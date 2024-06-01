@@ -747,8 +747,8 @@ class SubprocSpec:
             return
         else:
             new_cmd = alias
-            if alias[-1] == "{STOP_ARGS}":
-                new_cmd = alias[:-1]
+            if "{CUT_ARGS}" in alias:
+                new_cmd = alias[:alias.index("{CUT_ARGS}")]
             else:
                 new_cmd += self.cmd[1:]
             self.cmd = new_cmd

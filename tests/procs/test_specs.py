@@ -363,3 +363,52 @@ def test_partial_args_from_classmethod(xession):
     xession.aliases["alias_with_partial_args"] = Class.alias
     out = run_subproc([["alias_with_partial_args"]], captured="stdout")
     assert out == "ok"
+
+
+def test_alias_return_command_alone(xession):
+    @xession.aliases.register('wakka', return_command=True)
+    def _midground(args):
+        return ['echo', 'e0', 'e1']
+
+    cmds = [
+        ["wakka", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo", "e0", "e1", "0", "1"]
+    assert spec.alias_name == "wakka"
+
+
+def test_alias_return_command_chain(xession):
+    xession.aliases['foreground'] = "midground f0 f1"
+
+    @xession.aliases.register('midground', return_command=True)
+    def _midground(args):
+        return ['ground', 'm0', 'm1']
+
+    xession.aliases['ground'] = "background g0 g1"
+    xession.aliases['background'] = "echo b0 b1"
+
+    cmds = [
+        ["foreground", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo", "b0", "b1", "g0", "g1", "m0", "m1", "f0", "f1", "0", "1"]
+    assert spec.alias_name == "foreground"
+
+
+def test_alias_return_command_chain_args_cut(xession):
+    xession.aliases['foreground'] = "midground f0 f1"
+
+    @xession.aliases.register('midground', return_command=True)
+    def _midground(args):
+        return ['ground', 'm0', 'm1', '{CUT_ARGS}', 'cutted', '{CUT_ARGS}']
+
+    xession.aliases['ground'] = "background g0 g1"
+    xession.aliases['background'] = "echo b0 b1"
+
+    cmds = [
+        ["foreground", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo", "b0", "b1", "g0", "g1", "m0", "m1"]
+    assert spec.alias_name == "foreground"

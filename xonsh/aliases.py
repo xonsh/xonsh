@@ -152,14 +152,14 @@ class Aliases(cabc.MutableMapping):
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
             return self.eval_alias(
-                val, seen_tokens={key}, spec_modifiers=spec_modifiers
+                val, seen_tokens={key}, spec_modifiers=spec_modifiers, args=args
             )
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
 
     def eval_alias(
-        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=None
+        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=None, args=None
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -183,6 +183,10 @@ class Aliases(cabc.MutableMapping):
             spec_modifiers.append(mod)
             value = value[1:]
 
+        if callable(value) and getattr(value, "return_command", False):
+            args = args if args is not None else []
+            value = value(args)
+
         if callable(value):
             return partial_eval_alias(value, acc_args=acc_args)
         else:
@@ -204,6 +208,7 @@ class Aliases(cabc.MutableMapping):
                     seen_tokens,
                     acc_args,
                     spec_modifiers=spec_modifiers,
+                    args=(acc_args+args)
                 )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
