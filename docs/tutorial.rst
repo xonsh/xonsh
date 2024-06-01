@@ -1317,7 +1317,7 @@ is expanding an aliases:
 
     >>> @aliases.register('xsudo', return_command=True)
     ... def _xsudo(args, stdin=None):
-    ...     return ['sudo', '--'] + aliases.eval_alias(args) + ['_CUT_ARGS_']
+    ...     return ['sudo', '--', *aliases.eval_alias(args), '_CUT_ARGS_']
     ...
     >>> aliases['install'] = "apt install cowsay"
     >>> xsudo install
