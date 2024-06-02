@@ -1,0 +1,23 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* Minor cleanup of ``commands_cache``, unifying behavior across platforms.
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* No longer is ``.`` implied for running commands on Windows. Instead the behavior is the same across platforms. Windows users will need to prefix ``./`` or ``.\`` to run commands from the current directory (#5476).
+
+**Fixed:**
+
+* Commands on Windows now honor the case as they appear on the file system (#5469).
+
+**Security:**
+
+* <news item>
