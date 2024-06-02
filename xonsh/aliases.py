@@ -445,9 +445,17 @@ class PartialEvalAlias6(PartialEvalAliasBase):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
+
 class PartialEvalAlias7(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, spec_modifiers=None
+        self,
+        args,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        spec_modifiers=None,
     ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec, stack, spec_modifiers)
