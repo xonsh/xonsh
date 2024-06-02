@@ -454,6 +454,13 @@ class PartialEvalAlias6(PartialEvalAliasBase):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
+class PartialEvalAlias7(PartialEvalAliasBase):
+    def __call__(
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, spec_modifiers=None
+    ):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr, spec, stack, spec_modifiers)
+
 
 PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias0,
@@ -463,6 +470,7 @@ PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias4,
     PartialEvalAlias5,
     PartialEvalAlias6,
+    PartialEvalAlias7,
 )
 
 
@@ -483,10 +491,10 @@ def partial_eval_alias(f, acc_args=()):
             numargs += 1
         elif name in ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
             numargs += 1
-    if numargs < 7:
+    if numargs < 8:
         return PARTIAL_EVAL_ALIASES[numargs](f, acc_args=acc_args)
     else:
-        e = "Expected proxy with 6 or fewer arguments for {}, not {}"
+        e = "Expected proxy with 7 or fewer arguments for {}, not {}"
         raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
 
 
