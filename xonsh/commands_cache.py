@@ -99,8 +99,16 @@ class CommandsCache(cabc.Mapping):
         return len(self._cmds_cache) == 0
 
     def get_possible_names(self, name):
-        """Generates the possible `PATHEXT` extension variants of a given executable
-        name on Windows as a list, conserving the ordering in `PATHEXT`."""
+        """Expand name to all possible variants based on `PATHEXT`.
+
+        PATHEXT is a Windows convention containing extensions to be
+        considered when searching for an executable file.
+
+        Conserves order of any extensions found and gives precedence
+        to the bare name.
+
+        Incidentally, also uppercase the name on Windows (why?).
+        """
         if ON_WINDOWS:
             name = name.upper()
         pathext = [""] + self.env.get("PATHEXT", [])
