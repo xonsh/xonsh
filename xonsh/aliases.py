@@ -90,8 +90,8 @@ class FuncAlias:
         spec_modifiers=None,
     ):
         func_args = [args, stdin, stdout, stderr, spec, stack, spec_modifiers][
-                    : len(inspect.signature(self.func).parameters)
-                    ]
+            : len(inspect.signature(self.func).parameters)
+        ]
         return self.func(*func_args)
 
 
