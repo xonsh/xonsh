@@ -203,6 +203,15 @@ def test_update_cache(xession, tmp_path):
     assert file2.samefile(cached[basename][0])
 
 
+def test_find_binary_retains_case(tmp_path):
+    faux_binary = tmp_path / "runme.exe"
+    faux_binary.touch()
+    faux_binary.chmod(0o755)
+    cache = CommandsCache({"PATH": []})
+    loc = cache.locate_binary(str(faux_binary))
+    assert "runme.exe" in loc
+
+
 def test_nixos_coreutils(tmp_path):
     """On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file."""
     path = tmp_path / "core"
