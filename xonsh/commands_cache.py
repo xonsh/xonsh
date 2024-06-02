@@ -217,13 +217,9 @@ class CommandsCache(cabc.Mapping):
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it exists."""
-        if name is None:
-            return None
         cached = pathbasename(name) if os.pathsep in name else name
-        if ON_WINDOWS:
-            keys = self.get_possible_names(cached)
-            cached = next((k for k in keys if k in self._cmds_cache), None)
-        return cached
+        keys = self.get_possible_names(cached)
+        return next((k for k in keys if k in self._cmds_cache), name)
 
     def lazyin(self, key):
         """Checks if the value is in the current cache without the potential to
