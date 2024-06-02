@@ -203,20 +203,22 @@ def test_update_cache(xession, tmp_path):
     assert file2.samefile(cached[basename][0])
 
 
-def test_find_binary_retains_case(tmp_path):
-    faux_binary = tmp_path / "runme.exe"
-    faux_binary.touch()
-    faux_binary.chmod(0o755)
+@pytest.fixture
+def faux_binary(tmp_path):
+    binary = tmp_path / "runme.exe"
+    binary.touch()
+    binary.chmod(0o755)
+    return binary
+
+
+def test_find_binary_retains_case(faux_binary):
     cache = CommandsCache({"PATH": []})
     loc = cache.locate_binary(str(faux_binary))
     assert "runme.exe" in loc
 
 
-def test_exes_in_cwd_are_not_matched(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    faux_binary = tmp_path / "runme.exe"
-    faux_binary.touch()
-    faux_binary.chmod(0o755)
+def test_exes_in_cwd_are_not_matched(faux_binary, monkeypatch):
+    monkeypatch.chdir(faux_binary.parent)
     cache = CommandsCache({"PATH": []})
     assert cache.locate_binary("runme.exe") is None
 
