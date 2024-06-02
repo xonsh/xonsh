@@ -111,8 +111,8 @@ class CommandsCache(cabc.Mapping):
         """
         if ON_WINDOWS:
             name = name.upper()
-        pathext = [""] + self.env.get("PATHEXT", [])
-        return [name + ext for ext in pathext]
+        extensions = [""] + self.env.get("PATHEXT", [])
+        return [name + ext for ext in extensions]
 
     @staticmethod
     def remove_dups(paths):
