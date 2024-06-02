@@ -212,6 +212,15 @@ def test_find_binary_retains_case(tmp_path):
     assert "runme.exe" in loc
 
 
+def test_exes_in_cwd_are_not_matched(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    faux_binary = tmp_path / "runme.exe"
+    faux_binary.touch()
+    faux_binary.chmod(0o755)
+    cache = CommandsCache({"PATH": []})
+    assert cache.locate_binary("runme.exe") is None
+
+
 def test_nixos_coreutils(tmp_path):
     """On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file."""
     path = tmp_path / "core"
