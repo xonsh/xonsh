@@ -534,15 +534,15 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
         name: alias_params[name] for name, p in func_params if name in alias_params
     }
 
-    if len(kwargs) != (ln := len(func_params)):
+    if len(kwargs) != len(func_params):
         # There is unknown param. Switch to positional mode.
         kwargs = OrderedDict()
         vals = list(alias_params.values())
         len_vals = len(vals)
         i = 0
-        for name, p in func_params:
-            kwargs[name] = vals[i]
-            if (i := i + 1) == ln or i == len_vals:
+        for namep in func_params:
+            kwargs[namep[0]] = vals[i]
+            if (i := i + 1) == len_vals:
                 break
     return func(**kwargs)
 
