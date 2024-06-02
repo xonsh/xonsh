@@ -6,8 +6,7 @@ import sys
 
 import pytest
 
-from xonsh.aliases import Aliases, ExecAlias
-
+from xonsh.aliases import Aliases, ExecAlias, run_alias_by_params
 
 def cd(args, stdin=None):
     return args
@@ -214,3 +213,18 @@ def test_register_decorator(xession):
     def _private(): ...
 
     assert set(aliases) == {"debug", "name", "private"}
+
+
+def test_run_alias_by_params():
+    def alias_named_params(args, stdout):
+        return (args, stdout)
+
+    def alias_named_params_rev(stdout, args):
+        return (args, stdout)
+
+    def alias_list_params(a,i,o,e):
+        return (a, i, o, e)
+
+    assert run_alias_by_params(alias_named_params, {"args": 1, "stdout": 2}) == (1, 2)
+    assert run_alias_by_params(alias_named_params_rev, {"args": 1, "stdout": 2}) == (1, 2)
+    assert run_alias_by_params(alias_list_params, {"args": 1, "stderr": 4}) == (1, None, None, 4)

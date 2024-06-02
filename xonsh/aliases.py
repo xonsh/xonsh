@@ -1,7 +1,7 @@
 """Aliases for the xonsh shell."""
 
 import argparse
-import collections.abc as cabc
+from collections import OrderedDict, abc as cabc
 import functools
 import inspect
 import os
@@ -89,10 +89,19 @@ class FuncAlias:
         stack=None,
         spec_modifiers=None,
     ):
-        func_args = [args, stdin, stdout, stderr, spec, stack, spec_modifiers][
-            : len(inspect.signature(self.func).parameters)
-        ]
-        return self.func(*func_args)
+        return run_alias_by_params(self.func, {
+                        "args": args,
+                        "stdin": stdin,
+                        "stdout": stdout,
+                        "stderr": stderr,
+                        "spec": spec,
+                        "stack": stack,
+                        "spec_modifiers": spec_modifiers,
+                    })
+        # func_args = [args, stdin, stdout, stderr, spec, stack, spec_modifiers][
+        #     : len(inspect.signature(self.func).parameters)
+        # ]
+        # return self.func(*func_args)
 
 
 class Aliases(cabc.MutableMapping):
@@ -496,6 +505,30 @@ def partial_eval_alias(f, acc_args=()):
         e = "Expected proxy with 7 or fewer arguments for {}, not {}"
         raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
 
+
+def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
+    """
+    Run alias function based on signature and params.
+    If function param names are in alias signature fill them.
+    If function params have unknown names fill using alias signature order.
+    """
+    alias_params = OrderedDict({"args": None, "stdin": None, "stdout": None, "stderr": None, "spec": None, "stack": None, "spec_modifiers": None})
+    alias_params |= params
+    sign = inspect.signature(func)
+    func_params = sign.parameters.items()
+    kwargs = {name: alias_params[name] for name, p in func_params if name in alias_params}
+
+    if len(kwargs) != (ln := len(func_params)):
+        # There is unknown param. Switch to positional mode.
+        kwargs = OrderedDict()
+        vals = list(alias_params.values())
+        len_vals = len(vals)
+        i = 0
+        for name, p in func_params:
+            kwargs[name] = vals[i]
+            if (i := i+1) == ln or i == len_vals:
+                break
+    return func(**kwargs)
 
 #
 # Actual aliases below
