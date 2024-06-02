@@ -671,7 +671,7 @@ class CommandPipeline:
             if not lines:
                 return lines
             elif len(lines) == 1:
-                return lines[0].rstrip("\n")
+                return [lines[0].rstrip("\n")]
             else:
                 return [line.rstrip("\n") for line in lines]
         elif callable(format):
