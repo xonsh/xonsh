@@ -82,6 +82,7 @@ class FuncAlias:
     def __call__(
         self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None, spec_modifiers=None
     ):
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         return run_with_partial_args(
                 self.func,
                 {
@@ -162,7 +163,7 @@ class Aliases(cabc.MutableMapping):
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_command", False):
             try:
-                val = val(args, spec_modifiers)
+                val = val(args, spec_modifiers=spec_modifiers)
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
                 return None

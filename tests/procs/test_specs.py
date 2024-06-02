@@ -421,15 +421,19 @@ def test_alias_return_command_chain(xession):
     assert spec.alias_name == "foreground"
 
 
-def test_alias_return_command_chain_args_cut(xession):
+def test_alias_return_command_chain_spec_modifiers(xession):
     xession.aliases["foreground"] = "midground f0 f1"
+
+    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+        {"threadable": False, "force_threadable": False}
+    )
 
     @xession.aliases.register("midground", return_command=True)
     def _midground(args):
         return ["ground", "m0", "m1", "_CUT_ARGS_"]
 
     xession.aliases["ground"] = "background g0 g1"
-    xession.aliases["background"] = "echo b0 b1"
+    xession.aliases["background"] = "xunthread echo b0 b1"
 
     cmds = [
         ["foreground", "0", "1"],
@@ -437,3 +441,24 @@ def test_alias_return_command_chain_args_cut(xession):
     spec = cmds_to_specs(cmds, captured="object")[-1]
     assert spec.cmd == ["echo", "b0", "b1", "g0", "g1", "m0", "m1"]
     assert spec.alias_name == "foreground"
+    assert spec.threadable is False
+
+
+def test_alias_return_command_eval_inside(xession):
+    xession.aliases["xthread"] = SpecAttrModifierAlias(
+        {"threadable": True, "force_threadable": True}
+    )
+
+    @xession.aliases.register("xsudo", return_command=True)
+    def _midground(args, spec_modifiers=None):
+        return ["sudo", *xession.aliases.eval_alias(args, spec_modifiers=spec_modifiers), "_CUT_ARGS_"]
+
+    xession.aliases["cmd"] = "xthread echo 1"
+
+    cmds = [
+        ["xsudo", "cmd"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["sudo", "echo", "1"]
+    assert spec.alias_name == "xsudo"
+    assert spec.threadable is True
