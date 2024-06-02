@@ -660,13 +660,14 @@ if not ON_WINDOWS:
 
 ALL_PLATFORMS
 
+
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_script(case):
     path = str(Path(__file__).parent)
     script, exp_out, exp_rtn = case
-    script = script.replace('tests/', path+'/')
+    script = script.replace("tests/", path + "/")
     out, err, rtn = run_xonsh(script)
     if callable(exp_out):
         assert exp_out(out)
