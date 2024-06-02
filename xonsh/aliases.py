@@ -89,19 +89,10 @@ class FuncAlias:
         stack=None,
         spec_modifiers=None,
     ):
-        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
-        return run_with_partial_args(
-            self.func,
-            {
-                "args": args,
-                "stdin": stdin,
-                "stdout": stdout,
-                "stderr": stderr,
-                "spec": spec,
-                "stack": stack,
-                "spec_modifiers": spec_modifiers,
-            },
-        )
+        func_args = [args, stdin, stdout, stderr, spec, stack, spec_modifiers][
+                    : len(inspect.signature(self.func).parameters)
+                    ]
+        return self.func(*func_args)
 
 
 class Aliases(cabc.MutableMapping):
