@@ -204,6 +204,16 @@ def test_update_cache(xession, tmp_path):
     assert file2.samefile(cached[basename][0])
 
 
+@pytest.mark.xfail("platform.system() == 'Windows'", reason="#5476")
+def test_exes_in_cwd_are_not_matched(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    faux_binary = tmp_path / "runme.exe"
+    faux_binary.touch()
+    faux_binary.chmod(0o755)
+    cache = CommandsCache({"PATH": []})
+    assert cache.locate_binary("runme.exe") is None
+
+
 @skip_if_on_windows
 def test_nixos_coreutils(tmp_path):
     """On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file."""
