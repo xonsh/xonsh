@@ -579,7 +579,7 @@ echo $SHLVL # == 5
 # creating a subshell should increment the child's $SHLVL and maintain the parents $SHLVL
 
 $SHLVL = 5
-xonsh -c r'echo $SHLVL' # == 6
+xonsh --no-rc -c r'echo $SHLVL' # == 6
 echo $SHLVL # == 5
 
 # replacing the current process with another process should derease $SHLVL
@@ -658,12 +658,15 @@ three
 if not ON_WINDOWS:
     ALL_PLATFORMS = tuple(ALL_PLATFORMS) + tuple(UNIX_TESTS)
 
+ALL_PLATFORMS
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_script(case):
+    path = str(Path(__file__).parent)
     script, exp_out, exp_rtn = case
+    script = script.replace('tests/', path+'/')
     out, err, rtn = run_xonsh(script)
     if callable(exp_out):
         assert exp_out(out)
@@ -706,7 +709,7 @@ def test_script_stderr(case):
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
         (
-            "$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'",
+            "$FOO='foo' $BAR=2 xonsh --no-rc -c r'echo -n $FOO$BAR'",
             None,
             "foo2",
         ),
