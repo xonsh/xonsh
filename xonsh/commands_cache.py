@@ -18,6 +18,11 @@ from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
 from xonsh.tools import executables_in
 
+if ON_WINDOWS:
+    from case_insensitive_dict import CaseInsensitiveDict as CacheDict
+else:
+    CacheDict = dict
+
 
 class _Commands(tp.NamedTuple):
     mtime: float
@@ -80,12 +85,7 @@ class CommandsCache(cabc.Mapping):
 
     def iter_commands(self):
         """Wrapper for handling windows path behaviour"""
-        for cmd, (path, is_alias) in self.all_commands.items():
-            if ON_WINDOWS and path is not None:
-                # All command keys are stored in uppercase on Windows.
-                # This ensures the original command name is returned.
-                cmd = pathbasename(path)
-            yield cmd, (path, is_alias)
+        return self.all_commands.items()
 
     def __len__(self):
         return len(self.all_commands)
@@ -106,11 +106,7 @@ class CommandsCache(cabc.Mapping):
 
         Conserves order of any extensions found and gives precedence
         to the bare name.
-
-        Incidentally, also uppercase the name on Windows (why?).
         """
-        if ON_WINDOWS:
-            name = name.upper()
         extensions = [""] + self.env.get("PATHEXT", [])
         return [name + ext for ext in extensions]
 
@@ -164,11 +160,10 @@ class CommandsCache(cabc.Mapping):
         # entries at the back.
         paths = tuple(reversed(tuple(self.remove_dups(env.get("PATH") or []))))
         if any(self._check_changes(paths)):
-            all_cmds = {}
+            all_cmds = CacheDict()
             for cmd, path in self._iter_binaries(paths):
-                key = cmd.upper() if ON_WINDOWS else cmd
                 # None     -> not in aliases
-                all_cmds[key] = (path, None)
+                all_cmds[cmd] = (path, None)
 
             # aliases override cmds
             for cmd in self.aliases:
@@ -183,9 +178,8 @@ class CommandsCache(cabc.Mapping):
                     # (path, False) -> has same named alias
                     all_cmds[override_key] = (all_cmds[override_key][0], False)
                 else:
-                    key = cmd.upper() if ON_WINDOWS else cmd
                     # True -> pure alias
-                    all_cmds[key] = (cmd, True)
+                    all_cmds[cmd] = (cmd, True)
             self._cmds_cache = all_cmds
         return self._cmds_cache
 
@@ -327,18 +321,6 @@ class CommandsCache(cabc.Mapping):
         """
         name = self.cached_name(cmd0)
         predictors = self.threadable_predictors
-        if ON_WINDOWS:
-            # On all names (keys) are stored in upper case so instead
-            # we get the original cmd or alias name
-            path, _ = self.lazyget(name, (None, None))
-            if path is None:
-                return predict_true
-            else:
-                name = pathbasename(path)
-            if name not in predictors:
-                pre, ext = os.path.splitext(name)
-                if pre in predictors:
-                    predictors[name] = predictors[pre]
         if name not in predictors:
             predictors[name] = self.default_predictor(name, cmd0)
         predictor = predictors[name]
