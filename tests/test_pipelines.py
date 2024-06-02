@@ -74,7 +74,6 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
         ("!(echo hi | grep x)", "", "", ""),
     ),
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_command_pipeline_capture(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
     pipeline: CommandPipeline = xonsh_execer.eval(cmdline)
     assert pipeline.out == stdout
