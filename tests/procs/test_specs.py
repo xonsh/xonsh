@@ -451,7 +451,11 @@ def test_alias_return_command_eval_inside(xession):
 
     @xession.aliases.register("xsudo", return_command=True)
     def _midground(args, spec_modifiers=None):
-        return ["sudo", *xession.aliases.eval_alias(args, spec_modifiers=spec_modifiers), "_CUT_ARGS_"]
+        return [
+            "sudo",
+            *xession.aliases.eval_alias(args, spec_modifiers=spec_modifiers),
+            "_CUT_ARGS_",
+        ]
 
     xession.aliases["cmd"] = "xthread echo 1"
 
