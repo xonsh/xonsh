@@ -80,21 +80,28 @@ class FuncAlias:
         return f"FuncAlias({repr(r)})"
 
     def __call__(
-        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None, spec_modifiers=None
+        self,
+        args=None,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        spec_modifiers=None,
     ):
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         return run_with_partial_args(
-                self.func,
-                {
-                    "args": args,
-                    "stdin": stdin,
-                    "stdout": stdout,
-                    "stderr": stderr,
-                    "spec": spec,
-                    "stack": stack,
-                    "spec_modifiers": spec_modifiers,
-                }
-            )
+            self.func,
+            {
+                "args": args,
+                "stdin": stdin,
+                "stdout": stdout,
+                "stderr": stderr,
+                "spec": spec,
+                "stack": stack,
+                "spec_modifiers": spec_modifiers,
+            },
+        )
 
 
 class Aliases(cabc.MutableMapping):
