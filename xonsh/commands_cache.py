@@ -277,12 +277,6 @@ class CommandsCache(cabc.Mapping):
             (default ``False``)
         """
         possibilities = self.get_possible_names(name)
-        if ON_WINDOWS:
-            # Windows users expect to be able to execute files in the same
-            # directory without `./`
-            local_bin = next((fn for fn in possibilities if os.path.isfile(fn)), None)
-            if local_bin:
-                return os.path.abspath(local_bin)
         cached = next((cmd for cmd in possibilities if cmd in self._cmds_cache), None)
         if cached:
             (path, alias) = self._cmds_cache[cached]
