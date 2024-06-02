@@ -100,14 +100,11 @@ class CommandsCache(cabc.Mapping):
 
     def get_possible_names(self, name):
         """Generates the possible `PATHEXT` extension variants of a given executable
-        name on Windows as a list, conserving the ordering in `PATHEXT`.
-        Returns a list as `name` being the only item in it on other platforms."""
+        name on Windows as a list, conserving the ordering in `PATHEXT`."""
         if ON_WINDOWS:
-            pathext = [""] + self.env.get("PATHEXT", [])
             name = name.upper()
-            return [name + ext for ext in pathext]
-        else:
-            return [name]
+        pathext = [""] + self.env.get("PATHEXT", [])
+        return [name + ext for ext in pathext]
 
     @staticmethod
     def remove_dups(paths):
