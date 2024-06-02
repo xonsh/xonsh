@@ -262,7 +262,6 @@ class CommandsCache(cabc.Mapping):
             Force return of binary path even if alias of ``name`` exists
             (default ``False``)
         """
-        # make sure the cache is up to date by accessing the property
         self.update_cache()
         return self.lazy_locate_binary(name, ignore_alias)
 
