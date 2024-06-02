@@ -205,7 +205,12 @@ def test_update_cache(xession, tmp_path):
 
 @pytest.fixture
 def faux_binary(tmp_path):
-    binary = tmp_path / "runme.exe"
+    """
+    A fake binary in the temp path.
+
+    Uses mixed case so tests may make assertions about it.
+    """
+    binary = tmp_path / "RunMe.exe"
     binary.touch()
     binary.chmod(0o755)
     return binary
@@ -214,13 +219,13 @@ def faux_binary(tmp_path):
 def test_find_binary_retains_case(faux_binary):
     cache = CommandsCache({"PATH": []})
     loc = cache.locate_binary(str(faux_binary))
-    assert "runme.exe" in loc
+    assert faux_binary.name in loc
 
 
 def test_exes_in_cwd_are_not_matched(faux_binary, monkeypatch):
     monkeypatch.chdir(faux_binary.parent)
     cache = CommandsCache({"PATH": []})
-    assert cache.locate_binary("runme.exe") is None
+    assert cache.locate_binary(faux_binary.name) is None
 
 
 def test_nixos_coreutils(tmp_path):
