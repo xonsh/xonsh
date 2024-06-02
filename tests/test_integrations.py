@@ -658,8 +658,6 @@ three
 if not ON_WINDOWS:
     ALL_PLATFORMS = tuple(ALL_PLATFORMS) + tuple(UNIX_TESTS)
 
-ALL_PLATFORMS
-
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
