@@ -16,7 +16,7 @@ import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 from xonsh.ast import isexpression
 from xonsh.built_ins import XSH
-from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
+from xonsh.cli_utils import Annotated, Arg, ArgParserAlias, run_with_partial_args
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
@@ -80,12 +80,20 @@ class FuncAlias:
         return f"FuncAlias({repr(r)})"
 
     def __call__(
-        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None, spec_modifiers=None
     ):
-        func_args = [args, stdin, stdout, stderr, spec, stack][
-            : len(inspect.signature(self.func).parameters)
-        ]
-        return self.func(*func_args)
+        return run_with_partial_args(
+                self.func,
+                {
+                    "args": args,
+                    "stdin": stdin,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "spec": spec,
+                    "stack": stack,
+                    "spec_modifiers": spec_modifiers,
+                }
+            )
 
 
 class Aliases(cabc.MutableMapping):
@@ -154,7 +162,7 @@ class Aliases(cabc.MutableMapping):
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_command", False):
             try:
-                val = val(args)
+                val = val(args, spec_modifiers)
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
                 return None
@@ -205,7 +213,7 @@ class Aliases(cabc.MutableMapping):
         if callable(value) and getattr(value, "return_command", False):
             args = args if args is not None else []
             try:
-                value = value(args)
+                value = value(args, spec_modifiers=spec_modifiers)
             except Exception as e:
                 print_exception(f"Exception inside alias {value}: {e}")
                 return None
