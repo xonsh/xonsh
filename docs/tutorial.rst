@@ -1496,7 +1496,7 @@ through xonsh to the screen.
     >>> @aliases.register('hunter')
     ... def _hunter():
     ...     print('catch me')
-    ...     echo if
+    ...     echo if  # The same as `![echo if]`
     ...     $[echo you]
     ...     ![echo can]
     >>> hunter
