@@ -186,8 +186,8 @@ def test_specs_with_suspended_captured_process_pipeline(
 @pytest.mark.parametrize(
     "cmds, exp_stream_lines, exp_list_lines",
     [
-        ([["echo", "-n", "1"]], "1", "1"),
-        ([["echo", "-n", "1\n"]], "1", "1"),
+        ([["echo", "-n", "1"]], "1", ["1"]),
+        ([["echo", "-n", "1\n"]], "1", ["1"]),
         ([["echo", "-n", "1\n2\n3\n"]], "1\n2\n3\n", ["1", "2", "3"]),
         ([["echo", "-n", "1\r\n2\r3\r\n"]], "1\n2\n3\n", ["1", "2", "3"]),
         ([["echo", "-n", "1\n2\n3"]], "1\n2\n3", ["1", "2", "3"]),
