@@ -10,6 +10,7 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
+    SpecModifierAlias,
     SpecAttrModifierAlias,
     SubprocSpec,
     _run_command_pipeline,
@@ -271,8 +272,6 @@ def test_spec_modifier_alias_tree(xession):
 
 
 def test_spec_modifier_alias_output_format(xession):
-    from xonsh.procs.specs import SpecModifierAlias
-
     class SpecModifierOutputLinesAlias(SpecModifierAlias):
         def on_modifer_added(self, spec):
             spec.output_format = "list_lines"
