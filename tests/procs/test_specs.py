@@ -271,6 +271,7 @@ def test_spec_modifier_alias_tree(xession):
     assert spec.force_threadable is False
 
 
+@skip_if_on_windows
 def test_spec_modifier_alias_output_format(xession):
     class SpecModifierOutputLinesAlias(SpecModifierAlias):
         def on_modifer_added(self, spec):
