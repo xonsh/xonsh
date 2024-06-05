@@ -10,8 +10,8 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    SpecModifierAlias,
     SpecAttrModifierAlias,
+    SpecModifierAlias,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
