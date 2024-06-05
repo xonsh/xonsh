@@ -272,15 +272,17 @@ def test_spec_modifier_alias_tree(xession):
 
 def test_spec_modifier_alias_output_format(xession):
     from xonsh.procs.specs import SpecModifierAlias
+
     class SpecModifierOutputLinesAlias(SpecModifierAlias):
         def on_modifer_added(self, spec):
-            spec.output_format = 'list_lines'
-    xession.aliases['xlines'] = SpecModifierOutputLinesAlias()
+            spec.output_format = "list_lines"
 
-    cmds = [["xlines","echo", '1\n2\n3']]
+    xession.aliases["xlines"] = SpecModifierOutputLinesAlias()
+
+    cmds = [["xlines", "echo", "1\n2\n3"]]
     specs = cmds_to_specs(cmds, captured="stdout")
     (p := _run_command_pipeline(specs, cmds)).end()
-    assert p.output == ["1","2","3"]
+    assert p.output == ["1", "2", "3"]
 
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])
