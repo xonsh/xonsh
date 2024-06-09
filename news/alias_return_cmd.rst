@@ -1,7 +1,8 @@
 **Added:**
 
 * Added ability to create alias that returns modified command.
-  This allows modify and return command in the context of execution without wrapping with complex callable aliases. See also 5473.
+  This allows modify and return command in the context of execution without wrapping with complex callable alias.
+  See also 5473.
 
 **Changed:**
 
