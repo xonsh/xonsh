@@ -934,7 +934,7 @@ class GeneralSetting(Xettings):
         "uppercase.",
     )
     RAISE_SUBPROC_ERROR = Var.with_default(
-        False,
+        True,
         "Whether or not to raise an error if a subprocess (captured or "
         "uncaptured) returns a non-zero exit status, which indicates failure. "
         "This is most useful in xonsh scripts or modules where failures "
