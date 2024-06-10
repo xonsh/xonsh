@@ -420,6 +420,7 @@ class SubprocSpec:
         self.captured_stderr = None
         self.stack = None
         self.spec_modifiers = []  # List of SpecModifierAlias objects that applied to spec.
+        self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
