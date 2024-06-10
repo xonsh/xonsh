@@ -65,7 +65,7 @@ Projects that use xonsh or compatible
 - `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
-- `Starship <https://starship.rs/>`_: Cross-shell prompt
+- `Starship <https://starship.rs/>`_: Cross-shell prompt.
 
 Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
 
