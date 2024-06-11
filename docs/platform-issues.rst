@@ -241,3 +241,28 @@ You can add aliases to your ``~/.xonshrc`` to have it always
 available when xonsh starts.
 
 
+Working Directory on PATH
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Windows users, particularly those coming from the ``cmd.exe`` shell,
+might be accustomed to being able to run executables from the current
+directory by simply typing the program name.
+
+Since version 0.16, ``xonsh`` follows the more secure and modern
+approach of not including the current working directory in the search
+path, similar to Powershell and popular Unix shells. To invoke commands
+in the current directory on any platform, include the current directory
+explicitly:
+
+.. code-block:: xonshcon
+
+    >>> ./my-program
+
+Although not recommended, to restore the behavior found in the
+``cmd.exe`` shell, simply append ``.`` to the ``PATH``:
+
+.. code-block:: xonshcon
+
+    >>> $PATH.append('.')
+
+Add that to ``~/.xonshrc`` to enable that as the default behavior.

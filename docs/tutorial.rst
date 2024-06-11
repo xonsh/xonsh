@@ -1484,6 +1484,30 @@ Removing an alias is as easy as deleting the key from the alias dictionary:
    Otherwise, they may shadow the alias itself, as Python variables take
    precedence over aliases when xonsh executes commands.
 
+Callable alias and capturing
+----------------------------
+
+Callable aliases tend to be capturable. Only the explicitly denoted uncaptured subprocess
+operator ``$[]`` is uncapturable, and the subprocess's stdout passes directly
+through xonsh to the screen.
+
+.. code-block:: xonshcon
+
+    >>> @aliases.register('hunter')
+    ... def _hunter():
+    ...     print('catch me')
+    ...     echo if  # The same as `![echo if]`
+    ...     $[echo you]
+    ...     ![echo can]
+    >>> hunter
+    catch me
+    if
+    you
+    can
+
+    >>> $(hunter)
+    you
+    'catch me\nif\ncan\n'
 
 Anonymous Aliases
 -----------------
