@@ -50,8 +50,9 @@ def run_xonsh(
     single_command=False,
     interactive=False,
     path=None,
-    add_args: list = None,
+    args=None,
     timeout=20,
+    add_env=None
 ):
     env = dict(os.environ)
     if path is None:
@@ -65,20 +66,26 @@ def run_xonsh(
     env["PROMPT"] = ""
     # disable ansi escape codes
     env["TERM"] = "linux"
+
+    if add_env:
+        env |= add_env
+
     xonsh = shutil.which("xonsh", path=PATH)
-    args = [xonsh, "--no-rc"]
+    popen_args = [xonsh]
+    if not args:
+        popen_args += ["--no-rc"]
+    else:
+        popen_args += args
     if interactive:
-        args.append("-i")
+        popen_args.append("-i")
     if single_command:
-        args += ["-c", cmd]
+        popen_args += ["-c", cmd]
         input = None
     else:
         input = cmd
-    if add_args:
-        args += add_args
 
     proc = sp.Popen(
-        args,
+        popen_args,
         env=env,
         stdin=stdin,
         stdout=stdout,
@@ -1257,7 +1264,7 @@ def test_main_d():
     assert out == "json\n"
 
     out, err, ret = run_xonsh(
-        add_args=["-DXONSH_HISTORY_BACKEND='dummy'"],
+        args=["--no-rc", "-DXONSH_HISTORY_BACKEND='dummy'"],
         cmd="print($XONSH_HISTORY_BACKEND)",
         single_command=True,
     )
@@ -1335,3 +1342,49 @@ def test_alias_stability_exception():
         re.MULTILINE | re.DOTALL,
     )
     assert "Bad file descriptor" not in out
+
+
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_rc_no_xonshrc_for_non_interactive(tmpdir):
+    """Testing alias stability (exception) after amalgamation regress that described in #5435."""
+    rc_dir = tmpdir.mkdir("rc.d")
+    user_home_dir = tmpdir.mkdir("user_home")
+    user_homeless_dir = tmpdir.mkdir("rc.homeless")
+
+    (rc_dir / 'rc_dir.xsh').write_text('echo RC_DIR', encoding='utf8')
+    (user_home_rc := user_home_dir / '.xonshrc').write_text('echo HOME_XONSHRC', encoding='utf8')
+    (user_homeless_rc := user_homeless_dir / 'rc.xsh').write_text('echo RC_HOMELESS', encoding='utf8')
+
+    args = [
+        f'-DHOME={user_home_dir}',
+        f'-DXONSHRC={user_homeless_rc}:{user_home_rc}',
+        f'-DXONSHRC_DIR={rc_dir}',
+    ]
+    add_env = {
+        "HOME": str(user_home_dir)
+    }
+    out, err, ret = run_xonsh(
+        cmd="echo CMD",
+        interactive=False,
+        args=args,
+        add_env=add_env
+    )
+    assert re.match(
+        ".*RC_HOMELESS.*RC_DIR.*CMD.*",
+        out,
+        re.MULTILINE | re.DOTALL,
+    )
+
+    args += ["-i"]
+    out, err, ret = run_xonsh(
+        cmd="echo CMD",
+        interactive=False,
+        args=args,
+        add_env=add_env
+    )
+    assert re.match(
+        ".*RC_HOMELESS.*HOME_XONSHRC.*RC_DIR.*CMD.*",
+        out,
+        re.MULTILINE | re.DOTALL,
+    )
+
