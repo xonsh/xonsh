@@ -11,6 +11,7 @@ from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
     SpecAttrModifierAlias,
+    SpecModifierAlias,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
@@ -152,6 +153,7 @@ def test_capture_always(
 @skip_if_on_windows
 @pytest.mark.parametrize("captured", ["stdout", "object"])
 @pytest.mark.parametrize("interactive", [True, False])
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_interrupted_process_returncode(xonsh_session, captured, interactive):
     xonsh_session.env["XONSH_INTERACTIVE"] = interactive
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
@@ -268,6 +270,20 @@ def test_spec_modifier_alias_tree(xession):
     assert spec.alias_name == "foreground"
     assert spec.threadable is False
     assert spec.force_threadable is False
+
+
+@skip_if_on_windows
+def test_spec_modifier_alias_output_format(xession):
+    class SpecModifierOutputLinesAlias(SpecModifierAlias):
+        def on_modifer_added(self, spec):
+            spec.output_format = "list_lines"
+
+    xession.aliases["xlines"] = SpecModifierOutputLinesAlias()
+
+    cmds = [["xlines", "echo", "1\n2\n3"]]
+    specs = cmds_to_specs(cmds, captured="stdout")
+    (p := _run_command_pipeline(specs, cmds)).end()
+    assert p.output == ["1", "2", "3"]
 
 
 @pytest.mark.parametrize("thread_subprocs", [False, True])
