@@ -699,6 +699,8 @@ if not ON_WINDOWS:
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
+    if ON_DARWIN:
+        script = script.replace('tests/bin', str(Path(__file__).parent / 'bin'))
     out, err, rtn = run_xonsh(script)
     if callable(exp_out):
         assert exp_out(out)
