@@ -311,9 +311,9 @@ def _get_rc_files(shell_kwargs: dict, args, env):
 
     if not env.get("XONSH_INTERACTIVE", False):
         """
-        Home ``~/.xonshrc`` file has special meaning and history. The ecosystem around shells treat this kind of files
-        as the place where interactive tools and configs may be added. To avoid unintended and unexpected affection
-        of this file on non interactive behavior we remote this file in non interactive mode e.g. script with shebang.
+        Home based ``~/.xonshrc`` file has special meaning and history. The ecosystem around shells treats this kind of files
+        as the place where interactive tools can add configs. To avoid unintended and unexpected affection
+        of this file to non-interactive behavior we remove this file in non-interactive mode e.g. script with shebang.
         """
         home_xonshrc = os.path.expanduser("~/.xonshrc")
         rc = tuple(c for c in rc if c != home_xonshrc)
