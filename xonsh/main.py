@@ -308,6 +308,16 @@ def _get_rc_files(shell_kwargs: dict, args, env):
     # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
     rc = env.get("XONSHRC")
     rcd = env.get("XONSHRC_DIR")
+
+    if not env.get("XONSH_INTERACTIVE", False):
+        """
+        Home ``~/.xonshrc`` file has special meaning and history. The ecosystem around shells treat this kind of files
+        as the place where interactive tools and configs may be added. To avoid unintended and unexpected affection
+        of this file on non interactive behavior we remote this file in non interactive mode e.g. script with shebang.
+        """
+        home_xonshrc = os.path.expanduser("~/.xonshrc")
+        rc = tuple(c for c in rc if c != home_xonshrc)
+
     return rc, rcd
 
 
