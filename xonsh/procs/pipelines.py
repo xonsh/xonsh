@@ -155,6 +155,7 @@ class CommandPipeline:
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
         self.suspended = None
+        self.output_format = self.spec.output_format
 
         background = self.spec.background
         pipeline_group = None
@@ -661,21 +662,21 @@ class CommandPipeline:
 
     def get_formatted_lines(self, lines):
         """Format output lines."""
-        format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
-        if format == "stream_lines":
+        fmt = self.output_format
+        if fmt == "stream_lines":
             if len(lines) == 1:
                 return lines[0].rstrip("\n")
             else:
                 return "".join(lines)
-        elif format == "list_lines":
+        elif fmt == "list_lines":
             if not lines:
                 return lines
             elif len(lines) == 1:
                 return [lines[0].rstrip("\n")]
             else:
                 return [line.rstrip("\n") for line in lines]
-        elif callable(format):
-            return format(lines)
+        elif callable(fmt):
+            return fmt(lines)
 
     @property
     def output(self):
