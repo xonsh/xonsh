@@ -2,26 +2,29 @@ Run Control File
 =========================
 Xonsh allows you to customize your shell behavior with run control files, called "xonshrc" files.
 These files are written either in the Xonsh language (a superset of Python) or in Python and are executed
-exactly once at startup, only when running in interactive mode.
+exactly once at startup.
 
 The control file usually contains:
 
-* Assignment statements setting `environment variables <envvars.html>`_.  This includes standard OS environment variables that affect other programs and many that Xonsh uses for itself.
-* ``xonfig`` commands to load selected add-ins ("`xontribs<tutorial_xontrib.html#loading-xontribs>`")
-* Xonsh function definitions
+* Assignment statements setting `environment variables <envvars.html>`_. This includes standard OS environment variables that affect other programs and many that Xonsh uses for itself.
+* ``xontrib`` commands to load selected add-ins ("`xontribs<tutorial_xontrib.html#loading-xontribs>`").
+* Xonsh function definitions.
 * `Alias definitions <aliases.html>`_, many of which invoke the above functions with specified arguments.
 
-The system-wide ``xonshrc`` file controls options that are applied to all users of Xonsh on a given system.
-You can create this file in ``/etc/xonsh/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows.
+First of all, you need to know about the home directory ``~/.xonshrc`` control file. This file is commonly used to put configurations for the user interactive prompt and it is executed automatically only for interactive Xonsh sessions.
 
-Xonsh also allows a per-user run control file in your home directory, either
-directly in the home directory at ``~/.xonshrc`` or, for XDG compliance, at ``~/.config/xonsh/rc.xsh``.
+There are also a few places where Xonsh looks for run control files. These files will be executed automatically in both interactive and non-interactive modes, and you need to use the `$XONSH_INTERACTIVE <envvars.html#xonsh-interactive>`_ and `$XONSH_LOGIN <envvars.html#xonsh-login>`_ environment variables to determine what code you want to execute in each mode. Here is the list of run control files and directories:
+
+* Cross-desktop group (XDG) compliant ``~/.config/xonsh/rc.xsh`` control file.
+* The system-wide control file ``/etc/xonsh/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows. It controls options that are applied to all users of Xonsh on a given system.
+* The home-based directory ``~/.config/xonsh/rc.d/`` and system ``/etc/xonsh/rc.d/`` can contain ``.xsh`` files. They will be executed at startup in order. This allows for drop-in configuration where your configuration can be split across scripts and common and local configurations more easily separated.
+
+In addition:
+
+* Use ``xonsh --no-rc`` to prevent using control files.
+* Use ``xonsh --rc snail.xsh`` to run only a certain control file.
+
 The options set per user override settings in the system-wide control file.
-
-Xonsh also supports configuration directories, from which all ``.xsh`` files will be sourced in order.
-This allows for drop-in configuration where your configuration can be split across scripts and common
-and local configuration more easily separated. By default, if the directory ``~/.config/xonsh/rc.d``
-exists, any ``*.xsh`` files within will be sourced at startup.
 
 Xonsh provides 2 wizards to create your own "xonshrc".  ``xonfig web`` provides basic settings, and ``xonfig wizard``
 steps you through all the available options.

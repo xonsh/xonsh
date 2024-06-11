@@ -1156,7 +1156,9 @@ The file should contain a function with the signature
     )
     XONSH_INTERACTIVE = Var.with_default(
         True,
-        "``True`` if xonsh is running interactively, and ``False`` otherwise.",
+        "``True`` if xonsh is running interactively, and ``False`` otherwise. "
+        "It's highly recommended to use this variable in your ``xonshrc`` files "
+        "to split the code execution for interactive and non-interactive modes.",
         is_configurable=False,
     )
     XONSH_LOGIN = Var.with_default(
