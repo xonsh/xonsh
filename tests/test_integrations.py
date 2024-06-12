@@ -1386,7 +1386,12 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     out, err, ret = run_xonsh(
         cmd=cmd + "\n", interactive=True, args=args, add_env=add_env
     )
-    exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*"
+
+    if ON_WINDOWS:
+        # On Windows we well have `NoConsoleScreenBufferError` in interactive mode so avoid checking interactive output of the command.
+        exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*"
+    else:
+        exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*84.*"
     assert re.match(
         exp,
         out,
