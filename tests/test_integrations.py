@@ -1361,11 +1361,14 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     (user_not_home_rc := user_not_home_dir / "rc.xsh").write_text(
         "echo RC_NOT_HOME", encoding="utf8"
     )
+    xonshrc_files = [str(user_not_home_rc), str(user_home_rc_path_crossplatform)]
+    xonshrc_dir = [str(rc_dir)]
 
+    # Here `eval()` is needed in Windows case where the path contains `:` symbol (e.g. `C:\\path`) and treated as list delimiter.
     args = [
         f"-DHOME={str(user_home_dir)}",
-        f"-DXONSHRC={str(user_not_home_rc)}:{user_home_rc_path_crossplatform}",
-        f"-DXONSHRC_DIR={str(rc_dir)}",
+        f"-DXONSHRC=eval({repr(xonshrc_files)})",
+        f"-DXONSHRC_DIR=eval({repr(xonshrc_dir)})",
     ]
     add_env = {"HOME": str(user_home_dir)}
     out, err, ret = run_xonsh(
