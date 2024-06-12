@@ -1382,9 +1382,8 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         re.MULTILINE | re.DOTALL,
     ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
 
-    args += ["-i"]
     out, err, ret = run_xonsh(
-        cmd=cmd+"\n", interactive=False, args=args, add_env=add_env
+        cmd=cmd+"\n", interactive=True, args=args, add_env=add_env
     )
     assert re.match(
         ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*84.*",
