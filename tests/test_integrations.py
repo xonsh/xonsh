@@ -1357,7 +1357,9 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     (user_home_rc := user_home_dir / ".xonshrc").write_text(
         "echo HOME_XONSHRC", encoding="utf8"
     )
-    user_home_rc_path_crossplatform = str((Path(user_home_dir) / ".xonshrc").expanduser())
+    user_home_rc_path_crossplatform = str(
+        (Path(user_home_dir) / ".xonshrc").expanduser()
+    )
     (user_homeless_rc := user_homeless_dir / "rc.xsh").write_text(
         "echo RC_HOMELESS", encoding="utf8"
     )
