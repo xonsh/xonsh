@@ -3,6 +3,7 @@
 import os
 import re
 import typing as tp
+from xonsh.environ import get_home_xonshrc_path
 
 
 def write_value(value: str, _) -> str:
@@ -50,7 +51,7 @@ def config_to_xonsh(
     yield suffix
 
 
-RC_FILE = "~/.xonshrc"
+RC_FILE = get_home_xonshrc_path()
 
 
 def insert_into_xonshrc(
