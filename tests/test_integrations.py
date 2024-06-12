@@ -1366,9 +1366,9 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
 
     # Here `eval()` is needed in Windows case where the path contains `:` symbol (e.g. `C:\\path`) and treated as list delimiter.
     args = [
-        f"-DHOME=\"{str(user_home_dir)}\"",
-        f"-DXONSHRC=\"eval({repr(xonshrc_files)})\"",
-        f"-DXONSHRC_DIR=\"eval({repr(xonshrc_dir)})\"",
+        f'-DHOME="{str(user_home_dir)}"',
+        f'-DXONSHRC="eval({repr(xonshrc_files)})"',
+        f'-DXONSHRC_DIR="eval({repr(xonshrc_dir)})"',
     ]
     add_env = {"HOME": str(user_home_dir)}
     out, err, ret = run_xonsh(
