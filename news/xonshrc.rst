@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* The home based ``~/.xonshrc`` will not be executed in non-interactive mode  (#5491).
+* The home based ``~/.xonshrc`` will not be executed in non-interactive mode (#5491).
 
 **Deprecated:**
 
