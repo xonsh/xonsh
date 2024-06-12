@@ -1370,9 +1370,10 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         f'-DXONSHRC="eval({repr(xonshrc_files)})"',
         f'-DXONSHRC_DIR="eval({repr(xonshrc_dir)})"',
     ]
+    cmd = "print(42+42)"
     add_env = {"HOME": str(user_home_dir)}
     out, err, ret = run_xonsh(
-        cmd="print(42+42)", interactive=False, args=args, add_env=add_env
+        cmd=cmd, interactive=False, args=args, add_env=add_env
     )
     exp = ".*RC_NOT_HOME.*RC_DIR.*84.*"
     assert re.match(
@@ -1383,7 +1384,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
 
     args += ["-i"]
     out, err, ret = run_xonsh(
-        cmd="echo CMD", interactive=False, args=args, add_env=add_env
+        cmd=cmd, interactive=False, args=args, add_env=add_env
     )
     assert re.match(
         ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*84.*",
