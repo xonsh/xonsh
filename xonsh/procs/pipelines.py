@@ -627,7 +627,10 @@ class CommandPipeline:
         spec = self.spec
         rtn = self.returncode
 
-        if rtn is None or rtn == 0 or not XSH.env.get("RAISE_SUBPROC_ERROR"):
+        if spec.raise_subproc_error is None:
+            if rtn is None or rtn == 0 or not XSH.env.get("RAISE_SUBPROC_ERROR"):
+                return
+        elif spec.raise_subproc_error is False:
             return
 
         try:

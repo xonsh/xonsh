@@ -421,6 +421,7 @@ class SubprocSpec:
         self.stack = None
         self.spec_modifiers = []  # List of SpecModifierAlias objects that applied to spec.
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
+        self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR variable.
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
