@@ -1365,7 +1365,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     args = [
         f"-DHOME={str(user_home_dir)}",
         f"-DXONSHRC={user_not_home_rc}:{user_home_rc_path_crossplatform}",
-        f"-DXONSHRC_DIR={rc_dir}",
+        f"-DXONSHRC_DIR={str(rc_dir)}",
     ]
     add_env = {"HOME": str(user_home_dir)}
     out, err, ret = run_xonsh(
