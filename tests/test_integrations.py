@@ -1375,7 +1375,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         exp,
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r},\nHOME={os.path.expanduser("~/.xonshrc")},\nuser_home_rc={user_home_rc!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r},\nHOME={os.path.expanduser('~/.xonshrc')},\nuser_home_rc={user_home_rc!r}"
 
     args += ["-i"]
     out, err, ret = run_xonsh(
@@ -1385,4 +1385,4 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         ".*RC_HOMELESS.*HOME_XONSHRC.*RC_DIR.*CMD.*",
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r},\nHOME={os.path.expanduser("~/.xonshrc")},\nuser_home_rc={user_home_rc!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r},\nHOME={os.path.expanduser('~/.xonshrc')},\nuser_home_rc={user_home_rc!r}"
