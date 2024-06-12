@@ -1348,42 +1348,42 @@ def test_alias_stability_exception():
 
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_rc_no_xonshrc_for_non_interactive(tmpdir):
-    """Testing alias stability (exception) after amalgamation regress that described in #5435."""
-    rc_dir = tmpdir.mkdir("rc.d")
+    """Testing no ``~/.xonshrc`` execution in non-interactive commands (#5491)."""
+    rc_dir = tmpdir.mkdir("rc_dir")
     user_home_dir = tmpdir.mkdir("user_home")
-    user_homeless_dir = tmpdir.mkdir("rc.homeless")
+    user_not_home_dir = tmpdir.mkdir("user_not_home")
 
     (rc_dir / "rc_dir.xsh").write_text("echo RC_DIR", encoding="utf8")
     (user_home_dir / ".xonshrc").write_text("echo RC_HOME", encoding="utf8")
     user_home_rc_path_crossplatform = str(
         (Path(user_home_dir) / ".xonshrc").expanduser()
     )
-    (user_homeless_rc := user_homeless_dir / "rc.xsh").write_text(
-        "echo RC_HOMELESS", encoding="utf8"
+    (user_not_home_rc := user_not_home_dir / "rc.xsh").write_text(
+        "echo RC_NOT_HOME", encoding="utf8"
     )
 
     args = [
         f"-DHOME={user_home_dir}",
-        f"-DXONSHRC={user_homeless_rc}:{user_home_rc_path_crossplatform}",
+        f"-DXONSHRC={user_not_home_rc}:{user_home_rc_path_crossplatform}",
         f"-DXONSHRC_DIR={rc_dir}",
     ]
     add_env = {"HOME": str(user_home_dir)}
     out, err, ret = run_xonsh(
         cmd="echo CMD", interactive=False, args=args, add_env=add_env
     )
-    exp = ".*RC_HOMELESS.*RC_DIR.*CMD.*"
+    exp = ".*RC_NOT_HOME.*RC_DIR.*CMD.*"
     assert re.match(
         exp,
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r},\nuser_home_rc_path_crossplatform={user_home_rc_path_crossplatform!r}"
 
     args += ["-i"]
     out, err, ret = run_xonsh(
         cmd="echo CMD", interactive=False, args=args, add_env=add_env
     )
     assert re.match(
-        ".*RC_HOMELESS.*RC_HOME.*RC_DIR.*CMD.*",
+        ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*CMD.*",
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r},\nuser_home_rc_path_crossplatform={user_home_rc_path_crossplatform!r}"
