@@ -172,6 +172,7 @@ The following is a real-world example of such a file.
 .. include:: xonshrc.xsh
     :code: xonsh
 
+See also `xontrib-rc-awesome <https://github.com/anki-code/xontrib-rc-awesome>`_.
 
 Real world sample rc.py
 -------------------------

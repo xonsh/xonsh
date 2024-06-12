@@ -434,7 +434,7 @@ def premain(argv=None):
                 var, val = x.split("=", 1)
                 newval = unquote(val)
                 if newval.startswith("eval(") and newval.endswith(")"):
-                    # This use case is needed to instantiate a complex environment variables.
+                    # This use case is needed to instantiate complex environment variables.
                     newval = eval(newval[5:-1])
                 pre_env[var] = newval
             except Exception:
