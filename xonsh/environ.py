@@ -15,6 +15,7 @@ import threading
 import typing as tp
 import warnings
 from collections import ChainMap
+from pathlib import Path
 
 import xonsh.prompt.base as prompt
 from xonsh import __version__ as XONSH_VERSION
@@ -623,6 +624,9 @@ def xonshconfig(env):
     xc = os.path.join(xcd, "config.json")
     return xc
 
+def get_home_xonshrc_path():
+    """Cross-platform implementation of getting ``~/.xonshrc`` path."""
+    return str((Path("~") / ".xonshrc").expanduser())
 
 @default_value
 def default_xonshrc(env) -> "tuple[str, ...]":
@@ -633,7 +637,7 @@ def default_xonshrc(env) -> "tuple[str, ...]":
     dxrc = (
         os.path.join(xonsh_sys_config_dir(env), "xonshrc"),
         os.path.join(xonsh_config_dir(env), "rc.xsh"),
-        os.path.expanduser("~/.xonshrc"),
+        get_home_xonshrc_path()
     )
     # Check if old config file exists and issue warning
     old_config_filename = xonshconfig(env)

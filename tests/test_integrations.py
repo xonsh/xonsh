@@ -1357,13 +1357,14 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     (user_home_rc := user_home_dir / ".xonshrc").write_text(
         "echo HOME_XONSHRC", encoding="utf8"
     )
+    user_home_rc_path_crossplatform = str((Path(user_home_dir) / ".xonshrc").expanduser())
     (user_homeless_rc := user_homeless_dir / "rc.xsh").write_text(
         "echo RC_HOMELESS", encoding="utf8"
     )
 
     args = [
         f"-DHOME={user_home_dir}",
-        f"-DXONSHRC={user_homeless_rc}:{user_home_rc}",
+        f"-DXONSHRC={user_homeless_rc}:{user_home_rc_path_crossplatform}",
         f"-DXONSHRC_DIR={rc_dir}",
     ]
     add_env = {"HOME": str(user_home_dir)}
@@ -1375,7 +1376,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         exp,
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r},\nHOME={os.path.expanduser('~/.xonshrc')},\nuser_home_rc={user_home_rc!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r}"
 
     args += ["-i"]
     out, err, ret = run_xonsh(
@@ -1385,4 +1386,4 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         ".*RC_HOMELESS.*HOME_XONSHRC.*RC_DIR.*CMD.*",
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r},\nHOME={os.path.expanduser('~/.xonshrc')},\nuser_home_rc={user_home_rc!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r}"
