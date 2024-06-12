@@ -432,11 +432,7 @@ def premain(argv=None):
         for x in args.defines:
             try:
                 var, val = x.split("=", 1)
-                newval = unquote(val)
-                if newval.startswith("eval(") and newval.endswith(")"):
-                    # This use case is needed to instantiate complex environment variables.
-                    newval = eval(newval[5:-1])
-                pre_env[var] = newval
+                pre_env[var] = unquote(val)
             except Exception:
                 print(
                     f"Wrong format for -D{x} argument. Use -DVAR=VAL form.",
