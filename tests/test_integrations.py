@@ -1372,7 +1372,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     ]
     add_env = {"HOME": str(user_home_dir)}
     out, err, ret = run_xonsh(
-        cmd="42+42", interactive=False, args=args, add_env=add_env
+        cmd="print(42+42)", interactive=False, args=args, add_env=add_env
     )
     exp = ".*RC_NOT_HOME.*RC_DIR.*84.*"
     assert re.match(
