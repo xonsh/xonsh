@@ -78,6 +78,9 @@ def run_xonsh(
         popen_args += args
     if interactive:
         popen_args.append("-i")
+        if cmd and isinstance(cmd, str) and not cmd.endswith("\n"):
+            # In interactive mode we need to emulate "Press Enter".
+            cmd += "\n"
     if single_command:
         popen_args += ["-c", cmd]
         input = None
