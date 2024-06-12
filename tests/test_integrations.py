@@ -1354,9 +1354,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     user_homeless_dir = tmpdir.mkdir("rc.homeless")
 
     (rc_dir / "rc_dir.xsh").write_text("echo RC_DIR", encoding="utf8")
-    (user_home_dir / ".xonshrc").write_text(
-        "echo RC_HOME", encoding="utf8"
-    )
+    (user_home_dir / ".xonshrc").write_text("echo RC_HOME", encoding="utf8")
     user_home_rc_path_crossplatform = str(
         (Path(user_home_dir) / ".xonshrc").expanduser()
     )
