@@ -433,7 +433,7 @@ def premain(argv=None):
             try:
                 var, val = x.split("=", 1)
                 newval = unquote(val)
-                if newval.startswith('eval(') and newval.endswith(')'):
+                if newval.startswith("eval(") and newval.endswith(")"):
                     # This use case is needed to instantiate a complex environment variables.
                     newval = eval(newval[5:-1])
                 pre_env[var] = newval
