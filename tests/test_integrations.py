@@ -1355,7 +1355,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
 
     (rc_dir / "rc_dir.xsh").write_text("echo RC_DIR", encoding="utf8")
     (user_home_rc := user_home_dir / ".xonshrc").write_text(
-        "echo HOME_XONSHRC", encoding="utf8"
+        "echo RC_HOME", encoding="utf8"
     )
     user_home_rc_path_crossplatform = str(
         (Path(user_home_dir) / ".xonshrc").expanduser()
@@ -1385,7 +1385,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         cmd="echo CMD", interactive=False, args=args, add_env=add_env
     )
     assert re.match(
-        ".*RC_HOMELESS.*HOME_XONSHRC.*RC_DIR.*CMD.*",
+        ".*RC_HOMELESS.*RC_HOME.*RC_DIR.*CMD.*",
         out,
         re.MULTILINE | re.DOTALL,
     ), f"Expected: {exp!r},\nResult: {out!r}"
