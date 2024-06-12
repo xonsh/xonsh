@@ -1376,7 +1376,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         exp,
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r},\nuser_home_rc_path_crossplatform={user_home_rc_path_crossplatform!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r},\nuser_home_dir={user_home_dir!r},\nuser_home_rc_path_crossplatform={user_home_rc_path_crossplatform!r}"
 
     args += ["-i"]
     out, err, ret = run_xonsh(
@@ -1386,4 +1386,4 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*CMD.*",
         out,
         re.MULTILINE | re.DOTALL,
-    ), f"Expected: {exp!r},\nResult: {out!r},\nuser_home_rc_path_crossplatform={user_home_rc_path_crossplatform!r}"
+    ), f"Expected: {exp!r},\nResult: {out!r},\nuser_home_dir={user_home_dir!r},\nuser_home_rc_path_crossplatform={user_home_rc_path_crossplatform!r}"
