@@ -1,6 +1,6 @@
 **Added:**
 
-* Added ``spec.raise_subproc_error`` for fine-tuning exceptions via SpecModifierAlias.
+* Added ``spec.raise_subproc_error`` for fine-tuning exceptions via SpecModifierAlias (#5494).
 
 **Changed:**
 
