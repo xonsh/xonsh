@@ -1315,7 +1315,8 @@ is expanding an aliases:
 
 .. code-block:: xonshcon
 
-    >>> @aliases.register('xsudo', return_command=True)
+    >>> @aliases.register('xsudo')
+    ... @aliases.return_command
     ... def _xsudo(args, stdin=None):
     ...     return ['sudo', '--', *aliases.eval_alias(args), '_CUT_ARGS_']
     ...
