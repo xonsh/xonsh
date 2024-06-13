@@ -309,7 +309,7 @@ def _get_rc_files(shell_kwargs: dict, args, env):
     rc = env.get("XONSHRC")
     rcd = env.get("XONSHRC_DIR")
 
-    if not (env.get("XONSH_INTERACTIVE", False) or args.force_interactive):
+    if not env.get("XONSH_INTERACTIVE", False):
         """
         Home based ``~/.xonshrc`` file has special meaning and history. The ecosystem around shells treats this kind of files
         as the place where interactive tools can add configs. To avoid unintended and unexpected affection
