@@ -1358,6 +1358,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
 
     (rc_dir / "rc_dir.xsh").write_text("echo RC_DIR", encoding="utf8")
     (user_home_dir / ".xonshrc").write_text("echo RC_HOME", encoding="utf8")
+    (script := user_home_dir / "script.xsh").write_text("echo SCRIPT", encoding="utf8")
     user_home_rc_path_crossplatform = str(
         (Path(user_home_dir) / ".xonshrc").expanduser()
     )
@@ -1375,6 +1376,25 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
     ]
     cmd = "print(42+42)"
     add_env = {"HOME": str(user_home_dir)}
+
+    # xonsh
+    out, err, ret = run_xonsh(
+        cmd=None, stdin=None, single_command=False, interactive=True, args=args, add_env=add_env
+    )
+
+    exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*"
+    if not ON_WINDOWS:
+        # On Windows we well have `NoConsoleScreenBufferError` in interactive mode so avoid checking interactive output of the command.
+        exp += "84.*"
+
+    assert re.match(
+        exp,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
+
+
+    # xonsh -c "cmd"
     out, err, ret = run_xonsh(cmd=cmd, interactive=False, args=args, add_env=add_env)
     exp = ".*RC_NOT_HOME.*RC_DIR.*84.*"
     assert re.match(
@@ -1383,6 +1403,7 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         re.MULTILINE | re.DOTALL,
     ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
 
+    # xonsh -i -c "cmd"
     out, err, ret = run_xonsh(
         cmd=cmd + "\n", interactive=True, args=args, add_env=add_env
     )
@@ -1392,6 +1413,28 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         # On Windows we well have `NoConsoleScreenBufferError` in interactive mode so avoid checking interactive output of the command.
         exp += "84.*"
 
+    assert re.match(
+        exp,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
+
+    # xonsh script.xsh
+    out, err, ret = run_xonsh(
+        cmd=cmd + "\n", interactive=False, single_command=False, args=args+['--', script], add_env=add_env
+    )
+    exp = ".*RC_NOT_HOME.*RC_DIR.*SCRIPT.*"
+    assert re.match(
+        exp,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
+
+    # xonsh -i script.xsh
+    out, err, ret = run_xonsh(
+        cmd=None, interactive=False, single_command=False, args=args+['-i', '--', script], add_env=add_env
+    )
+    exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*SCRIPT.*"
     assert re.match(
         exp,
         out,
