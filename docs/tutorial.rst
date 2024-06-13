@@ -1309,7 +1309,7 @@ Alias to modify command
 -----------------------
 
 The best way to modify command on the fly is to use alias that returns modified command.
-You can use ``_CUT_ARGS_`` tag to remove unwanted arguments at the end of the command
+You can use ``aliases.CUT_ARGS`` to remove unwanted arguments at the end of the command
 if you take over their processing. One of the most interesting application
 is expanding an aliases:
 
@@ -1318,7 +1318,7 @@ is expanding an aliases:
     >>> @aliases.register('xsudo')
     ... @aliases.return_command
     ... def _xsudo(args, stdin=None):
-    ...     return ['sudo', '--', *aliases.eval_alias(args), '_CUT_ARGS_']
+    ...     return ['sudo', '--', *aliases.eval_alias(args), aliases.CUT_ARGS]
     ...
     >>> aliases['install'] = "apt install cowsay"
     >>> xsudo install

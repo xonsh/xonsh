@@ -767,8 +767,8 @@ class SubprocSpec:
             return
         else:
             new_cmd = alias
-            if "_CUT_ARGS_" in alias:
-                new_cmd = alias[: alias.index("_CUT_ARGS_")]
+            if XSH.aliases.CUT_ARGS in alias:
+                new_cmd = alias[: alias.index(XSH.aliases.CUT_ARGS)]
             else:
                 new_cmd += self.cmd[1:]
             self.cmd = new_cmd

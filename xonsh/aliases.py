@@ -107,6 +107,11 @@ class FuncAlias:
 class Aliases(cabc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
+    """
+    Special variable to cut unwanted arguments in `return_command` alias.
+    """
+    CUT_ARGS = '_CUT_ARGS_'
+
     def __init__(self, *args, **kwargs):
         self._raw = {}
         self.update(*args, **kwargs)
