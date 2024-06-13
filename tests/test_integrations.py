@@ -47,8 +47,9 @@ base_env = {
     "RAISE_SUBPROC_ERROR": "0",
     "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": "1",
     "PROMPT": "",
-    "TERM": "linux" # disable ansi escape codes
+    "TERM": "linux",  # disable ansi escape codes
 }
+
 
 def run_xonsh(
     cmd,
@@ -1355,27 +1356,33 @@ def test_alias_stability_exception():
 
 
 @pytest.mark.parametrize(
-    "cmd,exp", [
-    ["-i", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*"],
-    ["--rc rc.xsh", ".*RCXSH.*"],
-    ["-i --rc rc.xsh", ".*RCXSH.*"],
-    ["-c print('CMD')", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CMD.*"],
-    ["-i -c print('CMD')", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CMD.*"],
-    ["script.xsh", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*SCRIPT.*"],
-    ["-i script.xsh", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*SCRIPT.*"],
-    ["--rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
-    ["-i --rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
-    ["--no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
-    ["-i --no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
-]
+    "cmd,exp",
+    [
+        ["-i", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*"],
+        ["--rc rc.xsh", ".*RCXSH.*"],
+        ["-i --rc rc.xsh", ".*RCXSH.*"],
+        ["-c print('CMD')", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CMD.*"],
+        [
+            "-i -c print('CMD')",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CMD.*",
+        ],
+        ["script.xsh", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*SCRIPT.*"],
+        [
+            "-i script.xsh",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*SCRIPT.*",
+        ],
+        ["--rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
+        ["-i --rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
+        ["--no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
+        ["-i --no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
+    ],
 )
 # @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_xonshrc(tmpdir, cmd, exp):
-
     # ~/.xonshrc
     home = tmpdir.mkdir("home")
     (home / ".xonshrc").write_text("echo HOME_XONSHRC", encoding="utf8")
-    home_xonsh_rc_path = str( # crossplatform path
+    home_xonsh_rc_path = str(  # crossplatform path
         (Path(home) / ".xonshrc").expanduser()
     )
 
@@ -1387,7 +1394,9 @@ def test_xonshrc(tmpdir, cmd, exp):
 
     # ~/.config/xonsh/rc.d/
     home_config_xonsh_rcd = tmpdir.mkdir("home_config_xonsh_rcd")
-    (home_config_xonsh_rcd / "rcd1.xsh").write_text("echo CONFIG_XONSH_RCD", encoding="utf8")
+    (home_config_xonsh_rcd / "rcd1.xsh").write_text(
+        "echo CONFIG_XONSH_RCD", encoding="utf8"
+    )
 
     # ~/home/rc.xsh
     (rc_xsh := home / "rc.xsh").write_text("echo RCXSH", encoding="utf8")
@@ -1404,7 +1413,7 @@ def test_xonshrc(tmpdir, cmd, exp):
     ]
     env = {"HOME": str(home)}
 
-    cmd = cmd.replace('rc.xsh', str(rc_xsh)).replace('script.xsh', str(script_xsh))
+    cmd = cmd.replace("rc.xsh", str(rc_xsh)).replace("script.xsh", str(script_xsh))
     args = args + cmd.split()
 
     # xonsh
