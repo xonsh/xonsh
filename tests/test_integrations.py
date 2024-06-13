@@ -50,8 +50,9 @@ def run_xonsh(
     single_command=False,
     interactive=False,
     path=None,
-    add_args: list = None,
+    args=None,
     timeout=20,
+    add_env=None,
 ):
     env = dict(os.environ)
     if path is None:
@@ -65,20 +66,29 @@ def run_xonsh(
     env["PROMPT"] = ""
     # disable ansi escape codes
     env["TERM"] = "linux"
+
+    if add_env:
+        env |= add_env
+
     xonsh = shutil.which("xonsh", path=PATH)
-    args = [xonsh, "--no-rc"]
+    popen_args = [xonsh]
+    if not args:
+        popen_args += ["--no-rc"]
+    else:
+        popen_args += args
     if interactive:
-        args.append("-i")
+        popen_args.append("-i")
+        if cmd and isinstance(cmd, str) and not cmd.endswith("\n"):
+            # In interactive mode we need to emulate "Press Enter".
+            cmd += "\n"
     if single_command:
-        args += ["-c", cmd]
+        popen_args += ["-c", cmd]
         input = None
     else:
         input = cmd
-    if add_args:
-        args += add_args
 
     proc = sp.Popen(
-        args,
+        popen_args,
         env=env,
         stdin=stdin,
         stdout=stdout,
@@ -692,6 +702,8 @@ if not ON_WINDOWS:
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
+    if ON_DARWIN:
+        script = script.replace("tests/bin", str(Path(__file__).parent / "bin"))
     out, err, rtn = run_xonsh(script)
     if callable(exp_out):
         assert exp_out(out)
@@ -1257,7 +1269,7 @@ def test_main_d():
     assert out == "json\n"
 
     out, err, ret = run_xonsh(
-        add_args=["-DXONSH_HISTORY_BACKEND='dummy'"],
+        args=["--no-rc", "-DXONSH_HISTORY_BACKEND='dummy'"],
         cmd="print($XONSH_HISTORY_BACKEND)",
         single_command=True,
     )
@@ -1335,3 +1347,53 @@ def test_alias_stability_exception():
         re.MULTILINE | re.DOTALL,
     )
     assert "Bad file descriptor" not in out
+
+
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_rc_no_xonshrc_for_non_interactive(tmpdir):
+    """Testing no ``~/.xonshrc`` execution in non-interactive commands (#5491)."""
+    rc_dir = tmpdir.mkdir("rc_dir")
+    user_home_dir = tmpdir.mkdir("user_home")
+    user_not_home_dir = tmpdir.mkdir("user_not_home")
+
+    (rc_dir / "rc_dir.xsh").write_text("echo RC_DIR", encoding="utf8")
+    (user_home_dir / ".xonshrc").write_text("echo RC_HOME", encoding="utf8")
+    user_home_rc_path_crossplatform = str(
+        (Path(user_home_dir) / ".xonshrc").expanduser()
+    )
+    (user_not_home_rc := user_not_home_dir / "rc.xsh").write_text(
+        "echo RC_NOT_HOME", encoding="utf8"
+    )
+    xonshrc_files = [str(user_not_home_rc), str(user_home_rc_path_crossplatform)]
+    xonshrc_dir = [str(rc_dir)]
+
+    # Here `eval()` is needed in Windows case where the path contains `:` symbol (e.g. `C:\\path`) and treated as list delimiter.
+    args = [
+        f'-DHOME="{str(user_home_dir)}"',
+        f'-DXONSHRC="{os.pathsep.join(xonshrc_files)}"',
+        f'-DXONSHRC_DIR="{os.pathsep.join(xonshrc_dir)}"',
+    ]
+    cmd = "print(42+42)"
+    add_env = {"HOME": str(user_home_dir)}
+    out, err, ret = run_xonsh(cmd=cmd, interactive=False, args=args, add_env=add_env)
+    exp = ".*RC_NOT_HOME.*RC_DIR.*84.*"
+    assert re.match(
+        exp,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
+
+    out, err, ret = run_xonsh(
+        cmd=cmd + "\n", interactive=True, args=args, add_env=add_env
+    )
+
+    exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*"
+    if not ON_WINDOWS:
+        # On Windows we well have `NoConsoleScreenBufferError` in interactive mode so avoid checking interactive output of the command.
+        exp += "84.*"
+
+    assert re.match(
+        exp,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
