@@ -1379,7 +1379,12 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
 
     # xonsh
     out, err, ret = run_xonsh(
-        cmd=None, stdin=None, single_command=False, interactive=True, args=args, add_env=add_env
+        cmd=None,
+        stdin=None,
+        single_command=False,
+        interactive=True,
+        args=args,
+        add_env=add_env,
     )
 
     exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*"
@@ -1392,7 +1397,6 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
         out,
         re.MULTILINE | re.DOTALL,
     ), f"Expected: {exp!r},\nResult: {out!r},\nargs={args!r}"
-
 
     # xonsh -c "cmd"
     out, err, ret = run_xonsh(cmd=cmd, interactive=False, args=args, add_env=add_env)
@@ -1421,7 +1425,11 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
 
     # xonsh script.xsh
     out, err, ret = run_xonsh(
-        cmd=cmd + "\n", interactive=False, single_command=False, args=args+['--', script], add_env=add_env
+        cmd=cmd + "\n",
+        interactive=False,
+        single_command=False,
+        args=args + ["--", script],
+        add_env=add_env,
     )
     exp = ".*RC_NOT_HOME.*RC_DIR.*SCRIPT.*"
     assert re.match(
@@ -1432,7 +1440,11 @@ def test_rc_no_xonshrc_for_non_interactive(tmpdir):
 
     # xonsh -i script.xsh
     out, err, ret = run_xonsh(
-        cmd=None, interactive=False, single_command=False, args=args+['-i', '--', script], add_env=add_env
+        cmd=None,
+        interactive=False,
+        single_command=False,
+        args=args + ["-i", "--", script],
+        add_env=add_env,
     )
     exp = ".*RC_NOT_HOME.*RC_HOME.*RC_DIR.*SCRIPT.*"
     assert re.match(
