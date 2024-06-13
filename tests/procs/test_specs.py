@@ -390,7 +390,8 @@ def test_partial_args_from_classmethod(xession):
 
 
 def test_alias_return_command_alone(xession):
-    @xession.aliases.register("wakka", return_command=True)
+    @xession.aliases.register("wakka")
+    @xession.aliases.return_command
     def _wakka(args):
         return ["echo"]
 
@@ -403,7 +404,8 @@ def test_alias_return_command_alone(xession):
 
 
 def test_alias_return_command_alone_args(xession):
-    @xession.aliases.register("wakka", return_command=True)
+    @xession.aliases.register("wakka")
+    @xession.aliases.return_command
     def _wakka(args):
         return ["echo", "e0", "e1"]
 
@@ -418,7 +420,8 @@ def test_alias_return_command_alone_args(xession):
 def test_alias_return_command_chain(xession):
     xession.aliases["foreground"] = "midground f0 f1"
 
-    @xession.aliases.register("midground", return_command=True)
+    @xession.aliases.register("midground")
+    @xession.aliases.return_command
     def _midground(args):
         return ["ground", "m0", "m1"]
 
@@ -452,7 +455,8 @@ def test_alias_return_command_chain_spec_modifiers(xession):
         {"threadable": False, "force_threadable": False}
     )
 
-    @xession.aliases.register("midground", return_command=True)
+    @xession.aliases.register("midground")
+    @xession.aliases.return_command
     def _midground(args):
         return ["ground", "m0", "m1", "_CUT_ARGS_"]
 
@@ -473,7 +477,8 @@ def test_alias_return_command_eval_inside(xession):
         {"threadable": True, "force_threadable": True}
     )
 
-    @xession.aliases.register("xsudo", return_command=True)
+    @xession.aliases.register("xsudo")
+    @xession.aliases.return_command
     def _midground(args, spec_modifiers=None):
         return [
             "sudo",
