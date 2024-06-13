@@ -7,6 +7,7 @@ from subprocess import Popen
 
 import pytest
 
+from xonsh.aliases import CUT_ARGS
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
@@ -19,7 +20,7 @@ from xonsh.procs.specs import (
 )
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
-from xonsh.aliases import CUT_ARGS
+
 
 def cmd_sig(sig):
     return [

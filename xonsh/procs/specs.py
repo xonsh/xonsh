@@ -18,6 +18,7 @@ import xonsh.lazyasd as xl
 import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
+from xonsh.aliases import CUT_ARGS
 from xonsh.built_ins import XSH
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
@@ -28,7 +29,6 @@ from xonsh.procs.pipelines import (
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
-from xonsh.aliases import CUT_ARGS
 
 
 @xl.lazyobject
