@@ -13,7 +13,7 @@ import xonsh.procs.pipelines as xpp
 from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
-from xonsh.environ import make_args_env, xonshrc_context
+from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
@@ -308,6 +308,16 @@ def _get_rc_files(shell_kwargs: dict, args, env):
     # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
     rc = env.get("XONSHRC")
     rcd = env.get("XONSHRC_DIR")
+
+    if not env.get("XONSH_INTERACTIVE", False) or not args.force_interactive:
+        """
+        Home based ``~/.xonshrc`` file has special meaning and history. The ecosystem around shells treats this kind of files
+        as the place where interactive tools can add configs. To avoid unintended and unexpected affection
+        of this file to non-interactive behavior we remove this file in non-interactive mode e.g. script with shebang.
+        """
+        home_xonshrc = get_home_xonshrc_path()
+        rc = tuple(c for c in rc if c != home_xonshrc)
+
     return rc, rcd
 
 
