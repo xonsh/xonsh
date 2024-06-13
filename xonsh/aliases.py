@@ -142,14 +142,10 @@ class Aliases(cabc.MutableMapping):
         """Decorator to register the given function by name."""
 
         if isinstance(func_or_name, types.FunctionType):
-            return self._register(
-                func_or_name, name, dash_case
-            )
+            return self._register(func_or_name, name, dash_case)
 
         def wrapper(func):
-            return self._register(
-                func, func_or_name, dash_case
-            )
+            return self._register(func, func_or_name, dash_case)
 
         return wrapper
 
