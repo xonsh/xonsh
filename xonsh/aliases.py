@@ -110,7 +110,7 @@ class Aliases(cabc.MutableMapping):
     """
     Special variable to cut unwanted arguments in `return_command` alias.
     """
-    CUT_ARGS = '_CUT_ARGS_'
+    CUT_ARGS = "_CUT_ARGS_"
 
     def __init__(self, *args, **kwargs):
         self._raw = {}
