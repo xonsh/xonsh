@@ -120,15 +120,11 @@ class Aliases(cabc.MutableMapping):
             name = name[1:]
         return name
 
-    def _register(self, func, name="", dash_case=True, return_command=False):
+    def _register(self, func, name="", dash_case=True):
         name = name or self._get_func_name(func)
 
         if dash_case:
             name = name.replace("_", "-")
-
-        if return_command:
-            func = FuncAlias(name, func)
-            func.return_command = True
 
         self[name] = func
         return func
@@ -139,23 +135,27 @@ class Aliases(cabc.MutableMapping):
 
     @tp.overload
     def register(
-        self, name: str, *, dash_case: bool = True, return_command: bool = False
+        self, name: str, *, dash_case: bool = True
     ) -> tp.Callable[[types.FunctionType], types.FunctionType]: ...
 
-    def register(self, func_or_name, name=None, dash_case=True, return_command=False):
+    def register(self, func_or_name, name=None, dash_case=True):
         """Decorator to register the given function by name."""
 
         if isinstance(func_or_name, types.FunctionType):
             return self._register(
-                func_or_name, name, dash_case, return_command=return_command
+                func_or_name, name, dash_case
             )
 
         def wrapper(func):
             return self._register(
-                func, func_or_name, dash_case, return_command=return_command
+                func, func_or_name, dash_case
             )
 
         return wrapper
+
+    def return_command(self, f):
+        f.return_command = True
+        return f
 
     def get(self, key, default=None, spec_modifiers=None, args=None):
         """Returns the (possibly modified) value. If the key is not present,
