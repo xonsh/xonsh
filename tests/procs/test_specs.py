@@ -3,7 +3,7 @@
 import itertools
 import signal
 import sys
-from subprocess import Popen, CalledProcessError
+from subprocess import CalledProcessError, Popen
 
 import pytest
 
@@ -167,7 +167,7 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
 def test_proc_raise_subproc_error(xonsh_session):
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
 
-    specs = cmds_to_specs(cmd := [['ls']], captured="stdout")
+    specs = cmds_to_specs(cmd := [["ls"]], captured="stdout")
     specs[-1].raise_subproc_error = True
     exception = None
     try:
@@ -177,7 +177,7 @@ def test_proc_raise_subproc_error(xonsh_session):
         exception = e
     assert exception is None
 
-    specs = cmds_to_specs(cmd := [['ls', 'nofile']], captured="stdout")
+    specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
     specs[-1].raise_subproc_error = False
     exception = None
     try:
@@ -187,7 +187,7 @@ def test_proc_raise_subproc_error(xonsh_session):
         exception = e
     assert exception is None
 
-    specs = cmds_to_specs(cmd := [['ls', 'nofile']], captured="stdout")
+    specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
     specs[-1].raise_subproc_error = True
     exception = None
     try:
@@ -198,7 +198,7 @@ def test_proc_raise_subproc_error(xonsh_session):
     assert isinstance(exception, CalledProcessError)
 
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = True
-    specs = cmds_to_specs(cmd := [['ls', 'nofile']], captured="stdout")
+    specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
     exception = None
     try:
         (p := _run_command_pipeline(specs, cmd)).end()
@@ -206,7 +206,6 @@ def test_proc_raise_subproc_error(xonsh_session):
         assert p.proc.returncode > 0
         exception = e
     assert isinstance(exception, CalledProcessError)
-
 
 
 @skip_if_on_windows
