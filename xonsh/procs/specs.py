@@ -28,6 +28,7 @@ from xonsh.procs.pipelines import (
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
+from xonsh.aliases import CUT_ARGS
 
 
 @xl.lazyobject
@@ -767,8 +768,8 @@ class SubprocSpec:
             return
         else:
             new_cmd = alias
-            if XSH.aliases.CUT_ARGS in alias:
-                new_cmd = alias[: alias.index(XSH.aliases.CUT_ARGS)]
+            if CUT_ARGS in alias:
+                new_cmd = alias[: alias.index(CUT_ARGS)]
             else:
                 new_cmd += self.cmd[1:]
             self.cmd = new_cmd
