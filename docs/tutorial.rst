@@ -1310,7 +1310,7 @@ Alias to modify command
 
 The best way to modify command on the fly is to use alias that returns modified command.
 You can use ``_CUT_ARGS_`` tag to remove unwanted arguments at the end of the command
-if you if you take over their processing. One of the most interesting application
+if you take over their processing. One of the most interesting application
 is expanding an aliases:
 
 .. code-block:: xonshcon
