@@ -18,7 +18,6 @@ import xonsh.lazyasd as xl
 import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
-from xonsh.aliases import CUT_ARGS
 from xonsh.built_ins import XSH
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
@@ -768,7 +767,7 @@ class SubprocSpec:
             return
         else:
             new_cmd = alias
-            if CUT_ARGS in alias:
+            if (CUT_ARGS := getattr(XSH.aliases, 'CUT_ARGS', '_CUT_ARGS_')) in alias:
                 new_cmd = alias[: alias.index(CUT_ARGS)]
             else:
                 new_cmd += self.cmd[1:]
