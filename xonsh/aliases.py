@@ -106,6 +106,7 @@ class FuncAlias:
 
 """
 Special variable to cut unwanted arguments in `return_command` alias.
+We need this here for Windows tests where XSH.aliases is a dict.
 """
 CUT_ARGS = "_CUT_ARGS_"
 
