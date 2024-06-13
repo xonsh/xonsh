@@ -150,6 +150,7 @@ class Aliases(cabc.MutableMapping):
         return wrapper
 
     def return_command(self, f):
+        """Decorator that switch alias from returning result to return in new command for execution."""
         f.return_command = True
         return f
 
