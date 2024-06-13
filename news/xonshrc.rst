@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Windows: fixed path to RC file in ``xonfig web``.
 
 **Security:**
 
