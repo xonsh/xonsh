@@ -1075,8 +1075,10 @@ class GeneralSetting(Xettings):
     STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
     STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
 
+
 class SubprocessSetting(Xettings):
     """Subprocess Settings"""
+
     RAISE_SUBPROC_ERROR = Var.with_default(
         False,
         "Whether or not to raise an error if a subprocess (captured or "
@@ -1169,8 +1171,10 @@ class SubprocessSetting(Xettings):
     """,
     )
 
+
 class ErrorHandlingSetting(Xettings):
     """Error Handling Settings"""
+
     XONSH_SHOW_TRACEBACK = Var.with_default(
         False,
         "Controls if a traceback is shown if exceptions occur in the shell. "
@@ -1189,8 +1193,10 @@ class ErrorHandlingSetting(Xettings):
         "Logging to a file is not enabled by default.",
     )
 
+
 class JobsSetting(Xettings):
     """Jobs Settings"""
+
     AUTO_CONTINUE = Var.with_default(
         False,
         "If ``True``, automatically resume stopped jobs when they are disowned. "
@@ -1198,8 +1204,10 @@ class JobsSetting(Xettings):
         "will print information about how to continue the stopped process.",
     )
 
+
 class LangSetting(Xettings):
     """Language and locale settings."""
+
     LANG = Var.with_default(
         default="C.UTF-8",
         doc="Fallback locale setting for systems where it matters",
@@ -1219,6 +1227,7 @@ class LangSetting(Xettings):
         "i.e the history timestamp option.",
         type_str="str",
     )
+
 
 class CacheSetting(Xettings):
     """Cache Settings"""
@@ -1335,8 +1344,10 @@ class InterpreterSetting(Xettings):
         "the results are returned in arbitrary order.",
     )
 
+
 class XontribSetting(Xettings):
     """Xontrib Settings"""
+
     XONTRIBS_AUTOLOAD_DISABLED = Var(
         default=False,
         doc="""\
@@ -1348,6 +1359,7 @@ class XontribSetting(Xettings):
     Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.
     """,
     )
+
 
 class PromptSetting(Xettings):
     """Interactive Prompt"""
@@ -1879,6 +1891,7 @@ The file should contain a function with the signature
         False,
         "Set to ``True`` to show completers invoked and their return values.",
     )
+
 
 class PTKCompletionSetting(AutoCompletionSetting):
     """Prompt Toolkit tab-completion"""
