@@ -91,12 +91,12 @@ def get_named_prompts():
             "default",
             default_prompt(),
         ),
-        ("debian chroot", "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{RESET}> "),
-        ("minimalist", "{BOLD_GREEN}{cwd_base}{RESET} ) "),
+        ("debian chroot", "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} {cwd}{RESET} @ "),
+        ("minimalist", "{BOLD_GREEN}{cwd_base}{RESET} @ "),
         (
             "terlar",
             "{env_name}{BOLD_GREEN}{user}{RESET}@{hostname}:"
-            "{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\n{BOLD_INTENSE_RED}➤{RESET} ",
+            "{BOLD_GREEN}{cwd}{RESET}|{gitstatus}\n{BOLD_INTENSE_RED}@{RESET} ",
         ),
         (
             "default with git status",
@@ -105,34 +105,34 @@ def get_named_prompts():
             "{prompt_end}{RESET} ",
         ),
         ("robbyrussell", "{BOLD_INTENSE_RED}➜ {CYAN}{cwd_base} {gitstatus}{RESET} "),
-        ("just a dollar", "$ "),
+        ("just a conch", "@ "),
         (
             "simple pythonista",
             "{INTENSE_RED}{user}{RESET} at {INTENSE_PURPLE}{hostname}{RESET} "
-            "in {BOLD_GREEN}{cwd}{RESET}\n↪ ",
+            "in {BOLD_GREEN}{cwd}{RESET}\n@ ",
         ),
         (
             "informative",
             "[{localtime}] {YELLOW}{env_name} {BOLD_BLUE}{user}@{hostname} "
-            "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\n> ",
+            "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\n@ ",
         ),
         (
             "informative Version Control",
             "{YELLOW}{env_name} " "{BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} ",
         ),
-        ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> "),
+        ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}@ "),
         (
             "classic with git status",
-            "{gitstatus} {RESET}{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}> ",
+            "{gitstatus} {RESET}{user}@{hostname} {BOLD_GREEN}{cwd}{RESET} @ ",
         ),
-        ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{RESET}> "),
+        ("screen savvy", "{YELLOW}{user}@{PURPLE}{hostname}{BOLD_GREEN}{cwd}{RESET}@ "),
         (
             "sorin",
-            "{CYAN}{cwd} {INTENSE_RED}❯{INTENSE_YELLOW}❯{INTENSE_GREEN}❯{RESET} ",
+            "{CYAN}{cwd} {INTENSE_RED}@{INTENSE_YELLOW}@{INTENSE_GREEN}@{RESET} ",
         ),
         (
             "acidhub",
-            "❰{INTENSE_GREEN}{user}{RESET}❙{YELLOW}{cwd}{RESET}{env_name}❱{gitstatus}≻ ",
+            "❰{INTENSE_GREEN}{user}{RESET}❙{YELLOW}{cwd}{RESET}{env_name}❱{gitstatus}@ ",
         ),
         (
             "nim",
