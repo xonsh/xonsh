@@ -24,6 +24,7 @@ In addition:
 * Use ``xonsh --no-rc`` to prevent using control files.
 * Use ``xonsh --rc snail.xsh`` to run only a certain control file.
 * Use ``xonsh -i script.xsh`` to run xonsh in interactive mode with loading all possible control files.
+* Use ``xonsh --rc rc1.xsh rc2.xsh -- script.xsh`` to run scripts with multiple control files.
 
 The options set per user override settings in the system-wide control file.
 
