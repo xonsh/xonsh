@@ -2621,9 +2621,6 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
     if execer is None:
         return False
 
-    if not env.get('XONSH_INTERACTIVE', True) and '$XONSH_INTERACTIVE' not in Path(filename).read_text():
-        print_warning(f'Please check $XONSH_INTERACTIVE in {filename!r} to prevent loading interactive tools in non-interactive mode.')
-
     updates = {"__file__": filename, "__name__": os.path.abspath(filename)}
     rc_dir = _RcPath(os.path.dirname(filename))
     sys.path.append(rc_dir)
