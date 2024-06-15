@@ -2536,11 +2536,11 @@ def scan_dir_for_source_files(path: str):
 
 
 def _skip_rc_file(rcfile, env) -> bool:
-    interactive = env.get('XONSH_INTERACTIVE', False)
+    interactive = env.get("XONSH_INTERACTIVE", False)
     file = Path(rcfile)
-    if interactive and file.stem.endswith('_noint'):
+    if interactive and file.stem.endswith("_noint"):
         return True
-    elif not interactive and file.stem.endswith('_int'):
+    elif not interactive and file.stem.endswith("_int"):
         return True
     return False
 
