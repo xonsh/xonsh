@@ -1358,7 +1358,10 @@ def test_alias_stability_exception():
 @pytest.mark.parametrize(
     "cmd,exp",
     [
-        ["-i", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_INT.*"],
+        [
+            "-i",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_INT.*",
+        ],
         ["--rc rc.xsh", ".*RCXSH.*"],
         ["-i --rc rc.xsh", ".*RCXSH.*"],
         ["-c print('CMD')", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CMD.*"],
@@ -1366,7 +1369,10 @@ def test_alias_stability_exception():
             "-i -c print('CMD')",
             ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CMD.*",
         ],
-        ["script.xsh", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_NOINT.*SCRIPT.*"],
+        [
+            "script.xsh",
+            ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_NOINT.*SCRIPT.*",
+        ],
         [
             "-i script.xsh",
             ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_INT.*SCRIPT.*",

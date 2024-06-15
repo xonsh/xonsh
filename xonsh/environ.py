@@ -2536,11 +2536,11 @@ def scan_dir_for_source_files(path: str):
 
 
 def _skip_rc_file(rcfile, env) -> bool:
-    interactive = env.get('XONSH_INTERACTIVE', False)
+    interactive = env.get("XONSH_INTERACTIVE", False)
     file = Path(rcfile)
-    if interactive and file.stem.endswith('_noint'):
+    if interactive and file.stem.endswith("_noint"):
         return True
-    elif not interactive and file.stem.endswith('_int'):
+    elif not interactive and file.stem.endswith("_int"):
         return True
     return False
 
@@ -2621,8 +2621,13 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
     if execer is None:
         return False
 
-    if not env.get('XONSH_INTERACTIVE', True) and '$XONSH_INTERACTIVE' not in Path(filename).read_text():
-        print_warning(f'Please check $XONSH_INTERACTIVE in {filename!r} to prevent loading interactive tools in non-interactive mode.')
+    if (
+        not env.get("XONSH_INTERACTIVE", True)
+        and "$XONSH_INTERACTIVE" not in Path(filename).read_text()
+    ):
+        print_warning(
+            f"Please check $XONSH_INTERACTIVE in {filename!r} to prevent loading interactive tools in non-interactive mode."
+        )
 
     updates = {"__file__": filename, "__name__": os.path.abspath(filename)}
     rc_dir = _RcPath(os.path.dirname(filename))
