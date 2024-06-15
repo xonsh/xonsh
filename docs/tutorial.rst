@@ -1656,6 +1656,7 @@ By default, the following variables are available for use:
   * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
   * ``last_return_code``: The return code of the last issued command.
   * ``last_return_code_if_nonzero``: The return code of the last issued command if it is non-zero, otherwise ``None``. This is useful for only printing the code in case of errors.
+  * ``SOFT_NL``: add new line character if the prompt end is near terminal border.
 
 .. note:: See the section below on ``PROMPT_FIELDS`` for more information on changing.
 

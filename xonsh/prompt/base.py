@@ -144,14 +144,14 @@ def default_prompt():
         dp = (
             "{YELLOW}{env_name}{RESET}"
             "{BOLD_GREEN}{user}@{hostname}"
-            "{BOLD_BLUE} {cwd} {prompt_end}{RESET} "
+            "{BOLD_BLUE} {cwd} {SOFT_NL}{prompt_end}{RESET} "
         )
     elif xp.ON_WINDOWS and not xp.win_ansi_support():
         dp = (
             "{YELLOW}{env_name}{RESET}"
             "{BOLD_INTENSE_GREEN}{user}@{hostname}{BOLD_INTENSE_CYAN} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
-            "{BOLD_INTENSE_CYAN}{prompt_end}{RESET} "
+            "{SOFT_NL}{BOLD_INTENSE_CYAN}{prompt_end}{RESET} "
         )
     else:
         dp = (
@@ -159,7 +159,7 @@ def default_prompt():
             "{BOLD_GREEN}{user}@{hostname}{BOLD_BLUE} "
             "{cwd}{branch_color}{curr_branch: {}}{RESET} "
             "{RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}"
-            "{BOLD_BLUE}{prompt_end}{RESET} "
+            "{SOFT_NL}{BOLD_BLUE}{prompt_end}{RESET} "
         )
     return dp
 

@@ -440,6 +440,27 @@ class PromptToolkitShell(BaseShell):
                 else:
                     break
 
+    def _replace_soft_nl(self, toks):
+        """Replace ``{SOFT_NL}`` tag to new line."""
+        SOFT_NL = '{SOFT_NL}'
+        prompt_len = 0
+        soft_nl_pos = None
+        for i, t in enumerate(toks):
+            nt = t[1].replace(SOFT_NL, '')
+            prompt_len += len(nt)
+            if len(t[1]) != len(nt):
+                soft_nl_pos = i
+
+        if soft_nl_pos is not None:
+            try:
+                import shutil
+                term_w, h = shutil.get_terminal_size()
+                c = '\n' if (term_w - prompt_len%term_w) < 10 else ''
+                toks[soft_nl_pos] = (toks[soft_nl_pos][0], toks[soft_nl_pos][1].replace(SOFT_NL, c))
+            except:
+                toks[soft_nl_pos] = (toks[soft_nl_pos][0], toks[soft_nl_pos][1].replace(SOFT_NL, ''))
+        return toks
+
     def _get_prompt_tokens(self, env_name: str, prompt_name: str, **kwargs):
         env = XSH.env  # type:ignore
         p = env.get(env_name)
@@ -455,7 +476,7 @@ class PromptToolkitShell(BaseShell):
             print_exception()
 
         toks = partial_color_tokenize(p)
-
+        toks = self._replace_soft_nl(toks)
         return tokenize_ansi(PygmentsTokens(toks))
 
     def prompt_tokens(self):
