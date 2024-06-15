@@ -2535,6 +2535,16 @@ def scan_dir_for_source_files(path: str):
                 yield os.path.join(path, entry.name), entry
 
 
+def _skip_rc_file(rcfile, env) -> bool:
+    interactive = env.get('XONSH_INTERACTIVE', False)
+    file = Path(rcfile)
+    if interactive and file.stem.endswith('_noint'):
+        return True
+    elif not interactive and file.stem.endswith('_int'):
+        return True
+    return False
+
+
 def xonshrc_context(
     rcfiles=None, rcdirs=None, execer=None, ctx=None, env=None, login=True
 ):
@@ -2550,6 +2560,8 @@ def xonshrc_context(
     if rcfiles is not None:
         for rcfile in rcfiles:
             if os.path.isfile(rcfile):
+                if _skip_rc_file(rcfile, env):
+                    continue
                 status = xonsh_script_run_control(
                     rcfile, ctx, env, execer=execer, login=login
                 )
@@ -2559,6 +2571,8 @@ def xonshrc_context(
     if rcdirs is not None:
         for rcdir in rcdirs:
             for rcfile in sorted(dict(scan_dir_for_source_files(rcdir))):
+                if _skip_rc_file(rcfile, env):
+                    continue
                 status = xonsh_script_run_control(
                     rcfile, ctx, env, execer=execer, login=login
                 )
@@ -2606,6 +2620,10 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
     """
     if execer is None:
         return False
+
+    if not env.get('XONSH_INTERACTIVE', True) and '$XONSH_INTERACTIVE' not in Path(filename).read_text():
+        print_warning(f'Please check $XONSH_INTERACTIVE in {filename!r} to prevent loading interactive tools in non-interactive mode.')
+
     updates = {"__file__": filename, "__name__": os.path.abspath(filename)}
     rc_dir = _RcPath(os.path.dirname(filename))
     sys.path.append(rc_dir)

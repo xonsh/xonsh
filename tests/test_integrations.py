@@ -1358,7 +1358,7 @@ def test_alias_stability_exception():
 @pytest.mark.parametrize(
     "cmd,exp",
     [
-        ["-i", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*"],
+        ["-i", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_INT.*"],
         ["--rc rc.xsh", ".*RCXSH.*"],
         ["-i --rc rc.xsh", ".*RCXSH.*"],
         ["-c print('CMD')", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CMD.*"],
@@ -1366,10 +1366,10 @@ def test_alias_stability_exception():
             "-i -c print('CMD')",
             ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CMD.*",
         ],
-        ["script.xsh", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*SCRIPT.*"],
+        ["script.xsh", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_NOINT.*SCRIPT.*"],
         [
             "-i script.xsh",
-            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*SCRIPT.*",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSHRCD_INT.*SCRIPT.*",
         ],
         ["--rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
         ["-i --rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
@@ -1377,7 +1377,6 @@ def test_alias_stability_exception():
         ["-i --no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
     ],
 )
-# @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_xonshrc(tmpdir, cmd, exp):
     # ~/.xonshrc
     home = tmpdir.mkdir("home")
@@ -1396,6 +1395,12 @@ def test_xonshrc(tmpdir, cmd, exp):
     home_config_xonsh_rcd = tmpdir.mkdir("home_config_xonsh_rcd")
     (home_config_xonsh_rcd / "rcd1.xsh").write_text(
         "echo CONFIG_XONSH_RCD", encoding="utf8"
+    )
+    (home_config_xonsh_rcd / "rcd_int.xsh").write_text(
+        "echo CONFIG_XONSHRCD_INT", encoding="utf8"
+    )
+    (home_config_xonsh_rcd / "rcd_noint.xsh").write_text(
+        "echo CONFIG_XONSHRCD_NOINT", encoding="utf8"
     )
 
     # ~/home/rc.xsh

@@ -13,7 +13,8 @@ The control file usually contains:
 
 First of all, you need to know about the home directory ``~/.xonshrc`` control file. This file is commonly used to put configurations for the user interactive prompt and it is executed automatically only for interactive Xonsh sessions.
 
-There are also a few places where Xonsh looks for run control files. These files will be executed automatically in both interactive and non-interactive modes, and you need to use the `$XONSH_INTERACTIVE <envvars.html#xonsh-interactive>`_ and `$XONSH_LOGIN <envvars.html#xonsh-login>`_ environment variables to determine what code you want to execute in each mode. Here is the list of run control files and directories:
+There are also a few places where Xonsh looks for run control files. These files will be executed automatically in both interactive and non-interactive modes, and you need to use the `$XONSH_INTERACTIVE <envvars.html#xonsh-interactive>`_ and `$XONSH_LOGIN <envvars.html#xonsh-login>`_ environment variables to determine what code you want to execute in each mode. You can also specify the mode in file suffix (e.g. ``myrc_noint.xsh`` or ``myrc_int.xsh``) to avoid loading the file entirely.
+ Here is the list of run control files and directories:
 
 * Cross-desktop group (XDG) compliant ``~/.config/xonsh/rc.xsh`` control file.
 * The system-wide control file ``/etc/xonsh/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows. It controls options that are applied to all users of Xonsh on a given system.
