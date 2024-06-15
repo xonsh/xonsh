@@ -252,34 +252,3 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
     get_shelldate.fulldate = 0
 
     $PROMPT_FIELDS['shelldate'] = get_shelldate
-
-Use the Nix Package manager with Xonsh
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines might be life-savers:
-
-.. code-block:: xonshcon
-
-    import os.path
-    if os.path.exists(f"{$HOME}/.nix-profile") and not __xonsh__.env.get("NIX_PATH"):
-        $NIX_REMOTE="daemon"
-        $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
-        $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
-        $NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
-        $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
-        $PATH += [f"{$HOME}/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
-
-Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is:
-
-.. code-block:: xonshcon
-
-    for p in map(lambda s: str(s.resolve()), p"~/.local/lib/".glob("python*/site-packages")):
-        if p not in sys.path:
-            sys.path.append(p)
-
-    $PYTHONPATH = "$USER/.local/lib/python3.7/site-packages"
-
-    python -m ensurepip --user
-    xonsh
-    python -m pip install --user -U pip xontrib-z xonsh-direnv
-
-Just run the last three lines, do not put them in your `xonshrc`!
