@@ -47,6 +47,10 @@ The above ``pip`` commands may have to be spelled ``pip3`` or ``sudo pip3`` if y
 
 Spelling of ``pip`` command may likewise have to be amended as noted above.
 
+**core shell:** When xonsh becomes a core shell it's needed to keep python environment with xonsh stable,
+predictable and independent of any changes in the system.
+Use `xonsh-install <a href="https://github.com/anki-code/xonsh-install>`_ for this.
+
 **platform package managers**
 Various operating system distributions have platform-specific package managers which may offer a xonsh package.
 This may not be  the most current version of xonsh, but it should have been tested for stability on that platform
