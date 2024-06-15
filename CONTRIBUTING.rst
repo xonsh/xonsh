@@ -3,7 +3,7 @@
 =================
 Developer's Guide
 =================
-.. image:: docs/_static/knight-vs-snail.jpg
+.. image:: _static/knight-vs-snail.jpg
    :width: 80 %
    :alt: knight-vs-snail
    :align: center
