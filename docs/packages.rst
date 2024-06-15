@@ -84,7 +84,7 @@ or highlight syntax or set process title, respectively.
 If it does not find ``prompt-toolkit`` package, it will
 use the Python ``readline`` module (which reads configuration  file ``.inputrc`` in a manner compatible with ``GNU readline``).
 To ensure xonsh uses ``readline`` even if ``prompt-toolkit`` is installed, configure this in your
-``.xonshrc`` file:
+`xonshrc <xonshrc.rst>`_ (e.g. ``~/.xonshrc``) file:
 
 .. code-block:: xonshcon
 

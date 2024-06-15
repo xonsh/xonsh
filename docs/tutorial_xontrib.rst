@@ -104,12 +104,11 @@ create the layout for your xontrib package.
 
 Loading Xontribs
 ================
-Xontribs may be loaded in a few different ways: from the config file
-(e.g. ``~/.config/xonsh/rc.xsh``), dynamically at runtime with
-the ``xontrib`` command, or its Python API.
+Xontribs may be loaded in a few different ways: from the `xonshrc <xonshrc.rst>`_ file
+(e.g. ``~/.xonshrc``), dynamically at runtime with the ``xontrib`` command, or its Python API.
 
 Extensions are loaded via the ``xontrib load`` command.
-This command may be run from anywhere in a xonshrc file or at any point
+This command may be run from anywhere in a `xonshrc <xonshrc.rst>`_ file or at any point
 after xonsh has started up.
 
 .. code-block:: xonsh
