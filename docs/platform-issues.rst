@@ -237,7 +237,7 @@ typing and avoid the ambiguity altogether:
 
    >>> aliases['d'] = ['cmd', '/c', 'dir']
 
-You can add aliases to your ``~/.xonshrc`` to have it always
+You can add aliases to your `xonshrc <xonshrc.rst>`_ to have it always
 available when xonsh starts.
 
 
