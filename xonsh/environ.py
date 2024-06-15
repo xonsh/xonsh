@@ -1057,7 +1057,7 @@ class GeneralSetting(Xettings):
     )
     XONSHRC = Var.with_default(
         default_xonshrc,
-        "A list of the locations of run control files, if they exist.  User "
+        "A list of the locations of `run control files <https://xon.sh/xonshrc.html>`_, if they exist.  User "
         "defined run control file will supersede values set in system-wide "
         "control file if there is a naming collision. $THREAD_SUBPROCS=None "
         "when reading in run control files.",
@@ -1065,7 +1065,8 @@ class GeneralSetting(Xettings):
     )
     XONSHRC_DIR = Var.with_default(
         default_xonshrcdir,
-        "A list of directories, from which all .xsh|.py files will be loaded "
+        "A list of directories, from which all ``.xsh`` or ``.py`` "
+        "`run control files <https://xon.sh/xonshrc.html>`_ will be loaded "
         "at startup, sorted in lexographic order. Files in these directories "
         "are loaded after any files in XONSHRC.",
         type_str="env_path",
