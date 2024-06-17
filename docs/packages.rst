@@ -48,8 +48,8 @@ The above ``pip`` commands may have to be spelled ``pip3`` or ``sudo pip3`` if y
 Spelling of ``pip`` command may likewise have to be amended as noted above.
 
 **core shell:** When using ``xonsh`` as a default shell (and we do!), it's important to ensure that it is installed in a
-Python environment that is independent of changes from the system package manager.  If you are installing 
-``xonsh`` via your system package-manager, this is handled for you.  If you install ``xonsh`` outside of your 
+Python environment that is independent of changes from the system package manager.  If you are installing
+``xonsh`` via your system package-manager, this is handled for you.  If you install ``xonsh`` outside of your
 system package manager, you can use `xonsh-install <a href="https://github.com/anki-code/xonsh-install>`_ for this.
 
 **platform package managers**
