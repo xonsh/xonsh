@@ -331,11 +331,30 @@
                                     <a data-toggle="collapse" href="#collapse1" aria-expanded="true" aria-controls="collapse1">PyPi package</a>
                                 </h5>
                             </div>
-                            <div id="collapse1" class="collapse show" role="tabpanel" aria-labelledby="faq1" data-parent="#accordion">
+                            <div id="collapse0" class="collapse show" role="tabpanel" aria-labelledby="faq1" data-parent="#accordion">
                                 <div class="card-body">
                                     <p>Install:</p>
                                     <pre class="code">python -m pip install 'xonsh[full]'</pre>
                                     <a href="https://xon.sh/packages.html">Learn more →</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header active" role="tab" id="faq1">
+                                <h5 class="mb-0">
+                                    <a data-toggle="collapse" href="#collapse1" aria-expanded="true" aria-controls="collapse1">Install as a core shell</a>
+                                </h5>
+                            </div>
+                            <div id="collapse1" class="collapse show" role="tabpanel" aria-labelledby="faq1" data-parent="#accordion">
+                                <div class="card-body">
+                                    <p>
+                                        When using xonsh as a default shell (and we do!), it's important to ensure that it is installed
+                                        in a Python environment that is independent of changes from the system package manager.
+                                        If you are installing xonsh via your system package-manager, this is handled for you.
+                                        If you install xonsh outside of your system package manager, you can use
+                                        <a href="https://github.com/anki-code/xonsh-install">xonsh-install</a> for this.
+                                    </p>
                                 </div>
                             </div>
                         </div>
