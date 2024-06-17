@@ -117,8 +117,8 @@ def get_named_prompts():
             "{BOLD_GREEN}{cwd} {gitstatus}{RESET}\n@ ",
         ),
         (
-            "informative Version Control",
-            "{YELLOW}{env_name} " "{BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} ",
+            "informative version control",
+            "{YELLOW}{env_name} {BOLD_GREEN}{cwd} {gitstatus}{RESET} {prompt_end} ",
         ),
         ("classic", "{user}@{hostname} {BOLD_GREEN}{cwd}{RESET}@ "),
         (
