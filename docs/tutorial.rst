@@ -1609,10 +1609,10 @@ which will be replaced automatically:
 
 .. code-block:: xonshcon
 
-    >>> $PROMPT = '{user}@{hostname}:{cwd} > '
-    snail@home:~ > # it works!
-    snail@home:~ > $PROMPT = lambda: '{user}@{hostname}:{cwd} >> '
-    snail@home:~ >> # so does that!
+    >>> $PROMPT = '{user}@{hostname}:{cwd} @ '
+    snail@home:~ @ # it works!
+    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    snail@home:~ @> # so does that!
 
 -- todo: convert this to jinja template and generate these contents dynamically and mention about $PROMPT_FIELDS
 
