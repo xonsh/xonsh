@@ -1916,7 +1916,32 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 Additionally, if the script should exit if a command fails, set the
 environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
 file. Errors in Python mode will already raise exceptions and so this
-is roughly equivalent to Bash's ``set -e``.
+is roughly equivalent to Bash's ``set -e``. If the script should exit if
+a *piped* command fails, set the environment variable
+``$XONSH_PIPEFAIL = True``, which is roughly equivalent to Bash's
+``set -o pipefail``. For example, in the following codeblock, if
+``src/config.h`` doesn't exist, then ``defines.txt`` becomes an empty file,
+and, without ``$XONSH_PIPEFAIL`` the ``cp`` command below it then copies that
+empty file.
+
+.. code-block:: xonshcon
+
+    cat src/config.h | grep -v '#define.+POSIX' > defines.h
+    cp defines.h src/config_posix.h
+
+With ``$XONSH_PIPEFAIL``, an error is raised after the ``cat`` command fails
+instead.
+
+Robust Bash scripts often use the idiom ``set -euo pipefail``; the equivalent
+in Xonsh is the following:
+
+.. code-block:: xonshcon
+
+    $RAISE_SUBPROC_ERROR = True
+    $XONSH_PIPEFAIL = True
+
+An equivalent to Bash's ``-u`` option is not needed, as Xonsh always raises an
+error when attempting to use an undefined variable.
 
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivalent to

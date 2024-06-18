@@ -624,14 +624,33 @@ class CommandPipeline:
 
     def _raise_subproc_error(self):
         """Raises a subprocess error, if we are supposed to."""
-        spec = self.spec
-        rtn = self.returncode
 
-        if rtn is None or rtn == 0 or not XSH.env.get("RAISE_SUBPROC_ERROR"):
+        can_pipefail = XSH.env.get("XONSH_PIPEFAIL") and len(self.procs) > 1
+        can_err_exit = XSH.env.get("RAISE_SUBPROC_ERROR")
+
+        if can_pipefail:
+            # With XONSH_PIPEFAIL enabled, we have to check every process.
+            procs = self.procs
+        elif can_err_exit:
+            # With only RAISE_SUBPROC_ERROR, just check the last one.
+            procs = [self.proc]
+        else:
+            # And with neither, we don't have to check at all.
             return
 
         try:
-            raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
+            for proc in procs:
+                # Poll for the process' exit before checking its return code.
+                proc.poll()
+                last = proc.spec.last_in_pipeline
+                if proc.returncode in (None, 0):
+                    continue
+
+                if (can_pipefail and not last) or (can_err_exit and last):
+                    raise subprocess.CalledProcessError(
+                        proc.returncode, proc.spec.args, output=self.output
+                    )
+
         finally:
             # this is need to get a working terminal in interactive mode
             self._return_terminal()
