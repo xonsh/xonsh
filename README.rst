@@ -66,7 +66,7 @@ Projects that use xonsh or compatible
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
 - `Starship <https://starship.rs/>`_: Cross-shell prompt.
-- `x-cmd <https://www.x-cmd.com/>`_: x-cmd is a toolset and shell library implemented using posix shell and awk, aiming to provide users with a powerful, secure, and enjoyable collection of tools.
+- `x-cmd <https://www.x-cmd.com/>`_: x-cmd is a vast and interesting collection of tools guided by the Unix philosophy.
 
 Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
 
