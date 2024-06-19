@@ -1406,7 +1406,8 @@ def test_xonshrc(tmpdir, cmd, exp):
         "echo CONFIG_XONSH_RCD", encoding="utf8"
     )
     (home_config_xonsh_rcd / "rcd2.py").write_text(
-        "__xonsh__.print(__xonsh__.subproc_captured_stdout(['echo', 'CONFIG_XONSH_PY_RCD']))", encoding="utf8"
+        "__xonsh__.print(__xonsh__.subproc_captured_stdout(['echo', 'CONFIG_XONSH_PY_RCD']))",
+        encoding="utf8",
     )
 
     # ~/home/rc.xsh
