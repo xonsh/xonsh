@@ -1414,7 +1414,7 @@ def test_xonshrc(tmpdir, cmd, exp):
     (rc_xsh := home / "rc.xsh").write_text("echo RCXSH", encoding="utf8")
     (script_xsh := home / "script.xsh").write_text("echo SCRIPT_XSH", encoding="utf8")
 
-    # Construct $XONSHRC and $XONSHRC_DIR
+    # Construct $XONSHRC and $XONSHRC_DIR.
     xonshrc_files = [str(home_config_xonsh_rc_xsh), str(home_xonsh_rc_path)]
     xonshrc_dir = [str(home_config_xonsh_rcd)]
 
