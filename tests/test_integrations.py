@@ -1377,7 +1377,6 @@ def test_alias_stability_exception():
         ["-i --no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
     ],
 )
-# @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_xonshrc(tmpdir, cmd, exp):
     # ~/.xonshrc
     home = tmpdir.mkdir("home")
@@ -1398,7 +1397,7 @@ def test_xonshrc(tmpdir, cmd, exp):
         "echo CONFIG_XONSH_RCD", encoding="utf8"
     )
     (home_config_xonsh_rcd / "rcd2.py").write_text(
-        "print('CONFIG_XONSH_PY_RCD')", encoding="utf8"
+        "__xonsh__.print(__xonsh__.subproc_captured_stdout(['echo', 'CONFIG_XONSH_PY_RCD']))", encoding="utf8"
     )
 
     # ~/home/rc.xsh
