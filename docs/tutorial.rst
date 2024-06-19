@@ -1566,6 +1566,47 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
+Specification Modifier Aliases
+------------------------------
+
+Using ``SpecModifierAlias`` and callable ``output_format`` you can
+convert subprocess command output into Python object:
+
+.. code-block:: xonshcon
+
+    import json
+    from xonsh.procs.specs import SpecModifierAlias
+    class SpecModifierOutputJsonAlias(SpecModifierAlias):
+        @staticmethod
+        def lines_to_json(lines):
+            return json.loads('\n'.join(lines))
+        def on_modifer_added(self, spec):
+            spec.output_format = self.lines_to_json
+
+    aliases['xjson'] = SpecModifierOutputJsonAlias()
+
+    $(xjson echo '{"answer":42}')
+    # dict({"answer":42})
+
+    j = $(echo '{"answer":"snail"}' | xjson cat)
+    j['answer']
+    # snail
+
+Using `SpecAttrModifierAlias` you can change process specification easily:
+
+.. code-block:: xonshcon
+
+    from xonsh.procs.specs import SpecAttrModifierAlias
+    aliases['xlines'] = SpecAttrModifierAlias({"output_format": 'list_lines'}, "Set `list_lines` output format.")
+    aliases['xnoerr'] = SpecAttrModifierAlias({"raise_subproc_error": False}, "Set `raise_subproc_error` to False.")
+
+    $(xlines ls /)
+    # ['/bin', '/etc', '/home']
+
+    $RAISE_SUBPROC_ERROR = True
+    if ![xnoerr ls nononofile]:  # Do not raise exception in case of error.
+        echo file
+
 -------------
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
