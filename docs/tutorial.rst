@@ -1575,20 +1575,21 @@ convert subprocess command output into Python object:
 .. code-block:: xonshcon
 
     import json
+    def lines_to_json(lines):
+        return json.loads('\n'.join(lines))
+
     from xonsh.procs.specs import SpecModifierAlias
     class SpecModifierOutputJsonAlias(SpecModifierAlias):
-        @staticmethod
-        def lines_to_json(lines):
-            return json.loads('\n'.join(lines))
         def on_modifer_added(self, spec):
-            spec.output_format = self.lines_to_json
+            spec.output_format = lines_to_json
 
-    aliases['xjson'] = SpecModifierOutputJsonAlias()
+    aliases['@json'] = SpecModifierOutputJsonAlias()
 
-    $(xjson echo '{"answer":42}')
-    # dict({"answer":42})
+    j = $(@json echo '{"answer":42}')
+    j['answer']
+    # 42
 
-    j = $(echo '{"answer":"snail"}' | xjson cat)
+    j = $(echo '{"answer":"snail"}' | @json cat)
     j['answer']
     # snail
 
