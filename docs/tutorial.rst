@@ -1339,37 +1339,13 @@ may have one of the following signatures:
     def mycmd0():
         """This form takes no arguments but may return output or a return code.
         """
-        return "some output."
-
-    def mycmd1(args):
-        """This form takes a single argument, args. This is a list of strings
-        representing the arguments to this command. Feel free to parse them
-        however you wish!
-        """
-        # perform some action.
-        return 0
-
-    def mycmd2(args, stdin=None):
-        """This form takes two arguments. The args list like above, as a well
-        as standard input. stdin will be a file like object that the command
-        can read from, if the user piped input to this command. If no input
-        was provided this will be None.
-        """
-        # do whatever you want! Anything you print to stdout or stderr
-        # will be captured for you automatically. This allows callable
-        # aliases to support piping.
-        print('I go to stdout and will be printed or piped')
-
-        # Note: that you have access to the xonsh
-        # built-ins if you 'import builtins'.  For example, if you need the
-        # environment, you could do the following:
-        import builtins
-        env = builtins.__xonsh__.env
-
         # The return value of the function can either be None,
         return
 
-        # a single string representing stdout
+        # a return code,
+        return 0
+
+        # a single string representing stdout,
         return  'I am out of here'
 
         # or you can build up strings for stdout and stderr and then
@@ -1384,6 +1360,37 @@ may have one of the following signatures:
         # return code indicating failure (> 0 return code). In the previous
         # examples the return code would be 0/success.
         return (None, "I failed", 2)
+
+        # Anything you print to stdout or stderr
+        # will be captured for you automatically. This allows callable
+        # aliases to support piping.
+        print('I go to stdout and will be printed or piped')
+
+        # Note: that you have access to the xonsh
+        # built-ins if you 'import builtins'.  For example, if you need the
+        # environment, you could do the following:
+        import builtins
+        env = builtins.__xonsh__.env
+
+    def mycmd1(args):
+        """This form takes a single argument, args. This is a list of strings
+        representing the arguments to this command. Feel free to parse them
+        however you wish!
+        """
+        # perform some action.
+        print(f"arg count: {len(args)}")
+        return 0
+
+    def mycmd2(args, stdin=None):
+        """This form takes two arguments. The args list like above, as a well
+        as standard input. stdin will be a file like object that the command
+        can read from, if the user piped input to this command. If no input
+        was provided this will be None.
+        """
+        # Read input either from piped input or the terminal
+        stdin = stdin or sys.stdin
+        for line in stdin.readlines():
+            ... # process line
 
     def mycmd3(args, stdin=None, stdout=None):
         """This form has three parameters.  The first two are the same as above.
@@ -1406,10 +1413,8 @@ may have one of the following signatures:
         for i in range(5):
             time.sleep(i)
             print(i, file=stdout)
+            stdout.flush()
 
-        # In this form, the return value should be a single integer
-        # representing the "return code" of the alias (zero if successful,
-        # non-zero otherwise)
         return 0
 
     def mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
