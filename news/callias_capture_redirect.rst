@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Callable alias: fixed capturing stdout in case of redirect e.g. `a > file` (#5527).
 
 **Security:**
 
