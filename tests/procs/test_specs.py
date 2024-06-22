@@ -165,7 +165,7 @@ def test_callias_captured_redirect(xonsh_session, tmpdir):
     f = tmpdir / "capture.txt"
     cmd = (["a", (">", str(f))],)
     specs = cmds_to_specs(cmd, captured="hiddenobject")
-    (p := _run_command_pipeline(specs, cmd)).end()
+    _run_command_pipeline(specs, cmd).end()
     assert f.read_text(encoding="utf-8") == "print_stdout\nhiddenobject\n"
 
 
