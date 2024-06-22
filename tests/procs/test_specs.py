@@ -151,6 +151,25 @@ def test_capture_always(
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callias_captured_redirect(xonsh_session, tmpdir):
+    @xonsh_session.aliases.register('a')
+    def _a(a, i, o, e):
+        print('print_stdout')
+        xonsh_session.subproc_captured_stdout(['echo', 'cap_stdout'])
+        xonsh_session.subproc_captured_object(['echo', 'cap_object'])
+        xonsh_session.subproc_captured_hiddenobject(['echo', 'hiddenobject'])
+        xonsh_session.subproc_uncaptured(['echo', 'uncaptured'])
+        print('print_error', file=e)
+
+    f = tmpdir / 'capture.txt'
+    cmd = (['a', ('>', str(f))],)
+    specs = cmds_to_specs(cmd, captured="hiddenobject")
+    (p := _run_command_pipeline(specs, cmd)).end()
+    assert f.read_text(encoding='utf-8') == 'print_stdout\nhiddenobject\n'
+
+
+@skip_if_on_windows
 @pytest.mark.parametrize("captured", ["stdout", "object"])
 @pytest.mark.parametrize("interactive", [True, False])
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
