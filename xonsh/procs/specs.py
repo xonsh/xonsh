@@ -1024,8 +1024,9 @@ def cmds_to_specs(cmds, captured=False, envs=None):
         # Make sure sub-specs are always captured in case:
         # `![some_alias | grep x]`, `$(some_alias)`, `some_alias > file`.
         last = spec
+        is_redirected_stdout = bool(last.stdout)
         specs_to_capture = (
-            specs if captured in STDOUT_CAPTURE_KINDS or last.stdout else specs[:-1]
+            specs if captured in STDOUT_CAPTURE_KINDS or is_redirected_stdout else specs[:-1]
         )
         _set_specs_capture_always(specs_to_capture)
 
