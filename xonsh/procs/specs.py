@@ -1021,17 +1021,23 @@ def cmds_to_specs(cmds, captured=False, envs=None):
 
     # Apply boundary conditions
     if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
-        # Make sure sub-specs are always captured.
-        # I.e. ![some_alias | grep x] $(some_alias)
-        specs_to_capture = specs if captured in STDOUT_CAPTURE_KINDS else specs[:-1]
-        for spec in specs_to_capture:
-            if spec.env is None:
-                spec.env = {"XONSH_CAPTURE_ALWAYS": True}
-            else:
-                spec.env.setdefault("XONSH_CAPTURE_ALWAYS", True)
+        # Make sure sub-specs are always captured in case:
+        # `![some_alias | grep x]`, `$(some_alias)`, `some_alias > file`.
+        last = spec
+        specs_to_capture = specs if captured in STDOUT_CAPTURE_KINDS or last.stdout else specs[:-1]
+        _set_specs_capture_always(specs_to_capture)
 
     _update_last_spec(specs[-1])
     return specs
+
+
+def _set_specs_capture_always(specs_to_capture):
+    """Set XONSH_CAPTURE_ALWAYS for all specs."""
+    for spec in specs_to_capture:
+        if spec.env is None:
+            spec.env = {"XONSH_CAPTURE_ALWAYS": True}
+        else:
+            spec.env.setdefault("XONSH_CAPTURE_ALWAYS", True)
 
 
 def _shell_set_title(cmds):
