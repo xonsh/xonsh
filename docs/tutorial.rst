@@ -1566,6 +1566,48 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
+Specification Modifier Aliases
+------------------------------
+
+Using ``SpecAttrModifierAlias`` and callable ``output_format`` you can
+convert subprocess command output into Python object:
+
+.. code-block:: xonshcon
+
+    import json, pathlib, yaml
+    from xonsh.procs.specs import SpecAttrModifierAlias
+
+    aliases['@lines'] = SpecAttrModifierAlias({"output_format": 'list_lines'},
+                                               "Set `list_lines` output format.")
+    aliases['@json'] = SpecAttrModifierAlias({"output_format": lambda lines: json.loads('\n'.join(lines))},
+                                               "Set `json` output format.")
+    aliases['@path'] = SpecAttrModifierAlias({"output_format": lambda lines: pathlib.Path(':'.join(lines))},
+                                               "Set `path` output format.")
+    aliases['@yaml'] = SpecAttrModifierAlias({"output_format": lambda lines: yaml.safe_load('\n'.join(lines))},
+                                               "Set `yaml` output format.")
+    aliases['@noerr'] = SpecAttrModifierAlias({"raise_subproc_error": False},
+                                               "Set `raise_subproc_error` to False.")
+
+
+Now you can run:
+
+.. code-block:: xonshcon
+
+    $(@lines ls /)
+    # ['/bin', '/etc', '/home']
+
+    j = $(@json echo '{"answer":42}')
+    j['answer']
+    # 42
+
+    $(@path which xonsh)
+    # Path('/path/to/xonsh')
+
+    aliases['ydig'] = '@yaml dig +yaml'
+    y = $(ydig google.com)
+    y[0]['type']
+    # 'MESSAGE'
+
 -------------
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
