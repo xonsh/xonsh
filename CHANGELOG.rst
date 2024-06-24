@@ -4,6 +4,92 @@ Xonsh Change Log
 
 .. current developments
 
+v0.17.0
+====================
+
+**Added:**
+
+* Added section "Use the Nix Package manager with Xonsh" to "Platform-specific tips and tricks".
+* Added ``env.detype_all()`` to get all available variables that is possible to detype.
+* Reading stop signals from the process and update the process state (#5361).
+* Added support of NixOS core tools in ``predict_threadable``.
+* Added catching an exceptions during load a history backend to avoid shell exiting e.g. on permission error.
+* Added catching an exception when cache file is not writable.
+* Added FuncAlias to process callable aliases.
+* Added alias name printing in case of exception in alias.
+* Saving history in case of any type of exiting the shell.
+* Added catching ChildProcessError in jobs. Avoiding hanging aliases in some cases.
+* Added xonsh support into Jupytext project! Jupytext is to store Jupyter notebooks as a plain text documents.
+* Now last executed CommandPipeline is available in ``__xonsh__.last``.
+* Added ``xonsh --no-env`` option to run xonsh without inheriting the environment variables. Now by running ``xonsh --no-rc --no-env`` you have pure xonsh session.
+* Added thread class, name, func and alias names to thread exception for easy understanding the source of issue.
+* Added shortcut ``-st`` for ``--shell-type``.
+* Saving history on SIGINT. Development tools like PyCharm send SIGINT before killing the run
+  and doing this is the last chance to save history.
+* Added ``spec.raise_subproc_error`` for fine-tuning exceptions via ``SpecModifierAlias`` (#5494).
+* Added ``$XONSH_SUBPROC_OUTPUT_FORMAT`` to switch the way to return the output lines.
+  Default ``stream_lines`` to return text. Alternative ``list_lines`` to return
+  the list of lines. Now you can run ``du $(ls)`` without additional stripping.
+  Also supported custom lambda function to process lines (if you're looking for
+  alternative to bash IFS).
+* Added ``xthread`` and ``xunthread`` aliases to force command running as threaded and unthreaded.
+* Added ``SpecModifierAlias`` class to have an ability to create alias that modifies spec before run e.g. ``xthread`` alias.
+* Added mode ``$XONSH_TRACE_SUBPROC=3`` to show more information about pipeline.
+* Added "Callable alias and capturing" to the tutorial.
+* Xonfig: show sensitive env variables that could affect the shell behavior.
+* We started `Zulip Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>`_ to publish news and chatting.
+
+**Changed:**
+
+* Minor cleanup of ``commands_cache``, unifying behavior across platforms.
+* Xonsh AppImage downgraded to Python 3.11. We need to resolve 3.12 parser support (5166) before upgrade.
+* Env variables completion: now use substring for search and then sort results by the position of substring and then alphabetically. PR 5388.
+* jobs: default representation changed to dict.
+* The CommandPipeline repr will not show descriptors by default. Use XONSH_DEBUG mode to see them.
+* Prompt: ``env_name`` will have yellow color by default.
+* Show ``root`` and ``@#`` in prompt if user is superuser.
+* Cleaning logic and functions around threading and capturing in ``procs/specs.py`` file.
+* Now the ending new line symbol ``\n`` will be stripped from the single line output.
+  For ``$(whoami)`` you will get ``'user'`` instead of ``'user\n'``.
+* ``$XONSH_TRACE_SUBPROC=2`` returns more useful details.
+* The home based ``~/.xonshrc`` will not be executed in non-interactive mode (#5491).
+
+**Removed:**
+
+* No longer is ``.`` implied for running commands on Windows. Instead the behavior is the same across platforms. Windows users will need to prefix ``./`` or ``.\`` to run commands from the current directory (#5476).
+* Unpin prompt-toolkit version (#5438).
+
+**Fixed:**
+
+* Commands on Windows now honor the case as they appear on the file system (#5469).
+* Prevent exception on start up if ``dircolors`` util is wrong.
+* Fixed ``Bad file descriptor`` and I/O errors after running callable alias (#5435).
+* Fixed showing exception message in some cases.
+* Fixed empty stacktrace for CalledProcessError.
+* Fixed redirect with python substitution e.g. ``echo 1 > @('/tmp/file')`` is working now.
+* Fixed showing alias description using superhelp e.g. ``which?``.
+* Fixed ``xonsh -DVAR=VAL`` behavior: initiate env variables before shell initialization.
+* Fixed processing exit signals and exceptions (e.g. SIGHUP in #5381) to provide careful exiting with right exit code and TTY cleaning.
+* Fixed ``TypeError`` in xoreutils.
+* Fixed populating the return code for interrupted process.
+* Windows: fixed path to RC file in ``xonfig web``.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Peter Ye
+* Jason R. Coombs
+* dependabot[bot]
+* doronz88
+* jyn
+* l-no
+* amacfie-tc
+
+
+
 v0.16.0
 ====================
 
