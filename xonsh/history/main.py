@@ -21,7 +21,7 @@ HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory}
 try:
     """
     On some linux systems (e.g. alt linux) sqlite3 is not installed 
-    and it's hard to install it and maybe use don't want to install it. 
+    and it's hard to install it and maybe user can't install it.
     We need to just reduce this dependency.
     """
     from xonsh.history.sqlite import SqliteHistory
