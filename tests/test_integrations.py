@@ -1333,6 +1333,26 @@ def test_alias_stability():
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_spec_modifier_alias():
+    """Testing spec modifier alias with `@` in the alias name."""
+    stdin_cmd = (
+        "from xonsh.procs.specs import SpecAttrModifierAlias as mod\n"
+        'aliases["@dict"] = mod({"output_format": lambda lines: eval("\\n".join(lines))})\n'
+        "d = $(@dict echo '{\"a\":42}')\n"
+        "print('Answer =', d['a'])\n"
+    )
+    out, err, ret = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
+    )
+    assert 'Answer = 42' in out
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_alias_stability_exception():
     """Testing alias stability (exception) after amalgamation regress that described in #5435."""
     stdin_cmd = (
