@@ -1348,7 +1348,7 @@ def test_spec_modifier_alias():
         single_command=False,
         timeout=10,
     )
-    assert 'Answer = 42' in out
+    assert "Answer = 42" in out
 
 
 @skip_if_on_windows
