@@ -207,7 +207,9 @@ class Shell:
             `echo 'echo 1' | xonsh -i` and it's not working with `TERM=dumb` (#5462 #5517).
             So in this case we need to force using prompt_toolkit.
             """
-            is_stdin_to_interactive = not sys.stdin.isatty() and XSH.env.get("XONSH_INTERACTIVE", False)
+            is_stdin_to_interactive = not sys.stdin.isatty() and XSH.env.get(
+                "XONSH_INTERACTIVE", False
+            )
 
             if backend == "none":
                 from xonsh.base_shell import BaseShell as cls
