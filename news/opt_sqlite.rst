@@ -1,10 +1,10 @@
 **Added:**
 
-* Added thread class, name, func and alias names to thread exception for easy understanding the source of issue.
+* <news item>
 
 **Changed:**
 
-* <news item>
+* main: Importing sqlite became optional.
 
 **Deprecated:**
 
