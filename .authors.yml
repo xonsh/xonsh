@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 649
+  num_commits: 654
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -291,7 +291,7 @@
   github: shahinism
 - name: Jason R. Coombs
   email: jaraco@jaraco.com
-  num_commits: 13
+  num_commits: 15
   first_commit: 2018-04-23 15:25:29
   github: jaraco
 - name: torgny
@@ -1112,7 +1112,7 @@
   - Andy Kipp
   - Andy Kirby
   - a
-  num_commits: 84
+  num_commits: 95
   first_commit: 2019-10-15 18:20:58
   github: xxh
 - name: Sylvain Corlay
@@ -1136,7 +1136,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 225
+  num_commits: 235
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1431,7 +1431,7 @@
   first_commit: 2021-11-18 18:42:29
 - name: doronz88
   email: doron88@gmail.com
-  num_commits: 5
+  num_commits: 6
   first_commit: 2022-04-27 12:41:13
 - name: Stefano Rivera
   email: github@rivera.za.net
@@ -1465,7 +1465,7 @@
   first_commit: 2022-06-27 22:21:34
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
-  num_commits: 49
+  num_commits: 62
   first_commit: 2022-07-11 14:26:34
 - name: jgart
   email: 47760695+jgarte@users.noreply.github.com
@@ -1593,3 +1593,11 @@
   email: 22138751+l-no@users.noreply.github.com
   num_commits: 1
   first_commit: 2024-04-10 01:48:46
+- name: jyn
+  email: github@jyn.dev
+  num_commits: 2
+  first_commit: 2024-05-30 10:03:55
+- name: amacfie-tc
+  email: 91503417+amacfie-tc@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2024-06-10 12:25:31

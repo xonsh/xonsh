@@ -1333,6 +1333,26 @@ def test_alias_stability():
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_spec_modifier_alias():
+    """Testing spec modifier alias with `@` in the alias name."""
+    stdin_cmd = (
+        "from xonsh.procs.specs import SpecAttrModifierAlias as mod\n"
+        'aliases["@dict"] = mod({"output_format": lambda lines: eval("\\n".join(lines))})\n'
+        "d = $(@dict echo '{\"a\":42}')\n"
+        "print('Answer =', d['a'])\n"
+    )
+    out, err, ret = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
+    )
+    assert "Answer = 42" in out
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_alias_stability_exception():
     """Testing alias stability (exception) after amalgamation regress that described in #5435."""
     stdin_cmd = (
@@ -1358,18 +1378,27 @@ def test_alias_stability_exception():
 @pytest.mark.parametrize(
     "cmd,exp",
     [
-        ["-i", ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*"],
+        [
+            "-i",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*",
+        ],
         ["--rc rc.xsh", ".*RCXSH.*"],
         ["-i --rc rc.xsh", ".*RCXSH.*"],
-        ["-c print('CMD')", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CMD.*"],
+        [
+            "-c print('CMD')",
+            ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*CMD.*",
+        ],
         [
             "-i -c print('CMD')",
-            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CMD.*",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*CMD.*",
         ],
-        ["script.xsh", ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*SCRIPT.*"],
+        [
+            "script.xsh",
+            ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*SCRIPT.*",
+        ],
         [
             "-i script.xsh",
-            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*SCRIPT.*",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*SCRIPT.*",
         ],
         ["--rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
         ["-i --rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
@@ -1377,7 +1406,6 @@ def test_alias_stability_exception():
         ["-i --no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
     ],
 )
-# @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_xonshrc(tmpdir, cmd, exp):
     # ~/.xonshrc
     home = tmpdir.mkdir("home")
@@ -1397,12 +1425,16 @@ def test_xonshrc(tmpdir, cmd, exp):
     (home_config_xonsh_rcd / "rcd1.xsh").write_text(
         "echo CONFIG_XONSH_RCD", encoding="utf8"
     )
+    (home_config_xonsh_rcd / "rcd2.py").write_text(
+        "__xonsh__.print(__xonsh__.subproc_captured_stdout(['echo', 'CONFIG_XONSH_PY_RCD']))",
+        encoding="utf8",
+    )
 
     # ~/home/rc.xsh
     (rc_xsh := home / "rc.xsh").write_text("echo RCXSH", encoding="utf8")
     (script_xsh := home / "script.xsh").write_text("echo SCRIPT_XSH", encoding="utf8")
 
-    # Construct $XONSHRC and $XONSHRC_DIR
+    # Construct $XONSHRC and $XONSHRC_DIR.
     xonshrc_files = [str(home_config_xonsh_rc_xsh), str(home_xonsh_rc_path)]
     xonshrc_dir = [str(home_config_xonsh_rcd)]
 

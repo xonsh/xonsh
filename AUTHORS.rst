@@ -15,10 +15,10 @@ Authors are sorted by number of commits.
 * anki-code
 * BlahGeek
 * Daniel Shimon
+* pre-commit-ci[bot]
 * Gyuri Horak
 * Jean-Benoist Leger
 * christopher
-* pre-commit-ci[bot]
 * Klaus Alexander Seistrup
 * Leonardo Santagada
 * Burak Yiğit Kaya
@@ -44,10 +44,10 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
+* Jason R. Coombs
 * cryzed
 * Frank Sachsenheim
 * Kurtis Rader
-* Jason R. Coombs
 * Brian Visel
 * cafehaine
 * Andrew Hundt
@@ -82,6 +82,7 @@ Authors are sorted by number of commits.
 * Mike Crowe
 * Vasilis Gerakaris
 * Angus Hollands
+* doronz88
 * JuanPablo
 * Ollie Terrance
 * Marcel Bollmann
@@ -95,7 +96,6 @@ Authors are sorted by number of commits.
 * Jay Tuckey
 * Alexander Steffen
 * Achim Herwig
-* doronz88
 * Randy Syring
 * Lucas Inojosa
 * adam j hartz
@@ -189,6 +189,7 @@ Authors are sorted by number of commits.
 * jbw3
 * Naveen
 * Blake Ramsdell
+* jyn
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -325,5 +326,6 @@ Authors are sorted by number of commits.
 * Daniel Saunders
 * Andrew
 * l-no
+* amacfie-tc
 * goodboy
 * Atsushi Morimoto

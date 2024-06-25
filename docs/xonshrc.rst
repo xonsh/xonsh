@@ -7,7 +7,7 @@ exactly once at startup.
 The control file usually contains:
 
 * Assignment statements setting `environment variables <envvars.html>`_. This includes standard OS environment variables that affect other programs and many that Xonsh uses for itself.
-* ``xontrib`` commands to load selected add-ins ("`xontribs<tutorial_xontrib.html#loading-xontribs>`").
+* ``xontrib`` commands to load selected add-ins (`xontribs <tutorial_xontrib.html#loading-xontribs>`_).
 * Xonsh function definitions.
 * `Alias definitions <aliases.html>`_, many of which invoke the above functions with specified arguments.
 
@@ -17,7 +17,7 @@ There are also a few places where Xonsh looks for run control files. These files
 
 * Cross-desktop group (XDG) compliant ``~/.config/xonsh/rc.xsh`` control file.
 * The system-wide control file ``/etc/xonsh/xonshrc`` for Linux and OSX and in ``%ALLUSERSPROFILE%\xonsh\xonshrc`` on Windows. It controls options that are applied to all users of Xonsh on a given system.
-* The home-based directory ``~/.config/xonsh/rc.d/`` and system ``/etc/xonsh/rc.d/`` can contain ``.xsh`` files. They will be executed at startup in order. This allows for drop-in configuration where your configuration can be split across scripts and common and local configurations more easily separated.
+* The home-based directory ``~/.config/xonsh/rc.d/`` and system ``/etc/xonsh/rc.d/`` can contain ``.xsh`` or ``.py`` files. They will be executed at startup in order. This allows for drop-in configuration where your configuration can be split across scripts and common and local configurations more easily separated.
 
 In addition:
 

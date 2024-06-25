@@ -15,9 +15,20 @@ from xonsh.built_ins import XSH
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
-from xonsh.history.sqlite import SqliteHistory
 
-HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": SqliteHistory}
+HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory}
+
+try:
+    from xonsh.history.sqlite import SqliteHistory
+
+    HISTORY_BACKENDS |= {"sqlite": SqliteHistory}
+except Exception:
+    """
+    On some linux systems (e.g. alt linux) sqlite3 is not installed
+    and it's hard to install it and maybe user can't install it.
+    We need to just go forward.
+    """
+    pass
 
 
 def construct_history(backend=None, **kwargs) -> "History":
