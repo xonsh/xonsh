@@ -208,7 +208,9 @@ class Shell:
             because `dumb` is readline where stdin is not supported yet. PR is very welcome!
             So in this case we need to force using prompt_toolkit.
             """
-            is_stdin_to_interactive = XSH.env.get("XONSH_INTERACTIVE", False) and not sys.stdin.isatty()
+            is_stdin_to_interactive = (
+                XSH.env.get("XONSH_INTERACTIVE", False) and not sys.stdin.isatty()
+            )
 
             if backend == "none":
                 from xonsh.base_shell import BaseShell as cls
