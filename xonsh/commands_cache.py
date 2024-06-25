@@ -135,7 +135,6 @@ class CommandsCache(cabc.Mapping):
         is_paths_change = self._update_paths_cache(paths)
         return is_aliases_change or is_paths_change
 
-
     @property
     def all_commands(self):
         self.update_cache()
