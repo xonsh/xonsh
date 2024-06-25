@@ -135,7 +135,6 @@ class CommandsCache(cabc.Mapping):
         is_paths_change = self._update_paths_cache(paths)
         return is_aliases_change or is_paths_change
 
-
     @property
     def all_commands(self):
         self.update_cache()
@@ -168,7 +167,7 @@ class CommandsCache(cabc.Mapping):
         # entries at the back.
         paths = tuple(reversed(tuple(self.remove_dups(env.get("PATH") or []))))
         if self._update_and_check_changes(paths):
-            print('load')
+            print("load")
             all_cmds = CacheDict()
             for cmd, path in self._iter_binaries(paths):
                 # None     -> not in aliases
