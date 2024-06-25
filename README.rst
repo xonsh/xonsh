@@ -3,7 +3,7 @@ xonsh
 
 .. class:: center
 
-    **xonsh** is a Python-powered, cross-platform, Unix-gazing shell language and command prompt.
+    **xonsh** is a Python-powered shell. Full-featured and cross-platform.
 
     The language is a superset of Python 3.6+ with additional shell primitives.
     xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
@@ -66,6 +66,7 @@ Projects that use xonsh or compatible
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
 - `Starship <https://starship.rs/>`_: Cross-shell prompt.
+- `x-cmd <https://www.x-cmd.com/>`_: x-cmd is a vast and interesting collection of tools guided by the Unix philosophy.
 
 Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
 
