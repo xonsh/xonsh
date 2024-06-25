@@ -124,9 +124,9 @@ class CommandsCache(cabc.Mapping):
         yield self._update_paths_cache(paths)
 
         # did aliases change?
-        al_hash = hash(frozenset(self.aliases))
-        yield al_hash != self._alias_checksum
-        self._alias_checksum = al_hash
+        prev_hash = self._alias_checksum
+        self._alias_checksum = hash(frozenset(self.aliases))
+        yield prev_hash != self._alias_checksum
 
     @property
     def all_commands(self):
