@@ -168,7 +168,6 @@ class CommandsCache(cabc.Mapping):
         # entries at the back.
         paths = tuple(reversed(tuple(self.remove_dups(env.get("PATH") or []))))
         if self._update_and_check_changes(paths):
-            print('load')
             all_cmds = CacheDict()
             for cmd, path in self._iter_binaries(paths):
                 # None     -> not in aliases
