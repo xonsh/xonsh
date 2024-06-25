@@ -119,14 +119,22 @@ class CommandsCache(cabc.Mapping):
                 if os.path.isdir(p):
                     yield p
 
-    def _check_changes(self, paths: tuple[str, ...]):
-        # did PATH change?
-        yield self._update_paths_cache(paths)
-
-        # did aliases change?
+    def _update_aliases_cache(self):
+        """Update aliases checksum and return result: updated or not."""
         prev_hash = self._alias_checksum
         self._alias_checksum = hash(frozenset(self.aliases))
-        yield prev_hash != self._alias_checksum
+        return prev_hash != self._alias_checksum
+
+    def _update_and_check_changes(self, paths: tuple[str, ...]):
+        """Update cache and return the result: updated or still the same.
+
+        Be careful in this place. Both `_update_*` functions must be called
+        because they are changing state after update.
+        """
+        is_aliases_change = self._update_aliases_cache()
+        is_paths_change = self._update_paths_cache(paths)
+        return is_aliases_change or is_paths_change
+
 
     @property
     def all_commands(self):
@@ -159,7 +167,8 @@ class CommandsCache(cabc.Mapping):
         # iterate backwards so that entries at the front of PATH overwrite
         # entries at the back.
         paths = tuple(reversed(tuple(self.remove_dups(env.get("PATH") or []))))
-        if any(self._check_changes(paths)):
+        if self._update_and_check_changes(paths):
+            print('load')
             all_cmds = CacheDict()
             for cmd, path in self._iter_binaries(paths):
                 # None     -> not in aliases

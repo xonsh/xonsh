@@ -192,11 +192,10 @@ def test_update_cache(xession, tmp_path):
     cached = cache.update_cache()
 
     # Check there are no changes after update cache.
-    c1 = list(cache._check_changes(paths))
-    c2 = list(cache._check_changes(paths))
-    c3 = list(cache._check_changes(paths))
-    assert any(c1)
-    assert c2 == c3 == [False, False]
+    c1 = cache._update_and_check_changes(paths)
+    c2 = cache._update_and_check_changes(paths)
+    c3 = cache._update_and_check_changes(paths)
+    assert [c1, c2, c3] == [True, False, False]
 
     assert file1.samefile(cached[basename][0])
 
