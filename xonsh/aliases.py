@@ -550,7 +550,7 @@ def make_default_aliases():
         "ipynb": ["jupyter", "notebook", "--no-browser"],
         "which": FuncAlias("xonsh.xoreutils.which:which"),
         "xontrib": xontribs_main,
-        "completer": FuncAlias("xonsh.completers._aliases:completer_alias"),
+        "completer": FuncAlias("xonsh.xaliases.completer:alias"),
         "xpip": detect_xpip_alias(),
         "xonsh-reset": FuncAlias("xonsh.xaliases.xsh:xonsh_reset"),
         "xthread": SpecAttrModifierAlias(
