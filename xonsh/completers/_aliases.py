@@ -24,12 +24,11 @@ def complete_aliases(command: CommandContext):
 
     if not command.args:
         return
-    cmd = command.args[0].value
 
-    if cmd not in XSH.aliases:
+    if command.command not in XSH.aliases:
         # only complete aliases
         return
-    alias = XSH.aliases.get(cmd)  # type: ignore
+    alias = XSH.aliases.get(command.command)  # type: ignore
 
     completer = getattr(alias, "xonsh_complete", None)
     if not completer:

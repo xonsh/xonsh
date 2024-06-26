@@ -98,7 +98,7 @@ class _GitDir(PromptField):
     def update(self, ctx):
         # call the subprocess only if cwd changed
         # or if value is None (in case `git init` was run)
-        from xonsh.dirstack import _get_cwd
+        from xonsh.tools import _get_cwd
 
         cwd = _get_cwd()
         if cwd != self._cwd or self.value is None:

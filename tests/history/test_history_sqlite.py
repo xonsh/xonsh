@@ -8,9 +8,9 @@ import sys
 
 import pytest
 
-from xonsh.history.main import history_main
 from xonsh.history.sqlite import SqliteHistory, _xh_sqlite_get_conn
 from xonsh.platform import ON_WINDOWS
+from xonsh.xaliases.history import alias as history_main
 
 hist_file_count = itertools.count(0)
 

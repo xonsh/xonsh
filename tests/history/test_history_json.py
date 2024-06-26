@@ -13,8 +13,10 @@ from xonsh.history.json import (
     _xhj_gc_files_to_rmfiles,
     _xhj_gc_seconds_to_rmfiles,
 )
-from xonsh.history.main import HistoryAlias, history_main
+
 from xonsh.lib.lazyjson import LazyJSON
+from xonsh.xaliases.history import HistoryAlias
+from xonsh.xaliases.history import alias as history_main
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
 IGNORE_OPTS = ",".join(["ignoredups", "ignoreerr", "ignorespace"])
@@ -335,12 +337,11 @@ def test_parser_show(args, session, slice, numerate, reverse, mocker, hist, xess
         "timestamp": False,
         "null_byte": False,
     }
+    import xonsh.cli_utils as xcli
 
     # clear parser instance, so that patched func can take place
-    from xonsh.history import main as mod
-
     main = HistoryAlias()
-    spy = mocker.spy(mod.xcli, "run_with_partial_args")
+    spy = mocker.spy(xcli, "run_with_partial_args")
 
     # action
     main(shlex.split(args))

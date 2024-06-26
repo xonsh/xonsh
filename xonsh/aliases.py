@@ -77,6 +77,10 @@ class FuncAlias:
         return self._func
 
     @cached_property
+    def xonsh_complete(self):
+        return getattr(self.func, "xonsh_complete", None)
+
+    @cached_property
     def __doc__(self):
         return getattr(self.func, "__doc__", None)
 
@@ -89,7 +93,10 @@ class FuncAlias:
         return getattr(self.func, "__xonsh_capturable__", True)
 
     def __repr__(self):
-        r = {"name": self.name, "func": self.func.__name__}
+        r = {
+            "name": self.name,
+            "func": self.func if hasattr(self.func, "__name__") else self.func,
+        }
         r |= {
             attr: val
             for attr in self.attributes_show
@@ -100,9 +107,9 @@ class FuncAlias:
     def __call__(
         self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
-        from xonsh.cli_utils import run_with_partial_args
+        import xonsh.cli_utils as xcli
 
-        return run_with_partial_args(
+        return xcli.run_with_partial_args(
             self.func,
             dict(
                 args=args,
