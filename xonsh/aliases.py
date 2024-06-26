@@ -1,5 +1,7 @@
 """Aliases for the xonsh shell."""
 
+from __future__ import annotations
+
 import collections.abc as cabc
 import inspect
 import os
@@ -8,6 +10,7 @@ import shutil
 import sys
 import types
 import typing as tp
+from functools import cached_property
 
 from xonsh.built_ins import XSH
 from xonsh.dirstack import cd, dirs, popd, pushd
@@ -45,15 +48,45 @@ def EXEC_ALIAS_RE():
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
-    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
-    attributes_inherit = attributes_show + ["__doc__"]
+    attributes_show = ("__xonsh_threadable__", "__xonsh_capturable__")
 
-    def __init__(self, name, func=None):
-        self.__name__ = self.name = name
-        self.func = func
-        for attr in self.attributes_inherit:
-            if (val := getattr(func, attr, None)) is not None:
-                self.__setattr__(attr, val)
+    def __init__(
+        self, func: tp.Callable[..., tp.Any] | str, name: str | None = None
+    ) -> None:
+        """
+
+        Parameters
+        ----------
+        func
+            when given as a string, it should be in the format of `path:func_name` and it will be lazily imported.
+        name
+            name of the alias which may be set during alias evaluation.
+        """
+        self.name = name or str(func)
+        self._func = func
+
+    @cached_property
+    def func(self):
+        if isinstance(self._func, str):
+            import importlib
+
+            path, func = self._func.rsplit(":", 1)
+            module = importlib.import_module(path)
+            return getattr(module, func)
+
+        return self._func
+
+    @cached_property
+    def __doc__(self):
+        return getattr(self.func, "__doc__", None)
+
+    @cached_property
+    def __xonsh_threadable__(self):
+        return getattr(self.func, "__xonsh_threadable__", True)
+
+    @cached_property
+    def __xonsh_capturable__(self):
+        return getattr(self.func, "__xonsh_capturable__", True)
 
     def __repr__(self):
         r = {"name": self.name, "func": self.func.__name__}
@@ -67,10 +100,19 @@ class FuncAlias:
     def __call__(
         self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
-        func_args = [args, stdin, stdout, stderr, spec, stack][
-            : len(inspect.signature(self.func).parameters)
-        ]
-        return self.func(*func_args)
+        from xonsh.cli_utils import run_with_partial_args
+
+        return run_with_partial_args(
+            self.func,
+            dict(
+                args=args,
+                stdin=stdin,
+                stdout=stdout,
+                stderr=stderr,
+                spec=spec,
+                stack=stack,
+            ),
+        )
 
 
 class Aliases(cabc.MutableMapping):
@@ -222,7 +264,7 @@ class Aliases(cabc.MutableMapping):
                 # need to exec alias
                 self._raw[key] = ExecAlias(val, filename=f)
         elif isinstance(val, types.FunctionType):
-            self._raw[key] = FuncAlias(key, val)
+            self._raw[key] = FuncAlias(val, key)
         else:
             self._raw[key] = val
 
@@ -302,48 +344,6 @@ class ExecAlias:
 
     def __repr__(self):
         return f"ExecAlias({self.src!r}, filename={self.filename!r})"
-
-
-class LazyAlias:
-    __slots__ = ("name", "_func")
-
-    def __init__(self, name: str):
-        """Represents a callable alias function
-
-        Parameters
-        ----------
-        name
-            module path and name of the alias function in the form of ``parent.module.name:func_name``
-        """
-        self.name = name
-        self._func = None
-
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        if self._func is None:
-            import importlib
-
-            path, func = self.name.rsplit(":", 1)
-            module = importlib.import_module(path)
-            self._func = getattr(module, func)
-
-        from xonsh.cli_utils import _dispatch_func
-
-        _dispatch_func(
-            self._func,
-            dict(
-                args=args,
-                stdin=stdin,
-                stdout=stdout,
-                stderr=stderr,
-                spec=spec,
-                stack=stack,
-            ),
-        )
-
-    def __repr__(self):
-        return f"LazyAlias({self.name})"
 
 
 class PartialEvalAliasBase:
@@ -520,7 +520,7 @@ def detect_xpip_alias():
 
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
-    xexec = LazyAlias("xonsh.xaliases.xsh:xexec")
+    xexec = FuncAlias("xonsh.xaliases.xsh:xexec")
     default_aliases = {
         "cd": cd,
         "pushd": pushd,
@@ -535,23 +535,23 @@ def make_default_aliases():
         "quit": xonsh_exit,
         "exec": xexec,
         "xexec": xexec,
-        "source": LazyAlias("xonsh.xaliases.source:source"),
-        "source-zsh": LazyAlias("xonsh.xaliases.source_foreign:zsh"),
-        "source-bash": LazyAlias("xonsh.xaliases.source_foreign:bash"),
-        "source-cmd": LazyAlias("xonsh.xaliases.source_foreign:cmd"),
-        "source-foreign": LazyAlias("xonsh.xaliases.source_foreign:alias"),
-        "history": LazyAlias("xonsh.xaliases.history:alias"),
-        "trace": LazyAlias("xonsh.tracer:tracermain"),
+        "source": FuncAlias("xonsh.xaliases.source:source"),
+        "source-zsh": FuncAlias("xonsh.xaliases.source_foreign:zsh"),
+        "source-bash": FuncAlias("xonsh.xaliases.source_foreign:bash"),
+        "source-cmd": FuncAlias("xonsh.xaliases.source_foreign:cmd"),
+        "source-foreign": FuncAlias("xonsh.xaliases.source_foreign:alias"),
+        "history": FuncAlias("xonsh.xaliases.history:alias"),
+        "trace": FuncAlias("xonsh.tracer:tracermain"),
         "timeit": timeit_alias,
-        "xonfig": LazyAlias("xonsh.xonfig:xonfig_main"),
+        "xonfig": FuncAlias("xonsh.xonfig:xonfig_main"),
         "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
-        "showcmd": LazyAlias("xonsh.xaliases.xsh:showcmd"),
+        "showcmd": FuncAlias("xonsh.xaliases.xsh:showcmd"),
         "ipynb": ["jupyter", "notebook", "--no-browser"],
-        "which": LazyAlias("xonsh.xoreutils.which:which"),
+        "which": FuncAlias("xonsh.xoreutils.which:which"),
         "xontrib": xontribs_main,
-        "completer": LazyAlias("xonsh.completers._aliases:completer_alias"),
+        "completer": FuncAlias("xonsh.completers._aliases:completer_alias"),
         "xpip": detect_xpip_alias(),
-        "xonsh-reset": LazyAlias("xonsh.xaliases.xsh:xonsh_reset"),
+        "xonsh-reset": FuncAlias("xonsh.xaliases.xsh:xonsh_reset"),
         "xthread": SpecAttrModifierAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
