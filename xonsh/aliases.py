@@ -111,6 +111,7 @@ class FuncAlias:
                 stderr=stderr,
                 spec=spec,
                 stack=stack,
+                xsh=XSH,
             ),
         )
 
