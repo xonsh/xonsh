@@ -82,8 +82,8 @@ def locate_file(name, env=None, check_executable=False, use_pathext=False):
 
     Compromise. There is no way to get case sensitive file name without listing all files.
     If the file name is ``CaMeL.exe`` and we found that ``camel.EXE`` exists there is no way
-    to get back the case sensitive name. Because we don't want to read the list of files
-    in all ``$PATH`` directories because of performance reasons we're ok to get existent
+    to get back the case sensitive name. We don't want to read the list of files in all ``$PATH``
+    directories because of performance reasons. So we're ok to get existent
     but case insensitive (or different) result from resolver.
     May be in the future file systems as well as Python Path will be smarter to get the case sensitive name.
     The task for reading and returning case sensitive filename we give to completer in interactive mode
