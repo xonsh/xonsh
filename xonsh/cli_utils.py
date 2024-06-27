@@ -545,7 +545,7 @@ class ArgparseCompleter:
                 break
             # it is a valid option and advance
             self.remaining_args = self.remaining_args[1:]
-            act, _, value = act_res
+            act, *_, value = act_res
 
             # remove the found option
             # todo: not remove if append/extend
