@@ -488,7 +488,8 @@ def _failback_to_other_shells(args, err):
 
     if foreign_shell:
         traceback.print_exc()
-        print("Xonsh encountered an issue during launch", file=sys.stderr)
+        print("Xonsh encountered an issue during launch.", file=sys.stderr)
+        print("Please report to https://github.com/xonsh/xonsh/issues", file=sys.stderr)
         print(f"Failback to {foreign_shell}", file=sys.stderr)
         os.execlp(foreign_shell, foreign_shell)
     else:
