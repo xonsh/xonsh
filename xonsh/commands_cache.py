@@ -16,7 +16,8 @@ from pathlib import Path
 
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
-from xonsh.tools import executables_in
+from xonsh.procs.executables import get_possible_names, clear_paths
+from xonsh.procs.executables import is_executable_in_windows, is_executable_in_posix
 
 if ON_WINDOWS:
     from case_insensitive_dict import CaseInsensitiveDict as CacheDict
@@ -29,12 +30,59 @@ class _Commands(tp.NamedTuple):
     cmds: "tuple[str, ...]"
 
 
+
+def _yield_accessible_unix_file_names(path):
+    """yield file names of executable files in path."""
+    if not os.path.exists(path):
+        return
+    for file_ in os.scandir(path):
+        if is_executable_in_posix(file_):
+            yield file_.name
+
+
+def _executables_in_posix(path):
+    if not os.path.exists(path):
+        return
+    else:
+        yield from _yield_accessible_unix_file_names(path)
+
+
+def _executables_in_windows(path):
+    if not os.path.isdir(path):
+        return
+    try:
+        for x in os.scandir(path):
+            if is_executable_in_windows(x):
+                yield x.name
+    except FileNotFoundError:
+        # On Windows, there's no guarantee for the directory to really
+        # exist even if isdir returns True. This may happen for instance
+        # if the path contains trailing spaces.
+        return
+
+
+def executables_in(path) -> tp.Iterable[str]:
+    """Returns a generator of files in path that the user could execute."""
+    if ON_WINDOWS:
+        func = _executables_in_windows
+    else:
+        func = _executables_in_posix
+    try:
+        yield from func(path)
+    except PermissionError:
+        return
+
+
 class CommandsCache(cabc.Mapping):
     """A lazy cache representing the commands available on the file system.
     The keys are the command names and the values a tuple of (loc, has_alias)
     where loc is either a str pointing to the executable on the file system or
     None (if no executable exists) and has_alias is a boolean flag for whether
     the command has an alias.
+
+    Note! There is ``xonsh.procs.executables`` module with resolving executables.
+    Usage ``executables`` is preferred instead of commands_cache for cases
+    where you just need to locate executable command.
     """
 
     CACHE_FILE = "path-commands-cache.pickle"
@@ -99,25 +147,8 @@ class CommandsCache(cabc.Mapping):
         return len(self._cmds_cache) == 0
 
     def get_possible_names(self, name):
-        """Expand name to all possible variants based on `PATHEXT`.
+        return get_possible_names(name, self.env)
 
-        PATHEXT is a Windows convention containing extensions to be
-        considered when searching for an executable file.
-
-        Conserves order of any extensions found and gives precedence
-        to the bare name.
-        """
-        extensions = [""] + self.env.get("PATHEXT", [])
-        return [name + ext for ext in extensions]
-
-    @staticmethod
-    def remove_dups(paths):
-        cont = set()
-        for p in map(os.path.realpath, paths):
-            if p not in cont:
-                cont.add(p)
-                if os.path.isdir(p):
-                    yield p
 
     def _update_aliases_cache(self):
         """Update aliases checksum and return result: updated or not."""
@@ -162,10 +193,15 @@ class CommandsCache(cabc.Mapping):
         return current_path
 
     def update_cache(self):
+        """The main function to update commands cache.
+        Note! There is ``xonsh.procs.executables`` module with resolving executables.
+        Usage ``executables`` is preferred instead of commands_cache for cases
+        where you just need to locate executable command.
+        """
         env = self.env
         # iterate backwards so that entries at the front of PATH overwrite
         # entries at the back.
-        paths = tuple(reversed(tuple(self.remove_dups(env.get("PATH") or []))))
+        paths = tuple(reversed(tuple(clear_paths(env.get("PATH") or []))))
         if self._update_and_check_changes(paths):
             all_cmds = CacheDict()
             for cmd, path in self._iter_binaries(paths):

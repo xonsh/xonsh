@@ -1,9 +1,11 @@
 import os
 import pickle
 import time
-
+import stat
 import pytest
+from tempfile import TemporaryDirectory
 
+from xonsh.platform import ON_WINDOWS
 from xonsh.commands_cache import (
     SHELL_PREDICTOR_PARSER,
     CommandsCache,
@@ -11,8 +13,11 @@ from xonsh.commands_cache import (
     predict_false,
     predict_shell,
     predict_true,
+    executables_in,
 )
 from xonsh.pytest.tools import skip_if_on_windows
+
+PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
 
 
 def test_commands_cache_lazy(xession):
@@ -260,3 +265,43 @@ def test_nixos_coreutils(tmp_path):
 
     assert cache.predict_threadable(["echo", "1"]) is True
     assert cache.predict_threadable(["cat", "file"]) is False
+
+
+def test_executables_in(xession):
+    expected = set()
+    types = ("file", "directory", "brokensymlink")
+    if ON_WINDOWS:
+        # Don't test symlinks on windows since it requires admin
+        types = ("file", "directory")
+    executables = (True, False)
+    with TemporaryDirectory() as test_path:
+        for _type in types:
+            for executable in executables:
+                fname = f"{_type}_{executable}"
+                if _type == "none":
+                    continue
+                if _type == "file" and executable:
+                    ext = ".exe" if ON_WINDOWS else ""
+                    expected.add(fname + ext)
+                else:
+                    ext = ""
+                path = os.path.join(test_path, fname + ext)
+                if _type == "file":
+                    with open(path, "w") as f:
+                        f.write(fname)
+                elif _type == "directory":
+                    os.mkdir(path)
+                elif _type == "brokensymlink":
+                    tmp_path = os.path.join(test_path, "i_wont_exist")
+                    with open(tmp_path, "w") as f:
+                        f.write("deleteme")
+                        os.symlink(tmp_path, path)
+                    os.remove(tmp_path)
+                if executable and not _type == "brokensymlink":
+                    os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+            if ON_WINDOWS:
+                xession.env = PATHEXT_ENV
+                result = set(executables_in(test_path))
+            else:
+                result = set(executables_in(test_path))
+    assert expected == result

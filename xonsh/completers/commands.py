@@ -15,6 +15,7 @@ from xonsh.completers.tools import (
 )
 from xonsh.lib.modules import ModuleFinder
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
+from xonsh.commands_cache import executables_in
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||
@@ -35,12 +36,12 @@ def complete_command(command: CommandContext):
                 kwargs["description"] = "Alias" if is_alias else path
             yield RichCompletion(s, append_space=True, **kwargs)
     if xp.ON_WINDOWS:
-        for i in xt.executables_in("."):
+        for i in executables_in("."):
             if i.startswith(cmd):
                 yield RichCompletion(i, append_space=True)
     base = os.path.basename(cmd)
     if os.path.isdir(base):
-        for i in xt.executables_in(base):
+        for i in executables_in(base):
             if i.startswith(cmd):
                 yield RichCompletion(os.path.join(base, i))
 
