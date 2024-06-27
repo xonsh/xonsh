@@ -30,7 +30,6 @@ def test_locate_executable(tmpdir):
 
     env = Env(PATH=str(bindir), PATHEXT=[".EXE", ".COM"])
 
-
     assert locate_executable("file1.EXE", env)
     assert locate_executable("nofile", env) is None
     assert locate_executable("file5", env) is None
