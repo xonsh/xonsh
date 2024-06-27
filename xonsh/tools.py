@@ -2133,27 +2133,18 @@ def register_custom_style(
 
 def _token_attr_from_stylemap(stylemap):
     """yields tokens attr, and index from a stylemap"""
-    import prompt_toolkit as ptk
+    from prompt_toolkit import styles
 
-    if xsh.shell.shell_type == "prompt_toolkit1":
-        style = ptk.styles.style_from_dict(stylemap)
-        for token in stylemap:
-            yield token, style.token_to_attrs[token]
-    else:
-        style = ptk.styles.style_from_pygments_dict(stylemap)
-        for token in stylemap:
-            style_str = (
-                f"class:{ptk.styles.pygments.pygments_token_to_classname(token)}"
-            )
-            yield (token, style.get_attrs_for_style_str(style_str))
+    style = styles.style_from_pygments_dict(stylemap)
+    for token in stylemap:
+        style_str = f"class:{styles.pygments.pygments_token_to_classname(token)}"
+        yield (token, style.get_attrs_for_style_str(style_str))
 
 
 def _get_color_lookup_table():
     """Returns the prompt_toolkit win32 ColorLookupTable"""
-    if xsh.shell.shell_type == "prompt_toolkit1":
-        from prompt_toolkit.terminal.win32_output import ColorLookupTable
-    else:
-        from prompt_toolkit.output.win32 import ColorLookupTable
+    from prompt_toolkit.output.win32 import ColorLookupTable
+
     return ColorLookupTable()
 
 
@@ -2301,8 +2292,6 @@ def intensify_colors_for_cmd_exe(style_map):
         6: "ansibrightyellow",  # subst yellow with bright yellow
         9: "ansicyan",  # subst intense blue with dark cyan (more readable)
     }
-    if xsh.shell.shell_type == "prompt_toolkit1":
-        replace_colors = ansicolors_to_ptk1_names(replace_colors)
     for token, idx, _ in _get_color_indexes(style_map):
         if idx in replace_colors:
             modified_style[token] = replace_colors[idx]

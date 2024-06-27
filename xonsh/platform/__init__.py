@@ -4,7 +4,6 @@ on a platform.
 """
 
 import collections.abc as cabc
-import ctypes  # noqa
 import functools
 import importlib.util
 import os
@@ -184,7 +183,7 @@ def ptk_version_info():
         return None
 
 
-minimum_required_ptk_version = (2, 0, 0)
+minimum_required_ptk_version = (3, 0, 29)
 """Minimum version of prompt-toolkit supported by Xonsh"""
 
 
@@ -560,7 +559,8 @@ def PATH_DEFAULT():
 @lazyobject
 def LIBC():
     """The platform dependent libc implementation."""
-    global ctypes
+    import ctypes
+
     if ON_DARWIN:
         import ctypes.util
 

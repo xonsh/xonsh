@@ -93,7 +93,7 @@ ptk = [
     "prompt-toolkit>=3.0.29",
     "pyperclip",
 ]
-pygments = ["pygments>=2.2"]
+pygments = ["pygments>=2.18"]
 mac = ["gnureadline"]
 linux = ["distro"]
 proctitle = ["setproctitle"]
@@ -105,8 +105,7 @@ full = [
     "ujson",
 ]
 bestshell = [
-    "prompt-toolkit>=3.0.29",
-    "pygments>=2.2",
+    "xonsh[ptk,pygments]",
 ]
 test = [
     "xonsh[bestshell]",
@@ -117,8 +116,6 @@ test = [
     "pytest-timeout",
     "pytest-subprocess",
     "pytest-rerunfailures",
-    "prompt-toolkit>=3.0.29",
-    "pygments>=2.2",
     "coverage>=5.3.1",
     "pyte>=0.8.0",
     "virtualenv>=20.16.2",
