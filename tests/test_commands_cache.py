@@ -1,20 +1,21 @@
 import os
 import pickle
-import time
 import stat
-import pytest
+import time
 from tempfile import TemporaryDirectory
 
-from xonsh.platform import ON_WINDOWS
+import pytest
+
 from xonsh.commands_cache import (
     SHELL_PREDICTOR_PARSER,
     CommandsCache,
     _Commands,
+    executables_in,
     predict_false,
     predict_shell,
     predict_true,
-    executables_in,
 )
+from xonsh.platform import ON_WINDOWS
 from xonsh.pytest.tools import skip_if_on_windows
 
 PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
