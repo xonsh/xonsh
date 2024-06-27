@@ -2547,7 +2547,12 @@ class InternalEnvironDict(ChainMap):
 
 
 def locate_binary(name):
-    """Locates an executable on the file system."""
+    """Locates an executable on the file system.
+
+    NOT RECOMMENDED because ``commands_cache.locate_binary`` contains ``update_cache``
+    with scanning all files in ``$PATH``. First of all take a look into ``xonsh.specs.executables``
+    for more fast implementation the locate operation.
+    """
     return XSH.commands_cache.locate_binary(name)
 
 
