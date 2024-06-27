@@ -2548,20 +2548,6 @@ class InternalEnvironDict(ChainMap):
         local.update(new_local)
 
 
-def _yield_executables(directory, name):
-    if ON_WINDOWS:
-        base_name, ext = os.path.splitext(name.lower())
-        for fname in executables_in(directory):
-            fbase, fext = os.path.splitext(fname.lower())
-            if base_name == fbase and (len(ext) == 0 or ext == fext):
-                yield os.path.join(directory, fname)
-    else:
-        for x in executables_in(directory):
-            if x == name:
-                yield os.path.join(directory, name)
-                return
-
-
 def locate_binary(name):
     """Locates an executable on the file system."""
     return locate_executable(name)
