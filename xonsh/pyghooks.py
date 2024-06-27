@@ -1650,15 +1650,12 @@ class XonshLexer(Python3Lexer):
 
     def __init__(self, *args, **kwargs):
         # If the lexer is loaded as a pygment plugin, we have to mock
-        # __xonsh__.env and __xonsh__.commands_cache
+        # __xonsh__.env
         if getattr(XSH, "env", None) is None:
             XSH.env = {}
             if ON_WINDOWS:
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
                 XSH.env["PATHEXT"] = pathext.split(os.pathsep)
-        if getattr(XSH, "commands_cache", None) is None:
-            XSH.commands_cache = CommandsCache(XSH.env)
-        _ = XSH.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)
 
     tokens = {
