@@ -5,7 +5,6 @@ import os
 import pathlib
 import re
 from random import shuffle
-from tempfile import TemporaryDirectory
 from threading import Thread
 from time import sleep
 
@@ -20,7 +19,6 @@ from xonsh.environ import (
     default_value,
     make_args_env,
 )
-from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
 
 
