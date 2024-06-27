@@ -58,6 +58,7 @@ from xonsh.tools import (
     hardcode_colors_for_win10,
     intensify_colors_for_cmd_exe,
 )
+from xonsh.procs.executables import locate_executable
 
 #
 # Colors and Styles
@@ -1600,7 +1601,7 @@ def _command_is_valid(cmd):
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     except OSError:
         return False
-    return (cmd in XSH.commands_cache and not iskeyword(cmd)) or (
+    return ((cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)) or (
         os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
     )
 
