@@ -37,7 +37,7 @@ def test_locate_executable(tmpdir, xession):
         if ON_WINDOWS:
             assert locate_executable("file1")
             assert locate_executable("file4")
-            assert locate_executable("file2").endswith("file2.EXE")
+            assert locate_executable("file2").endswith("file2.exe")
         else:
             assert locate_executable("file3")
             assert locate_executable("file1") is None
