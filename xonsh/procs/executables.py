@@ -72,8 +72,10 @@ def is_executable_in_posix(filepath):
         pass
     return False
 
-
 def locate_executable(name, env=None):
+    return locate_file(name, env=env, check_executable=True, use_pathext=True)
+
+def locate_file(name, env=None, check_executable=False, use_pathext=False):
     """Search executable binary name in $PATH and return full path.
 
     Compromise. There is no way to get case sensitive file name without listing all files.
@@ -88,18 +90,21 @@ def locate_executable(name, env=None):
     env = env if env is not None else XSH.env
     env_path = env.get("PATH", [])
     paths = tuple(reversed(tuple(clear_paths(env_path))))
-    possible_names = get_possible_names(name, env)
+    possible_names = get_possible_names(name, env) if use_pathext else [name]
+
+    if check_executable:
+        if ON_WINDOWS:
+            is_executable = is_executable_in_windows
+        else:
+            is_executable = is_executable_in_posix
+
     for path in paths:
         for possible_name in possible_names:
             filepath = Path(path) / possible_name
 
-            if ON_WINDOWS:
-                is_executable = is_executable_in_windows
-            else:
-                is_executable = is_executable_in_posix
-
             try:
-                if is_executable(filepath):
-                    return str(filepath)
+                if check_executable and not is_executable(filepath):
+                    continue
+                return str(filepath)
             except PermissionError:
                 return

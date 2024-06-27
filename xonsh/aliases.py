@@ -32,6 +32,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
+from xonsh.procs.executables import locate_file
 from xonsh.procs.specs import SpecAttrModifierAlias, SpecModifierAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
@@ -632,7 +633,7 @@ def source_alias(args, stdin=None):
     for i, fname in enumerate(args):
         fpath = fname
         if not os.path.isfile(fpath):
-            fpath = locate_binary(fname)
+            fpath = locate_file(fname)
             if fpath is None:
                 if env.get("XONSH_DEBUG"):
                     print(f"source: {fname}: No such file", file=sys.stderr)
