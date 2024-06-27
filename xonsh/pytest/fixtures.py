@@ -140,53 +140,52 @@ def env(tmp_path, session_env):
 
 
 @pytest.fixture
-def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch):
+def xonsh_session(mock_xonsh_session, os_env, monkeypatch):
     """a fixture to use where XonshSession is fully loaded without any mocks"""
 
-    XSH.load(
-        ctx={},
-        execer=session_execer,
-        env=os_env,
-    )
-    yield XSH
-    XSH.unload()
-    get_tasks().clear()  # must do this to enable resetting all_jobs
+    return mock_xonsh_session(env=os_env, mock_attrs=False)
 
 
 @pytest.fixture
-def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
+def mock_xonsh_session(monkeypatch, session_execer, xonsh_events, env):
     """Mock out most of the builtins xonsh attributes."""
 
     # make sure that all other fixtures call this mock only one time
-    session = []
+    sessions = []
 
-    def factory(*attrs_to_skip: str):
+    def factory(mock_attrs=True, **attrs):
         """
 
         Parameters
         ----------
-        attrs_to_skip
-            do not mock the given attributes
+        mock_attrs
+            do not mock the instance attributes if set to False
 
         Returns
         -------
         XonshSession
             with most of the attributes mocked out
         """
-        if session:
+        if sessions:
             raise RuntimeError("The factory should be called only once per test")
 
-        aliases = None if "aliases" in attrs_to_skip else Aliases()
+        xonsh_session = XSH
+        sessions.append(xonsh_session)
+
+        xonsh_session.load(
+            ctx={},
+            execer=session_execer,
+            env=attrs.pop("env", env),
+            aliases=attrs.pop("aliases", Aliases()),
+        )
+
+        if not mock_attrs:
+            return xonsh_session
         for attr, val in [
-            ("env", env),
             ("shell", DummyShell()),
             ("help", lambda x: x),
             ("exit", False),
             ("history", DummyHistory()),
-            (
-                "commands_cache",
-                commands_cache.CommandsCache(env, aliases),
-            ),  # since env,aliases change , patch cmds-cache
             # ("subproc_captured", sp),
             ("subproc_uncaptured", sp),
             ("subproc_captured_stdout", sp),
@@ -194,8 +193,6 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             ("subproc_captured_object", sp),
             ("subproc_captured_hiddenobject", sp),
         ]:
-            if attr in attrs_to_skip:
-                continue
             monkeypatch.setattr(xonsh_session, attr, val)
 
         for attr, val in [
@@ -209,11 +206,12 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             # attributes to builtins are dynamicProxy and should pickup the following
             monkeypatch.setattr(xonsh_session.builtins, attr, val)
 
-        session.append(xonsh_session)
         return xonsh_session
 
     yield factory
-    session.clear()
+    get_tasks().clear()  # must do this to enable resetting all_jobs
+    sessions[0].unload()
+    sessions.clear()
 
 
 @pytest.fixture
@@ -225,13 +223,13 @@ def xession(mock_xonsh_session) -> XonshSession:
 @pytest.fixture
 def xsh_with_aliases(mock_xonsh_session) -> XonshSession:
     """Xonsh mock-session with default set of aliases"""
-    return mock_xonsh_session("aliases")
+    return mock_xonsh_session(aliases=None)
 
 
 @pytest.fixture
-def xsh_with_env(mock_xonsh_session) -> XonshSession:
+def xsh_with_env(mock_xonsh_session, os_env) -> XonshSession:
     """Xonsh mock-session with os.environ"""
-    return mock_xonsh_session("env")
+    return mock_xonsh_session(env=os_env)
 
 
 @pytest.fixture(scope="session")
