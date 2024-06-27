@@ -5,7 +5,7 @@ from subprocess import check_output
 from xonsh.pytest.tools import ON_WINDOWS
 
 
-def test_xonsh_activator(tmp_path):
+def test_xonsh_activator(tmp_path, xonsh_session):
     # Create virtualenv
     venv_dir = tmp_path / "venv"
     assert b"XonshActivator" in check_output(
