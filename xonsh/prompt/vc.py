@@ -13,6 +13,7 @@ import threading
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import LazyObject
+from xonsh.procs.executables import locate_executable
 
 RE_REMOVE_ANSI = LazyObject(
     lambda: re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]"),
@@ -169,11 +170,7 @@ def _first_branch_timeout_message():
 
 def _vc_has(binary):
     """This allows us to locate binaries after git only if necessary"""
-    cmds = XSH.commands_cache
-    if cmds.is_empty():
-        return bool(cmds.locate_binary(binary, ignore_alias=True))
-    else:
-        return bool(cmds.lazy_locate_binary(binary, ignore_alias=True))
+    return bool(locate_executable(binary))
 
 
 def current_branch():
