@@ -2,7 +2,6 @@ import os
 import subprocess as sp
 import textwrap
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
