@@ -120,6 +120,7 @@ test = [
     "pyte>=0.8.0",
     "virtualenv>=20.16.2",
     "requests",
+    "pytest-subtests>=0.12.1",
 ]
 dev = [
     "xonsh[test,doc]",
