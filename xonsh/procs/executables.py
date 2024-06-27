@@ -3,8 +3,8 @@
 import os
 from pathlib import Path
 
-from xonsh.platform import ON_WINDOWS
 from xonsh.built_ins import XSH
+from xonsh.platform import ON_WINDOWS
 
 
 def get_possible_names(name, env=None):

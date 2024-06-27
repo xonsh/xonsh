@@ -16,8 +16,12 @@ from pathlib import Path
 
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
-from xonsh.procs.executables import get_possible_names, clear_paths
-from xonsh.procs.executables import is_executable_in_windows, is_executable_in_posix
+from xonsh.procs.executables import (
+    clear_paths,
+    get_possible_names,
+    is_executable_in_posix,
+    is_executable_in_windows,
+)
 
 if ON_WINDOWS:
     from case_insensitive_dict import CaseInsensitiveDict as CacheDict
@@ -28,7 +32,6 @@ else:
 class _Commands(tp.NamedTuple):
     mtime: float
     cmds: "tuple[str, ...]"
-
 
 
 def _yield_accessible_unix_file_names(path):
@@ -148,7 +151,6 @@ class CommandsCache(cabc.Mapping):
 
     def get_possible_names(self, name):
         return get_possible_names(name, self.env)
-
 
     def _update_aliases_cache(self):
         """Update aliases checksum and return result: updated or not."""

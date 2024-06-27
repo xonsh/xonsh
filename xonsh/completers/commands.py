@@ -4,8 +4,8 @@ import re
 import typing as tp
 
 import xonsh.platform as xp
-import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.commands_cache import executables_in
 from xonsh.completer import Completer
 from xonsh.completers.tools import (
     RichCompletion,
@@ -15,7 +15,6 @@ from xonsh.completers.tools import (
 )
 from xonsh.lib.modules import ModuleFinder
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
-from xonsh.commands_cache import executables_in
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||
