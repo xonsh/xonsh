@@ -36,7 +36,7 @@ def test_source_current_dir(mockopen, monkeypatch, mocked_execx_checker):
 
 
 def test_source_path(mockopen, mocked_execx_checker, xession):
-    with xession.env.swap(PATH=Path(__file__).parent.parent / "bin"):
+    with xession.env.swap(PATH=[Path(__file__).parent.parent / "bin"]):
         source_alias(["foo", "bar"])
     path_foo = os.path.join("bin", "foo")
     path_bar = os.path.join("bin", "bar")
