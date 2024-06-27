@@ -2550,7 +2550,6 @@ class InternalEnvironDict(ChainMap):
 def locate_binary(name):
     """Locates an executable on the file system."""
     return locate_executable(name)
-    # return XSH.commands_cache.locate_binary(name)
 
 
 def scan_dir_for_source_files(path: str):
