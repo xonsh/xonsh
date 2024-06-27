@@ -28,7 +28,7 @@ from xonsh.procs.pipelines import (
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
-
+from xonsh.procs.executables import locate_executable
 
 @xl.lazyobject
 def RE_SHEBANG():
@@ -734,13 +734,13 @@ class SubprocSpec:
         alias = self.alias
         if alias is None:
             cmd0 = self.cmd[0]
-            binary_loc = xenv.locate_binary(cmd0)
+            binary_loc = locate_executable(cmd0)
             if binary_loc is None and cmd0 and cmd0 in self.alias_stack:
                 raise Exception(f'Recursive calls to "{cmd0}" alias.')
         elif callable(alias):
             binary_loc = None
         else:
-            binary_loc = xenv.locate_binary(alias[0])
+            binary_loc = locate_executable(alias[0])
         self.binary_loc = binary_loc
 
     def resolve_auto_cd(self):
