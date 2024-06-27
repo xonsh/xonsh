@@ -735,7 +735,7 @@ class SubprocSpec:
         if alias is None:
             cmd0 = self.cmd[0]
             binary_loc = xenv.locate_binary(cmd0)
-            if binary_loc == cmd0 and cmd0 in self.alias_stack:
+            if binary_loc is None and cmd0 in self.alias_stack:
                 raise Exception(f'Recursive calls to "{cmd0}" alias.')
         elif callable(alias):
             binary_loc = None
