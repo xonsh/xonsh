@@ -18,8 +18,8 @@ from xonsh.shells.shell import Shell
         (None, "prompt_toolkit", "readline", None),
         ((0, 5, 7), "prompt_toolkit", "readline", "is not supported"),
         ((1, 0, 0), "prompt_toolkit", "readline", "is not supported"),
-        ((2, 0, 0), "prompt_toolkit", "prompt_toolkit", None),
-        ((2, 0, 0), "best", "prompt_toolkit", None),
+        ((2, 0, 0), "prompt_toolkit", "readline", None),
+        ((2, 0, 0), "best", "readline", None),
         ((2, 0, 0), "readline", "readline", None),
         ((3, 0, 0), "prompt_toolkit", "prompt_toolkit", None),
         ((3, 0, 0), "best", "prompt_toolkit", None),
@@ -107,15 +107,16 @@ def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
     ],
 )
 def test_ptk_prompt(line, exp, ptk_shell, capsys):
-    inp, out, shell = ptk_shell
+    inp, _, shell = ptk_shell
     inp.send_text(f"{line}\nexit\n")  # note: terminate with '\n'
-    shell.cmdloop()
-    screen = pyte.Screen(80, 24)
-    stream = pyte.Stream(screen)
-
+    prompt = shell.singleline()
+    assert prompt == line
+    shell.default(prompt)
     out, _ = capsys.readouterr()
 
     # this will remove render any color codes
+    screen = pyte.Screen(80, 24)
+    stream = pyte.Stream(screen)
     stream.feed(out.strip())
     out = screen.display[0].strip()
 

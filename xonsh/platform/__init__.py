@@ -183,7 +183,7 @@ def ptk_version_info():
         return None
 
 
-minimum_required_ptk_version = (3, 0, 29)
+minimum_required_ptk_version = (3, 0, 0)
 """Minimum version of prompt-toolkit supported by Xonsh"""
 
 
