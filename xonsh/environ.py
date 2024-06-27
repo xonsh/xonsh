@@ -39,6 +39,7 @@ from xonsh.platform import (
     PATH_DEFAULT,
     os_environ,
 )
+from xonsh.procs.executables import locate_executable
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
@@ -103,7 +104,6 @@ from xonsh.tools import (
     to_shlvl,
     to_tok_color_dict,
 )
-from xonsh.procs.executables import locate_executable
 
 events.doc(
     "on_envvar_new",
