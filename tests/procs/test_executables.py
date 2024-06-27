@@ -17,7 +17,7 @@ def test_get_paths(tmpdir):
     assert get_paths(env) == (bindir2, bindir1)
 
 
-def test_locate_executable(tmpdir):
+def test_locate_executable(tmpdir, xession):
     bindir = tmpdir.mkdir("bindir")
     bindir.mkdir("subdir")
     executables = ["file1.EXE", "file2.COM", "file2.EXE", "file3"]
@@ -28,18 +28,18 @@ def test_locate_executable(tmpdir):
         if exefile in executables:
             os.chmod(f, 0o777)
 
-    env = Env(PATH=str(bindir), PATHEXT=[".EXE", ".COM"])
-
-    assert locate_executable("file1.EXE", env)
-    assert locate_executable("nofile", env) is None
-    assert locate_executable("file5", env) is None
-    assert locate_executable("subdir", env) is None
-    if ON_WINDOWS:
-        assert locate_executable("file1", env)
-        assert locate_executable("file4", env)
-        assert locate_executable("file2", env).endswith("file2.EXE")
-    else:
-        assert locate_executable("file3", env)
-        assert locate_executable("file1", env) is None
-        assert locate_executable("file4", env) is None
-        assert locate_executable("file2", env) is None
+    pathext = [".EXE", ".COM"] if ON_WINDOWS else []
+    with xession.env.swap(PATH=str(bindir), PATHEXT=pathext):
+        assert locate_executable("file1.EXE")
+        assert locate_executable("nofile") is None
+        assert locate_executable("file5") is None
+        assert locate_executable("subdir") is None
+        if ON_WINDOWS:
+            assert locate_executable("file1")
+            assert locate_executable("file4")
+            assert locate_executable("file2").endswith("file2.EXE")
+        else:
+            assert locate_executable("file3")
+            assert locate_executable("file1") is None
+            assert locate_executable("file4") is None
+            assert locate_executable("file2") is None

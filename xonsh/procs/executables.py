@@ -71,11 +71,20 @@ def is_executable_in_posix(filepath):
 
 
 def locate_executable(name, env=None):
-    """Search executable binary name in $PATH and return full path."""
+    """Search executable binary name in $PATH and return full path.
+
+    Compromise. There is no way to get case sensitive file name without listing all files.
+    If the file name is ``CaMeL.exe`` and we found that ``camel.EXE`` exists there is no way
+    to get back the case sensitive name. Because we don't want to read the list of files
+    in all ``$PATH`` directories because of performance reasons we're ok to get existent
+    but case insensitive (or different) result from resolver.
+    May be in the future file systems as well as Python Path will be smarter to get the case sensitive name.
+    The task for reading and returning case sensitive filename we gives to completer in interactive mode.
+    """
     env = env if env is not None else XSH.env
     env_path = env.get("PATH", [])
     paths = tuple(reversed(tuple(clear_paths(env_path))))
-    possible_names = get_possible_names(name)
+    possible_names = get_possible_names(name, env)
     for path in paths:
         for possible_name in possible_names:
             filepath = Path(path) / possible_name
