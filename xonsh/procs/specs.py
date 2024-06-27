@@ -12,13 +12,13 @@ import stat
 import subprocess
 import sys
 
-import xonsh.environ as xenv
 import xonsh.jobs as xj
 import xonsh.lazyasd as xl
 import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.procs.executables import locate_executable
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
@@ -28,7 +28,7 @@ from xonsh.procs.pipelines import (
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
-from xonsh.procs.executables import locate_executable
+
 
 @xl.lazyobject
 def RE_SHEBANG():
