@@ -18,7 +18,6 @@ from xonsh.environ import (
     Var,
     default_env,
     default_value,
-    locate_binary,
     make_args_env,
 )
 from xonsh.pytest.tools import skip_if_on_unix
@@ -196,23 +195,6 @@ def test_thread_local_swap():
         t.join()
 
     assert all(success_variables)
-
-
-@skip_if_on_unix
-def test_locate_binary_on_windows(xession):
-    files = ("file1.exe", "FILE2.BAT", "file3.txt")
-    with TemporaryDirectory() as tmpdir:
-        tmpdir = os.path.realpath(tmpdir)
-        for fname in files:
-            fpath = os.path.join(tmpdir, fname)
-            with open(fpath, "w") as f:
-                f.write(fpath)
-        xession.env.update({"PATH": [tmpdir], "PATHEXT": [".COM", ".EXE", ".BAT"]})
-        assert locate_binary("file1") == os.path.join(tmpdir, "file1.exe")
-        assert locate_binary("file1.exe") == os.path.join(tmpdir, "file1.exe")
-        assert locate_binary("file2") == os.path.join(tmpdir, "FILE2.BAT")
-        assert locate_binary("file2.bat") == os.path.join(tmpdir, "FILE2.BAT")
-        assert locate_binary("file3") is None
 
 
 def test_event_on_envvar_change(xession, env):

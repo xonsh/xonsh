@@ -20,8 +20,8 @@ def test_get_paths(tmpdir):
 def test_locate_executable(tmpdir):
     bindir = tmpdir.mkdir("bindir")
     bindir.mkdir("subdir")
-    executables = ["cmd.EXE", "cmdcom.COM", "cmdcom.EXE", "runme"]
-    not_executables = ["no.EXE", "nonono"]
+    executables = ["file1.EXE", "file2.COM", "file2.EXE", "file3"]
+    not_executables = ["file4.EXE", "file5"]
     for exefile in executables + not_executables:
         f = bindir / exefile
         f.write_text("binary", encoding="utf8")
@@ -30,16 +30,16 @@ def test_locate_executable(tmpdir):
 
     env = Env(PATH=str(bindir), PATHEXT=[".EXE", ".COM"])
 
-    assert locate_executable("runme", env)
-    assert locate_executable("cmd.EXE", env)
+    assert locate_executable("file3", env)
+    assert locate_executable("file1.EXE", env)
     assert locate_executable("nofile", env) is None
-    assert locate_executable("nonono", env) is None
+    assert locate_executable("file5", env) is None
     assert locate_executable("subdir", env) is None
     if ON_WINDOWS:
-        assert locate_executable("cmd", env)
-        assert locate_executable("no", env)
-        assert locate_executable("cmdcom", env).endswith("cmdcom.EXE")
+        assert locate_executable("file1", env)
+        assert locate_executable("file4", env)
+        assert locate_executable("file2", env).endswith("file2.EXE")
     else:
-        assert locate_executable("cmd", env) is None
-        assert locate_executable("no", env) is None
-        assert locate_executable("cmdcom", env) is None
+        assert locate_executable("file1", env) is None
+        assert locate_executable("file4", env) is None
+        assert locate_executable("file2", env) is None
