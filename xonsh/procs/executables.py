@@ -72,8 +72,10 @@ def is_executable_in_posix(filepath):
         pass
     return False
 
+
 def locate_executable(name, env=None):
     return locate_file(name, env=env, check_executable=True, use_pathext=True)
+
 
 def locate_file(name, env=None, check_executable=False, use_pathext=False):
     """Search executable binary name in $PATH and return full path.
