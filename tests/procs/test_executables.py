@@ -1,8 +1,9 @@
 import os
 
-from xonsh.platform import ON_WINDOWS
-from xonsh.procs.executables import get_possible_names, locate_executable, get_paths
 from xonsh.environ import Env
+from xonsh.platform import ON_WINDOWS
+from xonsh.procs.executables import get_paths, get_possible_names, locate_executable
+
 
 def test_get_possible_names():
     env = Env(PATHEXT=[".EXE", ".COM"])
