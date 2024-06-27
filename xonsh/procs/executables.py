@@ -82,7 +82,8 @@ def locate_executable(name, env=None):
     in all ``$PATH`` directories because of performance reasons we're ok to get existent
     but case insensitive (or different) result from resolver.
     May be in the future file systems as well as Python Path will be smarter to get the case sensitive name.
-    The task for reading and returning case sensitive filename we gives to completer in interactive mode.
+    The task for reading and returning case sensitive filename we give to completer in interactive mode
+    with ``commands_cache``.
     """
     env = env if env is not None else XSH.env
     env_path = env.get("PATH", [])
