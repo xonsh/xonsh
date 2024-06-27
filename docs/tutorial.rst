@@ -1390,7 +1390,7 @@ may have one of the following signatures:
         # Read input either from piped input or the terminal
         stdin = stdin or sys.stdin
         for line in stdin.readlines():
-            ... # process line
+            print(line.strip().upper() + '!')
 
     def mycmd3(args, stdin=None, stdout=None):
         """This form has three parameters.  The first two are the same as above.
@@ -1413,7 +1413,7 @@ may have one of the following signatures:
         for i in range(5):
             time.sleep(i)
             print(i, file=stdout)
-            stdout.flush()
+            stdout.flush() # flush output to terminal immediately
 
         return 0
 
