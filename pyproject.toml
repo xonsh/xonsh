@@ -34,6 +34,7 @@ packages = [
     "xonsh.platform",
     "xonsh.parsers",
     "xonsh.xoreutils",
+    "xonsh.xaliases",
     "xontrib",
     "xonsh.completers",
     "xonsh.history",
