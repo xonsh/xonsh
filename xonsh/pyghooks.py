@@ -38,7 +38,6 @@ from xonsh.color_tools import (
     make_palette,
     warn_deprecated_no_color,
 )
-from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
 from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lazyimps import html, os_listxattr, terminal256
