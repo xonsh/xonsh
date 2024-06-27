@@ -347,8 +347,8 @@ class ExecAlias:
                 locs=frame.f_locals,
                 filename=self.filename,
             )
-        if XSH.history is not None:
-            return XSH.history.last_cmd_rtn
+        if (XSH.last is not None) and (XSH.last.proc is not None):
+            return XSH.last.proc.returncode
 
     def __repr__(self):
         return f"ExecAlias({self.src!r}, filename={self.filename!r})"

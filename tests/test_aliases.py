@@ -13,19 +13,21 @@ def cd(args, stdin=None):
     return args
 
 
-def make_aliases():
-    ales = Aliases(
-        {"o": ["omg", "lala"]},
+@pytest.fixture
+def xsh(xession):
+    ales = dict(
+        o=["omg", "lala"],
         color_ls=["ls", "--color=true"],
         ls="ls '-  -'",
         cd=cd,
         indirect_cd="cd ..",
     )
-    return ales
+    xession.aliases.update(ales)
+    return xession
 
 
-def test_imports(xession):
-    ales = make_aliases()
+def test_imports(xsh):
+    ales = xsh.aliases
     expected = {
         "o": ["omg", "lala"],
         "ls": ["ls", "-  -"],
@@ -38,24 +40,24 @@ def test_imports(xession):
     assert raw == expected
 
 
-def test_eval_normal(xession):
-    ales = make_aliases()
+def test_eval_normal(xsh):
+    ales = xsh.aliases
     assert ales.get("o") == ["omg", "lala"]
 
 
-def test_eval_self_reference(xession):
-    ales = make_aliases()
+def test_eval_self_reference(xsh):
+    ales = xsh.aliases
     assert ales.get("ls") == ["ls", "-  -"]
 
 
-def test_eval_recursive(xession):
-    ales = make_aliases()
+def test_eval_recursive(xsh):
+    ales = xsh.aliases
     assert ales.get("color_ls") == ["ls", "-  -", "--color=true"]
 
 
-def test_eval_recursive_callable_partial(xonsh_execer, xession):
-    ales = make_aliases()
-    xession.env["HOME"] = os.path.expanduser("~")
+def test_eval_recursive_callable_partial(xsh):
+    ales = xsh.aliases
+    xsh.env["HOME"] = os.path.expanduser("~")
     assert ales.get("indirect_cd")(["arg2", "arg3"]) == ["..", "arg2", "arg3"]
 
 
@@ -121,10 +123,9 @@ def test_recursive_callable_partial_none(xession):
         "echo 'hi';  echo 'there'",
     ],
 )
-def test_subprocess_logical_operators(xession, alias):
-    ales = make_aliases()
-    ales["echocat"] = alias
-    assert isinstance(ales["echocat"], ExecAlias)
+def test_subprocess_logical_operators(xsh, alias):
+    xsh.aliases["echocat"] = alias
+    assert isinstance(xsh.aliases["echocat"], ExecAlias)
 
 
 @pytest.mark.parametrize(
@@ -138,8 +139,8 @@ def test_subprocess_logical_operators(xession, alias):
         "echo 'h|i << x > 3' | grep x",
     ],
 )
-def test_subprocess_io_operators(xession, alias):
-    ales = make_aliases()
+def test_subprocess_io_operators(xsh, alias):
+    ales = xsh.aliases
     ales["echocat"] = alias
     assert isinstance(ales["echocat"], ExecAlias)
 
@@ -150,8 +151,8 @@ def test_subprocess_io_operators(xession, alias):
         {"echocat": "ls"},
     ],
 )
-def test_dict_merging(xession, alias):
-    ales = make_aliases()
+def test_dict_merging(xsh, alias):
+    ales = xsh.aliases
     assert (ales | alias)["echocat"] == ["ls"]
     assert (alias | ales)["echocat"] == ["ls"]
     assert "echocat" not in ales
@@ -164,14 +165,14 @@ def test_dict_merging(xession, alias):
         {"echocat": "echo Why?"},
     ],
 )
-def test_dict_merging_assignment(xession, alias):
-    ales = make_aliases()
+def test_dict_merging_assignment(xsh, alias):
+    ales = xsh.aliases
     ales |= alias
 
     assert "echocat" in ales
     assert " ".join(ales["echocat"]) == alias["echocat"]
 
-    ales = make_aliases()
+    ales = xsh.aliases
     alias |= ales
 
     assert "o" in alias
