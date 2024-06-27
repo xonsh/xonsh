@@ -103,6 +103,7 @@ from xonsh.tools import (
     to_shlvl,
     to_tok_color_dict,
 )
+from xonsh.procs.executables import locate_executable
 
 events.doc(
     "on_envvar_new",
@@ -2563,7 +2564,8 @@ def _yield_executables(directory, name):
 
 def locate_binary(name):
     """Locates an executable on the file system."""
-    return XSH.commands_cache.locate_binary(name)
+    return locate_executable(name)
+    # return XSH.commands_cache.locate_binary(name)
 
 
 def scan_dir_for_source_files(path: str):
