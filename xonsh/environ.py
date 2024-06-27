@@ -55,7 +55,6 @@ from xonsh.tools import (
     dynamic_cwd_tuple_to_str,
     ensure_string,
     env_path_to_str,
-    executables_in,
     history_tuple_to_str,
     intensify_colors_on_win_setter,
     is_bool,
