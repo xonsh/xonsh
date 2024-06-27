@@ -7,9 +7,8 @@ from xonsh.pytest.tools import skip_if_pre_3_8
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xession, xonsh_execer, monkeypatch):
+def xonsh_execer_autouse(xession, monkeypatch):
     monkeypatch.setitem(xession.env, "COMPLETIONS_BRACKETS", True)
-    return xonsh_execer
 
 
 def foo(x, y, z):

@@ -30,11 +30,6 @@ from xonsh.pytest.tools import skip_if_on_windows
 HOME_PATH = os.path.expanduser("~")
 
 
-@pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xonsh_execer):
-    return xonsh_execer
-
-
 @pytest.mark.parametrize("testfile", reglob("test_.*"))
 def test_reglob_tests(testfile):
     assert testfile.startswith("test_")

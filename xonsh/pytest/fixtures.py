@@ -13,10 +13,11 @@ from xonsh.built_ins import XSH, XonshSession
 from xonsh.completer import Completer
 from xonsh.events import events
 from xonsh.execer import Execer
+from xonsh.history.dummy import DummyHistory
 from xonsh.jobs import get_tasks
 from xonsh.parsers.completion_context import CompletionContextParser
 
-from .tools import DummyHistory, DummyShell, copy_env, sp
+from .tools import DummyShell, copy_env, sp
 
 
 @pytest.fixture
@@ -167,7 +168,8 @@ def mock_xonsh_session(monkeypatch, session_execer, xonsh_events, env):
             with most of the attributes mocked out
         """
         if sessions:
-            raise RuntimeError("The factory should be called only once per test")
+            # The factory should be called only once per test
+            return sessions[-1]
 
         xonsh_session = XSH
         sessions.append(xonsh_session)
@@ -210,7 +212,8 @@ def mock_xonsh_session(monkeypatch, session_execer, xonsh_events, env):
 
     yield factory
     get_tasks().clear()  # must do this to enable resetting all_jobs
-    sessions[0].unload()
+    if sessions:
+        sessions[-1].unload()
     sessions.clear()
 
 

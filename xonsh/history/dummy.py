@@ -8,8 +8,12 @@ from xonsh.history.base import History
 class DummyHistory(History):
     """A dummy implement of history backend."""
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.buffer = []
+
     def append(self, cmd):
-        pass
+        self.buffer.append(cmd)
 
     def items(self, newest_first=False):
         yield {"inp": "# dummy history backend in action", "ts": 1464652800, "ind": 0}

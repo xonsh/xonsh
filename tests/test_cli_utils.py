@@ -62,7 +62,7 @@ def test_generated_parser():
     assert add_cmd.format_usage() == "usage: completer add [-h] name func [pos]\n"
 
 
-def test_parser_hooking():
+def test_parser_hooking(xession):
     from xonsh.xaliases.history import HistoryAlias
 
     alias = HistoryAlias()
