@@ -39,7 +39,6 @@ from xonsh.platform import (
     PATH_DEFAULT,
     os_environ,
 )
-from xonsh.procs.executables import locate_executable
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
