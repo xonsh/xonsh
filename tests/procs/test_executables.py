@@ -7,7 +7,8 @@ from xonsh.procs.executables import get_paths, get_possible_names, locate_execut
 
 def test_get_possible_names():
     env = Env(PATHEXT=[".EXE", ".COM"])
-    assert get_possible_names("file", env) == ["file", "file.EXE", "file.COM"]
+    assert get_possible_names("file", env) == ["file", "file.exe", "file.com"]
+    assert get_possible_names("FILE", env) == ["FILE", "FILE.EXE", "FILE.COM"]
 
 
 def test_get_paths(tmpdir):
