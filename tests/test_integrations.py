@@ -713,7 +713,9 @@ def test_script(case):
     out, err, rtn = run_xonsh(script)
     out = out.replace("bash: no job control in this shell\n", "")
     if callable(exp_out):
-        assert exp_out(out), f"CASE:\nscript=***\n{script}\n***,\nExpected: {exp_out!r},\nActual: {out!r}"
+        assert exp_out(
+            out
+        ), f"CASE:\nscript=***\n{script}\n***,\nExpected: {exp_out!r},\nActual: {out!r}"
     else:
         assert exp_out == out
     assert exp_rtn == rtn
