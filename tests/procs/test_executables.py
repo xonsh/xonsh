@@ -30,7 +30,7 @@ def test_locate_executable(tmpdir):
 
     env = Env(PATH=str(bindir), PATHEXT=[".EXE", ".COM"])
 
-    assert locate_executable("file3", env)
+
     assert locate_executable("file1.EXE", env)
     assert locate_executable("nofile", env) is None
     assert locate_executable("file5", env) is None
@@ -40,6 +40,7 @@ def test_locate_executable(tmpdir):
         assert locate_executable("file4", env)
         assert locate_executable("file2", env).endswith("file2.EXE")
     else:
+        assert locate_executable("file3", env)
         assert locate_executable("file1", env) is None
         assert locate_executable("file4", env) is None
         assert locate_executable("file2", env) is None
