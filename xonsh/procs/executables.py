@@ -32,6 +32,12 @@ def clear_paths(paths):
                 yield p
 
 
+def get_paths(env=None):
+    """Return tuple with deduplicated and existent paths from ``$PATH``."""
+    env = env if env is not None else XSH.env
+    return tuple(reversed(tuple(clear_paths(env.get("PATH") or []))))
+
+
 def is_executable_in_windows(filepath, env=None):
     """Check the file is executable in Windows."""
     filepath = Path(filepath)

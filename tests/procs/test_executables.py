@@ -1,15 +1,22 @@
 import os
 
 from xonsh.platform import ON_WINDOWS
-from xonsh.procs.executables import get_possible_names, locate_executable
+from xonsh.procs.executables import get_possible_names, locate_executable, get_paths
 from xonsh.environ import Env
 
-def test_get_possible_names(xession):
+def test_get_possible_names():
     env = Env(PATHEXT=[".EXE", ".COM"])
     assert get_possible_names("file", env) == ["file", "file.EXE", "file.COM"]
 
 
-def test_xonshrc(tmpdir, xession):
+def test_get_paths(tmpdir):
+    bindir1 = str(tmpdir.mkdir("bindir1"))
+    bindir2 = str(tmpdir.mkdir("bindir2"))
+    env = Env(PATH=[bindir1, bindir2, bindir1, "nodir"])
+    assert get_paths(env) == (bindir2, bindir1)
+
+
+def test_locate_executable(tmpdir):
     bindir = tmpdir.mkdir("bindir")
     bindir.mkdir("subdir")
     executables = ["cmd.EXE", "cmdcom.COM", "cmdcom.EXE", "runme"]

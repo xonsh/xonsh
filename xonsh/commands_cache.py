@@ -17,7 +17,7 @@ from pathlib import Path
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
 from xonsh.procs.executables import (
-    clear_paths,
+    get_paths,
     get_possible_names,
     is_executable_in_posix,
     is_executable_in_windows,
@@ -203,7 +203,7 @@ class CommandsCache(cabc.Mapping):
         env = self.env
         # iterate backwards so that entries at the front of PATH overwrite
         # entries at the back.
-        paths = tuple(reversed(tuple(clear_paths(env.get("PATH") or []))))
+        paths = get_paths(env)
         if self._update_and_check_changes(paths):
             all_cmds = CacheDict()
             for cmd, path in self._iter_binaries(paths):
