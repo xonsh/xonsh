@@ -294,6 +294,9 @@ class CommandsCache(cabc.Mapping):
     def locate_binary(self, name, ignore_alias=False):
         """Locates an executable on the file system using the cache.
 
+        NOT RECOMMENDED. Take a look into `xonsh.procs.executables.locate_executable`
+        before using this function.
+
         Parameters
         ----------
         name : str
@@ -307,6 +310,9 @@ class CommandsCache(cabc.Mapping):
 
     def lazy_locate_binary(self, name, ignore_alias=False):
         """Locates an executable in the cache, without checking its validity.
+
+        NOT RECOMMENDED. Take a look into `xonsh.procs.executables.locate_executable`
+        before using this function.
 
         Parameters
         ----------
