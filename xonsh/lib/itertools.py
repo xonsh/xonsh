@@ -1,5 +1,6 @@
 from itertools import filterfalse
 
+
 def as_iterable(iterable_or_scalar):
     """Utility for converting an object to an iterable.
     Parameters
