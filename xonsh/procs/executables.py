@@ -1,6 +1,7 @@
 """Interfaces to locate executable files on file system."""
 
 import os
+import itertools
 from pathlib import Path
 
 from xonsh.built_ins import XSH
