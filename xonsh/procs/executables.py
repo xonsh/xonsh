@@ -69,6 +69,9 @@ def is_executable_in_posix(filepath):
     return False
 
 
+is_executable = is_executable_in_windows if ON_WINDOWS else is_executable_in_posix
+
+
 def locate_executable(name, env=None):
     return locate_file(name, env=env, check_executable=True, use_pathext=True)
 
@@ -89,12 +92,6 @@ def locate_file(name, env=None, check_executable=False, use_pathext=False):
     env_path = env.get("PATH", [])
     paths = tuple(reversed(tuple(clear_paths(env_path))))
     possible_names = get_possible_names(name, env) if use_pathext else [name]
-
-    if check_executable:
-        if ON_WINDOWS:
-            is_executable = is_executable_in_windows
-        else:
-            is_executable = is_executable_in_posix
 
     for path, possible_name in itertools.product(paths, possible_names):
         filepath = Path(path) / possible_name
