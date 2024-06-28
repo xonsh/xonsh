@@ -141,7 +141,6 @@ doc = [
     "myst-parser",
 ]
 
-
 [project.scripts]
 xonsh = "xonsh.main:main"
 xonsh-cat = "xonsh.xoreutils.cat:main"
