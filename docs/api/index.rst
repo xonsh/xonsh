@@ -31,7 +31,6 @@ For those of you who want the gritty details.
     xonsh.environ
     xonsh.aliases
     xonsh.dirstack
-    xonsh.jobs
     xonsh.procs
     xonsh.inspectors
     xonsh.history

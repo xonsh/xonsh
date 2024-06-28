@@ -13,7 +13,7 @@ import subprocess
 import sys
 
 import xonsh.environ as xenv
-import xonsh.jobs as xj
+import xonsh.procs.jobs as xj
 import xonsh.lazyasd as xl
 import xonsh.lazyimps as xli
 import xonsh.platform as xp

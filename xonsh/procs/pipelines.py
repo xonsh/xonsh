@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 
-import xonsh.jobs as xj
+import xonsh.procs.jobs as xj
 import xonsh.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
