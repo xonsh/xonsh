@@ -49,9 +49,7 @@ def is_executable_in_windows(filepath, env=None):
             return False
 
         env = env if env is not None else XSH.env
-        env_pathext = env.get("PATHEXT", [])
-        if filepath.suffix.upper() in env_pathext:
-            return True
+        return any(s.lower() == filepath.suffix.lower() for s in env.get("PATHEXT", []))
     except FileNotFoundError:
         # On Windows, there's no guarantee for the directory to really
         # exist even if isdir returns True. This may happen for instance
