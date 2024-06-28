@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from xonsh.jsonutils import serialize_xonsh_json
+from xonsh.lib.jsonutils import serialize_xonsh_json
 from xonsh.tools import EnvPath
 
 
