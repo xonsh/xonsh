@@ -6,6 +6,7 @@ from pathlib import Path
 
 from xonsh.built_ins import XSH
 from xonsh.platform import ON_WINDOWS
+from xonsh.lib.itertools import unique_everseen
 
 
 def get_possible_names(name, env=None):
@@ -18,18 +19,17 @@ def get_possible_names(name, env=None):
     to the bare name.
     """
     env = env if env is not None else XSH.env
-    extensions = [""] + env.get("PATHEXT", [])
-    return [name + match_case(ext, name) for ext in extensions]
+    env_pathext = env.get("PATHEXT", [])
+    if not env_pathext:
+        return [name]
+    upper = name.upper() == name
+    extensions = [""] + env_pathext
+    return [name + (ext.upper() if upper else ext.lower()) for ext in extensions]
 
 
 def clear_paths(paths):
     """Remove duplicates and nonexistent directories from paths."""
-    cont = set()
-    for p in map(os.path.realpath, paths):
-        if p not in cont:
-            cont.add(p)
-            if os.path.isdir(p):
-                yield p
+    return filter(os.path.isdir, unique_everseen(map(os.path.realpath, paths)))
 
 
 def get_paths(env=None):
