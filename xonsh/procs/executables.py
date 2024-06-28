@@ -95,8 +95,7 @@ def locate_file(name, env=None, check_executable=False, use_pathext=False):
         else:
             is_executable = is_executable_in_posix
 
-    for path in paths:
-        for possible_name in possible_names:
+    for path, possible_name in itertools.product(paths, possible_names):
             filepath = Path(path) / possible_name
 
             try:
