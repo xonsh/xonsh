@@ -24,17 +24,17 @@ from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.styles import Style, merge_styles
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
-from xonsh.shell.base_shell import BaseShell
 from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.lazyimps import pyghooks, pygments, winutils
 from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS
+from xonsh.pygments_cache import get_all_styles
+from xonsh.shell import transform_command
+from xonsh.shell.base_shell import BaseShell
 from xonsh.shell.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.shell.ptk_shell.formatter import PTKPromptFormatter
 from xonsh.shell.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
 from xonsh.shell.ptk_shell.key_bindings import load_xonsh_bindings
-from xonsh.pygments_cache import get_all_styles
-from xonsh.shell import transform_command
 from xonsh.style_tools import DEFAULT_STYLE_DICT, _TokenType, partial_color_tokenize
 from xonsh.tools import carriage_return, print_exception, print_warning
 
