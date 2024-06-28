@@ -61,8 +61,7 @@ def is_executable_in_windows(filepath, env=None):
 def is_executable_in_posix(filepath):
     """Check the file is executable in POSIX."""
     try:
-        if filepath.is_file() and os.access(filepath, os.X_OK):
-            return True
+        return filepath.is_file() and os.access(filepath, os.X_OK)
     except OSError:
         # broken Symlink are neither dir not files
         pass
