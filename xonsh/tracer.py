@@ -11,7 +11,7 @@ import typing as tp
 import xonsh.procs.pipelines as xpp
 import xonsh.prompt.cwd as prompt
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
-from xonsh.inspectors import find_file
+from xonsh.lib.inspectors import find_file
 from xonsh.lazyasd import LazyObject
 from xonsh.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS
