@@ -14,7 +14,7 @@ import typing as tp
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
-from xonsh.ast import isexpression
+from xonsh.parser.ast import isexpression
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
