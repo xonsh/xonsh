@@ -96,11 +96,11 @@ def locate_file(name, env=None, check_executable=False, use_pathext=False):
             is_executable = is_executable_in_posix
 
     for path, possible_name in itertools.product(paths, possible_names):
-            filepath = Path(path) / possible_name
+        filepath = Path(path) / possible_name
 
-            try:
-                if check_executable and not is_executable(filepath):
-                    continue
-                return str(filepath)
-            except PermissionError:
-                return
+        try:
+            if check_executable and not is_executable(filepath):
+                continue
+            return str(filepath)
+        except PermissionError:
+            return
