@@ -1,7 +1,7 @@
 import pytest
 
 from xonsh.completers.environment import complete_environment_vars
-from xonsh.parsers.completion_context import CompletionContextParser
+from xonsh.parser.completion_context import CompletionContextParser
 
 
 @pytest.fixture(scope="session")

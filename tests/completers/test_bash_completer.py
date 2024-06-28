@@ -2,7 +2,7 @@ import pytest
 
 from xonsh.completers.bash import complete_from_bash
 from xonsh.completers.tools import RichCompletion
-from xonsh.parsers.completion_context import (
+from xonsh.parser.completion_context import (
     CommandArg,
     CommandContext,
     CompletionContext,

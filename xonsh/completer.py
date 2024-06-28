@@ -13,7 +13,7 @@ from xonsh.completers.tools import (
     is_contextual_completer,
     is_exclusive_completer,
 )
-from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
+from xonsh.parser.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_exception
 
 

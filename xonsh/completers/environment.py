@@ -4,7 +4,7 @@ from xonsh.completers.tools import (
     contextual_completer,
     non_exclusive_completer,
 )
-from xonsh.parsers.completion_context import CompletionContext
+from xonsh.parser.completion_context import CompletionContext
 
 
 @contextual_completer

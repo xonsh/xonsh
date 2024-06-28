@@ -11,7 +11,7 @@ from functools import wraps
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.lazyasd import lazyobject
-from xonsh.parsers.completion_context import CommandContext, CompletionContext
+from xonsh.parser.completion_context import CommandContext, CompletionContext
 
 
 def _filter_with_func(text, prefix, func):

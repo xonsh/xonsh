@@ -15,7 +15,7 @@ from xonsh.completers.tools import (
     contextual_completer,
     get_filter_function,
 )
-from xonsh.parsers.completion_context import CompletionContext, PythonContext
+from xonsh.parser.completion_context import CompletionContext, PythonContext
 
 
 @xl.lazyobject

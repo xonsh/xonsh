@@ -1,5 +1,5 @@
 from xonsh.completers.path import complete_dir
-from xonsh.parsers.completion_context import CommandContext
+from xonsh.parser.completion_context import CommandContext
 
 
 def xonsh_complete(ctx: CommandContext):

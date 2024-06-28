@@ -42,7 +42,7 @@ def build_tables():
     root_dir = os.path.abspath(os.path.dirname(__file__))
     sys.path.insert(0, root_dir)
     from xonsh.parser import Parser
-    from xonsh.parsers.completion_context import CompletionContextParser
+    from xonsh.parser.completion_context import CompletionContextParser
 
     Parser(
         yacc_table="parser_table",

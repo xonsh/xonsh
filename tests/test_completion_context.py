@@ -4,8 +4,8 @@ from unittest import mock
 
 import pytest
 
-import xonsh.parsers.completion_context as ctx
-from xonsh.parsers.completion_context import (
+import xonsh.parser.completion_context as ctx
+from xonsh.parser.completion_context import (
     CommandArg,
     CommandContext,
     CompletionContextParser,
