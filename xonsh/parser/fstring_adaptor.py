@@ -3,8 +3,8 @@
 import re
 from ast import parse as pyparse
 
-from xonsh.parser import ast
 from xonsh.lazyasd import lazyobject
+from xonsh.parser import ast
 from xonsh.platform import PYTHON_VERSION_INFO
 
 
