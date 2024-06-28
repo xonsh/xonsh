@@ -73,11 +73,12 @@ is_executable = is_executable_in_windows if ON_WINDOWS else is_executable_in_pos
 
 
 def locate_executable(name, env=None):
+    """Search executable binary name in ``$PATH`` and return full path."""
     return locate_file(name, env=env, check_executable=True, use_pathext=True)
 
 
 def locate_file(name, env=None, check_executable=False, use_pathext=False):
-    """Search executable binary name in $PATH and return full path.
+    """Search file name in ``$PATH`` and return full path.
 
     Compromise. There is no way to get case sensitive file name without listing all files.
     If the file name is ``CaMeL.exe`` and we found that ``camel.EXE`` exists there is no way
