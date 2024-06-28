@@ -28,6 +28,7 @@ packages = [
     "xonsh",
     "xonsh.ply.ply",
     "xonsh.shell",
+    "xonsh.shell.ptk_shell",
     "xonsh.procs",
     "xonsh.parsers",
     "xonsh.xoreutils",
