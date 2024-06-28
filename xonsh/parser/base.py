@@ -10,10 +10,10 @@ from ast import parse as pyparse
 from collections.abc import Iterable, Mapping, Sequence
 from threading import Thread
 
-from xonsh.parser import ast
-from xonsh.parser.ast import has_elts, load_attribute_chain, xonsh_call
 from xonsh.lazyasd import LazyObject
 from xonsh.lexer import Lexer, LexToken
+from xonsh.parser import ast
+from xonsh.parser.ast import has_elts, load_attribute_chain, xonsh_call
 from xonsh.parser.context_check import check_contexts
 from xonsh.parser.fstring_adaptor import FStringAdaptor
 from xonsh.platform import PYTHON_VERSION_INFO
@@ -2254,12 +2254,12 @@ class BaseParser:
             if isinstance(
                 trailer,
                 (
-                        ast.Index,
-                        ast.Slice,
-                        ast.ExtSlice,
-                        ast.Constant,
-                        ast.Name,
-                        Index,
+                    ast.Index,
+                    ast.Slice,
+                    ast.ExtSlice,
+                    ast.Constant,
+                    ast.Name,
+                    Index,
                 ),
             ):
                 # unpack types
@@ -2894,7 +2894,7 @@ class BaseParser:
         """testlist : test COMMA"""
         p1 = p[1]
         if isinstance(p1, ast.List) or (
-                isinstance(p1, ast.Tuple) and hasattr(p1, "_real_tuple") and p1._real_tuple
+            isinstance(p1, ast.Tuple) and hasattr(p1, "_real_tuple") and p1._real_tuple
         ):
             lineno, col = lopen_loc(p1)
             p[0] = ast.Tuple(
@@ -2910,7 +2910,7 @@ class BaseParser:
         """
         p1 = p[1]
         if isinstance(p1, ast.List) or (
-                isinstance(p1, ast.Tuple) and hasattr(p1, "_real_tuple") and p1._real_tuple
+            isinstance(p1, ast.Tuple) and hasattr(p1, "_real_tuple") and p1._real_tuple
         ):
             lineno, col = lopen_loc(p1)
             p1 = ast.Tuple(

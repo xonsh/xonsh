@@ -6,8 +6,8 @@ import inspect
 import sys
 import types
 
-from xonsh.parser.ast import CtxAwareTransformer
 from xonsh.parser import Parser
+from xonsh.parser.ast import CtxAwareTransformer
 from xonsh.tools import (
     balanced_parens,
     ends_with_colon_token,
