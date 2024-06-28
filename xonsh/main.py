@@ -17,11 +17,11 @@ from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
-from xonsh.procs.jobs import ignore_sigtstp
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.pretty import pretty
+from xonsh.procs.jobs import ignore_sigtstp
 from xonsh.shell import Shell
 from xonsh.timings import setup_timings
 from xonsh.tools import (
