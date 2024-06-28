@@ -21,7 +21,7 @@ from xonsh.jobs import ignore_sigtstp
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
-from xonsh.pretty import pretty
+from xonsh.lib.pretty import pretty
 from xonsh.shell import Shell
 from xonsh.timings import setup_timings
 from xonsh.tools import (
