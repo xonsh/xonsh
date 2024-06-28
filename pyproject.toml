@@ -27,7 +27,7 @@ readme = {file = ["README.rst"]}
 packages = [
     "xonsh",
     "xonsh.ply.ply",
-    "xonsh.ptk_shell",
+    "xonsh.shell",
     "xonsh.procs",
     "xonsh.parsers",
     "xonsh.xoreutils",
