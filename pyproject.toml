@@ -29,7 +29,7 @@ packages = [
     "xonsh.ply.ply",
     "xonsh.ptk_shell",
     "xonsh.procs",
-    "xonsh.parsers",
+    "xonsh.parser",
     "xonsh.xoreutils",
     "xontrib",
     "xonsh.completers",
@@ -222,7 +222,7 @@ convention = "numpy"
 "xonsh/timings.py" = ["F401"]
 "xonsh/history.py" = ["F821"]
 "xonsh/lexer.py" = ["E741"]
-"xonsh/parsers/completion_context.py" = ["B018"]
+"xonsh/parser/completion_context.py" = ["B018"]
 "xonsh/tokenize.py" = [
     "F821",
     "F841",
@@ -253,7 +253,7 @@ convention = "numpy"
 "xontrib/vox.py" = ["F821"]
 "xonsh/inspectors.py" = ["E722"]
 "xonsh/platform.py" = ["F401"]
-"xonsh/parsers/*.py" = [
+"xonsh/parser/*.py" = [
     "E741", #  E741 Ambiguous variable name
 ]
 "tests/test*.py" = [
