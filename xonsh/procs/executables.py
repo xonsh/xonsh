@@ -17,12 +17,8 @@ def get_possible_names(name, env=None):
     to the bare name.
     """
     env = env if env is not None else XSH.env
-    env_pathext = env.get("PATHEXT", [])
-    if not env_pathext:
-        return [name]
-    upper = name.upper() == name
-    extensions = [""] + env_pathext
-    return [name + (ext.upper() if upper else ext.lower()) for ext in extensions]
+    extensions = [""] + env.get("PATHEXT", [])
+    return [name + match_case(ext, name) for ext in extensions]
 
 
 def clear_paths(paths):
