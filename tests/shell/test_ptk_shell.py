@@ -6,7 +6,7 @@ import pyte
 import pytest
 
 from xonsh.platform import minimum_required_ptk_version
-from xonsh.ptk_shell.shell import tokenize_ansi
+from xonsh.shell.ptk_shell import tokenize_ansi
 from xonsh.shell import Shell
 
 # verify error if ptk not installed or below min

@@ -17,7 +17,7 @@ Context = namedtuple("Context", ["indent", "buffer", "accept", "cli", "cr"])
 def ctx(xession):
     """Context in which the ptk multiline functionality will be tested."""
     xession.env["INDENT"] = "    "
-    from xonsh.ptk_shell.key_bindings import carriage_return
+    from xonsh.shell.ptk_shell.key_bindings import carriage_return
 
     ptk_buffer = Buffer()
     ptk_buffer.accept_action = MagicMock(name="accept")
