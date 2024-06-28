@@ -1,4 +1,4 @@
-"""(A down payment on) Testing for ``xonsh.base_shell.BaseShell`` and associated classes"""
+"""(A down payment on) Testing for ``xonsh.shell.base_shell.BaseShell`` and associated classes"""
 
 import os
 
