@@ -44,7 +44,7 @@ from contextlib import contextmanager
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
-from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.platform import (
     DEFAULT_ENCODING,
     HAS_PYGMENTS,
@@ -1824,7 +1824,7 @@ def to_completion_mode(x):
 def is_tok_color_dict(x):
     from pygments.token import _TokenType, string_to_tokentype
 
-    from xonsh.ptk_shell.shell import _style_from_pygments_dict
+    from xonsh.shells.ptk_shell import _style_from_pygments_dict
 
     """Tests if something is a Token:Style dictionary"""
     if not isinstance(x, dict):

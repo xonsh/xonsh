@@ -15,7 +15,7 @@ This file was forked from the IPython project:
 import io
 import re
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lib.lazyasd import LazyObject
 from xonsh.lib.tokenize import detect_encoding, tokopen
 
 cookie_comment_re = LazyObject(

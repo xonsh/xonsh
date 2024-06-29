@@ -10,7 +10,7 @@ from functools import wraps
 
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
 
 

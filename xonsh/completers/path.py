@@ -3,7 +3,7 @@ import glob
 import os
 import re
 
-import xonsh.lazyasd as xl
+import xonsh.lib.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH

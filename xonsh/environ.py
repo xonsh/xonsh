@@ -29,7 +29,7 @@ from xonsh.built_ins import XSH
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
-from xonsh.lazyasd import LazyBool, lazyobject
+from xonsh.lib.lazyasd import LazyBool, lazyobject
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
     DEFAULT_ENCODING,
@@ -1535,7 +1535,7 @@ class PromptSetting(Xettings):
         "`prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_"
         " library installed. To specify which shell should be used, do so in "
         "the run control file. "
-        "It also accepts a class type that inherits from ``xonsh.base_shell.BaseShell``",
+        "It also accepts a class type that inherits from ``xonsh.shells.base_shell.BaseShell``",
         doc_default="``best``",
     )
     SUGGEST_COMMANDS = Var.with_default(
