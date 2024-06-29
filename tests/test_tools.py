@@ -10,7 +10,7 @@ import warnings
 import pytest
 
 from xonsh import __version__
-from xonsh.lexer import Lexer
+from xonsh.parsers.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (

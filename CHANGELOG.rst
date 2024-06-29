@@ -2488,7 +2488,7 @@ v0.8.10
   terminal to close. This was problematic for certain command
   pipelines. For example, ``pv /dev/urandom | head`` now works.
 * Prevents recursive errors from being raised when there is no child process
-  in ``xonsh.jobs.wait_for_active_job()``.
+  in ``xonsh.procs.jobs.wait_for_active_job()``.
 * Tweaked ``xonsh.completers.commands.complete_skipper()`` to insert a space following
   certain tokens (``&&``, ``||``, ``|``, ``and``, ``or``) to avoid overwriting existing tokens
   with completer output.

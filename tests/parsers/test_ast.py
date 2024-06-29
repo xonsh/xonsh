@@ -4,8 +4,8 @@ import ast as pyast
 
 import pytest
 
-from xonsh import ast
-from xonsh.ast import BinOp, Call, Name, Store, Tuple, isexpression, min_line
+from xonsh.parsers import ast
+from xonsh.parsers.ast import BinOp, Call, Name, Store, Tuple, isexpression, min_line
 from xonsh.pytest.tools import nodes_equal
 
 

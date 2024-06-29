@@ -5,7 +5,7 @@
 import itertools
 import sys
 
-# pylint: enable=unused-import
+# pylint: disable=unused-import
 import textwrap
 from ast import (
     AST,

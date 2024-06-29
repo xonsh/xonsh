@@ -36,8 +36,8 @@ from xonsh.lib.tokenize import (
     TokenError,
     tokenize,
 )
+from xonsh.parsers.ply.lex import LexToken
 from xonsh.platform import PYTHON_VERSION_INFO
-from xonsh.ply.ply.lex import LexToken
 
 
 @lazyobject

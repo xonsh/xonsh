@@ -31,14 +31,13 @@ For those of you who want the gritty details.
     xonsh.environ
     xonsh.aliases
     xonsh.dirstack
-    xonsh.jobs
     xonsh.procs
     xonsh.inspectors
     xonsh.history
     xonsh.completer
     xonsh.completers
     xonsh.prompt
-    xonsh.shell
+    xonsh.shells
     xonsh.base_shell
     xonsh.readline_shell
     xonsh.ptk_shell

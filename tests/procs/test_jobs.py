@@ -1,6 +1,6 @@
 import pytest
 
-from xonsh import jobs
+from xonsh.procs import jobs
 
 
 @pytest.mark.parametrize(

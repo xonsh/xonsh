@@ -1768,7 +1768,7 @@ def to_completion_mode(x):
 def is_tok_color_dict(x):
     from pygments.token import _TokenType, string_to_tokentype
 
-    from xonsh.ptk_shell.shell import _style_from_pygments_dict
+    from xonsh.shells.ptk_shell import _style_from_pygments_dict
 
     """Tests if something is a Token:Style dictionary"""
     if not isinstance(x, dict):
