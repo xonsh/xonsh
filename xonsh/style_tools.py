@@ -3,7 +3,7 @@
 from collections import defaultdict
 
 from xonsh.color_tools import RE_BACKGROUND, iscolor, warn_deprecated_no_color
-from xonsh.lazyasd import LazyObject
+from xonsh.lib.lazyasd import LazyObject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import FORMATTER
 

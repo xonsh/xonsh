@@ -10,8 +10,8 @@ handle
 
 import ast
 
+from xonsh.parsers.ply import yacc
 from xonsh.parsers.v39 import Parser as ThreeNineParser
-from xonsh.ply.ply import yacc
 
 
 class Parser(ThreeNineParser):
