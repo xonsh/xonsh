@@ -19,7 +19,7 @@ from prompt_toolkit.keys import Keys
 from xonsh.aliases import xonsh_exit
 from xonsh.built_ins import XSH
 from xonsh.platform import ON_WINDOWS
-from xonsh.shells.shellimport transform_command
+from xonsh.shells.shell import transform_command
 from xonsh.tools import (
     check_for_partial_string,
     ends_with_colon_token,

@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from xonsh.shells.shellimport transform_command
+from xonsh.shells.shell import transform_command
 from xonsh.shells.base_shell import BaseShell
 
 

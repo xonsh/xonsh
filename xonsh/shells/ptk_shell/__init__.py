@@ -29,7 +29,7 @@ from xonsh.events import events
 from xonsh.lazyimps import pyghooks, pygments, winutils
 from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS
 from xonsh.pygments_cache import get_all_styles
-from xonsh.shells.shellimport transform_command
+from xonsh.shells.shell import transform_command
 from xonsh.shells.base_shell import BaseShell
 from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.shells.ptk_shell.formatter import PTKPromptFormatter

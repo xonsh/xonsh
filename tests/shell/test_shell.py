@@ -5,7 +5,7 @@ import os
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
 from xonsh.history.sqlite import SqliteHistory
-from xonsh.shells.shellimport Shell
+from xonsh.shells.shell import Shell
 
 
 def test_shell_with_json_history(xession, xonsh_execer, tmpdir_factory):
