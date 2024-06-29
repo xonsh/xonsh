@@ -225,7 +225,7 @@ convention = "numpy"
 "xonsh/history.py" = ["F821"]
 "xonsh/lexer.py" = ["E741"]
 "xonsh/parsers/completion_context.py" = ["B018"]
-"xonsh/tokenize.py" = [
+"xonsh/lib/tokenize.py" = [
     "F821",
     "F841",
     "B904" # Within an `except` clause, raise exceptions with `raise ... from err`
