@@ -14,7 +14,7 @@ from xonsh.completers.tools import (
     non_exclusive_completer,
 )
 from xonsh.lib.modules import ModuleFinder
-from xonsh.parser.completion_context import CommandContext, CompletionContext
+from xonsh.parsers.completion_context import CommandContext, CompletionContext
 
 SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||

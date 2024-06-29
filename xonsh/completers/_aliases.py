@@ -6,7 +6,7 @@ from xonsh.completers.completer import (
     remove_completer,
 )
 from xonsh.completers.tools import contextual_command_completer
-from xonsh.parser.completion_context import CommandContext
+from xonsh.parsers.completion_context import CommandContext
 
 # for backward compatibility
 _add_one_completer = add_one_completer

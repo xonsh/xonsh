@@ -5,7 +5,7 @@ import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.completers.bash_completion import bash_completions
 from xonsh.completers.tools import RichCompletion, contextual_command_completer
-from xonsh.parser.completion_context import CommandContext
+from xonsh.parsers.completion_context import CommandContext
 
 
 @contextual_command_completer

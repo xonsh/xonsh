@@ -8,7 +8,7 @@ from xonsh.completers.tools import (
     contextual_command_completer,
     non_exclusive_completer,
 )
-from xonsh.parser.completion_context import CommandContext
+from xonsh.parsers.completion_context import CommandContext
 
 
 @pytest.fixture(scope="session")

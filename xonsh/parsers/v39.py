@@ -7,8 +7,8 @@ handle
 
 import ast
 
-from xonsh.parser.base import Index
-from xonsh.parser.v38 import Parser as ThreeEightParser
+from xonsh.parsers.base import Index
+from xonsh.parsers.v38 import Parser as ThreeEightParser
 
 
 class Parser(ThreeEightParser):

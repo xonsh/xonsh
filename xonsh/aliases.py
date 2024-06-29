@@ -21,7 +21,7 @@ from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.jobs import bg, clean_jobs, disown, fg, jobs
 from xonsh.lazyasd import lazyobject
-from xonsh.parser.ast import isexpression
+from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
     IN_APPIMAGE,
     ON_ANACONDA,

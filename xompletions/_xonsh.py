@@ -1,5 +1,5 @@
 from xonsh.cli_utils import ArgparseCompleter
-from xonsh.parser.completion_context import CommandContext
+from xonsh.parsers.completion_context import CommandContext
 
 
 def xonsh_complete(command: CommandContext):

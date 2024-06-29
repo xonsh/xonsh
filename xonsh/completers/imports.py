@@ -22,7 +22,7 @@ from xonsh.completers.tools import (
     get_filter_function,
 )
 from xonsh.lazyasd import lazyobject
-from xonsh.parser.completion_context import CompletionContext
+from xonsh.parsers.completion_context import CompletionContext
 
 _suffixes = all_suffixes()
 

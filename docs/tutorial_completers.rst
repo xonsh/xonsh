@@ -54,7 +54,7 @@ checked.
 Writing a New Completer
 =======================
 
-Completers are implemented as Python functions that take a :class:`Completion Context <xonsh.parser.completion_context.CompletionContext>` object.
+Completers are implemented as Python functions that take a :class:`Completion Context <xonsh.parsers.completion_context.CompletionContext>` object.
 Examples for the context object:
 
 .. code-block:: python

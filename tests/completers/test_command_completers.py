@@ -4,7 +4,7 @@ import pytest
 
 from xonsh.completer import Completer
 from xonsh.completers.commands import complete_command, complete_skipper
-from xonsh.parser.completion_context import (
+from xonsh.parsers.completion_context import (
     CommandArg,
     CommandContext,
     CompletionContext,

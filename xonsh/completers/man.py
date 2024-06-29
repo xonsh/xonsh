@@ -8,7 +8,7 @@ from pathlib import Path
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion, contextual_command_completer
-from xonsh.parser.completion_context import CommandContext
+from xonsh.parsers.completion_context import CommandContext
 
 
 @functools.cache

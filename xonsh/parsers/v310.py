@@ -10,7 +10,7 @@ handle
 
 import ast
 
-from xonsh.parser.v39 import Parser as ThreeNineParser
+from xonsh.parsers.v39 import Parser as ThreeNineParser
 from xonsh.ply.ply import yacc
 
 

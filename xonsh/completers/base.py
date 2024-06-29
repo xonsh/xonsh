@@ -6,7 +6,7 @@ from xonsh.completers.commands import complete_command
 from xonsh.completers.path import contextual_complete_path
 from xonsh.completers.python import complete_python
 from xonsh.completers.tools import apply_lprefix, contextual_completer
-from xonsh.parser.completion_context import CompletionContext
+from xonsh.parsers.completion_context import CompletionContext
 
 
 @contextual_completer

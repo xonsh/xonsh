@@ -8,7 +8,7 @@ import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion, contextual_completer
-from xonsh.parser.completion_context import CommandContext
+from xonsh.parsers.completion_context import CommandContext
 
 
 @xl.lazyobject

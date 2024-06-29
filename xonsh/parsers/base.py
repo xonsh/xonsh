@@ -13,9 +13,9 @@ from threading import Thread
 from xonsh.lazyasd import LazyObject
 from xonsh.lexer import Lexer, LexToken
 from xonsh.parser import ast
-from xonsh.parser.ast import has_elts, load_attribute_chain, xonsh_call
-from xonsh.parser.context_check import check_contexts
-from xonsh.parser.fstring_adaptor import FStringAdaptor
+from xonsh.parsers.ast import has_elts, load_attribute_chain, xonsh_call
+from xonsh.parsers.context_check import check_contexts
+from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.ply.ply import yacc
 from xonsh.tokenize import SearchPath, StringPrefix

@@ -21,7 +21,7 @@ from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.jobs import get_tasks
 from xonsh.main import setup
-from xonsh.parser.completion_context import CompletionContextParser
+from xonsh.parsers.completion_context import CompletionContextParser
 
 from .tools import DummyHistory, DummyShell, copy_env, sp
 
