@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-from xonsh.lib.os import indir, rmtree
+from xonsh.api.os import indir, rmtree
 
 import pytest
 
