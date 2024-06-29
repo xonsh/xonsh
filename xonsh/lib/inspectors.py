@@ -18,9 +18,9 @@ import types
 from xonsh.lazyasd import LazyObject
 from xonsh.lazyimps import pyghooks, pygments
 from xonsh.lib.openpy import read_py_file
+from xonsh.lib.tokenize import detect_encoding
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.style_tools import partial_color_tokenize
-from xonsh.lib.tokenize import detect_encoding
 from xonsh.tools import cast_unicode, format_color, indent, print_color, safe_hasattr
 
 # builtin docstrings to ignore
