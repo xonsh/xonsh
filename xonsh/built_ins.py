@@ -19,7 +19,7 @@ import types
 import warnings
 from ast import AST
 
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.lib.inspectors import Inspector
 from xonsh.platform import ON_POSIX
 from xonsh.tools import (

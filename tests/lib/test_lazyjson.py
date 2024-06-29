@@ -2,7 +2,7 @@
 
 from io import StringIO
 
-from xonsh.lazyjson import LazyJSON, LJNode, index, ljdump
+from xonsh.lib.lazyjson import LazyJSON, LJNode, index, ljdump
 
 
 def test_index_int():

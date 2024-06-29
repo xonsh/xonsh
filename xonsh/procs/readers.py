@@ -8,7 +8,7 @@ import sys
 import threading
 import time
 
-import xonsh.lazyimps as xli
+import xonsh.lib.lazyimps as xli
 from xonsh.built_ins import XSH
 
 

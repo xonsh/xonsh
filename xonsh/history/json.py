@@ -19,7 +19,7 @@ except ImportError:
 
     JSONDecodeError = json.decoder.JSONDecodeError  # type: ignore
 
-import xonsh.lazyjson as xlj
+import xonsh.lib.lazyjson as xlj
 import xonsh.tools as xt
 import xonsh.xoreutils.uptime as uptime
 from xonsh.history.base import History

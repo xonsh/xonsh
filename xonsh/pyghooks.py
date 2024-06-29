@@ -40,8 +40,8 @@ from xonsh.color_tools import (
 )
 from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
-from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
-from xonsh.lazyimps import html, os_listxattr, terminal256
+from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.lib.lazyimps import html, os_listxattr, terminal256
 from xonsh.platform import (
     os_environ,
     ptk_version_info,

@@ -28,8 +28,8 @@ from xonsh.ansi_colors import (
 )
 from xonsh.built_ins import XSH
 from xonsh.events import events
-from xonsh.lazyasd import LazyObject, lazyobject
-from xonsh.lazyimps import pyghooks, pygments, winutils
+from xonsh.lib.lazyasd import LazyObject, lazyobject
+from xonsh.lib.lazyimps import pyghooks, pygments, winutils
 from xonsh.platform import (
     ON_CYGWIN,
     ON_DARWIN,

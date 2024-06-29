@@ -17,8 +17,8 @@ from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
-from xonsh.lazyasd import lazyobject
-from xonsh.lazyimps import pyghooks, pygments
+from xonsh.lib.lazyasd import lazyobject
+from xonsh.lib.lazyimps import pyghooks, pygments
 from xonsh.lib.pretty import pretty
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.procs.jobs import ignore_sigtstp

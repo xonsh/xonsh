@@ -16,7 +16,7 @@ from xonsh.color_tools import (
     short_to_ints,
     warn_deprecated_no_color,
 )
-from xonsh.lazyasd import LazyDict, lazyobject
+from xonsh.lib.lazyasd import LazyDict, lazyobject
 from xonsh.platform import HAS_PYGMENTS
 from xonsh.tools import FORMATTER
 

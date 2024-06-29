@@ -15,8 +15,8 @@ import os
 import sys
 import types
 
-from xonsh.lazyasd import LazyObject
-from xonsh.lazyimps import pyghooks, pygments
+from xonsh.lib.lazyasd import LazyObject
+from xonsh.lib.lazyimps import pyghooks, pygments
 from xonsh.lib.openpy import read_py_file
 from xonsh.lib.tokenize import detect_encoding
 from xonsh.platform import HAS_PYGMENTS

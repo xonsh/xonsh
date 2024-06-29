@@ -5,7 +5,7 @@ import difflib
 import itertools
 
 from xonsh.color_tools import COLORS
-from xonsh.lazyjson import LazyJSON
+from xonsh.lib.lazyjson import LazyJSON
 
 # intern some strings
 REPLACE_S = "replace"
