@@ -10,7 +10,7 @@ from pprint import pformat
 import pytest
 
 from xonsh.parsers.lexer import Lexer
-from xonsh.parsers.ply import LexToken
+from xonsh.parsers.ply.lex import LexToken
 
 LEXER_ARGS = {"lextab": "lexer_test_table", "debug": 0}
 
