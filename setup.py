@@ -41,7 +41,7 @@ def build_tables():
     print("Building lexer and parser tables.", file=sys.stderr)
     root_dir = os.path.abspath(os.path.dirname(__file__))
     sys.path.insert(0, root_dir)
-    from xonsh.parser import Parser
+    from xonsh.parsers import Parser
     from xonsh.parsers.completion_context import CompletionContextParser
 
     Parser(
