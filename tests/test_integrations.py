@@ -462,7 +462,7 @@ def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
 
-from xonsh.lib.subprocess import check_output
+from xonsh.api.subprocess import check_output
 
 print(check_output(["echo", "hello"]).decode("utf8"))
 """,

@@ -2,8 +2,8 @@
 import tempfile
 from subprocess import CalledProcessError
 
-from xonsh.lib.os import indir
-from xonsh.lib.subprocess import run, check_call, check_output
+from xonsh.api.os import indir
+from xonsh.api.subprocess import run, check_call, check_output
 
 import pytest
 
