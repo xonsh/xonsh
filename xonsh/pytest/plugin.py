@@ -19,9 +19,9 @@ from xonsh.built_ins import XSH, XonshSession
 from xonsh.completer import Completer
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.jobs import get_tasks
 from xonsh.main import setup
 from xonsh.parsers.completion_context import CompletionContextParser
+from xonsh.procs.jobs import get_tasks
 
 from .tools import DummyHistory, DummyShell, copy_env, sp
 
@@ -363,7 +363,7 @@ def ptk_shell(xonsh_execer):
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output import DummyOutput
 
-    from xonsh.ptk_shell.shell import PromptToolkitShell
+    from xonsh.shells.ptk_shell import PromptToolkitShell
 
     out = DummyOutput()
     with create_pipe_input() as inp:
@@ -375,7 +375,7 @@ def ptk_shell(xonsh_execer):
 
 @pytest.fixture
 def readline_shell(xonsh_execer, tmpdir, mocker):
-    from xonsh.readline_shell import ReadlineShell
+    from xonsh.shells.readline_shell import ReadlineShell
 
     inp_path = tmpdir / "in"
     inp = inp_path.open("w+")
