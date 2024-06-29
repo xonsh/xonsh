@@ -4,8 +4,8 @@ import os
 
 import pytest
 
-from xonsh.shells.shell import transform_command
 from xonsh.shells.base_shell import BaseShell
+from xonsh.shells.shell import transform_command
 
 
 def test_pwd_tracks_cwd(xession, xonsh_execer, tmpdir_factory, monkeypatch):
