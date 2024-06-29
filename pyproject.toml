@@ -257,7 +257,7 @@ convention = "numpy"
 "xonsh/inspectors.py" = ["E722"]
 "xonsh/platform.py" = ["F401"]
 "xonsh/parsers/*.py" = [
-    "E741", #  E741 Ambiguous variable name
+    "E741", # E741 Ambiguous variable name
 ]
 "tests/test*.py" = [
     "E741", #  E741 Ambiguous variable name
