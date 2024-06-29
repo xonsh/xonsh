@@ -1,7 +1,6 @@
 """Xonsh extension of the standard library os module, using xonsh for
 subprocess calls"""
 
-
 import sys
 
 from xonsh.built_ins import subproc_uncaptured
