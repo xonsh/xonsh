@@ -11,7 +11,7 @@ import textwrap
 import typing as tp
 
 from xonsh.built_ins import XSH
-from xonsh.jsonutils import serialize_xonsh_json
+from xonsh.lib.jsonutils import serialize_xonsh_json
 from xonsh.tools import backup_file, print_color, to_bool, to_bool_or_break
 
 

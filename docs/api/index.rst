@@ -57,7 +57,6 @@ For those of you who want the gritty details.
     xonsh.lib
     xonsh.tools
     xonsh.platform
-    xonsh.jsonutils
     xonsh.lazyjson
     xonsh.lazyasd
     xonsh.openpy
