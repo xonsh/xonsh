@@ -29,6 +29,7 @@ packages = [
     "xonsh.ply.ply",
     "xonsh.ptk_shell",
     "xonsh.procs",
+    "xonsh.platform",
     "xonsh.parser",
     "xonsh.xoreutils",
     "xontrib",
@@ -141,6 +142,7 @@ doc = [
     "myst-parser",
 ]
 
+
 [project.scripts]
 xonsh = "xonsh.main:main"
 xonsh-cat = "xonsh.xoreutils.cat:main"
@@ -221,7 +223,7 @@ convention = "numpy"
 "xonsh/timings.py" = ["F401"]
 "xonsh/history.py" = ["F821"]
 "xonsh/lexer.py" = ["E741"]
-"xonsh/parser/completion_context.py" = ["B018"]
+"xonsh/parsers/completion_context.py" = ["B018"]
 "xonsh/tokenize.py" = [
     "F821",
     "F841",
@@ -241,7 +243,7 @@ convention = "numpy"
 "xonsh/xoreutils/*.py" = ["E722"]
 "xonsh/completers/python.py" = ["E722"]
 "xonsh/ptk/shell.py" = ["E731"]
-"xonsh/parser/ast.py" = ["F401"]
+"xonsh/ast.py" = ["F401"]
 "xonsh/readline_shell.py" = ["F401"]
 "xonsh/commands_cache.py" = ["F841"]
 "xonsh/ptk/key_bindings.py" = ["F841"]
@@ -252,7 +254,7 @@ convention = "numpy"
 "xontrib/vox.py" = ["F821"]
 "xonsh/inspectors.py" = ["E722"]
 "xonsh/platform.py" = ["F401"]
-"xonsh/parser/*.py" = [
+"xonsh/parsers/*.py" = [
     "E741", #  E741 Ambiguous variable name
 ]
 "tests/test*.py" = [

@@ -67,7 +67,7 @@ def msvcrt():
 @lazyobject
 def winutils():
     if ON_WINDOWS:
-        import xonsh.winutils as m
+        import xonsh.platform.winutils as m
     else:
         m = None
     return m
@@ -76,7 +76,7 @@ def winutils():
 @lazyobject
 def macutils():
     if ON_DARWIN:
-        import xonsh.macutils as m
+        import xonsh.platform.macutils as m
     else:
         m = None
     return m
