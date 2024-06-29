@@ -13,7 +13,7 @@ import typing as tp
 from xonsh.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.ply.ply.lex import LexToken
-from xonsh.tokenize import (
+from xonsh.lib.tokenize import (
     CASE,
     COMMENT,
     DEDENT,
