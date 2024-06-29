@@ -2,7 +2,7 @@ import ast
 import collections
 import keyword
 
-from xonsh.parser import ast as xast
+from xonsh.parsers import ast as xast
 
 _all_keywords = frozenset(keyword.kwlist)
 

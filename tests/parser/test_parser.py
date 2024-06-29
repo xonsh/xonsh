@@ -6,7 +6,7 @@ import textwrap
 
 import pytest
 
-from xonsh.parser import Parser
+from xonsh.parsers import Parser
 from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (

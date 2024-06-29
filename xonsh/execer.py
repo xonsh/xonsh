@@ -6,7 +6,7 @@ import inspect
 import sys
 import types
 
-from xonsh.parser import Parser
+from xonsh.parsers import Parser
 from xonsh.parsers.ast import CtxAwareTransformer
 from xonsh.tools import (
     balanced_parens,
