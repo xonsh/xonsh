@@ -119,7 +119,7 @@ class AsyncPrompt:
         """Create a timer to update the prompt. The timing can be configured through env variables.
         threading.Timer is used to stop calling invalidate frequently.
         """
-        from xonsh.shell.ptk_shell import tokenize_ansi
+        from xonsh.shells.ptk_shell import tokenize_ansi
 
         if self.timer:
             self.timer.cancel()
@@ -158,7 +158,7 @@ class PromptUpdator:
     """Handle updating multiple AsyncPrompt instances prompt/rprompt/bottom_toolbar"""
 
     def __init__(self, shell):
-        from xonsh.shell.ptk_shell import PromptToolkitShell
+        from xonsh.shells.ptk_shell import PromptToolkitShell
 
         self.prompts: dict[str, AsyncPrompt] = {}
         self.shell: PromptToolkitShell = shell

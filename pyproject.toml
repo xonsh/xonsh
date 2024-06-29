@@ -26,9 +26,9 @@ readme = {file = ["README.rst"]}
 [tool.setuptools]
 packages = [
     "xonsh",
+    "xonsh.shells",
+    "xonsh.shells.ptk_shell",
     "xonsh.parsers.ply",
-    "xonsh.shell",
-    "xonsh.shell.ptk_shell",
     "xonsh.procs",
     "xonsh.platform",
     "xonsh.parsers",
@@ -243,11 +243,11 @@ convention = "numpy"
 "xonsh/style_tools.py" = ["F821"]
 "xonsh/xoreutils/*.py" = ["E722"]
 "xonsh/completers/python.py" = ["E722"]
+"xonsh/shells/ptk_shell/__init__.py" = ["E731"]
+"xonsh/shells/readline_shell.py" = ["F401"]
 "xonsh/parsers/ast.py" = ["F401"]
-"xonsh/shell/ptk_shell/__init__.py" = ["E731"]
-"xonsh/shell/readline_shell.py" = ["F401"]
 "xonsh/commands_cache.py" = ["F841"]
-"xonsh/shell/ptk_shell/key_bindings.py" = ["F841"]
+"xonsh/shells/ptk_shell/key_bindings.py" = ["F841"]
 "xonsh/tools.py" = [
     "E731",
 ]
