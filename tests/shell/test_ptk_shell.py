@@ -51,13 +51,13 @@ def test_prompt_toolkit_version_checks(
         return ptk_ver is not None
 
     monkeypatch.setattr(
-        "xonsh.shells.warnings.warn", mock_warning
+        "xonsh.shells.shell.warnings.warn", mock_warning
     )  # hardwon: patch the caller!
     monkeypatch.setattr(
-        "xonsh.shells.ptk_above_min_supported", mock_ptk_above_min_supported
+        "xonsh.shells.shell.ptk_above_min_supported", mock_ptk_above_min_supported
     )  # have to patch both callers
     monkeypatch.setattr(
-        "xonsh.platform.ptk_above_min_supported", mock_ptk_above_min_supported
+        "xonsh.shells.shell.ptk_above_min_supported", mock_ptk_above_min_supported
     )
     monkeypatch.setattr("xonsh.platform.has_prompt_toolkit", mock_has_prompt_toolkit)
 
