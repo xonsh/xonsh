@@ -20,8 +20,8 @@ from xonsh.imphooks import install_import_hooks
 from xonsh.jobs import ignore_sigtstp
 from xonsh.lazyasd import lazyobject
 from xonsh.lazyimps import pyghooks, pygments
+from xonsh.lib.pretty import pretty
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
-from xonsh.pretty import pretty
 from xonsh.shell import Shell
 from xonsh.timings import setup_timings
 from xonsh.tools import (
@@ -488,7 +488,8 @@ def _failback_to_other_shells(args, err):
 
     if foreign_shell:
         traceback.print_exc()
-        print("Xonsh encountered an issue during launch", file=sys.stderr)
+        print("Xonsh encountered an issue during launch.", file=sys.stderr)
+        print("Please report to https://github.com/xonsh/xonsh/issues", file=sys.stderr)
         print(f"Failback to {foreign_shell}", file=sys.stderr)
         os.execlp(foreign_shell, foreign_shell)
     else:

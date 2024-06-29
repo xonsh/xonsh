@@ -202,9 +202,19 @@ class Shell:
         if is_class(backend):
             cls = backend
         else:
+            """
+            There is an edge case that we're using mostly in integration tests:
+            `echo 'echo 1' | xonsh -i` and it's not working with `TERM=dumb` (#5462 #5517)
+            because `dumb` is readline where stdin is not supported yet. PR is very welcome!
+            So in this case we need to force using prompt_toolkit.
+            """
+            is_stdin_to_interactive = (
+                XSH.env.get("XONSH_INTERACTIVE", False) and not sys.stdin.isatty()
+            )
+
             if backend == "none":
                 from xonsh.base_shell import BaseShell as cls
-            elif backend == "prompt_toolkit":
+            elif backend == "prompt_toolkit" or is_stdin_to_interactive:
                 from xonsh.ptk_shell.shell import PromptToolkitShell as cls
             elif backend == "readline":
                 from xonsh.readline_shell import ReadlineShell as cls
