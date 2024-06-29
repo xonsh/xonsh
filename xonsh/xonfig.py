@@ -20,6 +20,7 @@ from xonsh.cli_utils import Arg, ArgParserAlias
 from xonsh.events import events
 from xonsh.foreign_shells import CANON_SHELL_NAMES
 from xonsh.lazyasd import lazyobject
+from xonsh.parsers import ply
 from xonsh.platform import (
     DEFAULT_ENCODING,
     ON_CYGWIN,
@@ -37,7 +38,6 @@ from xonsh.platform import (
     ptk_version,
     pygments_version,
 )
-from xonsh.parsers import ply
 from xonsh.prompt.base import is_template_string
 from xonsh.tools import (
     color_style,

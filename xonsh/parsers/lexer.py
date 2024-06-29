@@ -11,8 +11,8 @@ import re
 import typing as tp
 
 from xonsh.lazyasd import lazyobject
-from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.parsers.ply import LexToken
+from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tokenize import (
     CASE,
     COMMENT,
