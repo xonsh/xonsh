@@ -17,7 +17,7 @@ from xonsh.parsers.ast import has_elts, load_attribute_chain, xonsh_call
 from xonsh.parsers.context_check import check_contexts
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.platform import PYTHON_VERSION_INFO
-from xonsh.ply.ply import yacc
+from xonsh.parsers.ply import yacc
 from xonsh.tokenize import SearchPath, StringPrefix
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCHPATH")

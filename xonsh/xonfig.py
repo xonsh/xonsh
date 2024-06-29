@@ -37,7 +37,7 @@ from xonsh.platform import (
     ptk_version,
     pygments_version,
 )
-from xonsh.ply import ply
+from xonsh.parsers import ply
 from xonsh.prompt.base import is_template_string
 from xonsh.tools import (
     color_style,
