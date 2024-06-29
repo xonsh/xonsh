@@ -17,7 +17,7 @@ Context = namedtuple("Context", ["indent", "buffer", "accept", "cli", "cr"])
 def ctx(xession):
     """Context in which the ptk multiline functionality will be tested."""
     xession.env["INDENT"] = "    "
-    from xonsh.ptk_shell.key_bindings import carriage_return
+    from xonsh.shell.ptk_shell.key_bindings import carriage_return
 
     ptk_buffer = Buffer()
     ptk_buffer.accept_action = MagicMock(name="accept")
@@ -53,14 +53,14 @@ def test_dedent(ctx):
 def test_nodedent(ctx):
     """don't dedent if first line of ctx.buffer"""
     mock = MagicMock(return_value=True)
-    with patch("xonsh.ptk_shell.key_bindings.can_compile", mock):
+    with patch("xonsh.shell.ptk_shell.key_bindings.can_compile", mock):
         document = Document("pass")
         ctx.buffer.set_document(document)
         ctx.cr(ctx.buffer, ctx.cli)
         assert ctx.accept.mock_calls is not None
 
     mock = MagicMock(return_value=True)
-    with patch("xonsh.ptk_shell.key_bindings.can_compile", mock):
+    with patch("xonsh.shell.ptk_shell.key_bindings.can_compile", mock):
         document = Document(ctx.indent + "pass")
         ctx.buffer.set_document(document)
         ctx.cr(ctx.buffer, ctx.cli)
@@ -76,7 +76,7 @@ def test_continuation_line(ctx):
 
 def test_trailing_slash(ctx):
     mock = MagicMock(return_value=True)
-    with patch("xonsh.ptk_shell.key_bindings.can_compile", mock):
+    with patch("xonsh.shell.ptk_shell.key_bindings.can_compile", mock):
         document = Document("this line will \\")
         ctx.buffer.set_document(document)
         ctx.cr(ctx.buffer, ctx.cli)
@@ -88,7 +88,7 @@ def test_trailing_slash(ctx):
 
 def test_cant_compile_newline(ctx):
     mock = MagicMock(return_value=False)
-    with patch("xonsh.ptk_shell.key_bindings.can_compile", mock):
+    with patch("xonsh.shell.ptk_shell.key_bindings.can_compile", mock):
         document = Document("for i in (1, 2, ")
         ctx.buffer.set_document(document)
         ctx.cr(ctx.buffer, ctx.cli)
@@ -97,7 +97,7 @@ def test_cant_compile_newline(ctx):
 
 def test_can_compile_and_executes(ctx):
     mock = MagicMock(return_value=True)
-    with patch("xonsh.ptk_shell.key_bindings.can_compile", mock):
+    with patch("xonsh.shell.ptk_shell.key_bindings.can_compile", mock):
         document = Document("ls")
         ctx.buffer.set_document(document)
         ctx.cr(ctx.buffer, ctx.cli)
