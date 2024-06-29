@@ -10,7 +10,7 @@
 
 * Starting from this release we notify that in the future we will not recommend to use ``xonsh.procs.run_subproc``
   and ``xonsh.built_ins.subproc_*`` functions for downstream projects because of #5383.
-  We will develop `xonsh.api` as alternative.
+  We will develop ``xonsh.api`` as alternative.
 
 **Removed:**
 
