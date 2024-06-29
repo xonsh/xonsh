@@ -19,7 +19,7 @@ except ImportError:
 
     JSONDecodeError = json.decoder.JSONDecodeError  # type: ignore
 
-import xonsh.lazyjson as xlj
+import xonsh.lib.lazyjson as xlj
 import xonsh.tools as xt
 import xonsh.xoreutils.uptime as uptime
 from xonsh.history.base import History
@@ -585,7 +585,7 @@ class JsonHistory(History):
         data["gc_last_size"] = f"{(self.hist_size, self.hist_units)}"
         return data
 
-    def run_gc(self, size=None, blocking=True, force=False):
+    def run_gc(self, size=None, blocking=True, force=False, **_):
         self.gc = JsonHistoryGC(wait_for_shell=False, size=size, force=force)
         if blocking:
             while self.gc.is_alive():  # while waiting for gc.

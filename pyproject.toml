@@ -26,9 +26,12 @@ readme = {file = ["README.rst"]}
 [tool.setuptools]
 packages = [
     "xonsh",
-    "xonsh.ply.ply",
-    "xonsh.ptk_shell",
+    "xonsh.api",
+    "xonsh.shells",
+    "xonsh.shells.ptk_shell",
+    "xonsh.parsers.ply",
     "xonsh.procs",
+    "xonsh.platform",
     "xonsh.parsers",
     "xonsh.xoreutils",
     "xontrib",
@@ -221,9 +224,9 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "xonsh/timings.py" = ["F401"]
 "xonsh/history.py" = ["F821"]
-"xonsh/lexer.py" = ["E741"]
+"xonsh/parsers/lexer.py" = ["E741"]
 "xonsh/parsers/completion_context.py" = ["B018"]
-"xonsh/tokenize.py" = [
+"xonsh/lib/tokenize.py" = [
     "F821",
     "F841",
     "B904" # Within an `except` clause, raise exceptions with `raise ... from err`
@@ -241,11 +244,11 @@ convention = "numpy"
 "xonsh/style_tools.py" = ["F821"]
 "xonsh/xoreutils/*.py" = ["E722"]
 "xonsh/completers/python.py" = ["E722"]
-"xonsh/ptk/shell.py" = ["E731"]
-"xonsh/ast.py" = ["F401"]
-"xonsh/readline_shell.py" = ["F401"]
+"xonsh/parsers/ast.py" = ["F401"]
+"xonsh/shells/ptk_shell/__init__.py" = ["E731"]
+"xonsh/shells/readline_shell.py" = ["F401"]
 "xonsh/commands_cache.py" = ["F841"]
-"xonsh/ptk/key_bindings.py" = ["F841"]
+"xonsh/shells/ptk_shell/key_bindings.py" = ["F841"]
 "xonsh/tools.py" = [
     "E731",
 ]
@@ -254,7 +257,7 @@ convention = "numpy"
 "xonsh/inspectors.py" = ["E722"]
 "xonsh/platform.py" = ["F401"]
 "xonsh/parsers/*.py" = [
-    "E741", #  E741 Ambiguous variable name
+    "E741", # E741 Ambiguous variable name
 ]
 "tests/test*.py" = [
     "E741", #  E741 Ambiguous variable name

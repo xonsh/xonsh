@@ -12,7 +12,7 @@ import threading
 
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.lazyasd import LazyObject
+from xonsh.lib.lazyasd import LazyObject
 
 RE_REMOVE_ANSI = LazyObject(
     lambda: re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]"),

@@ -17,10 +17,10 @@ from typing import (
     overload,
 )
 
-from xonsh.lazyasd import lazyobject
-from xonsh.lexer import Lexer
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.base import Location, raise_parse_error
-from xonsh.ply.ply import yacc
+from xonsh.parsers.lexer import Lexer
+from xonsh.parsers.ply import yacc
 from xonsh.tools import check_for_partial_string, get_line_continuation
 
 

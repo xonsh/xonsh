@@ -14,14 +14,13 @@ import typing as tp
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
-from xonsh.ast import isexpression
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import bg, clean_jobs, disown, fg, jobs
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
+from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
     IN_APPIMAGE,
     ON_ANACONDA,
@@ -32,6 +31,7 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
+from xonsh.procs.jobs import bg, clean_jobs, disown, fg, jobs
 from xonsh.procs.specs import SpecAttrModifierAlias, SpecModifierAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
@@ -980,7 +980,7 @@ def make_default_aliases():
             default_aliases["deactivate"] = ["source-cmd", "deactivate.bat"]
         if shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
             # XSH.commands_cache is not available during setup
-            import xonsh.winutils as winutils
+            import xonsh.platform.winutils as winutils
 
             def sudo(args):
                 if len(args) < 1:

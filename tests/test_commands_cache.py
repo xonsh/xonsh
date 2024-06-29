@@ -187,8 +187,15 @@ def test_update_cache(xession, tmp_path):
     file1.touch()
     file1.chmod(0o755)
 
-    cache = CommandsCache({"PATH": [subdir2, subdir1]})
+    paths = [subdir2, subdir1]
+    cache = CommandsCache({"PATH": paths})
     cached = cache.update_cache()
+
+    # Check there are no changes after update cache.
+    c1 = cache._update_and_check_changes(paths)
+    c2 = cache._update_and_check_changes(paths)
+    c3 = cache._update_and_check_changes(paths)
+    assert [c1, c2, c3] == [True, False, False]
 
     assert file1.samefile(cached[basename][0])
 

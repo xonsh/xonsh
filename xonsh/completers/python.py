@@ -6,7 +6,7 @@ import inspect
 import re
 import warnings
 
-import xonsh.lazyasd as xl
+import xonsh.lib.lazyasd as xl
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
