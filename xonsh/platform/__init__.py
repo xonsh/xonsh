@@ -14,7 +14,7 @@ import signal
 import subprocess
 import sys
 
-from xonsh.lazyasd import LazyBool, lazybool, lazyobject
+from xonsh.lib.lazyasd import LazyBool, lazybool, lazyobject
 
 # do not import any xonsh-modules here to avoid circular dependencies
 

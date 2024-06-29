@@ -19,7 +19,7 @@ import struct
 import sys
 import time
 
-import xonsh.lazyimps as xlimps
+import xonsh.lib.lazyimps as xlimps
 import xonsh.platform as xp
 
 

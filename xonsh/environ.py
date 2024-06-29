@@ -29,7 +29,7 @@ from xonsh.built_ins import XSH
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
-from xonsh.lazyasd import LazyBool, lazyobject
+from xonsh.lib.lazyasd import LazyBool, lazyobject
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
     DEFAULT_ENCODING,

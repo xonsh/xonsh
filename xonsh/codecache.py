@@ -7,7 +7,7 @@ import sys
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.built_ins import XSH
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO_BYTES
 from xonsh.tools import is_writable_file, print_warning
 

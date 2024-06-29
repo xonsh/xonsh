@@ -86,7 +86,7 @@ import re
 import sys
 import types
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lib.lazyasd import LazyObject, lazyobject
 
 __all__ = [
     "pretty",

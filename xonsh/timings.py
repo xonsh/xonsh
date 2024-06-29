@@ -17,8 +17,7 @@ import timeit
 
 from xonsh.built_ins import XSH
 from xonsh.events import events
-from xonsh.lazyasd import lazybool, lazyobject
-from xonsh.platform import ON_WINDOWS
+from xonsh.lib.lazyasd import lazybool, lazyobject
 
 
 @lazybool

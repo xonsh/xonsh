@@ -3,7 +3,7 @@
 import os
 import re
 
-import xonsh.lazyasd as xl
+import xonsh.lib.lazyasd as xl
 
 
 @xl.lazyobject

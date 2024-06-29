@@ -328,7 +328,7 @@ def test_colorize_file_symlink(key, file_path, colorizable_files, xs_LS_COLORS):
     assert color_key == tar_color_key, "File classified as expected kind, via symlink"
 
 
-import xonsh.lazyimps
+import xonsh.lib.lazyimps
 
 
 def test_colorize_file_ca(xs_LS_COLORS, monkeypatch):

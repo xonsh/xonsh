@@ -9,7 +9,7 @@ WTFPL http://sam.zoy.org/wtfpl/
 import math
 import re
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lib.lazyasd import LazyObject, lazyobject
 from xonsh.tools import print_warning
 
 _NO_COLOR_WARNING_SHOWN = False

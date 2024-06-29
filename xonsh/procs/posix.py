@@ -9,8 +9,8 @@ import sys
 import threading
 import time
 
-import xonsh.lazyasd as xl
-import xonsh.lazyimps as xli
+import xonsh.lib.lazyasd as xl
+import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH

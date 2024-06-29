@@ -14,7 +14,7 @@ import time
 import typing as tp
 from pathlib import Path
 
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
 from xonsh.tools import executables_in
 
