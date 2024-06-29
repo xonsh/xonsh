@@ -9,7 +9,7 @@ except ImportError:
 @pytest.fixture
 def history_obj():
     """Instantiate `PromptToolkitHistory` and append a line string"""
-    from xonsh.shell.ptk_shell.history import PromptToolkitHistory
+    from xonsh.shells.ptk_shell.history import PromptToolkitHistory
 
     hist = PromptToolkitHistory(load_prev=False)
     hist.append_string("line10")

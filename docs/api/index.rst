@@ -37,7 +37,7 @@ For those of you who want the gritty details.
     xonsh.completer
     xonsh.completers
     xonsh.prompt
-    xonsh.shell
+    xonsh.shells
     xonsh.base_shell
     xonsh.readline_shell
     xonsh.ptk_shell

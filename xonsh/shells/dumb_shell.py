@@ -1,7 +1,7 @@
 """A dumb shell for when $TERM == 'dumb', which usually happens in emacs."""
 
 from xonsh.built_ins import XSH
-from xonsh.shell.readline_shell import ReadlineShell
+from xonsh.shells.readline_shell import ReadlineShell
 
 
 class DumbShell(ReadlineShell):

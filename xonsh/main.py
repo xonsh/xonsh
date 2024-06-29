@@ -22,7 +22,7 @@ from xonsh.lazyimps import pyghooks, pygments
 from xonsh.lib.pretty import pretty
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.procs.jobs import ignore_sigtstp
-from xonsh.shell import Shell
+from xonsh.shells.shell import Shell
 from xonsh.timings import setup_timings
 from xonsh.tools import (
     display_error_message,

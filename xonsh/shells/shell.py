@@ -213,13 +213,13 @@ class Shell:
             )
 
             if backend == "none":
-                from xonsh.shell.base_shell import BaseShell as cls
+                from xonsh.shells.base_shell import BaseShell as cls
             elif backend == "prompt_toolkit" or is_stdin_to_interactive:
-                from xonsh.shell.ptk_shell import PromptToolkitShell as cls
+                from xonsh.shells.ptk_shell import PromptToolkitShell as cls
             elif backend == "readline":
-                from xonsh.shell.readline_shell import ReadlineShell as cls
+                from xonsh.shells.readline_shell import ReadlineShell as cls
             elif backend == "dumb":
-                from xonsh.shell.dumb_shell import DumbShell as cls
+                from xonsh.shells.dumb_shell import DumbShell as cls
             else:
                 raise XonshError(f"{backend} is not recognized as a shell type")
         return cls(**kwargs)
