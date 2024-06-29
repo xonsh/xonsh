@@ -9,8 +9,8 @@ Originally posted by @scopatz in https://github.com/xonsh/xonsh/issues/2726#issu
     like ``sh()`` that you'd like to see, by all means please help us add it!
 """
 
-from xonsh.built_ins import XSH, subproc_captured_hiddenobject, subproc_captured_stdout
 from xonsh.api.os import indir
+from xonsh.built_ins import XSH, subproc_captured_hiddenobject, subproc_captured_stdout
 
 
 def run(cmd, cwd=None, check=False):
