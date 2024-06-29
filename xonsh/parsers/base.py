@@ -10,15 +10,15 @@ from ast import parse as pyparse
 from collections.abc import Iterable, Mapping, Sequence
 from threading import Thread
 
-from xonsh.lazyasd import LazyObject
-from xonsh.parsers import ast
+from xonsh import ast
 from xonsh.parsers.ast import has_elts, load_attribute_chain, xonsh_call
+from xonsh.lazyasd import LazyObject
+from xonsh.parsers.lexer import Lexer, LexToken
 from xonsh.parsers.context_check import check_contexts
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
-from xonsh.parsers.lexer import Lexer, LexToken
-from xonsh.parsers.ply import yacc
 from xonsh.platform import PYTHON_VERSION_INFO
-from xonsh.tokenize import SearchPath, StringPrefix
+from xonsh.parsers.ply import yacc
+from xonsh.lib.tokenize import SearchPath, StringPrefix
 
 RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCHPATH")
 RE_STRINGPREFIX = LazyObject(
