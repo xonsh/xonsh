@@ -13,7 +13,6 @@ from xonsh.history.json import (
     _xhj_gc_files_to_rmfiles,
     _xhj_gc_seconds_to_rmfiles,
 )
-
 from xonsh.lib.lazyjson import LazyJSON
 from xonsh.xaliases.history import HistoryAlias
 from xonsh.xaliases.history import alias as history_main

@@ -2,8 +2,6 @@
 
 import sys
 
-import xonsh.cli_utils as xcli
-import xonsh.history.diff_history as xdh
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.history.base import History
