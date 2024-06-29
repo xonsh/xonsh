@@ -10,7 +10,7 @@ from ast import parse as pyparse
 from collections.abc import Iterable, Mapping, Sequence
 from threading import Thread
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lib.lazyasd import LazyObject
 from xonsh.lib.tokenize import SearchPath, StringPrefix
 from xonsh.parsers import ast
 from xonsh.parsers.ast import has_elts, load_attribute_chain, xonsh_call

@@ -1,6 +1,6 @@
 """Implements the xonsh parser."""
 
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO
 
 

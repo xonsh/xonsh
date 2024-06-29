@@ -1,8 +1,8 @@
 """Xonsh extension of the standard library subprocess module, using xonsh for
 subprocess calls"""
 
+from xonsh.api.os import indir
 from xonsh.built_ins import XSH, subproc_captured_hiddenobject, subproc_captured_stdout
-from xonsh.lib.os import indir
 
 
 def run(cmd, cwd=None, check=False):

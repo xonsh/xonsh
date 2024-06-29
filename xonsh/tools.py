@@ -44,7 +44,7 @@ from contextlib import contextmanager
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
-from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.platform import (
     DEFAULT_ENCODING,
     HAS_PYGMENTS,

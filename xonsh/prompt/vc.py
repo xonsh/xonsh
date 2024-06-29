@@ -12,7 +12,7 @@ import threading
 
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.lazyasd import LazyObject
+from xonsh.lib.lazyasd import LazyObject
 from xonsh.procs.executables import locate_executable
 
 RE_REMOVE_ANSI = LazyObject(

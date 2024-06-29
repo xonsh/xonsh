@@ -10,7 +10,7 @@ import keyword as kwmod
 import re
 import typing as tp
 
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.lib.tokenize import (
     CASE,
     COMMENT,

@@ -19,7 +19,7 @@ from xonsh.built_ins import XSH
 from xonsh.cli_utils import Arg, ArgParserAlias
 from xonsh.events import events
 from xonsh.foreign_shells import CANON_SHELL_NAMES
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers import ply
 from xonsh.platform import (
     DEFAULT_ENCODING,

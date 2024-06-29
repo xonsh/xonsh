@@ -17,7 +17,7 @@ from typing import (
     overload,
 )
 
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.base import Location, raise_parse_error
 from xonsh.parsers.lexer import Lexer
 from xonsh.parsers.ply import yacc

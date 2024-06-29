@@ -16,7 +16,7 @@ import sys
 import threading
 import time
 
-import xonsh.lazyimps as xli
+import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH

@@ -14,7 +14,7 @@ from xonsh.history.json import (
     _xhj_gc_seconds_to_rmfiles,
 )
 from xonsh.history.main import HistoryAlias, history_main
-from xonsh.lazyjson import LazyJSON
+from xonsh.lib.lazyjson import LazyJSON
 
 CMDS = ["ls", "cat hello kitty", "abc", "def", "touch me", "grep from me"]
 IGNORE_OPTS = ",".join(["ignoredups", "ignoreerr", "ignorespace"])

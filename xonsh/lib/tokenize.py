@@ -81,7 +81,7 @@ from token import (
     tok_name,
 )
 
-from xonsh.lazyasd import LazyObject
+from xonsh.lib.lazyasd import LazyObject
 from xonsh.platform import PYTHON_VERSION_INFO
 
 cookie_re = LazyObject(
