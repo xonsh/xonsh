@@ -426,7 +426,7 @@ def premain(argv=None):
         "XONSH_INTERACTIVE": args.force_interactive
         or (args.mode == XonshMode.interactive),
     }
-    pre_env["COLOR_RESULTS"] = pre_env["XONSH_INTERACTIVE"]
+    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS",pre_env["XONSH_INTERACTIVE"])
 
     # Load -DVAR=VAL arguments.
     if args.defines is not None:
