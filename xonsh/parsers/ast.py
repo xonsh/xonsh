@@ -4,9 +4,8 @@
 # pylint: disable=unused-import
 import itertools
 import sys
-
 import textwrap
-from ast import (  #noqa # pylint: disable=unused-import
+from ast import (  # noqa # pylint: disable=unused-import
     AST,
     Add,
     And,
