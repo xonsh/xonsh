@@ -222,7 +222,7 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "xonsh/timings.py" = ["F401"]
 "xonsh/history.py" = ["F821"]
-"xonsh/lexer.py" = ["E741"]
+"xonsh/parsers/lexer.py" = ["E741"]
 "xonsh/parsers/completion_context.py" = ["B018"]
 "xonsh/tokenize.py" = [
     "F821",
