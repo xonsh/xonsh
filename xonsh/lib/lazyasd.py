@@ -1,6 +1,6 @@
 """Lazy and self destructive containers for speeding up module import."""
 
-# Copyright 2015-2016, the xonsh developers. All rights reserved.
+# Copyright 2015-2016, the xonsh core developers. All rights reserved.
 import builtins
 import collections.abc as cabc
 import importlib
