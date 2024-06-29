@@ -859,28 +859,6 @@ class Xettings:
 class GeneralSetting(Xettings):
     """General"""
 
-    AUTO_CONTINUE = Var.with_default(
-        False,
-        "If ``True``, automatically resume stopped jobs when they are disowned. "
-        "When stopped jobs are disowned and this option is ``False``, a warning "
-        "will print information about how to continue the stopped process.",
-    )
-
-    COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
-        False,
-        "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
-    )
-
-    ENABLE_COMMANDS_CACHE = Var(
-        default=True,
-        doc="command names in a directory are cached when enabled. "
-        "On some platforms it may not be accurate enough"
-        "(e.g. Windows, Linux save mtime in seconds). "
-        "Setting it to False would disable the caching mechanism "
-        "and may slow down the shell",
-        doc_default="True",
-    )
-
     HOSTNAME = Var.with_default(
         default=default_value(lambda env: platform.node()),
         doc="Automatically set to the name of the current host.",
@@ -891,18 +869,6 @@ class GeneralSetting(Xettings):
         doc="Automatically set to a string that fully describes the system type on which xonsh is executing.",
         type_str="str",
     )
-    LANG = Var.with_default(
-        default="C.UTF-8",
-        doc="Fallback locale setting for systems where it matters",
-        type_str="str",
-    )
-    LC_COLLATE = Var.for_locale("LC_COLLATE")
-    LC_CTYPE = Var.for_locale("LC_CTYPE")
-    LC_MONETARY = Var.for_locale("LC_MONETARY")
-    LC_NUMERIC = Var.for_locale("LC_NUMERIC")
-    LC_TIME = Var.for_locale("LC_TIME")
-    if hasattr(locale, "LC_MESSAGES"):
-        LC_MESSAGES = Var.for_locale("LC_MESSAGES")
 
     PWD = Var.with_default(
         _get_cwd() or ".",
@@ -939,18 +905,6 @@ class GeneralSetting(Xettings):
         "filtering valid executables by. Each element must be "
         "uppercase.",
     )
-    RAISE_SUBPROC_ERROR = Var.with_default(
-        False,
-        "Whether or not to raise an error if a subprocess (captured or "
-        "uncaptured) returns a non-zero exit status, which indicates failure. "
-        "This is most useful in xonsh scripts or modules where failures "
-        "should cause an end to execution. This is less useful at a terminal. "
-        "The error that is raised is a ``subprocess.CalledProcessError``.",
-    )
-    LAST_RETURN_CODE = Var.with_default(
-        0,
-        "Integer return code of the last command. Only updated during interactive use, i.e. not during execution of scripts.",
-    )
 
     SHLVL = Var(
         is_valid_shlvl,
@@ -960,10 +914,7 @@ class GeneralSetting(Xettings):
         "Shell nesting level typed as integer, mirrors bash's $SHLVL.",
         is_configurable=False,
     )
-    XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
-        False,
-        "If ``True`` the stderr from captured subproc will be printed automatically.",
-    )
+
     TERM = Var.no_default(
         "str",
         "TERM is sometimes set by the terminal emulator. This is used (when "
@@ -982,47 +933,7 @@ class GeneralSetting(Xettings):
         "not always happen.",
         is_configurable=False,
     )
-    XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
-        "stream_lines",
-        "Set output format for subprocess e.g. ``du $(ls)``. "
-        "By default (``stream_lines``) subprocess operator returns text output. "
-        "Set ``list_lines`` to have list of lines.",
-    )
-    XONSH_CAPTURE_ALWAYS = Var.with_default(
-        False,
-        "Try to capture output of commands run without explicit capturing.\n"
-        "If True, xonsh will capture the output of commands run directly or in ``![]``"
-        "to the session history.\n"
-        "Setting to True has the following disadvantages:\n"
-        "* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).\n"
-        "  For more information see discussion at https://github.com/xonsh/xonsh/issues/3672.\n"
-        "* Stopping these commands with ^Z (i.e. ``SIGTSTP``)\n"
-        "  is disabled as it causes deadlocked terminals.\n"
-        "  ``SIGTSTP`` may still be issued and only the physical pressing\n"
-        "  of ``Ctrl+Z`` is ignored.\n\n"
-        "Regardless of this value, commands run in ``$()``, ``!()`` or with an IO redirection (``>`` or ``|``) "
-        "will always be captured.\n"
-        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True.",
-    )
-    THREAD_SUBPROCS = Var(
-        is_bool_or_none,
-        to_bool_or_none,
-        bool_or_none_to_str,
-        not ON_CYGWIN,
-        "Note: The ``$XONSH_CAPTURE_ALWAYS`` variable introduces finer control "
-        "and you should probably use that instead.\n\n"
-        "Whether or not to try to run subrocess mode in a Python thread, "
-        "when trying to capture its output. There are various trade-offs.\n\n"
-        "If True, xonsh is able capture & store the stdin, stdout, and stderr"
-        " of threadable subprocesses.\n"
-        "The disadvantages are listed in ``$XONSH_CAPTURE_ALWAYS``.\n"
-        "The desired effect is often up to the command, user, or use case.\n\n"
-        "None values are for internal use only and are used to turn off "
-        "threading when loading xonshrc files. This is done because Bash "
-        "was automatically placing new xonsh instances in the background "
-        "at startup when threadable subprocs were used. Please see "
-        "https://github.com/xonsh/xonsh/pull/3705 for more information.\n",
-    )
+
     UPDATE_OS_ENVIRON = Var.with_default(
         False,
         "If True ``os_environ`` will always be updated "
@@ -1070,33 +981,7 @@ class GeneralSetting(Xettings):
         "are loaded after any files in XONSHRC.",
         type_str="env_path",
     )
-    XONSH_COMPLETER_DIRS = Var.with_default(
-        default_completer_dirs,
-        """\
-A list of paths where Xonsh searches for command completions.
-Any completions defined are lazy loaded when needed.
-The name of the completer file should match that of the completing command.
-The file should contain a function with the signature
-``xonsh_complete(ctx: CommandContext) -> Iterator[RichCompletion|str]``.
-""",
-        type_str="env_path",
-    )
-    XONSH_APPEND_NEWLINE = Var.with_default(
-        xonsh_append_newline,
-        "Append new line when a partial line is preserved in output.",
-        doc_default="``$XONSH_INTERACTIVE``",
-        type_str="bool",
-    )
-    XONSH_CACHE_SCRIPTS = Var.with_default(
-        True,
-        "Controls whether the code for scripts run from xonsh will be cached"
-        " (``True``) or re-compiled each time (``False``).",
-    )
-    XONSH_CACHE_EVERYTHING = Var.with_default(
-        False,
-        "Controls whether all code (including code entered at the interactive"
-        " prompt) will be cached.",
-    )
+
     XONSH_CONFIG_DIR = Var.with_default(
         xonsh_config_dir,
         "This is the location where xonsh user-level configuration information is stored.",
@@ -1115,12 +1000,7 @@ The file should contain a function with the signature
         "a color map. Run ``xonfig styles`` to see the available styles.",
         type_str="str",
     )
-    XONSH_DATETIME_FORMAT = Var.with_default(
-        "%Y-%m-%d %H:%M",
-        "The format that is used for ``datetime.strptime()`` in various places, "
-        "i.e the history timestamp option.",
-        type_str="str",
-    )
+
     XONSH_DEBUG = Var(
         always_false,
         to_debug,
@@ -1138,12 +1018,7 @@ The file should contain a function with the signature
         doc_default="``$XDG_DATA_HOME/xonsh``",
         type_str="str",
     )
-    XONSH_CACHE_DIR = Var.with_default(
-        xonsh_cache_dir,
-        "This is the location where cache files used by xonsh are stored, such as commands-cache...",
-        doc_default="``$XDG_CACHE_HOME/xonsh``",
-        type_str="str",
-    )
+
     XONSH_ENCODING = Var.with_default(
         DEFAULT_ENCODING,
         "This is the encoding that xonsh should use for subprocess operations.",
@@ -1172,19 +1047,7 @@ The file should contain a function with the signature
         "``True`` if xonsh is running as a login shell, and ``False`` otherwise.",
         is_configurable=False,
     )
-    XONSH_PROC_FREQUENCY = Var.with_default(
-        1e-4,
-        "The process frequency is the time that "
-        "xonsh process threads sleep for while running command pipelines. "
-        "The value has units of seconds [s].",
-    )
-    XONSH_SHOW_TRACEBACK = Var.with_default(
-        False,
-        "Controls if a traceback is shown if exceptions occur in the shell. "
-        "Set to ``True`` to always show traceback or ``False`` to always hide. "
-        "If undefined then the traceback is hidden but a notice is shown on how "
-        "to enable the full traceback.",
-    )
+
     XONSH_SOURCE = Var.with_default(
         "",
         "When running a xonsh script, this variable contains the absolute path "
@@ -1208,6 +1071,84 @@ The file should contain a function with the signature
         "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
         "(The rules above are all have the same effect.)",
     )
+
+    STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
+    STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
+
+
+class SubprocessSetting(Xettings):
+    """Subprocess Settings"""
+
+    RAISE_SUBPROC_ERROR = Var.with_default(
+        False,
+        "Whether or not to raise an error if a subprocess (captured or "
+        "uncaptured) returns a non-zero exit status, which indicates failure. "
+        "This is most useful in xonsh scripts or modules where failures "
+        "should cause an end to execution. This is less useful at a terminal. "
+        "The error that is raised is a ``subprocess.CalledProcessError``.",
+    )
+    LAST_RETURN_CODE = Var.with_default(
+        0,
+        "Integer return code of the last command. Only updated during interactive use, i.e. not during execution of scripts.",
+    )
+    XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
+        False,
+        "If ``True`` the stderr from captured subproc will be printed automatically.",
+    )
+    XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
+        "stream_lines",
+        "Set output format for subprocess e.g. ``du $(ls)``. "
+        "By default (``stream_lines``) subprocess operator returns text output. "
+        "Set ``list_lines`` to have list of lines.",
+    )
+
+    XONSH_CAPTURE_ALWAYS = Var.with_default(
+        False,
+        "Try to capture output of commands run without explicit capturing.\n"
+        "If True, xonsh will capture the output of commands run directly or in ``![]``"
+        "to the session history.\n"
+        "Setting to True has the following disadvantages:\n"
+        "* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).\n"
+        "  For more information see discussion at https://github.com/xonsh/xonsh/issues/3672.\n"
+        "* Stopping these commands with ^Z (i.e. ``SIGTSTP``)\n"
+        "  is disabled as it causes deadlocked terminals.\n"
+        "  ``SIGTSTP`` may still be issued and only the physical pressing\n"
+        "  of ``Ctrl+Z`` is ignored.\n\n"
+        "Regardless of this value, commands run in ``$()``, ``!()`` or with an IO redirection (``>`` or ``|``) "
+        "will always be captured.\n"
+        "Setting this to True depends on ``$THREAD_SUBPROCS`` being True.",
+    )
+    THREAD_SUBPROCS = Var(
+        is_bool_or_none,
+        to_bool_or_none,
+        bool_or_none_to_str,
+        not ON_CYGWIN,
+        "Note: The ``$XONSH_CAPTURE_ALWAYS`` variable introduces finer control "
+        "and you should probably use that instead.\n\n"
+        "Whether or not to try to run subrocess mode in a Python thread, "
+        "when trying to capture its output. There are various trade-offs.\n\n"
+        "If True, xonsh is able capture & store the stdin, stdout, and stderr"
+        " of threadable subprocesses.\n"
+        "The disadvantages are listed in ``$XONSH_CAPTURE_ALWAYS``.\n"
+        "The desired effect is often up to the command, user, or use case.\n\n"
+        "None values are for internal use only and are used to turn off "
+        "threading when loading xonshrc files. This is done because Bash "
+        "was automatically placing new xonsh instances in the background "
+        "at startup when threadable subprocs were used. Please see "
+        "https://github.com/xonsh/xonsh/pull/3705 for more information.\n",
+    )
+    XONSH_APPEND_NEWLINE = Var.with_default(
+        xonsh_append_newline,
+        "Append new line when a partial line is preserved in output.",
+        doc_default="``$XONSH_INTERACTIVE``",
+        type_str="bool",
+    )
+    XONSH_PROC_FREQUENCY = Var.with_default(
+        1e-4,
+        "The process frequency is the time that "
+        "xonsh process threads sleep for while running command pipelines. "
+        "The value has units of seconds [s].",
+    )
     XONSH_TRACE_SUBPROC = Var(
         default=False,
         validate=is_bool_or_int,
@@ -1215,23 +1156,31 @@ The file should contain a function with the signature
         doc="Set to ``True`` or ``1`` to show arguments list of every executed subprocess command. "
         "Use ``2`` to have a specification. Use ``3`` to have full specification.",
     )
-    XONSH_TRACE_COMPLETIONS = Var.with_default(
-        False,
-        "Set to ``True`` to show completers invoked and their return values.",
-    )
     XONSH_TRACE_SUBPROC_FUNC = Var.with_default(
         None,
         doc=(
             "A callback function used to format the trace output shown when $XONSH_TRACE_SUBPROC=True."
         ),
         doc_default="""\
-By default it just prints ``cmds`` like below.
+    By default it just prints ``cmds`` like below.
 
-.. code-block:: python
+    .. code-block:: python
 
-    def tracer(cmds: list, captured: Union[bool, str]):
-        print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
-""",
+        def tracer(cmds: list, captured: Union[bool, str]):
+            print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
+    """,
+    )
+
+
+class ErrorHandlingSetting(Xettings):
+    """Error Handling Settings"""
+
+    XONSH_SHOW_TRACEBACK = Var.with_default(
+        False,
+        "Controls if a traceback is shown if exceptions occur in the shell. "
+        "Set to ``True`` to always show traceback or ``False`` to always hide. "
+        "If undefined then the traceback is hidden but a notice is shown on how "
+        "to enable the full traceback.",
     )
     XONSH_TRACEBACK_LOGFILE = Var(
         is_logfile_opt,
@@ -1243,19 +1192,79 @@ By default it just prints ``cmds`` like below.
         "or None / the empty string if traceback logging is not desired. "
         "Logging to a file is not enabled by default.",
     )
-    XONTRIBS_AUTOLOAD_DISABLED = Var(
-        default=False,
-        doc="""\
-Controls auto-loading behaviour of xontrib packages at the startup.
-* Set this to ``True`` to disable autoloading completely.
-* Setting this to a list of xontrib names will block loading those specifically.
-""",
-        doc_default="""\
-Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.
-""",
+
+
+class JobsSetting(Xettings):
+    """Jobs Settings"""
+
+    AUTO_CONTINUE = Var.with_default(
+        False,
+        "If ``True``, automatically resume stopped jobs when they are disowned. "
+        "When stopped jobs are disowned and this option is ``False``, a warning "
+        "will print information about how to continue the stopped process.",
     )
-    STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
-    STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
+
+
+class LangSetting(Xettings):
+    """Language and locale settings."""
+
+    LANG = Var.with_default(
+        default="C.UTF-8",
+        doc="Fallback locale setting for systems where it matters",
+        type_str="str",
+    )
+    LC_COLLATE = Var.for_locale("LC_COLLATE")
+    LC_CTYPE = Var.for_locale("LC_CTYPE")
+    LC_MONETARY = Var.for_locale("LC_MONETARY")
+    LC_NUMERIC = Var.for_locale("LC_NUMERIC")
+    LC_TIME = Var.for_locale("LC_TIME")
+    if hasattr(locale, "LC_MESSAGES"):
+        LC_MESSAGES = Var.for_locale("LC_MESSAGES")
+
+    XONSH_DATETIME_FORMAT = Var.with_default(
+        "%Y-%m-%d %H:%M",
+        "The format that is used for ``datetime.strptime()`` in various places, "
+        "i.e the history timestamp option.",
+        type_str="str",
+    )
+
+
+class CacheSetting(Xettings):
+    """Cache Settings"""
+
+    XONSH_CACHE_SCRIPTS = Var.with_default(
+        True,
+        "Controls whether the code for scripts run from xonsh will be cached"
+        " (``True``) or re-compiled each time (``False``).",
+    )
+
+    XONSH_CACHE_EVERYTHING = Var.with_default(
+        False,
+        "Controls whether all code (including code entered at the interactive"
+        " prompt) will be cached.",
+    )
+
+    XONSH_CACHE_DIR = Var.with_default(
+        xonsh_cache_dir,
+        "This is the location where cache files used by xonsh are stored, such as commands-cache...",
+        doc_default="``$XDG_CACHE_HOME/xonsh``",
+        type_str="str",
+    )
+
+    ENABLE_COMMANDS_CACHE = Var(
+        default=True,
+        doc="command names in a directory are cached when enabled. "
+        "On some platforms it may not be accurate enough"
+        "(e.g. Windows, Linux save mtime in seconds). "
+        "Setting it to False would disable the caching mechanism "
+        "and may slow down the shell",
+        doc_default="True",
+    )
+
+    COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
+        False,
+        "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
+    )
 
 
 class ChangeDirSetting(Xettings):
@@ -1333,6 +1342,22 @@ class InterpreterSetting(Xettings):
         True,
         "Toggles whether globbing results are manually sorted. If ``False``, "
         "the results are returned in arbitrary order.",
+    )
+
+
+class XontribSetting(Xettings):
+    """Xontrib Settings"""
+
+    XONTRIBS_AUTOLOAD_DISABLED = Var(
+        default=False,
+        doc="""\
+    Controls auto-loading behaviour of xontrib packages at the startup.
+    * Set this to ``True`` to disable autoloading completely.
+    * Setting this to a list of xontrib names will block loading those specifically.
+    """,
+        doc_default="""\
+    Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.
+    """,
     )
 
 
@@ -1850,6 +1875,21 @@ This is to reduce the noise in generated completions.""",
         "This variable overrides the default settings in "
         "``xonsh.platform.bash_command``.",
         doc_default="None",
+    )
+    XONSH_COMPLETER_DIRS = Var.with_default(
+        default_completer_dirs,
+        """\
+A list of paths where Xonsh searches for command completions.
+Any completions defined are lazy loaded when needed.
+The name of the completer file should match that of the completing command.
+The file should contain a function with the signature
+``xonsh_complete(ctx: CommandContext) -> Iterator[RichCompletion|str]``.
+""",
+        type_str="env_path",
+    )
+    XONSH_TRACE_COMPLETIONS = Var.with_default(
+        False,
+        "Set to ``True`` to show completers invoked and their return values.",
     )
 
 

@@ -156,7 +156,7 @@ class History:
         """
         raise NotImplementedError
 
-    def run_gc(self, size=None, blocking=True):
+    def run_gc(self, size=None, blocking=True, **_):
         """Run the garbage collector.
 
         Parameters

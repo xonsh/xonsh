@@ -585,7 +585,7 @@ class JsonHistory(History):
         data["gc_last_size"] = f"{(self.hist_size, self.hist_units)}"
         return data
 
-    def run_gc(self, size=None, blocking=True, force=False):
+    def run_gc(self, size=None, blocking=True, force=False, **_):
         self.gc = JsonHistoryGC(wait_for_shell=False, size=size, force=force)
         if blocking:
             while self.gc.is_alive():  # while waiting for gc.

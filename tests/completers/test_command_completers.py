@@ -56,3 +56,27 @@ def test_skipper_arg(completion_context_parse, xession, monkeypatch):
     assert context.command == CommandContext(
         args=(CommandArg("grep"),), arg_index=1, prefix="--coun"
     )
+
+
+def test_argparse_completer(check_completer, monkeypatch):
+    assert check_completer("xonsh", prefix="-").issuperset(
+        {
+            "--cache-everything",
+            "--help",
+            "--interactive",
+            "--login",
+            "--no-env",
+            "--no-rc",
+            "--no-script-cache",
+            "--rc",
+            "--shell-type",
+            "--timings",
+            "--version",
+        }
+    )
+
+
+def test_argparse_completer_after_option(check_completer, tmp_path):
+    prefix = str(tmp_path)[:-1]
+    # has one or more completions including the above tmp_path
+    assert check_completer("xonsh --no-rc", prefix)

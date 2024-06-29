@@ -29,6 +29,7 @@ packages = [
     "xonsh.ply.ply",
     "xonsh.ptk_shell",
     "xonsh.procs",
+    "xonsh.platform",
     "xonsh.parsers",
     "xonsh.xoreutils",
     "xontrib",
@@ -223,7 +224,7 @@ convention = "numpy"
 "xonsh/history.py" = ["F821"]
 "xonsh/lexer.py" = ["E741"]
 "xonsh/parsers/completion_context.py" = ["B018"]
-"xonsh/tokenize.py" = [
+"xonsh/lib/tokenize.py" = [
     "F821",
     "F841",
     "B904" # Within an `except` clause, raise exceptions with `raise ... from err`
@@ -252,7 +253,7 @@ convention = "numpy"
 "xonsh/xonfig.py" = ["E731"]
 "xontrib/vox.py" = ["F821"]
 "xonsh/inspectors.py" = ["E722"]
-"xonsh/platform.py" = ["F401"]
+"xonsh/platform/__init__.py" = ["F401"]
 "xonsh/parsers/*.py" = [
     "E741", #  E741 Ambiguous variable name
 ]

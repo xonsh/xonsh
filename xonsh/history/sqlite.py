@@ -382,7 +382,7 @@ class SqliteHistory(History):
         self.last_pull_time = time.time()
         return cnt
 
-    def run_gc(self, size=None, blocking=True):
+    def run_gc(self, size=None, blocking=True, **_):
         self.gc = SqliteHistoryGC(wait_for_shell=False, size=size)
         if blocking:
             while self.gc.is_alive():
