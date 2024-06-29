@@ -26,6 +26,7 @@ readme = {file = ["README.rst"]}
 [tool.setuptools]
 packages = [
     "xonsh",
+    "xonsh.api",
     "xonsh.ply.ply",
     "xonsh.shell",
     "xonsh.shell.ptk_shell",
