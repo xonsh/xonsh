@@ -1,6 +1,6 @@
 """Implements the xonsh parser for Python v3.6."""
 
-import xonsh.ast as ast
+import xonsh.parsers.ast as ast
 from xonsh.parsers.base import BaseParser, lopen_loc, store_ctx
 
 

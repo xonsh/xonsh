@@ -4,13 +4,13 @@ import os
 import sys
 from collections.abc import Sequence
 
-sys.path.insert(0, os.path.abspath(".."))  # FIXME
+sys.path.insert(0, os.path.abspath("../.."))  # FIXME
 from pprint import pformat
 
 import pytest
 
-from xonsh.lexer import Lexer
-from xonsh.ply.ply.lex import LexToken
+from xonsh.parsers.lexer import Lexer
+from xonsh.parsers.ply.lex import LexToken
 
 LEXER_ARGS = {"lextab": "lexer_test_table", "debug": 0}
 

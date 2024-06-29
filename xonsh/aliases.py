@@ -14,13 +14,13 @@ import typing as tp
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
-from xonsh.ast import isexpression
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
 from xonsh.lazyasd import lazyobject
+from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
     IN_APPIMAGE,
     ON_ANACONDA,
