@@ -8,7 +8,7 @@ from prompt_toolkit.document import Document
 from xonsh.aliases import Aliases
 from xonsh.completer import Completer
 from xonsh.completers.tools import RichCompletion
-from xonsh.shell.ptk_shell.completer import PromptToolkitCompleter
+from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 
 
 @pytest.mark.parametrize(

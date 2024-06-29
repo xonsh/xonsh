@@ -1,7 +1,7 @@
 import pytest
 
 from xonsh.completers.tools import RichCompletion
-from xonsh.shell.readline_shell import _render_completions
+from xonsh.shells.readline_shell import _render_completions
 
 
 @pytest.mark.parametrize(

@@ -20,7 +20,7 @@ from xonsh.events import events
 from xonsh.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.prompt.base import PromptFormatter, multiline_prompt
-from xonsh.shell import transform_command
+from xonsh.shells.shellimport transform_command
 from xonsh.tools import (
     DefaultNotGiven,
     XonshError,

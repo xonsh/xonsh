@@ -39,7 +39,7 @@ from xonsh.platform import (
     os_environ,
 )
 from xonsh.prompt.base import multiline_prompt
-from xonsh.shell.base_shell import BaseShell
+from xonsh.shells.base_shell import BaseShell
 from xonsh.tools import (
     carriage_return,
     columnize,

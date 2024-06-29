@@ -6,8 +6,8 @@ import pyte
 import pytest
 
 from xonsh.platform import minimum_required_ptk_version
-from xonsh.shell import Shell
-from xonsh.shell.ptk_shell import tokenize_ansi
+from xonsh.shells.shellimport Shell
+from xonsh.shells.ptk_shell import tokenize_ansi
 
 # verify error if ptk not installed or below min
 
@@ -51,10 +51,10 @@ def test_prompt_toolkit_version_checks(
         return ptk_ver is not None
 
     monkeypatch.setattr(
-        "xonsh.shell.warnings.warn", mock_warning
+        "xonsh.shells.warnings.warn", mock_warning
     )  # hardwon: patch the caller!
     monkeypatch.setattr(
-        "xonsh.shell.ptk_above_min_supported", mock_ptk_above_min_supported
+        "xonsh.shells.ptk_above_min_supported", mock_ptk_above_min_supported
     )  # have to patch both callers
     monkeypatch.setattr(
         "xonsh.platform.ptk_above_min_supported", mock_ptk_above_min_supported
