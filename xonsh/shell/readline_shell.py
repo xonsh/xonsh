@@ -26,7 +26,6 @@ from xonsh.ansi_colors import (
     ansi_color_style_names,
     ansi_partial_color_format,
 )
-from xonsh.base_shell import BaseShell
 from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.lazyasd import LazyObject, lazyobject
@@ -40,6 +39,7 @@ from xonsh.platform import (
     os_environ,
 )
 from xonsh.prompt.base import multiline_prompt
+from xonsh.shell.base_shell import BaseShell
 from xonsh.tools import (
     carriage_return,
     columnize,
@@ -91,7 +91,6 @@ def setup_readline():
         )
         return
 
-    import ctypes
     import ctypes.util
 
     uses_libedit = readline.__doc__ and "libedit" in readline.__doc__

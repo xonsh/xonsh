@@ -13,7 +13,7 @@ from xonsh.pytest.tools import skip_if_on_unix, skip_if_on_windows
 
 @pytest.fixture(autouse=True)
 def patched_events(monkeypatch, xonsh_events, xonsh_session):
-    from xonsh.jobs import get_tasks
+    from xonsh.procs.jobs import get_tasks
 
     get_tasks().clear()
     # needed for ci tests

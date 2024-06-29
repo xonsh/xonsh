@@ -14,7 +14,7 @@ import xonsh.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.jobs import proc_untraced_waitpid
+from xonsh.procs.jobs import proc_untraced_waitpid
 from xonsh.procs.readers import (
     BufferedFDParallelReader,
     NonBlockingFDReader,
