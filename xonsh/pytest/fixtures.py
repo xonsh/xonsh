@@ -1,5 +1,6 @@
 """Fixtures that doesn't need XSH setup"""
 
+import copy
 import os
 import sys
 import types
@@ -14,8 +15,8 @@ from xonsh.completer import Completer
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.history.dummy import DummyHistory
-from xonsh.jobs import get_tasks
 from xonsh.parsers.completion_context import CompletionContextParser
+from xonsh.procs.jobs import get_tasks
 
 from .tools import DummyShell, copy_env, sp
 
@@ -297,7 +298,7 @@ def ptk_shell(xonsh_execer):
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output.plain_text import PlainTextOutput
 
-    from xonsh.ptk_shell.shell import PromptToolkitShell
+    from xonsh.shells.ptk_shell import PromptToolkitShell
 
     out = StringIO()
     with create_pipe_input() as inp:
@@ -311,7 +312,7 @@ def ptk_shell(xonsh_execer):
 
 @pytest.fixture
 def readline_shell(xonsh_execer, tmpdir, mocker):
-    from xonsh.readline_shell import ReadlineShell
+    from xonsh.shells.readline_shell import ReadlineShell
 
     inp_path = tmpdir / "in"
     inp = inp_path.open("w+")
@@ -323,6 +324,16 @@ def readline_shell(xonsh_execer, tmpdir, mocker):
     yield shell
     inp.close()
     out.close()
+
+
+@pytest.fixture
+def setup_import_hook(monkeypatch, xonsh_session):
+    from xonsh.imphooks import install_import_hooks
+
+    old = copy.copy(sys.meta_path)
+    install_import_hooks(xonsh_session.execer)
+    yield xonsh_session
+    sys.meta_path = old
 
 
 @pytest.fixture

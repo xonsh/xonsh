@@ -69,7 +69,7 @@ _foobar = 3
     assert ctx == {"spam": 1, "_foobar": 3}
 
 
-def test_xshxontrib(tmpmod):
+def test_xshxontrib(tmpmod, setup_import_hook):
     """
     Test that .xsh xontribs are loadable
     """
@@ -84,11 +84,11 @@ hello = 'world'
     assert ctx == {"hello": "world"}
 
 
-def test_xontrib_load(tmpmod):
+def test_xontrib_load(tmpmod, xession):
     """
     Test that .xsh xontribs are loadable
     """
-    with tmpmod.mkdir("xontrib").join("script.xsh").open("w") as x:
+    with tmpmod.mkdir("xontrib").join("script.py").open("w") as x:
         x.write(
             """
 hello = 'world'
@@ -146,9 +146,9 @@ def _unload_xontrib_(xsh): del xsh.ctx['hello']
 
 def test_xontrib_load_dashed(tmpmod):
     """
-    Test that .xsh xontribs are loadable
+    Test that xontribs are loadable
     """
-    with tmpmod.mkdir("xontrib").join("scri-pt.xsh").open("w") as x:
+    with tmpmod.mkdir("xontrib").join("scri-pt.py").open("w") as x:
         x.write(
             """
 hello = 'world'

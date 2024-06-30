@@ -7,7 +7,7 @@ import threading
 import typing as tp
 
 import xonsh.cli_utils as xcli
-import xonsh.diff_history as xdh
+import xonsh.history.diff_history as xdh
 import xonsh.history.main as xhm
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
