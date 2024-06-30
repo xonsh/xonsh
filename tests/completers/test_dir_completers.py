@@ -11,7 +11,7 @@ PARENT_DIR = ".." if ON_WINDOWS else "../"
 
 
 @pytest.fixture(autouse=True)
-def setup(xession, xonsh_execer):
+def setup(xession):
     with tempfile.TemporaryDirectory() as tmp:
         xession.env["XONSH_DATA_DIR"] = tmp
         xession.env["CDPATH"] = set()

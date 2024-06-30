@@ -413,6 +413,8 @@ class JsonHistory(History):
             Run garbage collector flag.
         """
         super().__init__(sessionid=sessionid, **meta)
+        self.supports_diff = True
+
         if filename is None:
             # pylint: disable=no-member
             data_dir = _xhj_get_data_dir()

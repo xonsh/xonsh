@@ -6,11 +6,6 @@ import pytest
 import xonsh.completers.path as xcp
 
 
-@pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xession, xonsh_execer):
-    return xonsh_execer
-
-
 def test_pattern_need_quotes():
     # just make sure the regex compiles
     xcp.PATTERN_NEED_QUOTES.match("")

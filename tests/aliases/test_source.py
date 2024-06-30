@@ -5,7 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from xonsh.aliases import make_default_aliases, source_alias
+from xonsh.aliases import make_default_aliases
+from xonsh.xaliases.source import source as source_alias
 
 
 @pytest.fixture
@@ -53,7 +54,7 @@ def test_source_path(mockopen, mocked_execx_checker, patch_locate_binary, xessio
 )
 def test_source_foreign_fn_parser(alias, xession):
     aliases = make_default_aliases()
-    source_bash = aliases[alias]
+    source_bash = aliases[alias].func
 
     positionals = [act.dest for act in source_bash.parser._get_positional_actions()]
     options = [act.dest for act in source_bash.parser._get_optional_actions()]

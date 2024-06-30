@@ -2,30 +2,27 @@
 
 import functools
 import re
-import types
 import uuid
+from typing import NamedTuple
 
 from xonsh.built_ins import XSH
 from xonsh.tools import print_warning
 
 
-class HistoryEntry(types.SimpleNamespace):
-    """Represent a command in history.
+class HistoryEntry(NamedTuple):
+    """Represent a command in history."""
 
-    Attributes
-    ----------
     cmd: str
-        The command as typed by the user, including newlines
+    """The command as typed by the user, including newlines"""
     out: str
-        The output of the command, if xonsh is configured to save it
+    """The output of the command, if xonsh is configured to save it"""
     rtn: int
-        The return of the command (ie, 0 on success)
-    ts: two-tuple of floats
-        The timestamps of when the command started and finished, including
-        fractions.
+    """The return of the command (ie, 0 on success)"""
+    ts: tuple[float, float]
+    """The timestamps of when the command started and finished, including
+    fractions."""
     cwd: str
-        The current working directory before execution the command.
-    """
+    """The current working directory before execution the command."""
 
 
 class History:
@@ -55,6 +52,9 @@ class History:
     In all of these sequences, index 0 is the oldest and -1 (the last item)
     is the newest.
     """
+
+    supports_diff = False
+    """Support for ``history diff``"""
 
     def __init__(self, sessionid=None, **kwargs):
         """Represents a xonsh session's history.

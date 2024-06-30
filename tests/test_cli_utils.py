@@ -48,9 +48,7 @@ def test_get_doc_param():
 
 
 def test_generated_parser():
-    from xonsh.completers._aliases import CompleterAlias
-
-    alias = CompleterAlias()
+    from xonsh.xaliases.completer import alias
 
     assert alias.parser.description
 
@@ -64,8 +62,8 @@ def test_generated_parser():
     assert add_cmd.format_usage() == "usage: completer add [-h] name func [pos]\n"
 
 
-def test_parser_hooking():
-    from xonsh.history.main import HistoryAlias
+def test_parser_hooking(xession):
+    from xonsh.xaliases.history import HistoryAlias
 
     alias = HistoryAlias()
 

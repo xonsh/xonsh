@@ -44,7 +44,6 @@ from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lib.lazyimps import html, os_listxattr, terminal256
 from xonsh.platform import (
     os_environ,
-    ptk_version_info,
     pygments_version_info,
     win_ansi_support,
 )
@@ -54,7 +53,6 @@ from xonsh.tools import (
     ANSICOLOR_NAMES_MAP,
     FORMATTER,
     ON_WINDOWS,
-    PTK_NEW_OLD_COLOR_MAP,
     hardcode_colors_for_win10,
     intensify_colors_for_cmd_exe,
 )
@@ -1317,29 +1315,6 @@ def pygments_style_by_name(name):
     return astyle
 
 
-def _monkey_patch_pygments_codes():
-    """Monky patch pygments' dict of console codes,
-    with new color names
-    """
-    if pygments_version_info() and pygments_version_info() >= (2, 4, 0):
-        return
-
-    import pygments.console
-
-    if "brightblack" in pygments.console.codes:
-        # Assume that colors are already fixed in pygments
-        # for example when using pygments from source
-        return
-
-    if not getattr(pygments.console, "_xonsh_patched", False):
-        patched_codes = {}
-        for new, old in PTK_NEW_OLD_COLOR_MAP.items():
-            if old in pygments.console.codes:
-                patched_codes[new[1:]] = pygments.console.codes[old]
-        pygments.console.codes.update(patched_codes)
-        pygments.console._xonsh_patched = True
-
-
 #
 # Formatter
 #
@@ -1347,17 +1322,6 @@ def _monkey_patch_pygments_codes():
 
 @lazyobject
 def XonshTerminal256Formatter():
-    if (
-        ptk_version_info()
-        and ptk_version_info() > (2, 0)
-        and pygments_version_info()
-        and (2, 2, 0) <= pygments_version_info() < (2, 4, 0)
-    ):
-        # Monky patch pygments' dict of console codes
-        # with the new color names used by PTK2
-        # Can be removed once pygment names get fixed.
-        _monkey_patch_pygments_codes()
-
     class XonshTerminal256FormatterProxy(terminal256.Terminal256Formatter):
         """Proxy class for xonsh terminal256 formatting that understands.
         xonsh color tokens.

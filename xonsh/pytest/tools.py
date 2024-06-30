@@ -86,17 +86,6 @@ class DummyShell:
         return self._shell
 
 
-class DummyHistory:
-    last_cmd_rtn = 0
-    last_cmd_out = ""
-
-    def append(self, x):
-        pass
-
-    def flush(self, *args, **kwargs):
-        pass
-
-
 #
 # Parser tools
 #

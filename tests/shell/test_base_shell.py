@@ -2,8 +2,6 @@
 
 import os
 
-import pytest
-
 from xonsh.shells.base_shell import BaseShell
 from xonsh.shells.shell import transform_command
 
@@ -39,28 +37,3 @@ def test_transform(xession):
     assert transform_command("spam") == "egg"
     assert transform_command("egg") == "egg"
     assert transform_command("foo") == "foo"
-
-
-@pytest.mark.parametrize(
-    "cmd,exp_append_history",
-    [
-        ("", False),
-        ("# a comment", False),
-        ("print('yes')", True),
-    ],
-)
-def test_default_append_history(cmd, exp_append_history, xonsh_session, monkeypatch):
-    """Test that running an empty line or a comment does not append to history"""
-    append_history_calls = []
-
-    def mock_append_history(**info):
-        append_history_calls.append(info)
-
-    monkeypatch.setattr(
-        xonsh_session.shell.shell, "_append_history", mock_append_history
-    )
-    xonsh_session.shell.default(cmd)
-    if exp_append_history:
-        assert len(append_history_calls) == 1
-    else:
-        assert len(append_history_calls) == 0

@@ -599,7 +599,7 @@ class XonshSession:
         if self._py_quit is not None:
             builtins.quit = self._py_quit
 
-    def load(self, execer=None, ctx=None, inherit_env=True, **kwargs):
+    def load(self, execer=None, ctx=None, inherit_env=True, env=None, aliases=None):
         """Loads the session with default values.
 
         Parameters
@@ -621,8 +621,8 @@ class XonshSession:
         if ctx is not None:
             self.ctx = ctx
 
-        if "env" in kwargs:
-            self.env = kwargs.pop("env")
+        if env is not None:
+            self.env = env
         elif inherit_env:
             self.env = Env(default_env())
         else:
@@ -641,15 +641,7 @@ class XonshSession:
         self.builtins = get_default_builtins(execer)
         self._initial_builtin_names = frozenset(vars(self.builtins))
 
-        aliases_given = kwargs.pop("aliases", None)
-        for attr, value in kwargs.items():
-            if hasattr(self, attr):
-                setattr(self, attr, value)
-        self.commands_cache = (
-            kwargs.pop("commands_cache")
-            if "commands_cache" in kwargs
-            else CommandsCache(self.env, aliases_given)
-        )
+        self.commands_cache = CommandsCache(self.env, aliases)
         self.link_builtins()
         self.builtins_loaded = True
 

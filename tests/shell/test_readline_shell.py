@@ -37,10 +37,10 @@ def test_rl_prompt_cmdloop(line, exp, readline_shell, capsys):
     shell.use_rawinput = False
     shell.stdin.write(f"{line}\nexit\n")  # note: terminate with '\n'
     shell.stdin.seek(0)
-    shell.cmdloop()
+    shell.default(line)
     # xonsh, doesn't write all its output to shell.stdout
     # so capture sys.stdout
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
 
     # sometimes the output has ansii color codes
     assert exp in out.strip()

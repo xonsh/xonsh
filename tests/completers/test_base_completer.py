@@ -10,7 +10,7 @@ CUR_DIR = (
 
 
 @pytest.fixture(autouse=True)
-def setup(xession, xonsh_execer, monkeypatch, mock_executables_in):
+def setup(xession, monkeypatch, mock_executables_in):
     xession.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = False
     xession.env["COMPLETION_QUERY_LIMIT"] = 2000
 

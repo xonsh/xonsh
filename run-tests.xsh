@@ -49,6 +49,7 @@ def test(
     else:
         # during CI run, some tests take longer to complete on windows
         ![pytest @(_replace_args(pytest_args, 0)) --durations=5]
+        ![pytest -p xonsh tests/test_xsh]
 
 
 def validate_news_items(

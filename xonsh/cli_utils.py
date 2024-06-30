@@ -651,6 +651,7 @@ class ArgParserAlias:
                 _stderr=stderr,
                 _spec=spec,
                 _stack=stack,
+                _xsh=kwargs.pop("xsh", XSH),
                 **kwargs,
             )
         except self.Error as ex:

@@ -77,7 +77,7 @@ pressing enter.
 ``exec`` and  ``xexec``
 =========================
 
-.. command-help:: xonsh.aliases.xexec
+.. command-help:: xonsh.xaliases.xsh.xexec
 
 
 ``source``
@@ -105,7 +105,7 @@ to ``zsh``.
 Like the ``source`` command but for files in foreign (non-xonsh) languages.
 It will pick up the environment and any aliases.
 
-.. command-help:: xonsh.aliases.source_foreign
+.. command-help:: xonsh.xaliases.source_foreign.alias
 
 
 ``history``
@@ -113,7 +113,7 @@ It will pick up the environment and any aliases.
 Tools for dealing with xonsh history. See `the history tutorial <tutorial_hist.html>`_
 for more information all the history command and all of its sub-commands.
 
-.. command-help:: xonsh.history.main.history_main
+.. command-help:: xonsh.xaliases.history.alias
 
 
 ``timeit``
