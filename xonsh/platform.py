@@ -9,10 +9,10 @@ import functools
 import importlib.util
 import os
 import pathlib
+import platform
 import signal
 import subprocess
 import sys
-import platform
 
 from xonsh.lib.lazyasd import LazyBool, lazybool, lazyobject
 
