@@ -12,6 +12,7 @@ import pathlib
 import signal
 import subprocess
 import sys
+import platform
 
 from xonsh.lib.lazyasd import LazyBool, lazybool, lazyobject
 
