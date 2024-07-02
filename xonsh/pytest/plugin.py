@@ -132,8 +132,8 @@ def mock_executables_in(xession, tmp_path, monkeypatch):
 
 @pytest.fixture
 def patch_locate_binary(monkeypatch):
-    def locate_binary(self, name):
-        return os.path.join(os.path.dirname(__file__), "bin", name)
+    def locate_binary(self, name, *args):
+        return str(Path(__file__).parent.parent.parent / "tests" / "bin" / name)
 
     def factory(cc: commands_cache.CommandsCache):
         monkeypatch.setattr(cc, "locate_binary", types.MethodType(locate_binary, cc))

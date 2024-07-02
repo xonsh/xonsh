@@ -54,7 +54,6 @@ from xonsh.tools import (
     dynamic_cwd_tuple_to_str,
     ensure_string,
     env_path_to_str,
-    executables_in,
     history_tuple_to_str,
     intensify_colors_on_win_setter,
     is_bool,
@@ -2547,22 +2546,13 @@ class InternalEnvironDict(ChainMap):
         local.update(new_local)
 
 
-def _yield_executables(directory, name):
-    if ON_WINDOWS:
-        base_name, ext = os.path.splitext(name.lower())
-        for fname in executables_in(directory):
-            fbase, fext = os.path.splitext(fname.lower())
-            if base_name == fbase and (len(ext) == 0 or ext == fext):
-                yield os.path.join(directory, fname)
-    else:
-        for x in executables_in(directory):
-            if x == name:
-                yield os.path.join(directory, name)
-                return
-
-
 def locate_binary(name):
-    """Locates an executable on the file system."""
+    """Locates an executable on the file system.
+
+    NOT RECOMMENDED because ``commands_cache.locate_binary`` contains ``update_cache``
+    with scanning all files in ``$PATH``. First of all take a look into ``xonsh.specs.executables``
+    for more fast implementation the locate operation.
+    """
     return XSH.commands_cache.locate_binary(name)
 
 

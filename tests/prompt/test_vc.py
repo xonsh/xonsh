@@ -2,7 +2,6 @@ import os
 import subprocess as sp
 import textwrap
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
@@ -117,27 +116,6 @@ current = yellow reverse
         branch = getattr(vc, get_branch)()
         assert branch in VC_BRANCH[repo["vc"]]
         assert not branch.startswith("\u001b[")
-
-
-def test_current_branch_calls_locate_binary_for_empty_cmds_cache(xession, monkeypatch):
-    cache = xession.commands_cache
-    monkeypatch.setattr(cache, "is_empty", Mock(return_value=True))
-    monkeypatch.setattr(cache, "locate_binary", Mock(return_value=""))
-    vc.current_branch()
-    assert cache.locate_binary.called
-
-
-def test_current_branch_does_not_call_locate_binary_for_non_empty_cmds_cache(
-    xession,
-    monkeypatch,
-):
-    cache = xession.commands_cache
-    monkeypatch.setattr(cache, "is_empty", Mock(return_value=False))
-    monkeypatch.setattr(cache, "locate_binary", Mock(return_value=""))
-    # make lazy locate return nothing to avoid running vc binaries
-    monkeypatch.setattr(cache, "lazy_locate_binary", Mock(return_value=""))
-    vc.current_branch()
-    assert not cache.locate_binary.called
 
 
 def test_dirty_working_directory(repo, set_xenv):
