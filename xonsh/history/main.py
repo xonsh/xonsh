@@ -103,9 +103,13 @@ def _xh_bash_hist_parser(location=None, **kwargs):
             os.path.join("~", ".bash_history"),
         )
     if location:
-        with open(location, errors="backslashreplace") as bash_hist:
-            for ind, line in enumerate(bash_hist):
-                yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
+        try:
+            with open(location, errors="backslashreplace") as bash_hist:
+                for ind, line in enumerate(bash_hist):
+                    yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
+        except PermissionError:
+            print(f"Bash history permission error in {location!r}", file=sys.stderr)
+            yield {"inp": f"# Bash history permission error in {location!r}", "ts": 0.0, "ind": 0}
     else:
         print("No bash history file", file=sys.stderr)
 
