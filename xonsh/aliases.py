@@ -1,7 +1,6 @@
 """Aliases for the xonsh shell."""
 
 import argparse
-import collections.abc as cabc
 import functools
 import inspect
 import os
@@ -10,6 +9,8 @@ import shutil
 import sys
 import types
 import typing as tp
+from collections import OrderedDict
+from collections import abc as cabc
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
@@ -41,6 +42,7 @@ from xonsh.tools import (
     argvquote,
     escape_windows_cmd_string,
     print_color,
+    print_exception,
     strip_simple_quotes,
     swap_values,
     to_repr_pretty_,
@@ -58,8 +60,9 @@ def EXEC_ALIAS_RE():
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
-    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
+    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__", "return_command"]
     attributes_inherit = attributes_show + ["__doc__"]
+    return_command = False
 
     def __init__(self, name, func=None):
         self.__name__ = self.name = name
@@ -78,16 +81,40 @@ class FuncAlias:
         return f"FuncAlias({repr(r)})"
 
     def __call__(
-        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self,
+        args=None,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        spec_modifiers=None,
     ):
-        func_args = [args, stdin, stdout, stderr, spec, stack][
-            : len(inspect.signature(self.func).parameters)
-        ]
-        return self.func(*func_args)
+        return run_alias_by_params(
+            self.func,
+            {
+                "args": args,
+                "stdin": stdin,
+                "stdout": stdout,
+                "stderr": stderr,
+                "spec": spec,
+                "stack": stack,
+                "spec_modifiers": spec_modifiers,
+            },
+        )
+
+
+"""
+Special variable to cut unwanted arguments in `return_command` alias.
+We need this here for Windows tests where XSH.aliases is a dict.
+"""
+CUT_ARGS = "_CUT_ARGS_"
 
 
 class Aliases(cabc.MutableMapping):
     """Represents a location to hold and look up aliases."""
+
+    CUT_ARGS = CUT_ARGS
 
     def __init__(self, *args, **kwargs):
         self._raw = {}
@@ -131,7 +158,12 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
-    def get(self, key, default=None, spec_modifiers=None):
+    def return_command(self, f):
+        """Decorator that switches alias from returning result to return in new command for execution."""
+        f.return_command = True
+        return f
+
+    def get(self, key, default=None, spec_modifiers=None, args=None):
         """Returns the (possibly modified) value. If the key is not present,
         then `default` is returned.
         If the value is callable, it is returned without modification. If it
@@ -140,19 +172,34 @@ class Aliases(cabc.MutableMapping):
         callable.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        args = args if args is not None else []
         val = self._raw.get(key)
+        if callable(val) and getattr(val, "return_command", False):
+            try:
+                val = val(args, spec_modifiers=spec_modifiers)
+            except Exception as e:
+                print_exception(f"Exception inside alias {key!r}: {e}")
+                return None
+            if not len(val):
+                raise ValueError("return_command alias: zero arguments.")
+
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
             return self.eval_alias(
-                val, seen_tokens={key}, spec_modifiers=spec_modifiers
+                val, seen_tokens={key}, spec_modifiers=spec_modifiers, args=args
             )
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
 
     def eval_alias(
-        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=None
+        self,
+        value,
+        seen_tokens=frozenset(),
+        acc_args=(),
+        spec_modifiers=None,
+        args=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -165,6 +212,7 @@ class Aliases(cabc.MutableMapping):
         ``["-al", "arg"]``.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        args = args if args is not None else []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
@@ -175,6 +223,16 @@ class Aliases(cabc.MutableMapping):
         ):
             spec_modifiers.append(mod)
             value = value[1:]
+
+        if callable(value) and getattr(value, "return_command", False):
+            args = args if args is not None else []
+            try:
+                value = value(args, spec_modifiers=spec_modifiers)
+            except Exception as e:
+                print_exception(f"Exception inside alias {value}: {e}")
+                return None
+            if not len(value):
+                raise ValueError("return_command alias: zero arguments.")
 
         if callable(value):
             return partial_eval_alias(value, acc_args=acc_args)
@@ -197,6 +255,7 @@ class Aliases(cabc.MutableMapping):
                     seen_tokens,
                     acc_args,
                     spec_modifiers=spec_modifiers,
+                    args=(acc_args + args),
                 )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
@@ -402,6 +461,21 @@ class PartialEvalAlias6(PartialEvalAliasBase):
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
 
+class PartialEvalAlias7(PartialEvalAliasBase):
+    def __call__(
+        self,
+        args,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        spec_modifiers=None,
+    ):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr, spec, stack, spec_modifiers)
+
+
 PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias0,
     PartialEvalAlias1,
@@ -410,6 +484,7 @@ PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias4,
     PartialEvalAlias5,
     PartialEvalAlias6,
+    PartialEvalAlias7,
 )
 
 
@@ -430,11 +505,48 @@ def partial_eval_alias(f, acc_args=()):
             numargs += 1
         elif name in ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
             numargs += 1
-    if numargs < 7:
+    if numargs < 8:
         return PARTIAL_EVAL_ALIASES[numargs](f, acc_args=acc_args)
     else:
-        e = "Expected proxy with 6 or fewer arguments for {}, not {}"
+        e = "Expected proxy with 7 or fewer arguments for {}, not {}"
         raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
+
+
+def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
+    """
+    Run alias function based on signature and params.
+    If function param names are in alias signature fill them.
+    If function params have unknown names fill using alias signature order.
+    """
+    alias_params = OrderedDict(
+        {
+            "args": None,
+            "stdin": None,
+            "stdout": None,
+            "stderr": None,
+            "spec": None,
+            "stack": None,
+            "spec_modifiers": None,
+        }
+    )
+    alias_params |= params
+    sign = inspect.signature(func)
+    func_params = sign.parameters.items()
+    kwargs = {
+        name: alias_params[name] for name, p in func_params if name in alias_params
+    }
+
+    if len(kwargs) != len(func_params):
+        # There is unknown param. Switch to positional mode.
+        kwargs = OrderedDict()
+        vals = list(alias_params.values())
+        len_vals = len(vals)
+        i = 0
+        for namep in func_params:
+            kwargs[namep[0]] = vals[i]
+            if (i := i + 1) == len_vals:
+                break
+    return func(**kwargs)
 
 
 #
