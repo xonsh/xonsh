@@ -354,7 +354,9 @@ def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch, xes
     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["-i", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")])
+    args = xonsh.main.premain(
+        ["-i", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert args.mode == XonshMode.interactive
     assert f.strpath in xession.rc_files
 
@@ -365,7 +367,9 @@ def test_force_interactive_custom_rc_with_script_and_no_rc(
     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["-i", "--no-rc", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")])
+    args = xonsh.main.premain(
+        ["-i", "--no-rc", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert args.mode == XonshMode.interactive
     assert len(xession.rc_files) == 0
 
@@ -376,7 +380,9 @@ def test_custom_rc_with_script(shell, tmpdir, xession):
     """
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")])
+    args = xonsh.main.premain(
+        ["--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert not (args.mode == XonshMode.interactive)
     assert f.strpath in xession.rc_files
 
@@ -387,7 +393,9 @@ def test_custom_rc_with_script_and_no_rc(shell, tmpdir, xession):
     """
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["--no-rc", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")])
+    args = xonsh.main.premain(
+        ["--no-rc", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert not (args.mode == XonshMode.interactive)
     assert len(xession.rc_files) == 0
 
