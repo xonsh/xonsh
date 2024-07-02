@@ -31,7 +31,7 @@ packages = [
     "xonsh.shells.ptk_shell",
     "xonsh.parsers.ply",
     "xonsh.procs",
-    "xonsh.platform",
+    "xonsh.platforms",
     "xonsh.parsers",
     "xonsh.xoreutils",
     "xontrib",
