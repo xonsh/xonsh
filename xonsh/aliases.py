@@ -104,7 +104,6 @@ class FuncAlias:
         )
 
 
-
 class Aliases(cabc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
@@ -155,7 +154,14 @@ class Aliases(cabc.MutableMapping):
         f.return_command = True
         return f
 
-    def get(self, key, default=None, spec_modifiers=None, args=None, found_return_command=None):
+    def get(
+        self,
+        key,
+        default=None,
+        spec_modifiers=None,
+        args=None,
+        found_return_command=None,
+    ):
         """Returns the (possibly modified) value. If the key is not present,
         then `default` is returned.
         If the value is callable, it is returned without modification. If it
@@ -164,7 +170,9 @@ class Aliases(cabc.MutableMapping):
         callable.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
-        found_return_command = found_return_command if found_return_command is not None else []
+        found_return_command = (
+            found_return_command if found_return_command is not None else []
+        )
         args = args if args is not None else []
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_command", False):
@@ -181,7 +189,11 @@ class Aliases(cabc.MutableMapping):
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
             return self.eval_alias(
-                val, seen_tokens={key}, spec_modifiers=spec_modifiers, args=args, found_return_command=found_return_command
+                val,
+                seen_tokens={key},
+                spec_modifiers=spec_modifiers,
+                args=args,
+                found_return_command=found_return_command,
             )
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
@@ -194,7 +206,7 @@ class Aliases(cabc.MutableMapping):
         acc_args=(),
         spec_modifiers=None,
         args=None,
-        found_return_command=None
+        found_return_command=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -208,7 +220,9 @@ class Aliases(cabc.MutableMapping):
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         args = args if args is not None else []
-        found_return_command = found_return_command if found_return_command is not None else []
+        found_return_command = (
+            found_return_command if found_return_command is not None else []
+        )
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
@@ -255,7 +269,7 @@ class Aliases(cabc.MutableMapping):
                     acc_args,
                     spec_modifiers=spec_modifiers,
                     args=(acc_args + args),
-                    found_return_command=found_return_command
+                    found_return_command=found_return_command,
                 )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:

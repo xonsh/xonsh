@@ -457,7 +457,7 @@ def test_alias_return_command_alone(xession):
     @xession.aliases.register("wakka")
     @xession.aliases.return_command
     def _wakka(args):
-        return ["echo"]  + args
+        return ["echo"] + args
 
     cmds = [
         ["wakka"],
@@ -471,7 +471,7 @@ def test_alias_return_command_alone_args(xession):
     @xession.aliases.register("wakka")
     @xession.aliases.return_command
     def _wakka(args):
-        return ["echo", "e0", "e1"]  + args
+        return ["echo", "e0", "e1"] + args
 
     cmds = [
         ["wakka", "0", "1"],

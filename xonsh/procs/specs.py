@@ -724,7 +724,11 @@ class SubprocSpec:
                 alias = XSH.aliases.get(cmd0, None)
             else:
                 alias = XSH.aliases.get(
-                    cmd0, None, spec_modifiers=found_spec_modifiers, args=self.cmd[1:], found_return_command=found_return_command
+                    cmd0,
+                    None,
+                    spec_modifiers=found_spec_modifiers,
+                    args=self.cmd[1:],
+                    found_return_command=found_return_command,
                 )
             if alias is not None:
                 self.alias_name = cmd0
