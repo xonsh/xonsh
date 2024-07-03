@@ -259,6 +259,7 @@ class Aliases(cabc.MutableMapping):
                 rtn = [token]
                 rtn.extend(rest)
                 rtn.extend(acc_args)
+                rtn.extend(args)
                 return rtn
             else:
                 seen_tokens = seen_tokens | {token}
