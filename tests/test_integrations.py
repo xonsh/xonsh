@@ -623,7 +623,7 @@ echo $SHLVL # == 5
 # creating a subshell should increment the child's $SHLVL and maintain the parents $SHLVL
 
 $SHLVL = 5
-xonsh --no-rc -c r'echo $SHLVL' # == 6
+xonsh -c r'echo $SHLVL' # == 6
 echo $SHLVL # == 5
 
 # replacing the current process with another process should derease $SHLVL
@@ -752,7 +752,7 @@ def test_script_stderr(case):
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
         (
-            "$FOO='foo' $BAR=2 xonsh --no-rc -c r'echo -n $FOO$BAR'",
+            "$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'",
             None,
             "foo2",
         ),
