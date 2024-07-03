@@ -408,6 +408,7 @@ class SubprocSpec:
         self.args = _flatten_cmd_redirects(cmd)
         self.alias = None
         self.alias_name = None
+        self.alias_return_command = None
         self.alias_stack = XSH.env.get("__ALIAS_STACK", "").split(":")
         self.binary_loc = None
         self.is_proxy = False
@@ -707,7 +708,8 @@ class SubprocSpec:
     def resolve_alias(self):
         """Sets alias in command, if applicable."""
         cmd0 = self.cmd[0]
-        spec_modifiers = []
+        found_spec_modifiers = []
+        found_return_command = []
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
             # and futher using binary_loc to resolve the alias name.
@@ -722,13 +724,14 @@ class SubprocSpec:
                 alias = XSH.aliases.get(cmd0, None)
             else:
                 alias = XSH.aliases.get(
-                    cmd0, None, spec_modifiers=spec_modifiers, args=self.cmd[1:]
+                    cmd0, None, spec_modifiers=found_spec_modifiers, args=self.cmd[1:], found_return_command=found_return_command
                 )
             if alias is not None:
                 self.alias_name = cmd0
         self.alias = alias
-        if spec_modifiers:
-            for mod in spec_modifiers:
+        self.alias_return_command = bool(found_return_command)
+        if found_spec_modifiers:
+            for mod in found_spec_modifiers:
                 self.add_spec_modifier(mod)
 
     def resolve_binary_loc(self):
@@ -767,12 +770,9 @@ class SubprocSpec:
             self.cmd.pop(0)
             return
         else:
-            new_cmd = alias
-            if (CUT_ARGS := getattr(XSH.aliases, "CUT_ARGS", "_CUT_ARGS_")) in alias:
-                new_cmd = alias[: alias.index(CUT_ARGS)]
-            else:
-                new_cmd += self.cmd[1:]
-            self.cmd = new_cmd
+            self.cmd = alias
+            if not self.alias_return_command:
+                self.cmd += self.cmd[1:]
             # resolve any redirects the aliases may have applied
             self.resolve_redirects()
         if self.binary_loc is None:

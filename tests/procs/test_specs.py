@@ -7,7 +7,6 @@ from subprocess import CalledProcessError, Popen
 
 import pytest
 
-from xonsh.aliases import CUT_ARGS
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
@@ -458,7 +457,7 @@ def test_alias_return_command_alone(xession):
     @xession.aliases.register("wakka")
     @xession.aliases.return_command
     def _wakka(args):
-        return ["echo"]
+        return ["echo"]  + args
 
     cmds = [
         ["wakka"],
@@ -472,7 +471,7 @@ def test_alias_return_command_alone_args(xession):
     @xession.aliases.register("wakka")
     @xession.aliases.return_command
     def _wakka(args):
-        return ["echo", "e0", "e1"]
+        return ["echo", "e0", "e1"]  + args
 
     cmds = [
         ["wakka", "0", "1"],
@@ -488,7 +487,7 @@ def test_alias_return_command_chain(xession):
     @xession.aliases.register("midground")
     @xession.aliases.return_command
     def _midground(args):
-        return ["ground", "m0", "m1"]
+        return ["ground", "m0", "m1"] + args
 
     xession.aliases["ground"] = "background g0 g1"
     xession.aliases["background"] = "echo b0 b1"
@@ -523,7 +522,7 @@ def test_alias_return_command_chain_spec_modifiers(xession):
     @xession.aliases.register("midground")
     @xession.aliases.return_command
     def _midground(args):
-        return ["ground", "m0", "m1", CUT_ARGS]
+        return ["ground", "m0", "m1"]
 
     xession.aliases["ground"] = "background g0 g1"
     xession.aliases["background"] = "xunthread echo b0 b1"
@@ -548,7 +547,6 @@ def test_alias_return_command_eval_inside(xession):
         return [
             "sudo",
             *xession.aliases.eval_alias(args, spec_modifiers=spec_modifiers),
-            CUT_ARGS,
         ]
 
     xession.aliases["cmd"] = "xthread echo 1"
