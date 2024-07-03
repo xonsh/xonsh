@@ -192,7 +192,7 @@ class Aliases(cabc.MutableMapping):
                 val,
                 seen_tokens={key},
                 spec_modifiers=spec_modifiers,
-                args=args,
+                acc_args=args,
                 found_return_command=found_return_command,
             )
         else:
@@ -259,7 +259,7 @@ class Aliases(cabc.MutableMapping):
                 rtn = [token]
                 rtn.extend(rest)
                 rtn.extend(acc_args)
-                rtn.extend(args)
+                # rtn.extend(args)
                 return rtn
             else:
                 seen_tokens = seen_tokens | {token}
@@ -269,7 +269,7 @@ class Aliases(cabc.MutableMapping):
                     seen_tokens,
                     acc_args,
                     spec_modifiers=spec_modifiers,
-                    args=(acc_args + args),
+                    # args=(acc_args + args),
                     found_return_command=found_return_command,
                 )
 
