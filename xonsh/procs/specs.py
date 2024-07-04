@@ -781,9 +781,6 @@ class SubprocSpec:
             return
         else:
             self.cmd = alias
-            # if not self.alias_return_command:
-            #     self.cmd += self.cmd[1:]
-            # resolve any redirects the aliases may have applied
             self.resolve_redirects()
         if self.binary_loc is None:
             return
