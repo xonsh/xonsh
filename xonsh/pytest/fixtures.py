@@ -107,7 +107,7 @@ def session_env():
     }
     env = Env(initial_vars)
     for key, val in default_env().items():
-        if key not in env:
+        if (key not in env) or (key.endswith("PATH")):
             env[key] = val
     return env
 
@@ -224,12 +224,6 @@ def xession(mock_xonsh_session) -> XonshSession:
 def xsh_with_aliases(mock_xonsh_session) -> XonshSession:
     """Xonsh mock-session with default set of aliases"""
     return mock_xonsh_session("aliases")
-
-
-@pytest.fixture
-def xsh_with_env(mock_xonsh_session) -> XonshSession:
-    """Xonsh mock-session with os.environ"""
-    return mock_xonsh_session("env")
 
 
 @pytest.fixture(scope="session")

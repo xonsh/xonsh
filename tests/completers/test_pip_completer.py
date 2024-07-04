@@ -54,7 +54,7 @@ def pip_installed():
         ["pip show", "", pip_installed],
     ],
 )
-def test_completions(line, prefix, exp, check_completer, xsh_with_env):
+def test_completions(line, prefix, exp, check_completer, xession):
     # use the actual PATH from os. Otherwise subproc will fail on windows. `unintialized python...`
     comps = check_completer(line, prefix=prefix)
 

@@ -12,7 +12,7 @@ pytestmark = skip_if_not_has("gh")
         ["gh repo ", {"archive", "clone", "create", "delete", "edit", "fork"}],
     ],
 )
-def test_completions(line, exp, check_completer, xsh_with_env):
+def test_completions(line, exp, check_completer, xonsh_session):
     # use the actual PATH from os. Otherwise subproc will fail on windows. `unintialized python...`
     comps = check_completer(line, prefix=None)
 
