@@ -82,7 +82,6 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs, xonsh_session)
 @pytest.mark.parametrize(
     "thread_subprocs, capture_always", list(itertools.product((True, False), repeat=2))
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_capture_always(
     capfd, thread_subprocs, capture_always, alias_type, pipe, monkeypatch, xonsh_session
 ):
@@ -172,7 +171,6 @@ def test_callias_captured_redirect(xonsh_session, tmpdir):
 @skip_if_on_windows
 @pytest.mark.parametrize("captured", ["stdout", "object"])
 @pytest.mark.parametrize("interactive", [True, False])
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_interrupted_process_returncode(xonsh_session, captured, interactive):
     xonsh_session.env["XONSH_INTERACTIVE"] = interactive
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
@@ -236,7 +234,6 @@ def test_proc_raise_subproc_error(xonsh_session):
         [["echo", "1"], "|", cmd_sig("SIGTTIN"), "|", ["head"]],
     ],
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_specs_with_suspended_captured_process_pipeline(
     xonsh_session, suspended_pipeline
 ):
@@ -260,7 +257,6 @@ def test_specs_with_suspended_captured_process_pipeline(
         ([["echo", "-n", "1\n2 3"]], "1\n2 3", ["1", "2 3"]),
     ],
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_subproc_output_format(cmds, exp_stream_lines, exp_list_lines, xonsh_session):
     xonsh_session.env["XONSH_SUBPROC_OUTPUT_FORMAT"] = "stream_lines"
     output = run_subproc(cmds, "stdout")

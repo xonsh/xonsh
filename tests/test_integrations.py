@@ -705,7 +705,6 @@ if not ON_WINDOWS:
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
     if ON_DARWIN:
@@ -1282,7 +1281,6 @@ def test_main_d():
     assert out == "dummy\n"
 
 
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_catching_system_exit():
     stdin_cmd = "__import__('sys').exit(2)\n"
     out, err, ret = run_xonsh(
@@ -1314,7 +1312,6 @@ def test_suspended_captured_process_pipeline():
 
 
 @skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_alias_stability():
     """Testing alias stability after amalgamation regress that described in #5435."""
     stdin_cmd = (
@@ -1332,7 +1329,6 @@ def test_alias_stability():
 
 
 @skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_spec_modifier_alias():
     """Testing spec modifier alias with `@` in the alias name."""
     stdin_cmd = (
@@ -1352,7 +1348,6 @@ def test_spec_modifier_alias():
 
 
 @skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_alias_stability_exception():
     """Testing alias stability (exception) after amalgamation regress that described in #5435."""
     stdin_cmd = (
