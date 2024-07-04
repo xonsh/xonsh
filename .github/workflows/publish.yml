@@ -1,7 +1,6 @@
 name: publish
 on:
   workflow_dispatch:
-  pull_request:
   release:
     types:
       - published
@@ -9,36 +8,36 @@ permissions:
   contents: read
   id-token: write
 jobs:
-  # publish:
-  #   if: github.repository_owner == 'xonsh'
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       python-version:
-  #         - "3.11"
-  #         - "3.12"
-  #         - "3.13"
-  #   steps:
-  #     - uses: actions/checkout@v6
-  #     - name: setup-python
-  #       uses: actions/setup-python@v6
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-  #         cache: 'pip'
-  #         cache-dependency-path: 'pyproject.toml'
-  #     - name: install pypa/build
-  #       run: pip install build
-  #     - name: build sdist(tarball) to dist/
-  #       if: ${{ startsWith(matrix.python-version, '3.11') }}
-  #       run: python -m build . --sdist
-  #     - name: build bdist(wheel) to dist/
-  #       run: python -m build . --wheel
-  #     - name: publish to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
+  publish:
+    if: github.repository_owner == 'xonsh'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+    steps:
+      - uses: actions/checkout@v6
+      - name: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+      - name: install pypa/build
+        run: pip install build
+      - name: build sdist(tarball) to dist/
+        if: ${{ startsWith(matrix.python-version, '3.11') }}
+        run: python -m build . --sdist
+      - name: build bdist(wheel) to dist/
+        run: python -m build . --wheel
+      - name: publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
   build-appimage:
-    # if: github.event_name == 'release'
+    if: github.repository_owner == 'xonsh'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -60,7 +59,7 @@ jobs:
         run: |
           python -m python_appimage build app -p 3.11 ./appimage  # Unpin python after fix https://github.com/xonsh/xonsh/issues/5166
       - name: upload xonsh AppImage to release
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # run: gh release upload ${{ github.event.release.tag_name }} ./xonsh-x86_64.AppImage
-        run: gh release upload '0.21.1' ./xonsh-x86_64.AppImage
+        run: gh release upload ${{ github.ref_name }} ./xonsh-x86_64.AppImage
