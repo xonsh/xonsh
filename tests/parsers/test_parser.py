@@ -3,7 +3,6 @@
 import ast
 import itertools
 import textwrap
-from unittest.mock import patch
 
 import pytest
 
@@ -12,7 +11,6 @@ from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
     VER_MAJOR_MINOR,
-    copy_env,
     nodes_equal,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
@@ -20,22 +18,10 @@ from xonsh.pytest.tools import (
 
 
 @pytest.fixture(scope="module")
-def xsh(session_execer, session_os_env, parser):
+def xsh(module_xsh, parser, module_mocker):
     """a fixture to use where XonshSession is fully loaded without any mocks"""
-    from xonsh.built_ins import XSH
-    from xonsh.procs.jobs import get_tasks
-
-    p = patch.object(session_execer, "parser", parser)
-    p.start()
-    XSH.load(
-        ctx={},
-        execer=session_execer,
-        env=copy_env(session_os_env),
-    )
-    yield XSH
-    XSH.unload()
-    p.stop()
-    get_tasks().clear()  # must do this to enable resetting all_jobs
+    module_mocker.patch.object(module_xsh.execer, "parser", parser)
+    yield module_xsh
 
 
 @pytest.fixture(scope="module")

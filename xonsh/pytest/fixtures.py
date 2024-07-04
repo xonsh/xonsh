@@ -92,17 +92,9 @@ def xonsh_events():
 
 
 @pytest.fixture(scope="session")
-def session_os_env():
-    """Env with values from os.environ like real session"""
-    from xonsh.environ import Env, default_env
-
-    return Env(default_env())
-
-
-@pytest.fixture(scope="session")
 def session_env():
-    """Env with some initial values that doesn't load from os.environ"""
-    from xonsh.environ import Env
+    """Env with initial values set from os.environ. But will not inherit XONSH specific variables"""
+    from xonsh.environ import Env, default_env
 
     initial_vars = {
         "UPDATE_OS_ENVIRON": False,
@@ -114,6 +106,9 @@ def session_env():
         "COMMANDS_CACHE_SAVE_INTERMEDIATE": False,
     }
     env = Env(initial_vars)
+    for key, val in default_env().items():
+        if key not in env:
+            env[key] = val
     return env
 
 
@@ -123,24 +118,17 @@ def session_execer():
 
 
 @pytest.fixture
-def os_env(session_os_env):
-    """A mutable copy of Original session_os_env"""
-
-    return copy_env(session_os_env)
-
-
-@pytest.fixture
 def env(xonsh_session):
     """to easily set env variables function level"""
     return xonsh_session.env
 
 
 @pytest.fixture(scope="module")
-def module_xsh(xonsh_events, session_execer, session_os_env, module_mocker):
+def module_xsh(xonsh_events, session_execer, session_env):
     XSH.load(
         ctx={},
         execer=session_execer,
-        env=copy_env(session_os_env, module_mocker),
+        env=copy_env(session_env),
     )
     yield XSH
     XSH.unload()

@@ -25,12 +25,8 @@ from xonsh.pyghooks import (
 
 
 @pytest.fixture
-def xs_LS_COLORS(xession, os_env, monkeypatch):
+def xs_LS_COLORS(xession, monkeypatch):
     """Xonsh environment including LS_COLORS"""
-
-    # original env is needed on windows. since it will skip enhanced coloring
-    # for some emulators
-    monkeypatch.setattr(xession, "env", os_env)
 
     lsc = LsColors(LsColors.default_settings)
     xession.env["LS_COLORS"] = lsc

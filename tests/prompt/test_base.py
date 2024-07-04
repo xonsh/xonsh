@@ -9,7 +9,12 @@ from xonsh.prompt.base import PromptField, PromptFields, PromptFormatter
 
 @pytest.fixture
 def formatter(xession):
-    return PromptFormatter()
+    xession.env.pop("VIRTUAL_ENV", None)  # For virtualenv
+    xession.env.pop("CONDA_DEFAULT_ENV", None)  # For conda/CircleCI
+    xession.env.pop("VIRTUAL_ENV_DISABLE_PROMPT", None)  # if set locally
+    pf = PromptFormatter()
+    xession.shell.prompt_formatter = pf
+    return pf
 
 
 @pytest.fixture
@@ -28,7 +33,7 @@ def live_fields(xession):
         ("{f} jawaka", "wakka jawaka"),
     ],
 )
-def test_format_prompt(inp, exp, fields, formatter, xession):
+def test_format_prompt(inp, exp, fields, formatter):
     obs = formatter(template=inp, fields=fields)
     assert exp == obs
 
@@ -80,7 +85,7 @@ def test_format_prompt_with_broken_template_in_func(inp, formatter):
     assert "{user" in formatter(lambda: inp)
 
 
-def test_format_prompt_with_invalid_func(formatter, xession):
+def test_format_prompt_with_invalid_func(formatter):
     def p():
         foo = bar  # raises exception # noqa
         return "{user}"
@@ -88,7 +93,7 @@ def test_format_prompt_with_invalid_func(formatter, xession):
     assert isinstance(formatter(p), str)
 
 
-def test_format_prompt_with_func_that_raises(formatter, capsys, xession):
+def test_format_prompt_with_func_that_raises(formatter, capsys):
     template = "tt {zerodiv} tt"
     exp = "tt {BACKGROUND_RED}{ERROR:zerodiv}{RESET} tt"
     fields = {"zerodiv": lambda: 1 / 0}
@@ -99,18 +104,11 @@ def test_format_prompt_with_func_that_raises(formatter, capsys, xession):
 
 
 def test_format_prompt_with_no_env(formatter, xession, live_fields, env):
-    xession.shell.prompt_formatter = formatter
-
-    env.pop("VIRTUAL_ENV", None)  # For virtualenv
-    env.pop("CONDA_DEFAULT_ENV", None)  # For conda/CircleCI
-
     assert formatter("{env_name}", fields=live_fields) == ""
 
 
 @pytest.mark.parametrize("envname", ["env", "foo", "bar"])
 def test_format_prompt_with_various_envs(formatter, xession, live_fields, envname):
-    xession.shell.prompt_formatter = formatter
-
     xession.env["VIRTUAL_ENV"] = envname
 
     exp = live_fields["env_prefix"] + envname + live_fields["env_postfix"]
@@ -120,8 +118,6 @@ def test_format_prompt_with_various_envs(formatter, xession, live_fields, envnam
 @pytest.mark.parametrize("pre", ["(", "[[", "", "   "])
 @pytest.mark.parametrize("post", [")", "]]", "", "   "])
 def test_format_prompt_with_various_prepost(formatter, xession, live_fields, pre, post):
-    xession.shell.prompt_formatter = formatter
-
     xession.env["VIRTUAL_ENV"] = "env"
 
     lf_copy = dict(live_fields)  # live_fields fixture is not idempotent!
@@ -131,7 +127,6 @@ def test_format_prompt_with_various_prepost(formatter, xession, live_fields, pre
 
 
 def test_noenv_with_disable_set(formatter, xession, live_fields):
-    xession.shell.prompt_formatter = formatter
     xession.env.update(dict(VIRTUAL_ENV="env", VIRTUAL_ENV_DISABLE_PROMPT=1))
 
     exp = ""
@@ -162,8 +157,6 @@ class TestEnvNamePrompt:
         assert formatter("{env_name}", fields=live_fields) == ""
 
     def test_search_order(self, monkeypatch, tmp_path, formatter, xession, live_fields):
-        xession.shell.prompt_formatter = formatter
-
         first = "first"
         second = "second"
         third = "third"
@@ -240,8 +233,6 @@ class TestEnvNamePrompt:
 
 @pytest.mark.parametrize("disable", [0, 1])
 def test_custom_env_overrides_default(formatter, xession, live_fields, disable):
-    xession.shell.prompt_formatter = formatter
-
     prompt = "!venv active! "
 
     xession.env.update(
