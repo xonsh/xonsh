@@ -34,7 +34,7 @@ from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.shells.ptk_shell.formatter import PTKPromptFormatter
 from xonsh.shells.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
 from xonsh.shells.ptk_shell.key_bindings import load_xonsh_bindings
-from xonsh.shells.shell import transform_command
+from xonsh.shell import transform_command
 from xonsh.style_tools import DEFAULT_STYLE_DICT, _TokenType, partial_color_tokenize
 from xonsh.tools import carriage_return, print_exception, print_warning
 
