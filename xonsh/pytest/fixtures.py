@@ -81,7 +81,7 @@ def monkeypatch_stderr(monkeypatch):
         yield
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def xonsh_events():
     yield events
     for name, oldevent in vars(events).items():
@@ -130,23 +130,23 @@ def os_env(session_os_env):
 
 
 @pytest.fixture
-def env(tmp_path, session_env):
+def env(tmp_path, session_env, mocker):
     """a mutable copy of session_env"""
-    env_copy = copy_env(session_env)
+    env_copy = copy_env(session_env, mocker)
     initial_vars = {"XONSH_DATA_DIR": str(tmp_path), "XONSH_CACHE_DIR": str(tmp_path)}
 
     env_copy.update(initial_vars)
     return env_copy
 
 
-@pytest.fixture
-def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch):
+@pytest.fixture(scope="module")
+def xonsh_session(xonsh_events, session_execer, session_os_env):
     """a fixture to use where XonshSession is fully loaded without any mocks"""
 
     XSH.load(
         ctx={},
         execer=session_execer,
-        env=os_env,
+        env=copy_env(session_os_env),
     )
     yield XSH
     XSH.unload()

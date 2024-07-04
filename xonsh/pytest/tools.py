@@ -140,15 +140,22 @@ def completions_from_result(results):
     return results
 
 
-def copy_env(old):
+def copy_env(old, mocker=None):
     from xonsh.environ import Env, InternalEnvironDict
 
-    env: Env = copy.copy(old)
-    internal = InternalEnvironDict()
-    internal._global = env._d._global.copy()
-    internal._thread_local = threading.local()
+    if mocker is None:
+        env: Env = copy.copy(old)
+        internal = InternalEnvironDict()
+        internal._global = env._d._global.copy()
+        internal._thread_local = threading.local()
 
-    env._d = internal
-    env._vars = env._vars.copy()
-    env._detyped = None
-    return env
+        env._d = internal
+        env._vars = env._vars.copy()
+        env._detyped = None
+        return env
+
+    mocker.patch.dict(old._d._global)
+    mocker.patch.object(old._d, "_thread_local", threading.local())
+    mocker.patch.dict(old._vars)
+    mocker.patch.object(old, "_detyped", None)
+    return old
