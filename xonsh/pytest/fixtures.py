@@ -1,3 +1,5 @@
+"""Fixtures that doesn't need XSH setup"""
+
 import os
 import sys
 import types
@@ -316,6 +318,18 @@ def readline_shell(xonsh_execer, tmpdir, mocker):
     yield shell
     inp.close()
     out.close()
+
+
+@pytest.fixture
+def setup_import_hook(monkeypatch, xonsh_session):
+    import copy
+
+    from xonsh.imphooks import install_import_hooks
+
+    old = copy.copy(sys.meta_path)
+    install_import_hooks(xonsh_session.execer)
+    yield xonsh_session
+    sys.meta_path = old
 
 
 @pytest.fixture
