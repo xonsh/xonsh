@@ -969,7 +969,7 @@ def print_warning(msg):
 
 
 def print_exception(msg=None, exc_info=None, source_msg=None):
-    """Print given exception (or current if None) with/without traceback and set sys.last_type, sys.last_value, sys.last_traceback accordingly."""
+    """Print given exception (or current if None) with/without traceback and set sys.last_exc accordingly."""
 
     # is no exec_info() triple is given, use the exception beeing handled at the moment
     if exc_info is None:
@@ -999,7 +999,17 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         limit = 0
         chain = False
 
-    sys.last_type, sys.last_value, sys.last_traceback = exc_info
+    if xsh.env.get("XONSH_SHOW_TRACEBACK", False):
+        """
+        This moved under ``XONSH_SHOW_TRACEBACK`` because it looks that python's
+        internal machinery behind ``sys.last_*`` is not thread safe
+        when traceback is not printed (#5408).
+        """
+        if sys.version_info >= (3, 12):
+            # https://docs.python.org/3/library/sys.html#sys.last_exc
+            sys.last_exc = exc_info
+        else:
+            sys.last_type, sys.last_value, sys.last_traceback = exc_info
 
     manually_set_trace, show_trace = _get_manual_env_var("XONSH_SHOW_TRACEBACK", False)
     manually_set_logfile, log_file = _get_manual_env_var("XONSH_TRACEBACK_LOGFILE")
