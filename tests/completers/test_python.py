@@ -7,9 +7,8 @@ from xonsh.pytest.tools import skip_if_pre_3_8
 
 
 @pytest.fixture(autouse=True)
-def xonsh_execer_autouse(xession, xonsh_execer, monkeypatch):
-    monkeypatch.setitem(xession.env, "COMPLETIONS_BRACKETS", True)
-    return xonsh_execer
+def xonsh_execer_autouse(xession):
+    return xession.execer
 
 
 def foo(x, y, z):
@@ -104,7 +103,6 @@ def test_complete_python_ctx():
         ("from pathlib import PosixPath PurePa", {"PurePath"}),
     ],
 )
-@pytest.mark.flaky(reruns=2, reruns_delay=2)
 def test_complete_import(command, exp, completer_obj):
     result = complete_import(completer_obj.parse(command))
     if isinstance(result, tuple):
