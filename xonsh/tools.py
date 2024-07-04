@@ -1055,7 +1055,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         limit = 0
         chain = False
 
-    if xsh.env.get("XONSH_SHOW_TRACEBACK"):
+    if xsh.env.get("XONSH_SHOW_TRACEBACK", False):
         """
         This moved under ``XONSH_SHOW_TRACEBACK`` because it looks that python's 
         internal machinery behind ``sys.last_*`` is not thread safe when traceback
