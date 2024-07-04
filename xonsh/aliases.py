@@ -182,10 +182,15 @@ class Aliases(cabc.MutableMapping):
             isinstance(value, cabc.Iterable)
             and hasattr(value, "__len__")
             and len(value) > 1
-            and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias))
         ):
-            spec_modifiers.append(mod)
-            value = value[1:]
+            i = 0
+            for v in value:
+                if isinstance(mod := self._raw.get(str(v)), SpecModifierAlias):
+                    spec_modifiers.append(mod)
+                    i += 1
+                else:
+                    break
+            value = value[i:]
 
         if callable(value) and getattr(value, "return_command", False):
             try:
