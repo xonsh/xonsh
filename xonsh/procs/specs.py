@@ -722,6 +722,7 @@ class SubprocSpec:
             if isinstance(XSH.aliases, dict):
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
+                self.cmd = alias + self.cmd[1:]
             else:
                 alias = XSH.aliases.get(
                     self.cmd,
