@@ -45,10 +45,12 @@ def test(
     """
 
     if report_cov:
-        ![pytest @(_replace_args(pytest_args, 0)) --cov --cov-report=xml --cov-report=term]
+        ![pytest @(_replace_args(pytest_args, 0)) --cov --cov-report=]
+        ![pytest -p xonsh tests/api --cov --cov-append --cov-report=xml --cov-report=term]
     else:
         # during CI run, some tests take longer to complete on windows
         ![pytest @(_replace_args(pytest_args, 0)) --durations=5]
+        ![pytest -p xonsh tests/api]
 
 
 def validate_news_items(
