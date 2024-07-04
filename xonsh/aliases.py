@@ -199,7 +199,7 @@ class Aliases(cabc.MutableMapping):
                 raise ValueError("return_command alias: zero arguments.")
 
         if callable(value):
-            return partial_eval_alias(value, acc_args=acc_args)
+            return [value] + list(acc_args)
         else:
             expand_path = XSH.expand_path
             token, *rest = map(expand_path, value)
@@ -226,7 +226,6 @@ class Aliases(cabc.MutableMapping):
         self,
         key,
         default=None,
-        args=None,
         spec_modifiers=None,
         found_return_command=None,
     ):
@@ -241,12 +240,16 @@ class Aliases(cabc.MutableMapping):
         found_return_command = (
             found_return_command if found_return_command is not None else []
         )
-        args = args if args is not None else []
+        args = []
+        if isinstance(key, list):
+            args = key[1:]
+            key = key[0]
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_command", False):
             try:
                 found_return_command.append(val.__name__)
                 val = val(args, spec_modifiers=spec_modifiers)
+                args = []
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
                 return None
