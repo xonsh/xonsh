@@ -1,4 +1,3 @@
-import builtins
 import os.path
 from contextlib import contextmanager
 from unittest.mock import MagicMock
@@ -9,12 +8,12 @@ from xonsh.aliases import make_default_aliases, source_alias
 
 
 @pytest.fixture
-def mockopen(xession, monkeypatch):
+def mockopen(xession, mocker):
     @contextmanager
     def mocked_open(fpath, *args, **kwargs):
         yield MagicMock(read=lambda: fpath)
 
-    monkeypatch.setattr(builtins, "open", mocked_open)
+    mocker.patch("xonsh.aliases.open", mocked_open)
 
 
 @pytest.fixture

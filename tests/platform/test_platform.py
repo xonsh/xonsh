@@ -1,16 +1,10 @@
-import builtins
-from contextlib import contextmanager
-from unittest.mock import MagicMock
+from pytest_mock import MockerFixture
 
 import xonsh.platform as xp
 
 
-def test_githash_value_error(monkeypatch):
-    @contextmanager
-    def mocked_open(*args):
-        yield MagicMock(read=lambda: "abc123")
-
-    monkeypatch.setattr(builtins, "open", mocked_open)
+def test_githash_value_error(mocker: MockerFixture):
+    mocker.patch.object(xp, "open", mocker.mock_open(read_data="abc123"))
     sha, date_ = xp.githash()
     assert date_ is None
     assert sha is None

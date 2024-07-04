@@ -1,11 +1,9 @@
 """Tests the xonsh main function."""
 
-import builtins
 import gc
 import os
 import os.path
 import sys
-from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -464,6 +462,7 @@ def test_xonsh_failback(
     xession,
     monkeypatch,
     monkeypatch_stderr,
+    mocker,
 ):
     failback_checker = []
 
@@ -480,11 +479,9 @@ def test_xonsh_failback(
     monkeypatch.setattr(os.path, "exists", lambda x: True)
     monkeypatch.setattr(sys, "argv", ["/bin/xonsh", "-i"])  # has to look like real path
 
-    @contextmanager
-    def mocked_open(*args):
-        yield rc_shells
-
-    monkeypatch.setattr(builtins, "open", mocked_open)
+    mocker.patch.object(
+        xonsh.main, "open", mocker.mock_open(read_data="\n".join(rc_shells))
+    )
 
     monkeypatch.setenv("SHELL", env_shell)
 
