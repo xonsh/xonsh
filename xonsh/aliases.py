@@ -154,12 +154,80 @@ class Aliases(cabc.MutableMapping):
         f.return_command = True
         return f
 
+    def eval_alias(
+        self,
+        value,
+        seen_tokens=frozenset(),
+        acc_args=(),
+        spec_modifiers=None,
+        found_return_command=None,
+    ):
+        """
+        "Evaluates" the alias ``value``, by recursively looking up the leftmost
+        token and "expanding" if it's also an alias.
+
+        A value like ``["cmd", "arg"]`` might transform like this:
+        ``> ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()``
+        where ``cmd=ls -al`` and ``ls`` is an alias with its value being a
+        callable.  The resulting callable will be "partially applied" with
+        ``["-al", "arg"]``.
+        """
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        found_return_command = (
+            found_return_command if found_return_command is not None else []
+        )
+        # Beware of mutability: default values for keyword args are evaluated
+        # only once.
+        if (
+            isinstance(value, cabc.Iterable)
+            and hasattr(value, "__len__")
+            and len(value) > 1
+            and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias))
+        ):
+            spec_modifiers.append(mod)
+            value = value[1:]
+
+        if callable(value) and getattr(value, "return_command", False):
+            try:
+                found_return_command.append(value.__name__)
+                value = value(acc_args, spec_modifiers=spec_modifiers)
+                acc_args = []
+            except Exception as e:
+                print_exception(f"Exception inside alias {value}: {e}")
+                return None
+            if not len(value):
+                raise ValueError("return_command alias: zero arguments.")
+
+        if callable(value):
+            return partial_eval_alias(value, acc_args=acc_args)
+        else:
+            expand_path = XSH.expand_path
+            token, *rest = map(expand_path, value)
+            if token in seen_tokens or token not in self._raw:
+                # ^ Making sure things like `egrep=egrep --color=auto` works,
+                # and that `l` evals to `ls --color=auto -CF` if `l=ls -CF`
+                # and `ls=ls --color=auto`
+                rtn = [token]
+                rtn.extend(rest)
+                rtn.extend(acc_args)
+                return rtn
+            else:
+                seen_tokens = seen_tokens | {token}
+                acc_args = rest + list(acc_args)
+                return self.eval_alias(
+                    self._raw[token],
+                    seen_tokens,
+                    acc_args,
+                    spec_modifiers=spec_modifiers,
+                    found_return_command=found_return_command,
+                )
+
     def get(
         self,
         key,
         default=None,
-        spec_modifiers=None,
         args=None,
+        spec_modifiers=None,
         found_return_command=None,
     ):
         """Returns the (possibly modified) value. If the key is not present,
@@ -198,80 +266,6 @@ class Aliases(cabc.MutableMapping):
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
-
-    def eval_alias(
-        self,
-        value,
-        seen_tokens=frozenset(),
-        acc_args=(),
-        spec_modifiers=None,
-        args=None,
-        found_return_command=None,
-    ):
-        """
-        "Evaluates" the alias ``value``, by recursively looking up the leftmost
-        token and "expanding" if it's also an alias.
-
-        A value like ``["cmd", "arg"]`` might transform like this:
-        ``> ["cmd", "arg"] -> ["ls", "-al", "arg"] -> callable()``
-        where ``cmd=ls -al`` and ``ls`` is an alias with its value being a
-        callable.  The resulting callable will be "partially applied" with
-        ``["-al", "arg"]``.
-        """
-        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
-        args = args if args is not None else []
-        found_return_command = (
-            found_return_command if found_return_command is not None else []
-        )
-        # Beware of mutability: default values for keyword args are evaluated
-        # only once.
-        if (
-            isinstance(value, cabc.Iterable)
-            and hasattr(value, "__len__")
-            and len(value) > 1
-            and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias))
-        ):
-            spec_modifiers.append(mod)
-            value = value[1:]
-
-        if callable(value) and getattr(value, "return_command", False):
-            args = args if args is not None else []
-            try:
-                found_return_command.append(value.__name__)
-                value = value(args, spec_modifiers=spec_modifiers)
-                args = []
-                acc_args = []
-            except Exception as e:
-                print_exception(f"Exception inside alias {value}: {e}")
-                return None
-            if not len(value):
-                raise ValueError("return_command alias: zero arguments.")
-
-        if callable(value):
-            return partial_eval_alias(value, acc_args=acc_args)
-        else:
-            expand_path = XSH.expand_path
-            token, *rest = map(expand_path, value)
-            if token in seen_tokens or token not in self._raw:
-                # ^ Making sure things like `egrep=egrep --color=auto` works,
-                # and that `l` evals to `ls --color=auto -CF` if `l=ls -CF`
-                # and `ls=ls --color=auto`
-                rtn = [token]
-                rtn.extend(rest)
-                rtn.extend(acc_args)
-                # rtn.extend(args)
-                return rtn
-            else:
-                seen_tokens = seen_tokens | {token}
-                acc_args = rest + list(acc_args)
-                return self.eval_alias(
-                    self._raw[token],
-                    seen_tokens,
-                    acc_args,
-                    spec_modifiers=spec_modifiers,
-                    # args=(acc_args + args),
-                    found_return_command=found_return_command,
-                )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
