@@ -336,6 +336,24 @@ def test_spec_modifier_alias_tree(xession):
     assert spec.force_threadable is False
 
 
+def test_spec_modifier_alias_multiple(xession):
+    xession.aliases["@unthread"] = SpecAttrModifierAlias(
+        {"threadable": False, "force_threadable": False}
+    )
+    xession.aliases["@dict"] = SpecAttrModifierAlias({"output_format": "list_lines"})
+
+    cmds = [
+        ["@unthread", "@dict", "echo", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+
+    assert spec.cmd == ["echo", "1"]
+    assert spec.alias_name is None
+    assert spec.threadable is False
+    assert spec.force_threadable is False
+    assert spec.output_format == "list_lines"
+
+
 @skip_if_on_windows
 def test_spec_modifier_alias_output_format(xession):
     class SpecModifierOutputLinesAlias(SpecModifierAlias):

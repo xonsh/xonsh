@@ -22,14 +22,14 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       - ✓
       - ✓
-    * - Easily scriptable
-      - ✓
-      - ✓
-      - ✓
-      - ✓
+    * - Stays readable at scale
+      -
       -
       - ✓
-    * - Native cross-platform support
+      -
+      -
+      - ✓
+    * - Native cross-platform
       -
       -
       - ✓
@@ -39,20 +39,6 @@ table lists built in features and capabilities that various tools may or may not
     * - Meant as a shell
       - ✓
       - ✓
-      -
-      - ✓
-      -
-      - ✓
-    * - Tab completion
-      - ✓
-      - ✓
-      -
-      - ✓
-      - ✓
-      - ✓
-    * - Completion from man-page parsing
-      -
-      -
       -
       - ✓
       -
@@ -78,6 +64,13 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       - in notebook
       - w/ prompt-toolkit
+    * - Rich history backend
+      -
+      -
+      -
+      -
+      -
+      - ✓
     * - Pun in name
       - ✓
       -
@@ -85,12 +78,4 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       -
       - ✓
-    * - Rich history
-      -
-      -
-      -
-      -
-      -
-      - ✓
-
 
