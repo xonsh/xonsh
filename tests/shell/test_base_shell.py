@@ -2,7 +2,6 @@
 
 import os
 
-
 from xonsh.shell import transform_command
 from xonsh.shells.base_shell import BaseShell
 
