@@ -1058,7 +1058,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     if xsh.env.get("XONSH_SHOW_TRACEBACK", False):
         """
         This moved under ``XONSH_SHOW_TRACEBACK`` because it looks that python's
-        internal machinery behind ``sys.last_*`` is not thread safe 
+        internal machinery behind ``sys.last_*`` is not thread safe
         when traceback is not printed (#5408).
         """
         if sys.version_info.major >= 3 and sys.version_info.minor >= 12:
