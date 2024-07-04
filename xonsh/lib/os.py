@@ -2,9 +2,9 @@
 import warnings
 
 warnings.warn(
-        "Use `xonsh.lib.lazyasd` instead of `xonsh.lazyasd`.",
+        "Use `xonsh.api.os` instead of `xonsh.lib.os`.",
         DeprecationWarning,
         stacklevel=2
     )
 
-from xonsh.lib.lazyasd import *  # noqa
+from xonsh.api.os import *  # noqa

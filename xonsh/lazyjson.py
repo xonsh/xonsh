@@ -7,4 +7,4 @@ warnings.warn(
         stacklevel=2
     )
 
-from xonsh.lib.lazyjson import *
+from xonsh.lib.lazyjson import *  # noqa

@@ -7,4 +7,4 @@ warnings.warn(
         stacklevel=2
     )
 
-from xonsh.lib.lazyimps import *
+from xonsh.lib.lazyimps import *  # noqa

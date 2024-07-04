@@ -2,9 +2,9 @@
 import warnings
 
 warnings.warn(
-        "Use `xonsh.lib.lazyasd` instead of `xonsh.lazyasd`.",
+        "Use `xonsh.api.subprocess` instead of `xonsh.lib.subprocess`.",
         DeprecationWarning,
         stacklevel=2
     )
 
-from xonsh.lib.lazyasd import *  # noqa
+from xonsh.api.subprocess import *  # noqa
