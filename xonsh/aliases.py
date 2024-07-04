@@ -229,12 +229,20 @@ class Aliases(cabc.MutableMapping):
         spec_modifiers=None,
         found_return_command=None,
     ):
-        """Returns the (possibly modified) value. If the key is not present,
-        then `default` is returned.
-        If the value is callable, it is returned without modification. If it
-        is an iterable of strings it will be evaluated recursively to expand
-        other aliases, resulting in a new list or a "partially applied"
-        callable.
+        """
+        Returns list that represent command with resolved aliases.
+        The ``key`` can be string with alias name or list for a command.
+        In the first position will be the resolved command name or callable alias.
+        If the key is not present, then `default` is returned.
+
+        ``spec_modifiers`` is the list of SpecModifier objects that found during
+        resolving aliases (#5443).
+        ``found_return_command`` is the list of aliases with return command functionality that found
+        during resolving aliases (#5473).
+
+        Note! The return value is always list because during resolving
+        we can find return_command alias that can completely replace
+        command and add new arguments.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         found_return_command = (

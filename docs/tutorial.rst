@@ -1313,15 +1313,31 @@ One of the most interesting application is expanding an aliases:
 
 .. code-block:: xonshcon
 
-    >>> @aliases.register('xsudo')
+    >>> @aliases.register
     ... @aliases.return_command
     ... def _xsudo(args):
+    ...     """Sudo with expanding aliases."""
     ...     return ['sudo', '--', *aliases.eval_alias(args)]
     ...
     >>> aliases['install'] = "apt install cowsay"
     >>> xsudo install
     # Password:
     # Install cowsay
+
+Or implement logic to run the right command:
+
+.. code-block:: xonshcon
+
+    >>> @aliases.register
+    ... @aliases.return_command
+    ... def _vi(args):
+    ...     """Universal vi editor."""
+    ...     if $(which vim 2>/dev/null):
+    ...         return ['vim'] + args
+    ...     else:
+    ...         return ['vi'] + args
+    ...
+    >>> vi file
 
 
 ExecAlias
