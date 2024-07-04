@@ -83,7 +83,9 @@ def test_recursive_callable_partial_all(xession):
     ales = Aliases({"rtn": _return_to_sender_all, "rtn-recurse": ["rtn", "arg1"]})
     alias = ales.get("rtn-recurse")[0]
     assert callable(alias)
-    args, obs = alias(["arg1", "arg2"], stdin="a", stdout="b", stderr="c", spec="d", stack="e")
+    args, obs = alias(
+        ["arg1", "arg2"], stdin="a", stdout="b", stderr="c", spec="d", stack="e"
+    )
     assert args == ["arg1", "arg2"]
     assert len(obs) == 5
     exp = {"stdin": "a", "stdout": "b", "stderr": "c", "spec": "d", "stack": "e"}
