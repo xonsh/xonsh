@@ -1,8 +1,6 @@
 **Added:**
 
-* Added ability to create alias that returns modified command.
-  This allows modify and return command in the context of execution without wrapping with complex callable alias.
-  See also #5473.
+* Added ``@aliases.return_command`` decorator to eliminate the need to wrap the logic for modifying command into callable alias wrapper (#5473).
 
 **Changed:**
 
