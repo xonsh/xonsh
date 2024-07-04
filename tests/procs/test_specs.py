@@ -348,7 +348,7 @@ def test_spec_modifier_alias_multiple(xession):
     spec = cmds_to_specs(cmds, captured="object")[-1]
 
     assert spec.cmd == ["echo", "1"]
-    assert spec.alias_name == None
+    assert spec.alias_name is None
     assert spec.threadable is False
     assert spec.force_threadable is False
     assert spec.output_format == "list_lines"
