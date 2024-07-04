@@ -340,11 +340,11 @@ def test_spec_modifier_alias_multiple(xession):
     xession.aliases["@unthread"] = SpecAttrModifierAlias(
         {"threadable": False, "force_threadable": False}
     )
-    xession.aliases["@dict"] = SpecAttrModifierAlias(
-        {"output_format": "list_lines"}
-    )
+    xession.aliases["@dict"] = SpecAttrModifierAlias({"output_format": "list_lines"})
 
-    cmds = [["@unthread", "@dict", "echo", "1"],]
+    cmds = [
+        ["@unthread", "@dict", "echo", "1"],
+    ]
     spec = cmds_to_specs(cmds, captured="object")[-1]
 
     assert spec.cmd == ["echo", "1"]
