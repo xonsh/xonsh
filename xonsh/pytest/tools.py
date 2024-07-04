@@ -153,7 +153,10 @@ def copy_env(old, mocker=None):
         env._vars = env._vars.copy()
         env._detyped = None
         return env
+    return mock_env(mocker, old)
 
+
+def mock_env(mocker, old):
     mocker.patch.dict(old._d._global)
     mocker.patch.object(old._d, "_thread_local", threading.local())
     mocker.patch.dict(old._vars)

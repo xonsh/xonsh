@@ -16,7 +16,7 @@ from xonsh.execer import Execer
 from xonsh.parsers.completion_context import CompletionContextParser
 from xonsh.procs.jobs import get_tasks
 
-from .tools import DummyHistory, DummyShell, copy_env, sp
+from .tools import DummyHistory, DummyShell, copy_env, mock_env, sp
 
 
 @pytest.fixture
@@ -130,23 +130,17 @@ def os_env(session_os_env):
 
 
 @pytest.fixture
-def env(tmp_path, session_env, mocker):
-    """a mutable copy of session_env"""
-    env_copy = copy_env(session_env, mocker)
-    initial_vars = {"XONSH_DATA_DIR": str(tmp_path), "XONSH_CACHE_DIR": str(tmp_path)}
-
-    env_copy.update(initial_vars)
-    return env_copy
+def env(xonsh_session):
+    """to easily set env variables function level"""
+    return xonsh_session.env
 
 
 @pytest.fixture(scope="module")
-def xonsh_session(xonsh_events, session_execer, session_os_env):
-    """a fixture to use where XonshSession is fully loaded without any mocks"""
-
+def module_xsh(xonsh_events, session_execer, session_os_env, module_mocker):
     XSH.load(
         ctx={},
         execer=session_execer,
-        env=copy_env(session_os_env),
+        env=copy_env(session_os_env, module_mocker),
     )
     yield XSH
     XSH.unload()
@@ -154,7 +148,26 @@ def xonsh_session(xonsh_events, session_execer, session_os_env):
 
 
 @pytest.fixture
-def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
+def xonsh_session(module_xsh, monkeypatch, mocker, tmp_path):
+    """a fixture to use where XonshSession is fully loaded without any mocks
+
+    Use `env` fixture to set function level variables
+    """
+    env_ref = module_xsh.env
+    mock_env(mocker, module_xsh.env)
+
+    for var in (
+        "XONSH_DATA_DIR",
+        "XONSH_CACHE_DIR",
+    ):
+        module_xsh.env[var] = tmp_path
+    yield module_xsh
+    # if any tests update .env, we need to reset it
+    module_xsh.env = env_ref
+
+
+@pytest.fixture
+def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session):
     """Mock out most of the builtins xonsh attributes."""
 
     # make sure that all other fixtures call this mock only one time
@@ -176,17 +189,14 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
         if session:
             raise RuntimeError("The factory should be called only once per test")
 
-        aliases = None if "aliases" in attrs_to_skip else Aliases()
+        if "aliases" not in attrs_to_skip:
+            monkeypatch.setattr(xonsh_session.commands_cache, "aliases", Aliases())
+
         for attr, val in [
-            ("env", env),
             ("shell", DummyShell()),
             ("help", lambda x: x),
             ("exit", False),
             ("history", DummyHistory()),
-            (
-                "commands_cache",
-                commands_cache.CommandsCache(env, aliases),
-            ),  # since env,aliases change , patch cmds-cache
             # ("subproc_captured", sp),
             ("subproc_uncaptured", sp),
             ("subproc_captured_stdout", sp),
