@@ -1061,8 +1061,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         internal machinery behind ``sys.last_*`` is not thread safe 
         when traceback is not printed (#5408).
         """
-        ver = sys.version_info
-        if ver.major >= 3 and ver.minor >= 12:
+        if sys.version_info.major >= 3 and sys.version_info.minor >= 12:
             # https://docs.python.org/3/library/sys.html#sys.last_exc
             sys.last_exc = exc_info
         else:
