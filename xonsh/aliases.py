@@ -980,7 +980,7 @@ def make_default_aliases():
             default_aliases["deactivate"] = ["source-cmd", "deactivate.bat"]
         if shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
             # XSH.commands_cache is not available during setup
-            import xonsh.platform.winutils as winutils
+            import xonsh.platforms.winutils as winutils
 
             def sudo(args):
                 if len(args) < 1:
