@@ -33,6 +33,7 @@ class TestCommandsCacheSaveIntermediate:
     @pytest.fixture
     def exin_mock(self, xession, mock_executables_in):
         xession.env["COMMANDS_CACHE_SAVE_INTERMEDIATE"] = True
+        xession.commands_cache._cache_file = None
         return mock_executables_in(["bin1", "bin2"])
 
     def test_caching_to_file(self, exin_mock, xession, tmp_path):
