@@ -576,6 +576,19 @@ def test_env_get_defaults():
     assert "TEST_REG_DNG" not in env
 
 
+def test_env_class_repr():
+    """Class with repr return string if env var."""
+    class Cls:
+        def __init__(self, var):
+            self.var = var
+        def __repr__(self):
+            return self.var
+
+    env = Env(CLS=Cls("hello"))
+    assert str(env.get("CLS")) == "hello"
+    assert str(env.__getitem__("CLS")) == "hello"
+
+
 @pytest.mark.parametrize(
     "val,validator",
     [
