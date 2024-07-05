@@ -431,6 +431,14 @@ class CommandsCache(cabc.Mapping):
         os.close(fd)
         return failure  # timeout
 
+    def reset(self):
+        """useful for testing"""
+        # cache commands in path by mtime
+        self._paths_cache.clear()
+        self._cmds_cache.clear()
+        self._alias_checksum = None
+        self._cache_file = None
+
 
 #
 # Background Predictors

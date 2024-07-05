@@ -4,6 +4,7 @@ import xonsh.platform as xp
 
 
 def test_githash_value_error(mocker: MockerFixture):
+    xp.githash.cache_clear()
     mocker.patch.object(xp, "open", mocker.mock_open(read_data="abc123"))
     sha, date_ = xp.githash()
     assert date_ is None
