@@ -578,9 +578,11 @@ def test_env_get_defaults():
 
 def test_env_class_repr():
     """Class with repr return string if env var."""
+
     class Cls:
         def __init__(self, var):
             self.var = var
+
         def __repr__(self):
             return self.var
 
