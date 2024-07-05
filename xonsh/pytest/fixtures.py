@@ -52,8 +52,9 @@ def xonsh_execer_parse(xonsh_execer):
 
 @pytest.fixture
 def mock_executables_in(xession, tmp_path, monkeypatch):
+    xession.env["PATH"] = [tmp_path]
+
     def _factory(binaries: list[str]):
-        xession.env["PATH"] = [tmp_path]
         exec_mock = MagicMock(return_value=binaries)
         monkeypatch.setattr(commands_cache, "executables_in", exec_mock)
         return exec_mock
@@ -92,9 +93,16 @@ def xonsh_events():
 
 
 @pytest.fixture(scope="session")
-def session_env():
+def default_os_env():
+    from xonsh.environ import default_env
+
+    return default_env()
+
+
+@pytest.fixture(scope="session")
+def session_env(default_os_env):
     """Env with initial values set from os.environ. But will not inherit XONSH specific variables"""
-    from xonsh.environ import Env, default_env
+    from xonsh.environ import Env
 
     initial_vars = {
         "UPDATE_OS_ENVIRON": False,
@@ -106,7 +114,7 @@ def session_env():
         "COMMANDS_CACHE_SAVE_INTERMEDIATE": False,
     }
     env = Env(initial_vars)
-    for key, val in default_env().items():
+    for key, val in default_os_env.items():
         if (key not in env) or (key.endswith("PATH")):
             env[key] = val
     return env
