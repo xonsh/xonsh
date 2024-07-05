@@ -131,7 +131,7 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
-    def get(self, key, default=None, spec_modifiers=None):
+    def get(self, key, default=None, spec_decorators=None):
         """Returns the (possibly modified) value. If the key is not present,
         then `default` is returned.
         If the value is callable, it is returned without modification. If it
@@ -139,20 +139,20 @@ class Aliases(cabc.MutableMapping):
         other aliases, resulting in a new list or a "partially applied"
         callable.
         """
-        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        spec_decorators = spec_decorators if spec_decorators is not None else []
         val = self._raw.get(key)
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
             return self.eval_alias(
-                val, seen_tokens={key}, spec_modifiers=spec_modifiers
+                val, seen_tokens={key}, spec_decorators=spec_decorators
             )
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
 
     def eval_alias(
-        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=None
+        self, value, seen_tokens=frozenset(), acc_args=(), spec_decorators=None
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -164,7 +164,7 @@ class Aliases(cabc.MutableMapping):
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
         """
-        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        spec_decorators = spec_decorators if spec_decorators is not None else []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
@@ -175,7 +175,7 @@ class Aliases(cabc.MutableMapping):
             i = 0
             for v in value:
                 if isinstance(mod := self._raw.get(str(v)), SpecDecoratorAlias):
-                    spec_modifiers.append(mod)
+                    spec_decorators.append(mod)
                     i += 1
                 else:
                     break
@@ -201,7 +201,7 @@ class Aliases(cabc.MutableMapping):
                     self._raw[token],
                     seen_tokens,
                     acc_args,
-                    spec_modifiers=spec_modifiers,
+                    spec_decorators=spec_decorators,
                 )
 
     def expand_alias(self, line: str, cursor_index: int) -> str:

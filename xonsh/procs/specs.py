@@ -278,7 +278,7 @@ def no_pg_xonsh_preexec_fn():
 
 
 class SpecDecoratorAlias:
-    """Spec modifier base class."""
+    """Specification decorator base class."""
 
     descr = "Spec modifier base class."
 
@@ -294,7 +294,7 @@ class SpecDecoratorAlias:
     ):
         print(self.descr, file=stdout)
 
-    def on_modifer_added(self, spec):
+    def on_decorator_added(self, spec):
         """Modify spec immediately after modifier added."""
         pass
 
@@ -304,14 +304,14 @@ class SpecDecoratorAlias:
 
 
 class SpecAttrDecoratorAlias(SpecDecoratorAlias):
-    """Modifier for spec attributes."""
+    """Decorator for specification attributes."""
 
     def __init__(self, set_attributes: dict, descr=""):
         self.set_attributes = set_attributes
         self.descr = descr
         super().__init__()
 
-    def on_modifer_added(self, spec):
+    def on_decorator_added(self, spec):
         for a, v in self.set_attributes.items():
             setattr(spec, a, v)
 
@@ -419,7 +419,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
-        self.spec_modifiers = []  # List of SpecDecoratorAlias objects that applied to spec.
+        self.spec_decorators = []  # List of SpecDecoratorAlias objects that applied to spec.
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
@@ -642,7 +642,7 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
-        spec.resolve_spec_modifiers()  # keep this first
+        spec.resolve_spec_decorators()  # keep this first
         spec.resolve_args_list()
         spec.resolve_redirects()
         spec.resolve_alias()
@@ -653,12 +653,12 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
-    def add_spec_modifier(self, mod: SpecDecoratorAlias):
+    def add_spec_decorator(self, mod: SpecDecoratorAlias):
         """Add spec modifier to the specification."""
-        mod.on_modifer_added(self)
-        self.spec_modifiers.append(mod)
+        mod.on_decorator_added(self)
+        self.spec_decorators.append(mod)
 
-    def resolve_spec_modifiers(self):
+    def resolve_spec_decorators(self):
         """Apply spec modifier."""
         if (ln := len(self.cmd)) == 1:
             return
@@ -667,7 +667,7 @@ class SubprocSpec:
             if c in XSH.aliases and isinstance(
                 mod := XSH.aliases[c], SpecDecoratorAlias
             ):
-                self.add_spec_modifier(mod)
+                self.add_spec_decorator(mod)
             else:
                 break
         self.cmd = self.cmd[i:]
@@ -707,7 +707,7 @@ class SubprocSpec:
     def resolve_alias(self):
         """Sets alias in command, if applicable."""
         cmd0 = self.cmd[0]
-        spec_modifiers = []
+        spec_decorators = []
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
             # and futher using binary_loc to resolve the alias name.
@@ -721,13 +721,13 @@ class SubprocSpec:
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
             else:
-                alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
+                alias = XSH.aliases.get(cmd0, None, spec_decorators=spec_decorators)
             if alias is not None:
                 self.alias_name = cmd0
         self.alias = alias
-        if spec_modifiers:
-            for mod in spec_modifiers:
-                self.add_spec_modifier(mod)
+        if spec_decorators:
+            for mod in spec_decorators:
+                self.add_spec_decorator(mod)
 
     def resolve_binary_loc(self):
         """Sets the binary location"""

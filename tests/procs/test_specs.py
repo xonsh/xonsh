@@ -287,7 +287,7 @@ def test_run_subproc_background(captured, exp_is_none):
     assert (return_val is None) == exp_is_none
 
 
-def test_spec_modifier_alias_alone(xession):
+def test_spec_decorator_alias_alone(xession):
     xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
@@ -299,7 +299,7 @@ def test_spec_modifier_alias_alone(xession):
     assert spec.alias_name == "xunthread"
 
 
-def test_spec_modifier_alias(xession):
+def test_spec_decorator_alias(xession):
     xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
@@ -312,7 +312,7 @@ def test_spec_modifier_alias(xession):
     assert spec.force_threadable is False
 
 
-def test_spec_modifier_alias_tree(xession):
+def test_spec_decorator_alias_tree(xession):
     xession.aliases["xthread"] = SpecAttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
@@ -336,7 +336,7 @@ def test_spec_modifier_alias_tree(xession):
     assert spec.force_threadable is False
 
 
-def test_spec_modifier_alias_multiple(xession):
+def test_spec_decorator_alias_multiple(xession):
     xession.aliases["@unthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
@@ -355,9 +355,9 @@ def test_spec_modifier_alias_multiple(xession):
 
 
 @skip_if_on_windows
-def test_spec_modifier_alias_output_format(xession):
+def test_spec_decorator_alias_output_format(xession):
     class SpecModifierOutputLinesAlias(SpecDecoratorAlias):
-        def on_modifer_added(self, spec):
+        def on_decorator_added(self, spec):
             spec.output_format = "list_lines"
 
     xession.aliases["xlines"] = SpecModifierOutputLinesAlias()
