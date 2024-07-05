@@ -109,7 +109,7 @@ def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
 def test_ptk_prompt(line, exp, ptk_shell, capsys):
     inp, out, shell = ptk_shell
     inp.send_text(f"{line}\nexit\n")  # note: terminate with '\n'
-    shell.cmdloop()
+    shell.default(line)
     screen = pyte.Screen(80, 24)
     stream = pyte.Stream(screen)
 
