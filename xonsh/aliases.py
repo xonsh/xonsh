@@ -660,7 +660,7 @@ def source_alias(args, stdin=None):
             src += "\n"
         ctx = XSH.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
-        with env.swap(**make_args_env(args[i + 1 :])), swap_values(ctx, updates):
+        with env.swap(XONSH_MODE="source", **make_args_env(args[i + 1 :])), swap_values(ctx, updates):
             try:
                 XSH.builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:

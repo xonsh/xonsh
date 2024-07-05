@@ -410,21 +410,26 @@ def premain(argv=None):
     if args.command is not None:
         args.mode = XonshMode.single_command
         shell_kwargs["shell_type"] = "none"
+        xonsh_mode = "single_command"
     elif args.file is not None:
         args.mode = XonshMode.script_from_file
         shell_kwargs["shell_type"] = "none"
+        xonsh_mode = "script_from_file"
     elif not sys.stdin.isatty() and not args.force_interactive:
         args.mode = XonshMode.script_from_stdin
         shell_kwargs["shell_type"] = "none"
+        xonsh_mode = "script_from_stdin"
     else:
         args.mode = XonshMode.interactive
         shell_kwargs["completer"] = True
         shell_kwargs["login"] = True
+        xonsh_mode = "interactive"
 
     pre_env = {
         "XONSH_LOGIN": shell_kwargs["login"],
         "XONSH_INTERACTIVE": args.force_interactive
         or (args.mode == XonshMode.interactive),
+        "XONSH_MODE": xonsh_mode
     }
     pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
