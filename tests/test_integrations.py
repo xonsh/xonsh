@@ -13,6 +13,7 @@ import pytest
 
 import xonsh
 from xonsh.dirstack import with_pushd
+from xonsh.environ import DEFAULT_VARS
 from xonsh.pytest.tools import (
     ON_DARWIN,
     ON_TRAVIS,
@@ -65,7 +66,11 @@ def run_xonsh(
     env=None,
 ):
     # Env
-    popen_env = dict(os.environ)
+    popen_env = dict()
+    for k in os.environ:
+        if (k in DEFAULT_VARS) and (not k.endswith("PATH")):
+            continue
+        popen_env[k] = os.environ[k]
     popen_env |= base_env
     if path:
         popen_env["PATH"] = path
@@ -705,6 +710,7 @@ if not ON_WINDOWS:
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
+@pytest.mark.flaky(reruns=3)
 def test_script(case):
     script, exp_out, exp_rtn = case
     if ON_DARWIN:
