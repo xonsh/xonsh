@@ -429,7 +429,7 @@ def premain(argv=None):
         "XONSH_LOGIN": shell_kwargs["login"],
         "XONSH_INTERACTIVE": args.force_interactive
         or (args.mode == XonshMode.interactive),
-        "XONSH_MODE": xonsh_mode
+        "XONSH_MODE": xonsh_mode,
     }
     pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
