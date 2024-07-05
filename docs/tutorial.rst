@@ -1574,23 +1574,23 @@ command.
 Specification Modifier Aliases
 ------------------------------
 
-Using ``SpecAttrModifierAlias`` and callable ``output_format`` you can
+Using ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
 convert subprocess command output into Python object:
 
 .. code-block:: xonshcon
 
     import json, pathlib, yaml
-    from xonsh.procs.specs import SpecAttrModifierAlias
+    from xonsh.procs.specs import SpecAttrDecoratorAlias
 
-    aliases['@lines'] = SpecAttrModifierAlias({"output_format": 'list_lines'},
+    aliases['@lines'] = SpecAttrDecoratorAlias({"output_format": 'list_lines'},
                                                "Set `list_lines` output format.")
-    aliases['@json'] = SpecAttrModifierAlias({"output_format": lambda lines: json.loads('\n'.join(lines))},
+    aliases['@json'] = SpecAttrDecoratorAlias({"output_format": lambda lines: json.loads('\n'.join(lines))},
                                                "Set `json` output format.")
-    aliases['@path'] = SpecAttrModifierAlias({"output_format": lambda lines: pathlib.Path(':'.join(lines))},
+    aliases['@path'] = SpecAttrDecoratorAlias({"output_format": lambda lines: pathlib.Path(':'.join(lines))},
                                                "Set `path` output format.")
-    aliases['@yaml'] = SpecAttrModifierAlias({"output_format": lambda lines: yaml.safe_load('\n'.join(lines))},
+    aliases['@yaml'] = SpecAttrDecoratorAlias({"output_format": lambda lines: yaml.safe_load('\n'.join(lines))},
                                                "Set `yaml` output format.")
-    aliases['@noerr'] = SpecAttrModifierAlias({"raise_subproc_error": False},
+    aliases['@noerr'] = SpecAttrDecoratorAlias({"raise_subproc_error": False},
                                                "Set `raise_subproc_error` to False.")
 
 

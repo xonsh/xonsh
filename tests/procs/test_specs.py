@@ -10,8 +10,8 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    SpecAttrModifierAlias,
-    SpecModifierAlias,
+    SpecAttrDecoratorAlias,
+    SpecDecoratorAlias,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
@@ -288,7 +288,7 @@ def test_run_subproc_background(captured, exp_is_none):
 
 
 def test_spec_modifier_alias_alone(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -300,7 +300,7 @@ def test_spec_modifier_alias_alone(xession):
 
 
 def test_spec_modifier_alias(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -313,10 +313,10 @@ def test_spec_modifier_alias(xession):
 
 
 def test_spec_modifier_alias_tree(xession):
-    xession.aliases["xthread"] = SpecAttrModifierAlias(
+    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -337,10 +337,10 @@ def test_spec_modifier_alias_tree(xession):
 
 
 def test_spec_modifier_alias_multiple(xession):
-    xession.aliases["@unthread"] = SpecAttrModifierAlias(
+    xession.aliases["@unthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
-    xession.aliases["@dict"] = SpecAttrModifierAlias({"output_format": "list_lines"})
+    xession.aliases["@dict"] = SpecAttrDecoratorAlias({"output_format": "list_lines"})
 
     cmds = [
         ["@unthread", "@dict", "echo", "1"],
@@ -356,7 +356,7 @@ def test_spec_modifier_alias_multiple(xession):
 
 @skip_if_on_windows
 def test_spec_modifier_alias_output_format(xession):
-    class SpecModifierOutputLinesAlias(SpecModifierAlias):
+    class SpecModifierOutputLinesAlias(SpecDecoratorAlias):
         def on_modifer_added(self, spec):
             spec.output_format = "list_lines"
 

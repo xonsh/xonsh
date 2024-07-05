@@ -1336,7 +1336,7 @@ def test_alias_stability():
 def test_spec_modifier_alias():
     """Testing spec modifier alias with `@` in the alias name."""
     stdin_cmd = (
-        "from xonsh.procs.specs import SpecAttrModifierAlias as mod\n"
+        "from xonsh.procs.specs import SpecAttrDecoratorAlias as mod\n"
         'aliases["@dict"] = mod({"output_format": lambda lines: eval("\\n".join(lines))})\n'
         "d = $(@dict echo '{\"a\":42}')\n"
         "print('Answer =', d['a'])\n"

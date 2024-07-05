@@ -277,7 +277,7 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
-class SpecModifierAlias:
+class SpecDecoratorAlias:
     """Spec modifier base class."""
 
     descr = "Spec modifier base class."
@@ -303,7 +303,7 @@ class SpecModifierAlias:
         pass
 
 
-class SpecAttrModifierAlias(SpecModifierAlias):
+class SpecAttrDecoratorAlias(SpecDecoratorAlias):
     """Modifier for spec attributes."""
 
     def __init__(self, set_attributes: dict, descr=""):
@@ -419,7 +419,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
-        self.spec_modifiers = []  # List of SpecModifierAlias objects that applied to spec.
+        self.spec_modifiers = []  # List of SpecDecoratorAlias objects that applied to spec.
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
@@ -653,7 +653,7 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
-    def add_spec_modifier(self, mod: SpecModifierAlias):
+    def add_spec_modifier(self, mod: SpecDecoratorAlias):
         """Add spec modifier to the specification."""
         mod.on_modifer_added(self)
         self.spec_modifiers.append(mod)
@@ -665,7 +665,7 @@ class SubprocSpec:
         for i in range(ln):
             c = self.cmd[i]
             if c in XSH.aliases and isinstance(
-                mod := XSH.aliases[c], SpecModifierAlias
+                mod := XSH.aliases[c], SpecDecoratorAlias
             ):
                 self.add_spec_modifier(mod)
             else:
