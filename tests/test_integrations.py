@@ -888,9 +888,9 @@ def test_xonsh_no_close_fds():
         "s:\n"
         "\t$(MAKE) a b\n"
         "a:\n"
-        "\tsleep 1\n"
+        "\tsleep 0.1\n"
         "b:\n"
-        "\tsleep 1\n"
+        "\tsleep 0.1\n"
     )
     with tempfile.TemporaryDirectory() as d, with_pushd(d):
         with open("Makefile", "w") as f:
@@ -1351,7 +1351,7 @@ def test_spec_modifier_alias():
 def test_alias_stability_exception():
     """Testing alias stability (exception) after amalgamation regress that described in #5435."""
     stdin_cmd = (
-        "aliases['tst1'] = lambda: [print('sleep'), __import__('time').sleep(1)]\n"
+        "aliases['tst1'] = lambda: [print('sleep'), __import__('time').sleep(0.1)]\n"
         "aliases['tst2'] = lambda: [1/0]\n"
         "tst1\ntst2\ntst1\ntst2\n"
     )
