@@ -3,18 +3,63 @@ xonsh
 
 .. class:: center
 
-    **xonsh** is a Python-powered shell. Full-featured and cross-platform.
+    **xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives. Xonsh pronounced as *conch* (🐚, *@*) and indicates belonging to the command shells world.
 
-    The language is a superset of Python 3.6+ with additional shell primitives.
-    xonsh (pronounced *conch*) is meant for the daily use of experts and novices alike.
 
-    .. image:: https://raw.githubusercontent.com/xonsh/xonsh/main/docs/_static/what_is_xonsh.png
-            :alt: What is xonsh?
-            :align: center
+.. list-table::
+   :widths: 1 1
+
+   *  -  **Xonsh is the Shell**
+      -  **Xonsh is Python**
+
+   *  -  .. code-block:: shell
+
+            cd $HOME
+
+            id $(whoami)
+
+            cat /etc/passwd | grep root > ~/root.txt
+
+            $PROMPT = '@ '
+            
+
+      -  .. code-block:: python
+
+            2 + 2
+
+            var = "hello".upper()
+
+            import json; json.loads('{"a":1}')
+
+            [i for i in range(0,10)]
+
+   *  -  **Xonsh is the Shell in Python**
+      -  **Xonsh is Python in the Shell**
+
+   *  -  .. code-block:: python
+
+            len($(curl -L https://xon.sh))
+
+            $PATH.append('/tmp')
+
+            p'/etc/passwd'.read_text().find('root')
+
+            id = $(@json docker ps --format json)['ID']
+
+      -  .. code-block:: python
+
+            name = 'foo' + 'bar'.upper()
+            echo @(name) > /tmp/@(name)
+
+            ls @(input('file: '))
+
+            aliases['e'] = 'echo @(2+2)'
+            aliases['a'] = lambda args: print(args)
+            
+
+If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
 
 .. class:: center
-
-    If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
 
     .. image:: https://img.shields.io/badge/Zulip%20Community-xonsh-green
             :target: https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/
@@ -31,6 +76,7 @@ xonsh
     .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
             :target: https://repology.org/project/xonsh/versions
             :alt: repology.org
+
 
 First steps
 ***********

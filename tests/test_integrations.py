@@ -498,6 +498,24 @@ else:
         0,
     ),
     #
+    # test env with class
+    #
+    (
+        """
+class Cls:
+    def __init__(self, var):
+        self.var = var
+    def __repr__(self):
+        return self.var
+
+$VAR = Cls("hello")
+print($VAR)
+echo $VAR
+""",
+        "hello\nhello\n",
+        0,
+    ),
+    #
     # test logical subprocess operators
     #
     (
