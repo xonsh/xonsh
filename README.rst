@@ -21,7 +21,7 @@ xonsh
             cat /etc/passwd | grep root > ~/root.txt
 
             $PROMPT = '@ '
-            
+
 
       -  .. code-block:: python
 
@@ -55,7 +55,7 @@ xonsh
 
             aliases['e'] = 'echo @(2+2)'
             aliases['a'] = lambda args: print(args)
-            
+
 
 If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
 
