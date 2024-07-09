@@ -654,7 +654,7 @@ class SubprocSpec:
         return spec
 
     def add_decorator(self, mod: DecoratorAlias):
-        """Add spec modifier to the specification."""
+        """Add decorator to the specification."""
         mod.decorate_spec(self)
         self.decorators.append(mod)
 
