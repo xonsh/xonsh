@@ -25,6 +25,7 @@ In addition:
 * Use ``xonsh --rc snail.xsh`` to run only a certain control file.
 * Use ``xonsh -i script.xsh`` to run xonsh in interactive mode with loading all possible control files.
 * Use ``xonsh --rc rc1.xsh rc2.xsh -- script.xsh`` to run scripts with multiple control files.
+* You can create autoloadable `xontrib <tutorial_xontrib.html#loading-xontribs>`_ as alternative to run control file and reuse it as python package.
 
 The options set per user override settings in the system-wide control file.
 
