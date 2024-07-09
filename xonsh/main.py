@@ -361,8 +361,10 @@ def start_services(shell_kwargs, args, pre_env=None):
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
     events.on_timingprobe.fire(name="post_execer_init")
+    events.on_timingprobe.fire(name="pre_xonsh_session_load")
+    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
+    events.on_timingprobe.fire(name="post_xonsh_session_load")
 
     install_import_hooks(execer)
 
@@ -370,7 +372,8 @@ def start_services(shell_kwargs, args, pre_env=None):
     for k, v in pre_env.items():
         env[k] = v
 
-    _autoload_xontribs(env)
+    if not shell_kwargs.get("norc"):
+        _autoload_xontribs(env)
     _load_rc_files(shell_kwargs, args, env, execer, ctx)
     # create shell
     XSH.shell = Shell(execer=execer, **shell_kwargs)
