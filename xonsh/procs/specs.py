@@ -304,7 +304,7 @@ class DecoratorAlias:
 
 
 class SpecAttrDecoratorAlias(DecoratorAlias):
-    """Decorator Alias for attributes."""
+    """Decorator Alias for spec attributes."""
 
     def __init__(self, set_attributes: dict, descr=""):
         self.set_attributes = set_attributes
