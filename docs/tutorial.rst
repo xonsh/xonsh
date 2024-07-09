@@ -1571,7 +1571,7 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
-Specification Decorator Aliases
+Decorator Aliases
 -------------------------------
 
 Using ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can

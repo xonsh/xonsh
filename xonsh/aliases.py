@@ -33,7 +33,7 @@ from xonsh.platform import (
 )
 from xonsh.procs.executables import locate_file
 from xonsh.procs.jobs import bg, clean_jobs, disown, fg, jobs
-from xonsh.procs.specs import AttrDecoratorAlias, DecoratorAlias
+from xonsh.procs.specs import SpecAttrDecoratorAlias, DecoratorAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -945,11 +945,11 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "@thread": AttrDecoratorAlias(
+        "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
         ),
-        "@unthread": AttrDecoratorAlias(
+        "@unthread": SpecAttrDecoratorAlias(
             {"threadable": False, "force_threadable": False},
             "Mark current command as unthreadable.",
         ),

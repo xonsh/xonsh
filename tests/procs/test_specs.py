@@ -10,7 +10,7 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    AttrDecoratorAlias,
+    SpecAttrDecoratorAlias,
     DecoratorAlias,
     SubprocSpec,
     _run_command_pipeline,
@@ -288,7 +288,7 @@ def test_run_subproc_background(captured, exp_is_none):
 
 
 def test_spec_decorator_alias_alone(xession):
-    xession.aliases["xunthread"] = AttrDecoratorAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -300,7 +300,7 @@ def test_spec_decorator_alias_alone(xession):
 
 
 def test_spec_decorator_alias(xession):
-    xession.aliases["xunthread"] = AttrDecoratorAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -313,10 +313,10 @@ def test_spec_decorator_alias(xession):
 
 
 def test_spec_decorator_alias_tree(xession):
-    xession.aliases["xthread"] = AttrDecoratorAlias(
+    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
-    xession.aliases["xunthread"] = AttrDecoratorAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -337,10 +337,10 @@ def test_spec_decorator_alias_tree(xession):
 
 
 def test_spec_decorator_alias_multiple(xession):
-    xession.aliases["@unthread"] = AttrDecoratorAlias(
+    xession.aliases["@unthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
-    xession.aliases["@dict"] = AttrDecoratorAlias({"output_format": "list_lines"})
+    xession.aliases["@dict"] = SpecAttrDecoratorAlias({"output_format": "list_lines"})
 
     cmds = [
         ["@unthread", "@dict", "echo", "1"],

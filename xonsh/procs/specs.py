@@ -303,7 +303,7 @@ class DecoratorAlias:
         pass
 
 
-class AttrDecoratorAlias(DecoratorAlias):
+class SpecAttrDecoratorAlias(DecoratorAlias):
     """Decorator Alias for attributes."""
 
     def __init__(self, set_attributes: dict, descr=""):
