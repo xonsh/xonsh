@@ -33,7 +33,7 @@ from xonsh.platform import (
 )
 from xonsh.procs.executables import locate_file
 from xonsh.procs.jobs import bg, clean_jobs, disown, fg, jobs
-from xonsh.procs.specs import SpecAttrDecoratorAlias, DecoratorAlias
+from xonsh.procs.specs import DecoratorAlias, SpecAttrDecoratorAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
