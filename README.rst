@@ -3,7 +3,7 @@ xonsh
 
 .. class:: center
 
-    **xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives. Xonsh pronounced as *conch* (🐚, *@*) and indicates belonging to the command shells world.
+    **xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives.  Xonsh word was made from *conch* (🐚, *@*) and indicates belonging to the command shells world.
 
 
 .. list-table::
