@@ -10,8 +10,8 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    SpecAttrDecoratorAlias,
-    SpecDecoratorAlias,
+    AttrDecoratorAlias,
+    DecoratorAlias,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
@@ -288,7 +288,7 @@ def test_run_subproc_background(captured, exp_is_none):
 
 
 def test_spec_decorator_alias_alone(xession):
-    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
+    xession.aliases["xunthread"] = AttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -300,7 +300,7 @@ def test_spec_decorator_alias_alone(xession):
 
 
 def test_spec_decorator_alias(xession):
-    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
+    xession.aliases["xunthread"] = AttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -313,10 +313,10 @@ def test_spec_decorator_alias(xession):
 
 
 def test_spec_decorator_alias_tree(xession):
-    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
+    xession.aliases["xthread"] = AttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
-    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
+    xession.aliases["xunthread"] = AttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -337,10 +337,10 @@ def test_spec_decorator_alias_tree(xession):
 
 
 def test_spec_decorator_alias_multiple(xession):
-    xession.aliases["@unthread"] = SpecAttrDecoratorAlias(
+    xession.aliases["@unthread"] = AttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
-    xession.aliases["@dict"] = SpecAttrDecoratorAlias({"output_format": "list_lines"})
+    xession.aliases["@dict"] = AttrDecoratorAlias({"output_format": "list_lines"})
 
     cmds = [
         ["@unthread", "@dict", "echo", "1"],
@@ -356,8 +356,8 @@ def test_spec_decorator_alias_multiple(xession):
 
 @skip_if_on_windows
 def test_spec_decorator_alias_output_format(xession):
-    class SpecModifierOutputLinesAlias(SpecDecoratorAlias):
-        def on_decorator_added(self, spec):
+    class SpecModifierOutputLinesAlias(DecoratorAlias):
+        def decorate_spec(self, spec):
             spec.output_format = "list_lines"
 
     xession.aliases["xlines"] = SpecModifierOutputLinesAlias()

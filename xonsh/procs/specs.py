@@ -277,10 +277,10 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
-class SpecDecoratorAlias:
-    """Specification decorator base class."""
+class DecoratorAlias:
+    """Decorator alias base class."""
 
-    descr = "Spec modifier base class."
+    descr = "DecoratorAlias base."
 
     def __call__(
         self,
@@ -294,24 +294,24 @@ class SpecDecoratorAlias:
     ):
         print(self.descr, file=stdout)
 
-    def on_decorator_added(self, spec):
+    def decorate_spec(self, spec):
         """Modify spec immediately after modifier added."""
         pass
 
-    def on_pre_run(self, pipeline, spec, spec_num):
+    def decorate_spec_pre_run(self, pipeline, spec, spec_num):
         """Modify spec before run."""
         pass
 
 
-class SpecAttrDecoratorAlias(SpecDecoratorAlias):
-    """Decorator for specification attributes."""
+class AttrDecoratorAlias(DecoratorAlias):
+    """Decorator Alias for attributes."""
 
     def __init__(self, set_attributes: dict, descr=""):
         self.set_attributes = set_attributes
         self.descr = descr
         super().__init__()
 
-    def on_decorator_added(self, spec):
+    def decorate_spec(self, spec):
         for a, v in self.set_attributes.items():
             setattr(spec, a, v)
 
@@ -419,7 +419,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
-        self.spec_decorators = []  # List of SpecDecoratorAlias objects that applied to spec.
+        self.decorators = []  # List of DecoratorAlias objects that applied to spec.
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
@@ -642,7 +642,7 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
-        spec.resolve_spec_decorators()  # keep this first
+        spec.resolve_decorators()  # keep this first
         spec.resolve_args_list()
         spec.resolve_redirects()
         spec.resolve_alias()
@@ -653,21 +653,21 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
-    def add_spec_decorator(self, mod: SpecDecoratorAlias):
+    def add_decorator(self, mod: DecoratorAlias):
         """Add spec modifier to the specification."""
-        mod.on_decorator_added(self)
-        self.spec_decorators.append(mod)
+        mod.decorate_spec(self)
+        self.decorators.append(mod)
 
-    def resolve_spec_decorators(self):
+    def resolve_decorators(self):
         """Apply spec modifier."""
         if (ln := len(self.cmd)) == 1:
             return
         for i in range(ln):
             c = self.cmd[i]
             if c in XSH.aliases and isinstance(
-                mod := XSH.aliases[c], SpecDecoratorAlias
+                mod := XSH.aliases[c], DecoratorAlias
             ):
-                self.add_spec_decorator(mod)
+                self.add_decorator(mod)
             else:
                 break
         self.cmd = self.cmd[i:]
@@ -707,7 +707,7 @@ class SubprocSpec:
     def resolve_alias(self):
         """Sets alias in command, if applicable."""
         cmd0 = self.cmd[0]
-        spec_decorators = []
+        decorators = []
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
             # and futher using binary_loc to resolve the alias name.
@@ -721,13 +721,13 @@ class SubprocSpec:
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
             else:
-                alias = XSH.aliases.get(cmd0, None, spec_decorators=spec_decorators)
+                alias = XSH.aliases.get(cmd0, None, spec_decorators=decorators)
             if alias is not None:
                 self.alias_name = cmd0
         self.alias = alias
-        if spec_decorators:
-            for mod in spec_decorators:
-                self.add_spec_decorator(mod)
+        if decorators:
+            for mod in decorators:
+                self.add_decorator(mod)
 
     def resolve_binary_loc(self):
         """Sets the binary location"""

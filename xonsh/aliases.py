@@ -32,7 +32,7 @@ from xonsh.platform import (
     ON_WINDOWS,
 )
 from xonsh.procs.jobs import bg, clean_jobs, disown, fg, jobs
-from xonsh.procs.specs import SpecAttrDecoratorAlias, SpecDecoratorAlias
+from xonsh.procs.specs import AttrDecoratorAlias, DecoratorAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -174,7 +174,7 @@ class Aliases(cabc.MutableMapping):
         ):
             i = 0
             for v in value:
-                if isinstance(mod := self._raw.get(str(v)), SpecDecoratorAlias):
+                if isinstance(mod := self._raw.get(str(v)), DecoratorAlias):
                     spec_decorators.append(mod)
                     i += 1
                 else:
@@ -944,11 +944,11 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "xthread": SpecAttrDecoratorAlias(
+        "@thread": AttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
         ),
-        "xunthread": SpecAttrDecoratorAlias(
+        "@unthread": AttrDecoratorAlias(
             {"threadable": False, "force_threadable": False},
             "Mark current command as unthreadable.",
         ),
