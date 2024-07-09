@@ -246,6 +246,29 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
 
+Callable Environment Variables
+------------------------------
+
+In some cases you may want to have environment variable with dynamically created value.
+Here is the example of callable environment variable:
+
+.. code-block:: xonshcon
+
+    >>> class Stamp:
+    ...    """Return current date as string representation."""
+    ...    def __repr__(self):
+    ...       from datetime import datetime
+    ...       return str(datetime.now().isoformat())
+    ...
+    ...
+    >>> $DT = Stamp()
+    >>> $DT
+    2024-11-11T11:11:22
+    >>> echo $DT
+    2024-11-11T11:11:33
+    >>> env | grep DT
+    2024-11-11T11:11:44
+
 
 Running Commands
 ==============================
