@@ -664,9 +664,7 @@ class SubprocSpec:
             return
         for i in range(ln):
             c = self.cmd[i]
-            if c in XSH.aliases and isinstance(
-                mod := XSH.aliases[c], DecoratorAlias
-            ):
+            if c in XSH.aliases and isinstance(mod := XSH.aliases[c], DecoratorAlias):
                 self.add_decorator(mod)
             else:
                 break
