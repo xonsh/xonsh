@@ -295,7 +295,7 @@ class DecoratorAlias:
         print(self.descr, file=stdout)
 
     def decorate_spec(self, spec):
-        """Modify spec immediately after modifier added."""
+        """Modify spec immediately after decorator added."""
         pass
 
     def decorate_spec_pre_run(self, pipeline, spec, spec_num):
