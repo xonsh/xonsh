@@ -659,7 +659,7 @@ class SubprocSpec:
         self.decorators.append(mod)
 
     def resolve_decorators(self):
-        """Apply spec modifier."""
+        """Apply decorators."""
         if (ln := len(self.cmd)) == 1:
             return
         for i in range(ln):
