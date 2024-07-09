@@ -267,7 +267,7 @@ Here is the example of callable environment variable:
     >>> echo $DT
     2024-11-11T11:11:33
     >>> env | grep DT
-    2024-11-11T11:11:44
+    DT=2024-11-11T11:11:44
 
 
 Running Commands
