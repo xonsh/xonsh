@@ -12,13 +12,13 @@ import stat
 import subprocess
 import sys
 
-import xonsh.environ as xenv
 import xonsh.lib.lazyasd as xl
 import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.procs.executables import locate_executable
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
@@ -749,13 +749,13 @@ class SubprocSpec:
         alias = self.alias
         if alias is None:
             cmd0 = self.cmd[0]
-            binary_loc = xenv.locate_binary(cmd0)
-            if binary_loc == cmd0 and cmd0 in self.alias_stack:
+            binary_loc = locate_executable(cmd0)
+            if binary_loc is None and cmd0 and cmd0 in self.alias_stack:
                 raise Exception(f'Recursive calls to "{cmd0}" alias.')
         elif callable(alias):
             binary_loc = None
         else:
-            binary_loc = xenv.locate_binary(alias[0])
+            binary_loc = locate_executable(alias[0])
         self.binary_loc = binary_loc
 
     def resolve_auto_cd(self):
