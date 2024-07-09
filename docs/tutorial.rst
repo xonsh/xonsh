@@ -1572,9 +1572,9 @@ Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
 Decorator Aliases
--------------------------------
+-----------------
 
-Using ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
+Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
 convert subprocess command output into Python object:
 
 .. code-block:: xonshcon
