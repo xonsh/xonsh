@@ -1,6 +1,6 @@
 **Added:**
 
-* tools: added ``mkdir`` to ``chdir`` e.g. ``with chdir('/tmp/new', mkdir=True): pass``.
+* tools: added ``mkdir`` to ``tools.chdir`` e.g. ``with chdir('/tmp/new', mkdir=True): pass``.
 
 **Changed:**
 
