@@ -2018,14 +2018,11 @@ def format_color(string, **kwargs):
         return ansi_partial_color_format(string, style=style)
 
 
-def print_color(string, color=None, **kwargs):
+def print_color(string, **kwargs):
     """Prints a string that may contain colors. This dispatched to the shell
     method of the same name. Colors will be formatted if they have not already
     been.
     """
-    if color:
-        string = f'{{{color}}}{string}{{RESET}}'
-
     if hasattr(xsh.shell, "shell"):
         xsh.shell.shell.print_color(string, **kwargs)
     else:
