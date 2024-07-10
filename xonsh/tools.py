@@ -57,8 +57,10 @@ from xonsh.platform import (
 
 
 @contextmanager
-def chdir(adir):
+def chdir(adir, mkdir=False):
     old_dir = os.getcwd()
+    if mkdir:
+        os.makedirs(adir, exist_ok=True)
     os.chdir(adir)
     try:
         yield
