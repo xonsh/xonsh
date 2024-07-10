@@ -18,6 +18,14 @@ def test_simple(xession):
         dirstack.cd(["tests"])
         assert os.getcwd() == HERE
 
+def test_chdir_mkdir(tmpdir):
+    d = str(tmpdir.join("chdir_mkdir"))
+    with chdir(d, mkdir=True):
+        assert os.getcwd() == d
+    assert os.getcwd() != d
+    with chdir(d, mkdir=True):
+        # Repeat to check there is no error for existing dir.
+        assert os.getcwd() == d
 
 def test_cdpath_simple(xession):
     xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
