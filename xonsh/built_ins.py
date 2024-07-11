@@ -521,10 +521,10 @@ def xonsh_builtins(execer=None):
 
 
 class InlineImporter:
-    """Inline importer."""
+    """Inline importer allows to import and use module attribute or function in one line."""
     def __getattr__(self, name):
         if name == "__name__":
-            return "Inline importer allows to import and use module attribute or function in one line."
+            return self.__doc__
         return __import__(name)
 
 
