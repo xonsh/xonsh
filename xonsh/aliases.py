@@ -9,8 +9,9 @@ import shutil
 import sys
 import types
 import typing as tp
-from collections import OrderedDict
+import operator
 from collections import abc as cabc
+from typing import Literal
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
@@ -61,9 +62,9 @@ def EXEC_ALIAS_RE():
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
-    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__", "return_command"]
+    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__", "return_what"]
     attributes_inherit = attributes_show + ["__doc__"]
-    return_command = False
+    return_what: Literal["command", "result"] = "result"
 
     def __init__(self, name, func=None):
         self.__name__ = self.name = name
@@ -152,7 +153,7 @@ class Aliases(cabc.MutableMapping):
 
     def return_command(self, f):
         """Decorator that switches alias from returning result to return in new command for execution."""
-        f.return_command = True
+        f.return_what = 'command'
         return f
 
     def eval_alias(
@@ -172,6 +173,8 @@ class Aliases(cabc.MutableMapping):
         where ``cmd=ls -al`` and ``ls`` is an alias with its value being a
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
+
+        The mutable list ``found_return_command`` accumulates the aliases that return command.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         found_return_command = (
@@ -193,7 +196,7 @@ class Aliases(cabc.MutableMapping):
                     break
             value = value[i:]
 
-        if callable(value) and getattr(value, "return_command", False):
+        if callable(value) and getattr(value, "return_what", 'result') == 'command':
             try:
                 found_return_command.append(value.__name__)
                 value = value(acc_args, spec_modifiers=spec_modifiers)
@@ -259,7 +262,7 @@ class Aliases(cabc.MutableMapping):
             args = key[1:]
             key = key[0]
         val = self._raw.get(key)
-        if callable(val) and getattr(val, "return_command", False):
+        if callable(val) and getattr(val, "return_what", 'result') == 'command':
             try:
                 found_return_command.append(val.__name__)
                 val = val(args, spec_modifiers=spec_modifiers)
@@ -544,8 +547,7 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
     If function param names are in alias signature fill them.
     If function params have unknown names fill using alias signature order.
     """
-    alias_params = OrderedDict(
-        {
+    alias_params = {
             "args": None,
             "stdin": None,
             "stdout": None,
@@ -554,7 +556,6 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
             "stack": None,
             "spec_modifiers": None,
         }
-    )
     alias_params |= params
     sign = inspect.signature(func)
     func_params = sign.parameters.items()
