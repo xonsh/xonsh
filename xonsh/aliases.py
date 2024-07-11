@@ -3,13 +3,13 @@
 import argparse
 import functools
 import inspect
+import operator
 import os
 import re
 import shutil
 import sys
 import types
 import typing as tp
-import operator
 from collections import abc as cabc
 from typing import Literal
 
@@ -153,7 +153,7 @@ class Aliases(cabc.MutableMapping):
 
     def return_command(self, f):
         """Decorator that switches alias from returning result to return in new command for execution."""
-        f.return_what = 'command'
+        f.return_what = "command"
         return f
 
     def eval_alias(
@@ -196,7 +196,7 @@ class Aliases(cabc.MutableMapping):
                     break
             value = value[i:]
 
-        if callable(value) and getattr(value, "return_what", 'result') == 'command':
+        if callable(value) and getattr(value, "return_what", "result") == "command":
             try:
                 found_return_command.append(value.__name__)
                 value = value(acc_args, spec_modifiers=spec_modifiers)
@@ -262,7 +262,7 @@ class Aliases(cabc.MutableMapping):
             args = key[1:]
             key = key[0]
         val = self._raw.get(key)
-        if callable(val) and getattr(val, "return_what", 'result') == 'command':
+        if callable(val) and getattr(val, "return_what", "result") == "command":
             try:
                 found_return_command.append(val.__name__)
                 val = val(args, spec_modifiers=spec_modifiers)
@@ -548,14 +548,14 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
     If function params have unknown names fill using alias signature order.
     """
     alias_params = {
-            "args": None,
-            "stdin": None,
-            "stdout": None,
-            "stderr": None,
-            "spec": None,
-            "stack": None,
-            "spec_modifiers": None,
-        }
+        "args": None,
+        "stdin": None,
+        "stdout": None,
+        "stderr": None,
+        "spec": None,
+        "stack": None,
+        "spec_modifiers": None,
+    }
     alias_params |= params
     sign = inspect.signature(func)
     func_params = sign.parameters.items()
