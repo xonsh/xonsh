@@ -10,9 +10,9 @@ build-backend = "setuptools.build_meta"
 # See https://www.python.org/dev/peps/pep-0621/
 name = "xonsh"
 dynamic = ["version", "readme"]
-description = "Python-powered, cross-platform, Unix-gazing shell"
+description = "Python-powered shell. Full-featured and cross-platform."
 authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
-maintainers = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
+maintainers = [{ name = "Xonsh Community" }, { email = "xonsh-email.d8c44838e5348844fa397b54d705ce30.show-sender.include-footer.include-quotes@streams.zulipchat.com" }]
 license = { text = "BSD 2-Clause License" }
 requires-python = ">=3.9"
 dependencies = [
