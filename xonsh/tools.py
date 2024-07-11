@@ -2024,7 +2024,7 @@ def print_color(string, color=None, **kwargs):
     been.
     """
     if color:
-        string = f"{{{color}}}{string}{{RESET}}"
+        string = f"{{{color.upper()}}}{string}{{RESET}}"
 
     if hasattr(xsh.shell, "shell"):
         xsh.shell.shell.print_color(string, **kwargs)
