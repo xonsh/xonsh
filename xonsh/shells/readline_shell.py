@@ -614,7 +614,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     pass
 
     def cmdloop(self, intro=None):
-        while not XSH.exit:
+        while XSH.exit is False:
             try:
                 self._cmdloop(intro=intro)
             except (KeyboardInterrupt, SystemExit) as e:

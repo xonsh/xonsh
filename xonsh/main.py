@@ -607,6 +607,9 @@ def main_xonsh(args):
                 print_exception(None, exc_info)
         events.on_exit.fire()
         postmain(args)
+
+    if not isinstance(XSH.exit, bool) and isinstance(XSH.exit, int):
+        return XSH.exit
     return exit_code
 
 
