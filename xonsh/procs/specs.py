@@ -706,11 +706,11 @@ class SubprocSpec:
         self.cmd = new_cmd
 
     def resolve_alias(self):
-        """Sets alias in command, if applicable."""
+        """Resolving alias and setting up command."""
         cmd0 = self.cmd[0]
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
-            # and futher using binary_loc to resolve the alias name.
+            # and further using binary_loc to resolve the alias name.
             self.alias = None
             return
 
@@ -734,12 +734,20 @@ class SubprocSpec:
             if alias is not None:
                 self.alias_name = cmd0
                 if callable(alias[0]):
+                    # E.g. `alias == [FuncAlias({'name': 'cd'}), '/tmp']`
                     self.alias = alias[0]
                     self.cmd = [cmd0] + alias[1:]
                 else:
+                    # E.g. `alias == ['ls', '-la']`
                     self.alias = alias
 
+            """
+            If during resolving alias there is an alias that returns command 
+            it means that command arguments were completely managed or modified 
+            by this alias and this can change further behavior.
+            """
             self.alias_return_command = bool(found_return_command)
+
             if found_spec_modifiers:
                 for mod in found_spec_modifiers:
                     self.add_spec_modifier(mod)
