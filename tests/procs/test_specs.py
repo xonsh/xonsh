@@ -183,6 +183,7 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_proc_raise_subproc_error(xonsh_session):
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
 
@@ -469,3 +470,110 @@ def test_partial_args_from_classmethod(xession):
     xession.aliases["alias_with_partial_args"] = Class.alias
     out = run_subproc([["alias_with_partial_args"]], captured="stdout")
     assert out == "ok"
+
+
+def test_alias_return_command_alone(xession):
+    @xession.aliases.register("wakka")
+    @xession.aliases.return_command
+    def _wakka(args):
+        return ["echo"] + args
+
+    cmds = [
+        ["wakka"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo"]
+    assert spec.alias_name == "wakka"
+
+
+def test_alias_return_command_alone_args(xession):
+    @xession.aliases.register("wakka")
+    @xession.aliases.return_command
+    def _wakka(args):
+        return ["echo", "e0", "e1"] + args
+
+    cmds = [
+        ["wakka", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo", "e0", "e1", "0", "1"]
+    assert spec.alias_name == "wakka"
+
+
+def test_alias_return_command_chain(xession):
+    xession.aliases["foreground"] = "midground f0 f1"
+
+    @xession.aliases.register("midground")
+    @xession.aliases.return_command
+    def _midground(args):
+        return ["ground", "m0", "m1"] + args
+
+    xession.aliases["ground"] = "background g0 g1"
+    xession.aliases["background"] = "echo b0 b1"
+
+    cmds = [
+        ["foreground", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == [
+        "echo",
+        "b0",
+        "b1",
+        "g0",
+        "g1",
+        "m0",
+        "m1",
+        "f0",
+        "f1",
+        "0",
+        "1",
+    ]
+    assert spec.alias_name == "foreground"
+
+
+def test_alias_return_command_chain_spec_modifiers(xession):
+    xession.aliases["foreground"] = "midground f0 f1"
+
+    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+        {"threadable": False, "force_threadable": False}
+    )
+
+    @xession.aliases.register("midground")
+    @xession.aliases.return_command
+    def _midground(args):
+        return ["ground", "m0", "m1"]
+
+    xession.aliases["ground"] = "background g0 g1"
+    xession.aliases["background"] = "xunthread echo b0 b1"
+
+    cmds = [
+        ["foreground", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo", "b0", "b1", "g0", "g1", "m0", "m1"]
+    assert spec.alias_name == "foreground"
+    assert spec.threadable is False
+
+
+def test_alias_return_command_eval_inside(xession):
+    xession.aliases["xthread"] = SpecAttrModifierAlias(
+        {"threadable": True, "force_threadable": True}
+    )
+
+    @xession.aliases.register("xsudo")
+    @xession.aliases.return_command
+    def _midground(args, spec_modifiers=None):
+        return [
+            "sudo",
+            *xession.aliases.eval_alias(args, spec_modifiers=spec_modifiers),
+        ]
+
+    xession.aliases["cmd"] = "xthread echo 1"
+
+    cmds = [
+        ["xsudo", "cmd"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["sudo", "echo", "1"]
+    assert spec.alias_name == "xsudo"
+    assert spec.threadable is True

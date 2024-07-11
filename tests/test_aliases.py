@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from xonsh.aliases import Aliases, ExecAlias
+from xonsh.aliases import Aliases, ExecAlias, run_alias_by_params
 
 
 def cd(args, stdin=None):
@@ -53,10 +53,17 @@ def test_eval_recursive(xession):
     assert ales.get("color_ls") == ["ls", "-  -", "--color=true"]
 
 
+def test_eval_callable(xession):
+    ales = make_aliases()
+    resolved = ales.get(["cd", "tmp"])
+    assert callable(resolved[0])
+    assert isinstance(resolved[1], str)
+
+
 def test_eval_recursive_callable_partial(xonsh_execer, xession):
     ales = make_aliases()
     xession.env["HOME"] = os.path.expanduser("~")
-    assert ales.get("indirect_cd")(["arg2", "arg3"]) == ["..", "arg2", "arg3"]
+    assert ales.get(["indirect_cd", "arg2", "arg3"])[1:] == ["..", "arg2", "arg3"]
 
 
 def _return_to_sender_all(args, stdin, stdout, stderr, spec, stack):
@@ -74,9 +81,11 @@ def _return_to_sender_all(args, stdin, stdout, stderr, spec, stack):
 
 def test_recursive_callable_partial_all(xession):
     ales = Aliases({"rtn": _return_to_sender_all, "rtn-recurse": ["rtn", "arg1"]})
-    alias = ales.get("rtn-recurse")
+    alias = ales.get("rtn-recurse")[0]
     assert callable(alias)
-    args, obs = alias(["arg2"], stdin="a", stdout="b", stderr="c", spec="d", stack="e")
+    args, obs = alias(
+        ["arg1", "arg2"], stdin="a", stdout="b", stderr="c", spec="d", stack="e"
+    )
     assert args == ["arg1", "arg2"]
     assert len(obs) == 5
     exp = {"stdin": "a", "stdout": "b", "stderr": "c", "spec": "d", "stack": "e"}
@@ -89,9 +98,9 @@ def _return_to_sender_handles(args, stdin, stdout, stderr):
 
 def test_recursive_callable_partial_handles(xession):
     ales = Aliases({"rtn": _return_to_sender_handles, "rtn-recurse": ["rtn", "arg1"]})
-    alias = ales.get("rtn-recurse")
+    alias = ales.get("rtn-recurse")[0]
     assert callable(alias)
-    args, obs = alias(["arg2"], stdin="a", stdout="b", stderr="c")
+    args, obs = alias(["arg1", "arg2"], stdin="a", stdout="b", stderr="c")
     assert args == ["arg1", "arg2"]
     assert len(obs) == 3
     exp = {"stdin": "a", "stdout": "b", "stderr": "c"}
@@ -104,7 +113,7 @@ def _return_to_sender_none():
 
 def test_recursive_callable_partial_none(xession):
     ales = Aliases({"rtn": _return_to_sender_none, "rtn-recurse": ["rtn"]})
-    alias = ales.get("rtn-recurse")
+    alias = ales.get("rtn-recurse")[0]
     assert callable(alias)
     args, obs = alias()
     assert args == "wakka"
@@ -214,3 +223,26 @@ def test_register_decorator(xession):
     def _private(): ...
 
     assert set(aliases) == {"debug", "name", "private"}
+
+
+def test_run_alias_by_params():
+    def alias_named_params(args, stdout):
+        return (args, stdout)
+
+    def alias_named_params_rev(stdout, args):
+        return (args, stdout)
+
+    def alias_list_params(a, i, o, e):
+        return (a, i, o, e)
+
+    assert run_alias_by_params(alias_named_params, {"args": 1, "stdout": 2}) == (1, 2)
+    assert run_alias_by_params(alias_named_params_rev, {"args": 1, "stdout": 2}) == (
+        1,
+        2,
+    )
+    assert run_alias_by_params(alias_list_params, {"args": 1, "stderr": 4}) == (
+        1,
+        None,
+        None,
+        4,
+    )
