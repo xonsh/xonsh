@@ -1309,7 +1309,7 @@ Alias to modify command
 -----------------------
 
 The best way to modify command on the fly is to use alias that returns modified command.
-One of the most interesting application is expanding an aliases:
+One of the most interesting application is expanding an alias:
 
 .. code-block:: xonshcon
 
