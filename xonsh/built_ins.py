@@ -524,7 +524,7 @@ class InlineImporter:
     """Inline importer allows to import and use module attribute or function in one line."""
 
     def __getattr__(self, name):
-        if name.startswith('__'):
+        if name.startswith("__"):
             return getattr(super(), name)
         return __import__(name)
 
