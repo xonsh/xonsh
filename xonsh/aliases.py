@@ -564,7 +564,9 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
 
     if len(kwargs) != len(func_params):
         # There is unknown param. Switch to positional mode.
-        kwargs = dict(zip(map(operator.itemgetter(0), func_params), alias_params.values()))
+        kwargs = dict(
+            zip(map(operator.itemgetter(0), func_params), alias_params.values())
+        )
     return func(**kwargs)
 
 
