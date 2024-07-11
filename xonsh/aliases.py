@@ -162,7 +162,6 @@ class Aliases(cabc.MutableMapping):
         seen_tokens=frozenset(),
         acc_args=(),
         spec_modifiers=None,
-        found_return_command=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -173,13 +172,8 @@ class Aliases(cabc.MutableMapping):
         where ``cmd=ls -al`` and ``ls`` is an alias with its value being a
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
-
-        The mutable list ``found_return_command`` accumulates the aliases that return command.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
-        found_return_command = (
-            found_return_command if found_return_command is not None else []
-        )
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
@@ -198,7 +192,6 @@ class Aliases(cabc.MutableMapping):
 
         if callable(value) and getattr(value, "return_what", "result") == "command":
             try:
-                found_return_command.append(value.__name__)
                 value = value(acc_args, spec_modifiers=spec_modifiers)
                 acc_args = []
             except Exception as e:
@@ -228,7 +221,6 @@ class Aliases(cabc.MutableMapping):
                     seen_tokens,
                     acc_args,
                     spec_modifiers=spec_modifiers,
-                    found_return_command=found_return_command,
                 )
 
     def get(
@@ -236,7 +228,6 @@ class Aliases(cabc.MutableMapping):
         key,
         default=None,
         spec_modifiers=None,
-        found_return_command=None,
     ):
         """
         Returns list that represent command with resolved aliases.
@@ -246,17 +237,12 @@ class Aliases(cabc.MutableMapping):
 
         ``spec_modifiers`` is the list of SpecModifier objects that found during
         resolving aliases (#5443).
-        ``found_return_command`` is the list of aliases with return command functionality that found
-        during resolving aliases (#5473).
 
         Note! The return value is always list because during resolving
         we can find return_command alias that can completely replace
         command and add new arguments.
         """
         spec_modifiers = spec_modifiers if spec_modifiers is not None else []
-        found_return_command = (
-            found_return_command if found_return_command is not None else []
-        )
         args = []
         if isinstance(key, list):
             args = key[1:]
@@ -264,7 +250,6 @@ class Aliases(cabc.MutableMapping):
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_what", "result") == "command":
             try:
-                found_return_command.append(val.__name__)
                 val = val(args, spec_modifiers=spec_modifiers)
                 args = []
             except Exception as e:
@@ -281,7 +266,6 @@ class Aliases(cabc.MutableMapping):
                 seen_tokens={key},
                 spec_modifiers=spec_modifiers,
                 acc_args=args,
-                found_return_command=found_return_command,
             )
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"

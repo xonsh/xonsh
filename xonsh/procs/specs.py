@@ -408,7 +408,6 @@ class SubprocSpec:
         self.args = _flatten_cmd_redirects(cmd)
         self.alias = None
         self.alias_name = None
-        self.alias_return_command = None
         self.alias_stack = XSH.env.get("__ALIAS_STACK", "").split(":")
         self.binary_loc = None
         self.is_proxy = False
@@ -718,7 +717,6 @@ class SubprocSpec:
             self.alias = cmd0
         else:
             found_spec_modifiers = []
-            found_return_command = []
             if isinstance(XSH.aliases, dict):
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
@@ -729,7 +727,6 @@ class SubprocSpec:
                     self.cmd,
                     None,
                     spec_modifiers=found_spec_modifiers,
-                    found_return_command=found_return_command,
                 )
             if alias is not None:
                 self.alias_name = cmd0
@@ -740,13 +737,6 @@ class SubprocSpec:
                 else:
                     # E.g. `alias == ['ls', '-la']`
                     self.alias = alias
-
-            """
-            If during resolving alias there is an alias that returns command
-            it means that command arguments were completely managed or modified
-            by this alias and this can change further behavior.
-            """
-            self.alias_return_command = bool(found_return_command)
 
             if found_spec_modifiers:
                 for mod in found_spec_modifiers:
