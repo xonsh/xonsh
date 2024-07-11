@@ -276,6 +276,11 @@ Running subprocess commands should work like in any other shell.
 
 This should feel very natural.
 
+.. note::
+
+    Access the last run subprocess command using ``__xonsh__.last``;
+    e.g. to get the return code, run ``__xonsh__.last.rtn``.
+
 
 Python-mode vs Subprocess-mode
 ================================
@@ -370,11 +375,6 @@ For example,
     By default the output is represented as one single block of output with new
     line characters. You can set ``$XONSH_SUBPROC_OUTPUT_FORMAT`` to ``list_lines``
     to have a list of distinct lines in the commands like ``du -h $(ls)``.
-
-.. note::
-
-    You can access a subprocess command you ran using ``__xonsh__.last``
-    e.g. to get the return code run ``__xonsh__.last.rtn``.
 
 
 The ``!()`` syntax captured more information about the command, as an instance
