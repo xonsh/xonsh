@@ -742,8 +742,8 @@ class SubprocSpec:
                     self.alias = alias
 
             """
-            If during resolving alias there is an alias that returns command 
-            it means that command arguments were completely managed or modified 
+            If during resolving alias there is an alias that returns command
+            it means that command arguments were completely managed or modified
             by this alias and this can change further behavior.
             """
             self.alias_return_command = bool(found_return_command)
