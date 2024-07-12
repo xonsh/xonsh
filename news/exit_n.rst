@@ -1,6 +1,6 @@
 **Added:**
 
-* builtin: ``exit`` can return exit code e.g. ``exit 71``.
+* Builtin: ``exit`` can return exit code e.g. ``exit 71``.
 
 **Changed:**
 
