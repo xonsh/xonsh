@@ -158,7 +158,7 @@ def complete_aliases(command: CommandContext):
     if cmd not in XSH.aliases:
         # only complete aliases
         return
-    alias = XSH.aliases.get(cmd)  # type: ignore
+    alias = XSH.aliases.get(cmd)[0]  # type: ignore
 
     completer = getattr(alias, "xonsh_complete", None)
     if not completer:
