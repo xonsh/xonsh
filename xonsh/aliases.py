@@ -453,7 +453,7 @@ def xonsh_exit(args, stdin=None):
     if not clean_jobs():
         # Do not exit if jobs not cleaned up
         return None, None
-    XSH.exit = int(args[0]) if args else True
+    XSH.exit = int(args[0]) if args else 0
     print()  # gimme a newline
     return None, None
 

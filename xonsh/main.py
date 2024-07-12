@@ -599,16 +599,16 @@ def main_xonsh(args):
         if exc_info != (None, None, None):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
-                XSH.exit = True
                 code = getattr(exc_info[1], "code", 0)
                 exit_code = int(code) if code is not None else 0
+                XSH.exit = exit_code
             else:
                 exit_code = 1
                 print_exception(None, exc_info)
         events.on_exit.fire()
         postmain(args)
 
-    if not isinstance(XSH.exit, bool) and isinstance(XSH.exit, int):
+    if isinstance(XSH.exit, int):
         return XSH.exit
     return exit_code
 

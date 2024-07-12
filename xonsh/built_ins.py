@@ -628,7 +628,7 @@ class XonshSession:
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
 
-        self.exit = False
+        self.exit = None
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
 
