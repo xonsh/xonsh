@@ -996,6 +996,8 @@ aliases['echo'] = _echo
         ("import sys; sys.exit(100)", 100),
         ("@('exit')", 0),
         ("exit 100", 100),
+        ("exit()", 0),
+        ("exit(100)", 100),
         ("__xonsh__.exit=100", 100),
         ("raise Exception()", 1),
         ("raise SystemExit(100)", 100),
