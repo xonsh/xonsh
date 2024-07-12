@@ -520,6 +520,15 @@ def xonsh_builtins(execer=None):
     XSH.unload()
 
 
+class InlineImporter:
+    """Inline importer allows to import and use module attribute or function in one line."""
+
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            return getattr(super(), name)
+        return __import__(name)
+
+
 class XonshSession:
     """All components defining a xonsh session."""
 
@@ -530,6 +539,7 @@ class XonshSession:
         self.history = None
         self.shell = None
         self.env = None
+        self.imp = InlineImporter()
         self.rc_files = None
 
         # AST-invoked functions
