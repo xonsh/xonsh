@@ -26,14 +26,14 @@ v0.17.0
 * Added shortcut ``-st`` for ``--shell-type``.
 * Saving history on SIGINT. Development tools like PyCharm send SIGINT before killing the run
   and doing this is the last chance to save history.
-* Added ``spec.raise_subproc_error`` for fine-tuning exceptions via ``SpecModifierAlias`` (#5494).
+* Added ``spec.raise_subproc_error`` for fine-tuning exceptions via ``DecoratorAlias`` (#5494).
 * Added ``$XONSH_SUBPROC_OUTPUT_FORMAT`` to switch the way to return the output lines.
   Default ``stream_lines`` to return text. Alternative ``list_lines`` to return
   the list of lines. Now you can run ``du $(ls)`` without additional stripping.
   Also supported custom lambda function to process lines (if you're looking for
   alternative to bash IFS).
 * Added ``xthread`` and ``xunthread`` aliases to force command running as threaded and unthreaded.
-* Added ``SpecModifierAlias`` class to have an ability to create alias that modifies spec before run e.g. ``xthread`` alias.
+* Added ``DecoratorAlias`` class to have an ability to create alias that modifies spec before run e.g. ``xthread`` alias.
 * Added mode ``$XONSH_TRACE_SUBPROC=3`` to show more information about pipeline.
 * Added "Callable alias and capturing" to the tutorial.
 * Xonfig: show sensitive env variables that could affect the shell behavior.

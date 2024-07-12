@@ -357,11 +357,11 @@ def test_spec_decorator_alias_multiple(xession):
 
 @skip_if_on_windows
 def test_spec_decorator_alias_output_format(xession):
-    class SpecModifierOutputLinesAlias(DecoratorAlias):
+    class OutputLinesDecoratorAlias(DecoratorAlias):
         def decorate_spec(self, spec):
             spec.output_format = "list_lines"
 
-    xession.aliases["xlines"] = SpecModifierOutputLinesAlias()
+    xession.aliases["xlines"] = OutputLinesDecoratorAlias()
 
     cmds = [["xlines", "echo", "1\n2\n3"]]
     specs = cmds_to_specs(cmds, captured="stdout")
@@ -531,10 +531,10 @@ def test_alias_return_command_chain(xession):
     assert spec.alias_name == "foreground"
 
 
-def test_alias_return_command_chain_spec_modifiers(xession):
+def test_alias_return_command_chain_decorators(xession):
     xession.aliases["foreground"] = "midground f0 f1"
 
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -556,16 +556,16 @@ def test_alias_return_command_chain_spec_modifiers(xession):
 
 
 def test_alias_return_command_eval_inside(xession):
-    xession.aliases["xthread"] = SpecAttrModifierAlias(
+    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
 
     @xession.aliases.register("xsudo")
     @xession.aliases.return_command
-    def _midground(args, spec_modifiers=None):
+    def _midground(args, decorators=None):
         return [
             "sudo",
-            *xession.aliases.eval_alias(args, spec_modifiers=spec_modifiers),
+            *xession.aliases.eval_alias(args, decorators=decorators),
         ]
 
     xession.aliases["cmd"] = "xthread echo 1"
