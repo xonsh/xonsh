@@ -4,8 +4,8 @@
 
 **Changed:**
 
-* Rename: ``SpecModifier``, ``xthread``, ``xunthread`` renamed to ``SpecDecorator``, ``@thread``, ``@unthread`` to support idea that
-  spec modifier is like a Python decorator but for command specification.
+* Rename: ``SpecModifier``, ``xthread``, ``xunthread`` renamed to ``DecoratorAlias``, ``@thread``, ``@unthread`` to support idea that
+  spec modifier is like a Python decorator.
 
 **Deprecated:**
 
