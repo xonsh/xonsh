@@ -235,7 +235,7 @@ class Aliases(cabc.MutableMapping):
         In the first position will be the resolved command name or callable alias.
         If the key is not present, then `default` is returned.
 
-        ``decorators`` is the list of SpecModifier objects that found during
+        ``decorators`` is the list of `DecoratorAlias` objects that found during
         resolving aliases (#5443).
 
         Note! The return value is always list because during resolving
