@@ -1275,7 +1275,7 @@ functions. If you don't know what these do, you probably don't need them.
 
 
 Aliases
-==============================
+=======
 Another important xonsh built-in is the ``aliases`` mapping.  This is
 like a dictionary that affects how subprocess commands are run.  If you are
 familiar with the Bash ``alias`` built-in, this is similar.  Alias command
@@ -1304,6 +1304,44 @@ control software. Both styles (list of strings and single string) are shown:
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
 being executed.
+
+Alias to modify command
+-----------------------
+
+The best way to modify command on the fly is to use alias that returns modified command.
+One of the most interesting application is expanding an alias:
+
+.. code-block:: xonshcon
+
+    >>> @aliases.register
+    ... @aliases.return_command
+    ... def _xsudo(args):
+    ...     """Sudo with expanding aliases."""
+    ...     return ['sudo', '--', *aliases.eval_alias(args)]
+    ...
+    >>> aliases['install'] = "apt install cowsay"
+    >>> xsudo install
+    # Password:
+    # Install cowsay
+
+Or implement logic to run the right command:
+
+.. code-block:: xonshcon
+
+    >>> @aliases.register
+    ... @aliases.return_command
+    ... def _vi(args):
+    ...     """Universal vi editor."""
+    ...     if $(which vim 2>/dev/null):
+    ...         return ['vim'] + args
+    ...     else:
+    ...         return ['vi'] + args
+    ...
+    >>> vi file
+
+
+ExecAlias
+---------
 
 If the string is representing a block of xonsh code, the alias will be registered
 as an ``ExecAlias``, which is a callable alias. This block of code will then be

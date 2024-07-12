@@ -277,10 +277,10 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
-class DecoratorAlias:
-    """Decorator alias base class."""
+class SpecModifierAlias:
+    """Spec modifier base class."""
 
-    descr = "DecoratorAlias base."
+    descr = "Spec modifier base class."
 
     def __call__(
         self,
@@ -294,24 +294,24 @@ class DecoratorAlias:
     ):
         print(self.descr, file=stdout)
 
-    def decorate_spec(self, spec):
-        """Modify spec immediately after decorator added."""
+    def on_modifer_added(self, spec):
+        """Modify spec immediately after modifier added."""
         pass
 
-    def decorate_spec_pre_run(self, pipeline, spec, spec_num):
+    def on_pre_run(self, pipeline, spec, spec_num):
         """Modify spec before run."""
         pass
 
 
-class SpecAttrDecoratorAlias(DecoratorAlias):
-    """Decorator Alias for spec attributes."""
+class SpecAttrModifierAlias(SpecModifierAlias):
+    """Modifier for spec attributes."""
 
     def __init__(self, set_attributes: dict, descr=""):
         self.set_attributes = set_attributes
         self.descr = descr
         super().__init__()
 
-    def decorate_spec(self, spec):
+    def on_modifer_added(self, spec):
         for a, v in self.set_attributes.items():
             setattr(spec, a, v)
 
@@ -419,7 +419,7 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
-        self.decorators = []  # List of DecoratorAlias objects that applied to spec.
+        self.spec_modifiers = []  # List of SpecModifierAlias objects that applied to spec.
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
@@ -642,7 +642,7 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
-        spec.resolve_decorators()  # keep this first
+        spec.resolve_spec_modifiers()  # keep this first
         spec.resolve_args_list()
         spec.resolve_redirects()
         spec.resolve_alias()
@@ -653,19 +653,21 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
-    def add_decorator(self, mod: DecoratorAlias):
-        """Add decorator to the specification."""
-        mod.decorate_spec(self)
-        self.decorators.append(mod)
+    def add_spec_modifier(self, mod: SpecModifierAlias):
+        """Add spec modifier to the specification."""
+        mod.on_modifer_added(self)
+        self.spec_modifiers.append(mod)
 
-    def resolve_decorators(self):
-        """Apply decorators."""
+    def resolve_spec_modifiers(self):
+        """Apply spec modifier."""
         if (ln := len(self.cmd)) == 1:
             return
         for i in range(ln):
             c = self.cmd[i]
-            if c in XSH.aliases and isinstance(mod := XSH.aliases[c], DecoratorAlias):
-                self.add_decorator(mod)
+            if c in XSH.aliases and isinstance(
+                mod := XSH.aliases[c], SpecModifierAlias
+            ):
+                self.add_spec_modifier(mod)
             else:
                 break
         self.cmd = self.cmd[i:]
@@ -703,29 +705,42 @@ class SubprocSpec:
         self.cmd = new_cmd
 
     def resolve_alias(self):
-        """Sets alias in command, if applicable."""
+        """Resolving alias and setting up command."""
         cmd0 = self.cmd[0]
-        decorators = []
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
-            # and futher using binary_loc to resolve the alias name.
+            # and further using binary_loc to resolve the alias name.
             self.alias = None
             return
 
         if callable(cmd0):
-            alias = cmd0
+            self.alias = cmd0
         else:
+            found_spec_modifiers = []
             if isinstance(XSH.aliases, dict):
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
+                if alias is not None:
+                    alias = alias + self.cmd[1:]
             else:
-                alias = XSH.aliases.get(cmd0, None, spec_decorators=decorators)
+                alias = XSH.aliases.get(
+                    self.cmd,
+                    None,
+                    spec_modifiers=found_spec_modifiers,
+                )
             if alias is not None:
                 self.alias_name = cmd0
-        self.alias = alias
-        if decorators:
-            for mod in decorators:
-                self.add_decorator(mod)
+                if callable(alias[0]):
+                    # E.g. `alias == [FuncAlias({'name': 'cd'}), '/tmp']`
+                    self.alias = alias[0]
+                    self.cmd = [cmd0] + alias[1:]
+                else:
+                    # E.g. `alias == ['ls', '-la']`
+                    self.alias = alias
+
+            if found_spec_modifiers:
+                for mod in found_spec_modifiers:
+                    self.add_spec_modifier(mod)
 
     def resolve_binary_loc(self):
         """Sets the binary location"""
@@ -763,8 +778,7 @@ class SubprocSpec:
             self.cmd.pop(0)
             return
         else:
-            self.cmd = alias + self.cmd[1:]
-            # resolve any redirects the aliases may have applied
+            self.cmd = alias
             self.resolve_redirects()
         if self.binary_loc is None:
             return
@@ -969,7 +983,13 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                 }
                 p |= {
                     a: getattr(s, a, None)
-                    for a in ["alias_name", "binary_loc", "threadable", "background"]
+                    for a in [
+                        "alias_name",
+                        "alias",
+                        "binary_loc",
+                        "threadable",
+                        "background",
+                    ]
                 }
                 if trace_mode == 3:
                     p |= {

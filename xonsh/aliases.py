@@ -1,15 +1,17 @@
 """Aliases for the xonsh shell."""
 
 import argparse
-import collections.abc as cabc
 import functools
 import inspect
+import operator
 import os
 import re
 import shutil
 import sys
 import types
 import typing as tp
+from collections import abc as cabc
+from typing import Literal
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
@@ -33,7 +35,7 @@ from xonsh.platform import (
 )
 from xonsh.procs.executables import locate_file
 from xonsh.procs.jobs import bg, clean_jobs, disown, fg, jobs
-from xonsh.procs.specs import DecoratorAlias, SpecAttrDecoratorAlias
+from xonsh.procs.specs import SpecAttrModifierAlias, SpecModifierAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -42,6 +44,7 @@ from xonsh.tools import (
     argvquote,
     escape_windows_cmd_string,
     print_color,
+    print_exception,
     strip_simple_quotes,
     swap_values,
     to_repr_pretty_,
@@ -59,8 +62,9 @@ def EXEC_ALIAS_RE():
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
-    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
+    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__", "return_what"]
     attributes_inherit = attributes_show + ["__doc__"]
+    return_what: Literal["command", "result"] = "result"
 
     def __init__(self, name, func=None):
         self.__name__ = self.name = name
@@ -79,12 +83,27 @@ class FuncAlias:
         return f"FuncAlias({repr(r)})"
 
     def __call__(
-        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self,
+        args=None,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        spec_modifiers=None,
     ):
-        func_args = [args, stdin, stdout, stderr, spec, stack][
-            : len(inspect.signature(self.func).parameters)
-        ]
-        return self.func(*func_args)
+        return run_alias_by_params(
+            self.func,
+            {
+                "args": args,
+                "stdin": stdin,
+                "stdout": stdout,
+                "stderr": stderr,
+                "spec": spec,
+                "stack": stack,
+                "spec_modifiers": spec_modifiers,
+            },
+        )
 
 
 class Aliases(cabc.MutableMapping):
@@ -132,28 +151,17 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
-    def get(self, key, default=None, spec_decorators=None):
-        """Returns the (possibly modified) value. If the key is not present,
-        then `default` is returned.
-        If the value is callable, it is returned without modification. If it
-        is an iterable of strings it will be evaluated recursively to expand
-        other aliases, resulting in a new list or a "partially applied"
-        callable.
-        """
-        spec_decorators = spec_decorators if spec_decorators is not None else []
-        val = self._raw.get(key)
-        if val is None:
-            return default
-        elif isinstance(val, cabc.Iterable) or callable(val):
-            return self.eval_alias(
-                val, seen_tokens={key}, spec_decorators=spec_decorators
-            )
-        else:
-            msg = "alias of {!r} has an inappropriate type: {!r}"
-            raise TypeError(msg.format(key, val))
+    def return_command(self, f):
+        """Decorator that switches alias from returning result to return in new command for execution."""
+        f.return_what = "command"
+        return f
 
     def eval_alias(
-        self, value, seen_tokens=frozenset(), acc_args=(), spec_decorators=None
+        self,
+        value,
+        seen_tokens=frozenset(),
+        acc_args=(),
+        spec_modifiers=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -165,7 +173,7 @@ class Aliases(cabc.MutableMapping):
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
         """
-        spec_decorators = spec_decorators if spec_decorators is not None else []
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
@@ -175,15 +183,25 @@ class Aliases(cabc.MutableMapping):
         ):
             i = 0
             for v in value:
-                if isinstance(mod := self._raw.get(str(v)), DecoratorAlias):
-                    spec_decorators.append(mod)
+                if isinstance(mod := self._raw.get(str(v)), SpecModifierAlias):
+                    spec_modifiers.append(mod)
                     i += 1
                 else:
                     break
             value = value[i:]
 
+        if callable(value) and getattr(value, "return_what", "result") == "command":
+            try:
+                value = value(acc_args, spec_modifiers=spec_modifiers)
+                acc_args = []
+            except Exception as e:
+                print_exception(f"Exception inside alias {value}: {e}")
+                return None
+            if not len(value):
+                raise ValueError("return_command alias: zero arguments.")
+
         if callable(value):
-            return partial_eval_alias(value, acc_args=acc_args)
+            return [value] + list(acc_args)
         else:
             expand_path = XSH.expand_path
             token, *rest = map(expand_path, value)
@@ -202,8 +220,56 @@ class Aliases(cabc.MutableMapping):
                     self._raw[token],
                     seen_tokens,
                     acc_args,
-                    spec_decorators=spec_decorators,
+                    spec_modifiers=spec_modifiers,
                 )
+
+    def get(
+        self,
+        key,
+        default=None,
+        spec_modifiers=None,
+    ):
+        """
+        Returns list that represent command with resolved aliases.
+        The ``key`` can be string with alias name or list for a command.
+        In the first position will be the resolved command name or callable alias.
+        If the key is not present, then `default` is returned.
+
+        ``spec_modifiers`` is the list of SpecModifier objects that found during
+        resolving aliases (#5443).
+
+        Note! The return value is always list because during resolving
+        we can find return_command alias that can completely replace
+        command and add new arguments.
+        """
+        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        args = []
+        if isinstance(key, list):
+            args = key[1:]
+            key = key[0]
+        val = self._raw.get(key)
+        if callable(val) and getattr(val, "return_what", "result") == "command":
+            try:
+                val = val(args, spec_modifiers=spec_modifiers)
+                args = []
+            except Exception as e:
+                print_exception(f"Exception inside alias {key!r}: {e}")
+                return None
+            if not len(val):
+                raise ValueError("return_command alias: zero arguments.")
+
+        if val is None:
+            return default
+        elif isinstance(val, cabc.Iterable) or callable(val):
+            return self.eval_alias(
+                val,
+                seen_tokens={key},
+                spec_modifiers=spec_modifiers,
+                acc_args=args,
+            )
+        else:
+            msg = "alias of {!r} has an inappropriate type: {!r}"
+            raise TypeError(msg.format(key, val))
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
@@ -408,6 +474,21 @@ class PartialEvalAlias6(PartialEvalAliasBase):
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
 
+class PartialEvalAlias7(PartialEvalAliasBase):
+    def __call__(
+        self,
+        args,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        spec_modifiers=None,
+    ):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr, spec, stack, spec_modifiers)
+
+
 PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias0,
     PartialEvalAlias1,
@@ -416,6 +497,7 @@ PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias4,
     PartialEvalAlias5,
     PartialEvalAlias6,
+    PartialEvalAlias7,
 )
 
 
@@ -436,11 +518,41 @@ def partial_eval_alias(f, acc_args=()):
             numargs += 1
         elif name in ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
             numargs += 1
-    if numargs < 7:
+    if numargs < 8:
         return PARTIAL_EVAL_ALIASES[numargs](f, acc_args=acc_args)
     else:
-        e = "Expected proxy with 6 or fewer arguments for {}, not {}"
+        e = "Expected proxy with 7 or fewer arguments for {}, not {}"
         raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
+
+
+def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
+    """
+    Run alias function based on signature and params.
+    If function param names are in alias signature fill them.
+    If function params have unknown names fill using alias signature order.
+    """
+    alias_params = {
+        "args": None,
+        "stdin": None,
+        "stdout": None,
+        "stderr": None,
+        "spec": None,
+        "stack": None,
+        "spec_modifiers": None,
+    }
+    alias_params |= params
+    sign = inspect.signature(func)
+    func_params = sign.parameters.items()
+    kwargs = {
+        name: alias_params[name] for name, p in func_params if name in alias_params
+    }
+
+    if len(kwargs) != len(func_params):
+        # There is unknown param. Switch to positional mode.
+        kwargs = dict(
+            zip(map(operator.itemgetter(0), func_params), alias_params.values())
+        )
+    return func(**kwargs)
 
 
 #
@@ -945,11 +1057,11 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "@thread": SpecAttrDecoratorAlias(
+        "xthread": SpecAttrModifierAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
         ),
-        "@unthread": SpecAttrDecoratorAlias(
+        "xunthread": SpecAttrModifierAlias(
             {"threadable": False, "force_threadable": False},
             "Mark current command as unthreadable.",
         ),
