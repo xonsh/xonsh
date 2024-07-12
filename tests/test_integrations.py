@@ -998,6 +998,7 @@ aliases['echo'] = _echo
         ("exit 100", 100),
         ("exit()", 0),
         ("exit(100)", 100),
+        ("__xonsh__.exit=0", 0),
         ("__xonsh__.exit=100", 100),
         ("raise Exception()", 1),
         ("raise SystemExit(100)", 100),
