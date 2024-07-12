@@ -705,29 +705,42 @@ class SubprocSpec:
         self.cmd = new_cmd
 
     def resolve_alias(self):
-        """Sets alias in command, if applicable."""
+        """Resolving alias and setting up command."""
         cmd0 = self.cmd[0]
-        spec_modifiers = []
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
-            # and futher using binary_loc to resolve the alias name.
+            # and further using binary_loc to resolve the alias name.
             self.alias = None
             return
 
         if callable(cmd0):
-            alias = cmd0
+            self.alias = cmd0
         else:
+            found_spec_modifiers = []
             if isinstance(XSH.aliases, dict):
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
+                if alias is not None:
+                    alias = alias + self.cmd[1:]
             else:
-                alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
+                alias = XSH.aliases.get(
+                    self.cmd,
+                    None,
+                    spec_modifiers=found_spec_modifiers,
+                )
             if alias is not None:
                 self.alias_name = cmd0
-        self.alias = alias
-        if spec_modifiers:
-            for mod in spec_modifiers:
-                self.add_spec_modifier(mod)
+                if callable(alias[0]):
+                    # E.g. `alias == [FuncAlias({'name': 'cd'}), '/tmp']`
+                    self.alias = alias[0]
+                    self.cmd = [cmd0] + alias[1:]
+                else:
+                    # E.g. `alias == ['ls', '-la']`
+                    self.alias = alias
+
+            if found_spec_modifiers:
+                for mod in found_spec_modifiers:
+                    self.add_spec_modifier(mod)
 
     def resolve_binary_loc(self):
         """Sets the binary location"""
@@ -765,8 +778,7 @@ class SubprocSpec:
             self.cmd.pop(0)
             return
         else:
-            self.cmd = alias + self.cmd[1:]
-            # resolve any redirects the aliases may have applied
+            self.cmd = alias
             self.resolve_redirects()
         if self.binary_loc is None:
             return
@@ -971,7 +983,13 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                 }
                 p |= {
                     a: getattr(s, a, None)
-                    for a in ["alias_name", "binary_loc", "threadable", "background"]
+                    for a in [
+                        "alias_name",
+                        "alias",
+                        "binary_loc",
+                        "threadable",
+                        "background",
+                    ]
                 }
                 if trace_mode == 3:
                     p |= {
