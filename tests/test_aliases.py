@@ -106,6 +106,14 @@ def test_recursive_callable_partial_handles(xession):
     exp = {"stdin": "a", "stdout": "b", "stderr": "c"}
     assert obs == exp
 
+def test_expand_alias():
+    ales = Aliases()
+    ales['ls'] = ['ls', '-G']
+    ales['ff'] = lambda args: print(args)
+    exp_ls = ales.expand_alias('ls ', 3)
+    exp_ff = ales.expand_alias('ff ', 3)
+    assert exp_ls == 'ls -G '
+    assert exp_ff == 'ff '
 
 def _return_to_sender_none():
     return "wakka", {}
