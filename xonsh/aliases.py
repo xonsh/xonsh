@@ -277,7 +277,7 @@ class Aliases(cabc.MutableMapping):
         The command won't be expanded if the cursor's inside/behind it.
         """
         word = (line.split(maxsplit=1) or [""])[0]
-        if word in XSH.aliases and isinstance(self.get(word), cabc.Sequence):  # type: ignore
+        if word in self and not callable(self.get(word)[0]):  # type: ignore
             word_idx = line.find(word)
             word_edge = word_idx + len(word)
             if cursor_index > word_edge:
