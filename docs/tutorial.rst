@@ -1662,6 +1662,9 @@ Now you can run:
     $(@lines ls /)
     # ['/bin', '/etc', '/home']
 
+    $(echo '{}' | @json head -n 1)['answer']
+    # 42
+
     j = $(@json echo '{"answer":42}')
     j['answer']
     # 42
@@ -1673,6 +1676,7 @@ Now you can run:
     y = $(ydig google.com)
     y[0]['type']
     # 'MESSAGE'
+
 
 -------------
 
