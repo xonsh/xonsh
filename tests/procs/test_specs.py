@@ -10,8 +10,8 @@ import pytest
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    SpecAttrModifierAlias,
-    SpecModifierAlias,
+    DecoratorAlias,
+    SpecAttrDecoratorAlias,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
@@ -288,8 +288,8 @@ def test_run_subproc_background(captured, exp_is_none):
     assert (return_val is None) == exp_is_none
 
 
-def test_spec_modifier_alias_alone(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+def test_spec_decorator_alias_alone(xession):
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -300,8 +300,8 @@ def test_spec_modifier_alias_alone(xession):
     assert spec.alias_name == "xunthread"
 
 
-def test_spec_modifier_alias(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+def test_spec_decorator_alias(xession):
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -313,11 +313,11 @@ def test_spec_modifier_alias(xession):
     assert spec.force_threadable is False
 
 
-def test_spec_modifier_alias_tree(xession):
-    xession.aliases["xthread"] = SpecAttrModifierAlias(
+def test_spec_decorator_alias_tree(xession):
+    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -337,11 +337,11 @@ def test_spec_modifier_alias_tree(xession):
     assert spec.force_threadable is False
 
 
-def test_spec_modifier_alias_multiple(xession):
-    xession.aliases["@unthread"] = SpecAttrModifierAlias(
+def test_spec_decorator_alias_multiple(xession):
+    xession.aliases["@unthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
-    xession.aliases["@dict"] = SpecAttrModifierAlias({"output_format": "list_lines"})
+    xession.aliases["@dict"] = SpecAttrDecoratorAlias({"output_format": "list_lines"})
 
     cmds = [
         ["@unthread", "@dict", "echo", "1"],
@@ -356,12 +356,12 @@ def test_spec_modifier_alias_multiple(xession):
 
 
 @skip_if_on_windows
-def test_spec_modifier_alias_output_format(xession):
-    class SpecModifierOutputLinesAlias(SpecModifierAlias):
-        def on_modifer_added(self, spec):
+def test_spec_decorator_alias_output_format(xession):
+    class OutputLinesDecoratorAlias(DecoratorAlias):
+        def decorate_spec(self, spec):
             spec.output_format = "list_lines"
 
-    xession.aliases["xlines"] = SpecModifierOutputLinesAlias()
+    xession.aliases["xlines"] = OutputLinesDecoratorAlias()
 
     cmds = [["xlines", "echo", "1\n2\n3"]]
     specs = cmds_to_specs(cmds, captured="stdout")
@@ -531,10 +531,10 @@ def test_alias_return_command_chain(xession):
     assert spec.alias_name == "foreground"
 
 
-def test_alias_return_command_chain_spec_modifiers(xession):
+def test_alias_return_command_chain_decorators(xession):
     xession.aliases["foreground"] = "midground f0 f1"
 
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -556,16 +556,16 @@ def test_alias_return_command_chain_spec_modifiers(xession):
 
 
 def test_alias_return_command_eval_inside(xession):
-    xession.aliases["xthread"] = SpecAttrModifierAlias(
+    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
 
     @xession.aliases.register("xsudo")
     @xession.aliases.return_command
-    def _midground(args, spec_modifiers=None):
+    def _midground(args, decorators=None):
         return [
             "sudo",
-            *xession.aliases.eval_alias(args, spec_modifiers=spec_modifiers),
+            *xession.aliases.eval_alias(args, decorators=decorators),
         ]
 
     xession.aliases["cmd"] = "xthread echo 1"

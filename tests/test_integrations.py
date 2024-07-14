@@ -1365,10 +1365,10 @@ def test_alias_stability():
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
-def test_spec_modifier_alias():
+def test_spec_decorator_alias():
     """Testing spec modifier alias with `@` in the alias name."""
     stdin_cmd = (
-        "from xonsh.procs.specs import SpecAttrModifierAlias as mod\n"
+        "from xonsh.procs.specs import SpecAttrDecoratorAlias as mod\n"
         'aliases["@dict"] = mod({"output_format": lambda lines: eval("\\n".join(lines))})\n'
         "d = $(@dict echo '{\"a\":42}')\n"
         "print('Answer =', d['a'])\n"
