@@ -736,9 +736,8 @@ class SubprocSpec:
                     # E.g. `alias == ['ls', '-la']`
                     self.alias = alias
 
-            if decorators:
-                for mod in decorators:
-                    self.add_decorator(mod)
+            for mod in decorators:
+                self.add_decorator(mod)
 
     def resolve_binary_loc(self):
         """Sets the binary location"""
