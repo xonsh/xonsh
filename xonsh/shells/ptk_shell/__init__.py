@@ -410,7 +410,7 @@ class PromptToolkitShell(BaseShell):
         if intro:
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
-        while not XSH.exit:
+        while XSH.exit is None:
             try:
                 line = self.singleline(auto_suggest=auto_suggest)
                 if not line:
