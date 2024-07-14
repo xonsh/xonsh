@@ -533,6 +533,13 @@ class XonshSession:
     """All components defining a xonsh session."""
 
     def __init__(self):
+        """
+        Attributes
+        ----------
+        exit: int or None
+            Session attribute. In case of integer value it signals xonsh to exit
+            with returning this value as exit code.
+        """
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
@@ -638,7 +645,7 @@ class XonshSession:
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
 
-        self.exit = False
+        self.exit = None
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
 

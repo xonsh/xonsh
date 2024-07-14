@@ -422,7 +422,7 @@ class BaseShell:
                 print(os.linesep, end="")
             tee.close()
             self._fix_cwd()
-        if XSH.exit:  # pylint: disable=no-member
+        if XSH.exit is not None:  # pylint: disable=no-member
             return True
 
     def _append_history(self, tee_out=None, **info):

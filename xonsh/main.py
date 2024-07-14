@@ -50,7 +50,7 @@ events.transmogrify("on_exit", "LoadEvent")
 events.doc(
     "on_exit",
     """
-on_exit() -> None
+on_exit(exit_code : int) -> None
 
 Fired after all commands have been executed, before tear-down occurs.
 
@@ -604,13 +604,16 @@ def main_xonsh(args):
         if exc_info != (None, None, None):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
-                XSH.exit = True
                 code = getattr(exc_info[1], "code", 0)
                 exit_code = int(code) if code is not None else 0
+                XSH.exit = exit_code
             else:
                 exit_code = 1
                 print_exception(None, exc_info)
-        events.on_exit.fire()
+
+        if isinstance(XSH.exit, int):
+            exit_code = XSH.exit
+        events.on_exit.fire(exit_code=exit_code)
         postmain(args)
     return exit_code
 

@@ -1714,8 +1714,8 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
 
     AUTO_SUGGEST = Var.with_default(
         True,
-        "Enable automatic command suggestions based on history, like in the fish "
-        "shell.\n\nPressing the right arrow key inserts the currently "
+        "Enable automatic command suggestions based on history."
+        "\n\nPressing the right arrow key inserts the currently "
         "displayed suggestion. ",
     )
     AUTO_SUGGEST_IN_COMPLETIONS = Var.with_default(
