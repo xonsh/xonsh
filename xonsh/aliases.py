@@ -1064,11 +1064,11 @@ def make_default_aliases():
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
         "xonsh-reset": xonsh_reset,
-        "xthread": SpecAttrDecoratorAlias(
+        "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
         ),
-        "xunthread": SpecAttrDecoratorAlias(
+        "@unthread": SpecAttrDecoratorAlias(
             {"threadable": False, "force_threadable": False},
             "Mark current command as unthreadable.",
         ),
