@@ -1,6 +1,6 @@
 **Added:**
 
-* aliases: Added ability to set multiple spec modifiers e.g. ``@json @noerr echo '{}'`` ().
+* aliases: Added ability to set multiple decorator aliases e.g. ``j = $(@json @noerr echo '{}')``.
 
 **Changed:**
 

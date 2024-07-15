@@ -104,7 +104,7 @@ class DummyHistory:
 
 def nodes_equal(x, y):
     __tracebackhide__ = True
-    assert type(x) == type(
+    assert type(x) is type(
         y
     ), f"Ast nodes do not have the same type: '{type(x)}' != '{type(y)}' "
     if isinstance(x, ast.Constant):
@@ -125,7 +125,7 @@ def nodes_equal(x, y):
         if isinstance(x, ast.Constant) and xname == "kind":
             continue
         assert (
-            type(xval) == type(yval)
+            type(xval) is type(yval)
         ), f"Ast nodes fields differ : {xname} (of type {type(xval)}) != {yname} (of type {type(yval)})"
     for xchild, ychild in zip(ast.iter_child_nodes(x), ast.iter_child_nodes(y)):
         assert nodes_equal(xchild, ychild), "Ast node children differs"
