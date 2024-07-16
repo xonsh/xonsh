@@ -96,7 +96,9 @@ def locate_file(name, env=None, check_executable=False, use_pathext=False):
         filepath = Path(path) / possible_name
 
         try:
-            if not filepath.is_file() or (check_executable and not is_executable(filepath)):
+            if not filepath.is_file() or (
+                check_executable and not is_executable(filepath)
+            ):
                 continue
             return str(filepath)
         except PermissionError:
