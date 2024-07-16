@@ -2,7 +2,7 @@ import os
 
 from xonsh.environ import Env
 from xonsh.platform import ON_WINDOWS
-from xonsh.procs.executables import get_paths, get_possible_names, locate_executable
+from xonsh.procs.executables import get_paths, get_possible_names, locate_executable, locate_file
 
 
 def test_get_possible_names():
@@ -44,3 +44,14 @@ def test_locate_executable(tmpdir, xession):
             assert locate_executable("file1") is None
             assert locate_executable("file4") is None
             assert locate_executable("file2") is None
+
+
+def test_locate_file(tmpdir, xession):
+    bindir1 = tmpdir.mkdir("bindir1")
+    bindir2 = tmpdir.mkdir("bindir2")
+    bindir3 = tmpdir.mkdir("bindir3")
+    file = bindir2 / 'findme'
+    file.write_text("", encoding="utf8")
+    with xession.env.swap(PATH=[str(bindir1), str(bindir2), str(bindir3)]):
+        f = locate_file('findme')
+        assert str(f) == str(file)
