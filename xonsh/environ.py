@@ -1049,12 +1049,11 @@ class GeneralSetting(Xettings):
 
     XONSH_MODE = Var.with_default(
         default="interactive",  # In sync with ``main.py``.
-        doc="The value represented the current xonsh mode: "
+        doc="A string value representing the current xonsh execution mode: "
         "``interactive``, ``script_from_file``, ``source``, ``single_command``, ``script_from_stdin``."
-        "Note! This variable reflects of the xonsh mode at start xonsh itself (e.g. ``script_from_file``) "
-        "or code execution (e.g. ``source``). After start some variables may be changed by arguments "
-        "(e.g. ``xonsh -i``) or RC files and if you need to check interactive mode use more certain "
-        "variables like ``$XONSH_INTERACTIVE`` to have full confidence with interactive mode.",
+        "Note! This variable reflects the mode at start time  (e.g. ``script_from_file``) "
+        "or code execution (e.g. ``source``).  If you need to gate behavior in an RC file that "
+        "you plan to ``source``, use ``$XONSH_INTERACTIVE`` as the flag instead.",
         type_str="str",
     )
 
