@@ -1047,6 +1047,16 @@ class GeneralSetting(Xettings):
         is_configurable=False,
     )
 
+    XONSH_MODE = Var.with_default(
+        default="interactive",  # In sync with ``main.py``.
+        doc="A string value representing the current xonsh execution mode: "
+        "``interactive``, ``script_from_file``, ``source``, ``single_command``, ``script_from_stdin``."
+        "Note! This variable reflects the mode at start time  (e.g. ``script_from_file``) "
+        "or code execution (e.g. ``source``).  If you need to gate behavior in an RC file that "
+        "you plan to ``source``, use ``$XONSH_INTERACTIVE`` as the flag instead.",
+        type_str="str",
+    )
+
     XONSH_SOURCE = Var.with_default(
         "",
         "When running a xonsh script, this variable contains the absolute path "
