@@ -4,6 +4,15 @@ Xonsh Change Log
 
 .. current developments
 
+v0.18.1
+====================
+
+**Authors:**
+
+* Gil Forsyth
+
+
+
 v0.18.0
 ====================
 
