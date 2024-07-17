@@ -327,5 +327,8 @@ Authors are sorted by number of commits.
 * Andrew
 * l-no
 * amacfie-tc
+* lunrenyi
+* Spencer Bliven
+* Niraj Kulkarni
 * goodboy
 * Atsushi Morimoto
