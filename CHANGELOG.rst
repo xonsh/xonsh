@@ -4,6 +4,68 @@ Xonsh Change Log
 
 .. current developments
 
+v0.18.0
+====================
+
+**Added:**
+
+* Added ``@aliases.return_command`` decorator to eliminate the need to wrap the logic for modifying command into callable alias wrapper (#5473).
+* Tutorial: added example of callable environment variable.
+* tools: added ``mkdir`` to ``xonsh.tools.chdir`` e.g. ``with chdir('/tmp/new', mkdir=True): pass``.
+* env: Added ``$XONSH_MODE`` variable to detect the current execution mode:
+  ``interactive``, ``script_from_file``, ``source``, ``single_command``, ``script_from_stdin``.
+* Builtin: ``exit`` can return exit code e.g. ``exit 71``.
+* builtin: added ``__xonsh__.imp`` to have an ability to import and use modules immediately in one line
+  e.g. ``__xonsh__.json.loads('{}')``.
+  In the future ``__xonsh__`` will have short notation ``@`` and the line will looks more elegant ``@.imp.json.loads('{}')``.
+* builtins: Added color to printx e.g. ``printx('Good', color='GREEN')``.
+* aliases: Added ability to set multiple decorator aliases e.g. ``j = $(@json @noerr echo '{}')``.
+* Created ``xonsh.api`` to use xonsh functionality in pure python code and downstream projects (#5383 #5538).
+  It's usable but don't treat this serios because it's mostly to move some functions into distinct
+  submodule to reflect the intention to have the API. We need review and improvements here.
+
+**Changed:**
+
+* New executable resolving method was introduced and the commands_cache usages were replaced in the key places. As result we expect speed up in xonsh startup, reducing lagging during typing in prompt and speed ups during the commands execution (#5544 by @anki-code).
+* ``COLOR_RESULTS`` switched to ``False`` for non-interactive command case to improve speed in default behavior (#5562).
+* main: Importing sqlite became optional.
+* prompt: Switching to prompt_toolkit in edge case of sending stdin to interactive mode (#5462 #5517).
+* Rename: ``SpecModifier``, ``xthread``, ``xunthread`` renamed to ``DecoratorAlias``, ``@thread``, ``@unthread`` to support idea that
+  spec modifier is like a Python decorator.
+* Big refactoring of internal modules structure to give clear understanding of internal xonsh components (#5538).
+  E.g. if you have ``import xonsh.jobs`` convert this to ``import xonsh.procs.jobs``.
+  This kind of refactoring occurs once per many years.
+
+**Deprecated:**
+
+* Starting from this release we notify that in the future we will not recommend to use ``xonsh.procs.run_subproc``
+  and ``xonsh.built_ins.subproc_*`` functions for downstream projects because of #5383.
+  We will develop ``xonsh.api`` as alternative.
+
+**Removed:**
+
+* xontrib: Do not autoload xontribs in ``xonsh --no-rc`` mode.
+
+**Fixed:**
+
+* Callable alias: fixed capturing stdout in case of redirect e.g. `a > file` (#5527).
+* Commands Cache: Fixed cache update logic that lead to lagging during typing.
+* Replaced deprecated `sys.last_type, sys.last_value, sys.last_traceback` with `sys.last_exc`
+* Fixed ``history gc`` invocation failing when ``sqlite`` history backend is used.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Jason R. Coombs
+* lunrenyi
+* Spencer Bliven
+* Niraj Kulkarni
+
+
+
 v0.17.0
 ====================
 
