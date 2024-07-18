@@ -106,15 +106,15 @@ Projects that use xonsh or compatible
 *************************************
 
 - `conda <https://conda.io/projects/conda/en/latest/>`_ and `mamba <https://mamba.readthedocs.io/en/latest/>`_: Modern package managers.
+- `Starship <https://starship.rs/>`_: Cross-shell prompt.
+- `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
 - `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the SSH.
+- `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
+- `lix <https://github.com/lix-project/lix>`_: A modern, delicious implementation of the Nix package manager.
+- `x-cmd <https://www.x-cmd.com/>`_: x-cmd is a vast and interesting collection of tools guided by the Unix philosophy.
 - `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
 - `Regro autotick bot <https://github.com/regro/cf-scripts>`_: Regro Conda-Forge autoticker.
-- `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
-- `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
-- `Starship <https://starship.rs/>`_: Cross-shell prompt.
-- `x-cmd <https://www.x-cmd.com/>`_: x-cmd is a vast and interesting collection of tools guided by the Unix philosophy.
-- `lix <https://github.com/lix-project/lix>`_: A modern, delicious implementation of the Nix package manager.
 
 Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
 
