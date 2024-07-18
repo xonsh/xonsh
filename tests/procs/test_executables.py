@@ -41,7 +41,9 @@ def test_locate_executable(tmpdir, xession):
     os.chmod(f, 0o777)
 
     pathext = [".EXE", ".COM"] if ON_WINDOWS else []
-    with xession.env.swap(PATH=[str(bindir1), str(bindir2), str(bindir3)], PATHEXT=pathext):
+    with xession.env.swap(
+        PATH=[str(bindir1), str(bindir2), str(bindir3)], PATHEXT=pathext
+    ):
         assert locate_executable("file1.EXE")
         assert locate_executable("nofile") is None
         assert locate_executable("file5") is None
@@ -51,7 +53,7 @@ def test_locate_executable(tmpdir, xession):
             assert locate_executable("file4")
             assert locate_executable("file2").endswith("file2.exe")
         else:
-            assert locate_executable("file3").find('bindir2') > 0
+            assert locate_executable("file3").find("bindir2") > 0
             assert locate_executable("file1") is None
             assert locate_executable("file4") is None
             assert locate_executable("file2") is None
