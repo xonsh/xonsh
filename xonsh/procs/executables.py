@@ -89,7 +89,7 @@ def locate_file(name, env=None, check_executable=False, use_pathext=False):
     """
     env = env if env is not None else XSH.env
     env_path = env.get("PATH", [])
-    paths = tuple(reversed(tuple(clear_paths(env_path))))
+    paths = tuple(tuple(clear_paths(env_path)))
     possible_names = get_possible_names(name, env) if use_pathext else [name]
 
     for path, possible_name in itertools.product(paths, possible_names):
