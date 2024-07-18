@@ -4,6 +4,19 @@ Xonsh Change Log
 
 .. current developments
 
+v0.18.2
+====================
+
+**Fixed:**
+
+* Fixed wrong order of directories in PATH (#5606 #5605). Please do not use 0.18.0 and 0.18.1 versions.
+
+**Authors:**
+
+* anki-code
+
+
+
 v0.18.1
 ====================
 
