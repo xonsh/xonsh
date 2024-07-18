@@ -24,18 +24,24 @@ def test_get_paths(tmpdir):
 
 
 def test_locate_executable(tmpdir, xession):
-    bindir = tmpdir.mkdir("bindir")
-    bindir.mkdir("subdir")
+    bindir1 = tmpdir.mkdir("bindir1")
+    bindir2 = tmpdir.mkdir("bindir2")
+    bindir3 = tmpdir.mkdir("bindir3")
+    bindir2.mkdir("subdir")
     executables = ["file1.EXE", "file2.COM", "file2.EXE", "file3"]
     not_executables = ["file4.EXE", "file5"]
     for exefile in executables + not_executables:
-        f = bindir / exefile
+        f = bindir2 / exefile
         f.write_text("binary", encoding="utf8")
         if exefile in executables:
             os.chmod(f, 0o777)
 
+    # Test overlapping file names in different bin directories.
+    (f := bindir3 / "file3").write_text("binary", encoding="utf8")
+    os.chmod(f, 0o777)
+
     pathext = [".EXE", ".COM"] if ON_WINDOWS else []
-    with xession.env.swap(PATH=str(bindir), PATHEXT=pathext):
+    with xession.env.swap(PATH=[str(bindir1), str(bindir2), str(bindir3)], PATHEXT=pathext):
         assert locate_executable("file1.EXE")
         assert locate_executable("nofile") is None
         assert locate_executable("file5") is None
@@ -45,7 +51,7 @@ def test_locate_executable(tmpdir, xession):
             assert locate_executable("file4")
             assert locate_executable("file2").endswith("file2.exe")
         else:
-            assert locate_executable("file3")
+            assert locate_executable("file3").find('bindir2') > 0
             assert locate_executable("file1") is None
             assert locate_executable("file4") is None
             assert locate_executable("file2") is None
