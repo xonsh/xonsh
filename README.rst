@@ -105,6 +105,7 @@ Xonsh has an extension/plugin system.  We call these additions ``xontribs``.
 Projects that use xonsh or compatible
 *************************************
 
+- `conda <https://conda.io/projects/conda/en/latest/>`_ and `mamba <https://mamba.readthedocs.io/en/latest/>`_: Modern package managers.
 - `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
 - `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the SSH.
 - `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
