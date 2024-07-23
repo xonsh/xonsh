@@ -11,6 +11,7 @@ import signal
 import stat
 import subprocess
 import sys
+from pathlib import Path
 
 import xonsh.lib.lazyasd as xl
 import xonsh.lib.lazyimps as xli
