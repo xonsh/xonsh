@@ -943,6 +943,11 @@ def test_negative_exit_codes_fail():
     assert "OK" != err
 
 
+def make_executable(path): # stackoverflow.com/a/30463972
+    mode = os.stat(path).st_mode
+    mode |= (mode & 0o444) >> 2    # copy R bits to X
+    os.chmod(path, mode)
+
 @skip_if_no_xonsh
 @skip_if_on_windows
 def test_shebang_cr(tmpdir):
@@ -953,7 +958,8 @@ def test_shebang_cr(tmpdir):
     (testdir / testfile).write_text(
         f"""#!/usr/bin/env xonsh\r\nprint("{expected_out}")""", encoding="utf8"
     )
-    command = f"cd {testdir}; chmod +x ./{testfile}; ./{testfile}\n"
+    make_executable(testdir / testfile)
+    command = f"cd {testdir}; ./{testfile}\n"
     out, err, rtn = run_xonsh(command)
     assert out == f"{expected_out}\n"
 
