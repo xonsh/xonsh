@@ -746,7 +746,7 @@ class SubprocSpec:
         if alias is None:
             cmd0 = self.cmd[0]
             if cmd0.startswith("."):  # only resolve ./relative paths
-                cmd0 = xt.expanduser_abs_path(self.cmd[0])
+                cmd0 = xt.expanduser_abs_path(cmd0)
                 binary_loc = cmd0 if is_executable(Path(cmd0)) else None
             else:
                 binary_loc = locate_executable(cmd0)
