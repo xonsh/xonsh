@@ -755,7 +755,12 @@ class SubprocSpec:
         elif callable(alias):
             binary_loc = None
         else:
-            binary_loc = locate_executable(alias[0])
+            cmd0 = alias[0]
+            if cmd0.startswith("."):  # only resolve ./relative paths
+                cmd0 = xt.expanduser_abs_path(cmd0)
+                binary_loc = cmd0 if is_executable(Path(cmd0)) else None
+            else:
+                binary_loc = locate_executable(cmd0)
         self.binary_loc = binary_loc
 
     def resolve_auto_cd(self):
