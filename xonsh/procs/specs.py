@@ -18,7 +18,7 @@ import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.procs.executables import locate_executable
+from xonsh.procs.executables import locate_executable, is_executable
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
@@ -746,7 +746,9 @@ class SubprocSpec:
             cmd0 = self.cmd[0]
             if cmd0.startswith("."):  # only resolve ./relative paths
                 cmd0 = xt.expanduser_abs_path(self.cmd[0])
-            binary_loc = locate_executable(cmd0)
+                binary_loc = cmd0 if is_executable(cmd0) else None
+            else:
+                binary_loc = locate_executable(cmd0)
             if binary_loc is None and cmd0 and cmd0 in self.alias_stack:
                 raise Exception(f'Recursive calls to "{cmd0}" alias.')
         elif callable(alias):
