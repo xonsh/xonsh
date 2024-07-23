@@ -18,7 +18,7 @@ import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.procs.executables import locate_executable, is_executable
+from xonsh.procs.executables import is_executable, locate_executable
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
