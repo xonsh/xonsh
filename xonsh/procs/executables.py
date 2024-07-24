@@ -77,19 +77,30 @@ def locate_executable(name, env=None):
 
 def locate_file(name, env=None, check_executable=False, use_pathext=False):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
-    return locate_relative_path(name, check_executable) or locate_file_in_path_env(
+    return locate_relative_path(name, env, check_executable, use_pathext) or locate_file_in_path_env(
         name, env, check_executable, use_pathext
     )
 
 
-def locate_relative_path(name, check_executable=False):
-    """Return absolute path by relative file path."""
-    if (name.startswith("." + os.path.sep) or name.startswith(".." + os.path.sep)) and (
-        p := Path(name)
-    ).exists():
-        if check_executable and not is_executable(p):
-            return None
-        return str(p.absolute())
+def locate_relative_path(name, env=None, check_executable=False, use_pathext=False):
+    """Return absolute path by relative file path.
+
+    We should not locate files without prefix (e.g. ``"binfile"``) by security reasons like other shells.
+    If directory has "binfile" it can be called only by providing prefix "./binfile" explicitly.
+    """
+    p = Path(name)
+    if name.startswith("." + os.path.sep) or name.startswith(".." + os.path.sep) or p.is_absolute():
+        possible_names = get_possible_names(p.name, env) if use_pathext else [p.name]
+        for possible_name in possible_names:
+            filepath = p.parent / possible_name
+            try:
+                if not filepath.is_file() or (
+                    check_executable and not is_executable(filepath)
+                ):
+                    continue
+                return str(p.absolute())
+            except PermissionError:
+                continue
 
 
 def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=False):
@@ -111,7 +122,6 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
 
     for path, possible_name in itertools.product(paths, possible_names):
         filepath = Path(path) / possible_name
-
         try:
             if not filepath.is_file() or (
                 check_executable and not is_executable(filepath)
@@ -119,4 +129,4 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
                 continue
             return str(filepath)
         except PermissionError:
-            return
+            continue

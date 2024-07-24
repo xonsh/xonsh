@@ -58,6 +58,11 @@ def test_locate_executable(tmpdir, xession):
         assert locate_executable(f".{os.path.sep}cwd_non_bin_file") is None
         assert locate_executable(f".{os.path.sep}cwd_bin_file.EXE")
         assert locate_executable(f"..{os.path.sep}bindir0{os.path.sep}cwd_bin_file.EXE")
+        assert locate_executable(str(bindir0 / "cwd_bin_file.EXE"))
+        if ON_WINDOWS:
+            assert locate_executable(f".{os.path.sep}cwd_bin_file")
+            assert locate_executable(str(bindir0 / "cwd_bin_file"))
+            assert locate_executable(f"..{os.path.sep}bindir0{os.path.sep}cwd_bin_file")
 
         # From PATH
         assert locate_executable("file1.EXE")
