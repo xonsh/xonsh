@@ -580,9 +580,9 @@ def test_alias_return_command_eval_inside(xession):
 
 
 def test_auto_cd(xession, tmpdir):
-    xession.aliases['cd'] = lambda: 'some_cd_alias'
+    xession.aliases["cd"] = lambda: "some_cd_alias"
     dir = str(tmpdir)
     with xession.env.swap(AUTO_CD=True):
         spec = cmds_to_specs([[dir]], captured="object")[-1]
-    assert spec.alias.__name__ == 'cd'
+    assert spec.alias.__name__ == "cd"
     assert spec.cmd[0] == dir
