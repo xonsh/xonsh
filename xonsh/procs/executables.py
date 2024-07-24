@@ -82,7 +82,7 @@ def locate_file(name, env=None, check_executable=False, use_pathext=False):
 
 def locate_relative_path(name, check_executable=False):
     """Return absolute path by relative file path."""
-    if (name.stratwith("." + os.path.sep) or name.stratwith(".." + os.path.sep)) and (p := Path(name)).exists():
+    if (name.startswith("." + os.path.sep) or name.startswith(".." + os.path.sep)) and (p := Path(name)).exists():
         if check_executable and not is_executable(p):
             return None
         return str(p.absolute())
