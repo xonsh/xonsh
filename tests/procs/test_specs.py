@@ -577,3 +577,12 @@ def test_alias_return_command_eval_inside(xession):
     assert spec.cmd == ["sudo", "echo", "1"]
     assert spec.alias_name == "xsudo"
     assert spec.threadable is True
+
+
+def test_auto_cd(xession, tmpdir):
+    xession.aliases["cd"] = lambda: "some_cd_alias"
+    dir = str(tmpdir)
+    with xession.env.swap(AUTO_CD=True):
+        spec = cmds_to_specs([[dir]], captured="object")[-1]
+    assert spec.alias.__name__ == "cd"
+    assert spec.cmd[0] == dir
