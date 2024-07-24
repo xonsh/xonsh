@@ -1494,6 +1494,7 @@ def test_xonshrc(tmpdir, cmd, exp):
         re.MULTILINE | re.DOTALL,
     ), f"Case: xonsh {cmd},\nExpected: {exp!r},\nResult: {out!r},\nargs={args!r}"
 
+
 def make_executable(path):  # stackoverflow.com/a/30463972
     mode = os.stat(path).st_mode
     mode |= (mode & 0o444) >> 2  # copy R bits to X
