@@ -43,15 +43,17 @@ def test_locate_executable(tmpdir, xession):
     (f := bindir0 / "cwd_bin_file").write_text("binary", encoding="utf8")
     os.chmod(f, 0o777)
 
-
     # Test overlapping file names in different bin directories.
     (f := bindir3 / "file3").write_text("binary", encoding="utf8")
     os.chmod(f, 0o777)
 
     pathext = [".EXE", ".COM"] if ON_WINDOWS else []
-    with xession.env.swap(
-        PATH=[str(bindir1), str(bindir2), str(bindir3)], PATHEXT=pathext
-    ), chdir(str(bindir0)):
+    with (
+        xession.env.swap(
+            PATH=[str(bindir1), str(bindir2), str(bindir3)], PATHEXT=pathext
+        ),
+        chdir(str(bindir0)),
+    ):
         # From current working directory
         assert locate_executable(f".{os.path.sep}cwd_non_bin_file") is None
         assert locate_executable(f".{os.path.sep}cwd_bin_file")

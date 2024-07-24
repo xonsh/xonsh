@@ -77,12 +77,16 @@ def locate_executable(name, env=None):
 
 def locate_file(name, env=None, check_executable=False, use_pathext=False):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
-    return locate_relative_path(name, check_executable) or locate_file_in_path_env(name, env, check_executable, use_pathext)
+    return locate_relative_path(name, check_executable) or locate_file_in_path_env(
+        name, env, check_executable, use_pathext
+    )
 
 
 def locate_relative_path(name, check_executable=False):
     """Return absolute path by relative file path."""
-    if (name.startswith("." + os.path.sep) or name.startswith(".." + os.path.sep)) and (p := Path(name)).exists():
+    if (name.startswith("." + os.path.sep) or name.startswith(".." + os.path.sep)) and (
+        p := Path(name)
+    ).exists():
         if check_executable and not is_executable(p):
             return None
         return str(p.absolute())
