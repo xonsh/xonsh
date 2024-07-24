@@ -13,6 +13,7 @@ This page will help you put a finger on how to do the equivalent task in xonsh.
     * - No special object for represent session.
       - ``__xonsh__``
       - The ``__xonsh__`` object has all about current xonsh session e.g. ``__xonsh__.env``.
+        You can set `X = __xonsh__` to have a shortcut for `X.env` and similar.
     * - ``script.sh``
       - ``script.xsh``
       - The recommended file extension is ``.xsh``.
