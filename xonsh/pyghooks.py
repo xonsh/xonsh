@@ -1600,9 +1600,7 @@ def _command_is_valid(cmd):
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
     except OSError:
         return False
-    return ((cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)) or (
-        os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
-    )
+    return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
 
 
 def _command_is_autocd(cmd):
