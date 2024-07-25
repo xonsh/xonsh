@@ -1596,10 +1596,6 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 
 def _command_is_valid(cmd):
-    try:
-        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except OSError:
-        return False
     return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
 
 
