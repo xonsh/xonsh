@@ -1493,3 +1493,18 @@ def test_xonshrc(tmpdir, cmd, exp):
         out,
         re.MULTILINE | re.DOTALL,
     ), f"Case: xonsh {cmd},\nExpected: {exp!r},\nResult: {out!r},\nargs={args!r}"
+
+
+@skip_if_no_xonsh
+@skip_if_on_windows
+def test_shebang_cr(tmpdir):
+    testdir = tmpdir.mkdir("xonsh_test_dir")
+    testfile = "shebang_cr.xsh"
+    expected_out = "I'm xonsh with shebang␍"
+    (f := testdir / testfile).write_text(
+        f"""#!/usr/bin/env xonsh\r\nprint("{expected_out}")""", encoding="utf8"
+    )
+    os.chmod(f, 0o777)
+    command = f"cd {testdir}; ./{testfile}\n"
+    out, err, rtn = run_xonsh(command)
+    assert out == f"{expected_out}\n"

@@ -8,6 +8,7 @@ from xonsh.procs.executables import (
     locate_executable,
     locate_file,
 )
+from xonsh.tools import chdir
 
 
 def test_get_possible_names():
@@ -24,6 +25,7 @@ def test_get_paths(tmpdir):
 
 
 def test_locate_executable(tmpdir, xession):
+    bindir0 = tmpdir.mkdir("bindir0")  # current working directory
     bindir1 = tmpdir.mkdir("bindir1")
     bindir2 = tmpdir.mkdir("bindir2")
     bindir3 = tmpdir.mkdir("bindir3")
@@ -36,14 +38,35 @@ def test_locate_executable(tmpdir, xession):
         if exefile in executables:
             os.chmod(f, 0o777)
 
+    # Test current working directory.
+    (bindir0 / "cwd_non_bin_file").write_text("binary", encoding="utf8")
+    (f := bindir0 / "cwd_bin_file.EXE").write_text("binary", encoding="utf8")
+    os.chmod(f, 0o777)
+
     # Test overlapping file names in different bin directories.
     (f := bindir3 / "file3").write_text("binary", encoding="utf8")
     os.chmod(f, 0o777)
 
     pathext = [".EXE", ".COM"] if ON_WINDOWS else []
-    with xession.env.swap(
-        PATH=[str(bindir1), str(bindir2), str(bindir3)], PATHEXT=pathext
+    sep = os.path.sep
+
+    with (
+        xession.env.swap(
+            PATH=[str(bindir1), str(bindir2), str(bindir3)], PATHEXT=pathext
+        ),
+        chdir(str(bindir0)),
     ):
+        # From current working directory
+        assert locate_executable(f".{sep}cwd_non_bin_file") is None
+        assert locate_executable(f".{sep}cwd_bin_file.EXE")
+        assert locate_executable(f"..{sep}bindir0{sep}cwd_bin_file.EXE")
+        assert locate_executable(str(bindir0 / "cwd_bin_file.EXE"))
+        if ON_WINDOWS:
+            assert locate_executable(f".{sep}cwd_bin_file")
+            assert locate_executable(str(bindir0 / "cwd_bin_file"))
+            assert locate_executable(f"..{sep}bindir0{sep}cwd_bin_file")
+
+        # From PATH
         assert locate_executable("file1.EXE")
         assert locate_executable("nofile") is None
         assert locate_executable("file5") is None

@@ -50,7 +50,7 @@ table lists built in features and capabilities that various tools may or may not
       -
       - ✓
       - ✓
-    * - Typed variables
+    * - Typed variables and objects
       -
       -
       - ✓
@@ -59,11 +59,11 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
     * - Syntax highlighting
       -
-      -
+      - plugins
       -
       - ✓
       - in notebook
-      - w/ prompt-toolkit
+      - prompt-toolkit
     * - Rich history backend
       -
       -
