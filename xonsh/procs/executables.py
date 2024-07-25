@@ -90,10 +90,7 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
     """
     p = Path(name)
     if (
-        name.startswith("./")
-        or name.startswith("../")
-        or name.startswith(".\\")
-        or name.startswith("..\\")
+        name.startswith(("./", "../", ".\\", "..\\"))
         or p.is_absolute()
     ):
         possible_names = get_possible_names(p.name, env) if use_pathext else [p.name]
