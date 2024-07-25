@@ -89,10 +89,7 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
     If directory has "binfile" it can be called only by providing prefix "./binfile" explicitly.
     """
     p = Path(name)
-    if (
-        name.startswith(("./", "../", ".\\", "..\\", "~/"))
-        or p.is_absolute()
-    ):
+    if name.startswith(("./", "../", ".\\", "..\\", "~/")) or p.is_absolute():
         possible_names = get_possible_names(p.name, env) if use_pathext else [p.name]
         for possible_name in possible_names:
             filepath = p.parent / possible_name
