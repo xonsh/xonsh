@@ -293,7 +293,7 @@ class Completer:
         if completion_context:
             if completion_context.python is not None:
                 prefix = completion_context.python.prefix
-            elif completion_context.commmand is not None:
+            elif completion_context.command is not None:
                 prefix = completion_context.command.prefix
             else:
                 raise RuntimeError("Completion context is empty")
