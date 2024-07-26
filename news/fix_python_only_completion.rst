@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed exception when in python-only completion context.
+* completion: Fixed exception when in python-only completion context (#5632).
 
 **Security:**
 
