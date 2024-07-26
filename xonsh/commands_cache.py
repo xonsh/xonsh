@@ -23,11 +23,6 @@ from xonsh.procs.executables import (
     is_executable_in_windows,
 )
 
-if ON_WINDOWS:
-    from case_insensitive_dict import CaseInsensitiveDict as CacheDict
-else:
-    CacheDict = dict
-
 
 class _Commands(tp.NamedTuple):
     mtime: float
@@ -205,7 +200,7 @@ class CommandsCache(cabc.Mapping):
         # entries at the back.
         paths = get_paths(env)
         if self._update_and_check_changes(paths):
-            all_cmds = CacheDict()
+            all_cmds = dict()
             for cmd, path in self._iter_binaries(paths):
                 # None     -> not in aliases
                 all_cmds[cmd] = (path, None)
