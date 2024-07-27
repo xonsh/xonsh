@@ -168,3 +168,8 @@ def test_env_completer_sort(completer, completers_mock):
         "$WOW", "$WOW", 4, 0, {}, multiline_text="'$WOW'", cursor_index=4
     )
     assert set(comps[0]) == {"$WOW0", "$WOW1", "$MID_WOW", "$SUPER_WOW"}
+
+
+def test_python_only_context(completer, completers_mock):
+    assert completer.complete_line("echo @(") != ()
+    assert completer.complete("", "echo @(", 0, 0, {}, "echo @(", 7) != ()
