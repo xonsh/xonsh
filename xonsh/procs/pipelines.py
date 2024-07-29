@@ -386,10 +386,10 @@ class CommandPipeline:
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
-                if stdout_has_buffer:
-                    sys.stdout.buffer.write(line)
-                else:
+                if isinstance(line, bytes):
                     sys.stdout.write(line.decode(encoding=enc, errors=err))
+                else:
+                    sys.stdout.write(line)
                 sys.stdout.flush()
             # save the raw bytes
             raw_out_lines.append(line)

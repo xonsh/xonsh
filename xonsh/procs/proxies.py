@@ -441,7 +441,9 @@ class ProcProxyThread(threading.Thread):
         # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(
-                open(self.c2pwrite, "wb", -1), encoding=enc, errors=err
+                self.stdout
+                # open(self.c2pwrite, "wb", -1)
+                , encoding=enc, errors=err
             )
         else:
             sp_stdout = sys.stdout
@@ -450,7 +452,9 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
             sp_stderr = io.TextIOWrapper(
-                open(self.errwrite, "wb", -1), encoding=enc, errors=err
+                self.stderr
+                # open(self.errwrite, "wb", -1)
+                , encoding=enc, errors=err
             )
         else:
             sp_stderr = sys.stderr
