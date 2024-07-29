@@ -62,6 +62,8 @@ def SIGNAL_MESSAGES():
 
 def safe_readlines(handle, hint=-1):
     """Attempts to read lines without throwing an error."""
+    if handle is None:
+        return []
     try:
         lines = handle.readlines(hint)
     except OSError:
@@ -386,10 +388,13 @@ class CommandPipeline:
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
-                if isinstance(line, bytes):
-                    sys.stdout.write(line.decode(encoding=enc, errors=err))
+                if stdout_has_buffer:
+                    if sys.stdout.buffer.mode == 'wb':
+                        sys.stdout.buffer.write(line)
+                    else:
+                        sys.stdout.buffer.write(line.decode(encoding=enc, errors=err))
                 else:
-                    sys.stdout.write(line)
+                    sys.stdout.write(line.decode(encoding=enc, errors=err))
                 sys.stdout.flush()
             # save the raw bytes
             raw_out_lines.append(line)
@@ -426,7 +431,10 @@ class CommandPipeline:
         if show_stderr:
             # write bytes to std stream
             if stderr_has_buffer:
-                sys.stderr.buffer.write(b)
+                if sys.stderr.buffer.mode == 'wb':
+                    sys.stderr.buffer.write(b)
+                else:
+                    sys.stderr.buffer.write(b.decode(encoding=enc, errors=err))
             else:
                 sys.stderr.write(b.decode(encoding=enc, errors=err))
             sys.stderr.flush()

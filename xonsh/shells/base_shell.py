@@ -65,6 +65,7 @@ class _TeeStdBuf(io.RawIOBase):
             The postfix to append to the standard buffer.
         """
         self.stdbuf = stdbuf
+        self.mode = stdbuf.mode
         self.membuf = membuf
         env = XSH.env
         self.encoding = env.get("XONSH_ENCODING") if encoding is None else encoding

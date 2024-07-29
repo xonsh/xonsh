@@ -822,20 +822,20 @@ def _safe_pipe_properties(fd, use_tty=False):
     # protocols, like git and ssh, which expect unix line endings.
     # see https://mail.python.org/pipermail/python-list/2013-June/650460.html
     # for more details and the following solution.
-    props = xli.termios.tcgetattr(fd)
-    props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
-    xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
-    # newly created PTYs have a stardard size (24x80), set size to the same size
-    # than the current terminal
-    winsize = None
-    if sys.stdin.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    elif sys.stdout.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    elif sys.stderr.isatty():
-        winsize = xli.fcntl.ioctl(sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    if winsize is not None:
-        xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
+    # props = xli.termios.tcgetattr(fd)
+    # props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
+    # xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
+    # # newly created PTYs have a stardard size (24x80), set size to the same size
+    # # than the current terminal
+    # winsize = None
+    # if sys.stdin.isatty():
+    #     winsize = xli.fcntl.ioctl(sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+    # elif sys.stdout.isatty():
+    #     winsize = xli.fcntl.ioctl(sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+    # elif sys.stderr.isatty():
+    #     winsize = xli.fcntl.ioctl(sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+    # if winsize is not None:
+    #     xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
 
 
 def _update_last_spec(last):
@@ -885,6 +885,30 @@ def _last_spec_update_captured(last: SubprocSpec):
         _make_last_spec_captured(last)
 
 
+import os
+import concurrent.futures
+import tempfile
+
+
+def named_pipe():
+    def read_stream(fifo_filename):
+        return open(fifo_filename, 'rb')
+
+    def write_stream(fifo_filename):
+        return open(fifo_filename, 'wb')
+
+    fifo_path = tempfile.mktemp()
+    os.mkfifo(fifo_path)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        creaete_read = executor.submit(read_stream, fifo_path)
+        create_write = executor.submit(write_stream, fifo_path)
+        r = creaete_read.result()
+        w = create_write.result()
+    # print(r, w)
+    return r, w
+
+
 def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
@@ -897,9 +921,10 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = True
     elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
-        r, w = os.pipe()
-        last.stdout = safe_open(w, "wb")
-        last.captured_stdout = safe_open(r, "rb")
+        # r, w = os.pipe()
+        r, w = named_pipe()
+        last.stdout = w #safe_open(w, "wb")
+        last.captured_stdout = r #safe_open(r, "rb")
     elif XSH.stdout_uncaptured is not None:
         last.universal_newlines = True
         last.stdout = XSH.stdout_uncaptured
@@ -910,20 +935,22 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.captured_stdout = ConsoleParallelReader(1)
     else:
         last.universal_newlines = True
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
+        # r, w = xli.pty.openpty() if use_tty else os.pipe()
+        r, w = named_pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = safe_open(w, "wb")
+        last.stdout = w #safe_open(w, "wb")
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = safe_open(r, "rb")
+        last.captured_stdout = r #safe_open(r, "rb")
     # set standard error
     if last.stderr is not None:
         pass
     elif captured == "stdout":
         pass
     elif captured == "object":
-        r, w = os.pipe()
-        last.stderr = safe_open(w, "wb")
-        last.captured_stderr = safe_open(r, "rb")
+        # r, w = os.pipe()
+        r, w = named_pipe()
+        last.stderr = w #safe_open(w, "wb")
+        last.captured_stderr = r # safe_open(r, "rb")
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
@@ -931,11 +958,12 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
     else:
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
+        # r, w = xli.pty.openpty() if use_tty else os.pipe()
+        r, w = named_pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stderr = safe_open(w, "wb")
+        last.stderr = w #safe_open(w, "wb")
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stderr = safe_open(r, "rb")
+        last.captured_stderr = r # safe_open(r, "rb")
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.
