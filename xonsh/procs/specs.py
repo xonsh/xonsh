@@ -13,7 +13,6 @@ import subprocess
 import sys
 
 import xonsh.lib.lazyasd as xl
-import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
@@ -885,17 +884,16 @@ def _last_spec_update_captured(last: SubprocSpec):
         _make_last_spec_captured(last)
 
 
-import os
 import concurrent.futures
 import tempfile
 
 
 def named_pipe():
     def read_stream(fifo_filename):
-        return open(fifo_filename, 'rb')
+        return open(fifo_filename, "rb")
 
     def write_stream(fifo_filename):
-        return open(fifo_filename, 'wb')
+        return open(fifo_filename, "wb")
 
     fifo_path = tempfile.mktemp()
     os.mkfifo(fifo_path)
@@ -923,8 +921,8 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = False
         # r, w = os.pipe()
         r, w = named_pipe()
-        last.stdout = w #safe_open(w, "wb")
-        last.captured_stdout = r #safe_open(r, "rb")
+        last.stdout = w  # safe_open(w, "wb")
+        last.captured_stdout = r  # safe_open(r, "rb")
     elif XSH.stdout_uncaptured is not None:
         last.universal_newlines = True
         last.stdout = XSH.stdout_uncaptured
@@ -938,9 +936,9 @@ def _make_last_spec_captured(last: SubprocSpec):
         # r, w = xli.pty.openpty() if use_tty else os.pipe()
         r, w = named_pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = w #safe_open(w, "wb")
+        last.stdout = w  # safe_open(w, "wb")
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = r #safe_open(r, "rb")
+        last.captured_stdout = r  # safe_open(r, "rb")
     # set standard error
     if last.stderr is not None:
         pass
@@ -949,8 +947,8 @@ def _make_last_spec_captured(last: SubprocSpec):
     elif captured == "object":
         # r, w = os.pipe()
         r, w = named_pipe()
-        last.stderr = w #safe_open(w, "wb")
-        last.captured_stderr = r # safe_open(r, "rb")
+        last.stderr = w  # safe_open(w, "wb")
+        last.captured_stderr = r  # safe_open(r, "rb")
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
@@ -961,9 +959,9 @@ def _make_last_spec_captured(last: SubprocSpec):
         # r, w = xli.pty.openpty() if use_tty else os.pipe()
         r, w = named_pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stderr = w #safe_open(w, "wb")
+        last.stderr = w  # safe_open(w, "wb")
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stderr = r # safe_open(r, "rb")
+        last.captured_stderr = r  # safe_open(r, "rb")
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.
