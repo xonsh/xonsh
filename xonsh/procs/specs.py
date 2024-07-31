@@ -921,10 +921,12 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = True
     elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
-        # r, w = os.pipe()
-        r, w = named_pipe()
-        last.stdout = w #safe_open(w, "wb")
-        last.captured_stdout = r #safe_open(r, "rb")
+        r, w = os.pipe()
+        # r, w = named_pipe()
+        # last.stdout = w #safe_open(w, "wb")
+        # last.captured_stdout = r #safe_open(r, "rb")
+        last.stdout = safe_open(w, "wb")
+        last.captured_stdout = safe_open(r, "rb")
     elif XSH.stdout_uncaptured is not None:
         last.universal_newlines = True
         last.stdout = XSH.stdout_uncaptured
@@ -935,12 +937,14 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.captured_stdout = ConsoleParallelReader(1)
     else:
         last.universal_newlines = True
-        # r, w = xli.pty.openpty() if use_tty else os.pipe()
-        r, w = named_pipe()
+        r, w = xli.pty.openpty() if use_tty else os.pipe()
+        # r, w = named_pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = w #safe_open(w, "wb")
+        last.stdout = safe_open(w, "wb")
+        # last.stdout = w
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = r #safe_open(r, "rb")
+        last.captured_stdout = safe_open(r, "rb")
+        # last.captured_stdout = r #safe_open(r, "rb")
     # set standard error
     if last.stderr is not None:
         pass
