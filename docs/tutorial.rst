@@ -1363,32 +1363,6 @@ Or implement logic to run the right command:
     >>> vi file
 
 
-ExecAlias
----------
-
-If the string is representing a block of xonsh code, the alias will be registered
-as an ``ExecAlias``, which is a callable alias. This block of code will then be
-executed whenever the alias is run. The arguments are available in the list ``$args``
-or by the index in ``$arg<n>`` environment variables.
-
-.. code-block:: xonshcon
-
-    >>> aliases['answer'] = 'echo @(21+21)'
-    >>> aliases['piu'] = 'pip install -U @($args)'
-    >>> aliases['cdls'] = 'cd $arg0 && ls'
-
-.. warning:: You need to add ``@($args)`` manually if you need arguments.
-
-.. code-block:: xonshcon
-
-    >>> aliases['careful'] = 'echo @("all args will be ignored")'
-    >>> aliases['better'] = 'echo @("the arguments are: ") @($args)'
-
-.. note::
-
-   To add multiple aliases there is merge operator: ``aliases |= {'e': 'echo', 'g': 'git'}``.
-
-
 Callable Aliases
 ----------------
 Lastly, if an alias value is a function (or other callable), then this
