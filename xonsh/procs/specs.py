@@ -822,20 +822,20 @@ def _safe_pipe_properties(fd, use_tty=False):
     # protocols, like git and ssh, which expect unix line endings.
     # see https://mail.python.org/pipermail/python-list/2013-June/650460.html
     # for more details and the following solution.
-    # props = xli.termios.tcgetattr(fd)
-    # props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
-    # xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
-    # # newly created PTYs have a stardard size (24x80), set size to the same size
-    # # than the current terminal
-    # winsize = None
-    # if sys.stdin.isatty():
-    #     winsize = xli.fcntl.ioctl(sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    # elif sys.stdout.isatty():
-    #     winsize = xli.fcntl.ioctl(sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    # elif sys.stderr.isatty():
-    #     winsize = xli.fcntl.ioctl(sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"0000")
-    # if winsize is not None:
-    #     xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
+    props = xli.termios.tcgetattr(fd)
+    props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
+    xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
+    # newly created PTYs have a stardard size (24x80), set size to the same size
+    # than the current terminal
+    winsize = None
+    if sys.stdin.isatty():
+        winsize = xli.fcntl.ioctl(sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+    elif sys.stdout.isatty():
+        winsize = xli.fcntl.ioctl(sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+    elif sys.stderr.isatty():
+        winsize = xli.fcntl.ioctl(sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+    if winsize is not None:
+        xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
 
 
 def _update_last_spec(last):
