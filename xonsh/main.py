@@ -334,7 +334,7 @@ def _load_rc_files(shell_kwargs: dict, args, env, execer, ctx):
 
 def _autoload_xontribs(env):
     events.on_timingprobe.fire(name="pre_xontribs_autoload")
-    disabled = env.get("XONTRIBS_AUTOLOAD_DISABLED", False)
+    disabled = env.get("XONTRIBS_AUTOLOAD", "True") == "False"
     if disabled is True:
         return
     blocked_xontribs = disabled or ()
