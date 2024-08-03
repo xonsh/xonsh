@@ -13,7 +13,7 @@ import xonsh.procs.pipelines as xpp
 from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
-from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
+from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context, XontribSetting
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
@@ -334,7 +334,9 @@ def _load_rc_files(shell_kwargs: dict, args, env, execer, ctx):
 
 def _autoload_xontribs(env):
     events.on_timingprobe.fire(name="pre_xontribs_autoload")
-    disabled = env.get("XONTRIBS_AUTOLOAD", "True") == "False"
+    disabled = XontribSetting.XONTRIBS_AUTOLOAD.convert(
+        env.get("XONTRIBS_AUTOLOAD", XontribSetting.XONTRIBS_AUTOLOAD.default)
+    )
     if disabled is True:
         return
     blocked_xontribs = disabled or ()
