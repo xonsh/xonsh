@@ -441,8 +441,7 @@ class ProcProxyThread(threading.Thread):
         # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(
-                self.stdout,
-                # open(self.c2pwrite, "wb", -1)
+                open(self.c2pwrite, "wb", -1) if isinstance(self.stdout, int) else self.stdout,
                 encoding=enc,
                 errors=err,
             )
@@ -453,8 +452,7 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
             sp_stderr = io.TextIOWrapper(
-                self.stderr,
-                # open(self.errwrite, "wb", -1)
+                open(self.errwrite, "wb", -1) if isinstance(self.stderr, int) else self.errwrite,
                 encoding=enc,
                 errors=err,
             )
@@ -518,6 +516,8 @@ class ProcProxyThread(threading.Thread):
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
         handles = [self.stdout, self.stderr]
+        # if self.stdout:
+        #     print('Close', self.stdout, self.stdout.fileno(), file=sys.__stdout__)
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
 

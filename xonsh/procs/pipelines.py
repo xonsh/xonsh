@@ -257,6 +257,11 @@ class CommandPipeline:
         if hasattr(stdout, "buffer"):
             stdout = stdout.buffer
         if stdout is not None and not isinstance(stdout, self.nonblocking):
+            # try:
+            #     fn = stdout.fileno()
+            # except:
+            #     fn=0
+            # print('NonBlockingFDReader', spec.alias, spec.cmd, stdout, fn, file=sys.__stdout__)
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
         if (
             not stdout
@@ -481,6 +486,8 @@ class CommandPipeline:
         """
         if self.ended:
             return
+        # if getattr(self.spec, 'is_redirect', False):
+        #     tee_output = False
         self._end(tee_output=tee_output)
         self._return_terminal()
 
