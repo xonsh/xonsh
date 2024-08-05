@@ -284,9 +284,12 @@ class CommandPipeline:
                     yield from lines
                     self.end(tee_output=False)
                 elif self.captured == "stdout":
-                    b = stdout.read()
-                    s = self._decode_uninew(b, universal_newlines=True)
-                    self.lines = s.splitlines(keepends=True)
+                    if stdout:
+                        b = stdout.read()
+                        s = self._decode_uninew(b, universal_newlines=True)
+                        self.lines = s.splitlines(keepends=True)
+                    else:
+                        self.lines = []
             return
         # get the correct stderr
         stderr = proc.stderr
