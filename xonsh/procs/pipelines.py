@@ -394,7 +394,9 @@ class CommandPipeline:
             # write to stdout line ASAP, if needed
             if stream:
                 if stdout_has_buffer:
-                    if "b" in sys.stdout.buffer.mode:
+                    # self._std_is_binary
+                    buf_mode = getattr(sys.stdout.buffer, "mode", None)
+                    if (buf_mode and 'b' in buf_mode) or getattr(sys.stdout.buffer, "_std_is_binary", False):
                         sys.stdout.buffer.write(line)
                     else:
                         sys.stdout.buffer.write(line.decode(encoding=enc, errors=err))
@@ -436,7 +438,8 @@ class CommandPipeline:
         if show_stderr:
             # write bytes to std stream
             if stderr_has_buffer:
-                if "b" in sys.stderr.buffer.mode:
+                buf_mode = getattr(sys.stderr.buffer, "mode", None)
+                if (buf_mode and 'b' in buf_mode) or getattr(sys.stderr.buffer, "_std_is_binary", False):
                     sys.stderr.buffer.write(b)
                 else:
                     sys.stderr.buffer.write(b.decode(encoding=enc, errors=err))
