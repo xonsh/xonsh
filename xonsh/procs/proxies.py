@@ -456,7 +456,7 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = io.TextIOWrapper(
                 open(self.errwrite, "wb", -1)
                 if isinstance(self.stderr, int)
-                else self.errwrite,
+                else self.stderr,
                 encoding=enc,
                 errors=err,
             )
