@@ -523,7 +523,11 @@ class ProcProxyThread(threading.Thread):
         # if self.stdout:
         #     print('Close', self.stdout, self.stdout.fileno(), file=sys.__stdout__)
         for handle in handles:
-            if getattr(handle, 'name') and isinstance(handle.name, str) and handle.name.startswith('/'):
+            if (
+                handle.name
+                and isinstance(handle.name, str)
+                and handle.name.startswith("/")
+            ):
                 continue
             safe_fdclose(handle, cache=self._closed_handle_cache)
 
