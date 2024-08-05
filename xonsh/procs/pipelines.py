@@ -394,7 +394,7 @@ class CommandPipeline:
             # write to stdout line ASAP, if needed
             if stream:
                 if stdout_has_buffer:
-                    if 'b' in sys.stdout.buffer.mode:
+                    if "b" in sys.stdout.buffer.mode:
                         sys.stdout.buffer.write(line)
                     else:
                         sys.stdout.buffer.write(line.decode(encoding=enc, errors=err))
@@ -436,7 +436,7 @@ class CommandPipeline:
         if show_stderr:
             # write bytes to std stream
             if stderr_has_buffer:
-                if 'b' in sys.stderr.buffer.mode:
+                if "b" in sys.stderr.buffer.mode:
                     sys.stderr.buffer.write(b)
                 else:
                     sys.stderr.buffer.write(b.decode(encoding=enc, errors=err))
