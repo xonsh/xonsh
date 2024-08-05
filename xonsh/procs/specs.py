@@ -240,6 +240,7 @@ def _redirect_streams(r, loc=None):
     if mode == "r":
         stdin = safe_open(loc, mode)
     elif mode in _WRITE_MODES:
+        mode += 'b'
         if orig in _REDIR_ALL:
             stdout = stderr = safe_open(loc, mode)
         elif orig in _REDIR_OUT:
