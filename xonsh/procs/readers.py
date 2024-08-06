@@ -415,7 +415,9 @@ def safe_fdclose(handle, cache=None):
         pass
     else:
         try:
+            # print(f'close {handle}')
             handle.close()
+            # print(f'/close {handle}')
         except OSError:
             status = False
     if cache is not None:

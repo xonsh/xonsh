@@ -519,9 +519,9 @@ class ProcProxyThread(threading.Thread):
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
-        handles = [self.stdout, self.stderr]
-        # if self.stdout:
-        #     print('Close', self.stdout, self.stdout.fileno(), file=sys.__stdout__)
+        handles = [sp_stdout, sp_stderr]
+        # # if self.stdout:
+        # #     print('Close', self.stdout, self.stdout.fileno(), file=sys.__stdout__)
         for handle in handles:
             # if isinstance(
             #     getattr(handle, "name", None), str
