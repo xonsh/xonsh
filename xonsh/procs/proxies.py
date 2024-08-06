@@ -442,7 +442,7 @@ class ProcProxyThread(threading.Thread):
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(
                 open(self.c2pwrite, "wb", -1)
-                if isinstance(self.stdout, int)
+                if isinstance(self.stdout, int) or self.stdout is None
                 else self.stdout,
                 encoding=enc,
                 errors=err,
@@ -455,7 +455,7 @@ class ProcProxyThread(threading.Thread):
         elif self.errwrite != -1:
             sp_stderr = io.TextIOWrapper(
                 open(self.errwrite, "wb", -1)
-                if isinstance(self.stderr, int)
+                if isinstance(self.stderr, int) or self.stderr is None
                 else self.stderr,
                 encoding=enc,
                 errors=err,
