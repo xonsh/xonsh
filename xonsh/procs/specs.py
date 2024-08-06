@@ -699,7 +699,6 @@ class SubprocSpec:
             if isinstance(c, tuple):
                 streams = _redirect_streams(*c)
                 self.stdin, self.stdout, self.stderr = streams
-                # self.is_redirect = True
             else:
                 new_cmd.append(c)
         self.cmd = new_cmd

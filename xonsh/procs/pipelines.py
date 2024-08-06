@@ -496,8 +496,6 @@ class CommandPipeline:
         """
         if self.ended:
             return
-        # if getattr(self.spec, 'is_redirect', False):
-        #     tee_output = False
         self._end(tee_output=tee_output)
         self._return_terminal()
 
