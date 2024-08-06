@@ -62,6 +62,8 @@ def SIGNAL_MESSAGES():
 
 def safe_readlines(handle, hint=-1):
     """Attempts to read lines without throwing an error."""
+    if handle is None:
+        return []
     try:
         lines = handle.readlines(hint)
     except OSError:
