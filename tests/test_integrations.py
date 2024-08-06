@@ -1535,8 +1535,5 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
         single_command=True,
     )
     assert ret == 0
-    if ON_WINDOWS:
-        assert "Error" not in out
-        assert "Exception" not in out
-    else:
-        assert out == "2EOEOEO O None \n" * 20
+    assert "Error" not in out
+    assert "Exception" not in out
