@@ -1524,6 +1524,7 @@ for i in range(0, 20):
 """
 ]
 
+
 @pytest.mark.parametrize("test_code", test_code)
 def test_callable_alias_no_bad_file_descriptor(test_code):
     """Test for #5631: no exceptions during any kind of capturing of callable alias."""
@@ -1535,7 +1536,7 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
     )
     assert ret == 0
     if ON_WINDOWS:
-        assert 'Error' not in out
-        assert 'Exception' not in out
+        assert "Error" not in out
+        assert "Exception" not in out
     else:
-        assert out == '2EOEOEO O None \n'*20
+        assert out == "2EOEOEO O None \n" * 20
