@@ -1508,3 +1508,34 @@ def test_shebang_cr(tmpdir):
     command = f"cd {testdir}; ./{testfile}\n"
     out, err, rtn = run_xonsh(command)
     assert out == f"{expected_out}\n"
+
+
+test_code = [
+    """
+$XONSH_SHOW_TRACEBACK = True
+@aliases.register
+def _e():
+    echo -n O
+    echo -n E 1>2
+
+for i in range(0, 20):
+    echo -n 2
+    print($(e), !(e), $[e], ![e])
+"""
+]
+
+@pytest.mark.parametrize("test_code", test_code)
+def test_callable_alias_no_bad_file_descriptor(test_code):
+    """Test for #5631: no exceptions during any kind of capturing of callable alias."""
+
+    out, err, ret = run_xonsh(
+        test_code,
+        interactive=True,
+        single_command=True,
+    )
+    assert ret == 0
+    if ON_WINDOWS:
+        assert 'Error' not in out
+        assert 'Exception' not in out
+    else:
+        assert out == '2EOEOEO O None \n'*20
