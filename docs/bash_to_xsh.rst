@@ -1,6 +1,6 @@
 Bash to Xonsh Translation Guide
 ================================
-As you have probably figured out by now, xonsh is not POSIX compliant.
+Xonsh relies primarily on the Python syntax and is not a suitable replacement for `sh` and is thus considered a non-POSIX shell.
 This page provides xonsh equivalents for common patterns in Bash.
 
 .. list-table::
