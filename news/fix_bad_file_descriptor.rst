@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed "Bad file descriptor" in case of callable alias with execx invocation inside e.g. ExecAlias.
+* Fixed "Bad file descriptor" in case of callable alias with execx invocation inside e.g. ExecAlias (#5645).
 
 **Security:**
 
