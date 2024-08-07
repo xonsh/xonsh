@@ -1529,6 +1529,7 @@ for i in range(0, 20):
 """
 ]
 
+
 @skip_if_on_windows
 @pytest.mark.parametrize("test_code", test_code)
 def test_callable_alias_no_bad_file_descriptor(test_code):
