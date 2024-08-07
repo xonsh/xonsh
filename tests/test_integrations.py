@@ -1514,12 +1514,17 @@ test_code = [
     """
 $XONSH_SHOW_TRACEBACK = True
 @aliases.register
-def _e():
+def _e(a,i,o,e):
     echo -n O
     echo -n E 1>2
+    execx("echo -n O")
+    execx("echo -n E 1>2")
+    print("o")
+    print("O", file=o)
+    print("E", file=e)
 
 for i in range(0, 20):
-    echo -n 2
+    echo -n o
     print($(e), !(e), $[e], ![e])
 """
 ]
