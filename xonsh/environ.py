@@ -1357,12 +1357,12 @@ class InterpreterSetting(Xettings):
 class XontribSetting(Xettings):
     """Xontrib Settings"""
 
-    XONTRIBS_AUTOLOAD_DISABLED = Var.with_default(
-        default=False,
+    XONTRIBS_AUTOLOAD = Var.with_default(
+        default=True,
         type_str="bool",
         doc="""\
     Controls auto-loading behaviour of xontrib packages at the startup.
-    * Set this to ``True`` to disable autoloading completely.
+    * Set this to ``False`` to disable autoloading completely.
     * Setting this to a list of xontrib names will block loading those specifically.
     """,
         doc_default="""\
