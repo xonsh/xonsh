@@ -1519,6 +1519,9 @@ def _e(a,i,o,e):
     echo -n E 1>2
     execx("echo -n O")
     execx("echo -n E 1>2")
+    print("o")
+    print("O", file=o)
+    print("E", file=e)
 
 for i in range(0, 20):
     echo -n o
@@ -1526,7 +1529,7 @@ for i in range(0, 20):
 """
 ]
 
-
+@skip_if_on_windows
 @pytest.mark.parametrize("test_code", test_code)
 def test_callable_alias_no_bad_file_descriptor(test_code):
     """Test for #5631: no exceptions during any kind of capturing of callable alias."""
