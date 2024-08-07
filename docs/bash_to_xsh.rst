@@ -1,7 +1,7 @@
 Bash to Xonsh Translation Guide
 ================================
 As you have probably figured out by now, xonsh is not POSIX compliant.
-This page will help you put a finger on how to do the equivalent task in xonsh.
+This page provides xonsh equivalents for common patterns in Bash.
 
 .. list-table::
     :widths: 30 30 40
