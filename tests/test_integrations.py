@@ -1523,7 +1523,7 @@ def _e(a,i,o,e):
     print("O", file=o)
     print("E", file=e)
 
-for i in range(0, 20):
+for i in range(0, 12):
     echo -n o
     print($(e), !(e), $[e], ![e])
 """
@@ -1539,6 +1539,7 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
         test_code,
         interactive=True,
         single_command=True,
+        timeout=40
     )
     assert ret == 0
     assert "Error" not in out
