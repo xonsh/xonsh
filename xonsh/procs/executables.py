@@ -83,7 +83,7 @@ def locate_executable(name, env=None, use_path_cache=True, use_dir_session_cache
 
 class PathCache:
     is_dirty = True
-    dir_cache = dict()
+    dir_cache: dict[str, list] = dict()
 
     @classmethod
     def get_clean(cls, env):
