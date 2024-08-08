@@ -1443,7 +1443,7 @@ class PromptSetting(Xettings):
         is_string_or_callable,
         ensure_string,
         ensure_string,
-        "{BACKGROUND_#222222} {RESET}",
+        " ",
         "Prompt text for 2nd+ lines of input, may be str or function which "
         "returns a str.",
     )

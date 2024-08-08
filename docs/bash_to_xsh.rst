@@ -1,11 +1,7 @@
 Bash to Xonsh Translation Guide
 ================================
-As you have probably figured out by now, xonsh is not ``sh``-lang compliant.
-If your muscles have memorized all of the Bash prestidigitations, this page
-will help you put a finger on how to do the equivalent task in xonsh.
-
-For shell scripts, the recommended file extension is ``xsh``, and shebang
-line is ``#!/usr/bin/env xonsh``.
+Xonsh relies primarily on the Python syntax and is not a suitable replacement for `sh` and is thus considered a non-POSIX shell.
+This page provides xonsh equivalents for common patterns in Bash.
 
 .. list-table::
     :widths: 30 30 40
@@ -14,6 +10,16 @@ line is ``#!/usr/bin/env xonsh``.
     * - Bash
       - Xonsh
       - Notes
+    * - No special object for represent session.
+      - ``__xonsh__``
+      - The ``__xonsh__`` object has all about current xonsh session e.g. ``__xonsh__.env``.
+        You can set ``X = __xonsh__`` to have a shortcut for ``X.env`` and similar.
+    * - ``script.sh``
+      - ``script.xsh``
+      - The recommended file extension is ``.xsh``.
+    * - ``#!/bin/bash``
+      - ``#!/usr/bin/env xonsh``
+      - Use ``xonsh`` in the shebang.
     * - ``echo --arg="val"``
 
         ``echo {}``
@@ -33,7 +39,8 @@ line is ``#!/usr/bin/env xonsh``.
         characters, words or brackets.
     * - ``IFS``
       - ``$XONSH_SUBPROC_OUTPUT_FORMAT``
-      - Changing the output representation and splitting.
+      - Changing the output representation and splitting. Also take a look into ``DecoratorAlias``
+        to have an ability to return object e.g. ``j = $(@json echo '{}')``.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
@@ -59,7 +66,7 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``ENV1=VAL1 command``
       - ``$ENV1=VAL1 command``
 
-        or ``with ${...}.swap(ENV1=VAL1): command``
+        or ``with __xonsh__.env.swap(ENV1=VAL1): command``
       - Set temporary environment variable(s) and execute the command.
         Use the second notation with an indented block to execute many commands in the same context.
     * - ``alias ll='ls -la'``
@@ -135,7 +142,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Xonsh publishes a handful of containers, primarily targeting CI and automation use cases.
         All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`_.
     * - ``exit 1``
-      - ``exit(1)``
+      - ``exit 1`` or ``exit(1)``
       - Exiting from the current script.
 
 To understand how xonsh executes the subprocess commands try
