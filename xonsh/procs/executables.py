@@ -171,33 +171,26 @@ def locate_file_in_path_env(
     path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
     possible_names = get_possible_names(name, env) if use_pathext else [name]
 
-    if path_to_list and (len(possible_names) > 2):
-        for path in paths:
-            if path in path_to_list:
-                f = []
-                for _dirpath, _dirnames, filenames in walk(path):
-                    f.extend(filenames)
-                    break  # no recursion into subdir
-                for possible_name in possible_names:
-                    if possible_name not in f:
-                        continue
-                    if found := check_possible_name(
-                        path, possible_name, check_executable
-                    ):
-                        return found
-                    else:
-                        continue
-            else:
-                for possible_name in possible_names:
-                    if found := check_possible_name(
-                        path, possible_name, check_executable
-                    ):
-                        return found
-                    else:
-                        continue
-    else:
-        for path, possible_name in itertools.product(paths, possible_names):
-            if found := check_possible_name(path, possible_name, check_executable):
-                return found
-            else:
-                continue
+    for path in paths:
+        if path in path_to_list:
+            f = []
+            for _dirpath, _dirnames, filenames in walk(path):
+                f.extend(filenames)
+                break  # no recursion into subdir
+            for possible_name in possible_names:
+                if possible_name not in f:
+                    continue
+                if found := check_possible_name(
+                    path, possible_name, check_executable
+                ):
+                    return found
+                else:
+                    continue
+        else:
+            for possible_name in possible_names:
+                if found := check_possible_name(
+                    path, possible_name, check_executable
+                ):
+                    return found
+                else:
+                    continue
