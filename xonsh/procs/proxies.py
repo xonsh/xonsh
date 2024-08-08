@@ -519,7 +519,10 @@ class ProcProxyThread(threading.Thread):
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
-        handles = [sp_stdout, sp_stderr]
+        if xt.ON_WINDOWS:
+            handles = [self.stdout, self.stderr]
+        else:
+            handles = [sp_stdout, sp_stderr]
         # # if self.stdout:
         # #     print('Close', self.stdout, self.stdout.fileno(), file=sys.__stdout__)
         for handle in handles:
