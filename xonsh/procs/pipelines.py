@@ -257,11 +257,6 @@ class CommandPipeline:
         if hasattr(stdout, "buffer"):
             stdout = stdout.buffer
         if stdout is not None and not isinstance(stdout, self.nonblocking):
-            # try:
-            #     fn = stdout.fileno()
-            # except:
-            #     fn=0
-            # print('NonBlockingFDReader', spec.alias, spec.cmd, stdout, fn, file=sys.__stdout__)
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
         if (
             not stdout
@@ -394,7 +389,6 @@ class CommandPipeline:
             # write to stdout line ASAP, if needed
             if stream:
                 if stdout_has_buffer:
-                    # self._std_is_binary
                     buf_mode = getattr(sys.stdout.buffer, "mode", None)
                     if (buf_mode and "b" in buf_mode) or getattr(
                         sys.stdout.buffer, "_std_is_binary", False
