@@ -192,7 +192,7 @@ def locate_file_in_path_env(
     ext_count = len(possible_names)
 
     for path in paths:
-        if path in dir_to_cache:  # use session dir cache
+        if dir_to_cache and path in dir_to_cache:  # use session dir cache
             if not (
                 f := PathCache.get_dir_cached(path)
             ):  # not cached, scan the dir ...
@@ -208,7 +208,7 @@ def locate_file_in_path_env(
                 else:
                     continue
         elif (
-            path in path_to_list and ext_count > 2
+            ext_count > 2 and path_to_list and path in path_to_list
         ):  # list a dir vs checking many files
             f = []
             for _dirpath, _dirnames, filenames in walk(path):
