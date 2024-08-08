@@ -84,6 +84,7 @@ def locate_executable(name, env=None, use_path_cache=True, use_dir_session_cache
 
 class PathCache:
     is_dirty = True
+    dir_cache = dict()
 
     @classmethod
     def get_clean(cls, env):
@@ -92,6 +93,14 @@ class PathCache:
             cls.clean_paths = tuple(clear_paths(env_path))
             cls.is_dirty = False
         return cls.clean_paths
+
+    @classmethod
+    def get_dir_cached(cls, path):
+        return cls.dir_cache.get(path,[])
+
+    @classmethod
+    def set_dir_cached(cls, path, file_list):
+        cls.dir_cache[path] = file_list
 
 
 def locate_file(
