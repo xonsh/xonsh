@@ -440,10 +440,12 @@ class ProcProxyThread(threading.Thread):
             sp_stdin = sys.stdin
         # stdout
         if self.c2pwrite != -1:
+            if xt.ON_WINDOWS:
+                open_stdout = open(self.c2pwrite, "wb", -1)
+            else:
+                open_stdout = open(self.c2pwrite, "wb", -1) if isinstance(self.stdout, int) or self.stdout is None else self.stdout
             sp_stdout = io.TextIOWrapper(
-                open(self.c2pwrite, "wb", -1)
-                if isinstance(self.stdout, int) or self.stdout is None
-                else self.stdout,
+                open_stdout,
                 encoding=enc,
                 errors=err,
             )
@@ -453,10 +455,12 @@ class ProcProxyThread(threading.Thread):
         if self.errwrite == self.c2pwrite:
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
+            if xt.ON_WINDOWS:
+                open_stderr = open(self.errwrite, "wb", -1)
+            else:
+                open_stderr = open(self.errwrite, "wb", -1) if isinstance(self.stderr, int) or self.stderr is None else self.stderr
             sp_stderr = io.TextIOWrapper(
-                open(self.errwrite, "wb", -1)
-                if isinstance(self.stderr, int) or self.stderr is None
-                else self.stderr,
+                open_stderr,
                 encoding=enc,
                 errors=err,
             )
