@@ -444,7 +444,11 @@ class ProcProxyThread(threading.Thread):
                 # This split was made during solving #5645. We need more eyes to improve this logic for Windows.
                 open_stdout = open(self.c2pwrite, "wb", -1)
             else:
-                open_stdout = open(self.c2pwrite, "wb", -1) if isinstance(self.stdout, int) or self.stdout is None else self.stdout
+                open_stdout = (
+                    open(self.c2pwrite, "wb", -1)
+                    if isinstance(self.stdout, int) or self.stdout is None
+                    else self.stdout
+                )
             sp_stdout = io.TextIOWrapper(
                 open_stdout,
                 encoding=enc,
@@ -460,7 +464,11 @@ class ProcProxyThread(threading.Thread):
                 # This split was made during solving #5645. We need more eyes to improve this logic for Windows.
                 open_stderr = open(self.errwrite, "wb", -1)
             else:
-                open_stderr = open(self.errwrite, "wb", -1) if isinstance(self.stderr, int) or self.stderr is None else self.stderr
+                open_stderr = (
+                    open(self.errwrite, "wb", -1)
+                    if isinstance(self.stderr, int) or self.stderr is None
+                    else self.stderr
+                )
             sp_stderr = io.TextIOWrapper(
                 open_stderr,
                 encoding=enc,
