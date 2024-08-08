@@ -146,14 +146,14 @@ def test_xonsh_win_path_dirs_to_list(tmpdir, xession):
 
     env["XONSH_WIN_PATH_DIRS_TO_LIST"] = None
     t0 = ttime()
-    for i in range(100):
+    for _i in range(100):
         f = locate_executable("nothing")
     t1 = ttime()
     dur1 = (t1 - t0) / ns
 
     env["XONSH_WIN_PATH_DIRS_TO_LIST"] = xonsh_win_path_dirs_to_list
     t0 = ttime()
-    for i in range(100):
+    for _i in range(100):
         f = locate_executable("nothing")
     t1 = ttime()
     dur2 = (t1 - t0) / ns
