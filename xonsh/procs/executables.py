@@ -1,6 +1,5 @@
 """Interfaces to locate executable files on file system."""
 
-import itertools
 import os
 from pathlib import Path
 
@@ -96,7 +95,7 @@ class PathCache:
 
     @classmethod
     def get_dir_cached(cls, path):
-        return cls.dir_cache.get(path,[])
+        return cls.dir_cache.get(path, [])
 
     @classmethod
     def set_dir_cached(cls, path, file_list):
@@ -104,7 +103,12 @@ class PathCache:
 
 
 def locate_file(
-    name, env=None, check_executable=False, use_pathext=False, use_path_cache=True, use_dir_session_cache=False
+    name,
+    env=None,
+    check_executable=False,
+    use_pathext=False,
+    use_path_cache=True,
+    use_dir_session_cache=False,
 ):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
     return locate_relative_path(
@@ -149,7 +153,12 @@ def check_possible_name(path, possible_name, check_executable):
 
 
 def locate_file_in_path_env(
-    name, env=None, check_executable=False, use_pathext=False, use_path_cache=True, use_dir_session_cache=False
+    name,
+    env=None,
+    check_executable=False,
+    use_pathext=False,
+    use_path_cache=True,
+    use_dir_session_cache=False,
 ):
     """Search file name in ``$PATH`` and return full path.
 
@@ -183,22 +192,24 @@ def locate_file_in_path_env(
     ext_count = len(possible_names)
 
     for path in paths:
-        if path in dir_to_cache: # use session dir cache
-            if not (f := PathCache.get_dir_cached(path)): # not cached, scan the dir ...
+        if path in dir_to_cache:  # use session dir cache
+            if not (
+                f := PathCache.get_dir_cached(path)
+            ):  # not cached, scan the dir ...
                 for _dirpath, _dirnames, filenames in walk(path):
                     f.extend(filenames)
                     break  # no recursion into subdir
-                PathCache.set_dir_cached(path, f) # ... and cache it
+                PathCache.set_dir_cached(path, f)  # ... and cache it
             for possible_name in possible_names:
                 if possible_name not in f:
                     continue
-                if found := check_possible_name(
-                    path, possible_name, check_executable
-                ):
+                if found := check_possible_name(path, possible_name, check_executable):
                     return found
                 else:
                     continue
-        elif path in path_to_list and ext_count > 2: # list a dir vs checking many files
+        elif (
+            path in path_to_list and ext_count > 2
+        ):  # list a dir vs checking many files
             f = []
             for _dirpath, _dirnames, filenames in walk(path):
                 f.extend(filenames)
@@ -206,17 +217,13 @@ def locate_file_in_path_env(
             for possible_name in possible_names:
                 if possible_name not in f:
                     continue
-                if found := check_possible_name(
-                    path, possible_name, check_executable
-                ):
+                if found := check_possible_name(path, possible_name, check_executable):
                     return found
                 else:
                     continue
-        else: # check that file(s) exists individually
+        else:  # check that file(s) exists individually
             for possible_name in possible_names:
-                if found := check_possible_name(
-                    path, possible_name, check_executable
-                ):
+                if found := check_possible_name(path, possible_name, check_executable):
                     return found
                 else:
                     continue
