@@ -103,6 +103,7 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
                 continue
 
 
+from os import walk
 def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=False):
     """Search file name in ``$PATH`` and return full path.
 
@@ -114,19 +115,53 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
     May be in the future file systems as well as Python Path will be smarter to get the case sensitive name.
     The task for reading and returning case sensitive filename we give to completer in interactive mode
     with ``commands_cache``.
+
+    Typing speed boost: on Windows instead of checking that 10+ file.pathext files exist it's faster
+    to scan a smaller dir and check whether those 10+ strings are in this list
+    XONSH_WIN_PATH_DIRS_TO_LIST allows users to do just that
     """
     env = env if env is not None else XSH.env
     env_path = env.get("PATH", [])
     paths = tuple(clear_paths(env_path))
+    path_to_list = env.get("XONSH_WIN_PATH_DIRS_TO_LIST",[])
     possible_names = get_possible_names(name, env) if use_pathext else [name]
+    ext_count = len(possible_names)
 
-    for path, possible_name in itertools.product(paths, possible_names):
-        filepath = Path(path) / possible_name
-        try:
-            if not filepath.is_file() or (
-                check_executable and not is_executable(filepath)
-            ):
+    if ext_count > 2 and path_to_list:
+        for path in paths:
+            if path in path_to_list:
+                f = []
+                for (_dirpath, _dirnames, filenames) in walk(path):
+                    f.extend(filenames)
+                    break # no recursion into subdir
+                for possible_name in possible_names:
+                    if not possible_name in f:
+                        continue
+                    filepath = Path(path) / possible_name
+                    try:
+                        if not               filepath.is_file() or (check_executable and
+                           not is_executable(filepath)):
+                            continue
+                        return str(filepath)
+                    except PermissionError:
+                        return
+            else:
+                for possible_name in possible_names:
+                    filepath = Path(path) / possible_name
+                    try:
+                        if not               filepath.is_file() or (check_executable and
+                           not is_executable(filepath)):
+                            continue
+                        return str(filepath)
+                    except PermissionError:
+                        continue
+    else:
+        for path, possible_name in itertools.product(paths, possible_names):
+            filepath = Path(path) / possible_name
+            try:
+                if not               filepath.is_file() or (check_executable and
+                   not is_executable(filepath)):
+                    continue
+                return str(filepath)
+            except PermissionError:
                 continue
-            return str(filepath)
-        except PermissionError:
-            continue
