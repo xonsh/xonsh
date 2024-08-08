@@ -127,9 +127,8 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
     paths = tuple(clear_paths(env_path))
     path_to_list = env.get("XONSH_WIN_PATH_DIRS_TO_LIST", [])
     possible_names = get_possible_names(name, env) if use_pathext else [name]
-    ext_count = len(possible_names)
 
-    if ext_count > 2 and path_to_list:
+    if path_to_list and (len(possible_names) > 2):
         for path in paths:
             if path in path_to_list:
                 f = []
