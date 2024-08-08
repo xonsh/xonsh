@@ -44,6 +44,7 @@ xonsh
 
             p'/etc/passwd'.read_text().find('root')
 
+            xontrib load dalias
             id = $(@json docker ps --format json)['ID']
 
       -  .. code-block:: python
@@ -52,6 +53,7 @@ xonsh
             echo @(name) > /tmp/@(name)
 
             ls @(input('file: '))
+            touch @([f"file{i}" for i in range(0,10)])
 
             aliases['e'] = 'echo @(2+2)'
             aliases['a'] = lambda args: print(args)
