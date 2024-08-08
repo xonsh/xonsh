@@ -62,6 +62,8 @@ def SIGNAL_MESSAGES():
 
 def safe_readlines(handle, hint=-1):
     """Attempts to read lines without throwing an error."""
+    if handle is None:
+        return []
     try:
         lines = handle.readlines(hint)
     except OSError:
@@ -276,7 +278,7 @@ class CommandPipeline:
                     lines = b.splitlines(keepends=True)
                     yield from lines
                     self.end(tee_output=False)
-                elif self.captured == "stdout":
+                elif self.captured == "stdout" and stdout is not None:
                     b = stdout.read()
                     s = self._decode_uninew(b, universal_newlines=True)
                     self.lines = s.splitlines(keepends=True)
