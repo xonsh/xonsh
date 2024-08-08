@@ -38,7 +38,7 @@ from xonsh.platform import (
     ON_WINDOWS,
     os_environ,
 )
-from xonsh.procs.executables import PathCleanCache
+from xonsh.procs.executables import PathCache
 from xonsh.prompt.base import multiline_prompt
 from xonsh.shells.base_shell import BaseShell
 from xonsh.tools import (
@@ -391,7 +391,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             except ImportError:
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
-        PathCleanCache.is_dirty = True
+        PathCache.is_dirty = True
         events.on_pre_prompt_format.fire()
         prompt = self.prompt
         events.on_pre_prompt.fire()
