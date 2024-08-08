@@ -70,9 +70,9 @@ def is_executable_in_posix(filepath):
 is_executable = is_executable_in_windows if ON_WINDOWS else is_executable_in_posix
 
 
-def locate_executable(name, env=None):
+def locate_executable(name, env=None, use_path_cache=True):
     """Search executable binary name in ``$PATH`` and return full path."""
-    return locate_file(name, env=env, check_executable=True, use_pathext=True)
+    return locate_file(name, env=env, check_executable=True, use_pathext=True, use_path_cache=use_path_cache)
 
 
 class PathCleanCache:
@@ -86,11 +86,11 @@ class PathCleanCache:
         return cls.clean_paths
 
 
-def locate_file(name, env=None, check_executable=False, use_pathext=False):
+def locate_file(name, env=None, check_executable=False, use_pathext=False, use_path_cache=True):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
     return locate_relative_path(
         name, env, check_executable, use_pathext
-    ) or locate_file_in_path_env(name, env, check_executable, use_pathext)
+    ) or locate_file_in_path_env(name, env, check_executable, use_pathext, use_path_cache)
 
 
 def locate_relative_path(name, env=None, check_executable=False, use_pathext=False):
@@ -127,7 +127,7 @@ def check_possible_name(path, possible_name, check_executable):
         return
 
 
-def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=False):
+def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=False, use_path_cache=True):
     """Search file name in ``$PATH`` and return full path.
 
     Compromise. There is no way to get case sensitive file name without listing all files.
