@@ -133,7 +133,7 @@ def test_xonsh_win_path_dirs_to_list(tmpdir, xession):
     xonsh_win_path_dirs_to_list = []
     for path in env_path:
         f = []
-        for dirpath, dirnames, filenames in walk(path):
+        for _dirpath, _dirnames, filenames in walk(path):
             f.extend(filenames)
             break
         if len(f) < short_path:
