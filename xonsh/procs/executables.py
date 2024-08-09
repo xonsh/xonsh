@@ -155,6 +155,18 @@ def check_possible_name(path, possible_name, check_executable):
     except PermissionError:
         return
 
+import hashlib
+import struct
+def hash_s_list(s_list):
+    """
+    Serialize a list of strings and hash them using sha256
+    """
+    hash_o = hashlib.sha256()
+    for s in s_list: # Hash each string
+        length_encoded = struct.pack("I",len(s))
+        hash_o.update(length_encoded)
+        hash_o.update(s.encode('utf-8'))
+    return hash_o.hexdigest()
 
 def locate_file_in_path_env(
     name,
