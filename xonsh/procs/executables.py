@@ -83,7 +83,7 @@ def locate_executable(name, env=None, use_path_cache=True, use_dir_session_cache
 
 class PathCache:
     is_dirty = True
-    dir_cache: dict[str, list[set, set]] = dict()
+    dir_cache: dict[str, list[list[str], list[str]]] = dict()
 
     @classmethod
     def get_clean(cls, env):
@@ -98,8 +98,8 @@ class PathCache:
         return cls.dir_cache.get(path, [None, None])
 
     @classmethod
-    def set_dir_cached(cls, path, File_set, file_set):
-        cls.dir_cache[path] = [File_set, file_set]
+    def set_dir_cached(cls, path, File_list, file_list):
+        cls.dir_cache[path] = [File_list, file_list]
 
 
 def locate_file(
@@ -197,31 +197,37 @@ def locate_file_in_path_env(
         if dir_to_cache and path in dir_to_cache:  # use session dir cache
             F,f = PathCache.get_dir_cached(path)
             if not F:  # not cached, scan the dir ...
-                F = set()
+                F = []
                 for _dirpath, _dirnames, filenames in walk(path):
-                    F = set(filenames)
+                    F.extend(filenames)
                     break  # no recursion into subdir
-                f = {i.lower() for i in F}
+                f = [i.lower() for i in F]
                 PathCache.set_dir_cached(path, F, f)  # ... and cache it
             for possible_name in possible_names:
-                if possible_name.lower() not in f:
+                try:
+                  i = f.index(possible_name.lower())
+                  possible_Name = F[i]
+                except ValueError:
                     continue
-                if found := check_possible_name(path, possible_name, check_executable):
+                if found := check_possible_name(path, possible_Name, check_executable):
                     return found
                 else:
                     continue
         elif (
             ext_count > 2 and path_to_list and path in path_to_list
         ):  # list a dir vs checking many files
-            F = set()
+            F = []
             for _dirpath, _dirnames, filenames in walk(path):
-                F = set(filenames)
+                F.extend(filenames)
                 break  # no recursion into subdir
-            f = {i.lower() for i in F}
+            f = [i.lower() for i in F]
             for possible_name in possible_names:
-                if possible_name.lower() not in f:
+                try:
+                  i = f.index(possible_name.lower())
+                  possible_Name = F[i]
+                except ValueError:
                     continue
-                if found := check_possible_name(path, possible_name, check_executable):
+                if found := check_possible_name(path, possible_Name, check_executable):
                     return found
                 else:
                     continue
