@@ -1536,10 +1536,7 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
     """Test for #5631: no exceptions during any kind of capturing of callable alias."""
 
     out, err, ret = run_xonsh(
-        test_code,
-        interactive=True,
-        single_command=True,
-        timeout=60
+        test_code, interactive=True, single_command=True, timeout=60
     )
     assert ret == 0
     assert "Error" not in out
