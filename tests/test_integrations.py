@@ -1536,7 +1536,7 @@ for i in range(0, 12):
 $XONSH_SHOW_TRACEBACK = True
 
 @aliases.register
-def _a(a,i,o):
+def _a(a,i,o,e):
     echo -n O
     echo -n E 1>2
     execx("echo -n O")
@@ -1546,19 +1546,19 @@ def _a(a,i,o):
     print("E", file=e)
 
 @aliases.register
-def _b(a,i,o):
+def _b(a,i,o,e):
     echo -n O
     echo -n E 1>2
     a
 
 @aliases.register
-def _c(a,i,o):
+def _c(a,i,o,e):
     echo -n O
     echo -n E 1>2
     b
 
 @aliases.register
-def _d(a,i,o):
+def _d(a,i,o,e):
     echo -n O
     echo -n E 1>2
     c
