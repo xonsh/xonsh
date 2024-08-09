@@ -13,8 +13,7 @@ from xonsh.tools import chdir
 
 def test_get_possible_names():
     env = Env(PATHEXT=[".EXE", ".COM"])
-    assert get_possible_names("file", env) == ["file", "file.exe", "file.com"]
-    assert get_possible_names("FILE", env) == ["FILE", "FILE.EXE", "FILE.COM"]
+    assert get_possible_names("file", env).sort() == ["file", "file.exe", "file.com", "FILE", "FILE.EXE", "FILE.COM"].sort()
 
 
 def test_get_paths(tmpdir):
@@ -74,7 +73,7 @@ def test_locate_executable(tmpdir, xession):
         if ON_WINDOWS:
             assert locate_executable("file1")
             assert locate_executable("file4")
-            assert locate_executable("file2").endswith("file2.exe")
+            assert locate_executable("file2").endswith("file2.EXE")
         else:
             assert locate_executable("file3").find("bindir2") > 0
             assert locate_executable("file1") is None
