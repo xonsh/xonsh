@@ -28,7 +28,7 @@ def get_possible_names(name, env=None):
 
 def clear_paths(paths):
     """Remove duplicates and nonexistent directories from paths."""
-    return filter(os.path.isdir, unique_everseen(map(os.path.realpath, paths)))
+    return filter(os.path.isdir, unique_everseen(map(os.path.normpath, paths)))
 
 
 def get_paths(env=None):
