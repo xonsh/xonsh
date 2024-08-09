@@ -320,3 +320,14 @@ This will cache a list of files within these dirs per Xonsh session and thus avo
 on subsequent typing.
 However, if Xonsh or any other process changes the list of files in these dirs, you'll lose the
 accuracy of syntax highlighting since the cache will not be updated to reflect it
+Since paths are normalized before comparison, you might also want to do so in your config
+to avoid mismatches:
+
+.. code-block:: xonshcon
+
+    from xonsh.built_ins import XSH
+    import os
+    xonsh_win_path_dirs_to_list = [R"C:\my\path\to\list",]
+    XSH.env["XONSH_WIN_PATH_DIRS_TO_LIST"] = set(os.path.normpath(p) for p in xonsh_win_dir_session_cache)
+    xonsh_win_dir_session_cache = [R"C:\my\path\to\cache",]
+    XSH.env["XONSH_WIN_DIR_SESSION_CACHE"] = set(os.path.normpath(p) for p in xonsh_win_dir_session_cache)
