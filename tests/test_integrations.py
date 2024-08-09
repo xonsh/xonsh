@@ -1542,15 +1542,15 @@ def test_shebang_exe_cr(tmpdir, xession):
     testfile_exe = "shebang_exe_cr.xsh"
     testfile_fail_x = "shebang_x_cr.xsh"
     expected_out = "I'm .xsh with xonsh shebang␍"
-    (f := testdir / testfile).write_text(
+    (_f := testdir / testfile).write_text(
         f"""#!/usr/bin/env xonsh\r\nprint("{expected_out}")""", encoding="utf8"
     )
     expected_out_exe = "I'm .xsh with xonsh.exe shebang␍"
-    (f := testdir / testfile_exe).write_text(
+    (_f := testdir / testfile_exe).write_text(
         f"""#!/usr/bin/env xonsh.exe\r\nprint("{expected_out_exe}")""", encoding="utf8"
     )
-    (f := testdir / testfile_fail_x).write_text(
-        f"""#!/usr/bin/env xonsh.x\r\nprint("")""", encoding="utf8"
+    (_f := testdir / testfile_fail_x).write_text(
+        """#!/usr/bin/env xonsh.x\r\nprint("")""", encoding="utf8"
     )
     env = base_env
     env["PATHEXT"] = ".COM;.EXE;.BAT;.XSH"
@@ -1565,11 +1565,11 @@ def test_shebang_exe_cr(tmpdir, xession):
     env["XONSH_SHOW_TRACEBACK"] = "0"
     command = f"cd {testdir}; ./{testfile_fail_x}\n"
     out, err, rtn = run_xonsh(command, env=env)
-    assert out.startswith(f"xonsh: subprocess mode: command not found: 'xonsh.x'")
+    assert out.startswith("xonsh: subprocess mode: command not found: 'xonsh.x'")
 
     env["PATHEXT"] = ".COM;.EXE;.BAT"
     out, err, rtn = run_xonsh(command, env=env)
-    assert out == 'OSError: [WinError 193] %1 is not a valid Win32 application\n'
+    assert out == "OSError: [WinError 193] %1 is not a valid Win32 application\n"
 
 
 test_code = [
