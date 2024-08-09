@@ -90,9 +90,11 @@ class PathCache:
     def get_clean(cls, env):
         if cls.is_dirty:
             env_path = env.get("PATH", [])
-            env_path_hash = hash_s_list(env_path) # to test whether it matches PATH before
+            env_path_hash = hash_s_list(
+                env_path
+            )  # to test whether it matches PATH before
             # returning the cleaned version (avoid wrong cache for a env.swap(PATH=['a']))
-            if not env_path_hash in cls.clean_paths:
+            if env_path_hash not in cls.clean_paths:
                 cls.clean_paths[env_path_hash] = tuple(clear_paths(env_path))
             cls.is_dirty = False
         return cls.clean_paths
@@ -155,18 +157,22 @@ def check_possible_name(path, possible_name, check_executable):
     except PermissionError:
         return
 
+
 import hashlib
 import struct
+
+
 def hash_s_list(s_list):
     """
     Serialize a list of strings and hash them using sha256
     """
     hash_o = hashlib.sha256()
-    for s in s_list: # Hash each string
-        length_encoded = struct.pack("I",len(s))
+    for s in s_list:  # Hash each string
+        length_encoded = struct.pack("I", len(s))
         hash_o.update(length_encoded)
-        hash_o.update(s.encode('utf-8'))
+        hash_o.update(s.encode("utf-8"))
     return hash_o.hexdigest()
+
 
 def locate_file_in_path_env(
     name,
