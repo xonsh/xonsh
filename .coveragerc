@@ -1,5 +1,5 @@
 [run]
-branch = true
+#branch = true
 source =
   xonsh/
   xontrib/
