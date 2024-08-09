@@ -389,10 +389,7 @@ class CommandPipeline:
             # write to stdout line ASAP, if needed
             if stream:
                 if stdout_has_buffer:
-                    buf_mode = getattr(sys.stdout.buffer, "mode", None)
-                    if (buf_mode and "b" in buf_mode) or getattr(
-                        sys.stdout.buffer, "_std_is_binary", False
-                    ):
+                    if self._is_buffer_binary(sys.stdout.buffer):
                         sys.stdout.buffer.write(line)
                     else:
                         sys.stdout.buffer.write(line.decode(encoding=enc, errors=err))
@@ -434,10 +431,7 @@ class CommandPipeline:
         if show_stderr:
             # write bytes to std stream
             if stderr_has_buffer:
-                buf_mode = getattr(sys.stderr.buffer, "mode", None)
-                if (buf_mode and "b" in buf_mode) or getattr(
-                    sys.stderr.buffer, "_std_is_binary", False
-                ):
+                if self._is_buffer_binary(sys.stderr.buffer):
                     sys.stderr.buffer.write(b)
                 else:
                     sys.stderr.buffer.write(b.decode(encoding=enc, errors=err))
@@ -656,6 +650,11 @@ class CommandPipeline:
             finally:
                 # this is need to get a working terminal in interactive mode
                 self._return_terminal()
+
+    def _is_buffer_binary(self, buffer):
+        """Checking that buffer opened as binary stream."""
+        return ((buf_mode := getattr(buffer, "mode", None)) and "b" in buf_mode) or getattr(
+                buffer, "_std_is_binary", False)
 
     #
     # Properties
