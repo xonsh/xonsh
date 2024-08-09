@@ -76,7 +76,7 @@ def _un_shebang(x):
     elif x.endswith("python") or x.endswith("python.exe"):
         x = "python"
     if x == "xonsh":
-        return ["python", "-m", "xonsh.main"]
+        return ["python", "-m", "xonsh"]
     return [x]
 
 
