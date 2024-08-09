@@ -112,7 +112,7 @@ def test_locate_file_clean_path_cache_time(tmpdir, xession):
     dur3 = (t3 - t2) / ns
     env = xession.env
     env_path = env.get("PATH", [])
-    if env_path:
+    if env_path and dur1 > 0:
         print("$PATH length = ", len(env_path))
         print(
             f"t1 (no cache) = {dur1:.6f}\nt2 (   cache) = {dur2:.6f}\nt3 (   cache) = {dur3:.6f}"
