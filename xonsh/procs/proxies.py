@@ -533,7 +533,7 @@ class ProcProxyThread(threading.Thread):
 
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here and stdout & stderr must:
-        
+
         # This split was made during solving #5645. We need more eyes to improve this logic for Windows.
         if xt.ON_WINDOWS:
             handles = [self.stdout, self.stderr]

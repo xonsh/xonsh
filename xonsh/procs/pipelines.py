@@ -653,8 +653,9 @@ class CommandPipeline:
 
     def _is_buffer_binary(self, buffer):
         """Checking that buffer opened as binary stream."""
-        return ((buf_mode := getattr(buffer, "mode", None)) and "b" in buf_mode) or getattr(
-                buffer, "_std_is_binary", False)
+        return (
+            (buf_mode := getattr(buffer, "mode", None)) and "b" in buf_mode
+        ) or getattr(buffer, "_std_is_binary", False)
 
     #
     # Properties
