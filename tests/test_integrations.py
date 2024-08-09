@@ -1523,9 +1523,14 @@ def _e(a,i,o,e):
     print("O", file=o)
     print("E", file=e)
 
+import tempfile
 for i in range(0, 12):
-    echo -n o
+    echo -n e
     print($(e), !(e), $[e], ![e])
+    print($(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print(!(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print($[e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+    print(![e > @(tempfile.NamedTemporaryFile(delete=False).name)])
 """
 ]
 
@@ -1533,7 +1538,7 @@ for i in range(0, 12):
 @skip_if_on_windows
 @pytest.mark.parametrize("test_code", test_code)
 def test_callable_alias_no_bad_file_descriptor(test_code):
-    """Test for #5631: no exceptions during any kind of capturing of callable alias."""
+    """Test no exceptions during any kind of capturing of callable alias. See also #5631."""
 
     out, err, ret = run_xonsh(
         test_code, interactive=True, single_command=True, timeout=60
