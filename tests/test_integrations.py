@@ -1531,6 +1531,41 @@ for i in range(0, 12):
     print(!(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
     print($[e > @(tempfile.NamedTemporaryFile(delete=False).name)])
     print(![e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+""",
+"""
+$XONSH_SHOW_TRACEBACK = True
+
+@aliases.register
+def _a(a,i,o):
+    echo -n O
+    echo -n E 1>2
+    execx("echo -n O")
+    execx("echo -n E 1>2")
+    print("o")
+    print("O", file=o)
+    print("E", file=e)
+
+@aliases.register
+def _b(a,i,o):
+    echo -n O
+    echo -n E 1>2
+    a
+
+@aliases.register
+def _c(a,i,o):
+    echo -n O
+    echo -n E 1>2
+    b
+
+@aliases.register
+def _d(a,i,o):
+    echo -n O
+    echo -n E 1>2
+    c
+
+for i in range(0, 12):
+    echo -n 2
+    print($(d), !(d), $[d], ![d])
 """
 ]
 
