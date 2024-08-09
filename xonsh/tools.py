@@ -58,6 +58,7 @@ from xonsh.platform import (
 
 @contextmanager
 def chdir(adir, mkdir=False):
+    adir = pathlib.Path(adir)
     old_dir = os.getcwd()
     if mkdir:
         os.makedirs(adir, exist_ok=True)

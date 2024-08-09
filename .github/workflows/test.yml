@@ -79,6 +79,8 @@ jobs:
       - name: Upload coverage to Codecov
         if: ${{ startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
         uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           verbose: true
           flags: ${{ matrix.os }}
