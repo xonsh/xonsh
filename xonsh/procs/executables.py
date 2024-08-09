@@ -84,14 +84,21 @@ def locate_executable(name, env=None, use_path_cache=True, use_dir_session_cache
 class PathCache:
     is_dirty = True
     dir_cache: dict[str, list[list[str]]] = dict()
+    env_path: list[str] = list()
 
     @classmethod
     def get_clean(cls, env):
         if cls.is_dirty:
             env_path = env.get("PATH", [])
+            cls.env_path = env_path
             cls.clean_paths = tuple(clear_paths(env_path))
             cls.is_dirty = False
         return cls.clean_paths
+
+    @classmethod
+    def get_env_path(cls): # to test whether it matches current PATH before returning the
+        # cleaned version to avoid returning the wrong cache for a env.swap(PATH=['a'])
+        return cls.env_path
 
     @classmethod
     def get_dir_cached(cls, path):
@@ -182,10 +189,12 @@ def locate_file_in_path_env(
     paths = []
     if env is None:
         env = XSH.env
+        env_path = env.get("PATH", [])
         if use_path_cache:  # for generic environment: use cache only if configured
             paths = PathCache.get_clean(env)
+            if not (env_path == PathCache.get_env_path()): # and PATH matches what we cleaned
+                paths = tuple(clear_paths(env_path))
         else:  #              otherwise              : clean paths every time
-            env_path = env.get("PATH", [])
             paths = tuple(clear_paths(env_path))
     else:  #                  for custom  environment: clean paths every time
         env_path = env.get("PATH", [])
