@@ -240,6 +240,7 @@ def _redirect_streams(r, loc=None):
     if mode == "r":
         stdin = safe_open(loc, mode)
     elif mode in _WRITE_MODES:
+        mode += "b"
         if orig in _REDIR_ALL:
             stdout = stderr = safe_open(loc, mode)
         elif orig in _REDIR_OUT:
@@ -885,6 +886,29 @@ def _last_spec_update_captured(last: SubprocSpec):
         _make_last_spec_captured(last)
 
 
+import concurrent.futures
+import tempfile
+
+
+def named_pipe():
+    def read_stream(fifo_filename):
+        return open(fifo_filename, "rb")
+
+    def write_stream(fifo_filename):
+        return open(fifo_filename, "wb")
+
+    fifo_path = tempfile.mktemp()
+    os.mkfifo(fifo_path)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        creaete_read = executor.submit(read_stream, fifo_path)
+        create_write = executor.submit(write_stream, fifo_path)
+        r = creaete_read.result()
+        w = create_write.result()
+    # print(r, w)
+    return r, w
+
+
 def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
@@ -898,6 +922,9 @@ def _make_last_spec_captured(last: SubprocSpec):
     elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
         r, w = os.pipe()
+        # r, w = named_pipe()
+        # last.stdout = w #safe_open(w, "wb")
+        # last.captured_stdout = r #safe_open(r, "rb")
         last.stdout = safe_open(w, "wb")
         last.captured_stdout = safe_open(r, "rb")
     elif XSH.stdout_uncaptured is not None:
@@ -911,10 +938,13 @@ def _make_last_spec_captured(last: SubprocSpec):
     else:
         last.universal_newlines = True
         r, w = xli.pty.openpty() if use_tty else os.pipe()
+        # r, w = named_pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = safe_open(w, "w")
+        last.stdout = safe_open(w, "wb")
+        # last.stdout = w
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = safe_open(r, "r")
+        last.captured_stdout = safe_open(r, "rb")
+        # last.captured_stdout = r #safe_open(r, "rb")
     # set standard error
     if last.stderr is not None:
         pass
@@ -922,8 +952,11 @@ def _make_last_spec_captured(last: SubprocSpec):
         pass
     elif captured == "object":
         r, w = os.pipe()
-        last.stderr = safe_open(w, "w")
-        last.captured_stderr = safe_open(r, "r")
+        # r, w = named_pipe()
+        # last.stderr = w  # safe_open(w, "wb")
+        # last.captured_stderr = r  # safe_open(r, "rb")
+        last.stderr = safe_open(w, "wb")
+        last.captured_stderr = safe_open(r, "rb")
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
@@ -932,10 +965,13 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.stderr = None  # must truly stream on windows
     else:
         r, w = xli.pty.openpty() if use_tty else os.pipe()
+        # r, w = named_pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stderr = safe_open(w, "w")
+        # last.stderr = w  # safe_open(w, "wb")
+        last.stderr = safe_open(w, "wb")
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stderr = safe_open(r, "r")
+        # last.captured_stderr = r  # safe_open(r, "rb")
+        last.captured_stderr = safe_open(r, "rb")
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.

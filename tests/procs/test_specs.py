@@ -152,7 +152,12 @@ def test_capture_always(
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
-def test_callias_captured_redirect(xonsh_session, tmpdir):
+def test_callias_captured_out_redirect(xonsh_session, tmpdir):
+    """
+    TODO: add the test for stderr - https://github.com/xonsh/xonsh/issues/5631#issuecomment-2268948149
+    """
+    xonsh_session.env["XONSH_SHOW_TRACEBACK"] = True
+
     @xonsh_session.aliases.register("a")
     def _a(a, i, o, e):
         print("print_stdout")

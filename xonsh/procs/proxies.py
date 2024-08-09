@@ -440,8 +440,19 @@ class ProcProxyThread(threading.Thread):
             sp_stdin = sys.stdin
         # stdout
         if self.c2pwrite != -1:
+            if xt.ON_WINDOWS:
+                # This split was made during solving #5645. We need more eyes to improve this logic for Windows.
+                open_stdout = open(self.c2pwrite, "wb", -1)
+            else:
+                open_stdout = (
+                    open(self.c2pwrite, "wb", -1)
+                    if isinstance(self.stdout, int) or self.stdout is None
+                    else self.stdout
+                )
             sp_stdout = io.TextIOWrapper(
-                open(self.c2pwrite, "wb", -1), encoding=enc, errors=err
+                open_stdout,
+                encoding=enc,
+                errors=err,
             )
         else:
             sp_stdout = sys.stdout
@@ -449,8 +460,19 @@ class ProcProxyThread(threading.Thread):
         if self.errwrite == self.c2pwrite:
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
+            if xt.ON_WINDOWS:
+                # This split was made during solving #5645. We need more eyes to improve this logic for Windows.
+                open_stderr = open(self.errwrite, "wb", -1)
+            else:
+                open_stderr = (
+                    open(self.errwrite, "wb", -1)
+                    if isinstance(self.stderr, int) or self.stderr is None
+                    else self.stderr
+                )
             sp_stderr = io.TextIOWrapper(
-                open(self.errwrite, "wb", -1), encoding=enc, errors=err
+                open_stderr,
+                encoding=enc,
+                errors=err,
             )
         else:
             sp_stderr = sys.stderr
@@ -511,7 +533,10 @@ class ProcProxyThread(threading.Thread):
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
-        handles = [self.stdout, self.stderr]
+        if xt.ON_WINDOWS:
+            handles = [self.stdout, self.stderr]
+        else:
+            handles = [sp_stdout, sp_stderr]
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
 
