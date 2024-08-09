@@ -103,24 +103,21 @@ def test_locate_file_clean_path_cache_time(tmpdir, xession):
     t0 = ttime()
     _f = locate_executable("nothing")
     t1 = ttime()
-    _f = locate_executable("nothing")
-    t2 = ttime()
-    _f = locate_executable("nothing")
-    t3 = ttime()
     dur1 = (t1 - t0) / ns
-    dur2 = (t2 - t1) / ns
-    dur3 = (t3 - t2) / ns
+    t0 = ttime()
+    iters = 100
+    for _i in range(iters):
+        _f = locate_executable("nothing")
+    t1 = ttime()
+    dur2 = (t1 - t0) / iters / ns
     env = xession.env
     env_path = env.get("PATH", [])
     if env_path and dur1 > 0:
         print("$PATH length = ", len(env_path))
-        print(
-            f"t1 (no cache) = {dur1:.6f}\nt2 (   cache) = {dur2:.6f}\nt3 (   cache) = {dur3:.6f}"
-        )
+        print(f"t1 (no cache) = {dur1:.6f}\nt2 (   cache) = {dur2:.6f}")
         assert (
             dur2 < 0.90 * dur1
-        )  # 2nd run with cache should always be noticeable faster
-        assert dur3 < 0.90 * dur1  # as well as all the subsequent calls
+        )  # 2nd+ run with cache should always be noticeable faster
 
 
 def test_xonsh_dir_cache_to_list(tmpdir, xession):
