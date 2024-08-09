@@ -511,7 +511,10 @@ class ProcProxyThread(threading.Thread):
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
-        handles = [self.stdout, self.stderr]
+        if xp.ON_WINDOWS:
+            handles = [self.stdout, self.stderr]
+        else:
+            handles = [sp_stdout, sp_stderr]
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
 

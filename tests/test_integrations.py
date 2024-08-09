@@ -1508,3 +1508,41 @@ def test_shebang_cr(tmpdir):
     command = f"cd {testdir}; ./{testfile}\n"
     out, err, rtn = run_xonsh(command)
     assert out == f"{expected_out}\n"
+
+
+test_code = [
+    """
+$XONSH_SHOW_TRACEBACK = True
+@aliases.register
+def _e(a,i,o,e):
+    echo -n O
+    echo -n E 1>2
+    execx("echo -n O")
+    execx("echo -n E 1>2")
+    print("o")
+    print("O", file=o)
+    print("E", file=e)
+
+import tempfile
+for i in range(0, 12):
+    echo -n e
+    print($(e), !(e), $[e], ![e])
+    print($(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print(!(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print($[e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+    print(![e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+"""
+]
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("test_code", test_code)
+def test_callable_alias_no_bad_file_descriptor(test_code):
+    """Test no exceptions during any kind of capturing of callable alias. See also #5631."""
+
+    out, err, ret = run_xonsh(
+        test_code, interactive=True, single_command=True, timeout=60
+    )
+    assert ret == 0
+    assert "Error" not in out
+    assert "Exception" not in out
