@@ -22,10 +22,8 @@ def get_possible_names(name, env=None):
     env_pathext = env.get("PATHEXT", [])
     if not env_pathext:
         return [name]
-    upper = name.upper() == name
     extensions = [""] + env_pathext
-    return [name + (ext.upper() if upper else ext.lower()) for ext in extensions]
-
+    return [case_func(name) + case_func(ext) for ext in extensions for case_func in (str.upper, str.lower)]
 
 def clear_paths(paths):
     """Remove duplicates and nonexistent directories from paths."""
