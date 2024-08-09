@@ -83,7 +83,7 @@ def locate_executable(name, env=None, use_path_cache=True, use_dir_session_cache
 
 class PathCache:
     is_dirty = True
-    dir_cache: dict[str, list[list[str], list[str]]] = dict()
+    dir_cache: dict[str, list[list[str]]] = dict()
 
     @classmethod
     def get_clean(cls, env):
@@ -197,7 +197,7 @@ def locate_file_in_path_env(
 
     for path in paths:
         if dir_to_cache and path in dir_to_cache:  # use session dir cache
-            F,f = PathCache.get_dir_cached(path)
+            F, f = PathCache.get_dir_cached(path)
             if not F:  # not cached, scan the dir ...
                 F = []
                 for _dirpath, _dirnames, filenames in walk(path):
@@ -207,8 +207,8 @@ def locate_file_in_path_env(
                 PathCache.set_dir_cached(path, F, f)  # ... and cache it
             for possible_name in possible_names:
                 try:
-                  i = f.index(possible_name.lower())
-                  possible_Name = F[i]
+                    i = f.index(possible_name.lower())
+                    possible_Name = F[i]
                 except ValueError:
                     continue
                 if found := check_possible_name(path, possible_Name, check_executable):
@@ -225,8 +225,8 @@ def locate_file_in_path_env(
             f = [i.lower() for i in F]
             for possible_name in possible_names:
                 try:
-                  i = f.index(possible_name.lower())
-                  possible_Name = F[i]
+                    i = f.index(possible_name.lower())
+                    possible_Name = F[i]
                 except ValueError:
                     continue
                 if found := check_possible_name(path, possible_Name, check_executable):
