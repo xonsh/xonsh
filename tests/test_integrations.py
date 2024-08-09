@@ -1532,7 +1532,7 @@ for i in range(0, 12):
     print($[e > @(tempfile.NamedTemporaryFile(delete=False).name)])
     print(![e > @(tempfile.NamedTemporaryFile(delete=False).name)])
 """,
-"""
+    """
 $XONSH_SHOW_TRACEBACK = True
 
 @aliases.register
@@ -1566,7 +1566,7 @@ def _d(a,i,o,e):
 for i in range(0, 12):
     echo -n 2
     print($(d), !(d), $[d], ![d])
-"""
+""",
 ]
 
 
