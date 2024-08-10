@@ -203,6 +203,8 @@ def locate_file_in_path_env(
     XONSH_DIR_CACHE_TO_LIST allows users to do just that
     XONSH_DIR_SESSION_CACHE further allows to list a dir and cache the results to avoid
     doing any IO on subsequent calls
+    XONSH_WIN_DIR_PERMA_CACHE further allows to list larger constant dirs like Windows/System32
+    and cache the results until OS is updated to avoid doing any IO
     """
     paths = []
     if env is None:
