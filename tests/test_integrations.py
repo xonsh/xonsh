@@ -1541,26 +1541,24 @@ def test_shebang_exe_cr(tmpdir, xession):
     testfile = "shebang_cr.xsh"
     testfile_exe = "shebang_exe_cr.xsh"
     testfile_fail_x = "shebang_x_cr.xsh"
-    expected_out = "I'm .xsh with xonsh shebang␍"
-    (_f := testdir / testfile).write_text(
-        f"""#!/usr/bin/env xonsh\r\nprint("{expected_out}")""", encoding="utf8"
+    (testdir / testfile).write_text(
+        """#!/usr/bin/env xonsh\r\nprint("x1")""", encoding="utf8"
     )
-    expected_out_exe = "I'm .xsh with xonsh.exe shebang␍"
-    (_f := testdir / testfile_exe).write_text(
-        f"""#!/usr/bin/env xonsh.exe\r\nprint("{expected_out_exe}")""", encoding="utf8"
+    (testdir / testfile_exe).write_text(
+        """#!/usr/bin/env xonsh.exe\r\nprint("x2")""", encoding="utf8"
     )
-    (_f := testdir / testfile_fail_x).write_text(
+    (testdir / testfile_fail_x).write_text(
         """#!/usr/bin/env xonsh.x\r\nprint("")""", encoding="utf8"
     )
     env = base_env
     env["PATHEXT"] = ".COM;.EXE;.BAT;.XSH"
     command = f"cd {testdir}; ./{testfile}\n"
     out, err, rtn = run_xonsh(command, env=env)
-    assert out == f"{expected_out}\n"
+    assert out == "x1\n"
 
     command = f"cd {testdir}; ./{testfile_exe}\n"
     out, err, rtn = run_xonsh(command, env=env)
-    assert out == f"{expected_out_exe}\n"
+    assert out == "x2\n"
 
     env["XONSH_SHOW_TRACEBACK"] = "0"
     command = f"cd {testdir}; ./{testfile_fail_x}\n"
