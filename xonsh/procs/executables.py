@@ -202,7 +202,8 @@ def locate_file_in_path_env(
     to scan a smaller dir and check whether those 10+ strings are in this list
     XONSH_WIN_PATH_DIRS_TO_LIST allows users to do just that.
     XONSH_WIN_DIR_SESSION_CACHE further allows to list a dir and cache the results to avoid
-    doing any IO on subsequent calls
+    XONSH_WIN_DIR_PERMA_CACHE further allows to list larger constant dirs like Windows/System32
+    and cache the results until OS is updated to avoid doing any IO
     """
     paths = []
     if env is None:
