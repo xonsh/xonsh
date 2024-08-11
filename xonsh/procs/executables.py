@@ -161,6 +161,82 @@ class PathCache: # Singleton
     def set_dir_cached(cls, path, File_list, file_list):
         cls.dir_cache[path] = [File_list, file_list]
 
+    CACHE_FILE = "win-dir-perma-cache.pickle"
+    def __init__(self, env) -> None:
+        self.env = env # path to the cache file where all dir are cached for pre-loading
+        self._cache_file = None
+        self._cmds_cache : pygtrie.CharTrie = pygtrie.CharTrie()
+        self._paths_cache: dict[str, pygtrie.CharTrie] = dict()
+        self._pathext_cache: set = set()
+
+    @property
+    def cache_file(self):
+        """Keeping a property that lies on instance-attribute"""
+        env = self.env
+        if self._cache_file is None: # path to the cache file where all dir are cached for pre-loading
+            if "XONSH_CACHE_DIR" in env and "XONSH_WIN_DIR_PERMA_CACHE" in env:
+                self._cache_file = (
+                    Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE).resolve()
+                )
+            else:
+                self._cache_file = "" # set a falsy value other than None
+        return self._cache_file
+
+    def get_paths_cache(self):
+        """Get a list of valid commands per path in a trie data structure for partial matching"""
+        self.update_cache()
+        return self._paths_cache
+
+    def update_cache(self):
+        """The main function to update commands cache"""
+        env = self.env
+        env_path = env.get("PATH", [])
+        env_path_hash = hash_s_list(env_path)
+        paths_dict = self.get_clean(env)
+        if env_path_hash in paths_dict:
+            paths = paths_dict[env_path_hash]
+        else:
+            paths = tuple(clear_paths(env_path))
+            PathCache.clean_paths[env_path_hash] = paths
+
+        if self._update_paths_cache(paths):
+            all_cmds = pygtrie.CharTrie()
+            for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
+                all_cmds[cmd_low] = (cmd,path)
+            self._cmds_cache = all_cmds
+        return self._cmds_cache
+
+    def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
+        """load cached results or update cache"""
+        if (not self._paths_cache) and self.cache_file and self.cache_file.exists():
+            try: # 1st time: load the commands from cache-file if configured
+                self._paths_cache, self._pathext_cache = pickle.loads(self.cache_file.read_bytes()) or [{},set()]
+            except Exception:
+                self.cache_file.unlink(missing_ok=True) # the file is corrupt
+        updated = False
+        pathext = set(self.env.get('PATHEXT', [])) if ON_WINDOWS else []
+        for path in paths: # ↓ user-configured to be cached
+            if (  ( path     in self.env.get("XONSH_WIN_DIR_PERMA_CACHE", []))
+              and ((path not in self._paths_cache) # ← not in cache
+              or  (not pathext == self._pathext_cache))): # ← definition of an executable changed
+                cmd_chartrie = pygtrie.CharTrie()
+                for cmd in executables_in(path):
+                    cmd_chartrie[cmd.lower()] = cmd # lower case for case-insensitive search, but preserve case
+                pd(f"   →→→ updated path={path} vs cache {self._paths_cache} pathext={self._pathext_cache}")
+                self._paths_cache[path] = cmd_chartrie
+                self._pathext_cache = pathext
+                updated = True
+        if updated and self.cache_file:
+            pd(f"_update_paths_cache pickled {self._paths_cache}")
+            self.cache_file.write_bytes(pickle.dumps([self._paths_cache, self._pathext_cache]))
+        return updated
+
+    def _iter_binaries(self, paths):
+        for path in paths:
+            for cmd_low in (cmd_chartrie := self._paths_cache.get(path, [])):
+                cmd = cmd_chartrie[cmd_low]
+                yield cmd_low, cmd, os.path.join(path, cmd)
+
 
 def locate_file(
     name,
@@ -280,6 +356,10 @@ def locate_file_in_path_env(
         paths = tuple(clear_paths(env_path))
     path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
     dir_to_cache = env.get("XONSH_DIR_SESSION_CACHE", [])
+    dir_cache_perma = env.get("XONSH_WIN_DIR_PERMA_CACHE", [])
+    if dir_cache_perma:
+        _pc = PathCache(env)
+        paths_cache = _pc.get_paths_cache() # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
 
