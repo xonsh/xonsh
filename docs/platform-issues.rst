@@ -320,6 +320,13 @@ This will cache a list of files within these dirs per Xonsh session and thus avo
 on subsequent typing.
 However, if Xonsh or any other process changes the list of files in these dirs, you'll lose the
 accuracy of syntax highlighting since the cache will not be updated to reflect it
+
+You can also cache large never changing dirs (like ``C:\Windows\System32\`` with thousands of files)
+permanently by adding them to
+:ref:`$XONSH_WIN_DIR_PERMA_CACHE <xonsh_win_dir_perma_cache>`
+
+(stored in ``$XONSH_CACHE_DIR\win-dir-perma-cache.pickle``)
+
 Since paths are normalized before comparison, you might also want to do so in your config
 to avoid mismatches:
 
