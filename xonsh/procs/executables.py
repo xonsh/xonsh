@@ -284,6 +284,7 @@ def locate_file(
         use_path_cache,
         use_dir_session_cache,
         use_perma_cache,
+        partial_match,
     )
 
 
@@ -415,7 +416,7 @@ def locate_file_in_path_env(
                     else:
                         continue
             if cmd_chartrie.has_subtrie(name.lower()):  # ± partial match
-                if partial_match:
+                if type(partial_match) is list:
                     partial_match.append(
                         True
                     )  # report partial match for color highlighting
