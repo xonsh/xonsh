@@ -138,7 +138,7 @@ import threading
 
 
 class PathCache:  # Singleton
-    _instance = None
+    _instance: tp.Any | None = None
     _lock = threading.Lock()
 
     def __new__(cls, env):
