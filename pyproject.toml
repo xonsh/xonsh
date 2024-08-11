@@ -17,6 +17,7 @@ license = { text = "BSD 2-Clause License" }
 requires-python = ">=3.9"
 dependencies = [
     "case-insensitive-dictionary; platform_system=='Windows'",
+    "pygtrie",
 ]
 
 [tool.setuptools.dynamic]
