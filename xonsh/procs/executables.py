@@ -422,7 +422,9 @@ def locate_file_in_path_env(
                     )  # report partial match for color highlighting
             else:  #                                      ✗ neither a full match, nor a prefix
                 pass
-        elif dir_to_cache and path in dir_to_cache:  # use session dir cache
+        elif (
+            use_dir_session_cache and dir_to_cache and path in dir_to_cache
+        ):  # use session dir cache
             F, f = PathCache.get_dir_cached(path)
             if not F:  # not cached, scan the dir ...
                 F = []
