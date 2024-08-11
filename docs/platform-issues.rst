@@ -312,7 +312,7 @@ For smaller dirs (~few dozen files) it's faster to list the dir, so you can add 
 :ref:`$XONSH_DIR_CACHE_TO_LIST <xonsh_dir_cache_to_list>`
 to reduce typing lag
 
-And to the typing lag even more (at the cost of a small loss of precision of syntax highlighting)
+And to reduce the typing lag even more (at the cost of a small loss of precision of syntax highlighting)
 you can list all the rarely changing (like ``C:\Program Files\Python\``) or not very important dirs
 from your ``$PATH`` in
 :ref:`$XONSH_WIN_DIR_SESSION_CACHE <xonsh_win_dir_session_cache>`
