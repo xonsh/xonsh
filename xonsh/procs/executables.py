@@ -247,14 +247,10 @@ class PathCache:  # Singleton
                     cmd_chartrie[cmd.lower()] = (
                         cmd  # lower case for case-insensitive search, but preserve case
                     )
-                pd(
-                    f"   →→→ updated path={path} vs cache {self._paths_cache} pathext={self._pathext_cache}"
-                )
                 self._paths_cache[path] = cmd_chartrie
                 self._pathext_cache = pathext
                 updated = True
         if updated and self.cache_file:
-            pd(f"_update_paths_cache pickled {self._paths_cache}")
             self.cache_file.write_bytes(
                 pickle.dumps([self._paths_cache, self._pathext_cache])
             )
