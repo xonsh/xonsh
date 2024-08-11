@@ -401,6 +401,7 @@ def locate_file_in_path_env(
     for path in paths:
         if (
             check_executable
+            and use_perma_cache
             and dir_cache_perma
             and path in dir_cache_perma
             and path in paths_cache
