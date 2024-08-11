@@ -124,7 +124,18 @@ def _yield_accessible_unix_file_names(path):
         if is_executable_in_posix(file_):
             yield file_.name
 
-class PathCache:
+import threading
+class PathCache: # Singleton
+    _instance = None
+    _lock = threading.Lock()
+    def __new__(cls, env):
+        if         not cls._instance:
+            with       cls._lock:
+                if not cls._instance:
+                    cls   ._instance = super().__new__(cls)
+        return         cls._instance
+
+
     is_dirty = True
     dir_cache: dict[str, list[list[str]]] = dict()
     clean_paths: dict[str, tuple[str]] = dict()
