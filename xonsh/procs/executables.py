@@ -224,7 +224,9 @@ def locate_file_in_path_env(
     ext_count = len(possible_names)
 
     for path in paths:
-        if dir_to_cache and path in dir_to_cache:  # use session dir cache
+        if (
+            use_dir_session_cache and dir_to_cache and path in dir_to_cache
+        ):  # use session dir cache
             F, f = PathCache.get_dir_cached(path)
             if not F:  # not cached, scan the dir ...
                 F = []
