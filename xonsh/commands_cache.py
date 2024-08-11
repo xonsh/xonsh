@@ -78,47 +78,7 @@ class _Commands(tp.NamedTuple):
     cmds: "tuple[str, ...]"
 
 
-def _yield_accessible_unix_file_names(path):
-    """yield file names of executable files in path."""
-    if not os.path.exists(path):
-        return
-    for file_ in os.scandir(path):
-        if is_executable_in_posix(file_):
-            yield file_.name
-
-
-def _executables_in_posix(path):
-    if not os.path.exists(path):
-        return
-    else:
-        yield from _yield_accessible_unix_file_names(path)
-
-
-def _executables_in_windows(path):
-    if not os.path.isdir(path):
-        return
-    try:
-        for x in os.scandir(path):
-            if is_executable_in_windows(x):
-                yield x.name
-    except FileNotFoundError:
-        # On Windows, there's no guarantee for the directory to really
-        # exist even if isdir returns True. This may happen for instance
-        # if the path contains trailing spaces.
-        return
-
-
-def executables_in(path) -> tp.Iterable[str]:
-    """Returns a generator of files in path that the user could execute."""
-    if ON_WINDOWS:
-        func = _executables_in_windows
-    else:
-        func = _executables_in_posix
-    try:
-        yield from func(path)
-    except PermissionError:
-        return
-
+from xonsh.procs.executables import executables_in
 
 class CommandsCache(cabc.Mapping):
     """A lazy cache representing the commands available on the file system.
