@@ -77,7 +77,7 @@ def locate_executable(
     use_path_cache=True,
     use_dir_session_cache=False,
     use_perma_cache=False,
-    partial_match=[],
+    partial_match=None,
 ):
     """Search executable binary name in ``$PATH`` and return full path."""
     return locate_file(
@@ -275,7 +275,7 @@ def locate_file(
     use_path_cache=True,
     use_dir_session_cache=False,
     use_perma_cache=False,
-    partial_match=[],
+    partial_match=None,
 ):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
     return locate_relative_path(
@@ -352,7 +352,7 @@ def locate_file_in_path_env(
     use_path_cache=True,
     use_dir_session_cache=False,
     use_perma_cache=False,
-    partial_match=[],
+    partial_match=None,
 ):
     """Search file name in ``$PATH`` and return full path.
 
@@ -419,9 +419,10 @@ def locate_file_in_path_env(
                     else:
                         continue
             if cmd_chartrie.has_subtrie(name.lower()):  # ± partial match
-                partial_match.append(
-                    True
-                )  # report partial match for color highlighting
+                if partial_match:
+                    partial_match.append(
+                        True
+                    )  # report partial match for color highlighting
             else:  #                                      ✗ neither a full match, nor a prefix
                 pass
         elif (
