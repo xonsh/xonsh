@@ -1596,7 +1596,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 # pygments hooks.
 
 
-def _command_is_valid(cmd, partial_match=[]):
+def _command_is_valid(cmd, partial_match=None):
     use_dir_session_cache = "XONSH_WIN_DIR_SESSION_CACHE" in XSH.env.keys()
     return (
         cmd in XSH.aliases
