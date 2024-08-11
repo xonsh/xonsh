@@ -237,3 +237,64 @@ def test_xonsh_dir_session_cache(tmpdir, xession):
     )
     print(f"🕐{dur1:.6f}\t(file.ext)\n🕐{dur2:.6f}\t(cache dirs)\t")
     assert dur2 < 0.90 * dur1  # caching dirs should be noticeable faster
+
+from xonsh.pytest.tools import (
+    ON_DARWIN,
+    ON_TRAVIS,
+    ON_WINDOWS,
+    skip_if_on_msys,
+    skip_if_on_unix,
+    skip_if_on_windows,
+)
+import shutil
+import pytest
+skip_if_no_xonsh = pytest.mark.skipif(
+    shutil.which("xonsh") is None, reason="xonsh not on PATH"
+)
+@skip_if_no_xonsh
+@skip_if_on_unix
+def test_xonsh_win_dir_perma_cache(tmpdir, xession):
+    # check that adding dirs to a XONSH_WIN_DIR_PERMA_CACHE var to cache a list of files in
+    # them permanently instead of checking for the existence of every file.pathext
+    # is faster
+    if not ON_WINDOWS:
+        return
+
+    from os import walk
+
+    xonsh_win_dir_perma_cache = []
+    env = xession.env
+    pathext = env["PATHEXT"]
+    env_path = env.get("PATH", [])
+    for path in env_path:  # cache all dirs in path
+        f = []
+        for _dirpath, _dirnames, filenames in walk(path):
+            f.extend(filenames)
+            break
+        xonsh_win_dir_perma_cache += [path.rstrip(os.path.sep)]
+
+    from math import pow
+    from time import monotonic_ns as ttime
+
+    ns = pow(10, 9)  # nanosecond, which 'monotonic_ns' are measured in
+
+    env["XONSH_WIN_DIR_PERMA_CACHE"] = None
+    t0 = ttime()
+    for _i in range(100):
+        f = locate_executable("nothing",use_perma_cache=False)
+    t1 = ttime()
+    dur1 = (t1 - t0) / ns
+
+    env["XONSH_WIN_DIR_PERMA_CACHE"] = xonsh_win_dir_perma_cache
+    f = locate_executable("nothing",use_perma_cache=True)  # to cache dirs
+    t0 = ttime()
+    for _i in range(100):
+        f = locate_executable("nothing",use_perma_cache=True)
+    t1 = ttime()
+    dur2 = (t1 - t0) / ns
+
+    print(
+        f"{len(pathext)} file.exists checks; {len(xonsh_win_dir_perma_cache)} paths from ∑{len(env_path)}"
+    )
+    print(f"🕐{dur1:.6f}\t(file.ext)\n🕐{dur2:.6f}\t(cache dirs)\t")
+    assert dur2 < 0.90 * dur1  # caching dirs should be noticeable faster
