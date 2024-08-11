@@ -318,6 +318,7 @@ DEFAULT_STYLE_DICT = LazyObject(
             Token.Name.Attribute: "ansibrightyellow",
             Token.Name.Builtin: "ansigreen",
             Token.Name.Builtin.Pseudo: "",
+            Token.Name.Cmdprefix: "underline ansiwhite",
             Token.Name.Class: "bold ansibrightblue",
             Token.Name.Constant: "ansired",
             Token.Name.Decorator: "ansibrightmagenta",
