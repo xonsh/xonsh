@@ -2,8 +2,8 @@
 
 import os
 import pickle
-from pathlib import Path
 import typing as tp
+from pathlib import Path
 
 from xonsh.built_ins import XSH
 from xonsh.lib.itertools import unique_everseen
@@ -71,7 +71,14 @@ def is_executable_in_posix(filepath):
 is_executable = is_executable_in_windows if ON_WINDOWS else is_executable_in_posix
 
 
-def locate_executable(name, env=None, use_path_cache=True, use_dir_session_cache=False, use_perma_cache=False, partial_match=[]):
+def locate_executable(
+    name,
+    env=None,
+    use_path_cache=True,
+    use_dir_session_cache=False,
+    use_perma_cache=False,
+    partial_match=[],
+):
     """Search executable binary name in ``$PATH`` and return full path."""
     return locate_file(
         name,
@@ -126,17 +133,20 @@ def _yield_accessible_unix_file_names(path):
         if is_executable_in_posix(file_):
             yield file_.name
 
+
 import threading
-class PathCache: # Singleton
+
+
+class PathCache:  # Singleton
     _instance = None
     _lock = threading.Lock()
-    def __new__(cls, env):
-        if         not cls._instance:
-            with       cls._lock:
-                if not cls._instance:
-                    cls   ._instance = super().__new__(cls)
-        return         cls._instance
 
+    def __new__(cls, env):
+        if not cls._instance:
+            with cls._lock:
+                if not cls._instance:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
 
     is_dirty = True
     dir_cache: dict[str, list[list[str]]] = dict()
@@ -164,10 +174,13 @@ class PathCache: # Singleton
         cls.dir_cache[path] = [File_list, file_list]
 
     CACHE_FILE = "win-dir-perma-cache.pickle"
+
     def __init__(self, env) -> None:
-        self.env = env # path to the cache file where all dir are cached for pre-loading
+        self.env = (
+            env  # path to the cache file where all dir are cached for pre-loading
+        )
         self._cache_file = None
-        self._cmds_cache : pygtrie.CharTrie = pygtrie.CharTrie()
+        self._cmds_cache: pygtrie.CharTrie = pygtrie.CharTrie()
         self._paths_cache: dict[str, pygtrie.CharTrie] = dict()
         self._pathext_cache: set = set()
 
@@ -175,13 +188,15 @@ class PathCache: # Singleton
     def cache_file(self):
         """Keeping a property that lies on instance-attribute"""
         env = self.env
-        if self._cache_file is None: # path to the cache file where all dir are cached for pre-loading
+        if (
+            self._cache_file is None
+        ):  # path to the cache file where all dir are cached for pre-loading
             if "XONSH_CACHE_DIR" in env and "XONSH_WIN_DIR_PERMA_CACHE" in env:
                 self._cache_file = (
                     Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE).resolve()
                 )
             else:
-                self._cache_file = "" # set a falsy value other than None
+                self._cache_file = ""  # set a falsy value other than None
         return self._cache_file
 
     def get_paths_cache(self):
@@ -201,7 +216,9 @@ class PathCache: # Singleton
             paths = tuple(clear_paths(env_path))
             PathCache.clean_paths[env_path_hash] = paths
 
-        if self._update_paths_cache(paths): # not yet needed since only a few dirs are supported
+        if self._update_paths_cache(
+            paths
+        ):  # not yet needed since only a few dirs are supported
             pass
         #     all_cmds = pygtrie.CharTrie()
         #     for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
@@ -212,26 +229,35 @@ class PathCache: # Singleton
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
         if (not self._paths_cache) and self.cache_file and self.cache_file.exists():
-            try: # 1st time: load the commands from cache-file if configured
-                self._paths_cache, self._pathext_cache = pickle.loads(self.cache_file.read_bytes()) or [{},set()]
+            try:  # 1st time: load the commands from cache-file if configured
+                self._paths_cache, self._pathext_cache = pickle.loads(
+                    self.cache_file.read_bytes()
+                ) or [{}, set()]
             except Exception:
-                self.cache_file.unlink(missing_ok=True) # the file is corrupt
+                self.cache_file.unlink(missing_ok=True)  # the file is corrupt
         updated = False
-        pathext = set(self.env.get('PATHEXT', [])) if ON_WINDOWS else []
-        for path in paths: # ↓ user-configured to be cached
-            if (  ( path     in self.env.get("XONSH_WIN_DIR_PERMA_CACHE", []))
-              and ((path not in self._paths_cache) # ← not in cache
-              or  (not pathext == self._pathext_cache))): # ← definition of an executable changed
+        pathext = set(self.env.get("PATHEXT", [])) if ON_WINDOWS else []
+        for path in paths:  # ↓ user-configured to be cached
+            if (path in self.env.get("XONSH_WIN_DIR_PERMA_CACHE", [])) and (
+                (path not in self._paths_cache)  # ← not in cache
+                or (not pathext == self._pathext_cache)
+            ):  # ← definition of an executable changed
                 cmd_chartrie = pygtrie.CharTrie()
                 for cmd in executables_in(path):
-                    cmd_chartrie[cmd.lower()] = cmd # lower case for case-insensitive search, but preserve case
-                pd(f"   →→→ updated path={path} vs cache {self._paths_cache} pathext={self._pathext_cache}")
+                    cmd_chartrie[cmd.lower()] = (
+                        cmd  # lower case for case-insensitive search, but preserve case
+                    )
+                pd(
+                    f"   →→→ updated path={path} vs cache {self._paths_cache} pathext={self._pathext_cache}"
+                )
                 self._paths_cache[path] = cmd_chartrie
                 self._pathext_cache = pathext
                 updated = True
         if updated and self.cache_file:
             pd(f"_update_paths_cache pickled {self._paths_cache}")
-            self.cache_file.write_bytes(pickle.dumps([self._paths_cache, self._pathext_cache]))
+            self.cache_file.write_bytes(
+                pickle.dumps([self._paths_cache, self._pathext_cache])
+            )
         return updated
 
     def _iter_binaries(self, paths):
@@ -255,7 +281,13 @@ def locate_file(
     return locate_relative_path(
         name, env, check_executable, use_pathext
     ) or locate_file_in_path_env(
-        name, env, check_executable, use_pathext, use_path_cache, use_dir_session_cache, use_perma_cache
+        name,
+        env,
+        check_executable,
+        use_pathext,
+        use_path_cache,
+        use_dir_session_cache,
+        use_perma_cache,
     )
 
 
@@ -308,7 +340,9 @@ def hash_s_list(s_list):
         hash_o.update(s.encode("utf-8"))
     return hash_o.hexdigest()
 
+
 import pygtrie
+
 
 def locate_file_in_path_env(
     name,
@@ -318,7 +352,7 @@ def locate_file_in_path_env(
     use_path_cache=True,
     use_dir_session_cache=False,
     use_perma_cache=False,
-    partial_match=[]
+    partial_match=[],
 ):
     """Search file name in ``$PATH`` and return full path.
 
@@ -363,22 +397,31 @@ def locate_file_in_path_env(
     dir_cache_perma = env.get("XONSH_WIN_DIR_PERMA_CACHE", [])
     if dir_cache_perma:
         _pc = PathCache(env)
-        paths_cache = _pc.get_paths_cache() # path → cmd_chartrie[cmd.lower()] = cmd
+        paths_cache = _pc.get_paths_cache()  # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
 
     for path in paths:
-        if check_executable and dir_cache_perma and path in dir_cache_perma and path in paths_cache:  # use permanent dir cache
+        if (
+            check_executable
+            and dir_cache_perma
+            and path in dir_cache_perma
+            and path in paths_cache
+        ):  # use permanent dir cache
             cmd_chartrie = paths_cache[path]
             for possible_name in possible_names:
                 possible_Name = cmd_chartrie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
-                    if found := check_possible_name(path, possible_Name, check_executable):
+                    if found := check_possible_name(
+                        path, possible_Name, check_executable
+                    ):
                         return found
                     else:
                         continue
             if cmd_chartrie.has_subtrie(name.lower()):  # ± partial match
-                partial_match.append(True) # report partial match for color highlighting
+                partial_match.append(
+                    True
+                )  # report partial match for color highlighting
             else:  #                                      ✗ neither a full match, nor a prefix
                 pass
         elif (

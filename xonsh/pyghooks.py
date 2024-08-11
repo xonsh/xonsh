@@ -1600,8 +1600,13 @@ def _command_is_valid(cmd, partial_match=[]):
     use_dir_session_cache = "XONSH_DIR_SESSION_CACHE" in XSH.env.keys()
     return (
         cmd in XSH.aliases
-        or locate_executable(cmd, use_dir_session_cache=use_dir_session_cache, partial_match=partial_match)
+        or locate_executable(
+            cmd,
+            use_dir_session_cache=use_dir_session_cache,
+            partial_match=partial_match,
+        )
     ) and not iskeyword(cmd)
+
 
 def _command_is_autocd(cmd):
     if not XSH.env.get("AUTO_CD", False):
@@ -1737,7 +1742,15 @@ class XonshLexer(Python3Lexer):
             cmd_is_autocd = _command_is_autocd(cmd)
 
             if cmd_is_valid or cmd_is_autocd or partial_match:
-                yield (m.start(2), Name.Builtin if cmd_is_valid else Name.Cmdprefix if partial_match else Name.Constant, cmd)
+                yield (
+                    m.start(2),
+                    Name.Builtin
+                    if cmd_is_valid
+                    else Name.Cmdprefix
+                    if partial_match
+                    else Name.Constant,
+                    cmd,
+                )
                 start = m.end(2)
                 state = ("subproc",)
 
