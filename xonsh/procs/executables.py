@@ -248,7 +248,7 @@ class PathCache:  # Singleton
                         cmd  # lower case for case-insensitive search, but preserve case
                     )
                 self._paths_cache[path] = cmd_chartrie
-                self._pathext_cache = pathext
+                self._pathext_cache = set(pathext)
                 updated = True
         if updated and self.cache_file:
             self.cache_file.write_bytes(
