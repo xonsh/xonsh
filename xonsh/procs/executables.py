@@ -376,7 +376,7 @@ def locate_file_in_path_env(
                         return found
                     else:
                         continue
-            if cmd_chartrie.has_subtrie(name):  # ± partial match
+            if cmd_chartrie.has_subtrie(name.lower()):  # ± partial match
                 partial_match.append(True) # report partial match for color highlighting
             else:  #                              ✗ neither a full match, nor a prefix
                 pass
