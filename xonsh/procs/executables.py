@@ -370,14 +370,14 @@ def locate_file_in_path_env(
             cmd_chartrie = paths_cache[path]
             for possible_name in possible_names:
                 possible_Name = cmd_chartrie.get(possible_name.lower())
-                if possible_Name is not None:  #  ✓ full match
+                if possible_Name is not None:  #          ✓ full match
                     if found := check_possible_name(path, possible_Name, check_executable):
                         return found
                     else:
                         continue
             if cmd_chartrie.has_subtrie(name.lower()):  # ± partial match
                 partial_match.append(True) # report partial match for color highlighting
-            else:  #                              ✗ neither a full match, nor a prefix
+            else:  #                                      ✗ neither a full match, nor a prefix
                 pass
 
         if dir_to_cache and path in dir_to_cache:  # use session dir cache
