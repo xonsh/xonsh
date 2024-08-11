@@ -201,12 +201,13 @@ class PathCache: # Singleton
             paths = tuple(clear_paths(env_path))
             PathCache.clean_paths[env_path_hash] = paths
 
-        if self._update_paths_cache(paths):
-            all_cmds = pygtrie.CharTrie()
-            for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
-                all_cmds[cmd_low] = (cmd,path)
-            self._cmds_cache = all_cmds
-        return self._cmds_cache
+        if self._update_paths_cache(paths): # not yet needed since only a few dirs are supported
+            pass
+        #     all_cmds = pygtrie.CharTrie()
+        #     for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
+        #         all_cmds[cmd_low] = (cmd,path)
+        #     self._cmds_cache = all_cmds
+        # return self._cmds_cache
 
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
