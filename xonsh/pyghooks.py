@@ -1732,11 +1732,12 @@ class XonshLexer(Python3Lexer):
             yield m.start(1), Whitespace, m.group(1)
             start = m.end(1)
             cmd = m.group(2)
-            cmd_is_valid = _command_is_valid(cmd)
+            partial_match = []
+            cmd_is_valid = _command_is_valid(cmd, partial_match)
             cmd_is_autocd = _command_is_autocd(cmd)
 
-            if cmd_is_valid or cmd_is_autocd:
-                yield (m.start(2), Name.Builtin if cmd_is_valid else Name.Constant, cmd)
+            if cmd_is_valid or cmd_is_autocd or partial_match:
+                yield (m.start(2), Name.Builtin if cmd_is_valid else Name.Cmdprefix if partial_match else Name.Constant, cmd)
                 start = m.end(2)
                 state = ("subproc",)
 
