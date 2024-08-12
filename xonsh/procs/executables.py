@@ -177,6 +177,7 @@ class PathCache:  # Singleton
     CACHE_FILE = "win-dir-perma-cache.pickle"
 
     def __init__(self, env) -> None:
+        self.__is_init: bool
         if self.__is_init:
             return
         self.env = (
