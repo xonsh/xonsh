@@ -146,6 +146,7 @@ class PathCache:  # Singleton
             with cls._lock:
                 if not cls._instance:
                     cls._instance = super().__new__(cls)
+                    cls._instance.__is_init = False
         return cls._instance
 
     is_dirty = True
@@ -176,6 +177,8 @@ class PathCache:  # Singleton
     CACHE_FILE = "win-dir-perma-cache.pickle"
 
     def __init__(self, env) -> None:
+        if self.__is_init:
+            return
         self.env = (
             env  # path to the cache file where all dir are cached for pre-loading
         )
@@ -183,6 +186,7 @@ class PathCache:  # Singleton
         self._cmds_cache: pygtrie.CharTrie = pygtrie.CharTrie()
         self._paths_cache: dict[str, pygtrie.CharTrie] = dict()
         self._pathext_cache: set = set()
+        self.__is_init = True
 
     @property
     def cache_file(self):
