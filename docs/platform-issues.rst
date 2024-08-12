@@ -338,3 +338,6 @@ to avoid mismatches:
     XSH.env["XONSH_WIN_PATH_DIRS_TO_LIST"] = set(os.path.normpath(p) for p in xonsh_win_dir_session_cache)
     xonsh_win_dir_session_cache = [R"C:\my\path\to\cache",]
     XSH.env["XONSH_WIN_DIR_SESSION_CACHE"] = set(os.path.normpath(p) for p in xonsh_win_dir_session_cache)
+
+And for a tiny extra boost you can set ``XONSH_WIN_DIR_CACHE_SKIP_EXIST`` to ``True`` to skip an extra
+IO operation by no checking for whether a file exists in the permanent/session cached dirs
