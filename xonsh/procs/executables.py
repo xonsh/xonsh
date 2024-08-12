@@ -43,7 +43,7 @@ def is_executable_in_windows(filepath, env=None, skip_exist=False):
     """Check the file is executable in Windows."""
     filepath = Path(filepath)
     try:
-        if not skip_exist: # caller checked that a file exists
+        if not skip_exist:  # caller checked that a file exists
             try:
                 if not filepath.is_file():
                     return False
@@ -62,8 +62,8 @@ def is_executable_in_windows(filepath, env=None, skip_exist=False):
 def is_executable_in_posix(filepath, skip_exist=False):
     """Check the file is executable in POSIX."""
     try:
-        if skip_exist: # caller checked that a file exists
-            return                        os.access(filepath, os.X_OK)
+        if skip_exist:  # caller checked that a file exists
+            return os.access(filepath, os.X_OK)
         else:
             return filepath.is_file() and os.access(filepath, os.X_OK)
     except OSError:
@@ -408,7 +408,9 @@ def locate_file_in_path_env(
         paths_cache = _pc.get_paths_cache()  # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
-    skip_exist = env.get("XONSH_WIN_DIR_CACHE_SKIP_EXIST", False)  # avoid dupe is_file check since we assume permanent/session caches don't change ever/per session
+    skip_exist = env.get(
+        "XONSH_WIN_DIR_CACHE_SKIP_EXIST", False
+    )  # avoid dupe is_file check since we assume permanent/session caches don't change ever/per session
 
     for path in paths:
         if (
@@ -452,7 +454,9 @@ def locate_file_in_path_env(
                     possible_Name = F[i]
                 except ValueError:
                     continue
-                if found := check_possible_name(path, possible_Name, check_executable, skip_exist):
+                if found := check_possible_name(
+                    path, possible_Name, check_executable, skip_exist
+                ):
                     return found
                 else:
                     continue
@@ -470,7 +474,9 @@ def locate_file_in_path_env(
                     possible_Name = F[i]
                 except ValueError:
                     continue
-                if found := check_possible_name(path, possible_Name, check_executable, skip_exist=True):  # avoid dupe is_file check since we already get a list of files
+                if found := check_possible_name(
+                    path, possible_Name, check_executable, skip_exist=True
+                ):  # avoid dupe is_file check since we already get a list of files
                     return found
                 else:
                     continue
