@@ -408,6 +408,7 @@ def locate_file_in_path_env(
         paths_cache = _pc.get_paths_cache()  # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
+    skip_exist = env.get("XONSH_WIN_DIR_CACHE_SKIP_EXIST", False)  # avoid dupe is_file check since we assume permanent/session caches don't change ever/per session
 
     for path in paths:
         if (
@@ -422,7 +423,7 @@ def locate_file_in_path_env(
                 possible_Name = cmd_chartrie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
                     if found := check_possible_name(
-                        path, possible_Name, check_executable
+                        path, possible_Name, check_executable, skip_exist
                     ):
                         return found
                     else:
@@ -451,7 +452,7 @@ def locate_file_in_path_env(
                     possible_Name = F[i]
                 except ValueError:
                     continue
-                if found := check_possible_name(path, possible_Name, check_executable):
+                if found := check_possible_name(path, possible_Name, check_executable, skip_exist):
                     return found
                 else:
                     continue
