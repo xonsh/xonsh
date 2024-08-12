@@ -435,8 +435,6 @@ def locate_file_in_path_env(
                     partial_match.append(
                         True
                     )  # report partial match for color highlighting
-            else:  #                                      ✗ neither a full match, nor a prefix
-                pass
         elif (
             use_dir_session_cache and dir_to_cache and path in dir_to_cache
         ):  # use session dir cache
