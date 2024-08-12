@@ -324,7 +324,7 @@ from os import walk
 def check_possible_name(path, possible_name, check_executable, skip_exist=False):
     filepath = Path(path) / possible_name
     try:
-        if check_executable and not is_executable(filepath, skip_exist):
+        if check_executable and not is_executable(filepath, skip_exist=skip_exist):
             return
         if not skip_exist and not filepath.is_file():
             return
