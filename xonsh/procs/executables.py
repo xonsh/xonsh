@@ -39,15 +39,16 @@ def get_paths(env=None):
     return tuple(reversed(tuple(clear_paths(env.get("PATH") or []))))
 
 
-def is_executable_in_windows(filepath, env=None):
+def is_executable_in_windows(filepath, env=None, skip_exist=False):
     """Check the file is executable in Windows."""
     filepath = Path(filepath)
     try:
-        try:
-            if not filepath.is_file():
+        if not skip_exist: # caller checked that a file exists
+            try:
+                if not filepath.is_file():
+                    return False
+            except OSError:
                 return False
-        except OSError:
-            return False
 
         env = env if env is not None else XSH.env
         return any(s.lower() == filepath.suffix.lower() for s in env.get("PATHEXT", []))
@@ -58,10 +59,13 @@ def is_executable_in_windows(filepath, env=None):
         return False
 
 
-def is_executable_in_posix(filepath):
+def is_executable_in_posix(filepath, skip_exist=False):
     """Check the file is executable in POSIX."""
     try:
-        return filepath.is_file() and os.access(filepath, os.X_OK)
+        if skip_exist: # caller checked that a file exists
+            return                        os.access(filepath, os.X_OK)
+        else:
+            return filepath.is_file() and os.access(filepath, os.X_OK)
     except OSError:
         # broken Symlink are neither dir not files
         pass
@@ -317,10 +321,12 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
 from os import walk
 
 
-def check_possible_name(path, possible_name, check_executable):
+def check_possible_name(path, possible_name, check_executable, skip_exist=False):
     filepath = Path(path) / possible_name
     try:
-        if not filepath.is_file() or (check_executable and not is_executable(filepath)):
+        if check_executable and not is_executable(filepath, skip_exist):
+            return
+        if not skip_exist and not filepath.is_file():
             return
         return str(filepath)
     except PermissionError:
