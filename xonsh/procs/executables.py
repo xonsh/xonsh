@@ -172,11 +172,11 @@ class PathCache:  # Singleton
 
     @classmethod
     def get_dir_cached(cls, path):
-        return cls.dir_cache.get(path, [None, None])
+        return cls.dir_cache.get(path, None)
 
     @classmethod
-    def set_dir_cached(cls, path, File_list, file_list):
-        cls.dir_cache[path] = [File_list, file_list]
+    def set_dir_cached(cls, path, f_trie):
+        cls.dir_cache[path] = f_trie
 
     CACHE_FILE = "win-dir-perma-cache.pickle"
 
@@ -438,46 +438,50 @@ def locate_file_in_path_env(
         elif (
             use_dir_session_cache and dir_to_cache and path in dir_to_cache
         ):  # use session dir cache
-            F, f = PathCache.get_dir_cached(path)
-            if not F:  # not cached, scan the dir ...
-                F = []
+            f_trie = PathCache.get_dir_cached(path)
+            if not f_trie:  # not cached, scan the dir ...
+                f_trie = pygtrie.CharTrie()
                 for _dirpath, _dirnames, filenames in walk(path):
-                    F.extend(filenames)
+                    for fname in filenames:
+                        f_trie[fname.lower()] = fname  # for case-insensitive match
                     break  # no recursion into subdir
-                f = [i.lower() for i in F]
-                PathCache.set_dir_cached(path, F, f)  # ... and cache it
+                PathCache.set_dir_cached(path, f_trie)  # ... and cache it
             for possible_name in possible_names:
-                try:
-                    i = f.index(possible_name.lower())
-                    possible_Name = F[i]
-                except ValueError:
-                    continue
-                if found := check_possible_name(
-                    path, possible_Name, check_executable, skip_exist
-                ):
-                    return found
-                else:
-                    continue
+                possible_Name = f_trie.get(possible_name.lower())
+                if possible_Name is not None:  #          ✓ full match
+                    if found := check_possible_name(
+                        path, possible_Name, check_executable, skip_exist
+                    ):
+                        return found
+                    else:
+                        continue
+            if f_trie.has_subtrie(name.lower()):  # ± partial match
+                if type(partial_match) is list:
+                    partial_match.append(
+                        True
+                    )  # report partial match for color highlighting
         elif (
             ext_count > 2 and path_to_list and path in path_to_list
         ):  # list a dir vs checking many files
-            F = []
+            f_trie = pygtrie.CharTrie()
             for _dirpath, _dirnames, filenames in walk(path):
-                F.extend(filenames)
+                for fname in filenames:
+                    f_trie[fname.lower()] = fname  # for case-insensitive match
                 break  # no recursion into subdir
-            f = [i.lower() for i in F]
             for possible_name in possible_names:
-                try:
-                    i = f.index(possible_name.lower())
-                    possible_Name = F[i]
-                except ValueError:
-                    continue
-                if found := check_possible_name(
-                    path, possible_Name, check_executable, skip_exist=True
-                ):  # avoid dupe is_file check since we already get a list of files
-                    return found
-                else:
-                    continue
+                possible_Name = f_trie.get(possible_name.lower())
+                if possible_Name is not None:  #          ✓ full match
+                    if found := check_possible_name(
+                        path, possible_Name, check_executable, skip_exist=True
+                    ):  # avoid dupe is_file check since we already get a list of files
+                        return found
+                    else:
+                        continue
+            if f_trie.has_subtrie(name.lower()):  # ± partial match
+                if type(partial_match) is list:
+                    partial_match.append(
+                        True
+                    )  # report partial match for color highlighting
         else:  # check that file(s) exists individually
             for possible_name in possible_names:
                 if found := check_possible_name(path, possible_name, check_executable):
