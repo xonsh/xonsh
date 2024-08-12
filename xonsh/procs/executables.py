@@ -122,7 +122,8 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
             filepath = p.parent / possible_name
             try:
                 if not is_file(filepath) or (
-                    check_executable and not is_executable(filepath, check_file_exist=False)
+                    check_executable
+                    and not is_executable(filepath, check_file_exist=False)
                 ):
                     continue
                 return str(p.absolute())
