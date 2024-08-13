@@ -199,10 +199,13 @@ _cases_no_win = {
     },
 }
 
+
 def _convert_cases():
     for title, input_dict in _cases.items():
         for idx, item in enumerate(input_dict.items()):
             yield pytest.param(*item, id=f"{title}-{idx}")
+
+
 def _convert_cases_no_win():
     for title, input_dict in _cases_no_win.items():
         for idx, item in enumerate(input_dict.items()):
@@ -212,6 +215,7 @@ def _convert_cases_no_win():
 @pytest.mark.parametrize("inp, expected", list(_convert_cases()))
 def test_xonsh_lexer(inp, expected, check_token):
     check_token(inp, expected)
+
 
 @pytest.mark.parametrize("inp, expected", list(_convert_cases_no_win()))
 @skip_if_on_windows
