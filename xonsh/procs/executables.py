@@ -146,12 +146,20 @@ def _yield_accessible_unix_file_names(path):
 import threading
 
 
+class _PathCmd(tp.NamedTuple):
+    """A trie of executable files in a given dir with dir's timestamp for cache invalidation"""
+
+    mtime: float
+    ftrie: "pygtrie.CharTrie"  # trie[name.lower()] = name for case insensitive match
+
+
 class PathCache:  # Singleton
     """Avoid IO during typing by caching:
     - cleaned paths (not files/cmds), refreshed per new prompt by setting .is_dirty
     - list of cmds in a "permanent" cache for unchanging dirs, pickled in a cache file
     - list of cmds in a "session" cache for rarely changing dirs
     """
+
     _instance: tp.Any | None = None
     _lock = threading.Lock()
 
@@ -163,8 +171,11 @@ class PathCache:  # Singleton
                     cls._instance.__is_init = False
         return cls._instance
 
-    is_dirty = True # flag to signal that cleaned paths (not files/cmds) should be refreshed
+    is_dirty = (
+        True  # flag to signal that cleaned paths (not files/cmds) should be refreshed
+    )
     dir_cache: dict[str, list[list[str]]] = dict()
+    dir_key_cache: dict[str, _PathCmd] = dict()
     clean_paths: dict[str, tuple[str]] = dict()
 
     @classmethod
@@ -187,6 +198,14 @@ class PathCache:  # Singleton
     @classmethod
     def set_dir_cached(cls, path, f_trie):  # dir_cache_session
         cls.dir_cache[path] = f_trie
+
+    @classmethod
+    def get_dir_key_cache(cls, path):  # dir_cache_key
+        return cls.dir_key_cache.get(path, None)
+
+    @classmethod
+    def set_dir_key_cache(cls, path, time, f_trie):  # dir_cache_key
+        cls.dir_key_cache[path] = _PathCmd(time, f_trie)
 
     CACHE_FILE = "win-dir-perma-cache.pickle"
 
@@ -415,7 +434,9 @@ def locate_file_in_path_env(
     dir_cache_perma = env.get("XONSH_WIN_DIR_PERMA_CACHE", [])
     if dir_cache_perma:
         _pc = PathCache(env)
-        paths_cache = _pc.get_dir_cache_perma()  # path → cmd_chartrie[cmd.lower()] = cmd
+        paths_cache = (
+            _pc.get_dir_cache_perma()
+        )  # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
     skip_exist = env.get(
@@ -473,13 +494,20 @@ def locate_file_in_path_env(
         elif (
             ext_count > 2 and path_to_list and path in path_to_list
         ):  # list a dir vs checking many files
-            f_trie = pygtrie.CharTrie()
-            for _dirpath, _dirnames, filenames in walk(path):
-                for fname in filenames:
-                    f_trie[fname.lower()] = fname  # for case-insensitive match
-                break  # no recursion into subdir
+            path_time = os.path.getmtime(path)
+            path_cmd = PathCache.get_dir_key_cache(path)
+            use_cache = True if path_cmd and (path_cmd.mtime == path_time) else False
+            if use_cache:
+                ftrie = path_cmd.ftrie
+            else:  # rebuild dir cache
+                ftrie = pygtrie.CharTrie()
+                for _dirpath, _dirnames, filenames in walk(path):
+                    for fname in filenames:
+                        ftrie[fname.lower()] = fname  # for case-insensitive match
+                    break  # no recursion into subdir
+                PathCache.set_dir_key_cache(path, path_time, ftrie)
             for possible_name in possible_names:
-                possible_Name = f_trie.get(possible_name.lower())
+                possible_Name = ftrie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
                     if found := check_possible_name(
                         path, possible_Name, check_executable, skip_exist=True
@@ -487,7 +515,7 @@ def locate_file_in_path_env(
                         return found
                     else:
                         continue
-            if f_trie.has_subtrie(name.lower()):  # ± partial match
+            if ftrie.has_subtrie(name.lower()):  # ± partial match
                 if isinstance(
                     partial_match, CmdPart
                 ):  # report partial match for color highlighting
