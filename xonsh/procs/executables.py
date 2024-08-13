@@ -147,6 +147,11 @@ import threading
 
 
 class PathCache:  # Singleton
+    """Avoid IO during typing by caching:
+    - cleaned paths (not files/cmds), refreshed per new prompt by setting .is_dirty
+    - list of cmds in a "permanent" cache for unchanging dirs, pickled in a cache file
+    - list of cmds in a "session" cache for rarely changing dirs
+    """
     _instance: tp.Any | None = None
     _lock = threading.Lock()
 
