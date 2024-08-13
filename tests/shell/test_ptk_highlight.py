@@ -46,16 +46,6 @@ def check_token(xsh):
 
 
 _cases = {
-    "ls": {
-        "ls -al": [
-            (Name.Builtin, "ls"),
-        ],
-    },
-    "ls-bin": {
-        "/bin/ls -al": [
-            (Name.Builtin, "/bin/ls"),
-        ],
-    },
     "print": {
         'print("hello")': [
             (Name.Builtin, "print"),
@@ -95,6 +85,69 @@ _cases = {
         ],
     },
     "nested": {
+        "print($(cd))": [
+            (Name.Builtin, "print"),
+            (Punctuation, "("),
+            (Keyword, "$"),
+            (Punctuation, "("),
+            (Name.Builtin, "cd"),
+            (Punctuation, ")"),
+            (Punctuation, ")"),
+            (Text.Whitespace, "\n"),
+        ],
+    },
+    "subproc-args": {
+        "cd 192.168.0.1": [
+            (Text, "192.168.0.1"),
+        ],
+    },
+    "backtick": {
+        r"echo g`.*\w+`": [
+            (String.Affix, "g"),
+            (String.Backtick, "`"),
+            (String.Regex, "."),
+            (String.Regex, "*"),
+            (String.Escape, r"\w"),
+        ],
+    },
+    "macro": {
+        r"g!(42, *, 65)": [
+            (Name, "g"),
+            (Keyword, "!"),
+            (Punctuation, "("),
+            (Number.Integer, "42"),
+        ],
+        r"bash -c ! export var=42; echo $var": [
+            (Name.Builtin, "bash"),
+            (Text, "-c"),
+            (Keyword, "!"),
+            (String, "export var=42; echo $var"),
+        ],
+    },
+}
+_cases_no_win = {
+    "ls": {
+        "ls -al": [
+            (Name.Builtin, "ls"),
+        ],
+    },
+    "ls-bin": {
+        "/bin/ls -al": [
+            (Name.Builtin, "/bin/ls"),
+        ],
+    },
+    "print": {
+        'print("hello")': [
+            (Name.Builtin, "print"),
+            (Punctuation, "("),
+            (Literal.String.Double, '"'),
+            (Literal.String.Double, "hello"),
+            (Literal.String.Double, '"'),
+            (Punctuation, ")"),
+            (Text.Whitespace, "\n"),
+        ]
+    },
+    "nested": {
         'echo @("hello")': [
             (Name.Builtin, "echo"),
             (Keyword, "@"),
@@ -125,20 +178,6 @@ _cases = {
             (Text.Whitespace, "\n"),
         ],
     },
-    "subproc-args": {
-        "cd 192.168.0.1": [
-            (Text, "192.168.0.1"),
-        ],
-    },
-    "backtick": {
-        r"echo g`.*\w+`": [
-            (String.Affix, "g"),
-            (String.Backtick, "`"),
-            (String.Regex, "."),
-            (String.Regex, "*"),
-            (String.Escape, r"\w"),
-        ],
-    },
     "macro": {
         r"g!(42, *, 65)": [
             (Name, "g"),
@@ -160,16 +199,23 @@ _cases = {
     },
 }
 
-
 def _convert_cases():
     for title, input_dict in _cases.items():
+        for idx, item in enumerate(input_dict.items()):
+            yield pytest.param(*item, id=f"{title}-{idx}")
+def _convert_cases_no_win():
+    for title, input_dict in _cases_no_win.items():
         for idx, item in enumerate(input_dict.items()):
             yield pytest.param(*item, id=f"{title}-{idx}")
 
 
 @pytest.mark.parametrize("inp, expected", list(_convert_cases()))
-@skip_if_on_windows
 def test_xonsh_lexer(inp, expected, check_token):
+    check_token(inp, expected)
+
+@pytest.mark.parametrize("inp, expected", list(_convert_cases_no_win()))
+@skip_if_on_windows
+def test_xonsh_lexer_no_win(inp, expected, check_token):
     check_token(inp, expected)
 
 
