@@ -325,16 +325,18 @@ def setup_timings(argv):
             times = list(_timings.items())
             times = sorted(times, key=lambda x: x[1])
             width = max(len(s) for s, _ in times) + 2
-            header_format = f"|{{:<{width}}}|{{:^11}}|{{:^11}}|"
-            entry_format = f"|{{:<{width}}}|{{:^11.3f}}|{{:^11.3f}}|"
-            sepline = "|{}|{}|{}|".format("-" * width, "-" * 11, "-" * 11)
+            begline = "┌{}┬{}┬{}┐".format("─" * width, "─" * 11, "─" * 11)
+            header_format = f"│{{:<{width}}}│{{:^11}}│{{:^11}}│"
+            entry_format = f"│{{:<{width}}}│{{:^11.3f}}│{{:^11.3f}}│"
+            sepline = "├{}┼{}┼{}┤".format("─" * width, "─" * 11, "─" * 11)
+            endline = "└{}┴{}┴{}┘".format("─" * width, "─" * 11, "─" * 11)
             # Print result table
             print(" Debug level: {}".format(os.getenv("XONSH_DEBUG", "Off")))
-            print(sepline)
+            print(begline)
             print(header_format.format("Event name", "Time (s)", "Delta (s)"))
             print(sepline)
             prevtime = tstart = times[0][1]
             for name, ts in times:
-                print(entry_format.format(name, ts - tstart, ts - prevtime))
+                print(entry_format.format(name, ts - tstart, ts - prevtime).replace('0.000','     '))
                 prevtime = ts
-            print(sepline)
+            print(endline)
