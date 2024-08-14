@@ -1743,13 +1743,18 @@ class XonshLexer(Python3Lexer):
             cmd_is_valid = _command_is_valid(cmd, partial_match)
             cmd_is_autocd = _command_is_autocd(cmd)
 
-            if cmd_is_valid or cmd_is_autocd or partial_match.is_part:
+            is_typing_cmd = (
+                m.group() == m.string
+            )  # style only when still typing the command
+            style_cmd_prefix = partial_match.is_part and is_typing_cmd
+
+            if cmd_is_valid or cmd_is_autocd or style_cmd_prefix:
                 yield (
                     m.start(2),
                     Name.Builtin
                     if cmd_is_valid
                     else Name.Cmdprefix
-                    if partial_match.is_part
+                    if style_cmd_prefix
                     else Name.Constant,
                     cmd,
                 )
