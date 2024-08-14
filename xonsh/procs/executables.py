@@ -226,9 +226,18 @@ class PathCache:  # Singleton
         self.usr_dir_list_session: set = set()
         self.usr_dir_list_key: set = set()
         # clean up user give list of dirs and cache it
-        usr_dir_list_perma   = [os.path.normpath(p).lower() for p in env.get("XONSH_WIN_DIR_PERMA_CACHE"  , [])]
-        usr_dir_list_session = [os.path.normpath(p).lower() for p in env.get("XONSH_WIN_DIR_SESSION_CACHE", [])]
-        usr_dir_list_key     = [os.path.normpath(p).lower() for p in env.get("XONSH_WIN_PATH_DIRS_TO_LIST", [])]
+        usr_dir_list_perma = [
+            os.path.normpath(p).lower()
+            for p in env.get("XONSH_WIN_DIR_PERMA_CACHE", [])
+        ]
+        usr_dir_list_session = [
+            os.path.normpath(p).lower()
+            for p in env.get("XONSH_WIN_DIR_SESSION_CACHE", [])
+        ]
+        usr_dir_list_key = [
+            os.path.normpath(p).lower()
+            for p in env.get("XONSH_WIN_PATH_DIRS_TO_LIST", [])
+        ]
         env_path = env.get("PATH", [])
         for p in env_path:
             pn = os.path.normpath(p)
@@ -486,7 +495,9 @@ def locate_file_in_path_env(
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
         elif (
-            use_dir_cache_session and usr_dir_list_session and path in usr_dir_list_session
+            use_dir_cache_session
+            and usr_dir_list_session
+            and path in usr_dir_list_session
         ):  # use session dir cache
             f_trie = PathCache.get_dir_cached(path)
             if not f_trie:  # not cached, scan the dir ...
