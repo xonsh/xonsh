@@ -338,9 +338,11 @@ def setup_timings(argv):
             prevtime = tstart = times[0][1]
             for name, ts in times:
                 print(
-                    entry_format.format(name, ts - tstart, ts - prevtime).replace(
-                        "0.000", "     "
-                    )
+                    entry_format.format(name, ts - tstart, ts - prevtime)
+                    .replace("0.000", "     ")
+                    .replace("0.00", " .  ")
+                    .replace("0.0", " . ")
+                    .replace("0.", " .")
                 )
                 prevtime = ts
             print(endline)
