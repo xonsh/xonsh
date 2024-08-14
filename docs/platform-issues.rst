@@ -327,17 +327,5 @@ permanently by adding them to
 
 (stored in ``$XONSH_CACHE_DIR\win-dir-perma-cache.pickle``)
 
-Since paths are normalized before comparison, you might also want to do so in your config
-to avoid mismatches:
-
-.. code-block:: xonshcon
-
-    from xonsh.built_ins import XSH
-    import os
-    xonsh_win_path_dirs_to_list = [R"C:\my\path\to\list",]
-    XSH.env["XONSH_WIN_PATH_DIRS_TO_LIST"] = set(os.path.normpath(p) for p in xonsh_win_dir_session_cache)
-    xonsh_win_dir_session_cache = [R"C:\my\path\to\cache",]
-    XSH.env["XONSH_WIN_DIR_SESSION_CACHE"] = set(os.path.normpath(p) for p in xonsh_win_dir_session_cache)
-
 And for a tiny extra boost you can set ``XONSH_WIN_DIR_CACHE_SKIP_EXIST`` to ``True`` to skip an extra
 IO operation by no checking for whether a file exists in the permanent/session cached dirs
