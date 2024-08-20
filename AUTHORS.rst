@@ -14,8 +14,8 @@ Authors are sorted by number of commits.
 * Bob Hyman
 * anki-code
 * BlahGeek
-* Daniel Shimon
 * pre-commit-ci[bot]
+* Daniel Shimon
 * Gyuri Horak
 * Jean-Benoist Leger
 * christopher
@@ -330,5 +330,6 @@ Authors are sorted by number of commits.
 * lunrenyi
 * Spencer Bliven
 * Niraj Kulkarni
+* Aidan Courtney
 * goodboy
 * Atsushi Morimoto
