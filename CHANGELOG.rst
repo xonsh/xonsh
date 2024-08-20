@@ -4,6 +4,35 @@ Xonsh Change Log
 
 .. current developments
 
+v0.18.3
+====================
+
+**Added:**
+
+* executables: Added ``locate_relative_path`` functionality to ``locate_file``.
+
+**Changed:**
+
+* ``$MULTILINE_PROMPT`` changed from ``'.'`` to ``' '`` (space)
+  to have an ability to copy the multiline functions from shell history without deleting the dot manually (#5624 #5634).
+
+**Fixed:**
+
+* Fixed ``$AUTO_CD`` regress after previous refactoring.
+* Partial fix for "Bad file descriptor" in case of callable alias with execx invocation inside e.g. ExecAlias (#5645).
+* completer: Fixed exception when in python-only completion context (#5632).
+* Fixed exception "object has no attribute readlines" in case of redirect callable alias output.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Aidan Courtney
+
+
+
 v0.18.2
 ====================
 
