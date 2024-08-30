@@ -1471,10 +1471,6 @@ class PromptSetting(Xettings):
         "or `WezTerm <https://wezfurlong.org/wezterm/shell-integration.html>`_ "
         "for more details). May be str or function which returns a str.",
     )
-    NO_EXECUTABLE_TOKENS = Var.with_default(
-        False,
-        "Flag for disabling searching command string for executables for highlighting",
-    )
     PRETTY_PRINT_RESULTS = Var.with_default(
         True,
         'Flag for "pretty printing" return values.',
@@ -1614,6 +1610,13 @@ class PromptSetting(Xettings):
         "When searching history from a partial string (by pressing up arrow), "
         "match command history anywhere in a given line (not just the start)",
         doc_default="False",
+    )
+    XONSH_PROMPT_HIGHLIGHT_EXECUTABLE = Var.with_default(
+        False,
+        "Flag for coloring executable commands in a prompt. "
+        "Aliases are still colored. "
+        "Disable this if you have slow I/O operations or "
+        " have an antivirus enabled with on-access scanning.",
     )
     XONSH_STDERR_PREFIX = Var.with_default(
         "",
