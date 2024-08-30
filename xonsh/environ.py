@@ -1471,6 +1471,10 @@ class PromptSetting(Xettings):
         "or `WezTerm <https://wezfurlong.org/wezterm/shell-integration.html>`_ "
         "for more details). May be str or function which returns a str.",
     )
+    NO_EXECUTABLE_TOKENS = Var.with_default(
+        False,
+        'Flag for disabling searching command string for executables for highlighting'
+    )
     PRETTY_PRINT_RESULTS = Var.with_default(
         True,
         'Flag for "pretty printing" return values.',
