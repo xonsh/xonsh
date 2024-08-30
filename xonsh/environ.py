@@ -1473,7 +1473,7 @@ class PromptSetting(Xettings):
     )
     NO_EXECUTABLE_TOKENS = Var.with_default(
         False,
-        'Flag for disabling searching command string for executables for highlighting'
+        "Flag for disabling searching command string for executables for highlighting",
     )
     PRETTY_PRINT_RESULTS = Var.with_default(
         True,
