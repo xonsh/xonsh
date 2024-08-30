@@ -1596,7 +1596,10 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 
 def _command_is_valid(cmd):
-    return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
+    if XSH.env.get("NO_EXECUTABLE_TOKENS"):
+        return cmd in XSH.aliases and not iskeyword(cmd)
+    else:
+        return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
 
 
 def _command_is_autocd(cmd):
