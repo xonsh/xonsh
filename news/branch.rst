@@ -21,7 +21,3 @@
 **Security:**
 
 * <news item>
-
-**Authors:**
-
-* Kyle Gottfried
