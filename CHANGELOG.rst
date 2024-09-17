@@ -2721,7 +2721,7 @@ v0.8.6
     * Exits after concatenating normal files which have a finite size
     * Continues to run for special files which do not have a size,
       such as ``/dev/random``
-    * Is interruptable in all cases with Crtl-C.
+    * Is interruptable in all cases with Ctrl-C.
 * Callable aliases were not properly raising a ``CalledProcessError`` when they
   returned a non-zero exist status when ``$RAISE_SUBPROC_ERROR = True``. This has
   been fixed.
@@ -4463,7 +4463,7 @@ v0.5.0
 * Fixed many PEP8 violations that had gone unnoticed
 * Fix failure to detect an Anaconda python distribution if the python was install from the conda-forge channel.
 * current_branch will try and locate the vc binary once
-* May now Crtl-C out of an infinite loop with a subprocess, such as
+* May now Ctrl-C out of an infinite loop with a subprocess, such as
   ```while True: sleep 1``.
 * Fix for stdin redirects.
 * Backgrounding works with ``$XONSH_STORE_STDOUT``
