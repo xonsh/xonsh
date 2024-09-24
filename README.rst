@@ -131,7 +131,8 @@ The xonsh shell is developed by a community of volunteers. There are a few ways 
 
 - Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_ or `high priority issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3Apriority-high+sort%3Areactions-%2B1-desc>`_ or a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_. You can start with the `Developer guide <https://xon.sh/devguide.html>`_.
 - Take an `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create a new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
-- Become xonsh core by deep diving into xonsh and improve the threading and subprocess logic.
+- Contribute to `xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
+- Become xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 - `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
 - Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
