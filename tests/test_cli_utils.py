@@ -89,3 +89,13 @@ def test_parser_default_func(mocker):
 
     mocker.patch.object(xx, "xontribs_list", func)
     assert alias([]) is True
+
+
+def test_arg_parser_alias_exit_code():
+    import xonsh.xontribs as xx
+
+    alias = xx.XontribAlias()
+
+    exit_code = alias(["invalid_command"])
+    assert isinstance(exit_code, int)
+    assert exit_code != 0
