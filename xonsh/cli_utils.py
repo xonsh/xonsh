@@ -655,7 +655,12 @@ class ArgParserAlias:
             )
         except self.Error as ex:
             self.err(f"Error: {ex}")
-            sys.exit(getattr(ex, "errno", 1))
+            return getattr(ex, "errno", 1)
+        except SystemExit as e:
+            # argparse.ArgumentParser calls sys.exit() in certain cases
+            # (e.g. when displaying a help message). We catch the SystemExit
+            # exception to prevent the entire shell from exiting (see #5689)
+            return e.code
         finally:
             # free the reference to input/output. Otherwise it will result in errors
             self.stdout = None
