@@ -336,6 +336,7 @@ from xonsh.tools import unthreadable
 
 @unthreadable
 def _f():
+    import sys
     sys.exit(42)
 
 aliases['f'] = _f
