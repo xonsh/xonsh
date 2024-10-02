@@ -792,6 +792,10 @@ class ProcProxy:
                         "stack": spec.stack,
                     },
                 )
+        except SystemExit as e:
+            # the alias function is running in the main thread, so we need to
+            # catch SystemExit to prevent the entire shell from exiting (see #5689)
+            r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except Exception:
             xt.print_exception(source_msg="Exception in " + get_proc_proxy_name(self))
             r = 1
