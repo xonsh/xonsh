@@ -329,6 +329,21 @@ f
         "hello\n",
         0,
     ),
+    # test system exit in unthreadable alias (see #5689)
+    (
+        """
+from xonsh.tools import unthreadable
+
+@unthreadable
+def _f():
+    sys.exit(42)
+
+aliases['f'] = _f
+print(![f].returncode)
+""",
+        "42\n",
+        0,
+    ),
     # test ambiguous globs
     (
         """
