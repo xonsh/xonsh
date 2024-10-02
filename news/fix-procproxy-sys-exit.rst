@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* <news item>
+* Now SystemExit that invoked from callable alias follows to exiting from callable alias instead of exiting the entire shell.
 
 **Deprecated:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Built-in commands such as `xonfig -h` and `xontrib -h` no longer cause the shell to exit
+* Built-in commands such as `xonfig -h` and `xontrib -h` no longer cause the shell to exit.
 
 **Security:**
 
