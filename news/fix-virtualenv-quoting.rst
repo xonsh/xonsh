@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed incorrect quoting behaviour in `activate.xsh`
+* Fixed incorrect quoting behaviour in `activate.xsh` for virtualenv version 20.26.6.
 
 **Security:**
 
