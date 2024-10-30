@@ -44,8 +44,6 @@ from being consumed.
 
 Other languages like Lisp, Forth, and Julia also provide their macro systems.
 Even restructured text (rST) directives could be considered macros.
-Haskell and other more purely functional languages do not need macros (since
-evaluation is lazy anyway), and so do not have them.
 
 If these seem unfamiliar to the Python world, note that Jupyter and IPython
 magics ``%`` and ``%%`` are macros!
