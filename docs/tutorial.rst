@@ -139,8 +139,8 @@ variable in Python.  The same is true for deleting them too.
     >>> $EXT = $NUM + "456"
     >>> $EXT
     '123456'
-    >>> $FNUM = f"{$QWE}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
-    >>> $FNUM = "{QWE}456".format(QWE=$QWE)
+    >>> $FNUM = f"{$NUM}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
+    >>> $FNUM = "{FILLME}456".format(FILLME=$NUM)
     >>> $FNUM
     '123456'
     >>> "%s456" % $NUM
