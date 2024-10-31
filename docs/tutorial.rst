@@ -135,12 +135,24 @@ variable in Python.  The same is true for deleting them too.
     Become the Lord of the Files
     >>> del $GOAL
 
+    >>> $NUM = "123"
+    >>> $EXT = $NUM + "456"
+    >>> $EXT
+    '123456'
+    >>> $FNUM = f"{$NUM}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
+    >>> $FNUM = "{FILLME}456".format(FILLME=$NUM)
+    >>> $FNUM
+    '123456'
+    >>> "%s456" % $NUM
+    '123456'
+
 Very nice.
 
 .. note::
 
    To update ``os.environ`` when the xonsh environment changes set
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
+
 
 The Environment Itself ``${...}``
 ---------------------------------
