@@ -135,15 +135,15 @@ variable in Python.  The same is true for deleting them too.
     Become the Lord of the Files
     >>> del $GOAL
 
-    >>> $QWE = "123"
-    >>> $ASD = $QWE + "456"
-    >>> $ASD
+    >>> $NUM = "123"
+    >>> $EXT = $NUM + "456"
+    >>> $EXT
     '123456'
-    >>> $ZXC = f"{$QWE}456" # Currently not working, see https://github.com/xonsh/xonsh/issues/5166
-    >>> $ZXC = "{QWE}456".format(QWE=$QWE)
-    >>> $ZXC
+    >>> $FNUM = f"{$QWE}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
+    >>> $FNUM = "{QWE}456".format(QWE=$QWE)
+    >>> $FNUM
     '123456'
-    >>> $ZXC = "%s456" % $QWE
+    >>> "%s456" % $NUM
     '123456'
 
 Very nice.
