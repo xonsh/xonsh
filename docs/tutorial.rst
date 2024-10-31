@@ -135,12 +135,24 @@ variable in Python.  The same is true for deleting them too.
     Become the Lord of the Files
     >>> del $GOAL
 
+    >>> $QWE = "123"
+    >>> $ASD = $QWE + "456"
+    >>> $ASD
+    '123456'
+    >>> $ZXC = f"{$QWE}456" # Currently not working, see https://github.com/xonsh/xonsh/issues/5166
+    >>> $ZXC = "{QWE}456".format(QWE=$QWE)
+    >>> $ZXC
+    '123456'
+    >>> $ZXC = "%s456" % $QWE
+    '123456'
+
 Very nice.
 
 .. note::
 
    To update ``os.environ`` when the xonsh environment changes set
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
+
 
 The Environment Itself ``${...}``
 ---------------------------------
