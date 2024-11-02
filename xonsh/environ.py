@@ -1627,6 +1627,10 @@ class PromptSetting(Xettings):
         "For example, to have stderr appear on a red background, the "
         'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
     )
+    XONSH_SUPPRESS_WELCOME = Var.with_default(
+        False,
+        "Suppresses the welcome message.",
+    )
 
 
 class PromptHistorySetting(Xettings):
