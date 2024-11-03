@@ -4,6 +4,29 @@ Xonsh Change Log
 
 .. current developments
 
+v0.18.4
+====================
+
+**Changed:**
+
+* Now SystemExit that invoked from callable alias follows to exiting from callable alias instead of exiting the entire shell.
+
+**Fixed:**
+
+* Built-in commands such as `xonfig -h` and `xontrib -h` no longer cause the shell to exit.
+* Fixed incorrect quoting behaviour in `activate.xsh` for virtualenv version 20.26.6.
+
+**Authors:**
+
+* anki-code
+* pre-commit-ci[bot]
+* Peter Ye
+* Max Nordlund
+* Shawn Wallace
+* Faidon Liambotis
+
+
+
 v0.18.3
 ====================
 

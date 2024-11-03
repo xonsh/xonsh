@@ -24,9 +24,9 @@ Authors are sorted by number of commits.
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
+* Peter Ye
 * Rob Brewer
 * virus
-* Peter Ye
 * Sagar Tewari
 * Gordon Ball
 * Eadaen1
@@ -331,5 +331,8 @@ Authors are sorted by number of commits.
 * Spencer Bliven
 * Niraj Kulkarni
 * Aidan Courtney
+* Max Nordlund
+* Shawn Wallace
+* Faidon Liambotis
 * goodboy
 * Atsushi Morimoto
