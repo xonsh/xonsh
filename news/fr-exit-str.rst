@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* non-int sys.exit codes raising ValueError
+* Fixed non-int sys.exit codes raising ValueError.
 
 **Security:**
 
