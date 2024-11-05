@@ -543,6 +543,9 @@ class ArgparseCompleter:
             if not act_res:
                 # it is not a option string: pass
                 break
+            if isinstance(act_res, list):
+                assert len(act_res) == 1
+                act_res = act_res[0]
             # it is a valid option and advance
             self.remaining_args = self.remaining_args[1:]
             act, *_, value = act_res
