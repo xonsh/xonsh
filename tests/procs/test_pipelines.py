@@ -122,6 +122,7 @@ def test_casting(cmdline, result, xonsh_execer):
 
 
 @skip_if_on_windows
+@skip_if_on_unix
 def test_background_pgid(xonsh_session, monkeypatch):
     monkeypatch.setitem(xonsh_session.env, "XONSH_INTERACTIVE", True)
     pipeline = xonsh_session.execer.eval("![echo hi &]")
