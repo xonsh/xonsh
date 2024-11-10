@@ -354,7 +354,9 @@ class ArgParser(ap.ArgumentParser):
         add_args(parser, func, allowed_params=args, doc=doc)
         return parser
 
-    def _parse_known_args(self, arg_strings: list[str], namespace: ap.Namespace, *args, **kwargs):
+    def _parse_known_args(
+        self, arg_strings: list[str], namespace: ap.Namespace, *args, **kwargs
+    ):
         arg_set = set(arg_strings)
         if (
             self.commands
