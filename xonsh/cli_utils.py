@@ -354,7 +354,9 @@ class ArgParser(ap.ArgumentParser):
         add_args(parser, func, allowed_params=args, doc=doc)
         return parser
 
-    def _parse_known_args(self, arg_strings: list[str], namespace: ap.Namespace):
+    def _parse_known_args(
+        self, arg_strings: list[str], namespace: ap.Namespace, *args, **kwargs
+    ):
         arg_set = set(arg_strings)
         if (
             self.commands
@@ -363,7 +365,7 @@ class ArgParser(ap.ArgumentParser):
             and (set(self.commands.choices).isdisjoint(arg_set))
         ):
             arg_strings = [self.default_command] + arg_strings
-        return super()._parse_known_args(arg_strings, namespace)
+        return super()._parse_known_args(arg_strings, namespace, *args, **kwargs)
 
 
 def run_with_partial_args(func: tp.Callable, ns: dict[str, tp.Any]):
@@ -543,6 +545,9 @@ class ArgparseCompleter:
             if not act_res:
                 # it is not a option string: pass
                 break
+            if isinstance(act_res, list):
+                assert len(act_res) == 1
+                act_res = act_res[0]
             # it is a valid option and advance
             self.remaining_args = self.remaining_args[1:]
             act, *_, value = act_res
