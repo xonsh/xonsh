@@ -402,3 +402,35 @@ def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     lexer = XonshLexer()
     assert XSH.env is not None
     list(lexer.get_tokens_unprocessed("  some text"))
+
+
+import shutil
+
+from xonsh.pytest.tools import (
+    skip_if_on_unix,
+)
+
+skip_if_no_xonsh = pytest.mark.skipif(
+    shutil.which("xonsh") is None, reason="xonsh not on PATH"
+)
+
+
+@skip_if_no_xonsh
+@skip_if_on_unix
+def test_xonsh_lexer_cmdprefix(xession):
+    # find where xonsh is and add its path to the cache env var that supports partial matches
+
+    env = xession.env
+    xonsh_exe = shutil.which("xonsh")
+    f = pathlib.Path(xonsh_exe)
+    xonsh_win_path_dirs_to_list = [str(f.parent)]  # listed dirs support partial matches
+    env["XONSH_WIN_PATH_DIRS_TO_LIST"] = xonsh_win_path_dirs_to_list
+    env["PATH"] = str(f.parent)
+
+    from xonsh.style_tools import Token
+
+    lexer = XonshLexer()
+    expected_token = (0, Token.Name.Cmdprefix, "xons")
+    tok_res = list(lexer.get_tokens_unprocessed("xons"))
+
+    assert tok_res[1] == expected_token
