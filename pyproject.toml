@@ -135,7 +135,6 @@ doc = [
     "psutil",
     "pyzmq",
     "matplotlib",
-    "doctr",
     "tornado",
     "runthis-sphinxext",
     "livereload",
