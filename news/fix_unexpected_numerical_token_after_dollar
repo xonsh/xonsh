@@ -1,0 +1,2 @@
+**Fixed:**
+* fixed unexpected numerical token after dollar sign when doing echo
