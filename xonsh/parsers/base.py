@@ -738,7 +738,9 @@ class BaseParser:
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt"""
         p1 = p[1]
-        p[0] = ast.Expression(body=p1, lineno=p1.lineno, col_offset=p1.col_offset)
+        p[0] = ast.Expression(body=p1)
+        p[0].lineno = p1.lineno
+        p[0].col_offset = p1.col_offset
 
     def p_func_call(self, p):
         """func_call : LPAREN arglist_opt RPAREN"""
