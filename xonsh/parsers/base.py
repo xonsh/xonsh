@@ -2157,7 +2157,8 @@ class BaseParser:
                 | minus_tok term
         """
         p1 = p[1]
-        op = self._term_binops[p1.value](lineno=p1.lineno, col_offset=p1.lexpos)
+        op = self._term_binops[p1.value]()
+        op.lineno, op.col_offset = p1.lineno, p1.lexpos
         p[0] = [op, p[2]]
 
     def p_term(self, p):
@@ -2196,7 +2197,9 @@ class BaseParser:
                 f"operation {p1!r} not supported",
                 self.currloc(lineno=p.lineno, column=p.lexpos),
             )
-        p[0] = [op(lineno=p1.lineno, col_offset=p1.lexpos), p[2]]
+        op_node = op()
+        op_node.lineno, op_node.col_offset = p1.lineno, p1.lexpos
+        p[0] = [op_node, p[2]]
 
     _factor_ops = {"+": ast.UAdd, "-": ast.USub, "~": ast.Invert}
 
@@ -3049,7 +3052,7 @@ class BaseParser:
         else:
             targ = ensure_has_elts(targs)
         store_ctx(targ)
-        comp = ast.comprehension(target=targ, iter=it, ifs=[])
+        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=0)
         comps = [comp]
         p0 = {"comps": comps}
         if p5 is not None:
