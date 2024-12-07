@@ -24,7 +24,7 @@ from xonsh.procs.executables import (
 )
 
 if ON_WINDOWS:
-    from requests.structures import CaseInsensitiveDict as CacheDict
+    from requests.structures import CaseInsensitiveDict as CacheDict  # type: ignore
 else:
     CacheDict = dict
 
