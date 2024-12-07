@@ -4,7 +4,8 @@
 
 **Changed:**
 
-* <news item>
+* replaced `case_insensitive_dictionary` dependency with local
+  `CaseInsensitiveDict` class
 
 **Deprecated:**
 
@@ -12,7 +13,7 @@
 
 **Removed:**
 
-* `case_insensitive_dictionary` dependency
+* <news item>
 
 **Fixed:**
 
