@@ -33,7 +33,7 @@ def complete_command(command: CommandContext):
             kwargs = {}
             if show_desc:
                 kwargs["description"] = "Alias" if is_alias else path
-            yield RichCompletion(s, append_space=True, **kwargs)
+            yield RichCompletion(s, append_space=True, **kwargs)  # type: ignore
     if xp.ON_WINDOWS:
         for i in executables_in("."):
             if i.startswith(cmd):
