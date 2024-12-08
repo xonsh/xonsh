@@ -24,7 +24,7 @@ from xonsh.procs.executables import (
 )
 
 
-class CaseInsensitiveDict(dict[str, tp.Any]):
+class CaseInsensitiveDict(dict[tp.Any, tp.Any]):
     def __init__(self, *args, **kwargs):
         super().__init__()
         self._store = {}
@@ -32,21 +32,21 @@ class CaseInsensitiveDict(dict[str, tp.Any]):
 
     def __setitem__(self, key, value):
         # Store the key in lowercase but preserve the original case for display
-        self._store[key.lower()] = key
-        super().__setitem__(key.lower(), value)
+        self._store[key.casefold()] = key
+        super().__setitem__(key.casefold(), value)
 
     def __getitem__(self, key):
-        return super().__getitem__(key.lower())
+        return super().__getitem__(key.casefold())
 
     def __delitem__(self, key):
-        del self._store[key.lower()]
-        super().__delitem__(key.lower())
+        del self._store[key.casefold()]
+        super().__delitem__(key.casefold())
 
     def __contains__(self, key):
-        return key.lower() in self._store
+        return key.casefold() in self._store
 
     def get(self, key, default=None):
-        return super().get(key.lower(), default)
+        return super().get(key.casefold(), default)
 
     def update(self, *args, **kwargs):
         for k, v in dict(*args, **kwargs).items():
@@ -66,6 +66,7 @@ class CaseInsensitiveDict(dict[str, tp.Any]):
         return CaseInsensitiveDict(self.items())
 
 
+CacheDict: tp.Union[type[CaseInsensitiveDict], type[dict]]
 if ON_WINDOWS:
     CacheDict = CaseInsensitiveDict
 else:
