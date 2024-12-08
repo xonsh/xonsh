@@ -201,6 +201,7 @@ ignore = [
     "E402", # Module level import not at top of file
     "E501", # line length
     "E731", # Do not assign a lambda expression, use a def
+    "UP031", # Use format specifiers instead of percent format
 ]
 select = [
     "B", # https://beta.ruff.rs/docs/rules/#flake8-bugbear-b
