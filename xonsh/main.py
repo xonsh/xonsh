@@ -606,7 +606,14 @@ def main_xonsh(args):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
                 code = getattr(exc_info[1], "code", 0)
-                exit_code = int(code) if code is not None else 0
+                if code is None:
+                    exit_code = 0
+                else:
+                    exit_code = code
+                    try:
+                        exit_code = int(code)
+                    except ValueError:
+                        pass
                 XSH.exit = exit_code
             else:
                 exit_code = 1
