@@ -8,6 +8,7 @@ import pytest
 
 from xonsh.commands_cache import (
     SHELL_PREDICTOR_PARSER,
+    CaseInsensitiveDict,
     CommandsCache,
     _Commands,
     executables_in,
@@ -306,3 +307,77 @@ def test_executables_in(xession):
             else:
                 result = set(executables_in(test_path))
     assert expected == result
+
+
+def test_caseinsdict_constructor():
+    actual = CaseInsensitiveDict({"key1": "val1", "Key2": "Val2"})
+    assert isinstance(actual, CaseInsensitiveDict)
+    assert actual["key1"] == "val1"
+    assert actual["Key2"] == "Val2"
+
+
+def test_caseinsdict_getitem():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual["Key1"] == "Val1"
+    assert actual["key1"] == "Val1"
+
+
+def test_caseinsdict_setitem():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    actual["Key1"] = "Val2"
+    assert actual["Key1"] == "Val2"
+    assert actual["key1"] == "Val2"
+    actual["key1"] = "Val3"
+    assert actual["Key1"] == "Val3"
+    assert actual["key1"] == "Val3"
+
+
+def test_caseinsdict_delitem():
+    actual = CaseInsensitiveDict({"Key1": "Val1", "Key2": "Val2"})
+    del actual["Key1"]
+    assert actual == CaseInsensitiveDict({"Key2": "Val2"})
+    del actual["key2"]
+    assert actual == CaseInsensitiveDict({})
+
+
+def test_caseinsdict_contains():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual.__contains__("Key1")
+    assert actual.__contains__("key1")
+    assert not actual.__contains__("key2")
+
+
+def test_caseinsdict_get():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual.get("Key1") == "Val1"
+    assert actual.get("key1") == "Val1"
+    assert actual.get("key2", "no val") == "no val"
+    assert actual.get("key1", "no val") == "Val1"
+
+
+def test_caseinsdict_update():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    actual.update({"Key2": "Val2"})
+    assert actual["key2"] == "Val2"
+
+
+def test_caseinsdict_keys():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert next(actual.keys()) == "Key1"
+
+
+def test_caseinsdict_items():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert next(actual.items()) == ("Key1", "Val1")
+
+
+def test_caseinsdict_repr():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual.__repr__() == "CaseInsensitiveDict({'Key1': 'Val1'})"
+
+
+def test_caseinsdict_copy():
+    initial = CaseInsensitiveDict({"Key1": "Val1"})
+    actual = initial.copy()
+    assert actual == initial
+    assert id(actual) != id(initial)

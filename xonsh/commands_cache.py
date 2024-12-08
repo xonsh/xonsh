@@ -23,8 +23,52 @@ from xonsh.procs.executables import (
     is_executable_in_windows,
 )
 
+
+class CaseInsensitiveDict(dict[tp.Any, tp.Any]):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self._store = {}
+        self.update(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        # Store the key in lowercase but preserve the original case for display
+        self._store[key.casefold()] = key
+        super().__setitem__(key.casefold(), value)
+
+    def __getitem__(self, key):
+        return super().__getitem__(key.casefold())
+
+    def __delitem__(self, key):
+        del self._store[key.casefold()]
+        super().__delitem__(key.casefold())
+
+    def __contains__(self, key):
+        return key.casefold() in self._store
+
+    def get(self, key, default=None):
+        return super().get(key.casefold(), default)
+
+    def update(self, *args, **kwargs):
+        for k, v in dict(*args, **kwargs).items():
+            self[k] = v
+
+    def keys(self):
+        # Return the original keys with their original casing
+        return (self._store[k] for k in self._store)
+
+    def items(self):
+        return ((self._store[k], self[k]) for k in self._store)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({dict(self.items())})"
+
+    def copy(self):
+        return CaseInsensitiveDict(self.items())
+
+
+CacheDict: tp.Union[type[CaseInsensitiveDict], type[dict]]
 if ON_WINDOWS:
-    from case_insensitive_dict import CaseInsensitiveDict as CacheDict
+    CacheDict = CaseInsensitiveDict
 else:
     CacheDict = dict
 
