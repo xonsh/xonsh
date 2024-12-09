@@ -1,7 +1,9 @@
 """Interfaces to locate executable files on file system."""
 
 import os
+import pickle
 from pathlib import Path
+import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.lib.itertools import unique_everseen
@@ -305,6 +307,7 @@ def hash_s_list(s_list):
         hash_o.update(s.encode("utf-8"))
     return hash_o.hexdigest()
 
+import pygtrie
 
 def locate_file_in_path_env(
     name,
@@ -364,6 +367,19 @@ def locate_file_in_path_env(
     ext_count = len(possible_names)
 
     for path in paths:
+        if check_executable and dir_cache_perma and path in dir_cache_perma and path in paths_cache:  # use permanent dir cache
+            cmd_chartrie = paths_cache[path]
+            for possible_name in possible_names:
+                possible_Name = cmd_chartrie.get(possible_name.lower())
+                if possible_Name is not None:  #  ✓ full match
+                    if found := check_possible_name(path, possible_Name, check_executable):
+                        return found
+                    else:
+                        continue
+            if cmd_chartrie.has_subtrie(name):  # ± partial match
+                partial_match.append(True) # report partial match for color highlighting
+            else:  #                              ✗ neither a full match, nor a prefix
+                pass
         if (
             use_dir_session_cache and dir_to_cache and path in dir_to_cache
         ):  # use session dir cache
