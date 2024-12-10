@@ -328,4 +328,4 @@ permanently by adding them to
 (stored in ``$XONSH_CACHE_DIR\win-dir-perma-cache.pickle``)
 
 And for a tiny extra boost you can set ``XONSH_WIN_DIR_CACHE_SKIP_EXIST`` to ``True`` to skip an extra
-IO operation by no checking for whether a file exists in the permanent/session cached dirs
+IO operation by not checking for whether a file exists in the permanent/session cached dirs
