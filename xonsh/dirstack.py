@@ -281,7 +281,7 @@ def cd(args, stdin=None):
 
 
 def pushd_fn(
-    dir_or_n: Annotated[tp.Optional[str], Arg(metavar="+N|-N|dir", nargs="?")] = None,
+    dir_or_n: Annotated[str | None, Arg(metavar="+N|-N|dir", nargs="?")] = None,
     cd=True,
     quiet=False,
 ):
@@ -325,7 +325,7 @@ def pushd_fn(
 
     if dir_or_n is None:
         try:
-            new_pwd: tp.Optional[str] = DIRSTACK.pop(0)
+            new_pwd: str | None = DIRSTACK.pop(0)
         except IndexError:
             e = "pushd: Directory stack is empty\n"
             return None, e, 1
@@ -381,7 +381,7 @@ pushd = ArgParserAlias(func=pushd_fn, has_args=True, prog="pushd")
 
 
 def popd_fn(
-    nth: Annotated[tp.Optional[str], Arg(metavar="+N|-N", nargs="?")] = None,
+    nth: Annotated[str | None, Arg(metavar="+N|-N", nargs="?")] = None,
     cd=True,
     quiet=False,
 ):
@@ -412,7 +412,7 @@ def popd_fn(
         BACKWARD = "-"
         FORWARD = "+"
 
-    new_pwd: tp.Optional[str] = None
+    new_pwd: str | None = None
     if nth is None:
         try:
             new_pwd = DIRSTACK.pop(0)
@@ -468,7 +468,7 @@ popd = ArgParserAlias(func=popd_fn, has_args=True, prog="popd")
 
 
 def dirs_fn(
-    nth: Annotated[tp.Optional[str], Arg(metavar="N", nargs="?")] = None,
+    nth: Annotated[str | None, Arg(metavar="N", nargs="?")] = None,
     clear=False,
     print_long=False,
     verbose=False,

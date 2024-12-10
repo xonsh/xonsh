@@ -186,10 +186,10 @@ def hasglobstar(x):
 
 
 def raise_parse_error(
-    msg: tp.Union[str, tuple[str]],
-    loc: tp.Optional[Location] = None,
-    code: tp.Optional[str] = None,
-    lines: tp.Optional[list[str]] = None,
+    msg: str | tuple[str],
+    loc: Location | None = None,
+    code: str | None = None,
+    lines: list[str] | None = None,
 ):
     err_line = None
     if loc is None or code is None or lines is None:
@@ -2132,7 +2132,7 @@ class BaseParser:
             )
         else:
             left = p1
-            for op, right in zip(p2[::2], p2[1::2]):
+            for op, right in zip(p2[::2], p2[1::2], strict=False):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
                 left = ast.BinOp(
@@ -2173,7 +2173,7 @@ class BaseParser:
             )
         else:
             left = p1
-            for op, right in zip(p2[::2], p2[1::2]):
+            for op, right in zip(p2[::2], p2[1::2], strict=False):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
                 left = ast.BinOp(
@@ -2704,7 +2704,7 @@ class BaseParser:
             begins.extend([(x[0], x[1] + 1) for x in p2])
             ends = p2 + ends
         elts = []
-        for beg, end in zip(begins, ends):
+        for beg, end in zip(begins, ends, strict=False):
             s = self._source_slice(beg, end).strip()
             if not s:
                 if len(begins) == 1:
@@ -2938,7 +2938,7 @@ class BaseParser:
         p1, p4 = p[1], p[4]
         keys = [p1]
         vals = [p[3]]
-        for k, v in zip(p4[::2], p4[1::2]):
+        for k, v in zip(p4[::2], p4[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1)
@@ -2951,7 +2951,7 @@ class BaseParser:
         p1, p2 = p[1], p[2]
         keys = [p1[0]]
         vals = [p1[1]]
-        for k, v in zip(p2[::2], p2[1::2]):
+        for k, v in zip(p2[::2], p2[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1[0] or p1[1])

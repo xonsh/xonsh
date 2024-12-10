@@ -1,7 +1,6 @@
 """PTK specific PromptFormatter class."""
 
 import functools
-import typing as tp
 
 from xonsh.prompt.base import DEFAULT_PROMPT, PromptFormatter
 from xonsh.shells.ptk_shell.updator import AsyncPrompt, PromptUpdator
@@ -40,7 +39,7 @@ class PTKPromptFormatter(PromptFormatter):
     def _format_prompt(
         self,
         template=DEFAULT_PROMPT,
-        async_prompt: tp.Optional[AsyncPrompt] = None,
+        async_prompt: AsyncPrompt | None = None,
         **kwargs,
     ):
         toks = super()._format_prompt(

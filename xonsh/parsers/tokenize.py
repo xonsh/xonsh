@@ -22,7 +22,6 @@ import itertools
 import re
 import sys
 import token
-import typing as tp
 from token import (
     AMPER,
     AMPEREQUAL,
@@ -185,7 +184,7 @@ for v in _xonsh_tokens.values():
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES: dict[str, tp.Union[str, int]] = {
+EXACT_TOKEN_TYPES: dict[str, str | int] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,

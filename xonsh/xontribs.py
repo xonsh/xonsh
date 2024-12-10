@@ -34,7 +34,7 @@ class Xontrib(tp.NamedTuple):
 
     module: str
     """path to the xontrib module"""
-    distribution: "tp.Optional[Distribution]" = None
+    distribution: "Distribution | None" = None
     """short description about the xontrib."""
 
     def get_description(self):
