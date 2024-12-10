@@ -28,7 +28,7 @@ class ArgCompleter:
 
 def Arg(
     *args: str,
-    completer: tp.Union[ArgCompleter, tp.Callable[..., tp.Iterator[str]]] = None,
+    completer: ArgCompleter | tp.Callable[..., tp.Iterator[str]] = None,
     **kwargs,
 ):
     # converting to tuple because of limitation with hashing args in py3.6
@@ -209,7 +209,7 @@ def add_args(
 
 
 def make_parser(
-    func: tp.Union[tp.Callable, str],
+    func: tp.Callable | str,
     empty_help=False,
     **kwargs,
 ) -> "ArgParser":

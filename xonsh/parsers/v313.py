@@ -174,7 +174,7 @@ class Parser(ThreeTenParser):
         p1, p4 = p[1], p[4]
         keys = [p1]
         vals = [p[3]]
-        for k, v in zip(p4[::2], p4[1::2]):
+        for k, v in zip(p4[::2], p4[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1)
@@ -186,7 +186,7 @@ class Parser(ThreeTenParser):
         p1, p2 = p[1], p[2]
         keys = [p1[0]]
         vals = [p1[1]]
-        for k, v in zip(p2[::2], p2[1::2]):
+        for k, v in zip(p2[::2], p2[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1[0] or p1[1])

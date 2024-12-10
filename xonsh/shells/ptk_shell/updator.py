@@ -64,7 +64,7 @@ class AsyncPrompt:
         self.name = name
 
         # list of tokens in that prompt. It could either be resolved or not resolved.
-        self.tokens: tp.Optional[ParsedTokens] = None
+        self.tokens: ParsedTokens | None = None
         self.timer = None
         self.session = session
         self.executor = executor
@@ -72,7 +72,7 @@ class AsyncPrompt:
         # (Key: the future object) that is created for the (value: index/field_name) in the tokens list
         self.futures: dict[
             concurrent.futures.Future,
-            tuple[str, tp.Optional[int], tp.Optional[str], tp.Optional[str]],
+            tuple[str, int | None, str | None, str | None],
         ] = {}
 
     def start_update(self, on_complete):
@@ -145,8 +145,8 @@ class AsyncPrompt:
         self,
         func: tp.Callable,
         field: str,
-        idx: tp.Optional[int] = None,
-        spec: tp.Optional[str] = None,
+        idx: int | None = None,
+        spec: str | None = None,
         conv=None,
     ):
         future, intermediate_value, placeholder = self.executor.submit(func, field)
@@ -166,7 +166,7 @@ class PromptUpdator:
         self.futures = {}
         self.attrs_loaded = None
 
-    def add(self, prompt_name: tp.Optional[str]) -> tp.Optional[AsyncPrompt]:
+    def add(self, prompt_name: str | None) -> AsyncPrompt | None:
         # clear out old futures from the same prompt
         if prompt_name is None:
             return None

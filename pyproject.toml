@@ -14,7 +14,7 @@ description = "Python-powered shell. Full-featured and cross-platform."
 authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
 maintainers = [{ name = "Xonsh Community" }, { email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = []
 
 [tool.setuptools.dynamic]
@@ -259,4 +259,12 @@ convention = "numpy"
 ]
 "tests/test*.py" = [
     "E741", #  E741 Ambiguous variable name
+]
+
+[tool.uv.sources]
+xonsh-rd-parser = { path = "../../rust/xonsh-rd-parser", editable = true }
+
+[dependency-groups]
+dev = [
+    "xonsh-rd-parser",
 ]
