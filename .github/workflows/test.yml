@@ -63,9 +63,6 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tmate_debug_enabled }}
         timeout-minutes: 15
-      - name: Run QA Checks
-        if: ${{ startsWith(matrix.os, 'ubuntu') && startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
-        run: python -m xonsh run-tests.xsh validate-news-items
       - name: Run tests
         if: ${{ !startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
         run: |
