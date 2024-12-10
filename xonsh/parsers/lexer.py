@@ -3,14 +3,20 @@
 Written using a hybrid of ``tokenize`` and PLY.
 """
 
+from __future__ import annotations
+
 import io
 
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
-import re
-import typing as tp
 
 from xonsh.lib.lazyasd import lazyobject
+from xonsh.parsers import lexer_consts as lc
+from xonsh.parsers.lexer_helpers import (
+    _is_not_lparen_and_rparen,
+    _offset_from_prev_lines,
+    check_bad_str_token,
+)
 from xonsh.parsers.ply.lex import LexToken
 from xonsh.parsers.tokenize import (
     CASE,
@@ -117,21 +123,12 @@ def token_map():
     return tm
 
 
-NEED_WHITESPACE = frozenset(["and", "or"])
-
-
-@lazyobject
-def RE_NEED_WHITESPACE():
-    pattern = r"\s?(" + "|".join(NEED_WHITESPACE) + r")(\s|[\\]$)"
-    return re.compile(pattern)
-
-
 def handle_name(state, token):
     """Function for handling name tokens"""
     typ = "NAME"
     state["last"] = token
-    needs_whitespace = token.string in NEED_WHITESPACE
-    has_whitespace = needs_whitespace and RE_NEED_WHITESPACE.match(
+    needs_whitespace = token.string in lc.NEED_WHITESPACE
+    has_whitespace = needs_whitespace and lc.RE_NEED_WHITESPACE.match(
         token.line[max(0, token.start[1] - 1) :]
     )
     if state["pymode"][-1][0]:
@@ -429,7 +426,7 @@ def _new_token(type, value, pos):
 class Lexer:
     """Implements a lexer for the xonsh language."""
 
-    _tokens: tp.Optional[tuple[str, ...]] = None
+    _tokens: tuple[str, ...] | None = None
 
     def __init__(self, tolerant=False, pymode=True):
         """
@@ -544,3 +541,124 @@ class Lexer:
             )
             self._tokens = t
         return self._tokens
+
+    def subproc_toks(
+        self, line: str, mincol=-1, maxcol=None, returnline=False, greedy=False
+    ) -> str | None:
+        self.reset()
+        self.input(line)
+        toks = []
+        lparens = []
+        saw_macro = False
+        end_offset = 0
+        for tok in self:
+            pos = tok.lexpos
+            if tok.type not in lc.END_TOK_TYPES and pos >= maxcol:
+                break
+            if tok.type == "BANG":
+                saw_macro = True
+            if saw_macro and tok.type not in ("NEWLINE", "DEDENT"):
+                toks.append(tok)
+                continue
+            if tok.type in lc.LPARENS:
+                lparens.append(tok.type)
+            if greedy and len(lparens) > 0 and "LPAREN" in lparens:
+                toks.append(tok)
+                if tok.type == "RPAREN":
+                    lparens.pop()
+                continue
+            if len(toks) == 0 and tok.type in lc.BEG_TOK_SKIPS:
+                continue  # handle indentation
+            elif len(toks) > 0 and toks[-1].type in lc.END_TOK_TYPES:
+                if _is_not_lparen_and_rparen(lparens, toks[-1]):
+                    lparens.pop()  # don't continue or break
+                elif pos < maxcol and tok.type not in ("NEWLINE", "DEDENT", "WS"):
+                    if not greedy:
+                        toks.clear()
+                    if tok.type in lc.BEG_TOK_SKIPS:
+                        continue
+                else:
+                    break
+            if pos < mincol:
+                continue
+            toks.append(tok)
+            if tok.type == "WS" and tok.value == "\\":
+                pass  # line continuation
+            elif tok.type == "NEWLINE":
+                break
+            elif tok.type == "DEDENT":
+                # fake a newline when dedenting without a newline
+                tok.type = "NEWLINE"
+                tok.value = "\n"
+                tok.lineno -= 1
+                if len(toks) >= 2:
+                    prev_tok_end = toks[-2].lexpos + len(toks[-2].value)
+                else:
+                    prev_tok_end = len(line)
+                if "#" in line[prev_tok_end:]:
+                    tok.lexpos = prev_tok_end  # prevents wrapping comments
+                else:
+                    tok.lexpos = len(line)
+                break
+            elif check_bad_str_token(tok):
+                return None
+        else:
+            if len(toks) > 0 and toks[-1].type in lc.END_TOK_TYPES:
+                if _is_not_lparen_and_rparen(lparens, toks[-1]):
+                    pass
+                elif greedy and toks[-1].type == "RPAREN":
+                    pass
+                else:
+                    toks.pop()
+            if len(toks) == 0:
+                return None  # handle comment lines
+            tok = toks[-1]
+            pos = tok.lexpos
+            if isinstance(tok.value, str):
+                end_offset = len(tok.value.rstrip())
+            else:
+                el = line[pos:].split("#")[0].rstrip()
+                end_offset = len(el)
+        if len(toks) == 0:
+            return None  # handle comment lines
+        elif saw_macro or greedy:
+            end_offset = len(toks[-1].value.rstrip()) + 1
+        if toks[0].lineno != toks[-1].lineno:
+            # handle multiline cases
+            end_offset += _offset_from_prev_lines(line, toks[-1].lineno)
+        beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
+        end = len(line[:end].rstrip())
+        rtn = "![" + line[beg:end] + "]"
+        if returnline:
+            rtn = line[:beg] + rtn + line[end:]
+        return rtn
+
+    def find_next_break(self, line, mincol=0) -> int | None:
+        """Finds the next break point in the line.
+
+        This function may be useful in finding the maxcol argument of
+        subproc_toks().
+        """
+        if mincol >= 1:
+            line = line[mincol:]
+        if lc.RE_END_TOKS.search(line) is None:
+            return None
+        maxcol = None
+        lparens = []
+        self.input(line)
+        for tok in self:
+            if tok.type in lc.LPARENS:
+                lparens.append(tok.type)
+            elif tok.type in lc.END_TOK_TYPES:
+                if _is_not_lparen_and_rparen(lparens, tok):
+                    lparens.pop()
+                else:
+                    maxcol = tok.lexpos + mincol + 1
+                    break
+            elif tok.type == "ERRORTOKEN" and ")" in tok.value:
+                maxcol = tok.lexpos + mincol + 1
+                break
+            elif tok.type == "BANG":
+                maxcol = mincol + len(line) + 1
+                break
+        return maxcol
