@@ -70,6 +70,7 @@ Authors are sorted by number of commits.
 * Yohei Tamura
 * Maximilian Köhl
 * Alexander Sosedkin
+* doronz88
 * Cody Scott
 * Jake Hedman
 * traverseda
@@ -82,7 +83,6 @@ Authors are sorted by number of commits.
 * Mike Crowe
 * Vasilis Gerakaris
 * Angus Hollands
-* doronz88
 * JuanPablo
 * Ollie Terrance
 * Marcel Bollmann
@@ -189,6 +189,7 @@ Authors are sorted by number of commits.
 * jbw3
 * Naveen
 * Blake Ramsdell
+* JamesParrott
 * jyn
 * Dan Allan
 * Ned Letcher
@@ -320,7 +321,6 @@ Authors are sorted by number of commits.
 * Jacqueline Leykam
 * Joshix-1
 * Nathan Monfils
-* JamesParrott
 * Airat Makhmutov
 * Matthieu LAURENT
 * Daniel Saunders
@@ -334,5 +334,8 @@ Authors are sorted by number of commits.
 * Max Nordlund
 * Shawn Wallace
 * Faidon Liambotis
+* Jueun Lee
+* Simon Billinge
+* Bala
 * goodboy
 * Atsushi Morimoto

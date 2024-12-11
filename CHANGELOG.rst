@@ -4,6 +4,36 @@ Xonsh Change Log
 
 .. current developments
 
+v0.19.0
+====================
+
+**Added:**
+
+* env: Added ``$XONSH_SUPPRESS_WELCOME`` variable to suppress the welcome message.
+
+**Changed:**
+
+* replaced `case_insensitive_dictionary` dependency with local
+  `CaseInsensitiveDict` class
+
+**Fixed:**
+
+* parsers: fix deprecation warnings triggered on python3.13
+* Fix DeprecationWarning while initializing Expression
+
+**Authors:**
+
+* Gil Forsyth
+* pre-commit-ci[bot]
+* Evgeny
+* doronz88
+* JamesParrott
+* Jueun Lee
+* Simon Billinge
+* Bala
+
+
+
 v0.18.4
 ====================
 

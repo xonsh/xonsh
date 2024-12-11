@@ -1,6 +1,6 @@
 **Added:**
 
-* env: Added ``$XONSH_SUPPRESS_WELCOME`` variable to suppress the welcome message.
+* <news item>
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* <news item>
+* Fixed non-int sys.exit codes raising ValueError.
 
 **Security:**
 
