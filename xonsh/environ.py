@@ -1275,6 +1275,16 @@ class CacheSetting(Xettings):
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
     )
 
+    XONSH_WIN_DIR_PERMA_CACHE = Var.with_default(
+        set(),
+        "Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
+        "Cache a list of files in these dirs permanently (until the OS is updated)"
+        "to avoid re-checking whether an executable exists on every keystroke."
+        "This is a potentially 'lossy' option, if the content of tese dirs changes,"
+        "syntax highlighting will be wrong, but it may still be worth the lower input lag.",
+        is_configurable=ON_WINDOWS,
+    )
+
     XONSH_DIR_SESSION_CACHE = Var.with_default(
         set(),
         "(Win) Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
