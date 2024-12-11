@@ -1291,7 +1291,11 @@ class CacheSetting(Xettings):
         "Cache a list of files in these dirs for the duration of Xonsh session to avoid"
         "re-checking whether an executable exists on every keystroke."
         "This is a 'lossy' option, if xonsh or another process changes the files,"
-        "syntax highlighting will be wrong, but it may still be worth the lower input lag.",
+        "syntax highlighting will be wrong, but it may still be worth the lower input lag."
+        "(Mac/Linux) cached dirs provide another syntax highlighting benefit:"
+        "they allow highlighting typos early if partially typed command isn't found as a prefix"
+        "to any cached commands, e.g., 'x̲o̲n̲' is a prefix of 'xonsh' and highlighted, but 'xonh'"
+        "is a typo, so isn't (color scheme 'Token.Name.Cmdprefix':'underline ansiwhite').",
     )
 
     XONSH_DIR_CACHE_TO_LIST = Var.with_default(
