@@ -93,6 +93,31 @@ def test_locate_file(tmpdir, xession):
         assert str(f) == str(file)
 
 
+def test_locate_file_clean_path_cache_time(tmpdir, xession):
+    # check that subsequent calls to locate_executable run faster due to use of path cache
+    # that skips doing IO calls to check that path dirs exist
+    from time import monotonic_ns as ttime
+    from math import pow
+    ns = pow(10,9) # nanosecond, which 'monotonic_ns' are measured in
+    t0 = ttime()
+    f1 = locate_executable("nothing")
+    t1 = ttime()
+    f2 = locate_executable("nothing")
+    t2 = ttime()
+    f3 = locate_executable("nothing")
+    t3 = ttime()
+    dur1 = (t1 - t0)/ns
+    dur2 = (t2 - t1)/ns
+    dur3 = (t3 - t2)/ns
+    env = xession.env
+    env_path = env.get("PATH", [])
+    if env_path:
+        print(f"$PATH length = ",len(env_path))
+        print(f"t1 (no cache) = {{:.6f}}\nt2 (   cache) = {{:.6f}}\nt3 (   cache) = {{:.6f}}".format(dur1,dur2,dur3))
+        assert  dur2 < 0.90 * dur1   # 2nd run with cache should always be noticeable faster
+        assert  dur3 < 0.90 * dur1   # as well as all the subsequent calls
+
+
 def test_xonsh_dir_cache_to_list(tmpdir, xession):
     # check that adding smaller dirs to a XONSH_DIR_CACHE_TO_LIST var to list them
     # instead of checking for the existence of every file.pathext
