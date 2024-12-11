@@ -1596,16 +1596,15 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 # pygments hooks.
 
 
-def _command_is_valid(cmd, partial_match=[]):
-    use_dir_session_cache = "XONSH_DIR_SESSION_CACHE" in XSH.env.keys()
-    use_dir_session_cache = "XONSH_WIN_DIR_SESSION_CACHE" in XSH.env.keys()
-    use_perma_cache = "XONSH_WIN_DIR_PERMA_CACHE" in XSH.env.keys()
+def _command_is_valid(cmd, partial_match=None):
+    use_dir_cache_session = "XONSH_DIR_SESSION_CACHE" in XSH.env.keys()
+    use_dir_cache_perma = "XONSH_WIN_DIR_PERMA_CACHE" in XSH.env.keys()
     return (
         cmd in XSH.aliases
         or locate_executable(
             cmd,
-            use_dir_session_cache=use_dir_session_cache,
-            use_perma_cache=use_perma_cache,
+            use_dir_cache_session=use_dir_cache_session,
+            use_dir_cache_perma=use_dir_cache_perma,
             partial_match=partial_match,
         )
     ) and not iskeyword(cmd)

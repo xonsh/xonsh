@@ -220,7 +220,7 @@ def test_xonsh_dir_session_cache(tmpdir, xession):
     env["XONSH_DIR_SESSION_CACHE"] = None
     t0 = ttime()
     for _i in range(100):
-        f = locate_executable("nothing", use_dir_session_cache=True)
+        f = locate_executable("nothing", use_dir_cache_session=True)
     t1 = ttime()
     dur1 = (t1 - t0) / ns
 
@@ -228,7 +228,7 @@ def test_xonsh_dir_session_cache(tmpdir, xession):
     f = locate_executable("nothing")  # to cache dirs
     t0 = ttime()
     for _i in range(100):
-        f = locate_executable("nothing", use_dir_session_cache=True)
+        f = locate_executable("nothing", use_dir_cache_session=True)
     t1 = ttime()
     dur2 = (t1 - t0) / ns
 
@@ -282,15 +282,15 @@ def test_xonsh_win_dir_perma_cache(tmpdir, xession):
     env["XONSH_WIN_DIR_PERMA_CACHE"] = None
     t0 = ttime()
     for _i in range(100):
-        f = locate_executable("nothing", use_perma_cache=False)
+        f = locate_executable("nothing", use_dir_cache_perma=False)
     t1 = ttime()
     dur1 = (t1 - t0) / ns
 
     env["XONSH_WIN_DIR_PERMA_CACHE"] = xonsh_win_dir_perma_cache
-    f = locate_executable("nothing", use_perma_cache=True)  # to cache dirs
+    f = locate_executable("nothing", use_dir_cache_perma=True)  # to cache dirs
     t0 = ttime()
     for _i in range(100):
-        f = locate_executable("nothing", use_perma_cache=True)
+        f = locate_executable("nothing", use_dir_cache_perma=True)
     t1 = ttime()
     dur2 = (t1 - t0) / ns
 

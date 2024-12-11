@@ -84,8 +84,8 @@ def locate_executable(
     name,
     env=None,
     use_path_cache=True,
-    use_dir_session_cache=False,
-    use_perma_cache=False,
+    use_dir_cache_session=False,
+    use_dir_cache_perma=False,
     partial_match=None,
 ):
     """Search executable binary name in ``$PATH`` and return full path."""
@@ -95,8 +95,8 @@ def locate_executable(
         check_executable=True,
         use_pathext=True,
         use_path_cache=use_path_cache,
-        use_dir_session_cache=use_dir_session_cache,
-        use_perma_cache=use_perma_cache,
+        use_dir_cache_session=use_dir_cache_session,
+        use_dir_cache_perma=use_dir_cache_perma,
         partial_match=partial_match,
     )
 
@@ -158,12 +158,12 @@ class PathCache:  # Singleton
                     cls._instance.__is_init = False
         return cls._instance
 
-    is_dirty = True
+    is_dirty = True # flag to signal that cleaned paths (not files/cmds) should be refreshed
     dir_cache: dict[str, list[list[str]]] = dict()
     clean_paths: dict[str, tuple[str]] = dict()
 
     @classmethod
-    def get_clean(cls, env):
+    def get_clean_path(cls, env):  # cleaned paths (not files/cmds)
         if cls.is_dirty:
             env_path = env.get("PATH", [])
             env_path_hash = hash_s_list(
@@ -176,11 +176,11 @@ class PathCache:  # Singleton
         return cls.clean_paths
 
     @classmethod
-    def get_dir_cached(cls, path):
+    def get_dir_cached(cls, path):  # dir_cache_session
         return cls.dir_cache.get(path, None)
 
     @classmethod
-    def set_dir_cached(cls, path, f_trie):
+    def set_dir_cached(cls, path, f_trie):  # dir_cache_session
         cls.dir_cache[path] = f_trie
 
     CACHE_FILE = "win-dir-perma-cache.pickle"
@@ -194,7 +194,7 @@ class PathCache:  # Singleton
         )
         self._cache_file = None
         self._cmds_cache: pygtrie.CharTrie = pygtrie.CharTrie()
-        self._paths_cache: dict[str, pygtrie.CharTrie] = dict()
+        self._dir_cache_perma: dict[str, pygtrie.CharTrie] = dict()
         self._pathext_cache: set = set()
         self.__is_init = True
 
@@ -213,17 +213,17 @@ class PathCache:  # Singleton
                 self._cache_file = ""  # set a falsy value other than None
         return self._cache_file
 
-    def get_paths_cache(self):
+    def get_dir_cache_perma(self):
         """Get a list of valid commands per path in a trie data structure for partial matching"""
         self.update_cache()
-        return self._paths_cache
+        return self._dir_cache_perma
 
     def update_cache(self):
         """The main function to update commands cache"""
         env = self.env
         env_path = env.get("PATH", [])
         env_path_hash = hash_s_list(env_path)
-        paths_dict = self.get_clean(env)
+        paths_dict = self.get_clean_path(env)
         if env_path_hash in paths_dict:
             paths = paths_dict[env_path_hash]
         else:
@@ -242,9 +242,9 @@ class PathCache:  # Singleton
 
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
-        if (not self._paths_cache) and self.cache_file and self.cache_file.exists():
+        if (not self._dir_cache_perma) and self.cache_file and self.cache_file.exists():
             try:  # 1st time: load the commands from cache-file if configured
-                self._paths_cache, self._pathext_cache = pickle.loads(
+                self._dir_cache_perma, self._pathext_cache = pickle.loads(
                     self.cache_file.read_bytes()
                 ) or [{}, set()]
             except Exception:
@@ -253,7 +253,7 @@ class PathCache:  # Singleton
         pathext = set(self.env.get("PATHEXT", [])) if ON_WINDOWS else []
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.env.get("XONSH_WIN_DIR_PERMA_CACHE", [])) and (
-                (path not in self._paths_cache)  # ← not in cache
+                (path not in self._dir_cache_perma)  # ← not in cache
                 or (not pathext == self._pathext_cache)
             ):  # ← definition of an executable changed
                 cmd_chartrie = pygtrie.CharTrie()
@@ -261,18 +261,18 @@ class PathCache:  # Singleton
                     cmd_chartrie[cmd.lower()] = (
                         cmd  # lower case for case-insensitive search, but preserve case
                     )
-                self._paths_cache[path] = cmd_chartrie
+                self._dir_cache_perma[path] = cmd_chartrie
                 self._pathext_cache = set(pathext)
                 updated = True
         if updated and self.cache_file:
             self.cache_file.write_bytes(
-                pickle.dumps([self._paths_cache, self._pathext_cache])
+                pickle.dumps([self._dir_cache_perma, self._pathext_cache])
             )
         return updated
 
     def _iter_binaries(self, paths):
         for path in paths:
-            for cmd_low in (cmd_chartrie := self._paths_cache.get(path, [])):
+            for cmd_low in (cmd_chartrie := self._dir_cache_perma.get(path, [])):
                 cmd = cmd_chartrie[cmd_low]
                 yield cmd_low, cmd, os.path.join(path, cmd)
 
@@ -283,8 +283,8 @@ def locate_file(
     check_executable=False,
     use_pathext=False,
     use_path_cache=True,
-    use_dir_session_cache=False,
-    use_perma_cache=False,
+    use_dir_cache_session=False,
+    use_dir_cache_perma=False,
     partial_match=None,
 ):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
@@ -296,8 +296,8 @@ def locate_file(
         check_executable,
         use_pathext,
         use_path_cache,
-        use_dir_session_cache,
-        use_perma_cache,
+        use_dir_cache_session,
+        use_dir_cache_perma,
         partial_match,
     )
 
@@ -363,8 +363,8 @@ def locate_file_in_path_env(
     check_executable=False,
     use_pathext=False,
     use_path_cache=True,
-    use_dir_session_cache=False,
-    use_perma_cache=False,
+    use_dir_cache_session=False,
+    use_dir_cache_perma=False,
     partial_match=None,
 ):
     """Search file name in ``$PATH`` and return full path.
@@ -393,7 +393,7 @@ def locate_file_in_path_env(
         env = XSH.env
         env_path = env.get("PATH", [])
         if use_path_cache:  # for generic environment: use cache only if configured
-            paths_dict = PathCache.get_clean(env)
+            paths_dict = PathCache.get_clean_path(env)
             env_path_hash = hash_s_list(env_path)
             if env_path_hash in paths_dict:
                 paths = paths_dict[env_path_hash]
@@ -406,11 +406,11 @@ def locate_file_in_path_env(
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
     path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
-    dir_to_cache = env.get("XONSH_DIR_SESSION_CACHE", [])
+    dir_cache_session = env.get("XONSH_DIR_SESSION_CACHE", [])
     dir_cache_perma = env.get("XONSH_WIN_DIR_PERMA_CACHE", [])
     if dir_cache_perma:
         _pc = PathCache(env)
-        paths_cache = _pc.get_paths_cache()  # path → cmd_chartrie[cmd.lower()] = cmd
+        paths_cache = _pc.get_dir_cache_perma()  # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
     skip_exist = env.get(
@@ -420,11 +420,11 @@ def locate_file_in_path_env(
     for path in paths:
         if (
             check_executable
-            and use_perma_cache
+            and use_dir_cache_perma
             and dir_cache_perma
             and path in dir_cache_perma
             and path in paths_cache
-        ):  # use permanent dir cache
+        ):
             cmd_chartrie = paths_cache[path]
             for possible_name in possible_names:
                 possible_Name = cmd_chartrie.get(possible_name.lower())
@@ -441,7 +441,7 @@ def locate_file_in_path_env(
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
         elif (
-            use_dir_session_cache and dir_to_cache and path in dir_to_cache
+            use_dir_cache_session and dir_cache_session and path in dir_cache_session
         ):  # use session dir cache
             f_trie = PathCache.get_dir_cached(path)
             if not f_trie:  # not cached, scan the dir ...
