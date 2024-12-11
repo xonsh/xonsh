@@ -178,10 +178,27 @@ def locate_file_in_path_env(
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
     path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
+    dir_to_cache = env.get("XONSH_WIN_DIR_SESSION_CACHE", [])
     possible_names = get_possible_names(name, env) if use_pathext else [name]
+    ext_count = len(possible_names)
 
     for path in paths:
-        if path in path_to_list:
+        if path in dir_to_cache: # use session dir cache
+            if not (f := PathCache.get_dir_cached(path)): # not cached, scan the dir ...
+                for _dirpath, _dirnames, filenames in walk(path):
+                    f.extend(filenames)
+                    break  # no recursion into subdir
+                PathCache.set_dir_cached(path, f) # ... and cache it
+            for possible_name in possible_names:
+                if possible_name not in f:
+                    continue
+                if found := check_possible_name(
+                    path, possible_name, check_executable
+                ):
+                    return found
+                else:
+                    continue
+        elif path in path_to_list and ext_count > 2: # list a dir vs checking many files
             f = []
             for _dirpath, _dirnames, filenames in walk(path):
                 f.extend(filenames)
@@ -195,7 +212,7 @@ def locate_file_in_path_env(
                     return found
                 else:
                     continue
-        else:
+        else: # check that file(s) exists individually
             for possible_name in possible_names:
                 if found := check_possible_name(
                     path, possible_name, check_executable
