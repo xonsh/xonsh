@@ -1275,6 +1275,15 @@ class CacheSetting(Xettings):
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
     )
 
+    XONSH_DIR_CACHE_TO_LIST = Var.with_default(
+        set(),
+        "(Win) Reduce typing delay via faster 'executable exists' checks."
+        "Color highlighting (green executable) is performend on every typed char,"
+        "which is ~10+ 'file.pathext exists' checks in each directory in PATH on Windows,"
+        "which can be more expensive than simly listing the directory (if it's small)"
+        "and searching in this list."
+        "This variable is a set of paths that should checked via direct listing.",
+    )
 
 class ChangeDirSetting(Xettings):
     """``cd`` Behavior"""
@@ -1996,16 +2005,6 @@ class WindowsSetting(GeneralSetting):
         "when using the default terminal (``cmd.exe``) on Windows. Blue colors, "
         "which are hard to read, are replaced with cyan. Other colors are "
         "generally replaced by their bright counter parts.",
-        is_configurable=ON_WINDOWS,
-    )
-    XONSH_WIN_PATH_DIRS_TO_LIST = Var.with_default(
-        set(),
-        "Reduce typing delay via faster 'executable exists' checks."
-        "Color highlighting (green executable) is performend on every typed char,"
-        "which is ~10+ 'file.pathext exists' checks in each directory in PATH on Windows,"
-        "which can be more expensive than simly listing the directory (if it's small)"
-        "and searching in this list."
-        "This variable is a set of paths that should checked via direct listing.",
         is_configurable=ON_WINDOWS,
     )
 

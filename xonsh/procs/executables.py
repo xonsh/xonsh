@@ -130,12 +130,12 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
 
     Typing speed boost: on Windows instead of checking that 10+ file.pathext files exist it's faster
     to scan a smaller dir and check whether those 10+ strings are in this list
-    XONSH_WIN_PATH_DIRS_TO_LIST allows users to do just that
+    XONSH_DIR_CACHE_TO_LIST allows users to do just that
     """
     env = env if env is not None else XSH.env
     env_path = env.get("PATH", [])
     paths = tuple(clear_paths(env_path))
-    path_to_list = env.get("XONSH_WIN_PATH_DIRS_TO_LIST", [])
+    path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
     possible_names = get_possible_names(name, env) if use_pathext else [name]
 
     if path_to_list and (len(possible_names) > 2):
