@@ -233,8 +233,7 @@ class PathCache:  # Singleton
             os.path.normpath(p).lower() for p in env.get("XONSH_DIR_SESSION_CACHE", [])
         ]
         usr_dir_list_key = [
-            os.path.normpath(p).lower()
-            for p in env.get("XONSH_DIR_CACHE_TO_LIST", [])
+            os.path.normpath(p).lower() for p in env.get("XONSH_DIR_CACHE_TO_LIST", [])
         ]
         env_path = env.get("PATH", [])
         for p in env_path:
