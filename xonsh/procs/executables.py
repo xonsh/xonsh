@@ -75,6 +75,17 @@ def locate_executable(name, env=None):
     return locate_file(name, env=env, check_executable=True, use_pathext=True)
 
 
+class PathCleanCache:
+    is_dirty = True
+    @classmethod
+    def get(cls,env):
+        if cls.is_dirty:
+            env_path = env.get("PATH", [])
+            cls.clean_paths = tuple(clear_paths(env_path))
+            cls.is_dirty = False
+        return cls.clean_paths
+
+
 def locate_file(name, env=None, check_executable=False, use_pathext=False):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
     return locate_relative_path(
@@ -132,9 +143,17 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
     to scan a smaller dir and check whether those 10+ strings are in this list
     XONSH_DIR_CACHE_TO_LIST allows users to do just that
     """
-    env = env if env is not None else XSH.env
-    env_path = env.get("PATH", [])
-    paths = tuple(clear_paths(env_path))
+    paths = []
+    if env is None:
+        env = XSH.env
+        if use_path_cache: # for generic environment: use cache only if configured
+            paths = PathCleanCache.get(env)
+        else:              # otherwise              : clean paths every time
+            env_path = env.get("PATH", [])
+            paths = tuple(clear_paths(env_path))
+    else:                  # for custom  environment: clean paths every time
+        env_path = env.get("PATH", [])
+        paths = tuple(clear_paths(env_path))
     path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
     possible_names = get_possible_names(name, env) if use_pathext else [name]
 
