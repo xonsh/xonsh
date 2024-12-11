@@ -1283,8 +1283,9 @@ class CacheSetting(Xettings):
         "This is a potentially 'lossy' option, if the content of these dirs changes,"
         "syntax highlighting will be wrong, but it may still be worth the lower input lag."
         "(Mac/Linux) cached dirs provide another syntax highlighting benefit:"
-        "they allow highlighting typos early if partially typed command isn't found as a prefix."
-        "see `XONSH_DIR_SESSION_CACHE`.",
+        "they allow highlighting typos early if partially typed command isn't found as a prefix"
+        "to any cached commands, e.g., 'x̲o̲n̲' is a prefix of 'xonsh' and highlighted, but 'xonh'"
+        "is a typo, so isn't (color scheme 'Token.Name.Cmdprefix':'underline ansiwhite').",
     )
 
     XONSH_DIR_SESSION_CACHE = Var.with_default(
@@ -1294,10 +1295,7 @@ class CacheSetting(Xettings):
         "re-checking whether an executable exists on every keystroke."
         "This is a 'lossy' option, if xonsh or another process changes the files,"
         "syntax highlighting will be wrong, but it may still be worth the lower input lag."
-        "(Mac/Linux) cached dirs provide another syntax highlighting benefit:"
-        "they allow highlighting typos early if partially typed command isn't found as a prefix"
-        "to any cached commands, e.g., 'x̲o̲n̲' is a prefix of 'xonsh' and highlighted, but 'xonh'"
-        "is a typo, so isn't (color scheme 'Token.Name.Cmdprefix':'underline ansiwhite').",
+        "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`.",
     )
 
     XONSH_DIR_CACHE_TO_LIST = Var.with_default(
@@ -1307,7 +1305,8 @@ class CacheSetting(Xettings):
         "which is ~10+ 'file.pathext exists' checks in each directory in PATH on Windows,"
         "which can be more expensive than simly listing the directory (if it's small)"
         "and searching in this list."
-        "This variable is a set of paths that should checked via direct listing.",
+        "This variable is a set of paths that should be checked via direct listing.",
+        "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`.",
     )
 
     XONSH_DIR_CACHE_SKIP_EXIST = Var.with_default(
