@@ -192,13 +192,13 @@ def locate_file_in_path_env(
     May be in the future file systems as well as Python Path will be smarter to get the case sensitive name.
     The task for reading and returning case sensitive filename we give to completer in interactive mode
     with ``commands_cache``.
-    When listing a XONSH_WIN_PATH_DIRS_TO_LIST dir or using a XONSH_WIN_DIR_SESSION_CACHE cache of a dir listing,
+    When listing a XONSH_WIN_PATH_DIRS_TO_LIST dir or using a XONSH_DIR_SESSION_CACHE cache of a dir listing,
     we can get case sensitive file name.
 
     Typing speed boost: on Windows instead of checking that 10+ file.pathext files exist it's faster
     to scan a smaller dir and check whether those 10+ strings are in this list
     XONSH_DIR_CACHE_TO_LIST allows users to do just that
-    XONSH_WIN_DIR_SESSION_CACHE further allows to list a dir and cache the results to avoid
+    XONSH_DIR_SESSION_CACHE further allows to list a dir and cache the results to avoid
     doing any IO on subsequent calls
     """
     paths = []
@@ -219,7 +219,7 @@ def locate_file_in_path_env(
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
     path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
-    dir_to_cache = env.get("XONSH_WIN_DIR_SESSION_CACHE", [])
+    dir_to_cache = env.get("XONSH_DIR_SESSION_CACHE", [])
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
 
