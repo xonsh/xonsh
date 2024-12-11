@@ -196,7 +196,7 @@ def test_xonsh_dir_session_cache(tmpdir, xession):
     # check that adding dirs to a XONSH_DIR_SESSION_CACHE var to cache a list of files in
     # them per session instead of checking for the existence of every file.pathext
     # is faster
-    if not ON_WINDOWS: # other OS use this for syntax checking benefit, not speed
+    if not ON_WINDOWS:  # other OS use this for syntax checking benefit, not speed
         return
 
     from os import walk
