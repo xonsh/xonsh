@@ -208,7 +208,7 @@ class PathCache:  # Singleton
     def set_dir_key_cache(cls, path, time, f_trie):  # dir_cache_key
         cls.dir_key_cache[path] = _PathCmd(time, f_trie)
 
-    CACHE_FILE = "win-dir-perma-cache.pickle"
+    CACHE_FILE = "dir_perma_cache.pickle"
 
     def __init__(self, env) -> None:
         self.__is_init: bool
