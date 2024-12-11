@@ -423,8 +423,8 @@ def test_xonsh_lexer_cmdprefix(xession):
     env = xession.env
     xonsh_exe = shutil.which("xonsh")
     f = pathlib.Path(xonsh_exe)
-    xonsh_win_path_dirs_to_list = [str(f.parent)]  # listed dirs support partial matches
-    env["XONSH_WIN_PATH_DIRS_TO_LIST"] = xonsh_win_path_dirs_to_list
+    xonsh_dir_cache_to_list = [str(f.parent)]  # listed dirs support partial matches
+    env["XONSH_DIR_CACHE_TO_LIST"] = xonsh_dir_cache_to_list
     env["PATH"] = str(f.parent)
 
     from xonsh.style_tools import Token
