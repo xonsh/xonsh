@@ -1280,7 +1280,7 @@ class CacheSetting(Xettings):
         "Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
         "Cache a list of files in these dirs permanently (until the OS is updated)"
         "to avoid re-checking whether an executable exists on every keystroke."
-        "This is a potentially 'lossy' option, if the content of tese dirs changes,"
+        "This is a potentially 'lossy' option, if the content of these dirs changes,"
         "syntax highlighting will be wrong, but it may still be worth the lower input lag.",
         is_configurable=ON_WINDOWS,
     )
