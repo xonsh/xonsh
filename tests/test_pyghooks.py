@@ -418,7 +418,7 @@ skip_if_no_xonsh = pytest.mark.skipif(
 @skip_if_no_xonsh
 @skip_if_on_unix
 def test_xonsh_lexer_cmdprefix(xession):
-    # find where xonsh is and add its path to the cache env var that supports partial matches
+    # find where xonsh is, add its path to the cache env var that supports partial matches
 
     env = xession.env
     xonsh_exe = shutil.which("xonsh")
