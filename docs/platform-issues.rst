@@ -323,9 +323,9 @@ accuracy of syntax highlighting since the cache will not be updated to reflect i
 
 You can also cache large never changing dirs (like ``C:\Windows\System32\`` with thousands of files)
 permanently by adding them to
-:ref:`$XONSH_WIN_DIR_PERMA_CACHE <xonsh_win_dir_perma_cache>`
+:ref:`$XONSH_DIR_PERMA_CACHE <xonsh_dir_perma_cache>`
 
 (stored in ``$XONSH_CACHE_DIR\win-dir-perma-cache.pickle``)
 
-And for a tiny extra boost you can set ``XONSH_WIN_DIR_CACHE_SKIP_EXIST`` to ``True`` to skip an extra
+And for a tiny extra boost you can set ``XONSH_DIR_CACHE_SKIP_EXIST`` to ``True`` to skip an extra
 IO operation by not checking for whether a file exists in the permanent/session cached dirs

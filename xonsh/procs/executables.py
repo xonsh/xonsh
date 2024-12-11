@@ -228,7 +228,7 @@ class PathCache:  # Singleton
         # clean up user give list of dirs and cache it
         usr_dir_list_perma = [
             os.path.normpath(p).lower()
-            for p in env.get("XONSH_WIN_DIR_PERMA_CACHE", [])
+            for p in env.get("XONSH_DIR_PERMA_CACHE", [])
         ]
         usr_dir_list_session = [
             os.path.normpath(p).lower()
@@ -257,7 +257,7 @@ class PathCache:  # Singleton
         if (
             self._cache_file is None
         ):  # path to the cache file where all dir are cached for pre-loading
-            if "XONSH_CACHE_DIR" in env and "XONSH_WIN_DIR_PERMA_CACHE" in env:
+            if "XONSH_CACHE_DIR" in env and "XONSH_DIR_PERMA_CACHE" in env:
                 self._cache_file = (
                     Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE).resolve()
                 )
@@ -437,7 +437,7 @@ def locate_file_in_path_env(
     XONSH_DIR_CACHE_TO_LIST allows users to do just that
     XONSH_DIR_SESSION_CACHE further allows to list a dir and cache the results to avoid
     doing any IO on subsequent calls
-    XONSH_WIN_DIR_PERMA_CACHE further allows to list larger constant dirs like Windows/System32
+    XONSH_DIR_PERMA_CACHE further allows to list larger constant dirs like Windows/System32
     and cache the results until OS is updated to avoid doing any IO
     """
     paths = []
@@ -468,7 +468,7 @@ def locate_file_in_path_env(
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
     skip_exist = env.get(
-        "XONSH_WIN_DIR_CACHE_SKIP_EXIST", False
+        "XONSH_DIR_CACHE_SKIP_EXIST", False
     )  # avoid dupe is_file check since we assume permanent/session caches don't change ever/per session
 
     for path in paths:
