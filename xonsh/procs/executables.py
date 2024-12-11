@@ -158,6 +158,7 @@ class PathCache:  # Singleton
     - cleaned paths (not files/cmds), refreshed per new prompt by setting .is_dirty
     - list of cmds in a "permanent" cache for unchanging dirs, pickled in a cache file
     - list of cmds in a "session" cache for rarely changing dirs
+    also contains cleaned up user configured set of paths to cache (normalized, case-matching)
     """
 
     _instance: tp.Any | None = None
@@ -220,6 +221,24 @@ class PathCache:  # Singleton
         self._cmds_cache: pygtrie.CharTrie = pygtrie.CharTrie()
         self._dir_cache_perma: dict[str, pygtrie.CharTrie] = dict()
         self._pathext_cache: set = set()
+        self._user_path_dirs_to_list: set = set()
+        self.usr_dir_list_perma: set = set()
+        self.usr_dir_list_session: set = set()
+        self.usr_dir_list_key: set = set()
+        # clean up user give list of dirs and cache it
+        usr_dir_list_perma   = [os.path.normpath(p).lower() for p in env.get("XONSH_WIN_DIR_PERMA_CACHE"  , [])]
+        usr_dir_list_session = [os.path.normpath(p).lower() for p in env.get("XONSH_WIN_DIR_SESSION_CACHE", [])]
+        usr_dir_list_key     = [os.path.normpath(p).lower() for p in env.get("XONSH_WIN_PATH_DIRS_TO_LIST", [])]
+        env_path = env.get("PATH", [])
+        for p in env_path:
+            pn = os.path.normpath(p)
+            pl = pn.lower()
+            if pl in usr_dir_list_perma:
+                self.usr_dir_list_perma.add(pn)
+            if pl in usr_dir_list_session:
+                self.usr_dir_list_session.add(pn)
+            if pl in usr_dir_list_key:
+                self.usr_dir_list_key.add(pn)
         self.__is_init = True
 
     @property
@@ -276,7 +295,7 @@ class PathCache:  # Singleton
         updated = False
         pathext = set(self.env.get("PATHEXT", [])) if ON_WINDOWS else []
         for path in paths:  # ↓ user-configured to be cached
-            if (path in self.env.get("XONSH_WIN_DIR_PERMA_CACHE", [])) and (
+            if (path in self.usr_dir_list_perma) and (
                 (path not in self._dir_cache_perma)  # ← not in cache
                 or (not pathext == self._pathext_cache)
             ):  # ← definition of an executable changed
@@ -429,13 +448,13 @@ def locate_file_in_path_env(
     else:  #                  for custom  environment: clean paths every time
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
-    path_to_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
-    dir_cache_session = env.get("XONSH_DIR_SESSION_CACHE", [])
-    dir_cache_perma = env.get("XONSH_WIN_DIR_PERMA_CACHE", [])
-    if dir_cache_perma:
-        _pc = PathCache(env)
-        paths_cache = (
-            _pc.get_dir_cache_perma()
+    pc = PathCache(env)
+    usr_dir_list_perma = pc.usr_dir_list_perma
+    usr_dir_list_session = pc.usr_dir_list_session
+    usr_dir_list_key = pc.usr_dir_list_key
+    if usr_dir_list_perma:
+        dir_cache_perma = (
+            pc.get_dir_cache_perma()
         )  # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
@@ -447,11 +466,11 @@ def locate_file_in_path_env(
         if (
             check_executable
             and use_dir_cache_perma
-            and dir_cache_perma
+            and usr_dir_list_perma
+            and path in usr_dir_list_perma
             and path in dir_cache_perma
-            and path in paths_cache
         ):
-            cmd_chartrie = paths_cache[path]
+            cmd_chartrie = dir_cache_perma[path]
             for possible_name in possible_names:
                 possible_Name = cmd_chartrie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
@@ -467,7 +486,7 @@ def locate_file_in_path_env(
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
         elif (
-            use_dir_cache_session and dir_cache_session and path in dir_cache_session
+            use_dir_cache_session and usr_dir_list_session and path in usr_dir_list_session
         ):  # use session dir cache
             f_trie = PathCache.get_dir_cached(path)
             if not f_trie:  # not cached, scan the dir ...
@@ -492,7 +511,7 @@ def locate_file_in_path_env(
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
         elif (
-            ext_count > 2 and path_to_list and path in path_to_list
+            ext_count > 2 and usr_dir_list_key and path in usr_dir_list_key
         ):  # list a dir vs checking many files
             path_time = os.path.getmtime(path)
             path_cmd = PathCache.get_dir_key_cache(path)
