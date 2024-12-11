@@ -1308,7 +1308,7 @@ class CacheSetting(Xettings):
         False,
         "Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
         "Don't check whether a file exists in the cached list of dirs"
-        " (`XONSH_WIN_DIR_SESSION_CACHE` and `XONSH_WIN_DIR_PERMA_CACHE`)",
+        " (`XONSH_DIR_SESSION_CACHE` and `XONSH_WIN_DIR_PERMA_CACHE`)",
         is_configurable=ON_WINDOWS,
     )
 

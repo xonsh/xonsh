@@ -315,7 +315,7 @@ to reduce typing lag
 And to reduce the typing lag even more (at the cost of a small loss of precision of syntax highlighting)
 you can list all the rarely changing (like ``C:\Program Files\Python\``) or not very important dirs
 from your ``$PATH`` in
-:ref:`$XONSH_WIN_DIR_SESSION_CACHE <xonsh_win_dir_session_cache>`
+:ref:`$XONSH_DIR_SESSION_CACHE <xonsh_dir_session_cache>`
 This will cache a list of files within these dirs per Xonsh session and thus avoid any IO checks
 on subsequent typing.
 However, if Xonsh or any other process changes the list of files in these dirs, you'll lose the
