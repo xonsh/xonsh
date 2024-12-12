@@ -189,7 +189,6 @@ class PathCache:  # Singleton
             cls.dir_key_cache: dict[str, _PathCmd] = dict()
             cls.clean_paths: dict[str, tuple[str]] = dict()
 
-
     @classmethod
     def get_clean_path(cls, env):  # cleaned paths (not files/cmds)
         if cls.is_dirty:

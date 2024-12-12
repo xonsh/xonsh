@@ -423,6 +423,9 @@ def test_xonsh_lexer_cmdprefix(xession):
     ]  # listed dirs support partial matches
     env["XONSH_DIR_CACHE_LIST_EXT_MIN"] = 1  # for listing otherwise won't highight
     env["PATH"] = str(f.parent)
+    from xonsh.procs.executables import PathCache
+
+    PathCache.reset()  # other tests could've init our singleton with an empty env, so reset it
 
     from xonsh.style_tools import Token
 

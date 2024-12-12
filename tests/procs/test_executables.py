@@ -129,6 +129,8 @@ def test_xonsh_dir_cache_to_list(tmpdir, xession):
 
     from os import walk
 
+    from xonsh.procs.executables import PathCache
+
     # create a list of smaller dirs in PATH
     short_path = 50  # exact threshold depends on the number of pathext, this is very ~
     env = xession.env
@@ -179,6 +181,7 @@ def test_xonsh_dir_cache_to_list(tmpdir, xession):
     dur1 = (t1 - t0) / ns
 
     env["XONSH_DIR_CACHE_TO_LIST"] = xonsh_dir_cache_to_list
+    PathCache.reset()  # previous benchmark set our singleton with an empty DIR_CACHE
     t0 = ttime()
     for _i in range(100):
         f = locate_executable("nothing")
@@ -200,6 +203,8 @@ def test_xonsh_dir_session_cache(tmpdir, xession):
         return
 
     from os import walk
+
+    from xonsh.procs.executables import PathCache
 
     xonsh_dir_session_cache = []
     env = xession.env
@@ -225,6 +230,7 @@ def test_xonsh_dir_session_cache(tmpdir, xession):
     dur1 = (t1 - t0) / ns
 
     env["XONSH_DIR_SESSION_CACHE"] = xonsh_dir_session_cache
+    PathCache.reset()  # previous benchmark set our singleton with an empty DIR_CACHE
     f = locate_executable("nothing")  # to cache dirs
     t0 = ttime()
     for _i in range(100):
@@ -263,6 +269,8 @@ def test_xonsh_dir_perma_cache(tmpdir, xession):
 
     from os import walk
 
+    from xonsh.procs.executables import PathCache
+
     xonsh_dir_perma_cache = []
     env = xession.env
     pathext = env["PATHEXT"]
@@ -287,6 +295,7 @@ def test_xonsh_dir_perma_cache(tmpdir, xession):
     dur1 = (t1 - t0) / ns
 
     env["XONSH_DIR_PERMA_CACHE"] = xonsh_dir_perma_cache
+    PathCache.reset()  # previous benchmark set our singleton with an empty DIR_CACHE
     f = locate_executable("nothing", use_dir_cache_perma=True)  # to cache dirs
     t0 = ttime()
     for _i in range(100):
