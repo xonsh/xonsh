@@ -1277,42 +1277,42 @@ class CacheSetting(Xettings):
 
     XONSH_DIR_PERMA_CACHE = Var.with_default(
         set(),
-        "(Win) Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
-        "Cache a list of files in these dirs permanently (until the OS is updated)"
-        "to avoid re-checking whether an executable exists on every keystroke."
-        "This is a potentially 'lossy' option, if the content of these dirs changes,"
-        "syntax highlighting will be wrong, but it may still be worth the lower input lag."
-        "(Mac/Linux) cached dirs provide another syntax highlighting benefit:"
-        "they allow highlighting typos early if partially typed command isn't found as a prefix"
-        "to any cached commands, e.g., 'x̲o̲n̲' is a prefix of 'xonsh' and highlighted, but 'xonh'"
+        "(Win) Reduce typing delay via faster 'executable exists' checks for syntax highlighting. "
+        "Cache a list of files in these dirs permanently (until the OS is updated) "
+        "to avoid re-checking whether an executable exists on every keystroke. "
+        "This is a potentially 'lossy' option, if the content of these dirs changes, "
+        "syntax highlighting will be wrong, but it may still be worth the lower input lag. "
+        "(Mac/Linux) cached dirs provide another syntax highlighting benefit: "
+        "they allow highlighting typos early if partially typed command isn't found as a prefix "
+        "to any cached commands, e.g., 'x̲o̲n̲' is a prefix of 'xonsh' and highlighted, but 'xonh' "
         "is a typo, so isn't (color scheme 'Token.Name.Cmdprefix':'underline ansiwhite').",
     )
 
     XONSH_DIR_SESSION_CACHE = Var.with_default(
         set(),
-        "(Win) Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
-        "Cache a list of files in these dirs for the duration of Xonsh session to avoid"
-        "re-checking whether an executable exists on every keystroke."
-        "This is a 'lossy' option, if xonsh or another process changes the files,"
-        "syntax highlighting will be wrong, but it may still be worth the lower input lag."
+        "(Win) Reduce typing delay via faster 'executable exists' checks for syntax highlighting. "
+        "Cache a list of files in these dirs for the duration of Xonsh session to avoid "
+        "re-checking whether an executable exists on every keystroke. "
+        "This is a 'lossy' option, if xonsh or another process changes the files, "
+        "syntax highlighting will be wrong, but it may still be worth the lower input lag. "
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`.",
     )
 
     XONSH_DIR_CACHE_TO_LIST = Var.with_default(
         set(),
-        "(Win) Reduce typing delay via faster 'executable exists' checks."
-        "Color highlighting (green executable) is performend on every typed char,"
-        "which is ~10+ 'file.pathext exists' checks in each directory in PATH on Windows,"
-        "which can be more expensive than simly listing the directory (if it's small)"
-        "and searching in this list."
+        "(Win) Reduce typing delay via faster 'executable exists' checks. "
+        "Color highlighting (green executable) is performend on every typed char, "
+        "which is ~10+ 'file.pathext exists' checks in each directory in PATH on Windows, "
+        "which can be more expensive than simly listing the directory (if it's small) "
+        "and searching in this list. "
         "This variable is a set of paths that should be checked via direct listing.",
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`.",
     )
 
     XONSH_DIR_CACHE_SKIP_EXIST = Var.with_default(
         False,
-        "Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
-        "Don't check whether a file exists in the cached list of dirs"
+        "Reduce typing delay via faster 'executable exists' checks for syntax highlighting. "
+        "Don't check whether a file exists in the cached list of dirs "
         " (`XONSH_DIR_SESSION_CACHE` and `XONSH_DIR_PERMA_CACHE`)",
     )
 
