@@ -235,7 +235,7 @@ class PathCache:  # Singleton
         self.usr_dir_list_perma: set = set()
         self.usr_dir_list_session: set = set()
         self.usr_dir_list_key: set = set()
-        # clean up user give list of dirs and cache it
+        # clean up user given lists of dirs and cache it
         usr_dir_list_perma = [
             os.path.normpath(p).lower() for p in env.get("XONSH_DIR_PERMA_CACHE", [])
         ]
