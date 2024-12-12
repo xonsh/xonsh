@@ -180,6 +180,17 @@ class PathCache:  # Singleton
     clean_paths: dict[str, tuple[str]] = dict()
 
     @classmethod
+    def reset(cls):  # clean self to allow creating a new one with a different env
+        if cls._instance:
+            # cls._instance.__is_init = False
+            cls._instance = None
+            cls.is_dirty = True
+            cls.dir_cache: dict[str, list[list[str]]] = dict()
+            cls.dir_key_cache: dict[str, _PathCmd] = dict()
+            cls.clean_paths: dict[str, tuple[str]] = dict()
+
+
+    @classmethod
     def get_clean_path(cls, env):  # cleaned paths (not files/cmds)
         if cls.is_dirty:
             env_path = env.get("PATH", [])
