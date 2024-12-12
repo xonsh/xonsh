@@ -303,7 +303,7 @@ class PathCache:  # Singleton
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.usr_dir_list_perma) and (
                 (path not in self._dir_cache_perma)  # ← not in cache
-                or (not pathext == self._pathext_cache)
+                or (pathext and (not pathext == self._pathext_cache))
             ):  # ← definition of an executable changed
                 cmd_chartrie = pygtrie.CharTrie()
                 for cmd in executables_in(path):
