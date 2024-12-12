@@ -218,6 +218,72 @@ class PathCache:  # Singleton
     def set_dir_key_cache(cls, path, time, f_trie):  # dir_cache_key
         cls.dir_key_cache[path] = _PathCmd(time, f_trie)
 
+    def get_cache_info(self, v=0):  # show some basic cache info
+        import textwrap
+        env = self.env
+        env_path = env.get("PATH", [])
+        env_path_hash = hash_s_list(env_path)
+        if env_path_hash not in PathCache.clean_paths:
+            print("hash not in clean_paths")
+        clean_paths = PathCache.clean_paths.get(
+            env_path_hash, tuple(clear_paths(env_path))
+        )
+        cached_perma, cached_sess, cached_list = 0, 0, 0
+        list_perma, list_sess, list_list = [], [], []
+        uncached = []
+        for p in clean_paths:
+            inc_perma, inc_sess, inc_list = 0, 0, 0
+            if p in self.usr_dir_list_perma:
+                inc_perma = 1
+                cached_perma += inc_perma
+                list_perma.append(p)
+            if p in self.usr_dir_list_session:
+                inc_sess = 1
+                cached_sess += inc_sess
+                list_sess.append(p)
+            if p in self.usr_dir_list_key:
+                inc_list = 1
+                cached_list += inc_list
+                list_list.append(p)
+            if (inc_perma + inc_sess + inc_list) == 0:
+                uncached.append(p)
+        uncached_c = len(uncached)
+        cached = cached_perma + cached_sess + cached_list
+        msg = f"""\
+            PATH    : ∑ {str(len(env_path   )).rjust(3)} dirty
+                      # {str(len(clean_paths)).rjust(3)} clean (unique & existing)
+            Cached  : ∑ {str(    cached      ).rjust(3)} of which:              (pc = PathCache(None))
+                      # {str(cached_perma    ).rjust(3)} permanently            (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE  )
+                      # {str(cached_sess     ).rjust(3)} this session           (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE)
+                      # {str(cached_list     ).rjust(3)} by dir mtime, list onΔ (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST)
+            Uncached: ∑ {str(uncached_c      ).rjust(3)} including:\
+        """
+        print(textwrap.dedent(msg))
+        print(f"  {'\n  '.join(uncached)}")
+        if v >= 1:
+            print(f"paths cached permanently :\n  {'\n  '.join(list_perma)}")
+            print(f"paths cached this session:\n  {'\n  '.join(list_sess)}")
+            print(f"paths cached by dir mtime:\n  {'\n  '.join(list_list)}")
+        if v >= 2:
+            # print(f"PATH #{len(env_path)}    :\n  {'\n  '.join(env_path)}")
+            msg = f"PATH #{len(env_path)}    :✓Cached, ✗Not (Perma, Session, Mtime); -Doesn't exist"
+            for p in env_path:
+                pn = os.path.normpath(p)
+                lbl = ""
+                if pn in self.usr_dir_list_perma   or\
+                   pn in self.usr_dir_list_session or\
+                   pn in self.usr_dir_list_key:
+                    lbl += "✓ "
+                else:
+                    lbl += " ✗"
+                lbl += " " if pn in clean_paths               else "-"
+                lbl += "P" if pn in self.usr_dir_list_perma   else " "
+                lbl += "S" if pn in self.usr_dir_list_session else " "
+                lbl += "M" if pn in self.usr_dir_list_key     else " "
+                msg += f"\n {lbl} {p}"
+            print(msg)
+
+
     CACHE_FILE = "dir_perma_cache.pickle"
 
     def __init__(self, env) -> None:
