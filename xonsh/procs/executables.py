@@ -464,6 +464,7 @@ def locate_file_in_path_env(
         )  # path → cmd_chartrie[cmd.lower()] = cmd
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
+    ext_min = int(env.get("XONSH_DIR_CACHE_LIST_EXT_MIN", 3))
     skip_exist = env.get(
         "XONSH_DIR_CACHE_SKIP_EXIST", False
     )  # avoid dupe is_file check since we assume permanent/session caches don't change ever/per session
@@ -519,7 +520,7 @@ def locate_file_in_path_env(
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
         elif (
-            ext_count > 2 and usr_dir_list_key and path in usr_dir_list_key
+            ext_count >= ext_min and usr_dir_list_key and path in usr_dir_list_key
         ):  # list a dir vs checking many files (cached by mtime)
             path_time = os.path.getmtime(path)
             path_cmd = PathCache.get_dir_key_cache(path)

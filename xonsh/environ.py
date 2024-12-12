@@ -1305,8 +1305,17 @@ class CacheSetting(Xettings):
         "which is ~10+ 'file.pathext exists' checks in each directory in PATH on Windows, "
         "which can be more expensive than simly listing the directory (if it's small) "
         "and searching in this list. "
-        "This variable is a set of paths that should be checked via direct listing.",
+        "This variable is a set of paths that should be checked via direct listing. ",
+        "Set `XONSH_DIR_CACHE_LIST_EXT_MIN` for more direct fine-tuning the tradeoff. ",
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`.",
+    )
+    XONSH_DIR_CACHE_LIST_EXT_MIN = Var.with_default(
+        3,
+        "The minimum number of executable file variants (# of PathExt on Windows) "
+        "that should trigger listing a dir from `XONSH_DIR_CACHE_TO_LIST` instead of checking "
+        "whether each of the variants exists. "
+        "Set to 1 if you want to list a dir regardless as that would allow caching its content"
+        "and highlighting valid partial prefixes while typing: see `XONSH_DIR_PERMA_CACHE`.",
     )
 
     XONSH_DIR_CACHE_SKIP_EXIST = Var.with_default(
