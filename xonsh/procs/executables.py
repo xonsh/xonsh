@@ -523,13 +523,13 @@ def locate_relative_path(
             else:  # rebuild dir cache
                 skip_exist = True  # no dupe is_file: we list files
                 ftrie = pygtrie.CharTrie()
-                for _dirpath, _dirnames, filenames in walk(path):
+                for dirpath, _dirnames, filenames in walk(path):
                     if len(filenames) > env.get("XONSH_DIR_CWD_CACHE_LEN_MAX", 500):
                         pc.cwd_too_long.add(path)
                     for fname in filenames:
                         if cache_non_exe:  # ↓for case-insensitive match
                             ftrie[fname.lower()] = fname
-                        elif is_executable(fname, skip_exist):
+                        elif is_executable(Path(dirpath) / fname, skip_exist):
                             ftrie[fname.lower()] = fname
                     break  # no recursion into subdir
                 pc.set_dir_key_cache(path, path_time, ftrie)
@@ -714,11 +714,11 @@ def locate_file_in_path_env(
             else:  # rebuild dir cache
                 skip_exist = True  # no dupe is_file: we list files
                 ftrie = pygtrie.CharTrie()
-                for _dirpath, _dirnames, filenames in walk(path):
+                for dirpath, _dirnames, filenames in walk(path):
                     for fname in filenames:
                         if cache_non_exe:  # ↓for case-insensitive match
                             ftrie[fname.lower()] = fname
-                        elif is_executable(fname, skip_exist):
+                        elif is_executable(Path(dirpath) / fname, skip_exist):
                             ftrie[fname.lower()] = fname
                     break  # no recursion into subdir
                 PathCache.set_dir_key_cache(path, path_time, ftrie)
