@@ -265,10 +265,10 @@ class PathCache:  # Singleton
         msg = f"""\
             PATH    : ∑ {str(len(env_path   )).rjust(3)} dirty
                       └ {str(len(clean_paths)).rjust(3)} clean (unique & existing)
-            Cached  : ∑ {str(    cached      ).rjust(3)} of which:              (pc = PathCache(None))
-                      ├ {str(cached_perma    ).rjust(3)} permanently            (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE       )
-                      ├ {str(cached_sess     ).rjust(3)} this session           (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE     )
-                      └ {str(cached_list     ).rjust(3)} by dir mtime, list onΔ (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST     )\
+            Cached  : ∑ {str(    cached      ).rjust(3)} of which:               (pc = PathCache(None))
+                      ├ {str(cached_perma    ).rjust(3)} permanently             (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE       )
+                      ├ {str(cached_sess     ).rjust(3)} this session            (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE     )
+                      └ {str(cached_list     ).rjust(3)} by dir mtime ('Listed') (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST     )\
         """
         if v >= 1:
             msg += f"""
@@ -302,12 +302,12 @@ class PathCache:  # Singleton
             msg += (
                 "\n"
                 + str(len(list_list))
-                + " paths cached by dir mtime:\n  "
+                + " paths cached by dir mtime ('listed'):\n  "
                 + "\n  ".join(list_list)
             )
         if v >= 2:
             # print(f"PATH #{len(env_path)}    :\n  {'\n  '.join(env_path)}")
-            msg += f"\n\n{len(env_path)} $PATH:\n ✓✗  Cached/Not (Perma, Session, Mtime)\n   - Doesn't exist"
+            msg += f"\n\n{len(env_path)} $PATH:\n ✓✗  Cached/Not (Perma, Session, 'Listed')\n   - Doesn't exist"
             for p in env_path:
                 pn = os.path.normpath(p)
                 lbl = ""
@@ -322,13 +322,21 @@ class PathCache:  # Singleton
                 lbl += " " if pn in clean_paths else "-"
                 lbl += "P" if pn in self.usr_dir_list_perma else " "
                 lbl += "S" if pn in self.usr_dir_list_session else " "
-                lbl += "M" if pn in self.usr_dir_list_key else " "
+                lbl += "L" if pn in self.usr_dir_list_key else " "
                 msg += f"\n {lbl} {p}"
         msg += (
             "\n\n"
             + ("✓" if env.get("XONSH_DIR_CWD_CACHE", False) else "✗")
             + " current working dir cache ($XONSH_DIR_CWD_CACHE)\n"
         )
+        if v >= 1:
+            msg += (
+                "\n"
+                "Cached file data: pc = PathCache(None) with key = path, value = (mtime+) trie of files|commands (depending on …_NON_EXE))\n"
+                + "  Permanent : pc._dir_cache_perma ($XONSH_DIR_PERMA_CACHE                         )\n"
+                + "  Session   : pc.dir_cache        ($XONSH_DIR_SESSION_CACHE                       )\n"
+                + "  'Listed'  : pc.dir_key_cache    ($XONSH_DIR_CACHE_TO_LIST + $XONSH_DIR_CWD_CACHE)\n"
+            )
         if env.get("XONSH_DIR_CWD_CACHE", False):
             msg += (
                 ("✓" if env.get("XONSH_DIR_CWD_CACHE_NON_EXE", False) else "✗")
