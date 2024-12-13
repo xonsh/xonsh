@@ -175,6 +175,7 @@ class PathCache:  # Singleton
     is_dirty = (
         True  # flag to signal that cleaned paths (not files/cmds) should be refreshed
     )
+    last_path_hash: str = ""  # avoid the risk of IO on keystroke of clearing Δ paths
     dir_cache: dict[str, list[list[str]]] = dict()
     dir_key_cache: dict[str, _PathCmd] = dict()
     clean_paths: dict[str, tuple[str]] = dict()
@@ -190,17 +191,22 @@ class PathCache:  # Singleton
             cls.clean_paths: dict[str, tuple[str]] = dict()
 
     @classmethod
-    def get_clean_path(cls, env):  # cleaned paths (not files/cmds)
+    def get_clean_paths(cls, env):  # cleaned paths (not files/cmds)
         if cls.is_dirty:
             env_path = env.get("PATH", [])
-            env_path_hash = hash_s_list(
-                env_path
-            )  # to test whether it matches PATH before
+            env_path_hash = hash_s_list(env_path)  # test match vs. cached PATH
             # returning the cleaned version (avoid wrong cache for a env.swap(PATH=['a']))
             if env_path_hash not in cls.clean_paths:
                 cls.clean_paths[env_path_hash] = tuple(clear_paths(env_path))
+            cls.last_path_hash = env_path_hash
             cls.is_dirty = False
         return cls.clean_paths
+
+    @classmethod
+    def get_clean_path(cls, env) -> Union[tuple[str],None]:  # cleaned paths matching PATH hash
+        paths_dict = cls.get_clean_paths(env)
+        # if is_dirty cls.last_path_hash = hash_s_list(env_path) in ↑get_clean_paths
+        return paths_dict.get(cls.last_path_hash)
 
     @classmethod
     def get_dir_cached(cls, path):  # dir_cache_session
@@ -348,7 +354,7 @@ class PathCache:  # Singleton
         env = self.env
         env_path = env.get("PATH", [])
         env_path_hash = hash_s_list(env_path)
-        paths_dict = self.get_clean_path(env)
+        paths_dict = self.get_clean_paths(env)
         if env_path_hash in paths_dict:
             paths = paths_dict[env_path_hash]
         else:
@@ -516,16 +522,10 @@ def locate_file_in_path_env(
     paths = []
     if env is None:
         env = XSH.env
-        env_path = env.get("PATH", [])
         if use_path_cache:  # for generic environment: use cache only if configured
-            paths_dict = PathCache.get_clean_path(env)
-            env_path_hash = hash_s_list(env_path)
-            if env_path_hash in paths_dict:
-                paths = paths_dict[env_path_hash]
-            else:
-                paths = tuple(clear_paths(env_path))
-                PathCache.clean_paths[env_path_hash] = paths
-        else:  #              otherwise              : clean paths every time
+            paths = PathCache.get_clean_path(env) # avoids clear_paths IO, if env_path Δ, use last cached one, .is_dirty is reponsible for updating the cache (on each prompt)
+        else:  #              otherwise              : clean paths
+            env_path = env.get("PATH", [])
             paths = tuple(clear_paths(env_path))
     else:  #                  for custom  environment: clean paths every time
         env_path = env.get("PATH", [])
