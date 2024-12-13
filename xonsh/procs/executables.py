@@ -172,9 +172,7 @@ class PathCache:  # Singleton
                     cls._instance.__is_init = False
         return cls._instance
 
-    is_dirty = (
-        True  # flag to signal that cleaned paths (not files/cmds) should be refreshed
-    )
+    is_dirty = True  # signal to refresh cleaned paths (not files/cmds)
     last_path_hash: str = ""  # avoid the risk of IO on keystroke of clearing Δ paths
     dir_cache: dict[str, list[list[str]]] = dict()
     dir_key_cache: dict[str, _PathCmd] = dict()
@@ -203,9 +201,9 @@ class PathCache:  # Singleton
         return cls.clean_paths
 
     @classmethod
-    def get_clean_path(cls, env) -> Union[tuple[str],None]:  # cleaned paths matching PATH hash
-        paths_dict = cls.get_clean_paths(env)
-        # if is_dirty cls.last_path_hash = hash_s_list(env_path) in ↑get_clean_paths
+    def get_clean_path(cls, env) -> tp.Union[tuple[str], None]:
+        """Get cleaned paths matching PATH hash, avoiding path cleaning IO unless dirty"""
+        paths_dict = cls.get_clean_paths(env)  # updates last_path_hash if dirty
         return paths_dict.get(cls.last_path_hash)
 
     @classmethod
@@ -226,6 +224,7 @@ class PathCache:  # Singleton
 
     def get_cache_info(self, v=0):  # show some basic cache info
         import textwrap
+
         env = self.env
         env_path = env.get("PATH", [])
         env_path_hash = hash_s_list(env_path)
@@ -276,19 +275,20 @@ class PathCache:  # Singleton
             for p in env_path:
                 pn = os.path.normpath(p)
                 lbl = ""
-                if pn in self.usr_dir_list_perma   or\
-                   pn in self.usr_dir_list_session or\
-                   pn in self.usr_dir_list_key:
+                if (
+                    pn in self.usr_dir_list_perma
+                    or pn in self.usr_dir_list_session
+                    or pn in self.usr_dir_list_key
+                ):
                     lbl += "✓ "
                 else:
                     lbl += " ✗"
-                lbl += " " if pn in clean_paths               else "-"
-                lbl += "P" if pn in self.usr_dir_list_perma   else " "
+                lbl += " " if pn in clean_paths else "-"
+                lbl += "P" if pn in self.usr_dir_list_perma else " "
                 lbl += "S" if pn in self.usr_dir_list_session else " "
-                lbl += "M" if pn in self.usr_dir_list_key     else " "
+                lbl += "M" if pn in self.usr_dir_list_key else " "
                 msg += f"\n {lbl} {p}"
             print(msg)
-
 
     CACHE_FILE = "dir_perma_cache.pickle"
 
@@ -523,7 +523,8 @@ def locate_file_in_path_env(
     if env is None:
         env = XSH.env
         if use_path_cache:  # for generic environment: use cache only if configured
-            paths = PathCache.get_clean_path(env) # avoids clear_paths IO, if env_path Δ, use last cached one, .is_dirty is reponsible for updating the cache (on each prompt)
+            # avoid clear_paths IO, if env_path Δ, use last cached one, .is_dirty is reponsible for updating the cache (on each prompt)
+            paths = PathCache.get_clean_path(env)
         else:  #              otherwise              : clean paths
             env_path = env.get("PATH", [])
             paths = tuple(clear_paths(env_path))
