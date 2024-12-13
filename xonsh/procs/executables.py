@@ -269,7 +269,9 @@ class PathCache:  # Singleton
             Uncached: ∑ {str(uncached_c      ).rjust(3)}{' including:' if uncached_c else ''}\
         """
         print(textwrap.dedent(msg))
-        msg = "  " + "\n  ".join(uncached)
+        msg = ""
+        if uncached:
+            msg += "  " + "\n  ".join(uncached)
         if v >= 1:
             msg += (
                 "\n"
@@ -308,6 +310,12 @@ class PathCache:  # Singleton
                 lbl += "S" if pn in self.usr_dir_list_session else " "
                 lbl += "M" if pn in self.usr_dir_list_key else " "
                 msg += f"\n {lbl} {p}"
+        msg += "\n\n" + ("✓" if env.get("XONSH_DIR_CWD_CACHE", False) else "✗") + " current working dir cache"
+        if len(self.cwd_too_long):
+            msg += f"\n {len(self.cwd_too_long)} cwdirs found with # of items > " + env.get("XONSH_DIR_CWD_CACHE_LEN_MAX")
+            if v >= 2:
+                msg += f":\n"
+                msg += "\n  ".join(self.cwd_too_long)
         print(msg)
 
     CACHE_FILE = "dir_perma_cache.pickle"
