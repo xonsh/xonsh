@@ -1300,6 +1300,24 @@ class CacheSetting(Xettings):
         "To get info about the current state of path cache, see 'xonsh.procs.executables.get_cache_info'.",
     )
 
+    XONSH_DIR_CWD_CACHE = Var.with_default(
+        False,
+        "(Win) Like ``$XONSH_DIR_CACHE_TO_LIST``, but for current working directory. "
+        "Set ``$XONSH_DIR_CWD_CACHE_LEN_MAX`` to exclude dirs with many items. "
+        "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see ``$XONSH_DIR_PERMA_CACHE``.",
+    )
+    XONSH_DIR_CWD_CACHE_LEN_MAX = Var.with_default(
+        500,
+        "The maximum number of files, above which the current working directory will not be cached "
+        " even if ``$XONSH_DIR_CWD_CACHE`` is True",
+    )
+    XONSH_DIR_CWD_CACHE_NON_EXE = Var.with_default(
+        True,
+        "Cache non-executable files. Disabling this will check every file in a listed dir, "
+        "potentially negating all the performance benefits of using ``$XONSH_DIR_CWD_CACHE``, "
+        "but then partial text for filenames you can't execute won't be highlighted.",
+    )
+
     XONSH_DIR_CACHE_TO_LIST = Var.with_default(
         set(),
         "(Win) Reduce typing delay via faster 'executable exists' checks. "
