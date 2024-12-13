@@ -310,11 +310,18 @@ class PathCache:  # Singleton
                 lbl += "S" if pn in self.usr_dir_list_session else " "
                 lbl += "M" if pn in self.usr_dir_list_key else " "
                 msg += f"\n {lbl} {p}"
-        msg += "\n\n" + ("✓" if env.get("XONSH_DIR_CWD_CACHE", False) else "✗") + " current working dir cache"
+        msg += (
+            "\n\n"
+            + ("✓" if env.get("XONSH_DIR_CWD_CACHE", False) else "✗")
+            + " current working dir cache"
+        )
         if len(self.cwd_too_long):
-            msg += f"\n {len(self.cwd_too_long)} cwdirs found with # of items > " + env.get("XONSH_DIR_CWD_CACHE_LEN_MAX")
+            msg += (
+                f"\n {len(self.cwd_too_long)} cwdirs found with # of items > "
+                + env.get("XONSH_DIR_CWD_CACHE_LEN_MAX")
+            )
             if v >= 2:
-                msg += f":\n"
+                msg += ":\n"
                 msg += "\n  ".join(self.cwd_too_long)
         print(msg)
 
@@ -460,7 +467,9 @@ def locate_file(
     )
 
 
-def locate_relative_path(name, env=None, check_executable=False, use_pathext=False, partial_match=None):
+def locate_relative_path(
+    name, env=None, check_executable=False, use_pathext=False, partial_match=None
+):
     """Return absolute path by relative file path.
 
     We should not locate files without prefix (e.g. ``"binfile"``) by security reasons like other shells.
@@ -478,12 +487,12 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
 
         if is_cache_cwd and p not in pc.cwd_too_long:
             name_clean = name
-            if has_prefix: # relative, remove prefix
+            if has_prefix:  # relative, remove prefix
                 for pref in prefixes:
                     if name.startswith(pref):
                         name_clean = name.removeprefix(pref)
                         break
-            elif p.name: # absolute, get name
+            elif p.name:  # absolute, get name
                 name_clean = p.name
             path = p.parent
             path_time = os.path.getmtime(path)
@@ -514,7 +523,7 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
                         continue
             if ftrie.has_subtrie(name_clean.lower()):  # ± partial match
                 if isinstance(partial_match, CmdPart):
-                    partial_match.is_part = True # for color highlighting
+                    partial_match.is_part = True  # for color highlighting
         else:
             for possible_name in possible_names:
                 filepath = p.parent / possible_name
