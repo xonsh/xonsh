@@ -351,20 +351,10 @@ class PathCache:  # Singleton
 
     def update_cache(self):
         """The main function to update commands cache"""
-        env = self.env
-        env_path = env.get("PATH", [])
-        env_path_hash = hash_s_list(env_path)
-        paths_dict = self.get_clean_paths(env)
-        if env_path_hash in paths_dict:
-            paths = paths_dict[env_path_hash]
-        else:
-            paths = tuple(clear_paths(env_path))
-            PathCache.clean_paths[env_path_hash] = paths
+        paths = self.get_clean_path(self.env)
 
-        if self._update_paths_cache(
-            paths
-        ):  # not yet needed since only a few dirs are supported
-            pass
+        if paths and self._update_paths_cache(paths):
+            pass  # not yet needed since only a few dirs are supported
         #     all_cmds = pygtrie.CharTrie()
         #     for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
         #         all_cmds[cmd_low] = (cmd,path)
