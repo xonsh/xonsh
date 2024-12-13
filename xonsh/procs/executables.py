@@ -222,7 +222,10 @@ class PathCache:  # Singleton
     def set_dir_key_cache(cls, path, time, f_trie):  # dir_cache_key
         cls.dir_key_cache[path] = _PathCmd(time, f_trie)
 
-    def get_cache_info(self, v=0):  # show some basic cache info
+    def get_cache_info(self, v=0):
+        """Show some basic path cache info, v: verbosity level 0–2. Example:
+        from xonsh.procs.executables import PathCache; pc = PathCache(None); pc.get_cache_info(v=2)
+        """
         import textwrap
 
         env = self.env
