@@ -258,15 +258,29 @@ class PathCache:  # Singleton
             if (inc_perma + inc_sess + inc_list) == 0:
                 uncached.append(p)
         uncached_c = len(uncached)
+        ext_min = int(env.get("XONSH_DIR_CACHE_LIST_EXT_MIN"))
         cached = cached_perma + cached_sess + cached_list
+        cache_non_exe = "✓" if env.get("XONSH_DIR_CACHE_LIST_NON_EXE", True) else "✗"
+        skip_exist = "✓" if env.get("XONSH_DIR_CACHE_SKIP_EXIST", True) else "✗"
         msg = f"""\
             PATH    : ∑ {str(len(env_path   )).rjust(3)} dirty
                       └ {str(len(clean_paths)).rjust(3)} clean (unique & existing)
             Cached  : ∑ {str(    cached      ).rjust(3)} of which:              (pc = PathCache(None))
-                      ├ {str(cached_perma    ).rjust(3)} permanently            (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE  )
-                      ├ {str(cached_sess     ).rjust(3)} this session           (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE)
-                      └ {str(cached_list     ).rjust(3)} by dir mtime, list onΔ (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST)
+                      ├ {str(cached_perma    ).rjust(3)} permanently            (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE       )
+                      ├ {str(cached_sess     ).rjust(3)} this session           (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE     )
+                      └ {str(cached_list     ).rjust(3)} by dir mtime, list onΔ (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST     )\
+        """
+        if v >= 1:
+            msg += f"""
+                                                   ({str(ext_min     ).rjust(2)}                        $XONSH_DIR_CACHE_LIST_EXT_MIN)
+                                                   ({    cache_non_exe.rjust(2)}                        $XONSH_DIR_CACHE_LIST_NON_EXE)\
+        """
+        msg += f"""
             Uncached: ∑ {str(uncached_c      ).rjust(3)}{' including:' if uncached_c else ''}\
+        """
+        if v >= 1:
+            msg += f"""
+                                                   ({       skip_exist.rjust(2)}                        $XONSH_DIR_CACHE_SKIP_EXIST  )\
         """
         print(textwrap.dedent(msg))
         msg = ""
