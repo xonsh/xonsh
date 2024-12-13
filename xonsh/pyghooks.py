@@ -1603,6 +1603,7 @@ def _command_is_valid(cmd, partial_match=None):
         cmd in XSH.aliases
         or locate_executable(
             cmd,
+            path_cache_dirty=True,
             use_dir_cache_session=use_dir_cache_session,
             use_dir_cache_perma=use_dir_cache_perma,
             partial_match=partial_match,
