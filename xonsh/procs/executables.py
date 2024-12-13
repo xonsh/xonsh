@@ -507,7 +507,7 @@ def locate_relative_path(
             if use_cache:
                 ftrie = path_cmd.ftrie
             else:  # rebuild dir cache
-                skip_exist = True  # avoid dupe is_file check since we got a list of files
+                skip_exist = True  # no dupe is_file: we list files
                 ftrie = pygtrie.CharTrie()
                 for _dirpath, _dirnames, filenames in walk(path):
                     if len(filenames) > env.get("XONSH_DIR_CWD_CACHE_LEN_MAX", 500):
@@ -637,6 +637,7 @@ def locate_file_in_path_env(
     skip_exist = env.get(
         "XONSH_DIR_CACHE_SKIP_EXIST", False
     )  # avoid dupe is_file check since we assume permanent/session caches don't change ever/per session
+    cache_non_exe = env.get("XONSH_DIR_CACHE_LIST_NON_EXE", True)
 
     for path in paths:
         if (
@@ -697,18 +698,22 @@ def locate_file_in_path_env(
             if use_cache:
                 ftrie = path_cmd.ftrie
             else:  # rebuild dir cache
+                skip_exist = True  # no dupe is_file: we list files
                 ftrie = pygtrie.CharTrie()
                 for _dirpath, _dirnames, filenames in walk(path):
                     for fname in filenames:
-                        ftrie[fname.lower()] = fname  # for case-insensitive match
+                        if cache_non_exe:  # ↓for case-insensitive match
+                            ftrie[fname.lower()] = fname
+                        elif is_executable(fname, skip_exist):
+                            ftrie[fname.lower()] = fname
                     break  # no recursion into subdir
                 PathCache.set_dir_key_cache(path, path_time, ftrie)
             for possible_name in possible_names:
                 possible_Name = ftrie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
                     if found := check_possible_name(
-                        path, possible_Name, check_executable, skip_exist=True
-                    ):  # avoid dupe is_file check since we already got a list of files
+                        path, possible_Name, check_executable, skip_exist
+                    ):
                         return found
                     else:
                         continue
