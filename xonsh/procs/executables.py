@@ -335,6 +335,7 @@ class PathCache:  # Singleton
         self.usr_dir_list_perma: set = set()
         self.usr_dir_list_session: set = set()
         self.usr_dir_list_key: set = set()
+        self.cwd_too_long: set = set()
         from os.path import normpath
 
         # clean up user lists of dirs and save them. Include dirs not in PATH since they can be added to PATH later (even on startup by a plugin)
@@ -445,7 +446,7 @@ def locate_file(
 ):
     """Search file name in the current working directory and in ``$PATH`` and return full path."""
     return locate_relative_path(
-        name, env, check_executable, use_pathext
+        name, env, check_executable, use_pathext, partial_match
     ) or locate_file_in_path_env(
         name,
         env,
@@ -459,25 +460,72 @@ def locate_file(
     )
 
 
-def locate_relative_path(name, env=None, check_executable=False, use_pathext=False):
+def locate_relative_path(name, env=None, check_executable=False, use_pathext=False, partial_match=None):
     """Return absolute path by relative file path.
 
     We should not locate files without prefix (e.g. ``"binfile"``) by security reasons like other shells.
     If directory has "binfile" it can be called only by providing prefix "./binfile" explicitly.
     """
     p = Path(name)
-    if name.startswith(("./", "../", ".\\", "..\\", "~/")) or p.is_absolute():
+    prefixes = ("./", "../", ".\\", "..\\", "~/")
+    has_prefix = name.startswith(prefixes)
+    if has_prefix or p.is_absolute():
+        env = env if env else XSH.env
+        cache_non_exe = env.get("XONSH_DIR_CWD_CACHE_NON_EXE", True)
+        is_cache_cwd = env.get("XONSH_DIR_CWD_CACHE", False)
+        pc = PathCache(env)
         possible_names = get_possible_names(p.name, env) if use_pathext else [p.name]
-        for possible_name in possible_names:
-            filepath = p.parent / possible_name
-            try:
-                if not filepath.is_file() or (
-                    check_executable and not is_executable(filepath)
-                ):
+
+        if is_cache_cwd and p not in pc.cwd_too_long:
+            name_clean = name
+            if has_prefix: # relative, remove prefix
+                for pref in prefixes:
+                    if name.startswith(pref):
+                        name_clean = name.removeprefix(pref)
+                        break
+            elif p.name: # absolute, get name
+                name_clean = p.name
+            path = p.parent
+            path_time = os.path.getmtime(path)
+            path_cmd = pc.get_dir_key_cache(path)
+            use_cache = True if path_cmd and (path_cmd.mtime == path_time) else False
+            if use_cache:
+                ftrie = path_cmd.ftrie
+            else:  # rebuild dir cache
+                ftrie = pygtrie.CharTrie()
+                for _dirpath, _dirnames, filenames in walk(path):
+                    if len(filenames) > env.get("XONSH_DIR_CWD_CACHE_LEN_MAX", 500):
+                        pc.cwd_too_long.add(path)
+                    for fname in filenames:
+                        if cache_non_exe:
+                            ftrie[fname.lower()] = fname  # for case-insensitive match
+                        elif is_executable(fname, skip_exist=True):
+                            ftrie[fname.lower()] = fname  # for case-insensitive match
+                    break  # no recursion into subdir
+                pc.set_dir_key_cache(path, path_time, ftrie)
+            for possible_name in possible_names:
+                possible_Name = ftrie.get(possible_name.lower())
+                if possible_Name is not None:  #          ✓ full match
+                    if found := check_possible_name(
+                        path, possible_Name, check_executable, skip_exist=True
+                    ):  # avoid dupe is_file check since we already got a list of files
+                        return found
+                    else:
+                        continue
+            if ftrie.has_subtrie(name_clean.lower()):  # ± partial match
+                if isinstance(partial_match, CmdPart):
+                    partial_match.is_part = True # for color highlighting
+        else:
+            for possible_name in possible_names:
+                filepath = p.parent / possible_name
+                try:
+                    if not filepath.is_file() or (
+                        check_executable and not is_executable(filepath)
+                    ):
+                        continue
+                    return str(p.absolute())
+                except PermissionError:
                     continue
-                return str(p.absolute())
-            except PermissionError:
-                continue
 
 
 from os import walk
