@@ -208,7 +208,23 @@ def test_xonsh_dir_session_cache(tmpdir, xession):
 
     xonsh_dir_session_cache = []
     env = xession.env
-    pathext = env["PATHEXT"]
+    pathext = [
+        ".COM",
+        ".EXE",
+        ".BAT",
+        ".CMD",
+        ".VBS",
+        ".VBE",
+        ".JS",
+        ".JSE",
+        ".WSF",
+        ".WSH",
+        ".MSC",
+        ".PY",
+        ".PYW",
+        ".XSH",
+    ]
+    env["PATHEXT"] = pathext
     env_path = env.get("PATH", [])
     for path in env_path:  # cache all dirs in path
         f = []
