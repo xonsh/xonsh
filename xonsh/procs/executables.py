@@ -325,25 +325,31 @@ class PathCache:  # Singleton
         self.usr_dir_list_perma: set = set()
         self.usr_dir_list_session: set = set()
         self.usr_dir_list_key: set = set()
-        # clean up user given lists of dirs and cache it
-        usr_dir_list_perma = [
-            os.path.normpath(p).lower() for p in env.get("XONSH_DIR_PERMA_CACHE", [])
-        ]
-        usr_dir_list_session = [
-            os.path.normpath(p).lower() for p in env.get("XONSH_DIR_SESSION_CACHE", [])
-        ]
-        usr_dir_list_key = [
-            os.path.normpath(p).lower() for p in env.get("XONSH_DIR_CACHE_TO_LIST", [])
-        ]
+        from os.path import normpath
+
+        # clean up user lists of dirs and save them. Include dirs not in PATH since they can be added to PATH later (even on startup by a plugin)
+        self.usr_dir_list_perma = set(
+            normpath(p) for p in env.get("XONSH_DIR_PERMA_CACHE", [])
+        )
+        self.usr_dir_list_session = set(
+            normpath(p) for p in env.get("XONSH_DIR_SESSION_CACHE", [])
+        )
+        self.usr_dir_list_key = set(
+            normpath(p) for p in env.get("XONSH_DIR_CACHE_TO_LIST", [])
+        )
+        # just in case, add dirs from PATH with a different case
+        usr_dir_list_perma_pl = [p.lower() for p in self.usr_dir_list_perma]
+        usr_dir_list_session_pl = [p.lower() for p in self.usr_dir_list_session]
+        usr_dir_list_key_pl = [p.lower() for p in self.usr_dir_list_key]
         env_path = env.get("PATH", [])
         for p in env_path:
-            pn = os.path.normpath(p)
+            pn = normpath(p)
             pl = pn.lower()
-            if pl in usr_dir_list_perma:
+            if pl in usr_dir_list_perma_pl:
                 self.usr_dir_list_perma.add(pn)
-            if pl in usr_dir_list_session:
+            if pl in usr_dir_list_session_pl:
                 self.usr_dir_list_session.add(pn)
-            if pl in usr_dir_list_key:
+            if pl in usr_dir_list_key_pl:
                 self.usr_dir_list_key.add(pn)
         self.__is_init = True
 
