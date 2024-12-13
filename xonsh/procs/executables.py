@@ -259,22 +259,37 @@ class PathCache:  # Singleton
         cached = cached_perma + cached_sess + cached_list
         msg = f"""\
             PATH    : ∑ {str(len(env_path   )).rjust(3)} dirty
-                      # {str(len(clean_paths)).rjust(3)} clean (unique & existing)
+                      └ {str(len(clean_paths)).rjust(3)} clean (unique & existing)
             Cached  : ∑ {str(    cached      ).rjust(3)} of which:              (pc = PathCache(None))
-                      # {str(cached_perma    ).rjust(3)} permanently            (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE  )
-                      # {str(cached_sess     ).rjust(3)} this session           (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE)
-                      # {str(cached_list     ).rjust(3)} by dir mtime, list onΔ (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST)
-            Uncached: ∑ {str(uncached_c      ).rjust(3)} including:\
+                      ├ {str(cached_perma    ).rjust(3)} permanently            (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE  )
+                      ├ {str(cached_sess     ).rjust(3)} this session           (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE)
+                      └ {str(cached_list     ).rjust(3)} by dir mtime, list onΔ (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST)
+            Uncached: ∑ {str(uncached_c      ).rjust(3)}{' including:' if uncached_c else ''}\
         """
         print(textwrap.dedent(msg))
         msg = "  " + "\n  ".join(uncached)
         if v >= 1:
-            msg += "\npaths cached permanently :\n  " + "\n  ".join(list_perma)
-            msg += "\npaths cached this session:\n  " + "\n  ".join(list_sess)
-            msg += "\npaths cached by dir mtime:\n  " + "\n  ".join(list_list)
+            msg += (
+                "\n"
+                + str(len(list_perma))
+                + " paths cached permanently :\n  "
+                + "\n  ".join(list_perma)
+            )
+            msg += (
+                "\n"
+                + str(len(list_sess))
+                + " paths cached this session:\n  "
+                + "\n  ".join(list_sess)
+            )
+            msg += (
+                "\n"
+                + str(len(list_list))
+                + " paths cached by dir mtime:\n  "
+                + "\n  ".join(list_list)
+            )
         if v >= 2:
             # print(f"PATH #{len(env_path)}    :\n  {'\n  '.join(env_path)}")
-            msg += f"\nPATH #{len(env_path)}    :✓Cached, ✗Not (Perma, Session, Mtime); -Doesn't exist"
+            msg += f"\n\n{len(env_path)} $PATH:\n ✓✗  Cached/Not (Perma, Session, Mtime)\n   - Doesn't exist"
             for p in env_path:
                 pn = os.path.normpath(p)
                 lbl = ""
