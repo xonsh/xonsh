@@ -267,14 +267,14 @@ class PathCache:  # Singleton
             Uncached: ∑ {str(uncached_c      ).rjust(3)} including:\
         """
         print(textwrap.dedent(msg))
-        print(f"  {'\n  '.join(uncached)}")
+        msg = "  " + "\n  ".join(uncached)
         if v >= 1:
-            print(f"paths cached permanently :\n  {'\n  '.join(list_perma)}")
-            print(f"paths cached this session:\n  {'\n  '.join(list_sess)}")
-            print(f"paths cached by dir mtime:\n  {'\n  '.join(list_list)}")
+            msg += "\npaths cached permanently :\n  " + "\n  ".join(list_perma)
+            msg += "\npaths cached this session:\n  " + "\n  ".join(list_sess)
+            msg += "\npaths cached by dir mtime:\n  " + "\n  ".join(list_list)
         if v >= 2:
             # print(f"PATH #{len(env_path)}    :\n  {'\n  '.join(env_path)}")
-            msg = f"PATH #{len(env_path)}    :✓Cached, ✗Not (Perma, Session, Mtime); -Doesn't exist"
+            msg += f"\nPATH #{len(env_path)}    :✓Cached, ✗Not (Perma, Session, Mtime); -Doesn't exist"
             for p in env_path:
                 pn = os.path.normpath(p)
                 lbl = ""
@@ -291,7 +291,7 @@ class PathCache:  # Singleton
                 lbl += "S" if pn in self.usr_dir_list_session else " "
                 lbl += "M" if pn in self.usr_dir_list_key else " "
                 msg += f"\n {lbl} {p}"
-            print(msg)
+        print(msg)
 
     CACHE_FILE = "dir_perma_cache.pickle"
 
