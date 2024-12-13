@@ -313,7 +313,9 @@ class PathCache:  # Singleton
         msg += (
             "\n\n"
             + ("✓" if env.get("XONSH_DIR_CWD_CACHE", False) else "✗")
-            + " current working dir cache"
+            + " current working dir cache ($XONSH_DIR_CWD_CACHE)\n"
+            + ("✓" if env.get("XONSH_DIR_CWD_CACHE_NON_EXE", False) else "✗")
+            + " (cwd) cache non-executable ($XONSH_DIR_CWD_CACHE_NON_EXE)"
         )
         if len(self.cwd_too_long):
             msg += (
