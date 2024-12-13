@@ -1338,6 +1338,12 @@ class CacheSetting(Xettings):
         "Set to 1 if you want to list a dir regardless as that would allow caching its content"
         "and highlighting valid partial prefixes while typing: see `XONSH_DIR_PERMA_CACHE`.",
     )
+    XONSH_DIR_CACHE_LIST_NON_EXE = Var.with_default(
+        True,
+        "Cache non-executable files. Disabling this will check every file in a listed dir, "
+        "potentially negating the performance benefits of using ``$XONSH_DIR_CACHE_TO_LIST``, "
+        "but then partial text for filenames you can't execute won't be highlighted.",
+    )
 
     XONSH_DIR_CACHE_SKIP_EXIST = Var.with_default(
         False,
