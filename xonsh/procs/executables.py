@@ -1,6 +1,7 @@
 """Interfaces to locate executable files on file system."""
 
 import os
+import sys
 import pickle
 import typing as tp
 from pathlib import Path
