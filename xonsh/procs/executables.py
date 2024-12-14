@@ -493,6 +493,42 @@ class PathCache:  # Singleton
             )
         return updated
 
+    @classmethod
+    def load_cache_listed(cls):
+        """Load cached 'Listed' dirs to file (on startup not to dupe-list dir if no mtime changed)"""
+        self = cls._instance
+        if not self:
+            return
+        dir_cache, pathext_cache = None, None
+        if self.cache_file_listed and self.cache_file_listed.exists():
+            try:  # load commands from cache-file if configured
+                [dir_cache, pathext_cache] = pickle.loads(self.cache_file_listed.read_bytes())
+            except Exception as e:
+                print(f"Failed to load 'Listed' dir cache, deleting it @ {self.cache_file_listed}: {e}", file=sys.stderr)
+                self.cache_file_listed.unlink(missing_ok=True)
+
+            pathext = set(cls.env.get("PATHEXT", [])) if ON_WINDOWS else set()
+            is_exe_def_valid = (pathext == pathext_cache)  # ≝ of an executable NOT changed
+            cls.dir_key_cache = dir_cache if is_exe_def_valid else dict()
+            self._pathext_cache_list = pathext_cache if is_exe_def_valid else set()
+            # if not is_exe_def_valid: # will be overwritten on exit, so no point in del?
+            #     # print(f"Stale 'Listed' dir cache, deleting it…")
+            #     cls.cache_file_listed.unlink(missing_ok=True)
+
+    @classmethod
+    def save_cache_listed(cls):
+        """Save cached 'Listed' dirs to file (on exit)"""
+        self = cls._instance
+        if not self:
+            return
+        dir_cache = cls.dir_key_cache
+        pathext_cache = set(cls.env.get("PATHEXT", [])) if ON_WINDOWS else set()
+        if self.cache_file_listed:
+            try:  # save commands to cache-file if configured
+                self.cache_file_listed.write_bytes(pickle.dumps([dir_cache, pathext_cache]))
+            except Exception as e:
+                print(f"Failed to save 'Listed' dir cache it @ {self.cache_file_listed}: {e}", file=sys.stderr)
+
     def _iter_binaries(self, paths):
         for path in paths:
             for cmd_low in (cmd_chartrie := self.__class__.dir_cache_perma.get(path, [])):
