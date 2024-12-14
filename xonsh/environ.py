@@ -1278,15 +1278,16 @@ class CacheSetting(Xettings):
     XONSH_DIR_PERMA_CACHE = Var.with_default(
         set(),
         "(Win) Reduce typing delay via faster 'executable exists' checks for syntax highlighting. "
-        "Cache a list of files in these dirs permanently (until the OS is updated) "
-        "to avoid re-checking whether an executable exists on every keystroke. "
-        "This is a potentially 'lossy' option, if the content of these dirs changes, "
+        "Cache a list of executable files in these dirs permanently to avoid re-checking whether "
+        "an executable exists on every keystroke (dirs not in ``$PATH`` are ignored)."
+        "This is potentially a 'lossy' option: if the content of these dirs changes, "
         "syntax highlighting will be wrong, but it may still be worth the lower input lag. "
-        "(Mac/Linux) cached dirs provide another syntax highlighting benefit: "
-        "they allow highlighting typos early if partially typed command isn't found as a prefix "
-        "to any cached commands, e.g., 'x̲o̲n̲' is a prefix of 'xonsh' and highlighted, but 'xonh' "
-        "is a typo, so isn't (color scheme 'Token.Name.Cmdprefix':'underline ansiwhite'). "
-        "To get info about the current state of path cache, see 'xonsh.procs.executables.get_cache_info'.",
+        "Cache is invalidated if the definition of an executable file changes (``$PATHEXT``). "
+        "(Win/Mac/Linux) cached dirs provide another benefit — they allow catching typos early: "
+        "only valid partially typed commands are highlighted. For example, assuming ``xonsh`` is in a cached dir, "
+        "``x̲o̲n̲`` is a prefix of ``xonsh`` and is highlighted, but ``xonh`` is a typo, so isn't "
+        "(change the highlighting in your color scheme via ``'Token.Name.Cmdprefix':'underline ansiwhite'``). "
+        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. "
     )
 
     XONSH_DIR_SESSION_CACHE = Var.with_default(
@@ -1297,7 +1298,7 @@ class CacheSetting(Xettings):
         "This is a 'lossy' option, if xonsh or another process changes the files, "
         "syntax highlighting will be wrong, but it may still be worth the lower input lag. "
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`. "
-        "To get info about the current state of path cache, see 'xonsh.procs.executables.get_cache_info'.",
+        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. "
     )
 
     XONSH_DIR_CWD_CACHE = Var.with_default(
@@ -1328,7 +1329,7 @@ class CacheSetting(Xettings):
         "This variable is a set of paths that should be checked via direct listing. ",
         "Set `XONSH_DIR_CACHE_LIST_EXT_MIN` for more direct fine-tuning the tradeoff. ",
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`. "
-        "To get info about the current state of path cache, see 'xonsh.procs.executables.get_cache_info'.",
+        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. "
     )
     XONSH_DIR_CACHE_LIST_EXT_MIN = Var.with_default(
         3,
