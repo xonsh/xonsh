@@ -415,11 +415,9 @@ class PathCache:  # Singleton
 
     @property
     def cache_file(self):
-        """Keeping a property that lies on instance-attribute"""
+        """Path to the cache file with "permanent" dir info (on instance-attr)"""
         env = self.env
-        if (
-            self._cache_file is None
-        ):  # path to the cache file where all dir are cached for pre-loading
+        if self._cache_file is None:
             if "XONSH_CACHE_DIR" in env and "XONSH_DIR_PERMA_CACHE" in env:
                 self._cache_file = (
                     Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE).resolve()
