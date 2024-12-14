@@ -185,8 +185,12 @@ class PathCache:  # Singleton
     clean_paths: dict[str, tuple[str]] = dict()
 
     @classmethod
-    def reset(cls):  # clean self to allow creating a new one with a different env
-        if cls._instance:
+    def reset(cls, delfiles: bool = False):
+        """ Clean PathCache to allow creating a new one with a different env
+            delfiles: Also delete cached files
+        """
+        self = cls._instance
+        if self:
             # cls._instance.__is_init = False
             cls._instance = None
             cls.is_dirty = True
@@ -194,6 +198,12 @@ class PathCache:  # Singleton
             cls.dir_cache: dict[str, list[list[str]]] = dict()
             cls.dir_key_cache: dict[str, _PathCmd] = dict()
             cls.clean_paths: dict[str, tuple[str]] = dict()
+            if delfiles:
+                if self.cache_file and self.cache_file.exists():
+                    self.cache_file.unlink(missing_ok=True)
+                if self.cache_file_listed and self.cache_file_listed.exists():
+                    self.cache_file_listed.unlink(missing_ok=True)
+
 
     @classmethod
     def get_clean_paths(cls, env):  # cleaned paths (not files/cmds)
