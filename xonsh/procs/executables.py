@@ -423,7 +423,7 @@ class PathCache:  # Singleton
         """Path to the cache file with "permanent" dir info (on instance-attr)"""
         env = self.env
         if self._cache_file is None:
-            if "XONSH_CACHE_DIR" in env and "XONSH_DIR_PERMA_CACHE" in env:
+            if env.get("XONSH_CACHE_DIR") and env.get("XONSH_DIR_PERMA_CACHE"):
                 self._cache_file = (
                     Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE).resolve()
                 )
