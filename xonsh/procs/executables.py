@@ -1,10 +1,11 @@
 """Interfaces to locate executable files on file system."""
 
 import os
-import sys
 import pickle
+import sys
 import typing as tp
 from pathlib import Path
+
 import pygtrie
 
 from xonsh.built_ins import XSH
@@ -189,6 +190,7 @@ class PathCache:  # Singleton
             # cls._instance.__is_init = False
             cls._instance = None
             cls.is_dirty = True
+            cls.dir_cache_perma: dict[str, pygtrie.CharTrie] = dict()
             cls.dir_cache: dict[str, list[list[str]]] = dict()
             cls.dir_key_cache: dict[str, _PathCmd] = dict()
             cls.clean_paths: dict[str, tuple[str]] = dict()
@@ -229,17 +231,19 @@ class PathCache:  # Singleton
 
     @classmethod
     def get_cache_db(cls, which: str):
-        """ Get the full cache database
-            which: str = one of 3 types of cache: p|perma|permanent, s|sess|session, l|listed|m|mtime
+        """Get the full cache database
+        which: str = one of 3 types of cache: p|perma|permanent, s|sess|session, l|listed|m|mtime
         """
-        if   which in ("p","perma","permanent"):
+        if which in ("p", "perma", "permanent"):
             return cls.dir_cache_perma
-        elif which in ("s","sess","session"):
+        elif which in ("s", "sess", "session"):
             return cls.dir_cache
-        elif which in ("l","listed","m","mtime"):
+        elif which in ("l", "listed", "m", "mtime"):
             return cls.dir_key_cache
         else:
-            print(f"valid 'get_cache_db(which)' argument values are: p|perma|permanent, s|sess|session, l|listed|m|mtime")
+            print(
+                "valid 'get_cache_db(which)' argument values are: p|perma|permanent, s|sess|session, l|listed|m|mtime"
+            )
 
     def get_cache_info(self, v=0):
         """Show some basic path cache info, v: verbosity level 0–2. Example:
@@ -356,9 +360,8 @@ class PathCache:  # Singleton
             )
         if env.get("XONSH_DIR_CWD_CACHE", False):
             msg += (
-                ("✓" if env.get("XONSH_DIR_CWD_CACHE_NON_EXE", False) else "✗")
-                + " (cwd) cache non-executable ($XONSH_DIR_CWD_CACHE_NON_EXE)"
-            )
+                "✓" if env.get("XONSH_DIR_CWD_CACHE_NON_EXE", False) else "✗"
+            ) + " (cwd) cache non-executable ($XONSH_DIR_CWD_CACHE_NON_EXE)"
         if len(self.cwd_too_long):
             msg += (
                 f"\n {len(self.cwd_too_long)} cwdirs found with # of items > "
@@ -376,9 +379,8 @@ class PathCache:  # Singleton
         self.__is_init: bool
         if self.__is_init:
             return
-        self.env = (
-            env  # path to the cache file where all dir are cached for pre-loading
-        )
+        self.__class__.env = env
+        # file paths storing [dir_cache,pathext_cache] for pre-loading
         self._cache_file = None
         self._cache_file_listed = None
         self._cmds_cache: pygtrie.CharTrie = pygtrie.CharTrie()
@@ -436,11 +438,13 @@ class PathCache:  # Singleton
         """Path to the cache file with "listed/mtimed" dir info (on instance-attr)"""
         env = self.env
         if self._cache_file_listed is None:
-            if (     env.get("XONSH_CACHE_DIR")
-                and (env.get("XONSH_DIR_CACHE_TO_LIST")
-                or   env.get("XONSH_DIR_CWD_CACHE"))):
+            if env.get("XONSH_CACHE_DIR") and (
+                env.get("XONSH_DIR_CACHE_TO_LIST") or env.get("XONSH_DIR_CWD_CACHE")
+            ):
                 self._cache_file_listed = (
-                    Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE_LISTED).resolve()
+                    Path(env["XONSH_CACHE_DIR"])
+                    .joinpath(self.CACHE_FILE_LISTED)
+                    .resolve()
                 )
             else:
                 self._cache_file_listed = ""  # set a falsy value other than None
@@ -465,27 +469,37 @@ class PathCache:  # Singleton
 
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
-        if (not self.__class__.dir_cache_perma) and self.cache_file and self.cache_file.exists():
-            try:  # 1st time: load the commands from cache-file if configured
-                self.__class__.dir_cache_perma, self._pathext_cache = pickle.loads(
+        dir_cache, pathext_cache = None, None
+        if (
+            (not self.__class__.dir_cache_perma)
+            and self.cache_file
+            and self.cache_file.exists()
+        ):
+            try:  # load commands from cache-file if configured
+                [dir_cache, pathext_cache] = pickle.loads(
                     self.cache_file.read_bytes()
-                ) or [{}, set()]
-            except Exception:
-                self.cache_file.unlink(missing_ok=True)  # the file is corrupt
+                ) or [dict(), set()]
+            except Exception as e:
+                print(
+                    f"failed to load 'Permanent' dir cache, deleting it @ {self.cache_file}: {e}",
+                    file=sys.stderr,
+                )
+                self.cache_file.unlink(missing_ok=True)
         updated = False
-        pathext = set(self.env.get("PATHEXT", [])) if ON_WINDOWS else []
+        pathext = set(self.env.get("PATHEXT", [])) if ON_WINDOWS else set()
+        is_exe_def_valid = pathext == pathext_cache  # ≝ of an executable NOT changed
+        self.__class__.dir_cache_perma = dir_cache if is_exe_def_valid else dict()
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.usr_dir_list_perma) and (
                 (path not in self.__class__.dir_cache_perma)  # ← not in cache
-                or (pathext and (not pathext == self._pathext_cache))
-            ):  # ← definition of an executable changed
+                or not is_exe_def_valid
+            ):
                 cmd_chartrie = pygtrie.CharTrie()
                 for cmd in executables_in(path):
-                    cmd_chartrie[cmd.lower()] = (
-                        cmd  # lower case for case-insensitive search, but preserve case
-                    )
+                    # case-insensitive ↓ search, ↓ but preserve case
+                    cmd_chartrie[cmd.lower()] = cmd
                 self.__class__.dir_cache_perma[path] = cmd_chartrie
-                self._pathext_cache = set(pathext)
+                self._pathext_cache = pathext
                 updated = True
         if updated and self.cache_file:
             self.cache_file.write_bytes(
@@ -502,13 +516,20 @@ class PathCache:  # Singleton
         dir_cache, pathext_cache = None, None
         if self.cache_file_listed and self.cache_file_listed.exists():
             try:  # load commands from cache-file if configured
-                [dir_cache, pathext_cache] = pickle.loads(self.cache_file_listed.read_bytes())
+                [dir_cache, pathext_cache] = pickle.loads(
+                    self.cache_file_listed.read_bytes()
+                )
             except Exception as e:
-                print(f"Failed to load 'Listed' dir cache, deleting it @ {self.cache_file_listed}: {e}", file=sys.stderr)
+                print(
+                    f"Failed to load 'Listed' dir cache, deleting it @ {self.cache_file_listed}: {e}",
+                    file=sys.stderr,
+                )
                 self.cache_file_listed.unlink(missing_ok=True)
 
             pathext = set(cls.env.get("PATHEXT", [])) if ON_WINDOWS else set()
-            is_exe_def_valid = (pathext == pathext_cache)  # ≝ of an executable NOT changed
+            is_exe_def_valid = (
+                pathext == pathext_cache
+            )  # ≝ of an executable NOT changed
             cls.dir_key_cache = dir_cache if is_exe_def_valid else dict()
             self._pathext_cache_list = pathext_cache if is_exe_def_valid else set()
             # if not is_exe_def_valid: # will be overwritten on exit, so no point in del?
@@ -525,13 +546,20 @@ class PathCache:  # Singleton
         pathext_cache = set(cls.env.get("PATHEXT", [])) if ON_WINDOWS else set()
         if self.cache_file_listed:
             try:  # save commands to cache-file if configured
-                self.cache_file_listed.write_bytes(pickle.dumps([dir_cache, pathext_cache]))
+                self.cache_file_listed.write_bytes(
+                    pickle.dumps([dir_cache, pathext_cache])
+                )
             except Exception as e:
-                print(f"Failed to save 'Listed' dir cache it @ {self.cache_file_listed}: {e}", file=sys.stderr)
+                print(
+                    f"Failed to save 'Listed' dir cache it @ {self.cache_file_listed}: {e}",
+                    file=sys.stderr,
+                )
 
     def _iter_binaries(self, paths):
         for path in paths:
-            for cmd_low in (cmd_chartrie := self.__class__.dir_cache_perma.get(path, [])):
+            for cmd_low in (
+                cmd_chartrie := self.__class__.dir_cache_perma.get(path, [])
+            ):
                 cmd = cmd_chartrie[cmd_low]
                 yield cmd_low, cmd, os.path.join(path, cmd)
 
@@ -664,8 +692,6 @@ def hash_s_list(s_list):
         hash_o.update(length_encoded)
         hash_o.update(s.encode("utf-8"))
     return hash_o.hexdigest()
-
-
 
 
 def locate_file_in_path_env(

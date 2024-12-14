@@ -1287,7 +1287,7 @@ class CacheSetting(Xettings):
         "only valid partially typed commands are highlighted. For example, assuming ``xonsh`` is in a cached dir, "
         "``x̲o̲n̲`` is a prefix of ``xonsh`` and is highlighted, but ``xonh`` is a typo, so isn't "
         "(change the highlighting in your color scheme via ``'Token.Name.Cmdprefix':'underline ansiwhite'``). "
-        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. "
+        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. ",
     )
 
     XONSH_DIR_SESSION_CACHE = Var.with_default(
@@ -1298,7 +1298,7 @@ class CacheSetting(Xettings):
         "This is a 'lossy' option, if xonsh or another process changes the files, "
         "syntax highlighting will be wrong, but it may still be worth the lower input lag. "
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`. "
-        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. "
+        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. ",
     )
 
     XONSH_DIR_CWD_CACHE = Var.with_default(
@@ -1329,7 +1329,7 @@ class CacheSetting(Xettings):
         "This variable is a set of paths that should be checked via direct listing. ",
         "Set `XONSH_DIR_CACHE_LIST_EXT_MIN` for more direct fine-tuning the tradeoff. ",
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`. "
-        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. "
+        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. ",
     )
     XONSH_DIR_CACHE_LIST_EXT_MIN = Var.with_default(
         3,
