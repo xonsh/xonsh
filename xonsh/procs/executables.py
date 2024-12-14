@@ -750,10 +750,7 @@ def locate_file_in_path_env(
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
     pc = PathCache(env)
-    usr_dir_list_perma = pc.usr_dir_list_perma
-    usr_dir_list_session = pc.usr_dir_list_session
-    usr_dir_list_key = pc.usr_dir_list_key
-    if usr_dir_list_perma:
+    if pc.usr_dir_list_perma:
         dir_cache_perma = (
             pc.get_dir_cache_perma()
         )  # path → cmd_chartrie[cmd.lower()] = cmd
@@ -769,8 +766,8 @@ def locate_file_in_path_env(
         if (
             check_executable
             and use_dir_cache_perma
-            and usr_dir_list_perma
-            and path in usr_dir_list_perma
+            and pc.usr_dir_list_perma
+            and path in pc.usr_dir_list_perma
             and path in dir_cache_perma
         ):
             cmd_chartrie = dir_cache_perma[path]
@@ -790,8 +787,8 @@ def locate_file_in_path_env(
                     partial_match.is_part = True
         elif (
             use_dir_cache_session
-            and usr_dir_list_session
-            and path in usr_dir_list_session
+            and pc.usr_dir_list_session
+            and path in pc.usr_dir_list_session
         ):  # use session dir cache
             f_trie = PathCache.get_dir_cached(path)
             if not f_trie:  # not cached, scan the dir ...
@@ -816,7 +813,7 @@ def locate_file_in_path_env(
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
         elif (
-            ext_count >= ext_min and usr_dir_list_key and path in usr_dir_list_key
+            ext_count >= ext_min and pc.usr_dir_list_key and path in pc.usr_dir_list_key
         ):  # list a dir vs checking many files (cached by mtime)
             path_time = os.path.getmtime(path)
             path_cmd = PathCache.get_dir_key_cache(path)
