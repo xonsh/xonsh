@@ -1345,6 +1345,11 @@ class CacheSetting(Xettings):
         "potentially negating the performance benefits of using ``$XONSH_DIR_CACHE_TO_LIST``, "
         "but then partial text for filenames you can't execute won't be highlighted.",
     )
+    XONSH_DIR_CACHE_LIST_SAVE_ON_EXIT = Var.with_default(
+        False,
+        "Save 'Listed' cached dirs to disk on exit (``$XONSH_DIR_CACHE_TO_LIST``, ``$XONSH_DIR_CWD_CACHE``), "
+        "avoiding the need to list them again on each shell start if the dirs haven't changed.",
+    )
 
     XONSH_DIR_CACHE_SKIP_EXIST = Var.with_default(
         False,
