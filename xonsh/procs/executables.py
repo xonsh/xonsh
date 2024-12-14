@@ -370,6 +370,7 @@ class PathCache:  # Singleton
         print(msg)
 
     CACHE_FILE = "dir_perma_cache.pickle"
+    CACHE_FILE_LISTED = "dir_listed_cache.pickle"
 
     def __init__(self, env) -> None:
         self.__is_init: bool
@@ -379,8 +380,10 @@ class PathCache:  # Singleton
             env  # path to the cache file where all dir are cached for pre-loading
         )
         self._cache_file = None
+        self._cache_file_listed = None
         self._cmds_cache: pygtrie.CharTrie = pygtrie.CharTrie()
         self._pathext_cache: set = set()
+        self._pathext_cache_list: set = set()
         self._user_path_dirs_to_list: set = set()
         self.usr_dir_list_perma: set = set()
         self.usr_dir_list_session: set = set()
@@ -412,6 +415,7 @@ class PathCache:  # Singleton
                 self.usr_dir_list_session.add(pn)
             if pl in usr_dir_list_key_pl:
                 self.usr_dir_list_key.add(pn)
+        self.load_cache_listed()
         self.__is_init = True
 
     @property
@@ -426,6 +430,21 @@ class PathCache:  # Singleton
             else:
                 self._cache_file = ""  # set a falsy value other than None
         return self._cache_file
+
+    @property
+    def cache_file_listed(self):
+        """Path to the cache file with "listed/mtimed" dir info (on instance-attr)"""
+        env = self.env
+        if self._cache_file_listed is None:
+            if (     env.get("XONSH_CACHE_DIR")
+                and (env.get("XONSH_DIR_CACHE_TO_LIST")
+                or   env.get("XONSH_DIR_CWD_CACHE"))):
+                self._cache_file_listed = (
+                    Path(env["XONSH_CACHE_DIR"]).joinpath(self.CACHE_FILE_LISTED).resolve()
+                )
+            else:
+                self._cache_file_listed = ""  # set a falsy value other than None
+        return self._cache_file_listed
 
     def get_dir_cache_perma(self):
         """Get a list of valid commands per path in a trie data structure for partial matching"""
