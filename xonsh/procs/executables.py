@@ -4,6 +4,7 @@ import os
 import pickle
 import typing as tp
 from pathlib import Path
+import pygtrie
 
 from xonsh.built_ins import XSH
 from xonsh.lib.itertools import unique_everseen
@@ -176,6 +177,7 @@ class PathCache:  # Singleton
 
     is_dirty = True  # signal to refresh cleaned paths (not files/cmds)
     last_path_hash: str = ""  # avoid the risk of IO on keystroke of clearing Δ paths
+    dir_cache_perma: dict[str, pygtrie.CharTrie] = dict()
     dir_cache: dict[str, list[list[str]]] = dict()
     dir_key_cache: dict[str, _PathCmd] = dict()
     clean_paths: dict[str, tuple[str]] = dict()
@@ -363,7 +365,6 @@ class PathCache:  # Singleton
         )
         self._cache_file = None
         self._cmds_cache: pygtrie.CharTrie = pygtrie.CharTrie()
-        self._dir_cache_perma: dict[str, pygtrie.CharTrie] = dict()
         self._pathext_cache: set = set()
         self._user_path_dirs_to_list: set = set()
         self.usr_dir_list_perma: set = set()
@@ -416,7 +417,7 @@ class PathCache:  # Singleton
     def get_dir_cache_perma(self):
         """Get a list of valid commands per path in a trie data structure for partial matching"""
         self.update_cache()
-        return self._dir_cache_perma
+        return self.__class__.dir_cache_perma
 
     def update_cache(self):
         """The main function to update commands cache"""
@@ -432,9 +433,9 @@ class PathCache:  # Singleton
 
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
-        if (not self._dir_cache_perma) and self.cache_file and self.cache_file.exists():
+        if (not self.__class__.dir_cache_perma) and self.cache_file and self.cache_file.exists():
             try:  # 1st time: load the commands from cache-file if configured
-                self._dir_cache_perma, self._pathext_cache = pickle.loads(
+                self.__class__.dir_cache_perma, self._pathext_cache = pickle.loads(
                     self.cache_file.read_bytes()
                 ) or [{}, set()]
             except Exception:
@@ -443,7 +444,7 @@ class PathCache:  # Singleton
         pathext = set(self.env.get("PATHEXT", [])) if ON_WINDOWS else []
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.usr_dir_list_perma) and (
-                (path not in self._dir_cache_perma)  # ← not in cache
+                (path not in self.__class__.dir_cache_perma)  # ← not in cache
                 or (pathext and (not pathext == self._pathext_cache))
             ):  # ← definition of an executable changed
                 cmd_chartrie = pygtrie.CharTrie()
@@ -451,18 +452,18 @@ class PathCache:  # Singleton
                     cmd_chartrie[cmd.lower()] = (
                         cmd  # lower case for case-insensitive search, but preserve case
                     )
-                self._dir_cache_perma[path] = cmd_chartrie
+                self.__class__.dir_cache_perma[path] = cmd_chartrie
                 self._pathext_cache = set(pathext)
                 updated = True
         if updated and self.cache_file:
             self.cache_file.write_bytes(
-                pickle.dumps([self._dir_cache_perma, self._pathext_cache])
+                pickle.dumps([self.__class__.dir_cache_perma, self._pathext_cache])
             )
         return updated
 
     def _iter_binaries(self, paths):
         for path in paths:
-            for cmd_low in (cmd_chartrie := self._dir_cache_perma.get(path, [])):
+            for cmd_low in (cmd_chartrie := self.__class__.dir_cache_perma.get(path, [])):
                 cmd = cmd_chartrie[cmd_low]
                 yield cmd_low, cmd, os.path.join(path, cmd)
 
@@ -597,7 +598,6 @@ def hash_s_list(s_list):
     return hash_o.hexdigest()
 
 
-import pygtrie
 
 
 def locate_file_in_path_env(
