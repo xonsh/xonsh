@@ -242,7 +242,7 @@ class PathCache:  # Singleton
     @classmethod
     def get_cache_db(cls, which: str):
         """Get the full cache database
-        which: str = one of 3 types of cache: p|perma|permanent, s|sess|session, l|listed|m|mtime
+        which: one of 3 types of cache: p|perma|permanent, s|sess|session, l|listed|m|mtime
         """
         if which in ("p", "perma", "permanent"):
             return cls.dir_cache_perma
@@ -251,9 +251,7 @@ class PathCache:  # Singleton
         elif which in ("l", "listed", "m", "mtime"):
             return cls.dir_key_cache
         else:
-            print(
-                "valid 'get_cache_db(which)' argument values are: p|perma|permanent, s|sess|session, l|listed|m|mtime"
-            )
+            print("valid 'which': p|perma|permanent, s|sess|session, l|listed|m|mtime")
 
     def get_cache_info(self, v=0):
         """Show some basic path cache info, v: verbosity level 0–2. Example:
