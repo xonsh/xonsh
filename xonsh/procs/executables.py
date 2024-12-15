@@ -486,7 +486,7 @@ class PathCache:  # Singleton
 
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
-        dir_cache, pathext_cache = dict(), dict()
+        dir_cache, pathext_cache = dict(), set()
         if (
             (not self.__class__.dir_cache_perma)
             and self.cache_file
@@ -504,7 +504,7 @@ class PathCache:  # Singleton
                 self.cache_file.unlink(missing_ok=True)
         updated = False
         pathext = set(self.__class__.env.get("PATHEXT", [])) if ON_WINDOWS else set()
-        is_exe_def_valid = pathext == pathext_cache  # ≝ of an executable NOT changed
+        is_exe_def_valid = (pathext == pathext_cache) or (not pathext and not pathext_cache)  # ≝ of an executable NOT changed
         self.__class__.dir_cache_perma = dir_cache if is_exe_def_valid else dict()
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.usr_dir_list_perma) and (
