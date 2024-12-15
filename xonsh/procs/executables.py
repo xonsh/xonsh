@@ -486,14 +486,13 @@ class PathCache:  # Singleton
 
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
-        dir_cache, pathext_cache = dict(), set()
         if (
             (not self.__class__.dir_cache_perma)
             and self.cache_file
             and self.cache_file.exists()
         ):
             try:  # load commands from cache-file if configured
-                [dir_cache, pathext_cache] = pickle.loads(
+                [self.__class__.dir_cache_perma, self._pathext_cache] = pickle.loads(
                     self.cache_file.read_bytes()
                 ) or [dict(), set()]
             except Exception as e:
@@ -504,8 +503,12 @@ class PathCache:  # Singleton
                 self.cache_file.unlink(missing_ok=True)
         updated = False
         pathext = set(self.__class__.env.get("PATHEXT", [])) if ON_WINDOWS else set()
-        is_exe_def_valid = (pathext == pathext_cache) or (not pathext and not pathext_cache)  # ≝ of an executable NOT changed
-        self.__class__.dir_cache_perma = dir_cache if is_exe_def_valid else dict()
+        is_exe_def_valid = (pathext == self._pathext_cache) or (
+            not pathext and not self._pathext_cache
+        )  # ≝ of an executable NOT changed
+        if not is_exe_def_valid:  # invalidate existing cache
+            self.__class__.dir_cache_perma = dict()
+            self.__class__._pathext_cache = pathext
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.usr_dir_list_perma) and (
                 (path not in self.__class__.dir_cache_perma)  # ← not in cache
@@ -516,7 +519,6 @@ class PathCache:  # Singleton
                     # case-insensitive ↓ search, ↓ but preserve case
                     cmd_chartrie[cmd.lower()] = cmd
                 self.__class__.dir_cache_perma[path] = cmd_chartrie
-                self._pathext_cache = pathext
                 updated = True
         if updated and self.cache_file:
             self.cache_file.write_bytes(
