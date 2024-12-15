@@ -735,6 +735,7 @@ def locate_file_in_path_env(
     and cache the results until OS is updated to avoid doing any IO
     """
     paths = []
+    pc = PathCache(env if env is not None else XSH.env)
     if env is None:
         env = XSH.env
         if use_path_cache:  # for generic environment: use cache only if configured
@@ -747,7 +748,6 @@ def locate_file_in_path_env(
     else:  #                  for custom  environment: clean paths every time
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
-    pc = PathCache(env)
     if pc.usr_dir_list_perma:
         dir_cache_perma = (
             pc.get_dir_cache_perma()
