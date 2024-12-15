@@ -176,6 +176,7 @@ class PathCache:  # Singleton
                 if not cls._instance:
                     cls._instance = super().__new__(cls)
                     cls._instance.__is_init = False
+            cls.env = env
         return cls._instance
 
     is_dirty = True  # signal to refresh cleaned paths (not files/cmds)
@@ -262,7 +263,7 @@ class PathCache:  # Singleton
         """
         import textwrap
 
-        env = self.env
+        env = self.__class__.env
         env_path = env.get("PATH", [])
         env_path_hash = hash_s_list(env_path)
         if env_path_hash not in PathCache.clean_paths:
@@ -387,7 +388,6 @@ class PathCache:  # Singleton
         self.__is_init: bool
         if self.__is_init:
             return
-        self.__class__.env = env
         # file paths storing [dir_cache,pathext_cache] for pre-loading
         self._cache_file = None
         self._cache_file_listed = None
@@ -431,7 +431,7 @@ class PathCache:  # Singleton
     @property
     def cache_file(self):
         """Path to the cache file with "permanent" dir info (on instance-attr)"""
-        env = self.env
+        env = self.__class__.env
         if self._cache_file is None:
             if env.get("XONSH_CACHE_DIR") and env.get("XONSH_DIR_PERMA_CACHE"):
                 self._cache_file = (
@@ -444,7 +444,7 @@ class PathCache:  # Singleton
     @property
     def cache_file_listed(self):
         """Path to the cache file with "listed/mtimed" dir info (on instance-attr)"""
-        env = self.env
+        env = self.__class__.env
         if self._cache_file_listed is None:
             if env.get("XONSH_CACHE_DIR") and (
                 env.get("XONSH_DIR_CACHE_TO_LIST") or env.get("XONSH_DIR_CWD_CACHE")
@@ -465,7 +465,7 @@ class PathCache:  # Singleton
 
     def update_cache(self):
         """The main function to update commands cache"""
-        paths = self.get_clean_path(self.env)
+        paths = self.get_clean_path(self.__class__.env)
 
         if paths and self._update_paths_cache(paths):
             pass  # not yet needed since only a few dirs are supported
@@ -494,7 +494,7 @@ class PathCache:  # Singleton
                 )
                 self.cache_file.unlink(missing_ok=True)
         updated = False
-        pathext = set(self.env.get("PATHEXT", [])) if ON_WINDOWS else set()
+        pathext = set(self.__class__.env.get("PATHEXT", [])) if ON_WINDOWS else set()
         is_exe_def_valid = pathext == pathext_cache  # ≝ of an executable NOT changed
         self.__class__.dir_cache_perma = dir_cache if is_exe_def_valid else dict()
         for path in paths:  # ↓ user-configured to be cached
