@@ -289,7 +289,23 @@ def test_xonsh_dir_perma_cache(tmpdir, xession):
 
     xonsh_dir_perma_cache = []
     env = xession.env
-    pathext = env["PATHEXT"]
+    pathext = [
+        ".COM",
+        ".EXE",
+        ".BAT",
+        ".CMD",
+        ".VBS",
+        ".VBE",
+        ".JS",
+        ".JSE",
+        ".WSF",
+        ".WSH",
+        ".MSC",
+        ".PY",
+        ".PYW",
+        ".XSH",
+    ]
+    env["PATHEXT"] = pathext
     env_path = env.get("PATH", [])
     for path in env_path:  # cache all dirs in path
         f = []
@@ -315,7 +331,9 @@ def test_xonsh_dir_perma_cache(tmpdir, xession):
     f = locate_executable("nothing", use_dir_cache_perma=True)  # to cache dirs
     t0 = ttime()
     for _i in range(100):
-        f = locate_executable("nothing", use_dir_cache_perma=True)
+        f = locate_executable(
+            "nothing", use_dir_cache_perma=True, path_cache_dirty=True
+        )
     t1 = ttime()
     dur2 = (t1 - t0) / ns
 
