@@ -4,8 +4,8 @@ import os
 import pickle
 import sys
 import typing as tp
-from pathlib import Path
 from os.path import normpath
+from pathlib import Path
 
 import pygtrie
 
@@ -190,24 +190,23 @@ class PathCache:  # Singleton
 
     @classmethod
     def reset(cls, delfiles: bool = False):
-        """ Clean PathCache to allow creating a new one with a different env
-            delfiles: Also delete cached files
+        """Clean PathCache to allow creating a new one with a different env
+        delfiles: Also delete cached files
         """
         self = cls._instance
         if self:
             # cls._instance.__is_init = False
             cls._instance = None
             cls.is_dirty = True
-            cls.dir_cache_perma: dict[str, pygtrie.CharTrie] = dict()
-            cls.dir_cache: dict[str, list[list[str]]] = dict()
-            cls.dir_key_cache: dict[str, _PathCmd] = dict()
-            cls.clean_paths: dict[str, tuple[str]] = dict()
+            cls.dir_cache_perma = dict()
+            cls.dir_cache = dict()
+            cls.dir_key_cache = dict()
+            cls.clean_paths = dict()
             if delfiles:
                 if self.cache_file and self.cache_file.exists():
                     self.cache_file.unlink(missing_ok=True)
                 if self.cache_file_listed and self.cache_file_listed.exists():
                     self.cache_file_listed.unlink(missing_ok=True)
-
 
     @classmethod
     def get_clean_paths(cls, env):  # cleaned paths (not files/cmds)
@@ -408,8 +407,7 @@ class PathCache:  # Singleton
         self.__is_init = True
 
     def set_usr_dir_list(self, env) -> None:
-        """ Clean up user lists of dirs-to-be-cached and save them. Also include dirs not in PATH since they can be added to PATH later (even on startup by a plugin).
-        """
+        """Clean up user lists of dirs-to-be-cached and save them. Also include dirs not in PATH since they can be added to PATH later (even on startup by a plugin)."""
         if self.__class__.is_dirty:
             dir_list = env.get("XONSH_DIR_PERMA_CACHE", [])
             if not dir_list == self._usr_dir_list_perma:
@@ -488,7 +486,7 @@ class PathCache:  # Singleton
 
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
-        dir_cache, pathext_cache = None, None
+        dir_cache, pathext_cache = dict(), dict()
         if (
             (not self.__class__.dir_cache_perma)
             and self.cache_file
