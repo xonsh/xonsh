@@ -387,6 +387,7 @@ class PathCache:  # Singleton
     def __init__(self, env) -> None:
         self.__is_init: bool
         if self.__is_init:
+            self.set_usr_dir_list(env)
             return
         # file paths storing [dir_cache,pathext_cache] for pre-loading
         self._cache_file = None
@@ -398,35 +399,45 @@ class PathCache:  # Singleton
         self.usr_dir_list_perma: set = set()
         self.usr_dir_list_session: set = set()
         self.usr_dir_list_key: set = set()
+        self._usr_dir_list_perma = None  # save last valid to check for updates
+        self._usr_dir_list_session = None
+        self._usr_dir_list_key = None
         self.cwd_too_long: set = set()
-        from os.path import normpath
-
-        # clean up user lists of dirs and save them. Include dirs not in PATH since they can be added to PATH later (even on startup by a plugin)
-        self.usr_dir_list_perma = set(
-            normpath(p) for p in env.get("XONSH_DIR_PERMA_CACHE", [])
-        )
-        self.usr_dir_list_session = set(
-            normpath(p) for p in env.get("XONSH_DIR_SESSION_CACHE", [])
-        )
-        self.usr_dir_list_key = set(
-            normpath(p) for p in env.get("XONSH_DIR_CACHE_TO_LIST", [])
-        )
-        # just in case, add dirs from PATH with a different case
-        usr_dir_list_perma_pl = [p.lower() for p in self.usr_dir_list_perma]
-        usr_dir_list_session_pl = [p.lower() for p in self.usr_dir_list_session]
-        usr_dir_list_key_pl = [p.lower() for p in self.usr_dir_list_key]
-        env_path = env.get("PATH", [])
-        for p in env_path:
-            pn = normpath(p)
-            pl = pn.lower()
-            if pl in usr_dir_list_perma_pl:
-                self.usr_dir_list_perma.add(pn)
-            if pl in usr_dir_list_session_pl:
-                self.usr_dir_list_session.add(pn)
-            if pl in usr_dir_list_key_pl:
-                self.usr_dir_list_key.add(pn)
+        self.set_usr_dir_list(env)
         self.load_cache_listed()
         self.__is_init = True
+
+    def set_usr_dir_list(self, env) -> None:
+        """ Clean up user lists of dirs-to-be-cached and save them. Also include dirs not in PATH since they can be added to PATH later (even on startup by a plugin).
+        """
+        if self.__class__.is_dirty:
+            dir_list = env.get("XONSH_DIR_PERMA_CACHE", [])
+            if not dir_list == self._usr_dir_list_perma:
+                self._usr_dir_list_perma = dir_list
+                self.usr_dir_list_perma = set(normpath(p) for p in dir_list)
+            dir_list = env.get("XONSH_DIR_SESSION_CACHE", [])
+            if not dir_list == self._usr_dir_list_session:
+                self._usr_dir_list_session = dir_list
+                self.usr_dir_list_session = set(normpath(p) for p in dir_list)
+            dir_list = env.get("XONSH_DIR_CACHE_TO_LIST", [])
+            if not dir_list == self._usr_dir_list_key:
+                self._usr_dir_list_key = dir_list
+                self.usr_dir_list_key = set(normpath(p) for p in dir_list)
+        if not self.__is_init:
+            # just in case, add dirs from PATH with a different case
+            usr_dir_list_perma_pl = [p.lower() for p in self.usr_dir_list_perma]
+            usr_dir_list_session_pl = [p.lower() for p in self.usr_dir_list_session]
+            usr_dir_list_key_pl = [p.lower() for p in self.usr_dir_list_key]
+            env_path = env.get("PATH", [])
+            for p in env_path:
+                pn = normpath(p)
+                pl = pn.lower()
+                if pl in usr_dir_list_perma_pl:
+                    self.usr_dir_list_perma.add(pn)
+                if pl in usr_dir_list_session_pl:
+                    self.usr_dir_list_session.add(pn)
+                if pl in usr_dir_list_key_pl:
+                    self.usr_dir_list_key.add(pn)
 
     @property
     def cache_file(self):
