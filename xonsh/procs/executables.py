@@ -508,7 +508,7 @@ class PathCache:  # Singleton
         )  # ≝ of an executable NOT changed
         if not is_exe_def_valid:  # invalidate existing cache
             self.__class__.dir_cache_perma = dict()
-            self.__class__._pathext_cache = pathext
+            self._pathext_cache = pathext
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.usr_dir_list_perma) and (
                 (path not in self.__class__.dir_cache_perma)  # ← not in cache
