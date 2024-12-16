@@ -1,6 +1,6 @@
 default_language_version:
     # force all unspecified python hooks to run python3
-    python: python3.10
+    python: python3.13
 
 #ci:
 #  autofix_prs: false
@@ -8,7 +8,7 @@ default_language_version:
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: 'v0.5.6'
+    rev: 'v0.8.2'
     hooks:
       - id: ruff
         args: [., --fix, --exit-non-zero-on-fix]
@@ -18,14 +18,14 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.11.1'  # Use the sha / tag you want to point at
+    rev: 'v1.13.0'  # Use the sha / tag you want to point at
     hooks:
       - id: mypy
         pass_filenames: false
         additional_dependencies:
           - types-ujson
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
         exclude: |

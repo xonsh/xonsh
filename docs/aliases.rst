@@ -70,7 +70,7 @@ independent of the setting of the $AUTO_CONTINUE option.
 ``EOF``, ``exit``, and ``quit``
 ===================================
 The commands ``EOF``, ``exit``, and ``quit`` all alias the same action, which is to
-leave xonsh in a safe manner. Typing ``Crtl-d`` is the same as typing ``EOF`` and
+leave xonsh in a safe manner. Typing ``Ctrl-d`` is the same as typing ``EOF`` and
 pressing enter.
 
 

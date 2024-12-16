@@ -138,7 +138,7 @@ def bind_server_to(
 
             httpd = cls(("", port), handler_cls)
             url = f"http://localhost:{port}"
-            print(f"Web config started at '{url}'. Hit Crtl+C to stop.")
+            print(f"Web config started at '{url}'. Hit Ctrl+C to stop.")
             if browser:
                 import webbrowser
 

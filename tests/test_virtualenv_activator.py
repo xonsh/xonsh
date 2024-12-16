@@ -2,12 +2,15 @@ import sys
 from pathlib import Path
 from subprocess import check_output
 
+import pytest
+
 from xonsh.pytest.tools import ON_WINDOWS
 
 
-def test_xonsh_activator(tmp_path):
+@pytest.mark.parametrize("dir_name", ["venv", "venv with space"])
+def test_xonsh_activator(tmp_path, dir_name):
     # Create virtualenv
-    venv_dir = tmp_path / "venv"
+    venv_dir = tmp_path / dir_name
     assert b"XonshActivator" in check_output(
         [sys.executable, "-m", "virtualenv", str(venv_dir)]
     )
@@ -35,7 +38,13 @@ def test_xonsh_activator(tmp_path):
 
     # Activate
     venv_python = check_output(
-        [sys.executable, "-m", "xonsh", "-c", f"source {activate_path}; which python"]
+        [
+            sys.executable,
+            "-m",
+            "xonsh",
+            "-c",
+            f"source r'{activate_path}'; which python",
+        ]
     ).decode()
     assert Path(venv_python).parent == bin_path
 
@@ -46,7 +55,7 @@ def test_xonsh_activator(tmp_path):
             "-m",
             "xonsh",
             "-c",
-            f"source {activate_path}; deactivate; "
+            f"source r'{activate_path}'; deactivate; "
             "import shutil; shutil.which('python') or shutil.which('python3')",
         ]
     ).decode()

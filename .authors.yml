@@ -64,7 +64,7 @@
   - Gilbert.Forsyth@capitalone.com
   - gforsyth@gwu.edu
   - gil@forsyth.dev
-  num_commits: 665
+  num_commits: 680
   first_commit: 2015-10-19 16:04:32
   github: gforsyth
 - name: Morten Enemark Lund
@@ -1136,7 +1136,7 @@
   github: marciomazza
 - name: Noortheen Raja
   email: jnoortheen@gmail.com
-  num_commits: 237
+  num_commits: 239
   first_commit: 2020-03-15 10:13:56
   github: jnoortheen
 - name: Samuel Lotz
@@ -1283,7 +1283,7 @@
   first_commit: 2021-02-08 10:50:51
 - name: Evgeny
   email: eugenesvk@users.noreply.github.com
-  num_commits: 11
+  num_commits: 12
   first_commit: 2021-02-22 09:32:34
 - name: Adam Schwalm
   email: adamschwalm@gmail.com
@@ -1301,7 +1301,7 @@
   email: 46109467+yaxollum@users.noreply.github.com
   alternate_emails:
   - yaxollum@gmail.com
-  num_commits: 34
+  num_commits: 36
   first_commit: 2021-06-11 14:11:19
 - name: Walter A. Boring IV
   email: waboring@hemna.com
@@ -1431,7 +1431,7 @@
   first_commit: 2021-11-18 18:42:29
 - name: doronz88
   email: doron88@gmail.com
-  num_commits: 6
+  num_commits: 7
   first_commit: 2022-04-27 12:41:13
 - name: Stefano Rivera
   email: github@rivera.za.net
@@ -1465,7 +1465,7 @@
   first_commit: 2022-06-27 22:21:34
 - name: pre-commit-ci[bot]
   email: 66853113+pre-commit-ci[bot]@users.noreply.github.com
-  num_commits: 66
+  num_commits: 78
   first_commit: 2022-07-11 14:26:34
 - name: jgart
   email: 47760695+jgarte@users.noreply.github.com
@@ -1571,7 +1571,7 @@
   first_commit: 2024-01-15 05:25:23
 - name: JamesParrott
   email: 80779630+JamesParrott@users.noreply.github.com
-  num_commits: 1
+  num_commits: 2
   first_commit: 2024-01-16 08:56:07
 - name: Airat Makhmutov
   email: 108220148+rautyrauty@users.noreply.github.com
@@ -1613,3 +1613,31 @@
   email: kulkarniniraj14@gmail.com
   num_commits: 1
   first_commit: 2024-07-04 04:37:55
+- name: Aidan Courtney
+  email: aidanfc97@gmail.com
+  num_commits: 1
+  first_commit: 2024-07-27 11:33:35
+- name: Max Nordlund
+  email: max.nordlund@gmail.com
+  num_commits: 1
+  first_commit: 2024-10-30 09:11:04
+- name: Shawn Wallace
+  email: yungwallace@live.com
+  num_commits: 1
+  first_commit: 2024-10-31 05:33:45
+- name: Faidon Liambotis
+  email: paravoid@debian.org
+  num_commits: 1
+  first_commit: 2024-09-17 06:47:59
+- name: Jueun Lee
+  email: seirios0107@gmail.com
+  num_commits: 1
+  first_commit: 2024-11-18 18:04:24
+- name: Simon Billinge
+  email: sbillinge@users.noreply.github.com
+  num_commits: 1
+  first_commit: 2024-12-08 03:28:31
+- name: Bala
+  email: kumaran.4353@gmail.com
+  num_commits: 1
+  first_commit: 2024-12-02 07:01:09
