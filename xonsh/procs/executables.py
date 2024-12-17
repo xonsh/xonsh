@@ -12,6 +12,7 @@ import pygtrie
 from xonsh.built_ins import XSH
 from xonsh.lib.itertools import unique_everseen
 from xonsh.platform import ON_WINDOWS
+from xonsh.tools import print_color, ColorXonsh
 
 
 def get_possible_names(name, env=None):
@@ -294,13 +295,14 @@ class PathCache:  # Singleton
         cached = cached_perma + cached_sess + cached_list
         cache_non_exe = "✓" if env.get("XONSH_DIR_CACHE_LIST_NON_EXE", True) else "✗"
         skip_exist = "✓" if env.get("XONSH_DIR_CACHE_SKIP_EXIST", True) else "✗"
+        c=_ColorXonsh()
         msg = f"""\
             PATH    : ∑ {str(len(env_path   )).rjust(3)} dirty
                       └ {str(len(clean_paths)).rjust(3)} clean (unique & existing)
-            Cached  : ∑ {str(    cached      ).rjust(3)} of which:               (pc = PathCache(None))
-                      ├ {str(cached_perma    ).rjust(3)} permanently             (pc.usr_dir_list_perma   ← $XONSH_DIR_PERMA_CACHE       )
-                      ├ {str(cached_sess     ).rjust(3)} this session            (pc.usr_dir_list_session ← $XONSH_DIR_SESSION_CACHE     )
-                      └ {str(cached_list     ).rjust(3)} by dir mtime ('Listed') (pc.usr_dir_list_key     ← $XONSH_DIR_CACHE_TO_LIST     )\
+            Cached  : ∑ {str(    cached      ).rjust(3)} of which:               ({c.b}pc = PathCache(None){c.R}pc.usr_dir_list_perma)
+                      ├ {str(cached_perma    ).rjust(3)} permanently             ({c.b}pc.usr_dir_list_perma  {c.R} ← $XONSH_DIR_PERMA_CACHE  )
+                      ├ {str(cached_sess     ).rjust(3)} this session            ({c.b}pc.usr_dir_list_session{c.R} ← $XONSH_DIR_SESSION_CACHE)
+                      └ {str(cached_list     ).rjust(3)} by dir mtime ('Listed') ({c.b}pc.usr_dir_list_key    {c.R} ← $XONSH_DIR_CACHE_TO_LIST)\
         """
         if v >= 1:
             msg += f"""
@@ -314,7 +316,7 @@ class PathCache:  # Singleton
             msg += f"""
                                                    ({       skip_exist.rjust(2)}                        $XONSH_DIR_CACHE_SKIP_EXIST  )\
         """
-        print(textwrap.dedent(msg))
+        print_color(textwrap.dedent(msg))
         msg = ""
         if uncached:
             msg += "  " + "\n  ".join(uncached)
@@ -365,14 +367,14 @@ class PathCache:  # Singleton
             msg += (
                 "\n"
                 "Cached file data: pc = PathCache with key = path, value = (mtime+) trie of files|commands (depending on …_NON_EXE))\n"
-                + "  Permanent : pc.get_cache_db('p')  ($XONSH_DIR_PERMA_CACHE                         )\n"
-                + "  Session   : pc.get_cache_db('s')  ($XONSH_DIR_SESSION_CACHE                       )\n"
-                + "  'Listed'  : pc.get_cache_db('l')  ($XONSH_DIR_CACHE_TO_LIST + $XONSH_DIR_CWD_CACHE)\n"
+                + f"  Permanent : {c.b}pc.get_cache_db('p'){c.R}  ($XONSH_DIR_PERMA_CACHE                         )\n"
+                + f"  Session   : {c.b}pc.get_cache_db('s'){c.R}  ($XONSH_DIR_SESSION_CACHE                       )\n"
+                + f"  'Listed'  : {c.b}pc.get_cache_db('l'){c.R}  ($XONSH_DIR_CACHE_TO_LIST + $XONSH_DIR_CWD_CACHE)\n"
             )
         if env.get("XONSH_DIR_CWD_CACHE", False):
             msg += (
                 "✓" if env.get("XONSH_DIR_CWD_CACHE_NON_EXE", False) else "✗"
-            ) + " (cwd) cache non-executable ($XONSH_DIR_CWD_CACHE_NON_EXE)"
+            ) + " (cwd) cache non-executable ({c.b}$XONSH_DIR_CWD_CACHE_NON_EXE){c.R}"
         if len(self.cwd_too_long):
             msg += (
                 f"\n {len(self.cwd_too_long)} cwdirs found with # of items > "
@@ -381,7 +383,7 @@ class PathCache:  # Singleton
             if v >= 2:
                 msg += ":\n"
                 msg += "\n  ".join(self.cwd_too_long)
-        print(msg)
+        print_color(msg)
 
     def __init__(self, env) -> None:
         self.__is_init: bool
