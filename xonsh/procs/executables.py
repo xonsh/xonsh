@@ -467,9 +467,11 @@ class PathCache:  # Singleton
                 self._cache_file_listed = ""  # set a falsy value other than None
         return self._cache_file_listed
 
-    def get_dir_cache_perma(self):
-        """Get a list of valid commands per path in a trie data structure for partial matching"""
-        self.update_cache()
+    def get_dir_cache_perma(self, was_dirty: bool = False):
+        """Get a list of valid commands per path in a trie data structure for partial matching
+        was_dirty: skip update risk (triggering IO) on each keystroke (is_dirty is set for a new prompt)"""
+        if was_dirty:
+            self.update_cache()
         return self.__class__.dir_cache_perma
 
     def update_cache(self):
@@ -747,11 +749,13 @@ def locate_file_in_path_env(
     """
     paths = []
     pc = PathCache(env if env is not None else XSH.env)
+    was_dirty = pc.is_dirty
     if env is None:
         env = XSH.env
         if use_path_cache:  # for generic environment: use cache only if configured
             if not path_cache_dirty:  # avoid clear_paths IO
                 PathCache.is_dirty = True  # updates path hash (≝each prompt)
+                was_dirty = True
             paths = PathCache.get_clean_path(env)
         else:  #              otherwise              : clean paths
             env_path = env.get("PATH", [])
@@ -759,10 +763,8 @@ def locate_file_in_path_env(
     else:  #                  for custom  environment: clean paths every time
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
-    if pc.usr_dir_list_perma:
-        dir_cache_perma = (
-            pc.get_dir_cache_perma()
-        )  # path → cmd_chartrie[cmd.lower()] = cmd
+    if pc.usr_dir_list_perma:  # path → cmd_chartrie[cmd.lower()] = cmd
+        dir_cache_perma = pc.get_dir_cache_perma(was_dirty)
     possible_names = get_possible_names(name, env) if use_pathext else [name]
     ext_count = len(possible_names)
     ext_min = int(env.get("XONSH_DIR_CACHE_LIST_EXT_MIN", 3))
