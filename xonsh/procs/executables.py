@@ -486,6 +486,13 @@ class PathCache:  # Singleton
         #     self._cmds_cache = all_cmds
         # return self._cmds_cache
 
+    def _shrink_dir_cache_perma(self, rm_pathext: set[str]) -> None:
+        for pathext_lc in set(ext.lower() for ext in rm_pathext):  # ref, so updates…
+            for cmd_chartrie in self.__class__.dir_cache_perma.values():
+                for cmd_lower in cmd_chartrie.keys():
+                    if cmd_lower.endswith(pathext_lc):
+                        cmd_chartrie.pop(cmd_lower, None)  # … when del here
+
     def _update_paths_cache(self, paths: tp.Sequence[str]) -> bool:
         """load cached results or update cache"""
         if (
@@ -509,8 +516,13 @@ class PathCache:  # Singleton
             not pathext and not self._pathext_cache
         )  # ≝ of an executable NOT changed
         if not is_exe_def_valid:  # invalidate existing cache
-            self.__class__.dir_cache_perma = dict()
             self._pathext_cache = pathext
+            rm_pathext = self._pathext_cache - pathext
+            if ON_WINDOWS and rm_pathext:  # fewer pathexts
+                self._shrink_dir_cache_perma(rm_pathext)  # remove without rebuilding
+                is_exe_def_valid = True
+            else:
+                self.__class__.dir_cache_perma = dict()
         for path in paths:  # ↓ user-configured to be cached
             if (path in self.usr_dir_list_perma) and (
                 (path not in self.__class__.dir_cache_perma)  # ← not in cache
