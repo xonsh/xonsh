@@ -544,38 +544,49 @@ class InlineImporter:
 class Cmd:
     """A command group."""
 
-    def __init__(self, xsh: XonshSession, *args: str, bg=False):
+    def __init__(
+        self,
+        xsh: XonshSession,
+        *args: str,
+        bg=False,
+        redirects: dict[str, str] | None = None,
+    ):
         self.xsh = xsh
-        self.args: list[list[str] | str] = []
-        additional = ("&",) if bg else ()
-        self._add_proc(*args, *additional)
+        self.args: list[list[str | tuple[str, str]] | str] = []
+        self._add_proc(*args, redirects=redirects or {})
+        if bg:
+            self.args.append("&")
 
     def _expand(self, *args: str | list[str]) -> Iterator[str]:
         for arg in args:
             if isinstance(arg, str):
-                yield str(arg)
+                yield expand_path(arg)
             else:
-                yield from (str(a) for a in arg)
+                yield from (expand_path(str(a)) for a in arg)
 
-    def _add_proc(self, *args: str) -> None:
+    def _add_proc(self, *args: str, redirects: dict[str, str] | None = None) -> None:
         """a single Popen process args"""
-        self.args.append(list(self._expand(*args)))
+        cmds: list[str | tuple[str, str]] = list(self._expand(*args))
+        if redirects:
+            for k, v in redirects.items():
+                cmds.append((k, expand_path(v)))
+        self.args.append(cmds)
 
     def out(self):
         """dispatch $()"""
-        return self.xsh.subproc_captured_stdout(self.args)
+        return self.xsh.subproc_captured_stdout(*self.args)
 
     def run(self):
         """dispatch $[]"""
-        return self.xsh.subproc_uncaptured(self.args)
+        return self.xsh.subproc_uncaptured(*self.args)
 
     def hide(self):
         """dispatch ![]"""
-        return self.xsh.subproc_captured_hiddenobject(self.args)
+        return self.xsh.subproc_captured_hiddenobject(*self.args)
 
     def obj(self):
         """dispatch !()"""
-        return self.xsh.subproc_captured_object(self.args)
+        return self.xsh.subproc_captured_object(*self.args)
 
     def pipe(self, *args):
         """combine $() | $[]"""
