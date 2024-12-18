@@ -1046,7 +1046,7 @@ def locate_file_in_path_env(
                     for fname in filenames:
                         if cache_non_exe:  # ↓for case-insensitive match
                             ftrie[fname.lower()] = fname
-                        elif is_executable(Path(dirpath) / fname, skip_exist):
+                        elif is_executable(Path(dirpath) / fname, skip_exist=skip_exist):
                             ftrie[fname.lower()] = fname
                     break  # no recursion into subdir
                 PathCache.set_dir_key_cache(path, path_time, ftrie)
