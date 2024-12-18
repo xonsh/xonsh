@@ -1029,11 +1029,9 @@ def locate_file_in_path_env(
                     partial_match, CmdPart
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
-        elif (
-            ext_count >= ext_min and (
-               (pc.usr_dir_list_key  and path in pc.usr_dir_list_key )
+        elif ext_count >= ext_min and (
+            (pc.usr_dir_list_key and path in pc.usr_dir_list_key)
             or (pc.usr_dir_alist_key and path in pc.usr_dir_alist_key)
-            )
         ):  # list a dir vs checking many files (cached by mtime)
             cache_non_exe = path in pc.usr_dir_alist_key
             path_time = os.path.getmtime(path)
