@@ -257,6 +257,89 @@ class PathCache:  # Singleton
         else:
             print("valid 'which': p|perma|permanent, s|sess|session, l|listed|m|mtime")
 
+    @classmethod
+    def help_me_choose(cls):
+        env = cls.env
+        env_path = env.get("PATH", [])
+        paths = tuple(clear_paths(env_path))
+        pathext = len(env.get("PATHEXT", [])) if ON_WINDOWS else 1
+
+        cat = ["ext","list_exe","list_all"]
+        cats = {k:k for k in cat}
+        cats["ext"] = f"{pathext}·ext"
+
+        import textwrap
+        import re
+        from time import monotonic_ns as ttime
+        from math import pow
+        ns = pow(10,9) # nanosecond, which 'monotonic_ns' are measured in
+        c=_ColorXonsh()
+
+        z0 = re.compile(r"(0)(\.)(0+)?",flags=re.X)
+        iters = 1
+        t_paths = dict()
+        msg = "list all files and store only executables"
+        msg = f"""\
+            A rough estimate of speed of 3 methods of caching path dirs:
+               • {c.c}ext{c.R}      checks {pathext} time{"s" if pathext > 1 else ""} whether a given file.ext exists (precise, slow with many pathext on Windows)
+               • {c.c}list_exe{c.R} list all files in a dir, for each file check its executable status (precise, slow with many files)
+               • {c.c}list_all{c.R} list all files in a dir, caches them all without a per-file check (imprecise, faster vs. list_exe)
+            For each method below is a time approximation of a single operation in seconds
+            """
+        print_color(textwrap.dedent(msg))
+        header = "   ".join([f"{cats[k]}" for k in cat])
+        header += "   # files"
+        print_color(f"{c.c}{header}{c.R}")
+        for path in paths:
+            t_paths[path] = dict()
+            file_count = 0
+            t0 = ttime()
+            for _ in range(iters):
+                for dirpath, _dirnames, filenames in walk(path):
+                    file_count = f"{len(filenames)}".rjust(5)
+                    for fname in filenames:
+                        is_executable(Path(dirpath) / fname, skip_exist=False)
+                    break  # no recursion into subdir
+            t1 = ttime()
+            t_paths[path]["list_exe"] = (t1 - t0)/ns/iters
+
+            # msg = "list all files and store all files"
+            t0 = ttime()
+            for _ in range(iters):
+                for dirpath, _dirnames, filenames in walk(path):
+                    for fname in filenames:
+                        pass
+                    break  # no recursion into subdir
+            t1 = ttime()
+            t_paths[path]["list_all"] = (t1 - t0)/ns/iters
+
+            # msg = "find each pathext executables in"
+            t0 = ttime()
+            for _ in range(iters):
+                for cmd in executables_in(path):
+                    pass
+            t1 = ttime()
+            t_paths[path]["ext"] = (t1 - t0)/ns/iters
+
+            s_out = {k:"" for k in cat}
+            for k in s_out:
+                c_pre, c_pos = "", ""
+                if not k == "list_all" and t_paths[path][k] == min([t_paths[path]["list_exe"],t_paths[path]["ext"],]):
+                    c_pre = c.g
+                    c_pos = c.R
+                s = f"{t_paths[path][k]:.4f}"
+                m = re.match(z0,s)
+                if m:
+                    z0pos_len = len(m.groups()[2]) if m.groups()[2] else 0
+                    s_out[k] = c_pre + re.sub(z0, f" .{' '*z0pos_len}",s) + c_pos
+                else:
+                    s_out[k] = c_pre +                                 s  + c_pos
+
+            res = "   ".join([f"{v}" for v in s_out.values()])
+            res += f"        {file_count}   {path}"
+            print_color(res)
+
+
     def get_cache_info(self, v=0):
         """Show some basic path cache info, v: verbosity level 0–2. Example:
         from xonsh.procs.executables import PathCache; pc = PathCache(None); pc.get_cache_info(v=2)
