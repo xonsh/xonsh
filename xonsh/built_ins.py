@@ -544,10 +544,11 @@ class InlineImporter:
 class Cmd:
     """A command group."""
 
-    def __init__(self, xsh: XonshSession, *args: str):
+    def __init__(self, xsh: XonshSession, *args: str, bg=False):
         self.xsh = xsh
         self.args: list[list[str] | str] = []
-        self._add_proc(*args)
+        additional = ("&",) if bg else ()
+        self._add_proc(*args, *additional)
 
     def _expand(self, *args: str | list[str]) -> Iterator[str]:
         for arg in args:
@@ -639,8 +640,8 @@ class XonshSession:
         self._initial_builtin_names = None
         self.last = None  # Last executed CommandPipeline.
 
-    def cmd(self, *args: str):
-        return Cmd(self, *args)
+    def cmd(self, *args: str, **kwargs):
+        return Cmd(self, *args, **kwargs)
 
     @property
     def aliases(self):
