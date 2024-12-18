@@ -291,7 +291,7 @@ class PathCache:  # Singleton
         ns = pow(10, 9)  # nanosecond, which 'monotonic_ns' are measured in
 
         z0 = re.compile(r"(0)(\.)(0+)?", flags=re.X)
-        t_paths = dict()
+        t_paths: dict[str, dict[str, float]] = dict()
         msg = f"""\
             A ~time estimate of 3 methods of searching for a command in {c.b}$PATH{c.R} (helps choose which dirs to add to which cache):
                • {c.c}ext{c.R}      checks {ext_count} time{"s" if ext_count > 1 else ""} whether a given file.ext exists (≝no cache, precise, slow with many pathext·paths ({int(pathext*ext_count)}) on Windows)
