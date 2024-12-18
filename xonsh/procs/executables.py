@@ -282,11 +282,11 @@ class PathCache:  # Singleton
         cats = {k: k for k in cat}
         cats["ext"] = f"{pathext}·ext"
 
+        import datetime
         import re
         import textwrap
         from math import pow
         from time import monotonic_ns as ttime
-        import datetime
 
         ns = pow(10, 9)  # nanosecond, which 'monotonic_ns' are measured in
 
@@ -313,7 +313,7 @@ class PathCache:  # Singleton
         header += "   mtime   "
         header += "  Cached?"
         print_color(f"{c.c}{header}{c.R}")
-        week_in_sec = 60*60*24*7
+        week_in_sec = 60 * 60 * 24 * 7
         for path in paths:
             is_large_dir = False
             file_count = 0
@@ -322,14 +322,16 @@ class PathCache:  # Singleton
             p = Path(path)
             try:
                 mtime_f = p.stat().st_mtime
-                mtime_r = datetime.datetime.fromtimestamp(mtime_f, tz=datetime.timezone.utc)
+                mtime_r = datetime.datetime.fromtimestamp(
+                    mtime_f, tz=datetime.timezone.utc
+                )
                 mtime_s = mtime_r.strftime("%Y-%m-%d")
                 how_old = datetime.datetime.now(tz=datetime.timezone.utc) - mtime_r
                 if how_old.total_seconds() > week_in_sec:
                     mtime = f"{c.g}{mtime_s}{c.R}"
                 else:
-                    mtime =         mtime_s
-            except Exception as e:
+                    mtime = mtime_s
+            except Exception:
                 mtime = "?".rjust(8)
 
             # get some stats without impacting later benchmakrs
@@ -375,7 +377,8 @@ class PathCache:  # Singleton
                     filepath = Path(path) / possible_name
                     try:
                         if not filepath.is_file() or (
-                            check_executable and not is_executable(filepath, skip_exist=True)
+                            check_executable
+                            and not is_executable(filepath, skip_exist=True)
                         ):
                             continue
                         break
