@@ -37,3 +37,8 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.6.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
