@@ -259,7 +259,15 @@ class PathCache:  # Singleton
 
     @classmethod
     def help_me_choose(cls):
+        c = ColorShort()
+
         env = cls.env
+        self = cls._instance
+        if not self:
+            print_color(
+                f"PathCache isn't initialized yet, so indication of which {c.b}$PATH{c.R} is in which cache isn't available"
+            )
+
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
         pathext = len(env.get("PATHEXT", [])) if ON_WINDOWS else 1
@@ -274,7 +282,6 @@ class PathCache:  # Singleton
         from time import monotonic_ns as ttime
 
         ns = pow(10, 9)  # nanosecond, which 'monotonic_ns' are measured in
-        c = ColorShort()
 
         z0 = re.compile(r"(0)(\.)(0+)?", flags=re.X)
         iters = 1
@@ -285,11 +292,13 @@ class PathCache:  # Singleton
                • {c.c}ext{c.R}      checks {pathext} time{"s" if pathext > 1 else ""} whether a given file.ext exists (≝no cache, precise, slow with many pathext on Windows)
                • {c.c}list_exe{c.R} list all files in a dir, for each file check its executable status (precise, slow with many files)
                • {c.c}list_all{c.R} list all files in a dir, caches them all without a per-file check (imprecise, faster vs. list_exe)
-            For each method below is a time approximation of a single operation in seconds
+            For each method below is a rough time estimate of a single operation in seconds
+            Cached labels: P̲ermanent, S̲ession, 'L̲isted'
             """
         print_color(textwrap.dedent(msg))
         header = "   ".join([f"{cats[k]}" for k in cat])
         header += "   # files"
+        header += " Cached?"
         print_color(f"{c.c}{header}{c.R}")
         for path in paths:
             t_paths[path] = dict()
@@ -342,7 +351,22 @@ class PathCache:  # Singleton
                     s_out[k] = c_pre + s + c_pos
 
             res = "   ".join([f"{v}" for v in s_out.values()])
-            res += f"        {file_count}   {path}"
+
+            # Check which PATHs are cached and where
+            pn = os.path.normpath(path)
+            lbl = ""
+            if (
+                pn in self.usr_dir_list_perma
+                or pn in self.usr_dir_list_session
+                or pn in self.usr_dir_list_key
+            ):
+                lbl += "✓ "
+            else:
+                lbl += " ✗"
+            lbl += "P" if pn in self.usr_dir_list_perma else " "
+            lbl += "S" if pn in self.usr_dir_list_session else " "
+            lbl += "L" if pn in self.usr_dir_list_key else " "
+            res += f"        {file_count}  {lbl} {path}"
             print_color(res)
 
     def get_cache_info(self, v=0):
