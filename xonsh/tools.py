@@ -455,6 +455,8 @@ def subproc_toks(
     """
     if lexer is None:
         lexer = xsh.execer.parser.lexer
+    if hasattr(lexer, "subproc_toks"):
+        return lexer.subproc_toks(line, mincol, maxcol, returnline, greedy)
     if maxcol is None:
         maxcol = len(line) + 1
     lexer.reset()
