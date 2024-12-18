@@ -1333,6 +1333,13 @@ class CacheSetting(Xettings):
         "To help identify, which dirs from ``$PATH`` would be faster if moved to this cache, "
         "run ``from xonsh.procs.executables import PathCache; pc = PathCache; pc.help_me_choose()``",
     )
+    XONSH_DIR_CACHE_TO_ALIST = Var.with_default(
+        set(),
+        "Same as ``$XONSH_DIR_CACHE_TO_LIST``, but caches all files, not just executables, "
+        "thus avoding per-file checks (expensive if many files). "
+        "Suitable for large dirs consisting of mostly executables, where the risk of caching "
+        "regular files is low and wouldn't make syntax highlighting very far off. ",
+    )
     XONSH_DIR_CACHE_LIST_EXT_MIN = Var.with_default(
         3,
         "The minimum number of executable file variants (# of PathExt on Windows) "
@@ -1340,12 +1347,6 @@ class CacheSetting(Xettings):
         "whether each of the variants exists. "
         "Set to 1 if you want to list a dir regardless as that would allow caching its content"
         "and highlighting valid partial prefixes while typing: see `XONSH_DIR_PERMA_CACHE`.",
-    )
-    XONSH_DIR_CACHE_LIST_NON_EXE = Var.with_default(
-        True,
-        "Cache non-executable files. Disabling this will check every file in a listed dir, "
-        "potentially negating the performance benefits of using ``$XONSH_DIR_CACHE_TO_LIST``, "
-        "but then partial text for filenames you can't execute won't be highlighted.",
     )
     XONSH_DIR_CACHE_LIST_SAVE_ON_EXIT = Var.with_default(
         False,
