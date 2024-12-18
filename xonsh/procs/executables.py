@@ -258,7 +258,10 @@ class PathCache:  # Singleton
             print("valid 'which': p|perma|permanent, s|sess|session, l|listed|m|mtime")
 
     @classmethod
-    def help_me_choose(cls):
+    def help_me_choose(cls, iters: int = 10):
+        """Show a table of time costs per dir from $PATH to help select which ones to cache in which type
+        iters: # of iterations to run per dir
+        """
         c = ColorShort()
 
         env = cls.env
@@ -280,19 +283,24 @@ class PathCache:  # Singleton
         import textwrap
         from math import pow
         from time import monotonic_ns as ttime
+        import datetime
 
         ns = pow(10, 9)  # nanosecond, which 'monotonic_ns' are measured in
 
         z0 = re.compile(r"(0)(\.)(0+)?", flags=re.X)
-        iters = 1
         t_paths = dict()
-        msg = "list all files and store only executables"
         msg = f"""\
-            A ~time estimate of 3 methods of searching for a command in {c.b}$PATH{c.R} (helps choose which dirs to add to {c.b}$XONSH_DIR_CACHE_TO_LIST{c.R}):
-               • {c.c}ext{c.R}      checks {pathext} time{"s" if pathext > 1 else ""} whether a given file.ext exists (≝no cache, precise, slow with many pathext on Windows)
-               • {c.c}list_exe{c.R} list all files in a dir, for each file check its executable status (precise, slow with many files)
-               • {c.c}list_all{c.R} list all files in a dir, caches them all without a per-file check (imprecise, faster vs. list_exe)
-            For each method below is a rough time estimate of a single operation in seconds
+            A ~time estimate of 3 methods of searching for a command in {c.b}$PATH{c.R} (helps choose which dirs to add to which cache):
+               • {c.c}ext{c.R}      checks {ext_count} time{"s" if ext_count > 1 else ""} whether a given file.ext exists (≝no cache, precise, slow with many pathext·paths ({int(pathext*ext_count)}) on Windows)
+               • {c.c}list_exe{c.R} list all files in a dir, cache only executables (each file is checked) (precise, slow with many files)
+               • {c.c}list_all{c.R} list all files in a dir, cache them all (no per-file check) (imprecise, faster vs. list_exe)
+            For each method below is a rough time estimate of a single operation in seconds, if {c.c}list_exe{c.R} is comparable to {c.c}ext{c.R} (even if higher), then it should be cached in {c.b}$XONSH_DIR_CACHE_TO_LIST{c.R} even if the dir changes frequently since you'll pay that price once per prompt and only on change instead of once per keystroke regardless of change. If it's high
+                • and the dir is changing frequently, but mostly consists of executables (e.g., some {c.c}/bin{c.R} or {c.c}/scripts{c.R} dir), use {c.b}$XONSH_DIR_CACHE_TO_LIST_NON_EXE{c.R}
+                • but the dir isn't changing, use {c.b}$XONSH_DIR_PERMA_CACHE{c.R}
+                • but the dir isn't changing frequently, consider using {c.b}$XONSH_DIR_SESSION_CACHE{c.R} to pay the price once per session and lose some precision on updates (multiple sessions can use the first session's cache file with {c.b}$XONSH_DIR_SESSION_CACHE_SHARE{c.R})
+                • and the dir is changing frequently with mixed exe+non-exe files, avoid caching or use imprecise variants
+            (dirs with > 1000 files are only assessed 1 time, not {iters})
+            Modified time: color-highlighted if older than 1 week
             Cached labels: P̲ermanent, S̲ession, 'L̲isted'
             """
         print_color(textwrap.dedent(msg))
