@@ -1329,7 +1329,9 @@ class CacheSetting(Xettings):
         "This variable is a set of paths that should be checked via direct listing. ",
         "Set `XONSH_DIR_CACHE_LIST_EXT_MIN` for more direct fine-tuning the tradeoff. ",
         "(Mac/Linux) cached dirs provide a syntax highlighting benefit: see `XONSH_DIR_PERMA_CACHE`. "
-        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. ",
+        "To get info about the current state of path cache, see ``xonsh.procs.executables.get_cache_info``. "
+        "To help identify, which dirs from ``$PATH`` would be faster if moved to this cache, "
+        "run ``from xonsh.procs.executables import PathCache; pc = PathCache; pc.help_me_choose()``",
     )
     XONSH_DIR_CACHE_LIST_EXT_MIN = Var.with_default(
         3,
