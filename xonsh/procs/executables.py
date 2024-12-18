@@ -415,6 +415,7 @@ class PathCache:  # Singleton
                 pn in self.usr_dir_list_perma
                 or pn in self.usr_dir_list_session
                 or pn in self.usr_dir_list_key
+                or pn in self.usr_dir_alist_key
             ):
                 lbl += "✓ "
             else:
@@ -422,6 +423,7 @@ class PathCache:  # Singleton
             lbl += "P" if pn in self.usr_dir_list_perma else " "
             lbl += "S" if pn in self.usr_dir_list_session else " "
             lbl += "L" if pn in self.usr_dir_list_key else " "
+            lbl += "A" if pn in self.usr_dir_alist_key else " "
             file_count_s = f"{file_count}".rjust(6)
             exec_count_s = f"{exe_count}".rjust(6)
             res += f"       {file_count_s}   {exec_count_s}  {mtime}  {lbl}   {path}"
@@ -441,43 +443,46 @@ class PathCache:  # Singleton
         clean_paths = PathCache.clean_paths.get(
             env_path_hash, tuple(clear_paths(env_path))
         )
-        cached_perma, cached_sess, cached_list = 0, 0, 0
-        list_perma, list_sess, list_list = [], [], []
+        cached_perma, cached_sess, cached_list, cached_alist = 0, 0, 0, 0
+        list_perma, list_sess, list_list, list_alist = [], [], [], []
         uncached = []
         for p in clean_paths:
-            inc_perma, inc_sess, inc_list = 0, 0, 0
+            inc_perma, inc_sess, inc_list, inc_alist = 0, 0, 0, 0
             if p in self.usr_dir_list_perma:
-                inc_perma = 1
-                cached_perma += inc_perma
+                inc_perma = True
+                cached_perma += 1
                 list_perma.append(p)
             if p in self.usr_dir_list_session:
-                inc_sess = 1
-                cached_sess += inc_sess
+                inc_sess = True
+                cached_sess += 1
                 list_sess.append(p)
             if p in self.usr_dir_list_key:
-                inc_list = 1
-                cached_list += inc_list
+                inc_list = True
+                cached_list += 1
                 list_list.append(p)
-            if (inc_perma + inc_sess + inc_list) == 0:
+            if p in self.usr_dir_alist_key:
+                inc_alist = True
+                cached_alist += 1
+                list_alist.append(p)
+            if not (inc_perma or inc_sess or inc_list or inc_alist):
                 uncached.append(p)
         uncached_c = len(uncached)
         ext_min = int(env.get("XONSH_DIR_CACHE_LIST_EXT_MIN"))
-        cached = cached_perma + cached_sess + cached_list
-        cache_non_exe = "✓" if env.get("XONSH_DIR_CACHE_LIST_NON_EXE", True) else "✗"
+        cached = cached_perma + cached_sess + cached_list + cached_alist
         skip_exist = "✓" if env.get("XONSH_DIR_CACHE_SKIP_EXIST", True) else "✗"
         c = ColorShort()
         msg = f"""\
             PATH    : ∑ {str(len(env_path   )).rjust(3)} dirty
                       └ {str(len(clean_paths)).rjust(3)} clean (unique & existing)
             Cached  : ∑ {str(    cached      ).rjust(3)} of which:               ({c.b}pc = PathCache(None){c.R}pc.usr_dir_list_perma)
-                      ├ {str(cached_perma    ).rjust(3)} permanently             ({c.b}pc.usr_dir_list_perma  {c.R} ← $XONSH_DIR_PERMA_CACHE  )
-                      ├ {str(cached_sess     ).rjust(3)} this session            ({c.b}pc.usr_dir_list_session{c.R} ← $XONSH_DIR_SESSION_CACHE)
-                      └ {str(cached_list     ).rjust(3)} by dir mtime ('Listed') ({c.b}pc.usr_dir_list_key    {c.R} ← $XONSH_DIR_CACHE_TO_LIST)\
+                      ├ {str(cached_perma    ).rjust(3)} permanently             ({c.b}pc.usr_dir_list_perma  {c.R} ← $XONSH_DIR_PERMA_CACHE   )
+                      ├ {str(cached_sess     ).rjust(3)} this session            ({c.b}pc.usr_dir_list_session{c.R} ← $XONSH_DIR_SESSION_CACHE )
+                      ├ {str(cached_list     ).rjust(3)} by dir mtime ('Listed') ({c.b}pc.usr_dir_list_key    {c.R} ← $XONSH_DIR_CACHE_TO_LIST )
+                      └ {str(cached_alist    ).rjust(3)} by dir mtime ('AListed')({c.b}pc.usr_dir_alist_key   {c.R} ← $XONSH_DIR_CACHE_TO_ALIST)\
         """
         if v >= 1:
             msg += f"""
-                                                   ({str(ext_min     ).rjust(2)}                        $XONSH_DIR_CACHE_LIST_EXT_MIN)
-                                                   ({    cache_non_exe.rjust(2)}                        $XONSH_DIR_CACHE_LIST_NON_EXE)\
+                                                   ({str(ext_min     ).rjust(2)}                        $XONSH_DIR_CACHE_LIST_EXT_MIN)\
         """
         msg += f"""
             Uncached: ∑ {str(uncached_c      ).rjust(3)}{' including:' if uncached_c else ''}\
@@ -509,9 +514,15 @@ class PathCache:  # Singleton
                 + " paths cached by dir mtime ('listed'):\n  "
                 + "\n  ".join(list_list)
             )
+            msg += (
+                "\n"
+                + str(len(list_alist))
+                + " paths cached by dir mtime ('alisted'):\n  "
+                + "\n  ".join(list_alist)
+            )
         if v >= 2:
             # print(f"PATH #{len(env_path)}    :\n  {'\n  '.join(env_path)}")
-            msg += f"\n\n{len(env_path)} $PATH:\n ✓✗  Cached/Not (Perma, Session, 'Listed')\n   - Doesn't exist"
+            msg += f"\n\n{len(env_path)} $PATH:\n ✓✗  Cached/Not (Perma, Session, 'Listed', 'AListed')\n   - Doesn't exist"
             for p in env_path:
                 pn = os.path.normpath(p)
                 lbl = ""
@@ -519,6 +530,7 @@ class PathCache:  # Singleton
                     pn in self.usr_dir_list_perma
                     or pn in self.usr_dir_list_session
                     or pn in self.usr_dir_list_key
+                    or pn in self.usr_dir_alist_key
                 ):
                     lbl += "✓ "
                 else:
@@ -527,6 +539,7 @@ class PathCache:  # Singleton
                 lbl += "P" if pn in self.usr_dir_list_perma else " "
                 lbl += "S" if pn in self.usr_dir_list_session else " "
                 lbl += "L" if pn in self.usr_dir_list_key else " "
+                lbl += "A" if pn in self.usr_dir_alist_key else " "
                 msg += f"\n {lbl} {p}"
         msg += (
             "\n\n"
@@ -570,9 +583,11 @@ class PathCache:  # Singleton
         self.usr_dir_list_perma: set = set()
         self.usr_dir_list_session: set = set()
         self.usr_dir_list_key: set = set()
+        self.usr_dir_alist_key: set = set()
         self._usr_dir_list_perma = None  # save last valid to check for updates
         self._usr_dir_list_session = None
         self._usr_dir_list_key = None
+        self._usr_dir_alist_key = None
         self.cwd_too_long: set = set()
         self.set_usr_dir_list(env)
         self.load_cache_listed()
@@ -593,11 +608,16 @@ class PathCache:  # Singleton
             if not dir_list == self._usr_dir_list_key:
                 self._usr_dir_list_key = dir_list
                 self.usr_dir_list_key = set(normpath(p) for p in dir_list)
+            dir_list = env.get("XONSH_DIR_CACHE_TO_ALIST", [])
+            if not dir_list == self._usr_dir_alist_key:
+                self._usr_dir_alist_key = dir_list
+                self.usr_dir_alist_key = set(normpath(p) for p in dir_list)
         if not self.__is_init:
             # just in case, add dirs from PATH with a different case
             usr_dir_list_perma_pl = [p.lower() for p in self.usr_dir_list_perma]
             usr_dir_list_session_pl = [p.lower() for p in self.usr_dir_list_session]
             usr_dir_list_key_pl = [p.lower() for p in self.usr_dir_list_key]
+            usr_dir_alist_key_pl = [p.lower() for p in self.usr_dir_alist_key]
             env_path = env.get("PATH", [])
             for p in env_path:
                 pn = normpath(p)
@@ -608,6 +628,8 @@ class PathCache:  # Singleton
                     self.usr_dir_list_session.add(pn)
                 if pl in usr_dir_list_key_pl:
                     self.usr_dir_list_key.add(pn)
+                if pl in usr_dir_alist_key_pl:
+                    self.usr_dir_alist_key.add(pn)
 
     @property
     def cache_file(self):
@@ -956,7 +978,6 @@ def locate_file_in_path_env(
     skip_exist = env.get(
         "XONSH_DIR_CACHE_SKIP_EXIST", False
     )  # avoid dupe is_file check since we assume permanent/session caches don't change ever/per session
-    cache_non_exe = env.get("XONSH_DIR_CACHE_LIST_NON_EXE", True)
 
     for path in paths:
         if (
@@ -1009,8 +1030,12 @@ def locate_file_in_path_env(
                 ):  # report partial match for color highlighting
                     partial_match.is_part = True
         elif (
-            ext_count >= ext_min and pc.usr_dir_list_key and path in pc.usr_dir_list_key
+            ext_count >= ext_min and (
+               (pc.usr_dir_list_key  and path in pc.usr_dir_list_key )
+            or (pc.usr_dir_alist_key and path in pc.usr_dir_alist_key)
+            )
         ):  # list a dir vs checking many files (cached by mtime)
+            cache_non_exe = path in pc.usr_dir_alist_key
             path_time = os.path.getmtime(path)
             path_cmd = PathCache.get_dir_key_cache(path)
             use_cache = True if path_cmd and (path_cmd.mtime == path_time) else False
