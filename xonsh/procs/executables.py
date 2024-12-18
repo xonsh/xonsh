@@ -274,6 +274,9 @@ class PathCache:  # Singleton
         env_path = env.get("PATH", [])
         paths = tuple(clear_paths(env_path))
         pathext = len(env.get("PATHEXT", [])) if ON_WINDOWS else 1
+        name = "1ef52612c0d54f0a85c59b61948c12ae"
+        possible_names = get_possible_names(name, env)
+        ext_count = len(possible_names)
 
         cat = ["ext", "list_exe", "list_all"]
         cats = {k: k for k in cat}
@@ -305,37 +308,79 @@ class PathCache:  # Singleton
             """
         print_color(textwrap.dedent(msg))
         header = "   ".join([f"{cats[k]}" for k in cat])
-        header += "   # files"
-        header += " Cached?"
+        header += "  # files"
+        header += "  # execs"
+        header += "   mtime   "
+        header += "  Cached?"
         print_color(f"{c.c}{header}{c.R}")
+        week_in_sec = 60*60*24*7
         for path in paths:
-            t_paths[path] = dict()
+            is_large_dir = False
             file_count = 0
-            t0 = ttime()
-            for _ in range(iters):
-                for dirpath, _dirnames, filenames in walk(path):
-                    file_count = f"{len(filenames)}".rjust(5)
-                    for fname in filenames:
-                        is_executable(Path(dirpath) / fname, skip_exist=False)
-                    break  # no recursion into subdir
-            t1 = ttime()
-            t_paths[path]["list_exe"] = (t1 - t0) / ns / iters
+            exe_count = 0
+            t_paths[path] = dict()
+            p = Path(path)
+            try:
+                mtime_f = p.stat().st_mtime
+                mtime_r = datetime.datetime.fromtimestamp(mtime_f, tz=datetime.timezone.utc)
+                mtime_s = mtime_r.strftime("%Y-%m-%d")
+                how_old = datetime.datetime.now(tz=datetime.timezone.utc) - mtime_r
+                if how_old.total_seconds() > week_in_sec:
+                    mtime = f"{c.g}{mtime_s}{c.R}"
+                else:
+                    mtime =         mtime_s
+            except Exception as e:
+                mtime = "?".rjust(8)
 
-            # msg = "list all files and store all files"
+            # get some stats without impacting later benchmakrs
+            for dirpath, _dirnames, filenames in walk(path):
+                file_count = len(filenames)
+                if file_count > 1000:
+                    is_large_dir = True
+                for fname in filenames:
+                    if is_executable(Path(dirpath) / fname, skip_exist=False):
+                        exe_count += 1
+                break  # no recursion into subdir
+
+            # list all files and store all files
             t0 = ttime()
             for _ in range(iters):
                 for _dirpath, _dirnames, filenames in walk(path):
                     for _fname in filenames:
                         pass
                     break  # no recursion into subdir
+                if is_large_dir:
+                    break  # don't waste time benchmarking very large dirs
             t1 = ttime()
-            t_paths[path]["list_all"] = (t1 - t0) / ns / iters
+            iters_real = 1 if is_large_dir else iters
+            t_paths[path]["list_all"] = (t1 - t0) / ns / iters_real
 
-            # msg = "find each pathext executables in"
+            # list all files and store only executables
             t0 = ttime()
             for _ in range(iters):
-                for _cmd in executables_in(path):
-                    pass
+                for dirpath, _dirnames, filenames in walk(path):
+                    for fname in filenames:
+                        is_executable(Path(dirpath) / fname, skip_exist=False)
+                    break  # no recursion into subdir
+                if is_large_dir:
+                    break  # don't waste time benchmarking very large dirs
+            t1 = ttime()
+            t_paths[path]["list_exe"] = (t1 - t0) / ns / iters_real
+
+            # find each pathext executables in
+            check_executable = True
+            t0 = ttime()
+            for _ in range(iters):
+                for possible_name in possible_names:
+                    filepath = Path(path) / possible_name
+                    try:
+                        if not filepath.is_file() or (
+                            check_executable and not is_executable(filepath, skip_exist=True)
+                        ):
+                            continue
+                        break
+                    except PermissionError:
+                        continue
             t1 = ttime()
             t_paths[path]["ext"] = (t1 - t0) / ns / iters
 
@@ -374,7 +419,9 @@ class PathCache:  # Singleton
             lbl += "P" if pn in self.usr_dir_list_perma else " "
             lbl += "S" if pn in self.usr_dir_list_session else " "
             lbl += "L" if pn in self.usr_dir_list_key else " "
-            res += f"        {file_count}  {lbl} {path}"
+            file_count_s = f"{file_count}".rjust(6)
+            exec_count_s = f"{exe_count}".rjust(6)
+            res += f"       {file_count_s}   {exec_count_s}  {mtime}  {lbl}   {path}"
             print_color(res)
 
     def get_cache_info(self, v=0):
