@@ -474,9 +474,11 @@ class PathCache:  # Singleton
             lbl_s = f"{lbl}".rjust(6)
             file_count_s = f"{file_count}".rjust(5)
             exec_count_s = f"{exe_count}".rjust(5)
-            file_eq_exec = '=' if exe_count == file_count else ''
-            file_approxeq_exec = '≈' if not file_eq_exec and exe_count >= file_count * 0.9 else ''
-            file_eq_pad = '' if file_eq_exec or file_approxeq_exec else ' '
+            file_eq_exec = "=" if exe_count == file_count else ""
+            file_approxeq_exec = (
+                "≈" if not file_eq_exec and exe_count >= file_count * 0.9 else ""
+            )
+            file_eq_pad = "" if file_eq_exec or file_approxeq_exec else " "
             res += f"       {file_count_s} {c.g}{file_eq_exec}{c.R}{file_approxeq_exec}{file_eq_pad} {exec_count_s}  {mtime}  {cache_in_s}  {lbl_s}   {path}"
             print_color(res)
 
