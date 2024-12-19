@@ -318,13 +318,20 @@ class PathCache:  # Singleton
         header += f"  # files  # execs   mtime   {c.g}  CacheIn  {c.c}  Cached?{c.R}"
         print_color(header)
         week_in_sec = 60 * 60 * 24 * 7
-        suggest_perma_c = [  # compare to: os.path.splitdrive(p)[1].lower() in suggest_perma
+        suggest_perma_win = [  # compare to: os.path.splitdrive(p)[1].lower() in suggest_perma
             R"\Windows",  #  61       16
             R"\Windows\system32",  # 4888      709
             R"\Windows\System32\Wbem",  # 380        9
             R"\Windows\System32\OpenSSH",  #  11        9
             R"\Windows\System32\WindowsPowerShell\v1.0",  #  22        2
         ]
+        suggest_perma_nix = [
+            R"/usr/bin",
+            R"/bin",
+            R"/usr/sbin",
+            R"/sbin",
+        ]
+        suggest_perma_c = suggest_perma_win if ON_WINDOWS else suggest_perma_nix
         suggest_perma = [p.lower() for p in suggest_perma_c]
         for path in paths:
             is_large_dir = False
