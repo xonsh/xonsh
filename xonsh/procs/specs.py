@@ -744,7 +744,7 @@ class SubprocSpec:
         alias = self.alias
         if alias is None:
             cmd0 = self.cmd[0]
-            binary_loc = locate_executable(cmd0)
+            binary_loc = locate_executable(cmd0, path_cache_dirty=True)
             if binary_loc is None and cmd0 and cmd0 in self.alias_stack:
                 raise Exception(f'Recursive calls to "{cmd0}" alias.')
         elif callable(alias):
