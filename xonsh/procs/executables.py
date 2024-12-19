@@ -194,8 +194,8 @@ class PathCache:  # Singleton
         """Clean PathCache to allow creating a new one with a different env
         delfiles: Also delete cached files
         """
-        self = cls._instance
-        if self:
+        if hasattr(cls, "_instance"):
+            self = cls._instance
             # cls._instance.__is_init = False
             cls._instance = None
             cls.is_dirty = True
@@ -265,8 +265,10 @@ class PathCache:  # Singleton
         c = ColorShort()
 
         env = cls.env
-        self = cls._instance
-        if not self:
+        if hasattr(cls, "_instance"):
+            self = cls._instance
+        else:
+            self = None
             print_color(
                 f"PathCache isn't initialized yet, so indication of which {c.b}$PATH{c.R} is in which cache isn't available"
             )
@@ -440,22 +442,24 @@ class PathCache:  # Singleton
             # Check which PATHs are cached and where
             pn = os.path.normpath(path)
             lbl = ""
-            if (
-                pn in self.usr_dir_list_perma
-                or pn in self.usr_dir_list_session
-                or pn in self.usr_dir_list_key
-                or pn in self.usr_dir_alist_key
-            ):
-                lbl += "✓ "
-            else:
-                lbl += " ✗"
-            lbl += "P" if pn in self.usr_dir_list_perma else " "
-            lbl += "S" if pn in self.usr_dir_list_session else " "
-            lbl += "L" if pn in self.usr_dir_list_key else " "
-            lbl += "A" if pn in self.usr_dir_alist_key else " "
+            if self:
+                if (
+                    pn in self.usr_dir_list_perma
+                    or pn in self.usr_dir_list_session
+                    or pn in self.usr_dir_list_key
+                    or pn in self.usr_dir_alist_key
+                ):
+                    lbl += "✓ "
+                else:
+                    lbl += " ✗"
+                lbl += "P" if pn in self.usr_dir_list_perma else " "
+                lbl += "S" if pn in self.usr_dir_list_session else " "
+                lbl += "L" if pn in self.usr_dir_list_key else " "
+                lbl += "A" if pn in self.usr_dir_alist_key else " "
+            lbl_s = f"{lbl}".rjust(6)
             file_count_s = f"{file_count}".rjust(6)
             exec_count_s = f"{exe_count}".rjust(6)
-            res += f"       {file_count_s}   {exec_count_s}  {mtime}  {cache_in_s}  {lbl}   {path}"
+            res += f"       {file_count_s}   {exec_count_s}  {mtime}  {cache_in_s}  {lbl_s}   {path}"
             print_color(res)
 
     def get_cache_info(self, v=0):
@@ -766,8 +770,9 @@ class PathCache:  # Singleton
     @classmethod
     def load_cache_listed(cls):
         """Load cached 'Listed' dirs to file (on startup not to dupe-list dir if no mtime changed)"""
-        self = cls._instance
-        if not self:
+        if hasattr(cls, "_instance"):
+            self = cls._instance
+        else:
             return
         dir_cache, pathext_cache = None, None
         if self.cache_file_listed and self.cache_file_listed.exists():
@@ -795,8 +800,9 @@ class PathCache:  # Singleton
     @classmethod
     def save_cache_listed(cls):
         """Save cached 'Listed' dirs to file (on exit)"""
-        self = cls._instance
-        if not self:
+        if hasattr(cls, "_instance"):
+            self = cls._instance
+        else:
             return
         dir_cache = cls.dir_key_cache
         pathext_cache = set(cls.env.get("PATHEXT", [])) if ON_WINDOWS else set()
