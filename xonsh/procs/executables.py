@@ -430,7 +430,6 @@ class PathCache:  # Singleton
             skip = False
             if os.path.splitdrive(path)[1].lower() in suggest_perma:
                 cache_in["P"] = "P?"  # manually add Win dirs to Perma
-                skip = True
             if not skip and t_paths[path]["list_all"] < t_paths[path]["ext"]:
                 if exe_count == file_count:
                     cache_in["A"] = "A "
