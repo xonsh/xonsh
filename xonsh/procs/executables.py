@@ -303,21 +303,30 @@ class PathCache:  # Singleton
                 • but the dir isn't changing frequently, consider using {c.b}$XONSH_DIR_SESSION_CACHE{c.R} to pay the price once per session and lose some precision on updates (multiple sessions can use the first session's cache file with {c.b}$XONSH_DIR_SESSION_CACHE_SHARE{c.R})
                 • and the dir is changing frequently with mixed exe+non-exe files, avoid caching or use imprecise variants
             (dirs with > 1000 files are only assessed 1 time, not {iters})
+            CacheIn: suggestion of where to cache this dir, ? means less certainty
+            Time: color-highlighted if less than {c.c}ext{c.R}
             Modified time: color-highlighted if older than 1 week
             Cached labels: P̲ermanent, S̲ession, 'L̲isted', 'A̲Listed'
             """
         print_color(textwrap.dedent(msg))
-        header = "   ".join([f"{cats[k]}" for k in cat])
-        header += "  # files"
-        header += "  # execs"
-        header += "   mtime   "
-        header += "  Cached?"
-        print_color(f"{c.c}{header}{c.R}")
+        header = f"{c.c}"
+        header += "   ".join([f"{cats[k]}" for k in cat])
+        header += f"  # files  # execs   mtime   {c.g}  CacheIn  {c.c}  Cached?{c.R}"
+        print_color(header)
         week_in_sec = 60 * 60 * 24 * 7
+        suggest_perma_c = [  # compare to: os.path.splitdrive(p)[1].lower() in suggest_perma
+            R"\Windows"                                ,#  61       16
+            R"\Windows\system32"                       ,#4888      709
+            R"\Windows\System32\Wbem"                  ,# 380        9
+            R"\Windows\System32\OpenSSH"               ,#  11        9
+            R"\Windows\System32\WindowsPowerShell\v1.0",#  22        2
+        ]
+        suggest_perma = [p.lower() for p in suggest_perma_c]
         for path in paths:
             is_large_dir = False
             file_count = 0
             exe_count = 0
+            is_mtime_old = False
             t_paths[path] = dict()
             p = Path(path)
             try:
@@ -329,6 +338,7 @@ class PathCache:  # Singleton
                 how_old = datetime.datetime.now(tz=datetime.timezone.utc) - mtime_r
                 if how_old.total_seconds() > week_in_sec:
                     mtime = f"{c.g}{mtime_s}{c.R}"
+                    is_mtime_old = True
                 else:
                     mtime = mtime_s
             except Exception:
@@ -390,14 +400,10 @@ class PathCache:  # Singleton
             s_out = {k: "" for k in cat}
             for k in s_out:
                 c_pre, c_pos = "", ""
-                if not k == "list_all" and t_paths[path][k] == min(
-                    [
-                        t_paths[path]["list_exe"],
-                        t_paths[path]["ext"],
-                    ]
-                ):
-                    c_pre = c.g
-                    c_pos = c.R
+                if k in ["list_exe", "list_all"]:
+                    if t_paths[path][k] < t_paths[path]["ext"]:
+                        c_pre = c.g
+                        c_pos = c.R
                 s = f"{t_paths[path][k]:.4f}"
                 m = re.match(z0, s)
                 if m:
@@ -407,6 +413,29 @@ class PathCache:  # Singleton
                     s_out[k] = c_pre + s + c_pos
 
             res = "   ".join([f"{v}" for v in s_out.values()])
+
+            # Add suggestions re. where dirs could be cached
+            cache_in = {k:"  " for k in "PSLA"}  # to maintain order in output
+            skip = False
+            if os.path.splitdrive(path)[1].lower() in suggest_perma:
+                cache_in['P'] = "P?"  # manually add Win dirs to Perma
+                skip = True
+            if not skip and t_paths[path]["list_all"] < t_paths[path]["ext"]:
+                if exe_count   == file_count      :
+                    cache_in['A'] = "A "
+                    skip = True
+                elif exe_count >= file_count * 0.9:
+                    cache_in['A'] = "A?"
+                    skip = True
+            if not skip and t_paths[path]["list_exe"] < t_paths[path]["ext"]    :
+                cache_in['L'] = "L "
+                skip = True
+            if not skip and t_paths[path]["list_exe"] < t_paths[path]["ext"] * 3:
+                cache_in['L'] = "L?"
+                skip = True
+            if not skip and is_mtime_old:
+                cache_in['S'] = "S?"
+            cache_in_s = "".join([cache_in[k] for k in "PSLA"]).rjust(8)
 
             # Check which PATHs are cached and where
             pn = os.path.normpath(path)
@@ -426,7 +455,7 @@ class PathCache:  # Singleton
             lbl += "A" if pn in self.usr_dir_alist_key else " "
             file_count_s = f"{file_count}".rjust(6)
             exec_count_s = f"{exe_count}".rjust(6)
-            res += f"       {file_count_s}   {exec_count_s}  {mtime}  {lbl}   {path}"
+            res += f"       {file_count_s}   {exec_count_s}  {mtime}  {cache_in_s}  {lbl}   {path}"
             print_color(res)
 
     def get_cache_info(self, v=0):
