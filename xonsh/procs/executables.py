@@ -300,7 +300,7 @@ class PathCache:  # Singleton
             For each method below is a rough time estimate of a single operation in seconds. If {c.c}list_exe{c.R} is comparable to {c.c}ext{c.R} (even if higher), then it should be cached in {c.b}$XONSH_DIR_CACHE_TO_LIST{c.R} even if the dir changes frequently since you'll pay that price once per prompt and only on change instead of once per keystroke regardless of change. If it's high
                 • and the dir is changing frequently, but mostly consists of executables (e.g., some {c.c}/bin{c.R} or {c.c}/scripts{c.R} dir), use {c.b}$XONSH_DIR_CACHE_TO_ALIST{c.R}
                 • but the dir isn't changing, use {c.b}$XONSH_DIR_PERMA_CACHE{c.R}
-                • but the dir isn't changing frequently, consider using {c.b}$XONSH_DIR_SESSION_CACHE{c.R} to pay the price once per session and lose some precision on updates (multiple sessions can use the first session's cache file with {c.b}$XONSH_DIR_SESSION_CACHE_SHARE{c.R})
+                • but the dir isn't changing frequently, consider using {c.b}$XONSH_DIR_SESSION_CACHE{c.R} to pay the price once per session and lose some precision on updates
                 • and the dir is changing frequently with mixed exe+non-exe files, avoid caching or use imprecise variants
             (dirs with > 1000 files are only assessed 1 time, not {iters})
             CacheIn: suggestion of where to cache this dir, ? means less certainty
