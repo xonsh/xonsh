@@ -465,9 +465,12 @@ class PathCache:  # Singleton
                 lbl += "L" if pn in self.usr_dir_list_key else " "
                 lbl += "A" if pn in self.usr_dir_alist_key else " "
             lbl_s = f"{lbl}".rjust(6)
-            file_count_s = f"{file_count}".rjust(6)
-            exec_count_s = f"{exe_count}".rjust(6)
-            res += f"       {file_count_s}   {exec_count_s}  {mtime}  {cache_in_s}  {lbl_s}   {path}"
+            file_count_s = f"{file_count}".rjust(5)
+            exec_count_s = f"{exe_count}".rjust(5)
+            file_eq_exec = '=' if exe_count == file_count else ''
+            file_approxeq_exec = '≈' if not file_eq_exec and exe_count >= file_count * 0.9 else ''
+            file_eq_pad = '' if file_eq_exec or file_approxeq_exec else ' '
+            res += f"       {file_count_s} {c.g}{file_eq_exec}{c.R}{file_approxeq_exec}{file_eq_pad} {exec_count_s}  {mtime}  {cache_in_s}  {lbl_s}   {path}"
             print_color(res)
 
     def get_cache_info(self, v=0):
