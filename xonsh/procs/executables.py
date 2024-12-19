@@ -437,6 +437,13 @@ class PathCache:  # Singleton
                 elif exe_count >= file_count * 0.9:
                     cache_in["A"] = "A?"
                     skip = True
+            if not skip and t_paths[path]["list_all"] < 0.01:
+                if exe_count == file_count:
+                    cache_in["A"] = "A "
+                    skip = True
+                elif exe_count >= file_count * 0.9:
+                    cache_in["A"] = "A?"
+                    skip = True
             if not skip and t_paths[path]["list_exe"] < t_paths[path]["ext"]:
                 cache_in["L"] = "L "
                 skip = True
