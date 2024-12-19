@@ -315,11 +315,11 @@ class PathCache:  # Singleton
         print_color(header)
         week_in_sec = 60 * 60 * 24 * 7
         suggest_perma_c = [  # compare to: os.path.splitdrive(p)[1].lower() in suggest_perma
-            R"\Windows"                                ,#  61       16
-            R"\Windows\system32"                       ,#4888      709
-            R"\Windows\System32\Wbem"                  ,# 380        9
-            R"\Windows\System32\OpenSSH"               ,#  11        9
-            R"\Windows\System32\WindowsPowerShell\v1.0",#  22        2
+            R"\Windows",  #  61       16
+            R"\Windows\system32",  # 4888      709
+            R"\Windows\System32\Wbem",  # 380        9
+            R"\Windows\System32\OpenSSH",  #  11        9
+            R"\Windows\System32\WindowsPowerShell\v1.0",  #  22        2
         ]
         suggest_perma = [p.lower() for p in suggest_perma_c]
         for path in paths:
@@ -415,26 +415,26 @@ class PathCache:  # Singleton
             res = "   ".join([f"{v}" for v in s_out.values()])
 
             # Add suggestions re. where dirs could be cached
-            cache_in = {k:"  " for k in "PSLA"}  # to maintain order in output
+            cache_in = {k: "  " for k in "PSLA"}  # to maintain order in output
             skip = False
             if os.path.splitdrive(path)[1].lower() in suggest_perma:
-                cache_in['P'] = "P?"  # manually add Win dirs to Perma
+                cache_in["P"] = "P?"  # manually add Win dirs to Perma
                 skip = True
             if not skip and t_paths[path]["list_all"] < t_paths[path]["ext"]:
-                if exe_count   == file_count      :
-                    cache_in['A'] = "A "
+                if exe_count == file_count:
+                    cache_in["A"] = "A "
                     skip = True
                 elif exe_count >= file_count * 0.9:
-                    cache_in['A'] = "A?"
+                    cache_in["A"] = "A?"
                     skip = True
-            if not skip and t_paths[path]["list_exe"] < t_paths[path]["ext"]    :
-                cache_in['L'] = "L "
+            if not skip and t_paths[path]["list_exe"] < t_paths[path]["ext"]:
+                cache_in["L"] = "L "
                 skip = True
             if not skip and t_paths[path]["list_exe"] < t_paths[path]["ext"] * 3:
-                cache_in['L'] = "L?"
+                cache_in["L"] = "L?"
                 skip = True
             if not skip and is_mtime_old:
-                cache_in['S'] = "S?"
+                cache_in["S"] = "S?"
             cache_in_s = "".join([cache_in[k] for k in "PSLA"]).rjust(8)
 
             # Check which PATHs are cached and where
@@ -1075,7 +1075,9 @@ def locate_file_in_path_env(
                     for fname in filenames:
                         if cache_non_exe:  # ↓for case-insensitive match
                             ftrie[fname.lower()] = fname
-                        elif is_executable(Path(dirpath) / fname, skip_exist=skip_exist):
+                        elif is_executable(
+                            Path(dirpath) / fname, skip_exist=skip_exist
+                        ):
                             ftrie[fname.lower()] = fname
                     break  # no recursion into subdir
                 PathCache.set_dir_key_cache(path, path_time, ftrie)
