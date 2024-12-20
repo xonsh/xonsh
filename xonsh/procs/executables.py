@@ -151,6 +151,7 @@ def _yield_accessible_unix_file_names(path):
 
 
 import threading
+from concurrent.futures import ThreadPoolExecutor, Future
 
 
 class _PathCmd(tp.NamedTuple):
@@ -626,6 +627,9 @@ class PathCache:  # Singleton
         if self.__is_init:
             self.set_usr_dir_list(env)
             return
+        self.task_cache: Future # track the status of async cache updates
+        self.__executor: ThreadPoolExecutor
+        self.__create_thread_pool_executor()
         # file paths storing [dir_cache,pathext_cache] for pre-loading
         self._cache_file = None
         self._cache_file_listed = None
@@ -645,6 +649,9 @@ class PathCache:  # Singleton
         self.set_usr_dir_list(env)
         self.load_cache_listed()
         self.__is_init = True
+
+    def __create_thread_pool_executor(self) -> None:
+        self.__executor = ThreadPoolExecutor()
 
     def set_usr_dir_list(self, env) -> None:
         """Clean up user lists of dirs-to-be-cached and save them. Also include dirs not in PATH since they can be added to PATH later (even on startup by a plugin)."""
@@ -721,16 +728,25 @@ class PathCache:  # Singleton
             self.update_cache()
         return self.__class__.dir_cache_perma
 
+    def __cb_update_cache(self, f: Future):
+        if f.cancelled():
+            pass
+        elif f.done():
+            pass  # not yet needed since only a few dirs are supported
+            # print(f"finished __cb_update_cache on a separate thread is_upd?={f.result()}")
+            # all_cmds = pygtrie.CharTrie()
+            # for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
+                # all_cmds[cmd_low] = (cmd,path)
+            # self._cmds_cache = all_cmds
+        else: # shouldn't happen?
+            pass
     def update_cache(self):
         """The main function to update commands cache"""
         paths = self.get_clean_path(self.__class__.env)
 
-        if paths and self._update_paths_cache(paths):
-            pass  # not yet needed since only a few dirs are supported
-        #     all_cmds = pygtrie.CharTrie()
-        #     for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
-        #         all_cmds[cmd_low] = (cmd,path)
-        #     self._cmds_cache = all_cmds
+        if paths:
+            self.task_cache = self.__executor.submit(self._update_paths_cache,paths)
+            self.task_cache.add_done_callback(self.__cb_update_cache)
         # return self._cmds_cache
 
     def _shrink_dir_cache_perma(self, rm_pathext: set[str]) -> None:
