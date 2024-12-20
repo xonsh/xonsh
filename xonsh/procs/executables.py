@@ -603,7 +603,7 @@ class PathCache:  # Singleton
         if v >= 1:
             msg += (
                 "\n"
-                "Cached file data: pc = PathCache with key = path, value = (mtime+) trie of files|commands (depending on …_NON_EXE))\n"
+                "Get cached file data: pc = PathCache with key = path, value = (mtime+) trie of files|commands (depending on …_NON_EXE))\n"
                 + f"  Permanent : {c.b}pc.get_cache_db('p'){c.R}  ($XONSH_DIR_PERMA_CACHE                         )\n"
                 + f"  Session   : {c.b}pc.get_cache_db('s'){c.R}  ($XONSH_DIR_SESSION_CACHE                       )\n"
                 + f"  'Listed'  : {c.b}pc.get_cache_db('l'){c.R}  ($XONSH_DIR_CACHE_TO_LIST + $XONSH_DIR_CWD_CACHE)\n"
