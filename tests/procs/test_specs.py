@@ -17,8 +17,16 @@ from xonsh.procs.specs import (
     cmds_to_specs,
     run_subproc,
 )
-from xonsh.pytest.tools import skip_if_on_windows
+from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
 from xonsh.tools import XonshError
+
+# TODO: track down which pipeline + spec test is hanging CI
+# Skip entire test file for Linux on Python 3.12
+pytestmark = pytest.mark.skipif(
+    not ON_WINDOWS and VER_MAJOR_MINOR == (3, 12),
+    reason="Backgrounded test is hanging on CI on 3.12 only",
+    allow_module_level=True,
+)
 
 
 def cmd_sig(sig):

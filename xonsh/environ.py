@@ -1443,7 +1443,7 @@ class PromptSetting(Xettings):
         is_string_or_callable,
         ensure_string,
         ensure_string,
-        "{BACKGROUND_#222222} {RESET}",
+        " ",
         "Prompt text for 2nd+ lines of input, may be str or function which "
         "returns a str.",
     )
@@ -1626,6 +1626,10 @@ class PromptSetting(Xettings):
         "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
         "For example, to have stderr appear on a red background, the "
         'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
+    )
+    XONSH_SUPPRESS_WELCOME = Var.with_default(
+        False,
+        "Suppresses the welcome message.",
     )
 
 

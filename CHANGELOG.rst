@@ -4,6 +4,88 @@ Xonsh Change Log
 
 .. current developments
 
+v0.19.0
+====================
+
+**Added:**
+
+* env: Added ``$XONSH_SUPPRESS_WELCOME`` variable to suppress the welcome message.
+
+**Changed:**
+
+* replaced `case_insensitive_dictionary` dependency with local
+  `CaseInsensitiveDict` class
+
+**Fixed:**
+
+* parsers: fix deprecation warnings triggered on python3.13
+* Fix DeprecationWarning while initializing Expression
+
+**Authors:**
+
+* Gil Forsyth
+* pre-commit-ci[bot]
+* Evgeny
+* doronz88
+* JamesParrott
+* Jueun Lee
+* Simon Billinge
+* Bala
+
+
+
+v0.18.4
+====================
+
+**Changed:**
+
+* Now SystemExit that invoked from callable alias follows to exiting from callable alias instead of exiting the entire shell.
+
+**Fixed:**
+
+* Built-in commands such as `xonfig -h` and `xontrib -h` no longer cause the shell to exit.
+* Fixed incorrect quoting behaviour in `activate.xsh` for virtualenv version 20.26.6.
+
+**Authors:**
+
+* anki-code
+* pre-commit-ci[bot]
+* Peter Ye
+* Max Nordlund
+* Shawn Wallace
+* Faidon Liambotis
+
+
+
+v0.18.3
+====================
+
+**Added:**
+
+* executables: Added ``locate_relative_path`` functionality to ``locate_file``.
+
+**Changed:**
+
+* ``$MULTILINE_PROMPT`` changed from ``'.'`` to ``' '`` (space)
+  to have an ability to copy the multiline functions from shell history without deleting the dot manually (#5624 #5634).
+
+**Fixed:**
+
+* Fixed ``$AUTO_CD`` regress after previous refactoring.
+* Partial fix for "Bad file descriptor" in case of callable alias with execx invocation inside e.g. ExecAlias (#5645).
+* completer: Fixed exception when in python-only completion context (#5632).
+* Fixed exception "object has no attribute readlines" in case of redirect callable alias output.
+
+**Authors:**
+
+* Gil Forsyth
+* Noortheen Raja
+* anki-code
+* pre-commit-ci[bot]
+* Aidan Courtney
+
+
+
 v0.18.2
 ====================
 
@@ -2692,7 +2774,7 @@ v0.8.6
     * Exits after concatenating normal files which have a finite size
     * Continues to run for special files which do not have a size,
       such as ``/dev/random``
-    * Is interruptable in all cases with Crtl-C.
+    * Is interruptable in all cases with Ctrl-C.
 * Callable aliases were not properly raising a ``CalledProcessError`` when they
   returned a non-zero exist status when ``$RAISE_SUBPROC_ERROR = True``. This has
   been fixed.
@@ -4434,7 +4516,7 @@ v0.5.0
 * Fixed many PEP8 violations that had gone unnoticed
 * Fix failure to detect an Anaconda python distribution if the python was install from the conda-forge channel.
 * current_branch will try and locate the vc binary once
-* May now Crtl-C out of an infinite loop with a subprocess, such as
+* May now Ctrl-C out of an infinite loop with a subprocess, such as
   ```while True: sleep 1``.
 * Fix for stdin redirects.
 * Backgrounding works with ``$XONSH_STORE_STDOUT``

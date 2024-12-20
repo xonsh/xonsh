@@ -45,6 +45,7 @@ def test(
     """
 
     if report_cov:
+        $COVERAGE_CORE="sysmon"
         ![pytest @(_replace_args(pytest_args, 0)) --cov --cov-report=xml --cov-report=term]
     else:
         # during CI run, some tests take longer to complete on windows

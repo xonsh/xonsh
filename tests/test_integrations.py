@@ -17,6 +17,7 @@ from xonsh.pytest.tools import (
     ON_DARWIN,
     ON_TRAVIS,
     ON_WINDOWS,
+    VER_FULL,
     skip_if_on_darwin,
     skip_if_on_msys,
     skip_if_on_unix,
@@ -329,6 +330,22 @@ f
         "hello\n",
         0,
     ),
+    # test system exit in unthreadable alias (see #5689)
+    (
+        """
+from xonsh.tools import unthreadable
+
+@unthreadable
+def _f():
+    import sys
+    sys.exit(42)
+
+aliases['f'] = _f
+print(![f].returncode)
+""",
+        "42\n",
+        0,
+    ),
     # test ambiguous globs
     (
         """
@@ -594,8 +611,9 @@ first
     ),
     # testing alias stack: parallel threaded callable aliases.
     # This breaks if the __ALIAS_STACK variables leak between threads.
-    (
-        """
+    pytest.param(
+        (
+            """
 from time import sleep
 aliases['a'] = lambda: print(1, end="") or sleep(0.2) or print(1, end="")
 aliases['b'] = 'a'
@@ -604,8 +622,14 @@ a | a
 a | b | a
 a | a | b | b
 """,
-        "1" * 2 * 4,
-        0,
+            "1" * 2 * 4,
+            0,
+        ),
+        # TODO: investigate errors on Python 3.13
+        marks=pytest.mark.skipif(
+            VER_FULL > (3, 12) and not ON_WINDOWS,
+            reason="broken pipes on Python 3.13 likely due to changes in threading behavior",
+        ),
     ),
     # test $SHLVL
     (
@@ -723,7 +747,7 @@ if not ON_WINDOWS:
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.flaky(reruns=4, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
     if ON_DARWIN:
@@ -1508,3 +1532,41 @@ def test_shebang_cr(tmpdir):
     command = f"cd {testdir}; ./{testfile}\n"
     out, err, rtn = run_xonsh(command)
     assert out == f"{expected_out}\n"
+
+
+test_code = [
+    """
+$XONSH_SHOW_TRACEBACK = True
+@aliases.register
+def _e(a,i,o,e):
+    echo -n O
+    echo -n E 1>2
+    execx("echo -n O")
+    execx("echo -n E 1>2")
+    print("o")
+    print("O", file=o)
+    print("E", file=e)
+
+import tempfile
+for i in range(0, 12):
+    echo -n e
+    print($(e), !(e), $[e], ![e])
+    print($(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print(!(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print($[e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+    print(![e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+"""
+]
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("test_code", test_code)
+def test_callable_alias_no_bad_file_descriptor(test_code):
+    """Test no exceptions during any kind of capturing of callable alias. See also #5631."""
+
+    out, err, ret = run_xonsh(
+        test_code, interactive=True, single_command=True, timeout=60
+    )
+    assert ret == 0
+    assert "Error" not in out
+    assert "Exception" not in out

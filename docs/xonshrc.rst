@@ -41,7 +41,7 @@ initializes your personal run control file (usually at ``~/.xonshrc``).  To invo
 .. code-block:: xonshcon
 
   >>> xonfig web
-  Web config started at 'http://localhost:8421'. Hit Crtl+C to stop.
+  Web config started at 'http://localhost:8421'. Hit Ctrl+C to stop.
   127.0.0.1 - - [23/Aug/2020 15:04:39] "GET / HTTP/1.1" 200 -
 
 This will open your default browser on a page served from a local server.  You can exit the server by typing ``Ctrl+c`` at any time.

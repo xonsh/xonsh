@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* completer: Fixed exception when in python-only completion context (#5632).
+* Fixed non-int sys.exit codes raising ValueError.
 
 **Security:**
 
