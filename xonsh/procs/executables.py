@@ -184,8 +184,8 @@ class PathCache:  # Singleton
     is_dirty = True  # signal to refresh cleaned paths (not files/cmds)
     last_path_hash: str = ""  # avoid the risk of IO on keystroke of clearing Δ paths
     dir_cache_perma: dict[str, pygtrie.CharTrie] = dict()
-    dir_cache: dict[str, list[list[str]]] = dict()
-    dir_key_cache: dict[str, _PathCmd] = dict()
+    dir_cache_sess: dict[str, list[list[str]]] = dict()
+    dir_cache_listed: dict[str, _PathCmd] = dict()
     clean_paths: dict[str, tuple[str]] = dict()
     CACHE_FILE = "dir_perma_cache.pickle"
     CACHE_FILE_LISTED = "dir_listed_cache.pickle"
@@ -202,8 +202,8 @@ class PathCache:  # Singleton
             cls._instance = None
             cls.is_dirty = True
             cls.dir_cache_perma = dict()
-            cls.dir_cache = dict()
-            cls.dir_key_cache = dict()
+            cls.dir_cache_sess = dict()
+            cls.dir_cache_listed = dict()
             cls.clean_paths = dict()
             if delfiles:
                 if self.cache_file and self.cache_file.exists():
@@ -230,20 +230,20 @@ class PathCache:  # Singleton
         return paths_dict.get(cls.last_path_hash)
 
     @classmethod
-    def get_dir_cached(cls, path):  # dir_cache_session
-        return cls.dir_cache.get(path, None)
+    def get_dir_cache_sess(cls, path):
+        return cls.dir_cache_sess.get(path, None)
 
     @classmethod
-    def set_dir_cached(cls, path, f_trie):  # dir_cache_session
-        cls.dir_cache[path] = f_trie
+    def set_dir_cache_sess(cls, path, f_trie):
+        cls.dir_cache_sess[path] = f_trie
 
     @classmethod
-    def get_dir_key_cache(cls, path):  # dir_cache_key
-        return cls.dir_key_cache.get(path, None)
+    def get_dir_cache_listed(cls, path):
+        return cls.dir_cache_listed.get(path, None)
 
     @classmethod
-    def set_dir_key_cache(cls, path, time, f_trie):  # dir_cache_key
-        cls.dir_key_cache[path] = _PathCmd(time, f_trie)
+    def set_dir_cache_listed(cls, path, time, f_trie):
+        cls.dir_cache_listed[path] = _PathCmd(time, f_trie)
 
     @classmethod
     def get_cache_db(cls, which: str):
@@ -253,9 +253,9 @@ class PathCache:  # Singleton
         if which in ("p", "perma", "permanent"):
             return cls.dir_cache_perma
         elif which in ("s", "sess", "session"):
-            return cls.dir_cache
+            return cls.dir_cache_sess
         elif which in ("l", "listed", "m", "mtime"):
-            return cls.dir_key_cache
+            return cls.dir_cache_listed
         else:
             print("valid 'which': p|perma|permanent, s|sess|session, l|listed|m|mtime")
 
@@ -629,7 +629,7 @@ class PathCache:  # Singleton
         if self.__is_init:
             self.set_usr_dir_list(env)
             return
-        self.task_cache: Future # track the status of async cache updates
+        self.task_cache: Future  # track the status of async cache updates
         self.__executor: ThreadPoolExecutor
         self.__create_thread_pool_executor()
         # file paths storing [dir_cache,pathext_cache] for pre-loading
@@ -738,16 +738,17 @@ class PathCache:  # Singleton
             # print(f"finished __cb_update_cache on a separate thread is_upd?={f.result()}")
             # all_cmds = pygtrie.CharTrie()
             # for cmd_low, cmd, path in self._iter_binaries(reversed(paths)): # iterate backwards for entries @ PATH front to overwrite entries at the back
-                # all_cmds[cmd_low] = (cmd,path)
+            # all_cmds[cmd_low] = (cmd,path)
             # self._cmds_cache = all_cmds
-        else: # shouldn't happen?
+        else:  # shouldn't happen?
             pass
+
     def update_cache(self):
         """The main function to update commands cache"""
         paths = self.get_clean_path(self.__class__.env)
 
         if paths:
-            self.task_cache = self.__executor.submit(self._update_paths_cache,paths)
+            self.task_cache = self.__executor.submit(self._update_paths_cache, paths)
             self.task_cache.add_done_callback(self.__cb_update_cache)
         # return self._cmds_cache
 
@@ -830,7 +831,7 @@ class PathCache:  # Singleton
             is_exe_def_valid = (
                 pathext == pathext_cache
             )  # ≝ of an executable NOT changed
-            cls.dir_key_cache = dir_cache if is_exe_def_valid else dict()
+            cls.dir_cache_listed = dir_cache if is_exe_def_valid else dict()
             self._pathext_cache_list = pathext_cache if is_exe_def_valid else set()
             # if not is_exe_def_valid: # will be overwritten on exit, so no point in del?
             #     # print(f"Stale 'Listed' dir cache, deleting it…")
@@ -844,7 +845,7 @@ class PathCache:  # Singleton
             assert self is not None
         else:
             return
-        dir_cache = cls.dir_key_cache
+        dir_cache = cls.dir_cache_listed
         pathext_cache = set(cls.env.get("PATHEXT", [])) if ON_WINDOWS else set()
         if self.cache_file_listed:
             try:  # save commands to cache-file if configured
@@ -923,7 +924,7 @@ def locate_relative_path(
                 name_clean = p.name
             path = p.parent
             path_time = os.path.getmtime(path)
-            path_cmd = pc.get_dir_key_cache(path)
+            path_cmd = pc.get_dir_cache_listed(path)
             use_cache = True if path_cmd and (path_cmd.mtime == path_time) else False
             if use_cache:
                 ftrie = path_cmd.ftrie
@@ -939,7 +940,7 @@ def locate_relative_path(
                         elif is_executable(Path(dirpath) / fname, skip_exist):
                             ftrie[fname.lower()] = fname
                     break  # no recursion into subdir
-                pc.set_dir_key_cache(path, path_time, ftrie)
+                pc.set_dir_cache_listed(path, path_time, ftrie)
             for possible_name in possible_names:
                 possible_Name = ftrie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
@@ -1082,14 +1083,14 @@ def locate_file_in_path_env(
             and pc.usr_dir_list_session
             and path in pc.usr_dir_list_session
         ):  # use session dir cache
-            f_trie = PathCache.get_dir_cached(path)
+            f_trie = PathCache.get_dir_cache_sess(path)
             if not f_trie:  # not cached, scan the dir ...
                 f_trie = pygtrie.CharTrie()
                 for _dirpath, _dirnames, filenames in walk(path):
                     for fname in filenames:
                         f_trie[fname.lower()] = fname  # for case-insensitive match
                     break  # no recursion into subdir
-                PathCache.set_dir_cached(path, f_trie)  # ... and cache it
+                PathCache.set_dir_cache_sess(path, f_trie)  # ... and cache it
             for possible_name in possible_names:
                 possible_Name = f_trie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
@@ -1110,7 +1111,7 @@ def locate_file_in_path_env(
         ):  # list a dir vs checking many files (cached by mtime)
             cache_non_exe = path in pc.usr_dir_alist_key
             path_time = os.path.getmtime(path)
-            path_cmd = PathCache.get_dir_key_cache(path)
+            path_cmd = PathCache.get_dir_cache_listed(path)
             use_cache = True if path_cmd and (path_cmd.mtime == path_time) else False
             if use_cache:
                 ftrie = path_cmd.ftrie
@@ -1126,7 +1127,7 @@ def locate_file_in_path_env(
                         ):
                             ftrie[fname.lower()] = fname
                     break  # no recursion into subdir
-                PathCache.set_dir_key_cache(path, path_time, ftrie)
+                PathCache.set_dir_cache_listed(path, path_time, ftrie)
             for possible_name in possible_names:
                 possible_Name = ftrie.get(possible_name.lower())
                 if possible_Name is not None:  #          ✓ full match
