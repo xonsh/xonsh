@@ -524,26 +524,28 @@ class PathCache:  # Singleton
         ext_min = int(env.get("XONSH_DIR_CACHE_LIST_EXT_MIN"))
         cached = cached_perma + cached_sess + cached_list + cached_alist
         skip_exist = "✓" if env.get("XONSH_DIR_CACHE_SKIP_EXIST", True) else "✗"
+        save_list = "🖫" if env.get("XONSH_DIR_CACHE_LIST_SAVE_ON_EXIT", True) else "✗"
         c = ColorShort()
         msg = f"""\
             PATH    : ∑ {str(len(env_path   )).rjust(3)} dirty
                       └ {str(len(clean_paths)).rjust(3)} clean (unique & existing)
-            Cached  : ∑ {str(    cached      ).rjust(3)} of which:               ({c.b}pc = PathCache(None){c.R})
-                      ├ {str(cached_perma    ).rjust(3)} permanently             ({c.b}pc.usr_dir_list_perma  {c.R} ← $XONSH_DIR_PERMA_CACHE   )
-                      ├ {str(cached_sess     ).rjust(3)} this session            ({c.b}pc.usr_dir_list_session{c.R} ← $XONSH_DIR_SESSION_CACHE )
-                      ├ {str(cached_list     ).rjust(3)} by dir mtime ('Listed') ({c.b}pc.usr_dir_list_key    {c.R} ← $XONSH_DIR_CACHE_TO_LIST )
-                      └ {str(cached_alist    ).rjust(3)} by dir mtime ('AListed')({c.b}pc.usr_dir_alist_key   {c.R} ← $XONSH_DIR_CACHE_TO_ALIST)\
+            Cached  : ∑ {str(    cached      ).rjust(3)} of which:               ({c.b}pc = PathCache(None){c.R}                                        )
+                      ├ {str(cached_perma    ).rjust(3)} permanently             ({c.b}pc.usr_dir_list_perma  {c.R} ← $XONSH_DIR_PERMA_CACHE            )
+                      ├ {str(cached_sess     ).rjust(3)} this session            ({c.b}pc.usr_dir_list_session{c.R} ← $XONSH_DIR_SESSION_CACHE          )
+                      ├ {str(cached_list     ).rjust(3)} by dir mtime ('Listed') ({c.b}pc.usr_dir_list_key    {c.R} ← $XONSH_DIR_CACHE_TO_LIST          )
+                      └ {str(cached_alist    ).rjust(3)} by dir mtime ('AListed')({c.b}pc.usr_dir_alist_key   {c.R} ← $XONSH_DIR_CACHE_TO_ALIST         )\
         """
         if v >= 1:
             msg += f"""
-                                                   ({str(ext_min     ).rjust(2)}                        $XONSH_DIR_CACHE_LIST_EXT_MIN)\
+                                                   ({str(ext_min     ).rjust(2)}                         $XONSH_DIR_CACHE_LIST_EXT_MIN     )
+                                                   ({        save_list.rjust(2)}                         $XONSH_DIR_CACHE_LIST_SAVE_ON_EXIT)\
         """
         msg += f"""
             Uncached: ∑ {str(uncached_c      ).rjust(3)}{' including:' if uncached_c else ''}\
         """
         if v >= 1:
             msg += f"""
-                                                   ({       skip_exist.rjust(2)}                        $XONSH_DIR_CACHE_SKIP_EXIST  )\
+                                                   ({       skip_exist.rjust(2)}                         $XONSH_DIR_CACHE_SKIP_EXIST       )\
         """
         print_color(textwrap.dedent(msg))
         msg = ""
