@@ -307,11 +307,12 @@ class PathCache:  # Singleton
                 • but the dir isn't changing, use {c.b}$XONSH_DIR_PERMA_CACHE{c.R}
                 • but the dir isn't changing frequently, consider using {c.b}$XONSH_DIR_SESSION_CACHE{c.R} to pay the price once per session and lose some precision on updates
                 • and the dir is changing frequently with mixed exe+non-exe files, avoid caching or use imprecise variants
-            (dirs with > 1000 files or taking > 5 sec to check are only assessed 1 time, not {iters})
             CacheIn: suggestion of where to cache this dir, ? means less certainty
             Time: color-highlighted if less than {c.c}ext{c.R}
             Modified time: color-highlighted if older than 1 week
             Cached labels: P̲ermanent, S̲ession, 'L̲isted', 'A̲Listed'
+
+            Might be {c.r}SLOW{c.R}, especially for large/network dirs (though dirs with > 1000 files or taking > 5 sec to check are only assessed 1 time, not {iters})
             """
         print_color(textwrap.dedent(msg))
         header = f"{c.c}"
