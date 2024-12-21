@@ -307,7 +307,7 @@ class PathCache:  # Singleton
                 • but the dir isn't changing, use {c.b}$XONSH_DIR_PERMA_CACHE{c.R}
                 • but the dir isn't changing frequently, consider using {c.b}$XONSH_DIR_SESSION_CACHE{c.R} to pay the price once per session and lose some precision on updates
                 • and the dir is changing frequently with mixed exe+non-exe files, avoid caching or use imprecise variants
-            (dirs with > 1000 files are only assessed 1 time, not {iters})
+            (dirs with > 1000 files or taking > 5 sec to check are only assessed 1 time, not {iters})
             CacheIn: suggestion of where to cache this dir, ? means less certainty
             Time: color-highlighted if less than {c.c}ext{c.R}
             Modified time: color-highlighted if older than 1 week
@@ -336,6 +336,7 @@ class PathCache:  # Singleton
         suggest_perma = [p.lower() for p in suggest_perma_c]
         for path in paths:
             is_large_dir = False
+            is_slow_dir = False
             file_count = 0
             exe_count = 0
             is_mtime_old = False
@@ -357,6 +358,7 @@ class PathCache:  # Singleton
                 mtime = "?".rjust(8)
 
             # get some stats without impacting later benchmakrs
+            t0 = ttime()
             for dirpath, _dirnames, filenames in walk(path):
                 file_count = len(filenames)
                 if file_count > 1000:
@@ -365,36 +367,36 @@ class PathCache:  # Singleton
                     if is_executable(Path(dirpath) / fname, skip_exist=False):
                         exe_count += 1
                 break  # no recursion into subdir
+            t1 = ttime()
+            tdiff = (t1 - t0) / ns
+            if tdiff > 5:
+                is_slow_dir = True
+            iters_min = 1 if is_large_dir or is_slow_dir else iters
 
             # list all files and store all files
             t0 = ttime()
-            for _ in range(iters):
+            for _ in range(iters_min):  # don't waste time with large/slow dirs
                 for _dirpath, _dirnames, filenames in walk(path):
                     for _fname in filenames:
                         pass
                     break  # no recursion into subdir
-                if is_large_dir:
-                    break  # don't waste time benchmarking very large dirs
             t1 = ttime()
-            iters_real = 1 if is_large_dir else iters
-            t_paths[path]["list_all"] = (t1 - t0) / ns / iters_real
+            t_paths[path]["list_all"] = (t1 - t0) / ns / iters_min
 
             # list all files and store only executables
             t0 = ttime()
-            for _ in range(iters):
+            for _ in range(iters_min):  # don't waste time with large/slow dirs
                 for dirpath, _dirnames, filenames in walk(path):
                     for fname in filenames:
                         is_executable(Path(dirpath) / fname, skip_exist=False)
                     break  # no recursion into subdir
-                if is_large_dir:
-                    break  # don't waste time benchmarking very large dirs
             t1 = ttime()
-            t_paths[path]["list_exe"] = (t1 - t0) / ns / iters_real
+            t_paths[path]["list_exe"] = (t1 - t0) / ns / iters_min
 
             # find each pathext executables in
             check_executable = True
             t0 = ttime()
-            for _ in range(iters):
+            for _ in range(iters_min):  # don't waste time with large/slow dirs
                 for possible_name in possible_names:
                     filepath = Path(path) / possible_name
                     try:
@@ -407,7 +409,7 @@ class PathCache:  # Singleton
                     except PermissionError:
                         continue
             t1 = ttime()
-            t_paths[path]["ext"] = (t1 - t0) / ns / iters
+            t_paths[path]["ext"] = (t1 - t0) / ns / iters_min
 
             s_out = {k: "" for k in cat}
             for k in s_out:
