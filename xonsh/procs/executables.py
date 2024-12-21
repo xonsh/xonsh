@@ -630,8 +630,7 @@ class PathCache:  # Singleton
             self.set_usr_dir_list(env)
             return
         self.task_cache: Future  # track the status of async cache updates
-        self.__executor: ThreadPoolExecutor
-        self.__create_thread_pool_executor()
+        self.__executor: ThreadPoolExecutor = ThreadPoolExecutor()
         # file paths storing [dir_cache,pathext_cache] for pre-loading
         self._cache_file = None
         self._cache_file_listed = None
@@ -651,9 +650,6 @@ class PathCache:  # Singleton
         self.set_usr_dir_list(env)
         self.load_cache_listed()
         self.__is_init = True
-
-    def __create_thread_pool_executor(self) -> None:
-        self.__executor = ThreadPoolExecutor()
 
     def set_usr_dir_list(self, env) -> None:
         """Clean up user lists of dirs-to-be-cached and save them. Also include dirs not in PATH since they can be added to PATH later (even on startup by a plugin)."""
