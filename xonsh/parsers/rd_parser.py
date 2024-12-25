@@ -30,7 +30,7 @@ class Lexer:
         return RDParser(self.src)
 
     def __iter__(self) -> Iterator[Token]:
-        self.tokens = self.parser.tokens()
+        self.tokens = self.parser.tokens(tolerant=True)
         return iter(self.tokens)
 
     def reset(self):
