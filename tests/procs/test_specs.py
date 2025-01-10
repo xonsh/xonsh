@@ -4,7 +4,6 @@ import itertools
 import signal
 import sys
 from subprocess import CalledProcessError, Popen
-from time import time
 
 import pytest
 
