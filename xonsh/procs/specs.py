@@ -889,7 +889,7 @@ def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
 
-    if captured == 'object':
+    if captured == "object":
         """
         In full capture mode the subprocess is running in background in fact
         and we don't need to wait for it in downstream code e.g. `jobs.wait_for_active_job`.
