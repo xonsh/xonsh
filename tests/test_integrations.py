@@ -1389,8 +1389,8 @@ def test_alias_stability():
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
-def test_alias_stability():
-    """Testing alias stability after amalgamation regress that described in #5435."""
+def test_captured_subproc_is_not_affected_next_command():
+    """Testing #5769."""
     stdin_cmd = (
         "t = __xonsh__.imp.time.time()\n"
         "p = !(sleep 2)\n"
