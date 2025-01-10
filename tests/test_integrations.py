@@ -1406,7 +1406,9 @@ def test_captured_subproc_is_not_affected_next_command():
         single_command=False,
         timeout=10,
     )
-    assert not re.match(".*FAIL_TEST.*", out, re.MULTILINE | re.DOTALL), "The second command after running captured subprocess shouldn't wait the end of the first one."
+    assert not re.match(
+        ".*FAIL_TEST.*", out, re.MULTILINE | re.DOTALL
+    ), "The second command after running captured subprocess shouldn't wait the end of the first one."
 
 
 @skip_if_on_windows
