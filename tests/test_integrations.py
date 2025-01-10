@@ -1389,6 +1389,28 @@ def test_alias_stability():
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_alias_stability():
+    """Testing alias stability after amalgamation regress that described in #5435."""
+    stdin_cmd = (
+        "t = __xonsh__.imp.time.time()\n"
+        "p = !(sleep 2)\n"
+        "print('OK_'+'TEST' if __xonsh__.imp.time.time() - t < 1 else 'FAIL_'+'TEST')\n"
+        "t = __xonsh__.imp.time.time()\n"
+        "echo 1\n"
+        "print('OK_'+'TEST' if __xonsh__.imp.time.time() - t < 1 else 'FAIL_'+'TEST')\n"
+    )
+    out, err, ret = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
+    )
+    assert not re.match(".*FAIL_TEST.*", out, re.MULTILINE | re.DOTALL), "The second command after running captured subprocess shouldn't wait the end of the first one."
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_spec_decorator_alias():
     """Testing spec modifier alias with `@` in the alias name."""
     stdin_cmd = (

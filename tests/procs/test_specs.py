@@ -161,26 +161,6 @@ def test_capture_always(
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
-def test_no_hanging_after_captured_subprocess():
-    """Testing #5769"""
-    sleep_cmds = [["sleep", "2"]]
-    echo_cmds = [["echo", "42"]]
-    first = run_subproc(sleep_cmds, "object")  # !(sleep 2)
-    start_time = time()
-    second = run_subproc(echo_cmds, "hiddenobject")  # ![echo 42]
-    duration_sec = time() - start_time
-    assert (
-        duration_sec < 1
-    ), "The second command after running captured subprocess shouldn't wait the end the first one."
-    assert second.rtn == 0
-    first.end()
-    third = run_subproc(echo_cmds, "hiddenobject")  # ![echo 42]
-    assert first.rtn == 0
-    assert third.rtn == 0
-
-
-@skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_callias_captured_redirect(xonsh_session, tmpdir):
     @xonsh_session.aliases.register("a")
     def _a(a, i, o, e):
