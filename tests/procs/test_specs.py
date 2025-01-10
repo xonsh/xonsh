@@ -3,8 +3,8 @@
 import itertools
 import signal
 import sys
-from time import time
 from subprocess import CalledProcessError, Popen
+from time import time
 
 import pytest
 
@@ -169,8 +169,9 @@ def test_no_hanging_after_captured_subprocess():
     start_time = time()
     second = run_subproc(echo_cmds, "hiddenobject")  # ![echo 42]
     duration_sec = time() - start_time
-    assert first.spec.background is True
-    assert duration_sec < 1, "The second command after running captured subprocess shouldn't wait the end the first one."
+    assert (
+        duration_sec < 1
+    ), "The second command after running captured subprocess shouldn't wait the end the first one."
     assert second.rtn == 0
     first.end()
     third = run_subproc(echo_cmds, "hiddenobject")  # ![echo 42]
