@@ -457,7 +457,11 @@ def add_job(info):
     info["status"] = info["status"] if "status" in info else "running"
     get_tasks().appendleft(num)
     get_jobs()[num] = info
-    if info["bg"] and XSH.env.get("XONSH_INTERACTIVE"):
+    if (
+        not info["pipeline"].spec.captured == "object"
+        and info["bg"]
+        and XSH.env.get("XONSH_INTERACTIVE")
+    ):
         print_one_job(num)
 
 
