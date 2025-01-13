@@ -4,6 +4,22 @@ Xonsh Change Log
 
 .. current developments
 
+v0.19.1
+====================
+
+**Fixed:**
+
+* Fixed hanging the command right after calling full capture subprocess (#5760).
+* Fixed non-int sys.exit codes raising ValueError.
+
+**Authors:**
+
+* anki-code
+* pre-commit-ci[bot]
+* Evgeny
+
+
+
 v0.19.0
 ====================
 
