@@ -48,6 +48,7 @@ Authors are sorted by number of commits.
 * cryzed
 * Frank Sachsenheim
 * Kurtis Rader
+* Evgeny
 * Brian Visel
 * cafehaine
 * Andrew Hundt
@@ -55,7 +56,6 @@ Authors are sorted by number of commits.
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* Evgeny
 * Stephan Fitzpatrick
 * dev2718
 * Will S
