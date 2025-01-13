@@ -327,6 +327,7 @@ class PopenThread(threading.Thread):
         if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
         if xt.on_main_thread() and not xp.ON_WINDOWS:
+            time.sleep(0.01)  # Give time to restore.
             signal.pthread_kill(threading.get_ident(), signal.SIGINT)
 
     def _restore_sigint(self, frame=None):
