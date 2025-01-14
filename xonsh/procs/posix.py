@@ -83,7 +83,7 @@ class PopenThread(threading.Thread):
         self.old_int_handler = self.old_winch_handler = None
         self.old_tstp_handler = self.old_quit_handler = None
         if xt.on_main_thread():
-            self.old_int_handler = signal.signal(signal.SIGINT, self._signal_int)
+            # self.old_int_handler = signal.signal(signal.SIGINT, self._signal_int)
             if xp.ON_POSIX:
                 self.old_tstp_handler = signal.signal(signal.SIGTSTP, self._signal_tstp)
                 self.old_quit_handler = signal.signal(signal.SIGQUIT, self._signal_quit)
