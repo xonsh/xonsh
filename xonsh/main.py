@@ -509,7 +509,8 @@ def main(argv=None):
     args = None
     try:
         args = premain(argv)
-        sys.exit(main_xonsh(args))
+        exit_status = main_xonsh(args)
+        sys.exit(exit_status)
     except Exception as err:
         _failback_to_other_shells(args, err)
 
