@@ -1034,8 +1034,8 @@ def _find_cmd_exe() -> str:
     Avoids using COMSPEC in order to allow COMSPEC to be used to
     indicate Xonsh (or other shell) as the default shell. (#5701)
     """
-    canonical = pathlib.Path(os.environ['SystemRoot'], 'System32', 'cmd.exe')
-    return str(canonical) if canonical.is_file() else os.environ['COMSPEC']
+    canonical = pathlib.Path(os.environ["SystemRoot"], "System32", "cmd.exe")
+    return str(canonical) if canonical.is_file() else os.environ["COMSPEC"]
 
 
 def make_default_aliases():
