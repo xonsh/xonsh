@@ -567,7 +567,9 @@ DEFAULT_TITLE = "{current_job:{} | }{user}@{hostname}: {cwd} | xonsh"
 @default_value
 def xonsh_data_dir(env):
     """Ensures and returns the $XONSH_DATA_DIR"""
-    xdd = os.path.expanduser(os.getenv("XONSH_DATA_DIR") or os.path.join(env.get("XDG_DATA_HOME"), "xonsh"))
+    xdd = os.path.expanduser(
+        os.getenv("XONSH_DATA_DIR") or os.path.join(env.get("XDG_DATA_HOME"), "xonsh")
+    )
     os.makedirs(xdd, exist_ok=True)
     return xdd
 
@@ -575,7 +577,9 @@ def xonsh_data_dir(env):
 @default_value
 def xonsh_cache_dir(env):
     """Ensures and returns the $XONSH_CACHE_DIR"""
-    xdd = os.path.expanduser(os.getenv("XONSH_CACHE_DIR") or os.path.join(env.get("XDG_CACHE_HOME"), "xonsh"))
+    xdd = os.path.expanduser(
+        os.getenv("XONSH_CACHE_DIR") or os.path.join(env.get("XDG_CACHE_HOME"), "xonsh")
+    )
     os.makedirs(xdd, exist_ok=True)
     return xdd
 
@@ -583,7 +587,10 @@ def xonsh_cache_dir(env):
 @default_value
 def xonsh_config_dir(env):
     """``$XDG_CONFIG_HOME/xonsh``"""
-    xcd = os.path.expanduser(os.getenv("XONSH_CONFIG_DIR") or os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh"))
+    xcd = os.path.expanduser(
+        os.getenv("XONSH_CONFIG_DIR")
+        or os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh")
+    )
     os.makedirs(xcd, exist_ok=True)
     return xcd
 
