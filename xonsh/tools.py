@@ -41,6 +41,13 @@ import typing as tp
 import warnings
 from contextlib import contextmanager
 
+try:
+    from prompt_toolkit.cursor_shapes import CursorShape, CursorShapeConfig, SimpleCursorShapeConfig, ModalCursorShapeConfig, DynamicCursorShapeConfig
+
+    HAVE_CURSOR_SHAPE = True
+except ImportError:
+    HAVE_CURSOR_SHAPE = False
+
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
@@ -1726,6 +1733,48 @@ def ptk2_color_depth_setter(x):
     else:
         os_environ["PROMPT_TOOLKIT_COLOR_DEPTH"] = x
     return x
+
+
+def ptk_cursor_shape_vi_modal():
+    if xsh.env.get('VI_MODE'):
+        return ModalCursorShapeConfig()
+    else:
+        return SimpleCursorShapeConfig()
+
+
+def to_ptk_cursor_shape(x):
+    if not HAVE_CURSOR_SHAPE:
+        return None
+    if not isinstance(x, (CursorShapeConfig, str)):
+        raise ValueError("invalid cursor shape")
+    if isinstance(x, CursorShapeConfig):
+        return x
+    x = str(x).upper().replace('-', '_')
+    if x == 'MODAL':
+        return ModalCursorShapeConfig()
+    elif x == 'MODAL_VI_MODE_ONLY':
+        return DynamicCursorShapeConfig(ptk_cursor_shape_vi_modal)
+    try:
+        return CursorShape[x]
+    except KeyError:
+        return SimpleCursorShapeConfig()
+
+
+def to_ptk_cursor_shape_display_value(x):
+    if not x:
+        return ''
+    if isinstance(x, SimpleCursorShapeConfig):
+        x = x.get_cursor_shape(None)
+    if isinstance(x, CursorShape):
+        x = x.value.lower().replace('_', '-')
+        if x.startswith('-'):
+            x = x[1:]
+        return x
+    if isinstance(x, ModalCursorShapeConfig):
+        return 'modal'
+    if isinstance(x, DynamicCursorShapeConfig):
+        return 'modal-vi-mode-only'
+    return 'unknown'
 
 
 def is_completions_display_value(x):
