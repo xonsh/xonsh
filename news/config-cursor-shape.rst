@@ -1,6 +1,6 @@
 **Added:**
 
-* env: add ``$PROMPT_TOOLKIT_CURSOR_SHAPE`` for configuring ``prompt_toolkit`` cursor shape.
+* env: add ``$XONSH_PROMPT_CURSOR_SHAPE`` for configuring prompt cursor shape.
 
 **Changed:**
 

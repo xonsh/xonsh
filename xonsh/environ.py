@@ -1745,12 +1745,12 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
         "colors. Default is an empty string which means that prompt toolkit decide.",
     )
-    PROMPT_TOOLKIT_CURSOR_SHAPE = Var(
+    XONSH_PROMPT_CURSOR_SHAPE = Var(
         always_false,
         to_ptk_cursor_shape,
         to_ptk_cursor_shape_display_value,
         to_ptk_cursor_shape("modal-vi-mode-only"),
-        "The cursor shape used by prompt toolkit. Possible values are: "
+        "The cursor shape. Possible values for prompt toolkit are: "
         "``block``, ``beam``, ``underline``, "
         "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "
         "``modal``, ``modal-vi-mode-only``, ``never-change``. "

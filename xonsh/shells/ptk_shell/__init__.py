@@ -370,7 +370,7 @@ class PromptToolkitShell(BaseShell):
             for attr, val in self.get_lazy_ptk_kwargs():
                 prompt_args[attr] = val
 
-        cursor_shape = env.get("PROMPT_TOOLKIT_CURSOR_SHAPE")
+        cursor_shape = env.get("XONSH_PROMPT_CURSOR_SHAPE")
         if cursor_shape:
             prompt_args["cursor"] = cursor_shape
 
