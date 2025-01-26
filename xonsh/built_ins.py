@@ -64,6 +64,7 @@ def resetting_signal_handle(sig, f):
             propagated to child processes so that they can decide what to do about it.
             """
             import xonsh.procs.jobs as xj
+
             xj.hup_all_jobs()
         if sig != 0:
             """

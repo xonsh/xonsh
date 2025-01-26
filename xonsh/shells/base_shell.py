@@ -415,7 +415,10 @@ class BaseShell:
             )
             if not isinstance(exc_info[1], SystemExit):
                 events.on_postcommand.fire(
-                    cmd=info["inp"], rtn=info["rtn"], out=info.get("out", None), ts=info["ts"]
+                    cmd=info["inp"],
+                    rtn=info["rtn"],
+                    out=info.get("out", None),
+                    ts=info["ts"],
                 )
             if (
                 tee_out
