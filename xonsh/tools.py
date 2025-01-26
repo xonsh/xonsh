@@ -1751,10 +1751,10 @@ def ptk_cursor_shape_vi_modal():
 def to_ptk_cursor_shape(x):
     if not HAVE_CURSOR_SHAPE:
         return None
-    if not isinstance(x, (CursorShapeConfig, str)):
-        raise ValueError("invalid cursor shape")
-    if isinstance(x, CursorShapeConfig):
+    if isinstance(x, (CursorShape, CursorShapeConfig)):
         return x
+    if not isinstance(x, str):
+        raise ValueError("invalid cursor shape")
     x = str(x).upper().replace("-", "_")
     if x == "MODAL":
         return ModalCursorShapeConfig()
