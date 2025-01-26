@@ -83,8 +83,6 @@ from xonsh.tools import (
     print_exception,
     print_warning,
     ptk2_color_depth_setter,
-    to_ptk_cursor_shape,
-    to_ptk_cursor_shape_display_value,
     seq_to_upper_pathsep,
     set_to_csv,
     str_to_env_path,
@@ -100,6 +98,8 @@ from xonsh.tools import (
     to_int_or_none,
     to_itself,
     to_logfile_opt,
+    to_ptk_cursor_shape,
+    to_ptk_cursor_shape_display_value,
     to_repr_pretty_,
     to_shlvl,
     to_tok_color_dict,
@@ -1749,14 +1749,14 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         always_false,
         to_ptk_cursor_shape,
         to_ptk_cursor_shape_display_value,
-        to_ptk_cursor_shape('modal-vi-mode-only'),
+        to_ptk_cursor_shape("modal-vi-mode-only"),
         "The cursor shape used by prompt toolkit. Possible values are: "
-            "``block``, ``beam``, ``underline``, "
-            "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "
-            "``modal``, ``modal-vi-mode-only``, ``never-change``. "
-            "Default value is ``modal-vi-mode-only`` which means "
-            "``modal`` if in vi mode and ``never-change`` if not in vi mode.",
-        doc_default = 'modal-vi-mode-only',
+        "``block``, ``beam``, ``underline``, "
+        "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "
+        "``modal``, ``modal-vi-mode-only``, ``never-change``. "
+        "Default value is ``modal-vi-mode-only`` which means "
+        "``modal`` if in vi mode and ``never-change`` if not in vi mode.",
+        doc_default="modal-vi-mode-only",
     )
     PTK_STYLE_OVERRIDES = Var(
         is_tok_color_dict,

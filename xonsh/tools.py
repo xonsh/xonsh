@@ -42,7 +42,13 @@ import warnings
 from contextlib import contextmanager
 
 try:
-    from prompt_toolkit.cursor_shapes import CursorShape, CursorShapeConfig, SimpleCursorShapeConfig, ModalCursorShapeConfig, DynamicCursorShapeConfig
+    from prompt_toolkit.cursor_shapes import (
+        CursorShape,
+        CursorShapeConfig,
+        DynamicCursorShapeConfig,
+        ModalCursorShapeConfig,
+        SimpleCursorShapeConfig,
+    )
 
     HAVE_CURSOR_SHAPE = True
 except ImportError:
@@ -1736,7 +1742,7 @@ def ptk2_color_depth_setter(x):
 
 
 def ptk_cursor_shape_vi_modal():
-    if xsh.env.get('VI_MODE'):
+    if xsh.env.get("VI_MODE"):
         return ModalCursorShapeConfig()
     else:
         return SimpleCursorShapeConfig()
@@ -1749,10 +1755,10 @@ def to_ptk_cursor_shape(x):
         raise ValueError("invalid cursor shape")
     if isinstance(x, CursorShapeConfig):
         return x
-    x = str(x).upper().replace('-', '_')
-    if x == 'MODAL':
+    x = str(x).upper().replace("-", "_")
+    if x == "MODAL":
         return ModalCursorShapeConfig()
-    elif x == 'MODAL_VI_MODE_ONLY':
+    elif x == "MODAL_VI_MODE_ONLY":
         return DynamicCursorShapeConfig(ptk_cursor_shape_vi_modal)
     try:
         return CursorShape[x]
@@ -1762,19 +1768,19 @@ def to_ptk_cursor_shape(x):
 
 def to_ptk_cursor_shape_display_value(x):
     if not x:
-        return ''
+        return ""
     if isinstance(x, SimpleCursorShapeConfig):
         x = x.get_cursor_shape(None)
     if isinstance(x, CursorShape):
-        x = x.value.lower().replace('_', '-')
-        if x.startswith('-'):
+        x = x.value.lower().replace("_", "-")
+        if x.startswith("-"):
             x = x[1:]
         return x
     if isinstance(x, ModalCursorShapeConfig):
-        return 'modal'
+        return "modal"
     if isinstance(x, DynamicCursorShapeConfig):
-        return 'modal-vi-mode-only'
-    return 'unknown'
+        return "modal-vi-mode-only"
+    return "unknown"
 
 
 def is_completions_display_value(x):
