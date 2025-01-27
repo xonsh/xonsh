@@ -1,9 +1,8 @@
 **Added:**
 
 * SIGHUP will now be forwarded to child processes when received by the main xonsh process.
-This matches the behavior of other shells (e.g. Bash, documented
-[here](https://www.gnu.org/software/bash/manual/bash.html#Signals))
-* Documented the fact that the `on_postcommand` event only fires in interactive mode.
+This matches the behavior of other shells e.g. bash.
+* Documented the fact that the ``on_postcommand`` event only fires in interactive mode.
 
 **Fixed:**
 
