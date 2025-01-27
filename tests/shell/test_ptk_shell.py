@@ -138,7 +138,7 @@ def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypa
     append_history_calls = []
 
     monkeypatch.setattr(
-        'xonsh.built_ins.XSH.history.append', append_history_calls.append
+        "xonsh.built_ins.XSH.history.append", append_history_calls.append
     )
     shell.default(cmd)
     if exp_append_history:
