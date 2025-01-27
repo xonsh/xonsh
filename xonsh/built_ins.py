@@ -62,6 +62,7 @@ def resetting_signal_handle(sig, f):
             """
             SIGHUP means the controlling terminal has been lost. This should be
             propagated to child processes so that they can decide what to do about it.
+            See also: https://www.gnu.org/software/bash/manual/bash.html#Signals
             """
             import xonsh.procs.jobs as xj
 
