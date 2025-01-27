@@ -98,6 +98,8 @@ from xonsh.tools import (
     to_int_or_none,
     to_itself,
     to_logfile_opt,
+    to_ptk_cursor_shape,
+    to_ptk_cursor_shape_display_value,
     to_repr_pretty_,
     to_shlvl,
     to_tok_color_dict,
@@ -1742,6 +1744,19 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         "The color depth used by prompt toolkit 2. Possible values are: "
         "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
         "colors. Default is an empty string which means that prompt toolkit decide.",
+    )
+    XONSH_PROMPT_CURSOR_SHAPE = Var(
+        always_false,
+        to_ptk_cursor_shape,
+        to_ptk_cursor_shape_display_value,
+        to_ptk_cursor_shape("modal-vi-mode-only"),
+        "The cursor shape. Possible values for prompt toolkit are: "
+        "``block``, ``beam``, ``underline``, "
+        "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "
+        "``modal``, ``modal-vi-mode-only``, ``never-change``. "
+        "Default value is ``modal-vi-mode-only`` which means "
+        "``modal`` if in vi mode and ``never-change`` if not in vi mode.",
+        doc_default="modal-vi-mode-only",
     )
     PTK_STYLE_OVERRIDES = Var(
         is_tok_color_dict,
