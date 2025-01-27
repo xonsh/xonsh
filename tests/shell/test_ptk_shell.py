@@ -137,10 +137,9 @@ def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypa
     inp, out, shell = ptk_shell
     append_history_calls = []
 
-    def mock_append_history(**info):
-        append_history_calls.append(info)
-
-    monkeypatch.setattr(shell, "_append_history", mock_append_history)
+    monkeypatch.setattr(
+        'xonsh.built_ins.XSH.history.append', append_history_calls.append
+    )
     shell.default(cmd)
     if exp_append_history:
         assert len(append_history_calls) == 1
