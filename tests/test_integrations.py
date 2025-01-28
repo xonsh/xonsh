@@ -64,6 +64,7 @@ def run_xonsh(
     args=None,
     timeout=20,
     env=None,
+    blocking=True,
 ):
     # Env
     popen_env = dict(os.environ)
@@ -106,6 +107,9 @@ def run_xonsh(
     if stdin_cmd:
         proc.stdin.write(stdin_cmd)
         proc.stdin.flush()
+
+    if not blocking:
+        return proc
 
     try:
         out, err = proc.communicate(input=input, timeout=timeout)
@@ -1354,6 +1358,46 @@ def test_catching_exit_signal():
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
     )
     assert ret > 0
+
+
+@skip_if_on_windows
+def test_forwarding_sighup():
+    """We want to make sure that SIGHUP is forwarded to subprocesses when
+    received, so we spin up a Bash process that waits for SIGHUP and then
+    writes `SIGHUP` to a file, then exits. Then we check the content of
+    that file to ensure that the Bash process really did get SIGHUP."""
+
+    stdin_cmd = """
+sleep 0.2
+rm -f /tmp/xonsh-sighup-test.out
+(sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
+bash -c "trap 'echo SIGHUP > /tmp/xonsh-sighup-test.out; exit 0' HUP; sleep 30 & wait $!"
+"""
+    proc = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, stderr=sp.PIPE, interactive=True, single_command=False, blocking=False
+    )
+    proc.wait(timeout=5)
+    # if this raises FileNotFoundError, then the Bash subprocess probably did not get SIGHUP
+    assert open('/tmp/xonsh-sighup-test.out').read().strip() == 'SIGHUP'
+
+
+@skip_if_on_windows
+def test_on_postcommand_waiting():
+    """Ensure that running a subcommand in the on_postcommand hook doesn't
+    block xonsh from exiting when there is a running foreground process."""
+    stdin_cmd = """
+sleep 0.2
+@events.on_postcommand
+def postcmd_hook(**kwargs):
+    touch /tmp/xonsh-sighup-test-postcommand
+
+(sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
+bash -c "trap '' HUP; sleep 30"
+"""
+    proc = run_xonsh(
+        cmd=None, stdin_cmd=stdin_cmd, stderr=sp.PIPE, interactive=True, single_command=False, blocking=False
+    )
+    proc.wait(timeout=5)
 
 
 @skip_if_on_windows
