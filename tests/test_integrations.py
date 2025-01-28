@@ -1361,17 +1361,18 @@ def test_catching_exit_signal():
 
 
 @skip_if_on_windows
-def test_forwarding_sighup():
+def test_forwarding_sighup(tmpdir):
     """We want to make sure that SIGHUP is forwarded to subprocesses when
     received, so we spin up a Bash process that waits for SIGHUP and then
     writes `SIGHUP` to a file, then exits. Then we check the content of
     that file to ensure that the Bash process really did get SIGHUP."""
+    outfile = tmpdir.mkdir("xonsh_test_dir").join("sighup_test.out")
 
-    stdin_cmd = """
+    stdin_cmd = f"""
 sleep 0.2
 rm -f /tmp/xonsh-sighup-test.out
 (sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
-bash -c "trap 'echo SIGHUP > /tmp/xonsh-sighup-test.out; exit 0' HUP; sleep 30 & wait $!"
+bash -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
 """
     proc = run_xonsh(
         cmd=None,
@@ -1383,18 +1384,20 @@ bash -c "trap 'echo SIGHUP > /tmp/xonsh-sighup-test.out; exit 0' HUP; sleep 30 &
     )
     proc.wait(timeout=5)
     # if this raises FileNotFoundError, then the Bash subprocess probably did not get SIGHUP
-    assert open("/tmp/xonsh-sighup-test.out").read().strip() == "SIGHUP"
+    assert outfile.read_text('utf-8').strip() == "SIGHUP"
 
 
 @skip_if_on_windows
-def test_on_postcommand_waiting():
+def test_on_postcommand_waiting(tmpdir):
     """Ensure that running a subcommand in the on_postcommand hook doesn't
     block xonsh from exiting when there is a running foreground process."""
-    stdin_cmd = """
+    outdir = tmpdir.mkdir("xonsh_test_dir")
+
+    stdin_cmd = f"""
 sleep 0.2
 @events.on_postcommand
 def postcmd_hook(**kwargs):
-    touch /tmp/xonsh-sighup-test-postcommand
+    touch {outdir}/sighup_test_postcommand
 
 (sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
 bash -c "trap '' HUP; sleep 30"
