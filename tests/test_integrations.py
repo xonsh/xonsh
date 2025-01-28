@@ -1384,7 +1384,7 @@ bash -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
     )
     proc.wait(timeout=5)
     # if this raises FileNotFoundError, then the Bash subprocess probably did not get SIGHUP
-    assert outfile.read_text('utf-8').strip() == "SIGHUP"
+    assert outfile.read_text("utf-8").strip() == "SIGHUP"
 
 
 @skip_if_on_windows
