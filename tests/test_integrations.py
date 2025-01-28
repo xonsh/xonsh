@@ -1374,11 +1374,16 @@ rm -f /tmp/xonsh-sighup-test.out
 bash -c "trap 'echo SIGHUP > /tmp/xonsh-sighup-test.out; exit 0' HUP; sleep 30 & wait $!"
 """
     proc = run_xonsh(
-        cmd=None, stdin_cmd=stdin_cmd, stderr=sp.PIPE, interactive=True, single_command=False, blocking=False
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        stderr=sp.PIPE,
+        interactive=True,
+        single_command=False,
+        blocking=False,
     )
     proc.wait(timeout=5)
     # if this raises FileNotFoundError, then the Bash subprocess probably did not get SIGHUP
-    assert open('/tmp/xonsh-sighup-test.out').read().strip() == 'SIGHUP'
+    assert open("/tmp/xonsh-sighup-test.out").read().strip() == "SIGHUP"
 
 
 @skip_if_on_windows
@@ -1395,7 +1400,12 @@ def postcmd_hook(**kwargs):
 bash -c "trap '' HUP; sleep 30"
 """
     proc = run_xonsh(
-        cmd=None, stdin_cmd=stdin_cmd, stderr=sp.PIPE, interactive=True, single_command=False, blocking=False
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        stderr=sp.PIPE,
+        interactive=True,
+        single_command=False,
+        blocking=False,
     )
     proc.wait(timeout=5)
 
