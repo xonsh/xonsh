@@ -1,9 +1,23 @@
+**Added:**
+
+* env: Added XONSH_CONFIG_DIR, XONSH_DATA_DIR and XONSH_CACHE_DIR.
+
 **Changed:**
 
-* XONSH_CONFIG_DIR, XONSH_DATA_DIR and XONSH_CACHE_DIR
-  are now read at initialisation, make sure to put
-  configuration files in the root of the chosen directory.
+* <news item>
 
-**Authors:**
+**Deprecated:**
 
-* Artur Manuel (amadaluzia)
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* <news item>
+
+**Security:**
+
+* <news item>
