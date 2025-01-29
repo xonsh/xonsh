@@ -653,7 +653,7 @@ def test_thread_local_dict_multiple():
     assert thread_values == [i**2 for i in range(num_threads)]
 
 
-def test_xonsh_env_vars():
+def test_xonsh_dir_vars():
     env = Env(
         XONSH_CONFIG_DIR="/config", XONSH_CACHE_DIR="/cache", XONSH_DATA_DIR="/data"
     )
