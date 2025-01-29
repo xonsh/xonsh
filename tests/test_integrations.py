@@ -1515,7 +1515,10 @@ def test_xonshrc(tmpdir, cmd, exp):
     (script_xsh := home / "script.xsh").write_text("echo SCRIPT_XSH", encoding="utf8")
 
     # Construct $XONSHRC and $XONSHRC_DIR.
-    xonshrc_files = [str(home_config_xonsh_rc_xsh), str(home_xonsh_rc_path)]
+    xonshrc_files = [
+        str(home_config_xonsh_rc_xsh),
+        str(home_xonsh_rc_path),
+    ]
     xonshrc_dir = [str(home_config_xonsh_rcd)]
 
     args = [
@@ -1535,7 +1538,6 @@ def test_xonshrc(tmpdir, cmd, exp):
         env=env,
     )
 
-    exp = exp
     assert re.match(
         exp,
         out,
@@ -1594,3 +1596,47 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
     assert ret == 0
     assert "Error" not in out
     assert "Exception" not in out
+
+
+@pytest.mark.parametrize(
+    "cmd,exp",
+    [
+        [
+            "-i",
+            ".*XONSH_CONFIG_DIR.*XONSH_CONFIG_DIR_RCD.*XONSH_CONFIG_DIR_RCD_PY",
+        ],
+    ],
+)
+def test_xonsh_env_vars(tmpdir, cmd, exp):
+    """Tests if the XONSH_*_DIR environment variables work"""
+    xonsh_config_dir = tmpdir.mkdir("xonsh_config_dir")
+    xonsh_data_dir = tmpdir.mkdir("xonsh_data_dir")
+    xonsh_cache_dir = tmpdir.mkdir("xonsh_cache_dir")
+    xonsh_config_dir_rcd = xonsh_config_dir.mkdir("rc.d")
+
+    (xonsh_config_dir / "rc.xsh").write_text("echo XONSH_CONFIG_DIR", encoding="utf8")
+
+    (xonsh_config_dir_rcd / "rcd1.xsh").write_text(
+        "echo XONSH_CONFIG_DIR_RCD", encoding="utf8"
+    )
+    (xonsh_config_dir_rcd / "rcd2.py").write_text(
+        "__xonsh__.print(__xonsh__.subproc_captured_stdout(['echo', 'XONSH_CONFIG_DIR_RCD_PY']))",
+        encoding="utf8",
+    )
+
+    env = {
+        "XONSH_CONFIG_DIR": str(xonsh_config_dir),
+        "XONSH_DATA_DIR": str(xonsh_data_dir),
+        "XONSH_CACHE_DIR": str(xonsh_cache_dir),
+    }
+
+    out, err, ret = run_xonsh(
+        cmd=None,
+        env=env,
+    )
+
+    assert re.match(
+        exp,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Case: xonsh {cmd},\nExpected: {exp!r},\nResult: {out!r}"
