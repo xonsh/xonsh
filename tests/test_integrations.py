@@ -1515,7 +1515,10 @@ def test_xonshrc(tmpdir, cmd, exp):
     (script_xsh := home / "script.xsh").write_text("echo SCRIPT_XSH", encoding="utf8")
 
     # Construct $XONSHRC and $XONSHRC_DIR.
-    xonshrc_files = [str(home_config_xonsh_rc_xsh), str(home_xonsh_rc_path)]
+    xonshrc_files = [
+        str(home_config_xonsh_rc_xsh),
+        str(home_xonsh_rc_path),
+    ]
     xonshrc_dir = [str(home_config_xonsh_rcd)]
 
     args = [
@@ -1535,7 +1538,6 @@ def test_xonshrc(tmpdir, cmd, exp):
         env=env,
     )
 
-    exp = exp
     assert re.match(
         exp,
         out,

@@ -569,7 +569,9 @@ DEFAULT_TITLE = "{current_job:{} | }{user}@{hostname}: {cwd} | xonsh"
 @default_value
 def xonsh_data_dir(env):
     """Ensures and returns the $XONSH_DATA_DIR"""
-    xdd = os.path.expanduser(os.path.join(env.get("XDG_DATA_HOME"), "xonsh"))
+    xdd = os.path.expanduser(
+        os.getenv("XONSH_DATA_DIR") or os.path.join(env.get("XDG_DATA_HOME"), "xonsh")
+    )
     os.makedirs(xdd, exist_ok=True)
     return xdd
 
@@ -577,7 +579,9 @@ def xonsh_data_dir(env):
 @default_value
 def xonsh_cache_dir(env):
     """Ensures and returns the $XONSH_CACHE_DIR"""
-    xdd = os.path.expanduser(os.path.join(env.get("XDG_CACHE_HOME"), "xonsh"))
+    xdd = os.path.expanduser(
+        os.getenv("XONSH_CACHE_DIR") or os.path.join(env.get("XDG_CACHE_HOME"), "xonsh")
+    )
     os.makedirs(xdd, exist_ok=True)
     return xdd
 
@@ -585,7 +589,10 @@ def xonsh_cache_dir(env):
 @default_value
 def xonsh_config_dir(env):
     """``$XDG_CONFIG_HOME/xonsh``"""
-    xcd = os.path.expanduser(os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh"))
+    xcd = os.path.expanduser(
+        os.getenv("XONSH_CONFIG_DIR")
+        or os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh")
+    )
     os.makedirs(xcd, exist_ok=True)
     return xcd
 
@@ -967,6 +974,17 @@ class GeneralSetting(Xettings):
         "A list of directories where system level data files are stored.",
         type_str="env_path",
     )
+    XONSH_CONFIG_DIR = Var.with_default(
+        xonsh_config_dir,
+        "This is the location where xonsh user-level configuration information is stored.",
+        type_str="str",
+    )
+    XONSH_SYS_CONFIG_DIR = Var.with_default(
+        xonsh_sys_config_dir,
+        "This is the location where xonsh system-level configuration information is stored.",
+        is_configurable=False,
+        type_str="str",
+    )
     XONSHRC = Var.with_default(
         default_xonshrc,
         "A list of the locations of run control files, if they exist.  User "
@@ -982,26 +1000,12 @@ class GeneralSetting(Xettings):
         "are loaded after any files in XONSHRC.",
         type_str="env_path",
     )
-
-    XONSH_CONFIG_DIR = Var.with_default(
-        xonsh_config_dir,
-        "This is the location where xonsh user-level configuration information is stored.",
-        is_configurable=False,
-        type_str="str",
-    )
-    XONSH_SYS_CONFIG_DIR = Var.with_default(
-        xonsh_sys_config_dir,
-        "This is the location where xonsh system-level configuration information is stored.",
-        is_configurable=False,
-        type_str="str",
-    )
     XONSH_COLOR_STYLE = Var.with_default(
         "default",
         "Sets the color style for xonsh colors. This is a style name, not "
         "a color map. Run ``xonfig styles`` to see the available styles.",
         type_str="str",
     )
-
     XONSH_DEBUG = Var(
         always_false,
         to_debug,
@@ -1019,7 +1023,6 @@ class GeneralSetting(Xettings):
         doc_default="``$XDG_DATA_HOME/xonsh``",
         type_str="str",
     )
-
     XONSH_ENCODING = Var.with_default(
         DEFAULT_ENCODING,
         "This is the encoding that xonsh should use for subprocess operations.",
@@ -1048,7 +1051,6 @@ class GeneralSetting(Xettings):
         "``True`` if xonsh is running as a login shell, and ``False`` otherwise.",
         is_configurable=False,
     )
-
     XONSH_MODE = Var.with_default(
         default="interactive",  # In sync with ``main.py``.
         doc="A string value representing the current xonsh execution mode: "
@@ -1058,7 +1060,6 @@ class GeneralSetting(Xettings):
         "you plan to ``source``, use ``$XONSH_INTERACTIVE`` as the flag instead.",
         type_str="str",
     )
-
     XONSH_SOURCE = Var.with_default(
         "",
         "When running a xonsh script, this variable contains the absolute path "
@@ -1082,7 +1083,6 @@ class GeneralSetting(Xettings):
         "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
         "(The rules above are all have the same effect.)",
     )
-
     STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
     STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
 
