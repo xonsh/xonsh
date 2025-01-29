@@ -20,9 +20,9 @@ from xonsh.environ import (
     default_value,
     locate_binary,
     make_args_env,
+    xonsh_cache_dir,
     xonsh_config_dir,
     xonsh_data_dir,
-    xonsh_cache_dir,
 )
 from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
@@ -657,6 +657,6 @@ def test_xonsh_env_vars():
     env = Env(
         XONSH_CONFIG_DIR="/config", XONSH_CACHE_DIR="/cache", XONSH_DATA_DIR="/data"
     )
-    assert xonsh_config_dir(env), str("/config")
-    assert xonsh_cache_dir(env), str("/cache")
-    assert xonsh_data_dir(env), str("/data")
+    assert xonsh_config_dir(env), "/config"
+    assert xonsh_cache_dir(env), "/cache"
+    assert xonsh_data_dir(env), "/data"
