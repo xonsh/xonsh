@@ -1370,7 +1370,6 @@ def test_forwarding_sighup(tmpdir):
 
     stdin_cmd = f"""
 sleep 0.2
-rm -f /tmp/xonsh-sighup-test.out
 (sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
 bash -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
 """
