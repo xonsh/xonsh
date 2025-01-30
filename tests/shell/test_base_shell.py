@@ -53,12 +53,7 @@ def test_default_append_history(cmd, exp_append_history, xonsh_session, monkeypa
     """Test that running an empty line or a comment does not append to history"""
     append_history_calls = []
 
-    def mock_append_history(**info):
-        append_history_calls.append(info)
-
-    monkeypatch.setattr(
-        xonsh_session.shell.shell, "_append_history", mock_append_history
-    )
+    monkeypatch.setattr(xonsh_session.history, "append", append_history_calls.append)
     xonsh_session.shell.default(cmd)
     if exp_append_history:
         assert len(append_history_calls) == 1

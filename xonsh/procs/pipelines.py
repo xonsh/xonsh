@@ -267,7 +267,10 @@ class CommandPipeline:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
-            task = xj.wait_for_active_job()
+            task = None
+            if not isinstance(sys.exc_info()[1], SystemExit):
+                task = xj.wait_for_active_job()
+
             if task is None or task["status"] != "stopped":
                 proc.wait()
                 self._endtime()
