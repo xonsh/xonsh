@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fixed autosuggest sometimes not updating when up-arrow is pressed.
+* prompt toolkit: Fixed autosuggest sometimes not updating when up-arrow is pressed (#5787).
 
 **Security:**
 
