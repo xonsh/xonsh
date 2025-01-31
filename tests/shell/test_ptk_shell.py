@@ -5,7 +5,6 @@ import sys
 import pyte
 import pytest
 
-from prompt_toolkit.history import ThreadedHistory
 from xonsh.platform import minimum_required_ptk_version
 from xonsh.shell import Shell
 from xonsh.shells.ptk_shell import tokenize_ansi
@@ -152,8 +151,9 @@ def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypa
 def test_ptk_combine_history(monkeypatch):
     """Test that consecutive identical history items are combined into a single item
     when loading xonsh history items into prompt-toolkit history."""
+
     def all_items(*args, **kwargs):
-        lines =  [
+        lines = [
             "one two three",
             "four five six",
             "four five six",
