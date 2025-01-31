@@ -25,11 +25,12 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         hist = XSH.history
         if hist is None:
             return
+        prev_line = None
         for cmd in hist.all_items(newest_first=True):
             line = cmd["inp"].rstrip()
-            strs = self.get_strings()
-            if len(strs) == 0 or line != strs[-1]:
+            if line != prev_line:
                 yield line
+            prev_line = line
 
     def __getitem__(self, index):
         return self.get_strings()[index]
