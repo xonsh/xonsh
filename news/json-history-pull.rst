@@ -1,6 +1,6 @@
 **Added:**
 
-* Added `--session-id` paramter to `history pull` command.
+* Added and documented `--session-id` paramter for `history pull` command.
 * Implemented `history pull` for JSON history backend.
 
 **Changed:**

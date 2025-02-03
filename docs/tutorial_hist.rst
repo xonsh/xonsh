@@ -262,6 +262,10 @@ Tries to pull the history from parallel sessions and add to the current session.
 For example if there are two parallel terminal windows the run of ``history pull``
 command from the second terminal window will get the commands from the first terminal.
 
+The optional `--session-id` allows you to specify that history should only be pulled
+from a specific other session. Most useful when using the JSON history backend, as
+the overhead of an unfiltered `pull` can be significantly higher.
+
 ``clear`` action
 ================
 Deletes the history from the current session up until this point. Later commands
