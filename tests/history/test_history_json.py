@@ -613,7 +613,9 @@ def test_hist_on_cmd(hist, xession, capsys, tmpdir):
     assert len(xession.history) == 6
 
 
-@pytest.mark.parametrize("src_sessionid", [None, "e2265764-041c-4c57-acba-49d4e4f676e5"])
+@pytest.mark.parametrize(
+    "src_sessionid", [None, "e2265764-041c-4c57-acba-49d4e4f676e5"]
+)
 def test_hist_pull(src_sessionid, ptk_shell, tmpdir, xonsh_session, monkeypatch):
     """Test that `pull` method correctly loads history entries
     added to the database by other sessions."""

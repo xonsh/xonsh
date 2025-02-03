@@ -121,6 +121,7 @@ def _xhj_get_data_dir_files(data_dir, include_mtime=False):
                 f"Could not collect xonsh history json files from {data_dir}"
             )
 
+
 def _xhj_get_history_files(sort=True, newest_first=False, modified_since=None):
     """Find and return the history files. Optionally sort files by
     modify time, or include only those modified after a certain time.
@@ -160,7 +161,7 @@ def _xhj_pull_items(last_pull_time, src_sessionid=None):
         src_paths = _xhj_get_history_files(sort=True, modified_since=last_pull_time)
 
     # src_paths may include the current session's file, so skip it to avoid duplicates
-    current_session_path = xt.expanduser_abs_path(XSH.env.get("XONSH_HISTORY_FILE", ''))
+    current_session_path = xt.expanduser_abs_path(XSH.env.get("XONSH_HISTORY_FILE", ""))
     items = []
     for path in src_paths:
         if path == current_session_path:
@@ -177,7 +178,7 @@ def _xhj_pull_items(last_pull_time, src_sessionid=None):
         for i in range(len(cmds) - 1, -1, -1):
             item = cmds[i].load()
             if item["ts"][1] > last_pull_time:
-                items.append((item))
+                items.append(item)
             else:
                 break
 

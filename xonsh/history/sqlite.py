@@ -210,7 +210,9 @@ def xh_sqlite_pull(filename, last_pull_time, current_sessionid, src_sessionid=No
         return []
 
     if src_sessionid:
-        sql = "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid = ? ORDER BY tsb"
+        sql = (
+            "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid = ? ORDER BY tsb"
+        )
         params = [last_pull_time, src_sessionid]
     else:
         sql = "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid != ? ORDER BY tsb"

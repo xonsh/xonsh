@@ -353,7 +353,9 @@ def test_hist_store_cwd(hist, xession):
     _clean_up(hist)
 
 
-@pytest.mark.parametrize("src_sessionid", [None, "e2265764-041c-4c57-acba-49d4e4f676e5"])
+@pytest.mark.parametrize(
+    "src_sessionid", [None, "e2265764-041c-4c57-acba-49d4e4f676e5"]
+)
 def test_hist_pull(src_sessionid, tmpdir, ptk_shell, monkeypatch):
     """Test that `pull` method correctly loads history entries
     added to the database by other sessions."""
