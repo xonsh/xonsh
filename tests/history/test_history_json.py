@@ -632,8 +632,10 @@ def test_hist_pull(src_sessionid, ptk_shell, tmpdir, xonsh_session, monkeypatch)
     after = time.time() + 1
     hist_a.append({"inp": "cmd hist_a after", "rtn": 0, "ts": [after, after]})
     hist_b.append({"inp": "cmd hist_b after", "rtn": 0, "ts": [after + 1, after + 1]})
-    # at_exit ensures that we run the flush synchronously instead of in a background thread
+
+    # give the filesystem long enough that it will update the mtime
     time.sleep(0.01)
+    # at_exit ensures that we run the flush synchronously instead of in a background thread
     hist_a.flush(at_exit=True)
     hist_b.flush(at_exit=True)
 
