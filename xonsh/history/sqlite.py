@@ -204,9 +204,20 @@ def xh_sqlite_delete_items(size_to_keep, filename=None):
         return _xh_sqlite_delete_records(c, size_to_keep)
 
 
-def xh_sqlite_pull(filename, last_pull_time, current_sessionid):
-    sql = "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid != ? ORDER BY tsb"
-    params = [last_pull_time, current_sessionid]
+def xh_sqlite_pull(filename, last_pull_time, current_sessionid, src_sessionid=None):
+    # ensure we don't duplicate history entries if some crazy person passes the current session
+    if src_sessionid == current_sessionid:
+        return []
+
+    if src_sessionid:
+        sql = (
+            "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid = ? ORDER BY tsb"
+        )
+        params = [last_pull_time, src_sessionid]
+    else:
+        sql = "SELECT inp FROM xonsh_history WHERE tsb > ? AND sessionid != ? ORDER BY tsb"
+        params = [last_pull_time, current_sessionid]
+
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         c.execute(sql, tuple(params))
@@ -366,19 +377,22 @@ class SqliteHistory(History):
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         return data
 
-    def pull(self, show_commands=False):
+    def pull(self, show_commands=False, src_sessionid=None):
         if not hasattr(XSH.shell.shell, "prompter"):
             print(f"Shell type {XSH.shell.shell} is not supported.")
             return 0
 
         cnt = 0
+        prev = None
         for r in xh_sqlite_pull(
-            self.filename, self.last_pull_time, str(self.sessionid)
+            self.filename, self.last_pull_time, str(self.sessionid), src_sessionid
         ):
             if show_commands:
                 print(r[0])
-            XSH.shell.shell.prompter.history.append_string(r[0])
-            cnt += 1
+            if r[0] != prev:
+                XSH.shell.shell.prompter.history.append_string(r[0])
+                cnt += 1
+            prev = r[0]
         self.last_pull_time = time.time()
         return cnt
 

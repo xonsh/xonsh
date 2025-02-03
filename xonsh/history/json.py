@@ -103,9 +103,28 @@ def _xhj_get_data_dir():
     return dir
 
 
-def _xhj_get_history_files(sort=True, newest_first=False):
+def _xhj_get_data_dir_files(data_dir, include_mtime=False):
+    """Iterate over all the history files in a data dir,
+    optionally including the `mtime` for each file.
+    """
+    # list of (file, mtime) pairs
+    data_dir = xt.expanduser_abs_path(data_dir)
+    try:
+        for file in os.listdir(data_dir):
+            if file.startswith("xonsh-") and file.endswith(".json"):
+                fullpath = os.path.join(data_dir, file)
+                mtime = os.path.getmtime(fullpath) if include_mtime else None
+                yield fullpath, mtime
+    except OSError:
+        if XSH.env.get("XONSH_DEBUG"):
+            xt.print_exception(
+                f"Could not collect xonsh history json files from {data_dir}"
+            )
+
+
+def _xhj_get_history_files(sort=True, newest_first=False, modified_since=None):
     """Find and return the history files. Optionally sort files by
-    modify time.
+    modify time, or include only those modified after a certain time.
     """
     data_dirs = [
         _xhj_get_data_dir(),
@@ -114,20 +133,14 @@ def _xhj_get_history_files(sort=True, newest_first=False):
 
     files = []
     for data_dir in data_dirs:
-        data_dir = xt.expanduser_abs_path(data_dir)
-        try:
-            files += [
-                os.path.join(data_dir, f)
-                for f in os.listdir(data_dir)
-                if f.startswith("xonsh-") and f.endswith(".json")
-            ]
-        except OSError:
-            if XSH.env.get("XONSH_DEBUG"):
-                xt.print_exception(
-                    f"Could not collect xonsh history json files from {data_dir}"
-                )
+        include_mtime = sort or (modified_since is not None)
+        for file, mtime in _xhj_get_data_dir_files(data_dir, include_mtime):
+            if modified_since is None or mtime > modified_since:
+                files.append((file, mtime))
     if sort:
-        files.sort(key=lambda x: os.path.getmtime(x), reverse=newest_first)
+        files.sort(key=lambda x: x[1], reverse=newest_first)
+    # drop the mtimes
+    files = [f[0] for f in files]
 
     custom_history_file = XSH.env.get("XONSH_HISTORY_FILE", None)
     if custom_history_file:
@@ -135,6 +148,43 @@ def _xhj_get_history_files(sort=True, newest_first=False):
         if custom_history_file not in files:
             files.insert(0, custom_history_file)
     return files
+
+
+def _xhj_pull_items(last_pull_time, src_sessionid=None):
+    """List all history items after a given start time.
+    Optionally restrict to just items from a single session.
+    """
+    if src_sessionid:
+        filename = os.path.join(_xhj_get_data_dir(), f"xonsh-{src_sessionid}.json")
+        src_paths = [filename]
+    else:
+        src_paths = _xhj_get_history_files(sort=True, modified_since=last_pull_time)
+
+    # src_paths may include the current session's file, so skip it to avoid duplicates
+    custom_history_file = XSH.env.get("XONSH_HISTORY_FILE") or ""
+    current_session_path = xt.expanduser_abs_path(custom_history_file)
+    items = []
+    for path in src_paths:
+        if path == current_session_path:
+            continue
+        try:
+            lj = xlj.LazyJSON(open(path))
+        except (JSONDecodeError, ValueError):
+            continue
+
+        cmds = lj["cmds"]
+        if len(cmds) == 0:
+            continue
+        # the cutoff point is likely to be very near the end of the session, so iterate backward
+        for i in range(len(cmds) - 1, -1, -1):
+            item = cmds[i].load()
+            if item["ts"][1] > last_pull_time:
+                items.append(item)
+            else:
+                break
+
+    items.sort(key=lambda i: i["ts"][1])
+    return items
 
 
 class JsonHistoryGC(threading.Thread):
@@ -444,6 +494,7 @@ class JsonHistory(History):
         self.last_cmd_out = None
         self.last_cmd_rtn = None
         self.gc = JsonHistoryGC() if gc else None
+        self.last_pull_time = time.time()
         # command fields that are known
         self.tss = JsonCommandField("ts", self)
         self.inps = JsonCommandField("inp", self)
@@ -584,6 +635,24 @@ class JsonHistory(History):
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         data["gc_last_size"] = f"{(self.hist_size, self.hist_units)}"
         return data
+
+    def pull(self, show_commands=False, src_sessionid=None):
+        if not hasattr(XSH.shell.shell, "prompter"):
+            print(f"Shell type {XSH.shell.shell} is not supported.")
+            return 0
+
+        cnt = 0
+        prev = None
+        for item in _xhj_pull_items(self.last_pull_time, src_sessionid):
+            line = item["inp"].rstrip()
+            if show_commands:
+                print(line)
+            if line != prev:
+                XSH.shell.shell.prompter.history.append_string(line)
+                cnt += 1
+            prev = line
+        self.last_pull_time = time.time()
+        return cnt
 
     def run_gc(self, size=None, blocking=True, force=False, **_):
         self.gc = JsonHistoryGC(wait_for_shell=False, size=size, force=force)
