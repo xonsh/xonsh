@@ -1,7 +1,7 @@
 **Added:**
 
-* Added and documented `--session-id` paramter for `history pull` command.
-* Implemented `history pull` for JSON history backend.
+* history: Added and documented `--session-id` parameter for `history pull` command.
+* history-json: Implemented `history pull` for JSON history backend.
 
 **Changed:**
 
@@ -17,7 +17,7 @@
 
 **Fixed:**
 
-* Prevented `history pull` command from adding consecutive duplicates to propmter history.
+* history: Prevented `history pull` command from adding consecutive duplicates to propmter history.
 
 **Security:**
 
