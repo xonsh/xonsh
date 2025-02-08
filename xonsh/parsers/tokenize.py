@@ -1064,7 +1064,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         break
                     else:  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
-                elif token.startswith("$"):
+                elif token.startswith("$") and token[1] not in (LBRACE, LPAR, LSQB):
                     yield TokenInfo(DOLLARNAME, token, spos, epos, line)
                 elif initial.isidentifier():  # ordinary name
                     if token in ("async", "await"):
