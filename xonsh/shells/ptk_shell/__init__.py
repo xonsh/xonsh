@@ -46,13 +46,6 @@ try:
 except ImportError:
     HAVE_SYS_CLIPBOARD = False
 
-try:
-    from prompt_toolkit.cursor_shapes import ModalCursorShapeConfig
-
-    HAVE_CURSOR_SHAPE = True
-except ImportError:
-    HAVE_CURSOR_SHAPE = False
-
 CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
 Token = _TokenType()
 
@@ -377,8 +370,10 @@ class PromptToolkitShell(BaseShell):
             for attr, val in self.get_lazy_ptk_kwargs():
                 prompt_args[attr] = val
 
-        if editing_mode == EditingMode.VI and HAVE_CURSOR_SHAPE:
-            prompt_args["cursor"] = ModalCursorShapeConfig()
+        cursor_shape = env.get("XONSH_PROMPT_CURSOR_SHAPE")
+        if cursor_shape:
+            prompt_args["cursor"] = cursor_shape
+
         events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
         events.on_post_prompt.fire()

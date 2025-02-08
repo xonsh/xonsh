@@ -46,6 +46,7 @@ events.doc(
 on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 
 Fires just after a command is executed. The arguments are the same as history.
+This event only fires in interactive mode.
 
 Parameters:
 

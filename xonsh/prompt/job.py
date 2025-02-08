@@ -1,4 +1,4 @@
-"""Prompt formatter for current jobs"""
+"""Prompt formatter for jobs fields e.g. current_job."""
 
 import contextlib
 import typing as tp

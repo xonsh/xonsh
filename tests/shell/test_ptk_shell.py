@@ -8,6 +8,7 @@ import pytest
 from xonsh.platform import minimum_required_ptk_version
 from xonsh.shell import Shell
 from xonsh.shells.ptk_shell import tokenize_ansi
+from xonsh.shells.ptk_shell.history import PromptToolkitHistory
 
 # verify error if ptk not installed or below min
 
@@ -137,12 +138,32 @@ def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypa
     inp, out, shell = ptk_shell
     append_history_calls = []
 
-    def mock_append_history(**info):
-        append_history_calls.append(info)
-
-    monkeypatch.setattr(shell, "_append_history", mock_append_history)
+    monkeypatch.setattr(
+        "xonsh.built_ins.XSH.history.append", append_history_calls.append
+    )
     shell.default(cmd)
     if exp_append_history:
         assert len(append_history_calls) == 1
     else:
         assert len(append_history_calls) == 0
+
+
+def test_ptk_combine_history(monkeypatch):
+    """Test that consecutive identical history items are combined into a single item
+    when loading xonsh history items into prompt-toolkit history."""
+
+    def all_items(*args, **kwargs):
+        lines = [
+            "one two three",
+            "four five six",
+            "four five six",
+            "one two three",
+        ]
+        for line in lines:
+            yield {"inp": line}
+
+    monkeypatch.setattr("xonsh.built_ins.XSH.history.all_items", all_items)
+
+    shell_hist = PromptToolkitHistory()
+    hist_strs = list(shell_hist.load_history_strings())
+    assert len(hist_strs) == 3

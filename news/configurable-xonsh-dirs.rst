@@ -1,6 +1,6 @@
 **Added:**
 
-* env: Added ``$XONSH_SUPPRESS_WELCOME`` variable to suppress the welcome message.
+* env: Added XONSH_CONFIG_DIR, XONSH_DATA_DIR and XONSH_CACHE_DIR.
 
 **Changed:**
 

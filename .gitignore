@@ -100,3 +100,7 @@ pdm.lock
 
 # asv benchmarks
 .asv/
+
+# nix symlinks
+result
+repl-result-out

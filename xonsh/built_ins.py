@@ -58,6 +58,15 @@ def resetting_signal_handle(sig, f):
     def new_signal_handler(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, prev_signal_handler)
+        if sig == signal.SIGHUP:
+            """
+            SIGHUP means the controlling terminal has been lost. This should be
+            propagated to child processes so that they can decide what to do about it.
+            See also: https://www.gnu.org/software/bash/manual/bash.html#Signals
+            """
+            import xonsh.procs.jobs as xj
+
+            xj.hup_all_jobs()
         if sig != 0:
             """
             There is no immediate exiting here.

@@ -1,6 +1,6 @@
 **Added:**
 
-* <news item>
+* env: add ``$XONSH_PROMPT_CURSOR_SHAPE`` for configuring prompt cursor shape.
 
 **Changed:**
 
@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* parsers: fix deprecation warnings triggered on python3.13
+* <news item>
 
 **Security:**
 

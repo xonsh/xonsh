@@ -15,9 +15,7 @@ authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
 maintainers = [{ name = "Xonsh Community" }, { email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
 requires-python = ">=3.9"
-dependencies = [
-    "case-insensitive-dictionary; platform_system=='Windows'",
-]
+dependencies = []
 
 [tool.setuptools.dynamic]
 version = {attr = "xonsh.__version__"}
@@ -137,7 +135,6 @@ doc = [
     "psutil",
     "pyzmq",
     "matplotlib",
-    "doctr",
     "tornado",
     "runthis-sphinxext",
     "livereload",
@@ -204,6 +201,7 @@ ignore = [
     "E402", # Module level import not at top of file
     "E501", # line length
     "E731", # Do not assign a lambda expression, use a def
+    "UP031", # Use format specifiers instead of percent format
 ]
 select = [
     "B", # https://beta.ruff.rs/docs/rules/#flake8-bugbear-b

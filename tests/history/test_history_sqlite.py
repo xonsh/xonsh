@@ -5,6 +5,7 @@ import itertools
 import os
 import shlex
 import sys
+import time
 
 import pytest
 
@@ -350,3 +351,37 @@ def test_hist_store_cwd(hist, xession):
     assert cmds[1]["cwd"] is None
 
     _clean_up(hist)
+
+
+@pytest.mark.parametrize(
+    "src_sessionid", [None, "e2265764-041c-4c57-acba-49d4e4f676e5"]
+)
+def test_hist_pull(src_sessionid, tmpdir, ptk_shell, monkeypatch):
+    """Test that `pull` method correctly loads history entries
+    added to the database by other sessions."""
+    db_file = tmpdir / "xonsh-HISTORY-TEST-PULL.sqlite"
+    before = time.time()
+
+    # simulate commands being run in other sessions before this session starts
+    hist_a = SqliteHistory(filename=db_file, gc=False, sessionid=src_sessionid)
+    hist_a.append({"inp": "cmd hist_a before", "rtn": 0, "ts": [before, before]})
+    hist_b = SqliteHistory(filename=db_file, gc=False)
+    hist_b.append({"inp": "cmd hist_b after", "rtn": 0, "ts": [before, before]})
+
+    hist_main = SqliteHistory(filename=db_file, gc=False)
+    # simulate commands being run in other sessions after this session starts
+    after = time.time() + 1
+    hist_a.append({"inp": "cmd hist_a after", "rtn": 0, "ts": [after, after]})
+    hist_b.append({"inp": "cmd hist_b after", "rtn": 0, "ts": [after + 1, after + 1]})
+
+    # pull only works with PTK shell
+    monkeypatch.setattr("xonsh.built_ins.XSH.shell.shell", ptk_shell[2])
+    hist_main.pull(src_sessionid=src_sessionid)
+    hist_strings = ptk_shell[2].prompter.history.get_strings()
+
+    if src_sessionid is None:
+        # ensure that only commands from after the pulling session started get pulled in
+        assert hist_strings == ["cmd hist_a after", "cmd hist_b after"]
+    else:
+        # and that the commands are correctly filtered by session id if applicable
+        assert hist_strings == ["cmd hist_a after"]
