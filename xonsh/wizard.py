@@ -695,7 +695,7 @@ class StateVisitor(Visitor):
 
 
 YN = "{GREEN}yes{RESET} or {RED}no{RESET} [default: no]? "
-YNB = "{GREEN}yes{RESET}, {RED}no{RESET}, or " "{YELLOW}break{RESET} [default: no]? "
+YNB = "{GREEN}yes{RESET}, {RED}no{RESET}, or {YELLOW}break{RESET} [default: no]? "
 
 
 class PromptVisitor(StateVisitor):
@@ -748,9 +748,7 @@ class PromptVisitor(StateVisitor):
                     raise
                 except Exception:
                     if node.retry:
-                        msg = (
-                            "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, " "please retry."
-                        )
+                        msg = "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, please retry."
                         print_color(msg.format(raw))
                         continue
                     else:
@@ -829,7 +827,9 @@ class PromptVisitor(StateVisitor):
                 self.state = json.load(f)
             print_color(f"{{GREEN}}{fname!r} loaded.{{RESET}}")
         else:
-            print_color(f"{{RED}}{fname!r} could not be found, " "continuing.{{RESET}}")
+            print_color(
+                f"{{RED}}{fname!r} could not be found, continuing.{{{{RESET}}}}"
+            )
         return fname
 
     def visit_fileinserter(self, node):

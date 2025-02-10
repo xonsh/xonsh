@@ -269,9 +269,9 @@ class Parser(ThreeNineParser):
 
         if build_complex:
             # TODO raise syntax error instead (see reason in p_literal_expr_number_or_string_literal_list)
-            assert isinstance(
-                right.value, complex
-            ), "right part of complex literal must be imaginary"
+            assert isinstance(right.value, complex), (
+                "right part of complex literal must be imaginary"
+            )
 
             if negate_left_side:
                 left = ast.UnaryOp(op=ast.USub(), operand=left, **loc)

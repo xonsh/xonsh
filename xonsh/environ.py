@@ -1870,7 +1870,7 @@ This is to reduce the noise in generated completions.""",
     )
     CASE_SENSITIVE_COMPLETIONS = Var.with_default(
         ON_LINUX,
-        "Sets whether completions should be case sensitive or case " "insensitive.",
+        "Sets whether completions should be case sensitive or case insensitive.",
         doc_default="True on Linux, False otherwise.",
     )
     COMPLETIONS_BRACKETS = Var.with_default(

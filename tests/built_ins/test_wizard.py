@@ -19,7 +19,7 @@ TREE1 = Question("wakka?", {"jawaka": Pass()})
 
 
 def test_pretty_format_tree0():
-    exp = "Wizard(children=[\n" " Pass(),\n" " Message('yo')\n" "])"
+    exp = "Wizard(children=[\n Pass(),\n Message('yo')\n])"
     obs = PrettyFormatter(TREE0).visit()
     assert exp == obs
     assert exp == str(TREE0)
@@ -27,14 +27,7 @@ def test_pretty_format_tree0():
 
 
 def test_pretty_format_tree1():
-    exp = (
-        "Question(\n"
-        " question='wakka?',\n"
-        " responses={\n"
-        "  'jawaka': Pass()\n"
-        " }\n"
-        ")"
-    )
+    exp = "Question(\n question='wakka?',\n responses={\n  'jawaka': Pass()\n }\n)"
     obs = PrettyFormatter(TREE1).visit()
     assert exp == obs
     assert exp == str(TREE1)
