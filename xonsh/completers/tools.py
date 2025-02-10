@@ -275,7 +275,7 @@ def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars:
             lines = output.split(sep)
 
         # if there is a single completion candidate then maybe it is over
-        append_space = len(lines) == 1
+        append_space = len(lines) == 1 and not lines[0].rstrip().endswith(os.sep)
         for line in lines:
             if filter_prefix and (not filter_func(line, filter_prefix)):
                 continue
