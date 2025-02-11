@@ -1,3 +1,19 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* <news item>
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
 **Fixed:**
 
 * Subprocess-based completions like
@@ -5,3 +21,7 @@
   no longer append a space if the single available completion ends with
   a directory separator. This is consistent with the behavior of the
   default completer.
+
+**Security:**
+
+* <news item>
