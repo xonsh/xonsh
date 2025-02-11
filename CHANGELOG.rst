@@ -4,6 +4,40 @@ Xonsh Change Log
 
 .. current developments
 
+v0.19.2
+====================
+
+**Added:**
+
+* env: add ``$XONSH_PROMPT_CURSOR_SHAPE`` for configuring prompt cursor shape.
+* env: Added XONSH_CONFIG_DIR, XONSH_DATA_DIR and XONSH_CACHE_DIR.
+* SIGHUP will now be forwarded to child processes when received by the main xonsh process.
+  This matches the behavior of other shells e.g. bash.
+* Documented the fact that the ``on_postcommand`` event only fires in interactive mode.
+* history: Added and documented `--session-id` parameter for `history pull` command.
+* history-json: Implemented `history pull` for JSON history backend.
+
+**Fixed:**
+
+* Running a subcommand in an event handler will no longer block xonsh from exiting.
+* history: Prevented `history pull` command from adding consecutive duplicates to propmter history.
+* prompt toolkit: Fixed autosuggest sometimes not updating when up-arrow is pressed (#5787).
+* Subprocess-based completions like
+  `xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_
+  no longer append a space if the single available completion ends with
+  a directory separator. This is consistent with the behavior of the
+  default completer.
+
+**Authors:**
+
+* anki-code
+* jfmontanaro
+* Artur Manuel
+* Đỗ Trung Nguyên
+* Łukasz Langa
+
+
+
 v0.19.1
 ====================
 
