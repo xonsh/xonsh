@@ -1,0 +1,23 @@
+**Added:**
+
+* <news item>
+
+**Changed:**
+
+* On Windows, cmd.exe-based aliases now resolve to %SystemRoot%\System32\cmd.exe by default (and fallback to COMSPEC only if the former cannot be found).
+
+**Deprecated:**
+
+* <news item>
+
+**Removed:**
+
+* <news item>
+
+**Fixed:**
+
+* <news item>
+
+**Security:**
+
+* <news item>

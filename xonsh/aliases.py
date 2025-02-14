@@ -5,6 +5,7 @@ import functools
 import inspect
 import operator
 import os
+import pathlib
 import re
 import shutil
 import sys
@@ -1026,6 +1027,17 @@ def detect_xpip_alias():
         return basecmd
 
 
+def _find_cmd_exe() -> str:
+    """
+    Resolve the cmd.exe executable.
+
+    Avoids using COMSPEC in order to allow COMSPEC to be used to
+    indicate Xonsh (or other shell) as the default shell. (#5701)
+    """
+    canonical = pathlib.Path(os.environ["SystemRoot"], "System32", "cmd.exe")
+    return str(canonical) if canonical.is_file() else os.environ["COMSPEC"]
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -1098,7 +1110,7 @@ def make_default_aliases():
             "vol",
         }
         for alias in windows_cmd_aliases:
-            default_aliases[alias] = [os.getenv("COMSPEC"), "/c", alias]
+            default_aliases[alias] = [_find_cmd_exe(), "/c", alias]
         default_aliases["call"] = ["source-cmd"]
         default_aliases["source-bat"] = ["source-cmd"]
         default_aliases["clear"] = "cls"
