@@ -115,7 +115,7 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
         proc.signal = None
         info["signal"] = None
 
-    info["signal_name"] = f'{info["signal"]} {get_signal_name(info["signal"])}'.strip()
+    info["signal_name"] = f"{info['signal']} {get_signal_name(info['signal'])}".strip()
     return info
 
 
