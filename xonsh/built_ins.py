@@ -4,6 +4,8 @@ Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
 
+from __future__ import annotations
+
 import atexit
 import builtins
 import collections.abc as cabc
@@ -18,6 +20,7 @@ import sys
 import types
 import warnings
 from ast import AST
+from collections.abc import Iterator
 
 from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
@@ -538,6 +541,60 @@ class InlineImporter:
         return __import__(name)
 
 
+class Cmd:
+    """A command group."""
+
+    def __init__(
+        self,
+        xsh: XonshSession,
+        *args: str,
+        bg=False,
+        redirects: dict[str, str] | None = None,
+    ):
+        self.xsh = xsh
+        self.args: list[list[str | tuple[str, str]] | str] = []
+        self._add_proc(*args, redirects=redirects or {})
+        if bg:
+            self.args.append("&")
+
+    def _expand(self, *args: str | list[str]) -> Iterator[str]:
+        for arg in args:
+            if isinstance(arg, str):
+                yield expand_path(arg)
+            else:
+                yield from (expand_path(str(a)) for a in arg)
+
+    def _add_proc(self, *args: str, redirects: dict[str, str] | None = None) -> None:
+        """a single Popen process args"""
+        cmds: list[str | tuple[str, str]] = list(self._expand(*args))
+        if redirects:
+            for k, v in redirects.items():
+                cmds.append((k, expand_path(v)))
+        self.args.append(cmds)
+
+    def out(self):
+        """dispatch $()"""
+        return self.xsh.subproc_captured_stdout(*self.args)
+
+    def run(self):
+        """dispatch $[]"""
+        return self.xsh.subproc_uncaptured(*self.args)
+
+    def hide(self):
+        """dispatch ![]"""
+        return self.xsh.subproc_captured_hiddenobject(*self.args)
+
+    def obj(self):
+        """dispatch !()"""
+        return self.xsh.subproc_captured_object(*self.args)
+
+    def pipe(self, *args):
+        """combine $() | $[]"""
+        self.args.append("|")
+        self._add_proc(*args)
+        return self
+
+
 class XonshSession:
     """All components defining a xonsh session."""
 
@@ -593,6 +650,9 @@ class XonshSession:
         self.builtins = None
         self._initial_builtin_names = None
         self.last = None  # Last executed CommandPipeline.
+
+    def cmd(self, *args: str, **kwargs):
+        return Cmd(self, *args, **kwargs)
 
     @property
     def aliases(self):
