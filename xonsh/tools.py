@@ -2359,6 +2359,30 @@ def format_std_prepost(template, env=None):
     return s
 
 
+class ColorShort:  # colors to allow c=ColorXonsh() then f"{c.r}"
+    def __init__(self):
+        self.d = "{DEFAULT}"
+        self.r = "{RED}"
+        self.ri = "{INTENSE_RED}"
+        self.g = "{GREEN}"
+        self.gi = "{INTENSE_GREEN}"
+        self.b = "{BLUE}"
+        self.bi = "{INTENSE_BLUE}"
+        self.w = "{WHITE}"
+        self.wi = "{INTENSE_WHITE}"
+        self.bl = "{BLACK}"
+        self.Bi = "{INTENSE_BLACK}"
+        self.bli = "{INTENSE_BLACK}"
+        self.y = "{YELLOW}"
+        self.yi = "{INTENSE_YELLOW}"
+        self.c = "{CYAN}"
+        self.ci = "{INTENSE_CYAN}"
+        self.p = "{PURPLE}"
+        self.pi = "{INTENSE_PURPLE}"
+        self.B = "{BLACK}"
+        self.R = "{RESET}"
+
+
 _RE_STRING_START = "[bBprRuUf]*"
 _RE_STRING_TRIPLE_DOUBLE = '"""'
 _RE_STRING_TRIPLE_SINGLE = "'''"
