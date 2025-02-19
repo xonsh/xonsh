@@ -841,7 +841,8 @@ class PathCache:  # Singleton
         """Save cached 'Listed' dirs to file (on exit)"""
         if hasattr(cls, "_instance"):
             self = cls._instance
-            assert self is not None
+            if self is None:
+                return
         else:
             return
         dir_cache = cls.dir_cache_listed
