@@ -1116,7 +1116,7 @@ class SubprocessSetting(Xettings):
     XONSH_CAPTURE_ALWAYS = Var.with_default(
         False,
         "Try to capture output of commands run without explicit capturing.\n"
-        "If True, xonsh will capture the output of commands run directly or in ``![]``"
+        "If True, xonsh will capture the output of commands run directly or in ``![]`` "
         "to the session history.\n"
         "Setting to True has the following disadvantages:\n"
         "* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).\n"
