@@ -64,7 +64,7 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
 .. class:: center
 
     .. image:: https://img.shields.io/badge/Zulip%20Community-xonsh-green
-            :target: https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/
+            :target: https://xonsh.zulipchat.com/
             :alt: Join to xonsh.zulipchat.com
 
     .. image:: https://github.com/xonsh/xonsh/actions/workflows/test.yml/badge.svg
@@ -144,4 +144,4 @@ We welcome new contributors!
 Credits
 *******
 
-- Thanks to `Zulip <https://zulip.com/>`_ for supporting the xonsh community!
+- Thanks to `Zulip <https://zulip.com/>`_ for supporting the `xonsh community <https://xonsh.zulipchat.com/>`_!
