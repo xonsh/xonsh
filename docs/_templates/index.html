@@ -679,6 +679,20 @@ chmod +x xonsh-x86_64.AppImage
     <script src="_static/landing2/js/custom.js"></script>
 
     <script language="JavaScript">
+        const code = document.querySelectorAll(".code");
+        code.forEach((element) => {
+            element.addEventListener("click", () => {
+                let textes = element.innerText;
+                navigator.clipboard.writeText(textes)
+                    .then(() => {
+                        alert("Code copied!");
+                    })
+                    .catch((error) => {
+                        console.error("Code didnt copy", error);
+                    })
+            });   
+        });
+        
         var tagsToReplace = {
             '&': '&amp;',
             '<': '&lt;',
