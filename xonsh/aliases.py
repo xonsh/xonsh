@@ -944,7 +944,7 @@ def xexec_fn(
     except FileNotFoundError as e:
         return (
             None,
-            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}" "\n",
+            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}\n",
             1,
         )
 
@@ -1124,9 +1124,7 @@ def make_default_aliases():
 
             def sudo(args):
                 if len(args) < 1:
-                    print(
-                        "You need to provide an executable to run as " "Administrator."
-                    )
+                    print("You need to provide an executable to run as Administrator.")
                     return
                 cmd = args[0]
                 if locate_binary(cmd):
