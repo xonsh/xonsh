@@ -370,9 +370,9 @@ def test_lscolors_events(key_in, old_in, new_in, test, xession):
     @xession.builtins.events.on_lscolors_change
     def handler(key, oldvalue, newvalue, **kwargs):
         nonlocal old_in, new_in, key_in, event_fired
-        assert (
-            key == key_in and oldvalue == old_in and newvalue == new_in
-        ), "Old and new event values match"
+        assert key == key_in and oldvalue == old_in and newvalue == new_in, (
+            "Old and new event values match"
+        )
         event_fired = True
 
     xession.env["LS_COLORS"] = lsc
