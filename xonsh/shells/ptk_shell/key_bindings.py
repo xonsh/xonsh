@@ -1,5 +1,7 @@
 """Key bindings for prompt_toolkit xonsh shell."""
 
+import re
+
 from prompt_toolkit import search
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.enums import DEFAULT_BUFFER
@@ -10,10 +12,12 @@ from prompt_toolkit.filters import (
     IsMultiline,
     IsSearching,
     ViInsertMode,
+    has_suggestion,
 )
 from prompt_toolkit.input import ansi_escape_sequences
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
@@ -428,6 +432,23 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
 
     # Complete a single auto-suggestion word
     create_alias([Keys.ControlRight], ["escape", "f"])
+    create_alias([Keys.ControlSquareClose], ["escape", "f"])
+
+    @handle(Keys.ControlRight, filter=has_suggestion)
+    @handle(Keys.ControlSquareClose, filter=has_suggestion)
+    def _fill(event: KeyPressEvent) -> None:
+        """
+        Fill partial suggestion. This supports VI_MODE
+            derived from:
+            https://github.com/prompt-toolkit/python-prompt-toolkit/blob/465ab02854763fafc0099a2e38a56328c1cb0625/src/prompt_toolkit/key_binding/bindings/auto_suggest.py#L54
+        """
+
+        b = event.current_buffer
+        suggestion = b.suggestion
+
+        if suggestion:
+            t = re.split(r"([^\s/]+(?:\s+|/))", suggestion.text)
+            b.insert_text(next(x for x in t if x))
 
     # since macOS uses Control as reserved, then we use the alt/option key instead
     # which is mapped as the "escape" key
