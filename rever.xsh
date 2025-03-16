@@ -1,13 +1,10 @@
 from rever.activities.ghrelease import git_archive_asset
 
-from pkg_resources import parse_requirements
 
 $PROJECT = $GITHUB_ORG = $GITHUB_REPO = 'xonsh'
 $WEBSITE_URL = 'http://xon.sh'
-$ACTIVITIES = ['authors', 'version_bump', 'changelog', 'pytest', 'appimage',
-               'tag', 'push_tag',
-               'ghrelease',
-               'sphinx',
+$ACTIVITIES = ['authors',
+               'appimage',
                ]
 $PYPI_SIGN = False
 $PYPI_BUILD_COMMANDS = ("sdist")
@@ -16,8 +13,6 @@ $AUTHORS_FILENAME = "AUTHORS.rst"
 $VERSION_BUMP_PATTERNS = [
     ('xonsh/__init__.py', r'__version__\s*=.*', '__version__ = "$VERSION"'),
     ]
-$CHANGELOG_FILENAME = 'CHANGELOG.rst'
-$CHANGELOG_TEMPLATE = 'TEMPLATE.rst'
 
 $PYTEST_COMMAND = "./run-tests.xsh test"
 
