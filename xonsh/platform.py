@@ -507,7 +507,7 @@ def BASH_COMPLETIONS_DEFAULT():
             ),
             os.path.join(
                 git_for_windows_path(),
-                "mingw64\\share\\git\\completion\\" "git-completion.bash",
+                "mingw64\\share\\git\\completion\\git-completion.bash",
             ),
         )
     else:

@@ -37,14 +37,14 @@ def _which_create_parser():
         "--version",
         action="version",
         version=f"{_which.__version__}",
-        help="Display the version of the python which module " "used by xonsh",
+        help="Display the version of the python which module used by xonsh",
     )
     parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
         dest="verbose",
-        help="Print out how matches were located and show " "near misses on stderr",
+        help="Print out how matches were located and show near misses on stderr",
     )
     parser.add_argument(
         "-p",

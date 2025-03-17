@@ -577,7 +577,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                         line = self.singleline()
                     except EOFError:
                         if XSH.env.get("IGNOREEOF"):
-                            self.stdout.write('Use "exit" to leave the shell.' "\n")
+                            self.stdout.write('Use "exit" to leave the shell.\n')
                             line = ""
                         else:
                             line = "EOF"

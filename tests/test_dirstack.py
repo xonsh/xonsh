@@ -58,9 +58,9 @@ def test_cdpath_expansion(xession):
         for d in test_dirs:
             if not os.path.exists(d):
                 os.mkdir(d)
-            assert os.path.exists(
-                dirstack._try_cdpath(d)
-            ), f"dirstack._try_cdpath: could not resolve {d}"
+            assert os.path.exists(dirstack._try_cdpath(d)), (
+                f"dirstack._try_cdpath: could not resolve {d}"
+            )
     finally:
         for d in test_dirs:
             if os.path.exists(d):

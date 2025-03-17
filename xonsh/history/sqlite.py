@@ -276,8 +276,7 @@ class SqliteHistoryGC(threading.Thread):
             hsize, units = envs.get("XONSH_HISTORY_SIZE")
         if units != "commands":
             print(
-                "sqlite backed history gc currently only supports "
-                '"commands" as units',
+                'sqlite backed history gc currently only supports "commands" as units',
                 file=sys.stderr,
             )
             return

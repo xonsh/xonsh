@@ -118,7 +118,7 @@ class HistoryDiffer:
 
     def header(self):
         """Computes a header string difference."""
-        s = "{red}--- {aline}{reset}\n" "{green}+++ {bline}{reset}"
+        s = "{red}--- {aline}{reset}\n{green}+++ {bline}{reset}"
         s = s.format(
             aline=self._header_line(self.a),
             bline=self._header_line(self.b),

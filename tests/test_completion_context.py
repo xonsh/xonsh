@@ -288,7 +288,7 @@ def test_partial_string_arg(commandline, context):
     assert_match(partial_commandline, partial_context, is_main_command=True)
 
 
-CONT = "\\" "\n"
+CONT = "\\\n"
 
 
 @pytest.mark.parametrize(
