@@ -759,9 +759,9 @@ def test_script(case):
     out, err, rtn = run_xonsh(script)
     out = out.replace("bash: no job control in this shell\n", "")
     if callable(exp_out):
-        assert exp_out(
-            out
-        ), f"CASE:\nscript=***\n{script}\n***,\nExpected: {exp_out!r},\nActual: {out!r}"
+        assert exp_out(out), (
+            f"CASE:\nscript=***\n{script}\n***,\nExpected: {exp_out!r},\nActual: {out!r}"
+        )
     else:
         assert exp_out == out
     assert exp_rtn == rtn
@@ -1280,9 +1280,9 @@ echo f1f1f1 ; f ; echo f2f2f2
 def test_aliases_print(case):
     cmd, match = case
     out, err, ret = run_xonsh(cmd=cmd, single_command=False)
-    assert re.match(
-        match, out, re.MULTILINE | re.DOTALL
-    ), f"\nFailed:\n```\n{cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    assert re.match(match, out, re.MULTILINE | re.DOTALL), (
+        f"\nFailed:\n```\n{cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    )
 
 
 @skip_if_on_windows
@@ -1420,9 +1420,9 @@ def test_suspended_captured_process_pipeline():
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
     )
     match = ".*suspended=True.*"
-    assert re.match(
-        match, out, re.MULTILINE | re.DOTALL
-    ), f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    assert re.match(match, out, re.MULTILINE | re.DOTALL), (
+        f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    )
 
 
 @skip_if_on_windows
@@ -1462,9 +1462,9 @@ def test_captured_subproc_is_not_affected_next_command():
         single_command=False,
         timeout=10,
     )
-    assert not re.match(
-        ".*FAIL_TEST.*", out, re.MULTILINE | re.DOTALL
-    ), "The second command after running captured subprocess shouldn't wait the end of the first one."
+    assert not re.match(".*FAIL_TEST.*", out, re.MULTILINE | re.DOTALL), (
+        "The second command after running captured subprocess shouldn't wait the end of the first one."
+    )
 
 
 @skip_if_on_windows

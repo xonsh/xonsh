@@ -277,7 +277,7 @@ def foreign_shell_data(
 
 @lazyobject
 def ENV_RE():
-    return re.compile("__XONSH_ENV_BEG__\n(.*)" "__XONSH_ENV_END__", flags=re.DOTALL)
+    return re.compile("__XONSH_ENV_BEG__\n(.*)__XONSH_ENV_END__", flags=re.DOTALL)
 
 
 @lazyobject
@@ -298,9 +298,7 @@ def parse_env(s):
 
 @lazyobject
 def ALIAS_RE():
-    return re.compile(
-        "__XONSH_ALIAS_BEG__\n(.*)" "__XONSH_ALIAS_END__", flags=re.DOTALL
-    )
+    return re.compile("__XONSH_ALIAS_BEG__\n(.*)__XONSH_ALIAS_END__", flags=re.DOTALL)
 
 
 @lazyobject
@@ -355,9 +353,7 @@ def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
 
 @lazyobject
 def FUNCS_RE():
-    return re.compile(
-        "__XONSH_FUNCS_BEG__\n(.+)\n" "__XONSH_FUNCS_END__", flags=re.DOTALL
-    )
+    return re.compile("__XONSH_FUNCS_BEG__\n(.+)\n__XONSH_FUNCS_END__", flags=re.DOTALL)
 
 
 def parse_funcs(s, shell, sourcer=None, files=(), extra_args=()):
