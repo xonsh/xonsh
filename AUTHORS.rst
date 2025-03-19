@@ -155,6 +155,7 @@ Authors are sorted by number of commits.
 * Oliver Bestwalter
 * Ivan Ogasawara
 * jfmontanaro
+* Łukasz Langa
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -340,6 +341,6 @@ Authors are sorted by number of commits.
 * Bala
 * Artur Manuel
 * Đỗ Trung Nguyên
-* Łukasz Langa
+* Ahmed
 * goodboy
 * Atsushi Morimoto
