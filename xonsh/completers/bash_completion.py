@@ -4,9 +4,21 @@ from bash.
 
 import functools
 
-# developer note: this file should not perform any action on import.
-#                 This file comes from https://github.com/xonsh/py-bash-completion
-#                 and should be edited there!
+# 
+#   ______    _ _ _   _                 _         _   _  ____ _______         _ _                       _    _ 
+#  |  ____|  | (_) | (_)               (_)       | \ | |/ __ \__   __|       | | |                     | |  | |
+#  | |__   __| |_| |_ _ _ __   __ _     _ ___    |  \| | |  | | | |      __ _| | | _____      _____  __| |  | |
+#  |  __| / _` | | __| | '_ \ / _` |   | / __|   | . ` | |  | | | |     / _` | | |/ _ \ \ /\ / / _ \/ _` |  | |
+#  | |___| (_| | | |_| | | | | (_| |   | \__ \   | |\  | |__| | | |    | (_| | | | (_) \ V  V /  __/ (_| |  |_|
+#  |______\__,_|_|\__|_|_| |_|\__, |   |_|___/   |_| \_|\____/  |_|     \__,_|_|_|\___/ \_/\_/ \___|\__,_|  (_)
+#                              __/ |                                                                           
+#                             |___/                                                                            
+#  Note! 
+#  1. This file comes from https://github.com/xonsh/py-bash-completion and should be edited there!
+#  2. This file should not perform any action on import.
+#  3. Refactoring issue - https://github.com/xonsh/xonsh/issues/5810
+#
+
 import os
 import pathlib
 import platform
