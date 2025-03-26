@@ -2,23 +2,9 @@
 from bash.
 """
 
+# developer note: this file should not perform any action on import.
+# This is to allow users who want to use this completion file as a standalone CLI tool.
 import functools
-
-# 
-#   ______    _ _ _   _                 _         _   _  ____ _______         _ _                       _    _ 
-#  |  ____|  | (_) | (_)               (_)       | \ | |/ __ \__   __|       | | |                     | |  | |
-#  | |__   __| |_| |_ _ _ __   __ _     _ ___    |  \| | |  | | | |      __ _| | | _____      _____  __| |  | |
-#  |  __| / _` | | __| | '_ \ / _` |   | / __|   | . ` | |  | | | |     / _` | | |/ _ \ \ /\ / / _ \/ _` |  | |
-#  | |___| (_| | | |_| | | | | (_| |   | \__ \   | |\  | |__| | | |    | (_| | | | (_) \ V  V /  __/ (_| |  |_|
-#  |______\__,_|_|\__|_|_| |_|\__, |   |_|___/   |_| \_|\____/  |_|     \__,_|_|_|\___/ \_/\_/ \___|\__,_|  (_)
-#                              __/ |                                                                           
-#                             |___/                                                                            
-#  Note! 
-#  1. This file comes from https://github.com/xonsh/py-bash-completion and should be edited there!
-#  2. This file should not perform any action on import.
-#  3. Refactoring issue - https://github.com/xonsh/xonsh/issues/5810
-#
-
 import os
 import pathlib
 import platform
@@ -29,7 +15,7 @@ import subprocess
 import sys
 import typing as tp
 
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 
 
 @functools.lru_cache(1)
@@ -56,7 +42,7 @@ def _windows_bash_command(env=None):
             out = subprocess.check_output(
                 [bash_on_path, "--version"],
                 stderr=subprocess.PIPE,
-                text=True,
+                universal_newlines=True,
             )
         except subprocess.CalledProcessError:
             bash_works = False
@@ -119,7 +105,7 @@ _BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
 def _get_bash_completions_source(paths=None):
     global _BASH_COMPLETIONS_PATHS_DEFAULT
     if paths is None:
-        if _BASH_COMPLETIONS_PATHS_DEFAULT is None:
+        if not _BASH_COMPLETIONS_PATHS_DEFAULT:
             _BASH_COMPLETIONS_PATHS_DEFAULT = _bash_completion_paths_default()
         paths = _BASH_COMPLETIONS_PATHS_DEFAULT
     for path in map(pathlib.Path, paths):
@@ -364,7 +350,6 @@ def bash_completions(
     cmd = splt[0]
     cmd = os.path.basename(cmd)
     prev = ""
-
     if arg_index is not None:
         n = arg_index
         if arg_index > 0:
@@ -378,10 +363,8 @@ def bash_completions(
                 if idx >= begidx:
                     break
             prev = tok
-
         if len(prefix) == 0:
             n += 1
-
     prefix_quoted = shlex.quote(prefix)
 
     script = BASH_COMPLETE_SCRIPT.format(
@@ -400,20 +383,21 @@ def bash_completions(
     try:
         out = subprocess.check_output(
             [command, "-c", script],
-            text=True,
+            universal_newlines=True,
             stderr=subprocess.PIPE,
             env=env,
         )
+        out = [line for line in out.splitlines() if line.strip()]
         if not out:
             raise ValueError
     except (
         subprocess.CalledProcessError,
         FileNotFoundError,
+        UnicodeDecodeError,
         ValueError,
     ):
         return set(), 0
 
-    out = out.splitlines()
     complete_stmt = out[0]
     out = set(out[1:])
 
