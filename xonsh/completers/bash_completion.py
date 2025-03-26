@@ -185,12 +185,12 @@ def _bash_quote_paths(paths, start, end):
             start = end = _bash_quote_to_use(s)
         if os.path.isdir(_bash_expand_path(s)):
             _tail = slash
-        elif end == "":
+        elif end == "" and not s.endswith("="):
             _tail = space
         else:
             _tail = ""
         if start != "" and "r" not in start and backslash in s:
-            start = "r%s" % start
+            start = f"r{start}"
         s = s + _tail
         if end != "":
             if "r" not in start.lower():
@@ -198,7 +198,7 @@ def _bash_quote_paths(paths, start, end):
             if s.endswith(backslash) and not s.endswith(double_backslash):
                 s += backslash
         if end in s:
-            s = s.replace(end, "".join("\\%s" % i for i in end))
+            s = s.replace(end, "".join(f"\\{i}" for i in end))
         out.add(start + s + end)
     return out, need_quotes
 
@@ -315,7 +315,7 @@ def bash_completions(
         since it lazy-loads individual completion scripts. For both
         bash-completion v1.x and v2.x, paths of individual completion scripts
         (like ``.../completes/ssh``) do not need to be included here. The
-        default values are platform dependent, but sane.
+        default values are platform dependent, but reasonable.
     command : str or None, optional
         The /path/to/bash to use. If None, it will be selected based on the
         from the environment and platform.
@@ -406,6 +406,12 @@ def bash_completions(
 
     # Ensure input to `commonprefix` is a list (now required by Python 3.6)
     commprefix = os.path.commonprefix(list(out))
+
+    if prefix.startswith("~") and commprefix and prefix not in commprefix:
+        home_ = os.path.expanduser("~")
+        out = {f"~/{os.path.relpath(p, home_)}" for p in out}
+        commprefix = f"~/{os.path.relpath(commprefix, home_)}"
+
     strip_len = 0
     strip_prefix = prefix.strip("\"'")
     while strip_len < len(strip_prefix) and strip_len < len(commprefix):
@@ -416,7 +422,17 @@ def bash_completions(
     if "-o noquote" not in complete_stmt:
         out, need_quotes = quote_paths(out, opening_quote, closing_quote)
     if "-o nospace" in complete_stmt:
-        out = set([x.rstrip() for x in out])
+        out = {x.rstrip() for x in out}
+
+    # For arguments like 'status=progress', the completion script only returns
+    # the part after '=' in the completion results. This causes the strip_len
+    # to be incorrectly calculated, so it needs to be fixed here
+    if "=" in prefix and "=" not in commprefix:
+        strip_len = prefix.index("=") + 1
+    # Fix case where remote git branch is being deleted
+    # (e.g. 'git push origin :dev-branch')
+    elif ":" in prefix and ":" not in commprefix:
+        strip_len = prefix.index(":") + 1
 
     return out, max(len(prefix) - strip_len, 0)
 
