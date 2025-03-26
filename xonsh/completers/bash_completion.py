@@ -2,23 +2,9 @@
 from bash.
 """
 
+# developer note: this file should not perform any action on import.
+# This is to allow users who want to use this completion file as a standalone CLI tool.
 import functools
-
-# 
-#   ______    _ _ _   _                 _         _   _  ____ _______         _ _                       _    _ 
-#  |  ____|  | (_) | (_)               (_)       | \ | |/ __ \__   __|       | | |                     | |  | |
-#  | |__   __| |_| |_ _ _ __   __ _     _ ___    |  \| | |  | | | |      __ _| | | _____      _____  __| |  | |
-#  |  __| / _` | | __| | '_ \ / _` |   | / __|   | . ` | |  | | | |     / _` | | |/ _ \ \ /\ / / _ \/ _` |  | |
-#  | |___| (_| | | |_| | | | | (_| |   | \__ \   | |\  | |__| | | |    | (_| | | | (_) \ V  V /  __/ (_| |  |_|
-#  |______\__,_|_|\__|_|_| |_|\__, |   |_|___/   |_| \_|\____/  |_|     \__,_|_|_|\___/ \_/\_/ \___|\__,_|  (_)
-#                              __/ |                                                                           
-#                             |___/                                                                            
-#  Note! 
-#  1. This file comes from https://github.com/xonsh/py-bash-completion and should be edited there!
-#  2. This file should not perform any action on import.
-#  3. Refactoring issue - https://github.com/xonsh/xonsh/issues/5810
-#
-
 import os
 import pathlib
 import platform
@@ -29,7 +15,7 @@ import subprocess
 import sys
 import typing as tp
 
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 
 
 @functools.lru_cache(1)
@@ -56,7 +42,7 @@ def _windows_bash_command(env=None):
             out = subprocess.check_output(
                 [bash_on_path, "--version"],
                 stderr=subprocess.PIPE,
-                text=True,
+                universal_newlines=True,
             )
         except subprocess.CalledProcessError:
             bash_works = False
@@ -113,18 +99,18 @@ def _bash_completion_paths_default():
     return bcd
 
 
-_BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
+_BASH_COMPLETIONS_PATHS_DEFAULT: tp.Tuple[str, ...] = ()
 
 
 def _get_bash_completions_source(paths=None):
     global _BASH_COMPLETIONS_PATHS_DEFAULT
     if paths is None:
-        if _BASH_COMPLETIONS_PATHS_DEFAULT is None:
+        if not _BASH_COMPLETIONS_PATHS_DEFAULT:
             _BASH_COMPLETIONS_PATHS_DEFAULT = _bash_completion_paths_default()
         paths = _BASH_COMPLETIONS_PATHS_DEFAULT
     for path in map(pathlib.Path, paths):
         if path.is_file():
-            return f'source "{path.as_posix()}"'
+            return 'source "{}"'.format(path.as_posix())
     return None
 
 
@@ -199,12 +185,12 @@ def _bash_quote_paths(paths, start, end):
             start = end = _bash_quote_to_use(s)
         if os.path.isdir(_bash_expand_path(s)):
             _tail = slash
-        elif end == "" and not s.endswith("="):
+        elif end == "":
             _tail = space
         else:
             _tail = ""
         if start != "" and "r" not in start and backslash in s:
-            start = f"r{start}"
+            start = "r%s" % start
         s = s + _tail
         if end != "":
             if "r" not in start.lower():
@@ -212,7 +198,7 @@ def _bash_quote_paths(paths, start, end):
             if s.endswith(backslash) and not s.endswith(double_backslash):
                 s += backslash
         if end in s:
-            s = s.replace(end, "".join(f"\\{i}" for i in end))
+            s = s.replace(end, "".join("\\%s" % i for i in end))
         out.add(start + s + end)
     return out, need_quotes
 
@@ -329,7 +315,7 @@ def bash_completions(
         since it lazy-loads individual completion scripts. For both
         bash-completion v1.x and v2.x, paths of individual completion scripts
         (like ``.../completes/ssh``) do not need to be included here. The
-        default values are platform dependent, but reasonable.
+        default values are platform dependent, but sane.
     command : str or None, optional
         The /path/to/bash to use. If None, it will be selected based on the
         from the environment and platform.
@@ -364,7 +350,6 @@ def bash_completions(
     cmd = splt[0]
     cmd = os.path.basename(cmd)
     prev = ""
-
     if arg_index is not None:
         n = arg_index
         if arg_index > 0:
@@ -378,10 +363,8 @@ def bash_completions(
                 if idx >= begidx:
                     break
             prev = tok
-
         if len(prefix) == 0:
             n += 1
-
     prefix_quoted = shlex.quote(prefix)
 
     script = BASH_COMPLETE_SCRIPT.format(
@@ -400,20 +383,21 @@ def bash_completions(
     try:
         out = subprocess.check_output(
             [command, "-c", script],
-            text=True,
+            universal_newlines=True,
             stderr=subprocess.PIPE,
             env=env,
         )
+        out = [line for line in out.splitlines() if line.strip()]
         if not out:
             raise ValueError
     except (
         subprocess.CalledProcessError,
         FileNotFoundError,
+        UnicodeDecodeError,
         ValueError,
     ):
         return set(), 0
 
-    out = out.splitlines()
     complete_stmt = out[0]
     out = set(out[1:])
 
@@ -422,12 +406,6 @@ def bash_completions(
 
     # Ensure input to `commonprefix` is a list (now required by Python 3.6)
     commprefix = os.path.commonprefix(list(out))
-
-    if prefix.startswith("~") and commprefix and prefix not in commprefix:
-        home_ = os.path.expanduser("~")
-        out = {f"~/{os.path.relpath(p, home_)}" for p in out}
-        commprefix = f"~/{os.path.relpath(commprefix, home_)}"
-
     strip_len = 0
     strip_prefix = prefix.strip("\"'")
     while strip_len < len(strip_prefix) and strip_len < len(commprefix):
@@ -438,17 +416,7 @@ def bash_completions(
     if "-o noquote" not in complete_stmt:
         out, need_quotes = quote_paths(out, opening_quote, closing_quote)
     if "-o nospace" in complete_stmt:
-        out = {x.rstrip() for x in out}
-
-    # For arguments like 'status=progress', the completion script only returns
-    # the part after '=' in the completion results. This causes the strip_len
-    # to be incorrectly calculated, so it needs to be fixed here
-    if "=" in prefix and "=" not in commprefix:
-        strip_len = prefix.index("=") + 1
-    # Fix case where remote git branch is being deleted
-    # (e.g. 'git push origin :dev-branch')
-    elif ":" in prefix and ":" not in commprefix:
-        strip_len = prefix.index(":") + 1
+        out = set([x.rstrip() for x in out])
 
     return out, max(len(prefix) - strip_len, 0)
 
