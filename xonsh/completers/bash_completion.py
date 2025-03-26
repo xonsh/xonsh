@@ -110,7 +110,7 @@ def _get_bash_completions_source(paths=None):
         paths = _BASH_COMPLETIONS_PATHS_DEFAULT
     for path in map(pathlib.Path, paths):
         if path.is_file():
-            return 'source "{}"'.format(path.as_posix())
+            return f'source "{path.as_posix()}"'
     return None
 
 
