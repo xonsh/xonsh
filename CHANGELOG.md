@@ -1,8 +1,46 @@
 # Xonsh Change Log
 
+## v0.19.4
+
+### Changed
+
+- Updated `bash_completion.py` from archived xonsh/py-bash-completion repo
+
+### Authors
+
+- Gil Forsyth
+- anki-code
+
+## v0.19.3
+
+### Changed
+
+- On Windows, cmd.exe-based aliases now resolve to %SystemRoot%\System32\cmd.exe by default (and fallback to COMSPEC only if the former cannot be found).
+
+### Fixed
+
+- Using ``trace on`` with ``.xsh`` scripts could previously lead to
+  a spurious ignored exception showing up on stderr. This is now fixed.
+- pipelines: fixed ``'NoneType' object has no attribute 'pid'`` exception (#5794).
+
+### Security
+
+- The ``history delete`` action on the sqlite backend used to
+  pass matched history lines to a SQL statement without sanitization.
+  This could lead to unexpected SQL being run on the history database.
+  This is now fixed. Security risk: low.
+
+### Authors
+
+- anki-code
+- Jason R. Coombs
+- Łukasz Langa
+- Ahmed
+
+
 ## v0.19.2
 
-### Added:
+### Added
 
 - **env:** Add `$XONSH_PROMPT_CURSOR_SHAPE` for configuring prompt cursor shape.
 - **env:** Added `XONSH_CONFIG_DIR`, `XONSH_DATA_DIR`, and `XONSH_CACHE_DIR`.
