@@ -4,6 +4,20 @@ Xonsh Change Log
 
 .. current developments
 
+v0.19.4
+====================
+
+**Changed:**
+
+* Updated ``bash_completion.py`` from archived xonsh/py-bash-completion repo
+
+**Authors:**
+
+* Gil Forsyth
+* anki-code
+
+
+
 v0.19.3
 ====================
 
