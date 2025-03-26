@@ -1277,6 +1277,25 @@ class CacheSetting(Xettings):
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
     )
 
+    XONSH_DIR_SESSION_CACHE = Var.with_default(
+        set(),
+        "(Win) Reduce typing delay via faster 'executable exists' checks for syntax highlighting."
+        "Cache a list of files in these dirs for the duration of Xonsh session to avoid"
+        "re-checking whether an executable exists on every keystroke."
+        "This is a 'lossy' option, if xonsh or another process changes the files,"
+        "syntax highlighting will be wrong, but it may still be worth the lower input lag.",
+    )
+
+    XONSH_DIR_CACHE_TO_LIST = Var.with_default(
+        set(),
+        "(Win) Reduce typing delay via faster 'executable exists' checks."
+        "Color highlighting (green executable) is performend on every typed char,"
+        "which is ~10+ 'file.pathext exists' checks in each directory in PATH on Windows,"
+        "which can be more expensive than simly listing the directory (if it's small)"
+        "and searching in this list."
+        "This variable is a set of paths that should checked via direct listing.",
+    )
+
 
 class ChangeDirSetting(Xettings):
     """``cd`` Behavior"""
