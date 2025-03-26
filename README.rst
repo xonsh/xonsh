@@ -1,10 +1,15 @@
 xonsh
 =====
 
-.. class:: center
+.. raw:: html
 
-    **xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives.  Xonsh word was made from *conch* (🐚, *@*) and indicates belonging to the command shells world.
+    <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Select Contact GIF" align="left" width="100px">
 
+**xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives.  Xonsh word was made from *conch* (🐚, *@*) and indicates belonging to the command shells world.
+
+.. raw:: html
+
+    <br clear="left"/>
 
 .. list-table::
    :widths: 1 1
