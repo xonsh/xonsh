@@ -105,3 +105,5 @@ uv.lock
 # nix symlinks
 result
 repl-result-out
+
+.codspeed/
