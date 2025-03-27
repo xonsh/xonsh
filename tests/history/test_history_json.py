@@ -408,7 +408,7 @@ def history_files_list(gen_count) -> (float, int, str, int):
                 # first day in sec + #days * 24hr + #hr * 60min + # sec * 60sec + sec= sec to date.
                 HF_FIRST_DAY + (((((i * 24) + 9) * 60) + 0) * 60) + 0,  # mod dt,
                 100,
-                f".argle/xonsh-{2*i:05n}.json",
+                f".argle/xonsh-{2 * i:05n}.json",
                 10000,
             )
         )
@@ -417,7 +417,7 @@ def history_files_list(gen_count) -> (float, int, str, int):
                 # first day in sec + #days * 24hr + #hr * 60min + # sec * 60sec + sec= sec to date.
                 HF_FIRST_DAY + (((((i * 24) + 23) * 60) + 0) * 60) + 0,  # mod dt,
                 50,
-                f".argle/xonsh-{2*i+1:05n}.json",
+                f".argle/xonsh-{2 * i + 1:05n}.json",
                 2500,
             )
         )

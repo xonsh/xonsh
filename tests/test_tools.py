@@ -511,18 +511,14 @@ mom"""
     ),
     # test from start
     (
-        "echo --option1 value1 \\\n"
-        "     --option2 value2 \\\n"
-        "     --optionZ valueZ",
+        "echo --option1 value1 \\\n     --option2 value2 \\\n     --optionZ valueZ",
         0,
         "echo --option1 value1      --option2 value2      --optionZ valueZ",
         3,
     ),
     # test from second line
     (
-        "echo --option1 value1 \\\n"
-        "     --option2 value2 \\\n"
-        "     --optionZ valueZ",
+        "echo --option1 value1 \\\n     --option2 value2 \\\n     --optionZ valueZ",
         1,
         "echo --option1 value1      --option2 value2      --optionZ valueZ",
         3,
@@ -575,7 +571,7 @@ def test_is_balanced_parens(inp):
     assert obs
 
 
-@pytest.mark.parametrize("inp", ["f(x.", "f(1,x." "f((1,10),x.y"])
+@pytest.mark.parametrize("inp", ["f(x.", "f(1,x.f((1,10),x.y"])
 def test_is_not_balanced_parens(inp):
     obs = is_balanced(inp, "(", ")")
     assert not obs

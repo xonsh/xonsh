@@ -481,7 +481,7 @@ class CtxAwareTransformer(NodeTransformer):
             increment_lineno(newnode, n=node.lineno - 1)
             newnode.col_offset = node.col_offset
             if self.debug_level >= 1:
-                msg = "{0}:{1}:{2}{3} - {4}\n" "{0}:{1}:{2}{3} + {5}"
+                msg = "{0}:{1}:{2}{3} - {4}\n{0}:{1}:{2}{3} + {5}"
                 mstr = "" if maxcol is None else ":" + str(maxcol)
                 msg = msg.format(self.filename, node.lineno, mincol, mstr, line, spline)
                 print(msg, file=sys.stderr)
