@@ -48,7 +48,7 @@ def find_source_encoding(src):
     return utf8
 
 
-class XonshImportHook(MetaPathFinder, SourceLoader):
+class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
     """Implements the import hook for xonsh source files."""
 
     def __init__(self, execer, *args, **kwargs):
