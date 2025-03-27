@@ -441,6 +441,7 @@ def test_redir_whitespace(case):
             ['print("""I am a \ntriple string""")'],
         ),
         ("echo $HOME", ["echo", "$HOME"]),
+        ("echo $123", ["echo", "$123"]),
         ("echo -n $HOME", ["echo", "-n", "$HOME"]),
         ("echo --go=away", ["echo", "--go=away"]),
         ("echo --go=$HOME", ["echo", "--go=$HOME"]),
