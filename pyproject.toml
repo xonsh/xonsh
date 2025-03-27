@@ -15,7 +15,9 @@ authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
 maintainers = [{ name = "Xonsh Community" }, { email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "pygtrie",
+]
 
 [tool.setuptools.dynamic]
 version = {attr = "xonsh.__version__"}

@@ -296,3 +296,36 @@ Although not recommended, to restore the behavior found in the
     >>> $PATH.append('.')
 
 Add that to ``~/.xonshrc`` to enable that as the default behavior.
+
+
+Reduce typing delay
+^^^^^^^^^^^^^^^^^^^
+
+Typing can be slow due to testing whether the typed text is an executable file
+(for color highlighting), which tests whether a file exists:
+
+- for each of the dozen of dirs in ``PATH``
+
+- for each of 10+ file.pathext
+
+For smaller dirs (~few dozen files) it's faster to list the dir, so you can add such dirs to
+:ref:`$XONSH_DIR_CACHE_TO_LIST <xonsh_dir_cache_to_list>`
+to reduce typing lag
+
+And to reduce the typing lag even more (at the cost of a small loss of precision of syntax highlighting)
+you can list all the rarely changing (like ``C:\Program Files\Python\``) or not very important dirs
+from your ``$PATH`` in
+:ref:`$XONSH_DIR_SESSION_CACHE <xonsh_dir_session_cache>`
+This will cache a list of files within these dirs per Xonsh session and thus avoid any IO checks
+on subsequent typing.
+However, if Xonsh or any other process changes the list of files in these dirs, you'll lose the
+accuracy of syntax highlighting since the cache will not be updated to reflect it
+
+You can also cache large never changing dirs (like ``C:\Windows\System32\`` with thousands of files)
+permanently by adding them to
+:ref:`$XONSH_DIR_PERMA_CACHE <xonsh_dir_perma_cache>`
+
+(stored in ``$XONSH_CACHE_DIR\dir_perma_cache.pickle``)
+
+And for a tiny extra boost you can set ``XONSH_DIR_CACHE_SKIP_EXIST`` to ``True`` to skip an extra
+IO operation by not checking for whether a file exists in the permanent/session cached dirs

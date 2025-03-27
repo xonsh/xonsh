@@ -47,7 +47,7 @@ from xonsh.platform import (
     pygments_version_info,
     win_ansi_support,
 )
-from xonsh.procs.executables import locate_executable
+from xonsh.procs.executables import CmdPart, locate_executable
 from xonsh.pygments_cache import add_custom_style, get_style_by_name
 from xonsh.style_tools import DEFAULT_STYLE_DICT, norm_name
 from xonsh.tools import (
@@ -596,6 +596,7 @@ XONSH_BASE_STYLE = LazyObject(
         Operator: "ansibrightblack",
         Operator.Word: "bold ansimagenta",
         Name.Builtin: "ansigreen",
+        Name.Cmdprefix: "underline ansiwhite",
         Name.Function: "ansibrightblue",
         Name.Class: "bold ansibrightblue",
         Name.Namespace: "bold ansibrightblue",
@@ -1595,8 +1596,21 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 # pygments hooks.
 
 
-def _command_is_valid(cmd):
-    return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
+def _command_is_valid(cmd, partial_match=None):
+    use_dir_cache_session = (
+        True if XSH.env.get("XONSH_DIR_SESSION_CACHE", False) else False
+    )
+    use_dir_cache_perma = True if XSH.env.get("XONSH_DIR_PERMA_CACHE", False) else False
+    return (
+        cmd in XSH.aliases
+        or locate_executable(
+            cmd,
+            path_cache_dirty=True,
+            use_dir_cache_session=use_dir_cache_session,
+            use_dir_cache_perma=use_dir_cache_perma,
+            partial_match=partial_match,
+        )
+    ) and not iskeyword(cmd)
 
 
 def _command_is_autocd(cmd):
@@ -1728,11 +1742,25 @@ class XonshLexer(Python3Lexer):
             yield m.start(1), Whitespace, m.group(1)
             start = m.end(1)
             cmd = m.group(2)
-            cmd_is_valid = _command_is_valid(cmd)
+            partial_match = CmdPart()
+            cmd_is_valid = _command_is_valid(cmd, partial_match)
             cmd_is_autocd = _command_is_autocd(cmd)
 
-            if cmd_is_valid or cmd_is_autocd:
-                yield (m.start(2), Name.Builtin if cmd_is_valid else Name.Constant, cmd)
+            is_typing_cmd = (
+                m.group() == m.string
+            )  # style only when still typing the command
+            style_cmd_prefix = partial_match.is_part and is_typing_cmd
+
+            if cmd_is_valid or cmd_is_autocd or style_cmd_prefix:
+                yield (
+                    m.start(2),
+                    Name.Builtin
+                    if cmd_is_valid
+                    else Name.Cmdprefix
+                    if style_cmd_prefix
+                    else Name.Constant,
+                    cmd,
+                )
                 start = m.end(2)
                 state = ("subproc",)
 

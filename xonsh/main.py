@@ -619,6 +619,10 @@ def main_xonsh(args):
                 exit_code = 1
                 print_exception(None, exc_info)
 
+        from xonsh.procs.executables import PathCache
+
+        if env.get("XONSH_DIR_CACHE_LIST_SAVE_ON_EXIT", False):
+            PathCache.save_cache_listed()
         if isinstance(XSH.exit, int):
             exit_code = XSH.exit
         events.on_exit.fire(exit_code=exit_code)

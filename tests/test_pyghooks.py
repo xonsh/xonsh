@@ -402,3 +402,35 @@ def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     lexer = XonshLexer()
     assert XSH.env is not None
     list(lexer.get_tokens_unprocessed("  some text"))
+
+
+import shutil
+
+skip_if_no_xonsh = pytest.mark.skipif(
+    shutil.which("xonsh") is None, reason="xonsh not on PATH"
+)
+
+
+@skip_if_no_xonsh
+def test_xonsh_lexer_cmdprefix(xession):
+    # find where xonsh is, add its path to the cache env var that supports partial matches
+
+    env = xession.env
+    xonsh_exe = shutil.which("xonsh")
+    f = pathlib.Path(xonsh_exe)
+    env["XONSH_DIR_CACHE_TO_LIST"] = [
+        str(f.parent)
+    ]  # listed dirs support partial matches
+    env["XONSH_DIR_CACHE_LIST_EXT_MIN"] = 1  # for listing otherwise won't highight
+    env["PATH"] = str(f.parent)
+    from xonsh.procs.executables import PathCache
+
+    PathCache.reset()  # other tests could've init our singleton with an empty env, so reset it
+
+    from xonsh.style_tools import Token
+
+    lexer = XonshLexer()
+    expected_token = (0, Token.Name.Cmdprefix, "xons")
+    tok_res = list(lexer.get_tokens_unprocessed("xons"))
+
+    assert tok_res[1] == expected_token
