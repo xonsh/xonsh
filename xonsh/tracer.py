@@ -81,7 +81,7 @@ class TracerType:
                     frame.f_trace = self.prev_tracer
             self.prev_tracer = DefaultNotGiven
 
-    def trace(self, frame, event, arg):
+    def trace(self, frame, event, arg, *, find_file=find_file, print_color=print_color):
         """Implements a line tracing function."""
         if event not in self.valid_events:
             return self.trace
@@ -162,7 +162,7 @@ class TracerType:
 tracer = LazyObject(TracerType, globals(), "tracer")
 
 COLORLESS_LINE = "{fname}:{lineno}:{line}"
-COLOR_LINE = "{{PURPLE}}{fname}{{BLUE}}:" "{{GREEN}}{lineno}{{BLUE}}:" "{{RESET}}"
+COLOR_LINE = "{{PURPLE}}{fname}{{BLUE}}:{{GREEN}}{lineno}{{BLUE}}:{{RESET}}"
 
 
 def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=None):

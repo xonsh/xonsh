@@ -727,7 +727,7 @@ class CommandPipeline:
     @property
     def pid(self):
         """Process identifier."""
-        return self.proc.pid
+        return self.proc.pid if self.proc else None
 
     @property
     def returncode(self):

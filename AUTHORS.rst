@@ -154,6 +154,8 @@ Authors are sorted by number of commits.
 * Samuel Dion-Girardeau
 * Oliver Bestwalter
 * Ivan Ogasawara
+* jfmontanaro
+* Łukasz Langa
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -337,5 +339,8 @@ Authors are sorted by number of commits.
 * Jueun Lee
 * Simon Billinge
 * Bala
+* Artur Manuel
+* Đỗ Trung Nguyên
+* Ahmed
 * goodboy
 * Atsushi Morimoto

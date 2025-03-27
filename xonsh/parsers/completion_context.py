@@ -154,7 +154,7 @@ class CompletionContext(NamedTuple):
 
 class ExpansionOperation(enum.Enum):
     NEVER_EXPAND = object()
-    SIMPLE_ARG_EXPANSION: "Any" = None  # the default
+    SIMPLE_ARG_EXPANSION = None  # the default
 
 
 class Missing(enum.Enum):
@@ -393,9 +393,9 @@ class CompletionContextParser:
         self.error = None
 
         try:
-            assert self.cursor_in_span(
-                slice(0, len(multiline_text))
-            ), f"Bad cursor index: {cursor_index}"
+            assert self.cursor_in_span(slice(0, len(multiline_text))), (
+                f"Bad cursor index: {cursor_index}"
+            )
 
             context: Optional[CompletionContext] = self.parser.parse(
                 input=multiline_text, lexer=self, debug=1 if self.debug else 0
@@ -440,9 +440,9 @@ class CompletionContextParser:
                 continue
 
             lineno = tok.lineno - 1  # tok.lineno is 1-indexed
-            assert lineno < len(
-                self.line_indices
-            ), f"Invalid lexer state for token {tok} - bad lineno"
+            assert lineno < len(self.line_indices), (
+                f"Invalid lexer state for token {tok} - bad lineno"
+            )
 
             tok.lexpos = lexpos = self.line_indices[lineno] + tok.lexpos
 

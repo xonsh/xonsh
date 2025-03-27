@@ -38,25 +38,9 @@ Finally, run the following commands. You should see the effects of your change
 
 Changelog
 =========
-Pull requests will often have CHANGELOG entries associated with. However,
-to avoid excessive merge conflicts, please follow the following procedure:
-
-1. Go into the ``news/`` directory,
-2. Copy the ``TEMPLATE.rst`` file to another file in the ``news/`` directory.
-   We suggest using the branchname::
-
-        @ cp TEMPLATE.rst branch.rst
-
-3. Add your entries as a bullet pointed lists in your ``branch.rst`` file in
-   the appropriate category. It is OK to leave the ``None`` entries for later
-   use.
-4. Commit your ``branch.rst``.
-
-Feel free to update this file whenever you want! Please don't use someone
-else's file name. All of the files in this ``news/`` directory will be merged
-automatically at release time.  The ``None`` entries will be automatically
-filtered out too!
-
+We use conventional commits to generate the changelog.
+Please refer to the `conventional commits specification <https://www.conventionalcommits.org/en/v1.0.0/>`_
+for more information.
 
 Style Guide
 ===========
