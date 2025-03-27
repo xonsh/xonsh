@@ -5,7 +5,7 @@ xonsh
 
     <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="left" width="100px">
 
-**xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives.  Xonsh word was made from *conch* (🐚, *@*) and indicates belonging to the command shells world.
+**Xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives. The name Xonsh should be pronounced like conch (🐚, @) and signifies belonging to the world of command shells.
 
 .. raw:: html
 
