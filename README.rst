@@ -130,8 +130,8 @@ Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xon
 - `euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
 - `Jupytext <https://jupytext.readthedocs.io/>`_: Clear and meaningful diffs when doing Jupyter notebooks version control.
 
-The xonsh shell community
-*************************
+Welcome to the xonsh shell community
+************************************
 
 The xonsh shell is developed by a community of volunteers. There are a few ways to help out:
 
@@ -139,6 +139,8 @@ The xonsh shell is developed by a community of volunteers. There are a few ways 
 - Take an `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create a new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
 - Contribute to `xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
 - Become xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
+- Implement and maintain xonsh support in third party tools e.g. conda, jupyter, zoxide, etc.
+- Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_.
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 - `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
 - Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
