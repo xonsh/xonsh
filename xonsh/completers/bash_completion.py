@@ -87,9 +87,9 @@ def _bash_completion_paths_default():
         gfwp = _git_for_windows_path()
         if gfwp:
             bcd = (
-                os.path.join(gfwp, "usr\\share\\bash-completion\\" "bash_completion"),
+                os.path.join(gfwp, "usr\\share\\bash-completion\\bash_completion"),
                 os.path.join(
-                    gfwp, "mingw64\\share\\git\\completion\\" "git-completion.bash"
+                    gfwp, "mingw64\\share\\git\\completion\\git-completion.bash"
                 ),
             )
         else:

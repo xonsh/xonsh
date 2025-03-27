@@ -109,13 +109,11 @@ class History:
             ]
         else:
             raise TypeError(
-                "history indices must be integers " f"or slices, not {type(item)}"
+                f"history indices must be integers or slices, not {type(item)}"
             )
 
     def __setitem__(self, *args):
-        raise PermissionError(
-            "You cannot change history! " "you can create new though."
-        )
+        raise PermissionError("You cannot change history! you can create new though.")
 
     def append(self, cmd):
         """Append a command item into history.

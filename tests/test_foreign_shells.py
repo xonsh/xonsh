@@ -11,14 +11,7 @@ from xonsh.pytest.tools import skip_if_on_unix, skip_if_on_windows
 
 def test_parse_env():
     exp = {"X": "YES", "Y": "NO"}
-    s = (
-        "some garbage\n"
-        "__XONSH_ENV_BEG__\n"
-        "Y=NO\n"
-        "X=YES\n"
-        "__XONSH_ENV_END__\n"
-        "more filth"
-    )
+    s = "some garbage\n__XONSH_ENV_BEG__\nY=NO\nX=YES\n__XONSH_ENV_END__\nmore filth"
     obs = parse_env(s)
     assert exp == obs
 

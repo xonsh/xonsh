@@ -373,7 +373,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
     elif kind is type:
         arg = type(execer.eval(raw_arg, glbs=glbs, locs=locs, filename=filename))
     else:
-        msg = "kind={0!r} and mode={1!r} was not recognized for macro " "argument {2!r}"
+        msg = "kind={0!r} and mode={1!r} was not recognized for macro argument {2!r}"
         raise TypeError(msg.format(kind, mode, name))
     return arg
 

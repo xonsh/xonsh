@@ -162,7 +162,7 @@ class TracerType:
 tracer = LazyObject(TracerType, globals(), "tracer")
 
 COLORLESS_LINE = "{fname}:{lineno}:{line}"
-COLOR_LINE = "{{PURPLE}}{fname}{{BLUE}}:" "{{GREEN}}{lineno}{{BLUE}}:" "{{RESET}}"
+COLOR_LINE = "{{PURPLE}}{fname}{{BLUE}}:{{GREEN}}{lineno}{{BLUE}}:{{RESET}}"
 
 
 def tracer_format_line(fname, lineno, line, color=True, lexer=None, formatter=None):
