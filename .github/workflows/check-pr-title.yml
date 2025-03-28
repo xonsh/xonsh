@@ -1,4 +1,4 @@
-name: Conventional commits check
+name: Check PR title conforms to semantic-release
 
 on:
   # runs on `pull_request_target` events so that commenting on the PR is allowed
@@ -6,83 +6,12 @@ on:
     types: [opened, edited, synchronize, reopened]
 
 jobs:
-  commitlint:
-    name: Check PR title conforms to semantic-release
+  main:
+    name: Validate PR title
     runs-on: ubuntu-latest
     permissions:
-      issues: write
-      pull-requests: write
+      pull-requests: read
     steps:
-      - name: install node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: checkout code to pick up commitlint configuration
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: install deps
-        run: npm install "@commitlint/config-conventional"
-
-      - name: run commitlint
-        id: lint
-        run: |
-          failed=0
-          if ! lint_output=$(npx commitlint --extends "@commitlint/config-conventional" --verbose <<< "$COMMIT_MSG" 2>&1); then
-              failed=1
-          fi
-          {
-              echo "failed=$failed"
-              echo "lint_output<<EOF"
-              echo "$lint_output"
-              echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+      - uses: amannn/action-semantic-pull-request@v5
         env:
-          COMMIT_MSG: |
-            ${{ github.event.pull_request.title }}
-
-            ${{ github.event.pull_request.body }}
-
-      - name: find existing comment
-        if: steps.lint.outputs.failed == '1'
-        uses: peter-evans/find-comment@v3
-        id: fc
-        with:
-          token: GH_TOKEN
-          issue-number: ${{ github.event.pull_request.number }}
-          body-includes: "ACTION NEEDED"
-
-      - name: post a message if the pull request title and body fail `commitlint`
-        if: steps.lint.outputs.failed == '1' && steps.fc.outputs.comment-body == ''
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: GH_TOKEN
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            **ACTION NEEDED**
-
-            Xonsh follows the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/) for release automation.
-
-            The PR title and description are used as the merge commit message.
-
-            Please update your PR title and description to match the specification.
-
-            Acceptable prefixes include `feat`, `fix`, `refactor`, `chore`, `docs` and `ci`
-
-            Some example commit messages that conform to the standard:
-
-              `fix(completer): remove trailing space from completion returns`
-
-              `refactor(release): use conventional commits`
-
-            The commitlint output is:
-
-            ```
-            ${{ steps.lint.outputs.lint_output }}
-            ```
-
-      - name: fail the check if commitlint failed
-        if: steps.lint.outputs.failed == '1'
-        run: exit 1 # templating not allowed here it seems
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
