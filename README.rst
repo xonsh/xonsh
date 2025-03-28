@@ -90,7 +90,7 @@ First steps
 
 Install xonsh from pip:
 
-.. code-block:: xonshcon
+.. code-block:: shell
 
     python -m pip install 'xonsh[full]'
 
