@@ -671,26 +671,29 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
     hist_b = JsonHistory(gc=False)
     hist_main = JsonHistory(gc=False)
 
+    # windows time.time() has ~16ms granularity, so we need to give it some time to increment
+    time.sleep(0.032)
     hist_a.append(cmd("a1"))
     hist_b.append(cmd("b1"))
 
     # filesystem mtimes and time.time() don't always match up perfectly,
     # so we need a little bit of fudge time
-    time.sleep(0.01)
+    time.sleep(0.032)
     hist_a.flush()
     hist_b.flush()
-    time.sleep(0.01)
+    time.sleep(0.032)
     hist_main.pull(src_sessionid=str(hist_a.sessionid))
     # at this point, hist_main will only have "a1" in its history
     assert ptk_shell[2].prompter.history.get_strings() == ["a1"]
 
+    time.sleep(0.032)
     hist_a.append(cmd("a2"))
     hist_b.append(cmd("b2"))
 
-    time.sleep(0.01)
+    time.sleep(0.032)
     hist_a.flush()
     hist_b.flush()
-    time.sleep(0.01)
+    time.sleep(0.032)
     hist_main.pull()
     # hist_main should now have all the items we just added
 

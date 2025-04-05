@@ -403,12 +403,15 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
     hist_b = SqliteHistory(filename=db_file, gc=False)
     hist_main = SqliteHistory(filename=db_file, gc=False)
 
+    # windows time.time() has only ~16ms granularity, so give it a chance to increment here
+    time.sleep(0.032)
     hist_a.append(cmd("a1"))
     hist_b.append(cmd("b1"))
     hist_main.pull(src_sessionid=str(hist_a.sessionid))
     # at this point, hist_main will only have "a1" in its history
     assert ptk_shell[2].prompter.history.get_strings() == ["a1"]
 
+    time.sleep(0.032)
     hist_a.append(cmd("a2"))
     hist_b.append(cmd("b2"))
     hist_main.pull()
