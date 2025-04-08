@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.19.5](https://github.com/xonsh/xonsh/compare/0.19.4...0.19.5) (2025-04-08)
+
+
+### Performance Improvements
+
+* Disable double check is_file on Windows systems to speedup IO ([b112b83](https://github.com/xonsh/xonsh/commit/b112b834f198a0e3d1628dfeb792cdbb0fe0b5ef))
+
 ## v0.19.4
 
 ### Changed
