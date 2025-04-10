@@ -674,6 +674,7 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
     # windows time.time() has ~16ms granularity, so we need to give it some time to increment
     time.sleep(0.032)
     hist_a.append(cmd("a1"))
+    time.sleep(0.032)
     hist_b.append(cmd("b1"))
 
     # filesystem mtimes and time.time() don't always match up perfectly,
@@ -688,6 +689,7 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
 
     time.sleep(0.032)
     hist_a.append(cmd("a2"))
+    time.sleep(0.032)
     hist_b.append(cmd("b2"))
 
     time.sleep(0.032)
