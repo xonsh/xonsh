@@ -89,7 +89,7 @@ This page provides xonsh equivalents for common patterns in Bash.
       - Globbing files with ``*`` or ``**`` will also match dotfiles, or those ‘hidden’ files whose names
         begin with a literal `.`. Such files are filtered out by default like in bash.
     * - ``if [ -f "$FILE" ];``
-      - ``if !(test -f $FILE):`` or ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()``
+      - ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()`` or ``if !(test -f $FILE):``
       - Path objects can be instantiated and checked directly using p-string syntax.
     * - ``set -e``
       - ``$RAISE_SUBPROC_ERROR = True``
