@@ -385,3 +385,37 @@ def test_hist_pull(src_sessionid, tmpdir, ptk_shell, monkeypatch):
     else:
         # and that the commands are correctly filtered by session id if applicable
         assert hist_strings == ["cmd hist_a after"]
+
+
+def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
+    """Test that mixing general pull with session-specific pull
+    does not result in missed or duplicate items.
+    """
+    monkeypatch.setattr(xonsh_session.shell, "shell", ptk_shell[2])
+
+    # make sure that all of our fake commands have real, sequential timestamps
+    def cmd(inp):
+        start, end = time.time(), time.time()
+        return {"inp": inp, "rtn": 0, "ts": [start, end]}
+
+    db_file = tmpdir / "xonsh-HISTORY-TEST-PULL-MIXED.sqlite"
+    hist_a = SqliteHistory(filename=db_file, gc=False)
+    hist_b = SqliteHistory(filename=db_file, gc=False)
+    hist_main = SqliteHistory(filename=db_file, gc=False)
+
+    # windows time.time() has only ~16ms granularity, so give it a chance to increment here
+    time.sleep(0.032)
+    hist_a.append(cmd("a1"))
+    hist_b.append(cmd("b1"))
+    hist_main.pull(src_sessionid=str(hist_a.sessionid))
+    # at this point, hist_main will only have "a1" in its history
+    assert ptk_shell[2].prompter.history.get_strings() == ["a1"]
+
+    time.sleep(0.032)
+    hist_a.append(cmd("a2"))
+    hist_b.append(cmd("b2"))
+    hist_main.pull()
+    # hist_main should now have all the items we just added
+
+    hist_strings = ptk_shell[2].prompter.history.get_strings()
+    assert hist_strings == ["a1", "b1", "a2", "b2"]

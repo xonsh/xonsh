@@ -648,7 +648,56 @@ def test_hist_pull(src_sessionid, ptk_shell, tmpdir, xonsh_session, monkeypatch)
 
     if src_sessionid is None:
         # ensure that only commands from after the pulling session started get pulled in
+        # order is ensured because files are ordered by mtime
         assert hist_strings == ["cmd hist_a after", "cmd hist_b after"]
     else:
         # and that the commands are correctly filtered by session id if applicable
         assert hist_strings == ["cmd hist_a after"]
+
+
+def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
+    """Test that mixing general pull with session-specific pull
+    does not result in missed or duplicate items.
+    """
+    xonsh_session.env["XONSH_DATA_DIR"] = str(tmpdir)
+    monkeypatch.setattr(xonsh_session.shell, "shell", ptk_shell[2])
+
+    # make sure that all of our fake commands have real, sequential timestamps
+    def cmd(inp):
+        start, end = time.time(), time.time()
+        return {"inp": inp, "rtn": 0, "ts": [start, end]}
+
+    hist_a = JsonHistory(gc=False)
+    hist_b = JsonHistory(gc=False)
+    hist_main = JsonHistory(gc=False)
+
+    # windows time.time() has ~16ms granularity, so we need to give it some time to increment
+    time.sleep(0.032)
+    hist_a.append(cmd("a1"))
+    time.sleep(0.032)
+    hist_b.append(cmd("b1"))
+
+    # filesystem mtimes and time.time() don't always match up perfectly,
+    # so we need a little bit of fudge time
+    time.sleep(0.032)
+    hist_a.flush()
+    hist_b.flush()
+    time.sleep(0.032)
+    hist_main.pull(src_sessionid=str(hist_a.sessionid))
+    # at this point, hist_main will only have "a1" in its history
+    assert ptk_shell[2].prompter.history.get_strings() == ["a1"]
+
+    time.sleep(0.032)
+    hist_a.append(cmd("a2"))
+    time.sleep(0.032)
+    hist_b.append(cmd("b2"))
+
+    time.sleep(0.032)
+    hist_a.flush()
+    hist_b.flush()
+    time.sleep(0.032)
+    hist_main.pull()
+    # hist_main should now have all the items we just added
+
+    hist_strings = ptk_shell[2].prompter.history.get_strings()
+    assert hist_strings == ["a1", "b1", "a2", "b2"]
