@@ -1,5 +1,22 @@
 # Xonsh Change Log
 
+## [0.19.5](https://github.com/xonsh/xonsh/compare/0.19.4...0.19.5) (2025-04-25)
+
+
+### Bug Fixes
+
+* don't skip history items when running full history pull after session-specific pull ([#5826](https://github.com/xonsh/xonsh/issues/5826)) ([5ecdcae](https://github.com/xonsh/xonsh/commit/5ecdcae86d8d430f125b61a387cf6bb4ab877940))
+
+
+### Performance Improvements
+
+* Disable double check is_file on Windows systems to speedup IO ([b112b83](https://github.com/xonsh/xonsh/commit/b112b834f198a0e3d1628dfeb792cdbb0fe0b5ef))
+
+
+### Documentation
+
+* Add missing bash conversion example ([#5832](https://github.com/xonsh/xonsh/issues/5832)) ([1985128](https://github.com/xonsh/xonsh/commit/198512832242afecf61ea902e4929f3d14767717))
+
 ## v0.19.4
 
 ### Changed
