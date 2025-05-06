@@ -239,7 +239,7 @@ if ON_WINDOWS:
             except subprocess.TimeoutExpired:
                 pass
             except KeyboardInterrupt:
-                pass # No proxying of SIGINT required, Ctrl-C is sent along to the child process.
+                pass  # No proxying of SIGINT required, Ctrl-C is sent along to the child process.
         return wait_for_active_job(last_task=active_task)
 
 else:
