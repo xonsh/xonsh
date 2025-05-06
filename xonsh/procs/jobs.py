@@ -214,9 +214,6 @@ if ON_WINDOWS:
             stderr=subprocess.STDOUT,
         )
 
-    def _ctrl_c(job):
-        os.kill(job["obj"].pid, signal.CTRL_C_EVENT)
-
     _hup = _kill  # there is no equivalent of SIGHUP on Windows
 
     def ignore_sigtstp():
@@ -242,7 +239,7 @@ if ON_WINDOWS:
             except subprocess.TimeoutExpired:
                 pass
             except KeyboardInterrupt:
-                _ctrl_c(active_task)
+                pass # No proxying of SIGINT required, Ctrl-C is sent along to the child process.
         return wait_for_active_job(last_task=active_task)
 
 else:
