@@ -234,12 +234,8 @@ if ON_WINDOWS:
         proc = active_task["obj"]
         _continue(active_task)
         while proc.returncode is None:
-            try:
+            with contextlib.suppress(subprocess.TimeoutExpired, KeyboardInterrupt):
                 proc.wait(0.01)
-            except subprocess.TimeoutExpired:
-                pass
-            except KeyboardInterrupt:
-                pass  # No proxying of SIGINT required, Ctrl-C is sent along to the child process.
         return wait_for_active_job(last_task=active_task)
 
 else:
