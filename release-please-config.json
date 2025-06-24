@@ -7,7 +7,8 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "include-v-in-tag": false,
-      "release-as": "0.19.6"
+      "release-as": "0.19.6",
+      "initial-version": "0.19.6"
     }
   }
 }
