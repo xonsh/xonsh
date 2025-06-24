@@ -170,11 +170,12 @@ extend-exclude = [
     "rever",
     ".venv*/",
     ".local.out*/",
-    # to suppress the syntax error about match statement
-    "xonsh/parsers/v310.py",
-    "xonsh/parsers/v313.py",
 ]
 line-length = 88
+
+[tool.ruff.per-file-target-version]
+"xonsh/parsers/v310.py" = "py310"
+"xonsh/parsers/v313.py" = "py313"
 
 [tool.ruff.lint]
 ignore = [
