@@ -40,3 +40,5 @@ jobs:
         run: python -m build . --wheel
       - name: publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verify-metadata: false

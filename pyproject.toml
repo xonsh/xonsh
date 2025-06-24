@@ -1,8 +1,6 @@
 [build-system]
 # PEP 518 https://www.python.org/dev/peps/pep-0518/
-# https://discuss.python.org/t/help-testing-experimental-features-in-setuptools/13821
 requires = ["setuptools>=61", "wheel"]
-# PEP 517 https://peps.python.org/pep-0517/
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -19,7 +17,7 @@ dependencies = []
 
 [tool.setuptools.dynamic]
 version = {attr = "xonsh.__version__"}
-readme = {file = ["README.rst"]}
+readme = {file = ["README.rst"], content-type = "text/x-rst"}
 
 [tool.setuptools]
 packages = [
