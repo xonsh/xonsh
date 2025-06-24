@@ -17,6 +17,6 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
+          # manifest-file: .release-please-manifest.json
           skip-labeling: true
 #      todo: add block to run rever's Authors and appimage activity on release
