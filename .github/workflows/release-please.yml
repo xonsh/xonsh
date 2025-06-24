@@ -18,6 +18,6 @@ jobs:
         with:
           release-type: "python"
           config-file: release-please-config.json
-          skip-labeling: true
+          # skip-labeling: true
 
         #      todo: add block to run rever's Authors and appimage activity on release
