@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
-        with:
-          release-type: "python"
-          config-file: release-please-config.json
+        # with:
+          # release-type: "python"
+          # config-file: release-please-config.json
           # skip-labeling: true
 
         #      todo: add block to run rever's Authors and appimage activity on release
