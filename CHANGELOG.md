@@ -1,5 +1,13 @@
 # Xonsh Change Log
 
+## [0.19.9](https://github.com/xonsh/xonsh/compare/0.19.8...v0.19.9) (2025-06-24)
+
+
+### Features
+
+* add comment ([ddcaac1](https://github.com/xonsh/xonsh/commit/ddcaac170692e319acd3167fcae1061860491b0a))
+* another two ([d1a6579](https://github.com/xonsh/xonsh/commit/d1a657916cff69abcf612579b138ee0430f8577d))
+
 ## [0.19.8](https://github.com/xonsh/xonsh/compare/0.19.7...v0.19.8) (2025-06-24)
 
 
