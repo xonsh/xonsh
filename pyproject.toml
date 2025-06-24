@@ -170,6 +170,8 @@ extend-exclude = [
     "rever",
     ".venv*/",
     ".local.out*/",
+    # to suppress the syntax error about match statement
+    "xonsh/parsers/v310.py"
 ]
 line-length = 88
 
