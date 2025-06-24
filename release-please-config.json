@@ -12,6 +12,7 @@
     ".": {
       "changelog-path": "CHANGELOG.md",
       "release-type": "python",
+      "include-v-in-tag": false,
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "draft": false,
