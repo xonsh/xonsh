@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.19.7](https://github.com/xonsh/xonsh/compare/0.19.6...0.19.7) (2025-06-24)
+
+
+### Bug Fixes
+
+* ruff v0.12 fix on codebase ([2d13615](https://github.com/xonsh/xonsh/commit/2d13615ca8a03aacf44861ee452f07de032be8ff))
+
 ## [0.19.6](https://github.com/xonsh/xonsh/compare/0.19.5...0.19.6) (2025-06-24)
 
 
