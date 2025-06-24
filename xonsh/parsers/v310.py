@@ -407,7 +407,9 @@ class Parser(ThreeNineParser):
 
         if keyword_patterns_key_value_tuple_list:
             # transpose, e.g. [ (a, 1), (b, 2) ] to [a, b], [1, 2]
-            kwd_attrs, kwd_patterns = list(zip(*keyword_patterns_key_value_tuple_list))
+            kwd_attrs, kwd_patterns = list(
+                zip(*keyword_patterns_key_value_tuple_list, strict=False)
+            )
         else:
             kwd_attrs, kwd_patterns = [], []
 
