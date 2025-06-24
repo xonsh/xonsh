@@ -262,3 +262,5 @@ convention = "numpy"
 "tests/test*.py" = [
     "E741", #  E741 Ambiguous variable name
 ]
+
+# comment 1
