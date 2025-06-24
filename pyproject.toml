@@ -171,7 +171,8 @@ extend-exclude = [
     ".venv*/",
     ".local.out*/",
     # to suppress the syntax error about match statement
-    "xonsh/parsers/v310.py"
+    "xonsh/parsers/v310.py",
+    "xonsh/parsers/v313.py",
 ]
 line-length = 88
 
