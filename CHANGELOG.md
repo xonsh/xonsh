@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.19.8](https://github.com/xonsh/xonsh/compare/0.19.8...0.19.8) (2025-06-24)
+
+
+### Miscellaneous Chores
+
+* release 0.0.1 ([d864c0d](https://github.com/xonsh/xonsh/commit/d864c0d637b5c403010df288fc6c561350ce43ff))
+
 ## [0.19.8](https://github.com/xonsh/xonsh/compare/0.19.7...v0.19.8) (2025-06-24)
 
 
