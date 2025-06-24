@@ -38,5 +38,5 @@ jobs:
         run: python -m build . --sdist
       - name: build bdist(wheel) to dist/
         run: python -m build . --wheel
-      - name: publish to TestPyPI
+      - name: publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
