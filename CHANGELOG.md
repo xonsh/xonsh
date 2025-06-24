@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.19.6](https://github.com/xonsh/xonsh/compare/0.19.5...0.19.6) (2025-06-24)
+
+
+### Bug Fixes
+
+* upload releases to PyPI ([#5847](https://github.com/xonsh/xonsh/issues/5847)) ([26818ef](https://github.com/xonsh/xonsh/commit/26818efd99ce0406beaaecab3e97a03a6352ac9f))
+
 ## [0.19.5](https://github.com/xonsh/xonsh/compare/0.19.4...0.19.5) (2025-06-24)
 
 
