@@ -1,5 +1,14 @@
 # Xonsh Change Log
 
+## [0.19.8](https://github.com/xonsh/xonsh/compare/0.19.7...v0.19.8) (2025-06-24)
+
+
+### Bug Fixes
+
+* ci update ([246a88f](https://github.com/xonsh/xonsh/commit/246a88fc267beaefce4af841e805200971109b68))
+* pypi wheel checking ([88bfa3c](https://github.com/xonsh/xonsh/commit/88bfa3ce7c4c67ebdb5144408abbce2df12d4d98))
+* update publish ([f510d01](https://github.com/xonsh/xonsh/commit/f510d01a27188c67bf756ffca2021556c15bcac2))
+
 ## [0.19.6](https://github.com/xonsh/xonsh/compare/0.19.5...0.19.6) (2025-06-24)
 
 
