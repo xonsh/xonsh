@@ -1,5 +1,91 @@
 # Xonsh Change Log
 
+## [0.20.0](https://github.com/xonsh/xonsh/compare/0.19.6...0.20.0) (2025-06-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove confusing hook_post_add_argument
+* remove deprecated module `xonsh.proc`
+
+### Features
+
+* [#5745](https://github.com/xonsh/xonsh/issues/5745) - send Ctrl+C event on Windows instead of forceful terminate ([#5838](https://github.com/xonsh/xonsh/issues/5838)) ([ac02ea1](https://github.com/xonsh/xonsh/commit/ac02ea167a1b1b98d13028d115303ab8890ce44f))
+* add --no-env flag to avoid inheriting parent-shell env ([#5370](https://github.com/xonsh/xonsh/issues/5370)) ([c3a12b2](https://github.com/xonsh/xonsh/commit/c3a12b2a9c2958ce2a8e97a59b41f030f24cb45c))
+* add subproc output format, autostrip singleline output ([#5377](https://github.com/xonsh/xonsh/issues/5377)) ([c5cb704](https://github.com/xonsh/xonsh/commit/c5cb7044b53f11fd1bb133469014f409ae074905))
+* add superhelp and additional context via new FuncAlias ([#5366](https://github.com/xonsh/xonsh/issues/5366)) ([bb394a8](https://github.com/xonsh/xonsh/commit/bb394a8e84109dff3b0db36bb5a54d1f8cfdca5e))
+* allow square brackets in command arguments ([#5326](https://github.com/xonsh/xonsh/issues/5326)) ([5a525e3](https://github.com/xonsh/xonsh/commit/5a525e37891af7af987d3243436cf3667a9b2658))
+* **bashpath:** add env-var to allow overriding path to bash ([#5295](https://github.com/xonsh/xonsh/issues/5295)) ([f5ae752](https://github.com/xonsh/xonsh/commit/f5ae75268a7b4af981d4ffba91897e920dfe8f8a))
+* **completion:** Accept single completion in VI MODE using `Ctrl+]` ([#5763](https://github.com/xonsh/xonsh/issues/5763)) ([45c6436](https://github.com/xonsh/xonsh/commit/45c643667c2e3e233783770cabeec0d8a8a49b61))
+* **environ:** allow XONSH_*_DIR to be configurable ([#5783](https://github.com/xonsh/xonsh/issues/5783)) ([0292b43](https://github.com/xonsh/xonsh/commit/0292b43e64c72ef16a75128d6346ce7d3b316d66))
+* New experimental Rust based parser for xonsh ([#5749](https://github.com/xonsh/xonsh/issues/5749)) ([cff9046](https://github.com/xonsh/xonsh/commit/cff9046e0c79fb8bbd614f9b2dbcf980581a6536))
+* start xonfig web from any directory ([6c68541](https://github.com/xonsh/xonsh/commit/6c685417060f70b5e70d02c06e2710100452308a))
+* update setting default sub-command for argparser ([a44c20d](https://github.com/xonsh/xonsh/commit/a44c20d805044be08a9fd31232d5db997cdd55ce))
+* use uv for installing test deps ([93900e7](https://github.com/xonsh/xonsh/commit/93900e7239972801100dc3f08d9074ac7246db01))
+
+
+### Bug Fixes
+
+* 5491: more tests ([#5498](https://github.com/xonsh/xonsh/issues/5498)) ([06aca86](https://github.com/xonsh/xonsh/commit/06aca868a288bd462a7dba39dcd91397aabc0a84))
+* 5800 ([7163e65](https://github.com/xonsh/xonsh/commit/7163e65e74e3a22d2b6daab8cf2dd6976bda5adb))
+* **abbrevs:** remove incorrect override of carriage return in abbrevs ([#5057](https://github.com/xonsh/xonsh/issues/5057)) ([23c2f20](https://github.com/xonsh/xonsh/commit/23c2f2034dbddb7af48284b945c6590b67ba1c3e))
+* **appimage:** quote version bounds in appimage prereqs ([91c18ba](https://github.com/xonsh/xonsh/commit/91c18ba60187068c48e74cb75d9bcae369887d43))
+* argparse based completions should work in newer python versions ([#5542](https://github.com/xonsh/xonsh/issues/5542)) ([fa25491](https://github.com/xonsh/xonsh/commit/fa254914d74a2cdf0078bc7c48ffab1beedb6965)), closes [#5471](https://github.com/xonsh/xonsh/issues/5471)
+* **ArgparseCompleter:** adjust parsing for upstream private changes ([8a65d4f](https://github.com/xonsh/xonsh/commit/8a65d4f449124796c1a155c37e71409bbc2cb4ac))
+* **dirstack:** use XSH.env for $HOME check, not os.path ([#5211](https://github.com/xonsh/xonsh/issues/5211)) ([0fe0a6c](https://github.com/xonsh/xonsh/commit/0fe0a6c03e9deeba3ace0159259d5e51970e462b))
+* do not attempt to color traceback for error in xonshrc file ([#5331](https://github.com/xonsh/xonsh/issues/5331)) ([a7688f6](https://github.com/xonsh/xonsh/commit/a7688f647dbbc6aa14e7cb1f7f2b0184d933983a))
+* don't skip history items when running full history pull after session-specific pull ([#5826](https://github.com/xonsh/xonsh/issues/5826)) ([5ecdcae](https://github.com/xonsh/xonsh/commit/5ecdcae86d8d430f125b61a387cf6bb4ab877940))
+* Error in completions with absolute paths ([a028c72](https://github.com/xonsh/xonsh/commit/a028c72deb9d130fd048805205a58d4f23f48956))
+* Error in completions with absolute paths ([#5127](https://github.com/xonsh/xonsh/issues/5127)) ([#5328](https://github.com/xonsh/xonsh/issues/5328)) ([a028c72](https://github.com/xonsh/xonsh/commit/a028c72deb9d130fd048805205a58d4f23f48956))
+* exception when completing in python-only context ([#5632](https://github.com/xonsh/xonsh/issues/5632)) ([58e2856](https://github.com/xonsh/xonsh/commit/58e2856145dfcb55c8c044ac0b1973cf5f186dd7))
+* failing tests on extra space ([80940e8](https://github.com/xonsh/xonsh/commit/80940e8b1ca3a141d372315d8023396ecce6b3d7))
+* Fix wrong verification for the simple output, introduced by PR5072 ([#5174](https://github.com/xonsh/xonsh/issues/5174)) ([de74576](https://github.com/xonsh/xonsh/commit/de7457646436256c4d1b5dedc9f260d1c2cf5dca))
+* Fixed ``history gc`` invocation failing when ``sqlite`` history … ([#5540](https://github.com/xonsh/xonsh/issues/5540)) ([0f2011d](https://github.com/xonsh/xonsh/commit/0f2011d3028db878460c281ae7010a47ebea10b2))
+* load autoloading (but not yet autoloaded) xontribs ([#5096](https://github.com/xonsh/xonsh/issues/5096)) ([5723317](https://github.com/xonsh/xonsh/commit/572331700b5d0876ffdbd62a5278f0ac1a9c514f))
+* ruff linter errors ([b4d196d](https://github.com/xonsh/xonsh/commit/b4d196db17f529249e09b47e9f16ce1871b15752))
+* **signals:** fix processing exit signals and exit exception ([#5399](https://github.com/xonsh/xonsh/issues/5399)) ([fd5304f](https://github.com/xonsh/xonsh/commit/fd5304fb8764a9f147dc60f82aec439001364b2b))
+* Suppress subprocess traceback in case XONSH_SHOW_TRACEBACK=False and $RAISE_SUBPROC_ERROR=True ([#5066](https://github.com/xonsh/xonsh/issues/5066)) ([0c713a0](https://github.com/xonsh/xonsh/commit/0c713a0c3122a12e5622730ea7c89f81e58537eb))
+* trace help on empty args ([b8f91cd](https://github.com/xonsh/xonsh/commit/b8f91cdf221faf81e1d24b76567e196269f6f19f)), closes [#5373](https://github.com/xonsh/xonsh/issues/5373)
+* update virtualenv activator ([#5419](https://github.com/xonsh/xonsh/issues/5419)) ([614ddeb](https://github.com/xonsh/xonsh/commit/614ddebc59c8e24647e60acc0d658fe4582c08cb))
+* upload releases to PyPI ([#5847](https://github.com/xonsh/xonsh/issues/5847)) ([26818ef](https://github.com/xonsh/xonsh/commit/26818efd99ce0406beaaecab3e97a03a6352ac9f))
+* web config overwrite existing value ([c930c9f](https://github.com/xonsh/xonsh/commit/c930c9f2340a098c21852916d1a434fd2639eff5)), closes [#5297](https://github.com/xonsh/xonsh/issues/5297)
+* **xpip:** patch in user site packages for xpip where needed ([#5238](https://github.com/xonsh/xonsh/issues/5238)) ([7a5d7c2](https://github.com/xonsh/xonsh/commit/7a5d7c28863baa4f97ea59bb24e4c9f2a3885a6f))
+
+
+### Performance Improvements
+
+* Disable double check is_file on Windows systems to speedup IO ([b112b83](https://github.com/xonsh/xonsh/commit/b112b834f198a0e3d1628dfeb792cdbb0fe0b5ef))
+
+
+### Reverts
+
+* 5423 ([#5468](https://github.com/xonsh/xonsh/issues/5468)) ([c9046ab](https://github.com/xonsh/xonsh/commit/c9046ab3f6dba6a431e231ef33507759c455c635))
+
+
+### Documentation
+
+* Add missing bash conversion example ([#5832](https://github.com/xonsh/xonsh/issues/5832)) ([1985128](https://github.com/xonsh/xonsh/commit/198512832242afecf61ea902e4929f3d14767717))
+* add news item ([ce215bb](https://github.com/xonsh/xonsh/commit/ce215bb8fe263a88309ccaf5cae8afc843eb4f8c))
+* example ([ab779f1](https://github.com/xonsh/xonsh/commit/ab779f188757a47c06c31d2bf84c89cd841b0727))
+* fix up api doc paths ([32a0855](https://github.com/xonsh/xonsh/commit/32a085543a7594a39fa61062cbaa06cc540f23fc))
+* fix up broken apidocs links ([#5609](https://github.com/xonsh/xonsh/issues/5609)) ([32a0855](https://github.com/xonsh/xonsh/commit/32a085543a7594a39fa61062cbaa06cc540f23fc))
+* install xonsh as a core shell ([#5504](https://github.com/xonsh/xonsh/issues/5504)) ([09a89bf](https://github.com/xonsh/xonsh/commit/09a89bf9b40be42386226f1989b5d09e1f24281f))
+* link to dev guide and emphasis on solving issues ([#5341](https://github.com/xonsh/xonsh/issues/5341)) ([97b6e1b](https://github.com/xonsh/xonsh/commit/97b6e1ba96c4f259c14e40888b6086b84f3bc4cb))
+* more links to xonshrc article ([#5505](https://github.com/xonsh/xonsh/issues/5505)) ([d30d0a5](https://github.com/xonsh/xonsh/commit/d30d0a5446237dda391e6623137cdc8dd0aa0154))
+* move section "Use the Nix Package manager with Xonsh" from rc to platform tips and tricks ([#5503](https://github.com/xonsh/xonsh/issues/5503)) ([f9d2842](https://github.com/xonsh/xonsh/commit/f9d2842fb1a0c8b30cd92493bede982694ca8b3a))
+* optimize webconfig icon ([#5081](https://github.com/xonsh/xonsh/issues/5081)) ([b2ada58](https://github.com/xonsh/xonsh/commit/b2ada58c0c4e9daca4e03741fb337bce3df8313b))
+* remove reduntant table of contents ([#5042](https://github.com/xonsh/xonsh/issues/5042)) ([6cf7865](https://github.com/xonsh/xonsh/commit/6cf78656c76f63b729ddaa03d3a42f14caee7b5c))
+* SpecModifierAlias to the tutorial ([#5518](https://github.com/xonsh/xonsh/issues/5518)) ([9343512](https://github.com/xonsh/xonsh/commit/934351254aeb5c857298195c42ee30533e129d23))
+* Update bash to xonsh guide ([#5628](https://github.com/xonsh/xonsh/issues/5628)) ([c0e0687](https://github.com/xonsh/xonsh/commit/c0e0687376ed64e07ce95d12f014bf7ea59705e6))
+* update comparision ([#5509](https://github.com/xonsh/xonsh/issues/5509)) ([2552ef1](https://github.com/xonsh/xonsh/commit/2552ef17276fae551cbaad9c7cd3eea5526deccd))
+* update contribution guide ([2a6e5e1](https://github.com/xonsh/xonsh/commit/2a6e5e15f826a967aba4f7750841842a16eb5613))
+
+
+### Code Refactoring
+
+* remove confusing hook_post_add_argument ([667efce](https://github.com/xonsh/xonsh/commit/667efceb72332ae842bbb2c744379a6eff3e3b5b))
+* remove deprecated module `xonsh.proc` ([912c7d3](https://github.com/xonsh/xonsh/commit/912c7d395c35cc7b1db7008f4787eb08cdd0c339))
+
 ## [0.19.6](https://github.com/xonsh/xonsh/compare/0.19.5...0.19.6) (2025-06-24)
 
 
