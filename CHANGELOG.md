@@ -5,6 +5,15 @@
 
 ### Bug Fixes
 
+* PyPI upload ([#5852](https://github.com/xonsh/xonsh/issues/5852)) ([43beed3](https://github.com/xonsh/xonsh/commit/43beed373212a83d801a63355f580d056e5ac922))
+* PyPI v0.19.6 upload ([0001a9d](https://github.com/xonsh/xonsh/commit/0001a9dee184bcd19699fc782d9a81ce26584cb2))
+* ruff v0.12 fix on codebase ([2d13615](https://github.com/xonsh/xonsh/commit/2d13615ca8a03aacf44861ee452f07de032be8ff))
+
+## [0.19.7](https://github.com/xonsh/xonsh/compare/0.19.6...0.19.7) (2025-06-24)
+
+
+### Bug Fixes
+
 * ruff v0.12 fix on codebase ([2d13615](https://github.com/xonsh/xonsh/commit/2d13615ca8a03aacf44861ee452f07de032be8ff))
 
 ## [0.19.6](https://github.com/xonsh/xonsh/compare/0.19.5...0.19.6) (2025-06-24)
