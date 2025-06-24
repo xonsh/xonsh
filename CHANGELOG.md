@@ -1,5 +1,29 @@
 # Xonsh Change Log
 
+## [0.19.5](https://github.com/xonsh/xonsh/compare/0.19.4...0.19.5) (2025-06-24)
+
+
+### Features
+
+* [#5745](https://github.com/xonsh/xonsh/issues/5745) - send Ctrl+C event on Windows instead of forceful terminate ([#5838](https://github.com/xonsh/xonsh/issues/5838)) ([ac02ea1](https://github.com/xonsh/xonsh/commit/ac02ea167a1b1b98d13028d115303ab8890ce44f))
+* **completion:** Accept single completion in VI MODE using `Ctrl+]` ([#5763](https://github.com/xonsh/xonsh/issues/5763)) ([45c6436](https://github.com/xonsh/xonsh/commit/45c643667c2e3e233783770cabeec0d8a8a49b61))
+* New experimental Rust based parser for xonsh ([#5749](https://github.com/xonsh/xonsh/issues/5749)) ([cff9046](https://github.com/xonsh/xonsh/commit/cff9046e0c79fb8bbd614f9b2dbcf980581a6536))
+
+
+### Bug Fixes
+
+* don't skip history items when running full history pull after session-specific pull ([#5826](https://github.com/xonsh/xonsh/issues/5826)) ([5ecdcae](https://github.com/xonsh/xonsh/commit/5ecdcae86d8d430f125b61a387cf6bb4ab877940))
+
+
+### Performance Improvements
+
+* Disable double check is_file on Windows systems to speedup IO ([b112b83](https://github.com/xonsh/xonsh/commit/b112b834f198a0e3d1628dfeb792cdbb0fe0b5ef))
+
+
+### Documentation
+
+* Add missing bash conversion example ([#5832](https://github.com/xonsh/xonsh/issues/5832)) ([1985128](https://github.com/xonsh/xonsh/commit/198512832242afecf61ea902e4929f3d14767717))
+
 ## v0.19.4
 
 ### Changed
