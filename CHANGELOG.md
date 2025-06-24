@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.19.9](https://github.com/xonsh/xonsh/compare/0.19.8...0.19.9) (2025-06-24)
+
+
+### Bug Fixes
+
+* Update release-please.yml ([505a3a7](https://github.com/xonsh/xonsh/commit/505a3a7288f2840975265922a543e6296f6870de))
+
 ## [0.19.8](https://github.com/xonsh/xonsh/compare/0.19.7...v0.19.8) (2025-06-24)
 
 
