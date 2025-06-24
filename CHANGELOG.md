@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.19.11](https://github.com/xonsh/xonsh/compare/0.19.10...0.19.11) (2025-06-24)
+
+
+### Bug Fixes
+
+* changelog ([426b54b](https://github.com/xonsh/xonsh/commit/426b54b66ab8a8bf4310d20de6a0cc754cde9fb9))
+
 ## [0.19.10](https://github.com/xonsh/xonsh/compare/0.19.9...0.19.10) (2025-06-24)
 
 
