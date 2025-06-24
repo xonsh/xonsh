@@ -16,9 +16,6 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         with:
-          release-type: "python",
-          bump-minor-pre-major: true,
-          include-v-in-tag: false,
-          bump-patch-for-minor-pre-major: true
+          release-type: "python"
           skip-labeling: true
 #      todo: add block to run rever's Authors and appimage activity on release
