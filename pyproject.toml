@@ -17,7 +17,7 @@ dependencies = []
 
 [tool.setuptools.dynamic]
 version = {attr = "xonsh.__version__"}
-readme = {file = ["README.rst"], content-type = "text/x-rst"}
+readme = {file = ["README.rst"], content-type = "text/plain"}
 
 [tool.setuptools]
 packages = [
