@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.19.10](https://github.com/xonsh/xonsh/compare/0.19.9...0.19.10) (2025-06-25)
+
+
+### Bug Fixes
+
+* Update release-please-config.json ([4c21211](https://github.com/xonsh/xonsh/commit/4c21211272f1a03e6b8ffc5f3307a1f9dafccfbd))
+
 ## [0.19.9](https://github.com/xonsh/xonsh/compare/0.19.8...0.19.9) (2025-06-24)
 
 
