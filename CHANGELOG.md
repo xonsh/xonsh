@@ -1,5 +1,21 @@
 # Xonsh Change Log
 
+## [0.20.0](https://github.com/xonsh/xonsh/compare/0.19.9...0.20.0) (2025-07-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* auto-load xontribs after loading RC files ([#5873](https://github.com/xonsh/xonsh/issues/5873))
+
+### Bug Fixes
+
+* Update release-please-config.json ([4c21211](https://github.com/xonsh/xonsh/commit/4c21211272f1a03e6b8ffc5f3307a1f9dafccfbd))
+
+
+### Code Refactoring
+
+* auto-load xontribs after loading RC files ([#5873](https://github.com/xonsh/xonsh/issues/5873)) ([bf4770a](https://github.com/xonsh/xonsh/commit/bf4770a0181f7019a695508cc05911d705a58d83))
+
 ## [0.19.9](https://github.com/xonsh/xonsh/compare/0.19.8...0.19.9) (2025-06-24)
 
 
