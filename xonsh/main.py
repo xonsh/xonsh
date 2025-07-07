@@ -372,9 +372,9 @@ def start_services(shell_kwargs, args, pre_env=None):
     for k, v in pre_env.items():
         env[k] = v
 
+    _load_rc_files(shell_kwargs, args, env, execer, ctx)
     if not shell_kwargs.get("norc"):
         _autoload_xontribs(env)
-    _load_rc_files(shell_kwargs, args, env, execer, ctx)
     # create shell
     XSH.shell = Shell(execer=execer, **shell_kwargs)
     ctx["__name__"] = "__main__"
