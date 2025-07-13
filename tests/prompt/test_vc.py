@@ -47,8 +47,6 @@ def repo(request, tmpdir_factory):
 
 
 def _init_git_repository(temp_dir):
-    # This function should only be called when git is available
-    # since it's called from the repo fixture which already checks
     git_config = temp_dir / ".git/config"
     git_config.write_text(
         textwrap.dedent(
@@ -63,11 +61,8 @@ def _init_git_repository(temp_dir):
     )
     # git needs at least one commit
     Path("test-file").touch()
-    try:
-        sp.call(["git", "add", "test-file"])
-        sp.call(["git", "commit", "-m", "test commit"])
-    except FileNotFoundError:
-        pytest.skip("cannot find git executable")
+    sp.call(["git", "add", "test-file"])
+    sp.call(["git", "commit", "-m", "test commit"])
 
 
 @pytest.fixture
@@ -136,10 +131,7 @@ def test_dirty_working_directory(repo, set_xenv):
     Path("second-test-file").touch()
     assert not getattr(vc, get_dwd)()
 
-    try:
-        sp.call([repo["vc"], "add", "second-test-file"])
-    except FileNotFoundError:
-        pytest.skip(f"cannot find {repo['vc']} executable")
+    sp.call([repo["vc"], "add", "second-test-file"])
     assert getattr(vc, get_dwd)()
 
 
