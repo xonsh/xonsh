@@ -33,7 +33,7 @@ def repo(request, tmpdir_factory):
     # Skip early if the VCS executable is not available
     if not shutil.which(vc):
         pytest.skip(f"cannot find {vc} executable")
-    
+
     temp_dir = Path(tmpdir_factory.mktemp("dir"))
     os.chdir(temp_dir)
     try:
