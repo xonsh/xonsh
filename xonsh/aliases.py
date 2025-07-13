@@ -767,14 +767,7 @@ def source_alias(args, stdin=None):
                         "must source at least one file, " + fname + " does not exist."
                     )
                 break
-        _, fext = os.path.splitext(fpath)
-        if fext and fext != ".xsh" and fext != ".py":
-            raise RuntimeError(
-                "attempting to source non-xonsh file! If you are "
-                "trying to source a file in another language, "
-                "then please use the appropriate source command. "
-                "For example, source-bash script.sh"
-            )
+        # Allow sourcing any file - the execx will handle validation
         with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
         if not src.endswith("\n"):

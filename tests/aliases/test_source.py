@@ -44,6 +44,13 @@ def test_source_path(mockopen, mocked_execx_checker, xession):
     assert mocked_execx_checker[1].endswith(path_bar)
 
 
+def test_source_non_xsh_extension(mockopen, monkeypatch, mocked_execx_checker):
+    """Test that files with non-.xsh extensions can be sourced"""
+    monkeypatch.setattr(os.path, "isfile", lambda x: True)
+    source_alias(["file.xonshrc", "script.config"])
+    assert mocked_execx_checker == ["file.xonshrc", "script.config"]
+
+
 @pytest.mark.parametrize(
     "alias",
     [
