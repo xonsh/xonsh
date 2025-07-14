@@ -136,8 +136,8 @@ def RICH_COMPLETION_DEFAULTS():
     ]
 
 
-Completion = tp.Union[RichCompletion, str]
-CompleterResult = tp.Union[set[Completion], tuple[set[Completion], int], None]
+Completion = tp.Union[RichCompletion, str]  # noqa: UP007
+CompleterResult = tp.Union[set[Completion], tuple[set[Completion], int], None]  # noqa: UP007
 ContextualCompleter = tp.Callable[[CompletionContext], CompleterResult]
 
 

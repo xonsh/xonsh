@@ -127,7 +127,7 @@ def load_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Load()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             load_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -139,7 +139,7 @@ def store_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Store()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             store_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -151,7 +151,7 @@ def del_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Del()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             del_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -2258,14 +2258,7 @@ class BaseParser:
         for trailer in trailers:
             if isinstance(
                 trailer,
-                (
-                    ast.Index,
-                    ast.Slice,
-                    ast.ExtSlice,
-                    ast.Constant,
-                    ast.Name,
-                    Index,
-                ),
+                ast.Index | ast.Slice | ast.ExtSlice | ast.Constant | ast.Name | Index,
             ):
                 # unpack types
                 slice = trailer.value if isinstance(trailer, Index) else trailer
@@ -2284,7 +2277,7 @@ class BaseParser:
                     col_offset=leader.col_offset,
                     **trailer,
                 )
-            elif isinstance(trailer, (ast.Tuple, tuple)):
+            elif isinstance(trailer, ast.Tuple | tuple):
                 # call macro functions
                 l, c = leader.lineno, leader.col_offset
                 gblcall = xonsh_call("globals", [], lineno=l, col=c)

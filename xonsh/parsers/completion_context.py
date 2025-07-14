@@ -258,9 +258,9 @@ class Spanned(Generic[T]):
 
 
 Commands = Spanned[list[Spanned[CommandContext]]]
-ArgContext = Union[Spanned[CommandContext], Commands, Spanned[PythonContext]]
+ArgContext = Union[Spanned[CommandContext], Commands, Spanned[PythonContext]]  # noqa: UP007
 
-ExpandableObject = Union[Spanned[CommandArg], ArgContext]
+ExpandableObject = Union[Spanned[CommandArg], ArgContext]  # noqa: UP007
 # https://github.com/python/mypy/issues/9424#issuecomment-687865111 :
 Exp = TypeVar(
     "Exp",

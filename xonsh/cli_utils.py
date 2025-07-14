@@ -28,7 +28,7 @@ class ArgCompleter:
 
 def Arg(
     *args: str,
-    completer: ArgCompleter | tp.Callable[..., tp.Iterator[str]] = None,
+    completer: ArgCompleter | tp.Callable[..., tp.Iterator[str]] | None = None,
     **kwargs,
 ):
     # converting to tuple because of limitation with hashing args in py3.6

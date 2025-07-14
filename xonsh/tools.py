@@ -215,7 +215,7 @@ class EnvPath(cabc.MutableSequence):
                 # in order to be able to retrieve it later, for cases such as
                 # when a generator expression was passed as an argument
                 args = list(args)
-                if not all(isinstance(i, (str, bytes, pathlib.Path)) for i in args):
+                if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence
                     raise TypeError(
@@ -1753,7 +1753,7 @@ def ptk_cursor_shape_vi_modal():
 def to_ptk_cursor_shape(x):
     if not HAVE_CURSOR_SHAPE:
         return None
-    if isinstance(x, (CursorShape, CursorShapeConfig)):
+    if isinstance(x, CursorShape | CursorShapeConfig):
         return x
     if not isinstance(x, str):
         raise ValueError("invalid cursor shape")
@@ -1975,7 +1975,7 @@ def is_history_tuple(x):
     if (
         isinstance(x, cabc.Sequence)
         and len(x) == 2
-        and isinstance(x[0], (int, float))
+        and isinstance(x[0], int | float)
         and x[1].lower() in CANON_HISTORY_UNITS
     ):
         return True
@@ -2040,12 +2040,12 @@ RE_HISTORY_TUPLE = LazyObject(
 
 def to_history_tuple(x):
     """Converts to a canonical history tuple."""
-    if not isinstance(x, (cabc.Sequence, float, int)):
+    if not isinstance(x, cabc.Sequence | float | int):
         raise ValueError("history size must be given as a sequence or number")
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
         return to_history_tuple((m.group(1), m.group(3)))
-    elif isinstance(x, (float, int)):
+    elif isinstance(x, float | int):
         return to_history_tuple((x, "commands"))
     units, converter = HISTORY_UNITS[x[1]]
     value = converter(x[0])
@@ -2683,7 +2683,7 @@ def iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
 
 
 def ensure_timestamp(t, datetime_format=None):
-    if isinstance(t, (int, float)):
+    if isinstance(t, int | float):
         return t
     try:
         return float(t)
