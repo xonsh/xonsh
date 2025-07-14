@@ -20,7 +20,7 @@ from xonsh.tools import get_signal_name, on_main_thread, unthreadable
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
-_last_exit_time: tp.Optional[float] = None
+_last_exit_time: float | None = None
 
 # Thread-local data for job control. Allows threadable callable aliases
 # (ProcProxyThread) to maintain job control information separate from the main

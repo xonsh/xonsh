@@ -21,7 +21,7 @@ from xonsh.tools import backup_file, print_color, to_bool, to_bool_or_break
 class Node:
     """Base type of all nodes."""
 
-    attrs: tp.Union[tuple[str, ...], str] = ()
+    attrs: tuple[str, ...] | str = ()
 
     def __str__(self):
         return PrettyFormatter(self).visit()
@@ -488,7 +488,7 @@ class PrettyFormatter(Visitor):
         for aname in node.attrs:
             a = getattr(node, aname)
             t.append(self.visit(a) if isinstance(a, Node) else pprint.pformat(a))
-        t = [f"{n}={x}" for n, x in zip(node.attrs, t)]
+        t = [f"{n}={x}" for n, x in zip(node.attrs, t, strict=False)]
         s += textwrap.indent(",\n".join(t), self.indent)
         self.level -= 1
         s += "\n)"
@@ -650,7 +650,7 @@ class StateVisitor(Visitor):
         """Stores a value at the path location."""
         path = canon_path(path, indices=indices)
         loc = self.state
-        for p, n in zip(path[:-1], path[1:]):
+        for p, n in zip(path[:-1], path[1:], strict=False):
             if isinstance(p, str) and p not in loc:
                 loc[p] = {} if isinstance(n, str) else []
             elif isinstance(p, int) and abs(p) + (p >= 0) > len(loc):

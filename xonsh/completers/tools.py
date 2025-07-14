@@ -64,8 +64,8 @@ class RichCompletion(str):
     def __init__(
         self,
         value: str,
-        prefix_len: tp.Optional[int] = None,
-        display: tp.Optional[str] = None,
+        prefix_len: int | None = None,
+        display: str | None = None,
         description: str = "",
         style: str = "",
         append_closing_quote: bool = True,

@@ -16,7 +16,7 @@ cases = [
     (Exception, "Exception"),
     ({}, "{}"),
     pytest.param(
-        dict(zip(range(30), range(100, 130))),
+        dict(zip(range(30), range(100, 130), strict=False)),
         """\
 {0: 100,
  1: 101,

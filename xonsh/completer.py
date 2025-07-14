@@ -118,7 +118,7 @@ class Completer:
             and (cursor_index is not None)
             and (completion_context is None)
         ):
-            completion_context: tp.Optional[CompletionContext] = self.parse(
+            completion_context: CompletionContext | None = self.parse(
                 multiline_text,
                 cursor_index,
                 ctx,

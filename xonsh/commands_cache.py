@@ -66,7 +66,7 @@ class CaseInsensitiveDict(dict[tp.Any, tp.Any]):
         return CaseInsensitiveDict(self.items())
 
 
-CacheDict: tp.Union[type[CaseInsensitiveDict], type[dict]]
+CacheDict: type[CaseInsensitiveDict] | type[dict]
 if ON_WINDOWS:
     CacheDict = CaseInsensitiveDict
 else:

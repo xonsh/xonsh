@@ -96,7 +96,7 @@ def test_prompt_toolkit_version_checks(
 )
 def test_tokenize_ansi(prompt_tokens, ansi_string_parts):
     ansi_tokens = tokenize_ansi(prompt_tokens)
-    for token, text in zip(ansi_tokens, ansi_string_parts):
+    for token, text in zip(ansi_tokens, ansi_string_parts, strict=False):
         assert token[1] == text
 
 

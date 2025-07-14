@@ -800,7 +800,7 @@ def fallback(cond, backup):
 # See the Python software license: https://docs.python.org/3/license.html
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
-    _stream: tp.Optional[str] = None
+    _stream: str | None = None
 
     def __init__(self, new_target):
         self._new_target = new_target
@@ -1457,7 +1457,7 @@ def to_itself(x):
     return x
 
 
-def to_int_or_none(x) -> tp.Optional[int]:
+def to_int_or_none(x) -> int | None:
     """Convert the given value to integer if possible. Otherwise return None"""
     if isinstance(x, str) and x.lower() == "none":
         return None

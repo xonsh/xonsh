@@ -143,8 +143,8 @@ STATEMENTS = (
 
 def const_str(
     s: str,
-    lineno: Optional[int] = None,
-    col_offset: Optional[int] = None,
+    lineno: int | None = None,
+    col_offset: int | None = None,
     is_raw: bool = True,
 ):
     if PYTHON_VERSION_INFO >= (3, 13):

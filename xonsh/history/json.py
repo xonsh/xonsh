@@ -594,9 +594,9 @@ class JsonHistory(History):
     def items(self, newest_first=False):
         """Display history items of current session."""
         if newest_first:
-            items = zip(reversed(self.inps), reversed(self.tss))
+            items = zip(reversed(self.inps), reversed(self.tss), strict=False)
         else:
-            items = zip(self.inps, self.tss)
+            items = zip(self.inps, self.tss, strict=False)
         for item, tss in items:
             yield {"inp": item.rstrip(), "ts": tss[0]}
 
