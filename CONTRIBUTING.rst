@@ -38,9 +38,9 @@ Finally, run the following commands. You should see the effects of your change
 
 Changelog
 =========
-We use conventional commits to generate the changelog.
-Please refer to the `conventional commits specification <https://www.conventionalcommits.org/en/v1.0.0/>`_
-for more information.
+1. Use `conventional commits <https://www.conventionalcommits.org/en/v1.0.0/>`_ for your git commits and Pull-Request titles
+2. ``CHANGELOG.md`` is automatically generated from these commit messages using `release-please-action <https://github.com/googleapis/release-please-action>`_
+3. We squash the Pull-Request commits when merging to maintain linear history. So it is important to use
 
 Style Guide
 ===========
