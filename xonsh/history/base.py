@@ -105,7 +105,7 @@ class History:
             cwds = self.cwds[item]
             return [
                 HistoryEntry(cmd=c, out=o, rtn=r, ts=t, cwd=cwd)
-                for c, o, r, t, cwd in zip(cmds, outs, rtns, tss, cwds)
+                for c, o, r, t, cwd in zip(cmds, outs, rtns, tss, cwds, strict=False)
             ]
         else:
             raise TypeError(

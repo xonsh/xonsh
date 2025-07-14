@@ -756,22 +756,22 @@ class Var(tp.NamedTuple):
         a regex pattern to match for the given variable
     """
 
-    validate: tp.Optional[tp.Callable] = always_true
-    convert: tp.Optional[tp.Callable] = None
-    detype: tp.Optional[tp.Callable] = ensure_string
+    validate: tp.Callable | None = always_true
+    convert: tp.Callable | None = None
+    detype: tp.Callable | None = ensure_string
     default: tp.Any = DefaultNotGiven
     doc: str = ""
-    is_configurable: tp.Union[bool, LazyBool] = True
-    doc_default: tp.Union[str, DefaultNotGivenType] = DefaultNotGiven
+    is_configurable: bool | LazyBool = True
+    doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
-    pattern: tp.Optional[VarKeyType] = None
+    pattern: VarKeyType | None = None
 
     @classmethod
     def with_default(
         cls,
         default: object,
         doc: str = "",
-        doc_default: tp.Union[str, DefaultNotGivenType] = DefaultNotGiven,
+        doc_default: str | DefaultNotGivenType = DefaultNotGiven,
         type_str: str = "",
         **kwargs,
     ):
@@ -822,9 +822,7 @@ class Xettings:
                 yield var.get_key(var_name), var
 
     @staticmethod
-    def _get_groups(
-        cls, _seen: tp.Optional[set["Xettings"]] = None, *bases: "Xettings"
-    ):
+    def _get_groups(cls, _seen: set["Xettings"] | None = None, *bases: "Xettings"):
         if _seen is None:
             _seen = set()
         subs = cls.__subclasses__()
