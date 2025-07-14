@@ -130,4 +130,4 @@ push-root:
 	git push
 
 serve:
-	sphinx-autobuild . $(BUILDDIR)/html
+	sphinx-autobuild . "$(BUILDDIR)"/html $(SPHINXOPTS) $(O)
