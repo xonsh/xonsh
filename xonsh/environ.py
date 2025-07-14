@@ -721,7 +721,7 @@ def default_prompt_fields(env):
     return prompt.PromptFields(XSH)
 
 
-VarKeyType = tp.Union[str, tp.Pattern]
+VarKeyType = tp.Union[str, tp.Pattern]  # noqa: UP007
 
 
 class Var(tp.NamedTuple):
@@ -2301,7 +2301,7 @@ class Env(cabc.MutableMapping):
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
         if isinstance(
-            val, (cabc.MutableSet, cabc.MutableSequence, cabc.MutableMapping)
+            val, cabc.MutableSet | cabc.MutableSequence | cabc.MutableMapping
         ):
             self._detyped = None
         return val

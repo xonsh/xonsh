@@ -583,7 +583,7 @@ def ensure_str_or_int(x):
         x = ast.literal_eval(x)
     except (ValueError, SyntaxError):
         pass
-    if not isinstance(x, (int, str)):
+    if not isinstance(x, int | str):
         msg = f"{x!r} could not be converted to int or str"
         raise ValueError(msg)
     return x
@@ -681,7 +681,7 @@ class StateVisitor(Visitor):
             for k, v in value.items():
                 p = path + k
                 self.flatten(path=p, value=v, flat=flat)
-        elif isinstance(value, (str, bytes)):
+        elif isinstance(value, str | bytes):
             flat[path] = value
         elif isinstance(value, cabc.Sequence):
             path = path if path.endswith("/") else path + "/"

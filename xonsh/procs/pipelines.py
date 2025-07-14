@@ -454,7 +454,7 @@ class CommandPipeline:
         """Decode bytes into a str and apply universal newlines as needed."""
         if not b:
             return ""
-        if isinstance(b, (bytes, bytearray)):
+        if isinstance(b, bytes | bytearray):
             env = XSH.env
             s = b.decode(
                 encoding=env.get("XONSH_ENCODING"),

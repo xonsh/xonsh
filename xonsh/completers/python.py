@@ -247,7 +247,7 @@ def attr_complete(prefix, ctx, filter_func):
         if XSH.env["COMPLETIONS_BRACKETS"]:
             if callable(a):
                 rpl = opt + "("
-            elif isinstance(a, (cabc.Sequence, cabc.Mapping)):
+            elif isinstance(a, cabc.Sequence | cabc.Mapping):
                 rpl = opt + "["
             else:
                 rpl = opt
