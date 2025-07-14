@@ -15,9 +15,9 @@ First, install xonsh from source and open a xonsh shell in your favorite
 terminal application. See installation instructions for details, but it
 is recommended to do an 'editable' install via `pip`
 
-```bash
-$ pip install -U "pip>=25.1"
-$ pip install -e . --group dev
+```{prompt} bash
+pip install -U "pip>=25.1"
+pip install -e .[dev]
 ```
 
 Next, make a trivial change (e.g. `print("hello!")` in `main.py`).
@@ -25,9 +25,8 @@ Next, make a trivial change (e.g. `print("hello!")` in `main.py`).
 Finally, run the following commands. You should see the effects of your change
 (e.g. `hello!`):
 
-```bash
-$ $XONSH_DEBUG=1
-$ xonsh
+```{prompt} bash
+env XONSH_DEBUG=1 xonsh
 ```
 
 ## Changelog
@@ -74,22 +73,15 @@ xonsh follows [PEP8](https://www.python.org/dev/peps/pep-0008/) for all Python c
 * Simple functions should have simple docstrings.
 * Lines should be at most 80 characters long. The 72 and 79 character
   recommendations from PEP8 are not required here.
-* All Python code should be compliant with Python 3.8+.
 * Tests should be written with [pytest](https://docs.pytest.org/) using a procedural style. Do not use
   unittest directly or write tests in an object-oriented style.
 * Test generators make more dots and the dots must flow!
-* We use [pre-commit](https://pre-commit.com/) for linting (ruff-lint) and formatting(ruff-format) the code.
-  To enable this as a git pre-commit hook:
+* We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting the code. It is used as a [pre-commit](https://pre-commit.com/) hook. Enable it by running:
 
-```bash
-@ pre-commit install
+```{prompt} bash
+pre-commit install
+pre-commit run --all-files
 ```
-
-#### Imports
-
-`xonsh` imports should be sorted alphabetically, and by module location. You
-can (and should) use `isort` either from the command line or use the
-`pre-commit` hook.
 
 ## How to Test
 
@@ -99,8 +91,8 @@ If you want to run your "work in progress version" without installing
 and in a fresh environment you can use Docker. If Docker is installed
 you just have to run this:
 
-```bash
-@ python xonsh-in-docker.py
+```{prompt} bash
+python xonsh-in-docker.py
 ```
 
 This will build and run the current state of the repository in an isolated
@@ -112,8 +104,8 @@ additional arguments you can pass this script.
 
 Example:
 
-```bash
-@ python docker.py 3.4 0.57
+```{prompt} bash
+python docker.py 3.4 0.57
 ```
 
 Ensure your cwd is the root directory of the project (i.e., the one containing the
@@ -123,16 +115,16 @@ Ensure your cwd is the root directory of the project (i.e., the one containing t
 
 Prep your environment for running the tests:
 
-```bash
-@ pip install -e '.[dev]'
+```{prompt} bash
+pip install -e '.[dev]'
 ```
 
 ### Running the Tests - Basic
 
 Run all the tests using pytest:
 
-```bash
-@ pytest -q
+```{prompt} bash
+pytest -q
 ```
 
 Use "-q" to keep pytest from outputting a bunch of info for every test.
@@ -141,21 +133,21 @@ Use "-q" to keep pytest from outputting a bunch of info for every test.
 
 To perform all unit tests:
 
-```bash
-@ pytest
+```{prompt} bash
+pytest
 ```
 
 If you want to run specific tests you can specify the test names to
 execute. For example to run test_aliases:
 
-```bash
-@ pytest test_aliases.py
+```{prompt} bash
+pytest test_aliases.py
 ```
 
 Note that you can pass multiple test names in the above examples:
 
-```bash
-@ pytest test_aliases.py test_environ.py
+```{prompt} bash
+pytest test_aliases.py test_environ.py
 ```
 
 ### Writing the Tests - Advanced
@@ -174,8 +166,8 @@ def test_whatever():
 The conftest.py in tests directory defines fixtures for mocking various
 parts of xonsh for more test isolation. For a list of the various fixtures:
 
-```bash
-@ pytest --fixtures
+```{prompt} bash
+pytest --fixtures
 ```
 
 when writing tests it's best to use pytest features i.e. parametrization:
@@ -223,8 +215,8 @@ you can learn about from [the sphinx website](http://sphinx-doc.org/).
 If you want to generate the documentation, first xonsh itself must be installed
 and then you may run the following command from the `docs` dir:
 
-```bash
-~/xonsh/docs @ make html
+```{prompt} bash (~/xonsh/docs)$
+make html
 ```
 
 For each new
@@ -255,8 +247,8 @@ Note that xonsh itself needs to be installed too.
 If you have cloned the git repository, you can install all of the doc-related
 dependencies by running:
 
-```bash
-@ pip install -e ".[doc]"
+```{prompt} bash
+pip install -e ".[doc]"
 ```
 
 ### Procedure for modifying the website
@@ -265,23 +257,23 @@ The xonsh website source files are located in the `docs` directory.
 A developer first makes necessary changes, then rebuilds the website locally
 by executing the command:
 
-```bash
-@ make html
+```{prompt} bash
+make html
 ```
 
 This will generate html files for the website in the `_build/html/` folder.
 
 There is also a helper utility in the `docs/` folder that will watch for changes and automatically rebuild the documentation. You can use this instead of running `make html` manually:
 
-```bash
-@ python docs/serve_docs.py
+```{prompt} bash
+python docs/serve_docs.py
 ```
 
 The developer may view the local changes by opening these files with their
 favorite browser, e.g.:
 
-```bash
-@ firefox _build/html/index.html
+```{prompt} bash
+firefox _build/html/index.html
 ```
 
 Once the developer is satisfied with the changes, the changes should be
@@ -303,10 +295,10 @@ past and upcoming releases.
 You can cleanup your local repository of transient files such as \*.pyc files
 created by unit testing by running:
 
-```bash
-@ rm -f xonsh/parser_table.py xonsh/completion_parser_table.py
-@ rm -f xonsh/*.pyc tests/*.pyc
-@ rm -fr build
+```{prompt} bash
+rm -f xonsh/parser_table.py xonsh/completion_parser_table.py
+rm -f xonsh/*.pyc tests/*.pyc
+rm -fr build
 ```
 
 ### Performing the Release
@@ -314,15 +306,15 @@ created by unit testing by running:
 This is done through the [rever](https://github.com/regro/rever). To get a list of the
 valid options use:
 
-```bash
-@ pip install re-ver
+```{prompt} bash
+pip install re-ver
 ```
 
 You can perform a full release:
 
-```bash
-@ rever check
-@ rever <version-number>
+```{prompt} bash
+rever check
+rever <version-number>
 ```
 
 ### Cross-platform testing
