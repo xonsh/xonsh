@@ -263,10 +263,10 @@ make html
 
 This will generate html files for the website in the `_build/html/` folder.
 
-There is also a helper utility in the `docs/` folder that will watch for changes and automatically rebuild the documentation. You can use this instead of running `make html` manually:
+You can watch for changes and automatically rebuild the documentation with the following command:
 
 ```{prompt} bash
-python docs/serve_docs.py
+make serve
 ```
 
 The developer may view the local changes by opening these files with their
@@ -280,9 +280,8 @@ Once the developer is satisfied with the changes, the changes should be
 committed and pull-requested per usual. The docs are built and deployed using
 GitHub Actions.
 
-Docs associated with the latest release are hosted at
-https://xon.sh while docs for the current `main` branch are available at
-https://xon.sh/dev
+Docs associated with the latest release are hosted at [https://xon.sh](https://xon.sh)
+while docs for the current `main` branch are available at [https://xon.sh/dev](https://xon.sh/dev).
 
 ## Branches and Releases
 
