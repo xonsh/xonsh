@@ -573,7 +573,10 @@ def main_xonsh(args):
         elif args.mode == XonshMode.script_from_file:
             # run a script contained in a file
             path = os.path.abspath(os.path.expanduser(args.file))
-            if os.path.isfile(path):
+            if os.path.isdir(path):
+                print(f"xonsh: {args.file}: Is a directory.")
+                exit_code = 1
+            elif os.path.exists(path):
                 sys.argv = [args.file] + args.args
                 env.update(make_args_env())  # $ARGS is not sys.argv
                 env["XONSH_SOURCE"] = path
@@ -582,7 +585,7 @@ def main_xonsh(args):
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
             else:
-                print(f"xonsh: {args.file}: No such file or directory.")
+                print(f"xonsh: {args.file}: No such file.")
                 exit_code = 1
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin

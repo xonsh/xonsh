@@ -7,6 +7,7 @@ import os.path
 import sys
 from contextlib import contextmanager
 from pathlib import Path
+from tempfile import TemporaryFile
 
 import pytest
 
@@ -603,3 +604,53 @@ def test_xontribs_autoload_disabled_in_custom_rc(xession, shell, mocker, tmpdir)
     # AND installed xontrib should not be auto-loaded
     assert not hasattr(xession.builtins, "autoloaded_xontribs")
     xontribs_load.assert_not_called()
+
+
+def test_script_normal_file(xession, monkeypatch, capsys, tmpdir):
+    script_path = tmpdir / "script.xsh"
+    with open(script_path, "w") as script:
+        script.write("print('Hello, World!')")
+    monkeypatch.setattr(sys, "argv", ["xonsh", str(script_path)])
+
+    with pytest.raises(SystemExit, match="0"):
+        xonsh.main.main()
+
+    stdout, stderr = capsys.readouterr()
+    assert "Hello, World!" in stdout
+
+
+@pytest.mark.skipif(
+    ON_WINDOWS,
+    reason="Windows does not support specifying file descriptors as paths",
+)
+def test_script_file_descriptor(xession, monkeypatch, capsys):
+    with TemporaryFile("w+t") as script:
+        script.write("print('Hello, World!')")
+        script.seek(0)
+        monkeypatch.setattr(sys, "argv", ["xonsh", f"/dev/fd/{script.fileno()}"])
+
+        with pytest.raises(SystemExit, match="0"):
+            xonsh.main.main()
+
+        stdout, stderr = capsys.readouterr()
+        assert "Hello, World!" in stdout
+
+
+def test_script_directory(xession, monkeypatch, capsys, tmpdir):
+    monkeypatch.setattr(sys, "argv", ["xonsh", str(tmpdir)])
+
+    with pytest.raises(SystemExit, match="1"):
+        xonsh.main.main()
+
+    stdout, stderr = capsys.readouterr()
+    assert "Is a directory." in stdout
+
+
+def test_script_missing_file(xession, monkeypatch, capsys, tmpdir):
+    monkeypatch.setattr(sys, "argv", ["xonsh", str(tmpdir / "invalid.xsh")])
+
+    with pytest.raises(SystemExit, match="1"):
+        xonsh.main.main()
+
+    stdout, stderr = capsys.readouterr()
+    assert "No such file." in stdout
