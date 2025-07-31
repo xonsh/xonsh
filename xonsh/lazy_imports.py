@@ -4,21 +4,21 @@ This version prioritizes compatibility over maximum performance gains.
 """
 
 import importlib
-import sys
 import os
-from typing import Any, Optional, Union
+import sys
+from typing import Any
 
 
 # Detect testing environment more reliably
 def _is_testing():
     """Detect if we're in a testing environment."""
     return (
-        'pytest' in sys.modules or
-        'unittest' in sys.modules or
-        os.environ.get('PYTEST_CURRENT_TEST') is not None or
-        any('test' in str(arg).lower() for arg in sys.argv) or
-        'CI' in os.environ or  # GitHub Actions, etc.
-        'CONTINUOUS_INTEGRATION' in os.environ
+        "pytest" in sys.modules
+        or "unittest" in sys.modules
+        or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        or any("test" in str(arg).lower() for arg in sys.argv)
+        or "CI" in os.environ  # GitHub Actions, etc.
+        or "CONTINUOUS_INTEGRATION" in os.environ
     )
 
 
@@ -50,7 +50,7 @@ class LazyObject:
                 self._import_error = e
                 self._obj = None
 
-        if self._obj is None and hasattr(self, '_import_error'):
+        if self._obj is None and hasattr(self, "_import_error"):
             raise self._import_error
 
         return self._obj
@@ -91,7 +91,11 @@ class LazyObject:
         """Support hashing."""
         try:
             obj = self._ensure_imported()
-            return hash(obj) if hasattr(obj, '__hash__') and callable(obj.__hash__) else id(self)
+            return (
+                hash(obj)
+                if hasattr(obj, "__hash__") and callable(obj.__hash__)
+                else id(self)
+            )
         except Exception:
             return id(self)
 
@@ -154,7 +158,7 @@ class LazyModule:
                 self._import_error = e
                 self._module = None
 
-        if self._module is None and hasattr(self, '_import_error'):
+        if self._module is None and hasattr(self, "_import_error"):
             raise self._import_error
 
         return self._module
@@ -202,7 +206,9 @@ def lazy_import_object(module_name: str, attr_name: str) -> LazyObject:
     return LazyObject(module_name, attr_name)
 
 
-def lazy_import(module_name: str, attr_name: Optional[str] = None) -> Union[LazyModule, LazyObject]:
+def lazy_import(
+    module_name: str, attr_name: str | None = None
+) -> LazyModule | LazyObject:
     """Create a lazy import for a module or object."""
     if attr_name is None:
         return lazy_import_module(module_name)
