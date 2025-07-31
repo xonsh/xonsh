@@ -1,0 +1,12 @@
+diff a/xonsh/built_ins.py b/xonsh/built_ins.py	(rejected hunks)
+@@ -15,8 +15,9 @@ import builtins
+ from collections.abc import MutableMapping, Sequence, MutableSequence, MutableSet
+ 
+ from xonsh.tools import unthreadable
+-from xonsh.completers.completer import Completer
+ from xonsh.dirstack import DirectoryStack, DIRSTACK
++from xonsh.lazy_imports import lazy_import_object
++Completer = lazy_import_object('xonsh.completers.completer', 'Completer')
+ from xonsh.environ import Environ
+ from xonsh.aliases import Aliases
+ from xonsh.events import events

@@ -14,8 +14,12 @@ from xonsh.completers.commands import (
 from xonsh.completers.environment import complete_environment_vars
 from xonsh.completers.imports import complete_import
 from xonsh.completers.man import complete_from_man
-from xonsh.completers.path import complete_path
-from xonsh.completers.python import complete_python
+from xonsh.lazy_imports import lazy_import_object
+
+bash_complete_line = lazy_import_object('xonsh.completers.bash_completion', 'bash_complete_line')
+python_signature_complete = lazy_import_object('xonsh.completers.python', 'python_signature_complete')
+complete_path = lazy_import_object('xonsh.completers.path', 'complete_path')
+
 
 
 def default_completers(cmd_cache):

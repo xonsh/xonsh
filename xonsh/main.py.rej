@@ -1,0 +1,25 @@
+diff a/xonsh/main.py b/xonsh/main.py	(rejected hunks)
+@@ -8,10 +8,10 @@ import sys
+ import argparse
+ import contextlib
+ 
+-from xonsh.completers.completer import Completer
+-from xonsh.history.main import History
++from xonsh.lazy_imports import lazy_import_object
++Completer = lazy_import_object('xonsh.completers.completer', 'Completer') 
++History = lazy_import_object('xonsh.history.main', 'History')
+ from xonsh.execer import Execer
+-from xonsh.tools import unthreadable
+ from xonsh.environ import Environ, locate_binary
+ from xonsh.built_ins import XonshSession
+ from xonsh.parser import Parser
+@@ -19,6 +19,9 @@ from xonsh.aliases import Aliases
+ from xonsh.events import events
+ from xonsh import __version__
+ 
++# Lazy import for tools (not always needed)
++from xonsh.lazy_imports import lazy_import_module
++tools = lazy_import_module('xonsh.tools')
+ 
+ def setup_readline():
+     """Set up readline bindings for better shell experience."""
