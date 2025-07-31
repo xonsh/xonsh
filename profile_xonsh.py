@@ -10,10 +10,10 @@ Usage:
 """
 
 import cProfile
-import pstats
-import time
-import sys
 import importlib
+import pstats
+import sys
+import time
 
 
 def profile_import(module_name, description=""):
@@ -52,7 +52,6 @@ def benchmark_startup(repeats=5):
         if 'xonsh.main' in sys.modules:
             del sys.modules['xonsh.main']
         start = time.time()
-        import xonsh.main
         end = time.time()
         delta = (end - start) * 1000
         times.append(delta)
@@ -109,7 +108,7 @@ if __name__ == "__main__":
     for module, _ in heavy_imports[:3]:
         profile_import(module)
 
-    print(f"\n=== SUMMARY ===")
+    print("\n=== SUMMARY ===")
     print(f"Current average startup: {baseline:.2f} ms")
     print("Top optimization targets:")
     for i, (module, time_ms) in enumerate(heavy_imports[:5], 1):

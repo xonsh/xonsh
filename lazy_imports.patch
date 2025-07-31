@@ -21,7 +21,7 @@ index 74f2f98..c9320cd 100644
 +unquote = tools.unquote
  from xonsh.xonfig import print_welcome_screen
  from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
- 
+
 diff --git a/xonsh/built_ins.py b/xonsh/built_ins.py
 index 1827342..d45041a 100644
 --- a/xonsh/built_ins.py
@@ -29,7 +29,7 @@ index 1827342..d45041a 100644
 @@ -18,7 +18,8 @@ import threading
  import builtins
  from collections.abc import MutableMapping, Sequence, MutableSequence, MutableSet
- 
+
 -from xonsh.completers.completer import Completer
 +from xonsh.lazy_imports import lazy_import_object
 +Completer = lazy_import_object('xonsh.completers.completer', 'Completer')
@@ -42,7 +42,7 @@ index a24cb01..f8d7f4c 100644
 +++ b/xonsh/completers/__init__.py
 @@ -1,8 +1,10 @@
  """Completers for xonsh."""
- 
+
 -from xonsh.completers.bash_completion import bash_complete_line
 -from xonsh.completers.python import python_signature_complete
 -from xonsh.completers.path import complete_path
@@ -50,6 +50,6 @@ index a24cb01..f8d7f4c 100644
 +bash_complete_line = lazy_import_object('xonsh.completers.bash_completion', 'bash_complete_line')
 +python_signature_complete = lazy_import_object('xonsh.completers.python', 'python_signature_complete')
 +complete_path = lazy_import_object('xonsh.completers.path', 'complete_path')
- 
+
  __all__ = [
      'bash_complete_line',

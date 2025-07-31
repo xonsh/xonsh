@@ -1,7 +1,7 @@
 diff a/xonsh/built_ins.py b/xonsh/built_ins.py	(rejected hunks)
 @@ -15,8 +15,9 @@ import builtins
  from collections.abc import MutableMapping, Sequence, MutableSequence, MutableSet
- 
+
  from xonsh.tools import unthreadable
 -from xonsh.completers.completer import Completer
  from xonsh.dirstack import DirectoryStack, DIRSTACK

@@ -1,7 +1,7 @@
 diff a/xonsh/completers/__init__.py b/xonsh/completers/__init__.py	(rejected hunks)
 @@ -1,8 +1,11 @@
  """Completers for xonsh."""
- 
+
 -from xonsh.completers.bash_completion import bash_complete_line
 -from xonsh.completers.python import python_signature_complete
 -from xonsh.completers.path import complete_path
@@ -9,8 +9,8 @@ diff a/xonsh/completers/__init__.py b/xonsh/completers/__init__.py	(rejected hun
 +from xonsh.lazy_imports import lazy_import_object
 +
 +bash_complete_line = lazy_import_object('xonsh.completers.bash_completion', 'bash_complete_line')
-+python_signature_complete = lazy_import_object('xonsh.completers.python', 'python_signature_complete') 
++python_signature_complete = lazy_import_object('xonsh.completers.python', 'python_signature_complete')
 +complete_path = lazy_import_object('xonsh.completers.path', 'complete_path')
- 
+
  __all__ = [
      'bash_complete_line',
