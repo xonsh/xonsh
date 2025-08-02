@@ -1064,7 +1064,11 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         break
                     else:  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
-                elif token.startswith("$") and len(token) > 1 and token[1:].replace('_', '').isalnum():
+                elif (
+                    token.startswith("$")
+                    and len(token) > 1
+                    and token[1:].replace("_", "").isalnum()
+                ):
                     yield TokenInfo(DOLLARNAME, token, spos, epos, line)
                 elif initial.isidentifier():  # ordinary name
                     if token in ("async", "await"):
