@@ -3,12 +3,11 @@
 import functools
 import re
 from pathlib import Path
-from typing import Optional
 
 from xonsh.built_ins import XSH
 
 
-def find_env_name() -> Optional[str]:
+def find_env_name() -> str | None:
     """Find current environment name from available sources.
 
     If ``$VIRTUAL_ENV`` is set, it is determined from the prompt setting in

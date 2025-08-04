@@ -63,6 +63,7 @@ extensions = [
     "runthis.sphinxext",
     "extensions.jinja_rst_ext",
     "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
+    "sphinx_prompt",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

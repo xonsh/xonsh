@@ -1,1 +1,0 @@
-../CONTRIBUTING.rst

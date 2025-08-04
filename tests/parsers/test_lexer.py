@@ -50,7 +50,7 @@ def assert_tokens_equal(x, y):
         msg = "The tokens sequences have different lengths: {0!r} != {1!r}\n"
         msg += "# x\n{2}\n\n# y\n{3}"
         pytest.fail(msg.format(len(x), len(y), pformat(x), pformat(y)))
-    diffs = [(a, b) for a, b in zip(x, y) if not tokens_equal(a, b)]
+    diffs = [(a, b) for a, b in zip(x, y, strict=False) if not tokens_equal(a, b)]
     if len(diffs) > 0:
         msg = ["The token sequences differ: "]
         for a, b in diffs:

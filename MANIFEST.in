@@ -1,7 +1,7 @@
 include logo.txt
 include scripts/*
 include license
-include CHANGELOG.rst
+include CHANGELOG.md
 include README.rst
 include run-tests.xsh
 recursive-include tests *

@@ -124,7 +124,7 @@ def _bash_get_sep():
         return os.sep
 
 
-_BASH_PATTERN_NEED_QUOTES: tp.Optional[tp.Pattern] = None
+_BASH_PATTERN_NEED_QUOTES: tp.Pattern | None = None
 
 
 def _bash_pattern_need_quotes():

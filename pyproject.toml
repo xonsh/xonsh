@@ -12,7 +12,7 @@ description = "Python-powered shell. Full-featured and cross-platform."
 authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
 maintainers = [{ name = "Xonsh Community" }, { email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = []
 
 [tool.setuptools.dynamic]
@@ -80,7 +80,7 @@ xonsh = "xonsh.virtualenv:XonshActivator"
 Homepage = "https://xon.sh"
 documentation = "https://xon.sh/contents.html"
 repository = "https://github.com/xonsh/xonsh"
-changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst"
+changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.md"
 "Issue tracker" = "https://github.com/xonsh/xonsh/issues"
 
 [project.optional-dependencies]
@@ -135,9 +135,11 @@ doc = [
     "matplotlib",
     "tornado",
     "runthis-sphinxext",
-    "livereload",
     "myst-parser",
+    "sphinx-autobuild",
+    "sphinx-prompt",
 ]
+
 
 
 [project.scripts]
@@ -261,4 +263,9 @@ convention = "numpy"
 ]
 "tests/test*.py" = [
     "E741", #  E741 Ambiguous variable name
+]
+
+[dependency-groups]
+dev = [
+    "xonsh[dev]",
 ]

@@ -375,7 +375,9 @@ def test_history_getitem(index, exp, hist, xession):
     attrs = ("inp", "out", "rtn", "ts")
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
-        entry = {k: v for k, v in zip(attrs, [cmd, "out", 0, (ts, ts + 1)])}
+        entry = {
+            k: v for k, v in zip(attrs, [cmd, "out", 0, (ts, ts + 1)], strict=False)
+        }
         hist.append(entry)
 
     entry = hist[index]

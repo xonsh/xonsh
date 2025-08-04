@@ -1,13 +1,12 @@
 """Prompt formatter for jobs fields e.g. current_job."""
 
 import contextlib
-import typing as tp
 
 from xonsh.prompt.base import PromptField
 
 
 class CurrentJobField(PromptField):
-    _current_cmds: tp.Optional[list] = None
+    _current_cmds: list | None = None
 
     def update(self, ctx):
         if self._current_cmds is not None:

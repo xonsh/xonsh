@@ -260,7 +260,7 @@ def list_of_strs_or_callables(x):
     Ensures that x is a list of strings or functions.
     This is called when using the ``@()`` operator to expand it's content.
     """
-    if isinstance(x, (str, bytes)) or callable(x):
+    if isinstance(x, str | bytes) or callable(x):
         rtn = [ensure_str_or_callable(x)]
     elif isinstance(x, cabc.Iterable):
         rtn = list(map(ensure_str_or_callable, x))
@@ -431,7 +431,7 @@ def call_macro(f, raw_args, glbs, locs):
     macroname = f.__name__
     i = 0
     args = []
-    for (key, param), raw_arg in zip(sig.parameters.items(), raw_args):
+    for (key, param), raw_arg in zip(sig.parameters.items(), raw_args, strict=False):
         i += 1
         if raw_arg == "*":
             break
