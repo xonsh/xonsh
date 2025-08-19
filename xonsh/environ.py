@@ -16,6 +16,7 @@ import typing as tp
 import warnings
 from collections import ChainMap
 from pathlib import Path
+from xonsh.tools import EnvPath
 
 import xonsh.prompt.base as prompt
 from xonsh import __version__ as XONSH_VERSION
@@ -2061,7 +2062,7 @@ class Env(cabc.MutableMapping):
         if "PATH" not in self._d:
             # this is here so the PATH is accessible to subprocs and so that
             # it can be modified in-place in the xonshrc file
-            self._d["PATH"] = list(PATH_DEFAULT)
+            self._d["PATH"] = EnvPath(PATH_DEFAULT)
         self._detyped = None
 
     def get_detyped(self, key: str):
