@@ -136,7 +136,6 @@ def test_dirty_working_directory(repo, set_xenv):
         assert result
 
 
-
 @pytest.mark.parametrize("include_untracked", [True, False])
 def test_git_dirty_working_directory_includes_untracked(
     xession, fake_process, include_untracked
