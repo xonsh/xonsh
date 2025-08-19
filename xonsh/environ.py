@@ -16,7 +16,6 @@ import typing as tp
 import warnings
 from collections import ChainMap
 from pathlib import Path
-from xonsh.tools import EnvPath
 
 import xonsh.prompt.base as prompt
 from xonsh import __version__ as XONSH_VERSION
@@ -43,6 +42,7 @@ from xonsh.platform import (
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
+    EnvPath,
     adjust_shlvl,
     always_false,
     always_true,

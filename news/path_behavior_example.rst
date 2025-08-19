@@ -11,7 +11,7 @@ EnvPath Methods
 The ``EnvPath`` class provides several useful methods:
 
 * ``.prepend(path)``: Add a path to the beginning
-* ``.append(path)``: Add a path to the end  
+* ``.append(path)``: Add a path to the end
 * ``.remove(path)``: Remove a path
 * ``.insert(index, path)``: Insert at specific position
 
@@ -22,10 +22,10 @@ Basic usage::
 
     # Add a directory to the front of PATH
     $PATH.prepend('/usr/local/bin')
-    
+
     # Add to the end
     $PATH.append('/opt/custom/bin')
-    
+
     # Remove a directory
     $PATH.remove('/unwanted/path')
 
@@ -43,7 +43,7 @@ list, causing errors:
     >>> $PATH.prepend('/usr/local/bin')
     AttributeError: 'list' object has no attribute 'prepend'
 
-After Fix (Current Behavior)  
+After Fix (Current Behavior)
 ----------------------------
 
 Now ``$PATH`` is always an ``EnvPath`` object:
