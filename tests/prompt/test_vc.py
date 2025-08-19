@@ -6,6 +6,12 @@ from pathlib import Path
 import pytest
 
 from xonsh.prompt import vc
+import shutil
+import pytest
+
+hg = shutil.which("hg")
+pytestmark = pytest.mark.skipif(hg is None, reason="hg (Mercurial) not installed")
+
 
 # Xonsh interaction with version control systems.
 VC_BRANCH = {
