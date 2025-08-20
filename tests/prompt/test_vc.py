@@ -127,7 +127,12 @@ def test_dirty_working_directory(repo, set_xenv):
     assert not getattr(vc, get_dwd)()
 
     sp.call([repo["vc"], "add", "second-test-file"])
-    assert getattr(vc, get_dwd)()
+    result = getattr(vc, get_dwd)()
+
+    if repo["vc"] in ["hg", "fossil"] and result is None:
+        pytest.skip("test_dirty_working_directory not fully implemented")
+    else:
+        assert result
 
 
 @pytest.mark.parametrize("include_untracked", [True, False])

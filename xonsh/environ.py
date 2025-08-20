@@ -42,6 +42,7 @@ from xonsh.platform import (
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
+    EnvPath,
     adjust_shlvl,
     always_false,
     always_true,
@@ -2061,7 +2062,7 @@ class Env(cabc.MutableMapping):
         if "PATH" not in self._d:
             # this is here so the PATH is accessible to subprocs and so that
             # it can be modified in-place in the xonshrc file
-            self._d["PATH"] = list(PATH_DEFAULT)
+            self._d["PATH"] = EnvPath(PATH_DEFAULT)
         self._detyped = None
 
     def get_detyped(self, key: str):
