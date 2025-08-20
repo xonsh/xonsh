@@ -129,9 +129,8 @@ def test_dirty_working_directory(repo, set_xenv):
     sp.call([repo["vc"], "add", "second-test-file"])
     result = getattr(vc, get_dwd)()
 
-    # hg implementation may return None, skip if so
-    if repo["vc"] == "hg" and result is None:
-        pytest.skip("hg_dirty_working_directory not fully implemented")
+    if repo["vc"] in ["hg", "fossil"] and result is None:
+        pytest.skip("test_dirty_working_directory not fully implemented")
     else:
         assert result
 
