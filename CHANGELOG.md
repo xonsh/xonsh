@@ -1,5 +1,39 @@
 # Xonsh Change Log
 
+## [0.20.0](https://github.com/xonsh/xonsh/compare/0.19.9...0.20.0) (2025-09-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for Python versions below 3.11
+* auto-load xontribs after loading RC files ([#5873](https://github.com/xonsh/xonsh/issues/5873))
+
+### Features
+
+* allow specifying special files as scripts ([d487f06](https://github.com/xonsh/xonsh/commit/d487f06f9ded99039dd2bce35b807fa48213f76f))
+* Allow specifying special files as scripts ([#5886](https://github.com/xonsh/xonsh/issues/5886)) ([d487f06](https://github.com/xonsh/xonsh/commit/d487f06f9ded99039dd2bce35b807fa48213f76f))
+
+
+### Bug Fixes
+
+* Update release-please-config.json ([4c21211](https://github.com/xonsh/xonsh/commit/4c21211272f1a03e6b8ffc5f3307a1f9dafccfbd))
+
+
+### Documentation
+
+* update devguide ([911a2f8](https://github.com/xonsh/xonsh/commit/911a2f84e6d25dd82c8a4957bb966a80a8d3f244))
+* update devguide ([eabf298](https://github.com/xonsh/xonsh/commit/eabf298c80e150faf76309c16eba735d4dd8b417))
+* update hardlink to external site ([41b4c85](https://github.com/xonsh/xonsh/commit/41b4c851cb5c024c0ad94012b11b0c7a2da2985f))
+* update TOC to include top level titles ([e21a326](https://github.com/xonsh/xonsh/commit/e21a326705d0317dd0218bf373b3ebbb5cc9f261))
+* use soft-links for external docs ([1a49358](https://github.com/xonsh/xonsh/commit/1a4935820b72848072ba6d3eebd704fe8cacb432))
+* use sphinx-autobuild for live reloaded docs ([174d2d8](https://github.com/xonsh/xonsh/commit/174d2d8551d3539c7f19c41c36c413b217d5f50d))
+
+
+### Code Refactoring
+
+* auto-load xontribs after loading RC files ([#5873](https://github.com/xonsh/xonsh/issues/5873)) ([bf4770a](https://github.com/xonsh/xonsh/commit/bf4770a0181f7019a695508cc05911d705a58d83))
+* drop support for Python versions below 3.11 ([02f0ec4](https://github.com/xonsh/xonsh/commit/02f0ec47423af6e810ed7cb1699dde05e3e2bc34))
+
 ## [0.19.9](https://github.com/xonsh/xonsh/compare/0.19.8...0.19.9) (2025-06-24)
 
 
