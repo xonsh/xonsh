@@ -397,6 +397,8 @@ class XonshStyle(Style):
             try:
                 style_obj = get_style_by_name(value)()
                 self._smap = style_obj.styles.copy()
+                if not self._smap.get(Name.Builtin):
+                    self._smap[Name.Builtin] = cmap.get(Color.GREEN, "ansigreen")
                 self.highlight_color = style_obj.highlight_color
                 self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
