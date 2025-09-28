@@ -660,3 +660,14 @@ def test_xonsh_dir_vars():
     assert xonsh_config_dir(env), "/config"
     assert xonsh_cache_dir(env), "/cache"
     assert xonsh_data_dir(env), "/data"
+
+
+def test_envpath_in_env_object():
+    """Ensure PATH is stored as an EnvPath inside Env."""
+    env = Env(PATH=["/usr/bin", "/bin"])
+    # PATH should exist in env
+    assert "PATH" in env
+    # PATH should behave like EnvPath (has .paths attribute)
+    assert hasattr(env["PATH"], "paths")
+    assert "/usr/bin" in env["PATH"].paths
+    assert "/bin" in env["PATH"].paths
