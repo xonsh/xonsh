@@ -306,10 +306,21 @@ def attr_complete(prefix, ctx, filter_func):
         a = getattr(val, opt)
         if XSH.env["COMPLETIONS_BRACKETS"]:
             if callable(a):
-                # Add both plain name (for attribute access) and with "(" (for calling)
+                # Determine if this callable has useful attributes (class/module/namespace)
+                has_useful_attrs = (
+                    inspect.isclass(a)
+                    or inspect.ismodule(a)
+                    or any(not attr.startswith("_") for attr in dir(a))
+                )
+
                 base_comp = prefix[: prelen - len(attr)] + opt
-                attrs.add(base_comp)
-                attrs.add(base_comp + "(")
+
+                if has_useful_attrs:
+                    # Show plain name for attribute access (e.g., classes, modules)
+                    attrs.add(base_comp)
+                else:
+                    # Show with ( for calling (e.g., simple functions, methods)
+                    attrs.add(base_comp + "(")
             elif isinstance(a, cabc.Sequence | cabc.Mapping):
                 rpl = opt + "["
                 comp = prefix[: prelen - len(attr)] + rpl

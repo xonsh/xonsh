@@ -169,7 +169,7 @@ def test_complete_xonsh_imp_not_matching():
 
 
 def test_complete_python_callable_with_attributes():
-    """Test that callable attributes provide both plain and parenthesized completions."""
+    """Test that callable classes show plain name only (no duplicate with parentheses)."""
     import datetime
 
     res = complete_python(
@@ -180,10 +180,35 @@ def test_complete_python_callable_with_attributes():
     assert res and len(res) == 2
     comps, _ = res
 
-    # Should have both datetime (for accessing attributes) and datetime( (for calling)
+    # Classes with attributes should show plain name only (not with parentheses)
     assert "datetime.datetime" in comps, (
         "Should have plain 'datetime' for attribute access"
     )
-    assert "datetime.datetime(" in comps, (
-        "Should have 'datetime(' for calling constructor"
+    assert "datetime.datetime(" not in comps, (
+        "Should NOT have 'datetime(' to avoid duplicates"
+    )
+
+
+def test_complete_python_simple_function():
+    """Test that simple functions/methods show with parentheses only (no plain name)."""
+
+    class SimpleClass:
+        def simple_method(self):
+            """A simple method with no useful attributes."""
+            pass
+
+    obj = SimpleClass()
+
+    res = complete_python(
+        CompletionContext(python=PythonContext("obj.simple", 10, ctx=locals()))
+    )
+    assert res and len(res) == 2
+    comps, _ = res
+
+    # Simple methods should show with ( only (not plain name)
+    assert "obj.simple_method(" in comps, (
+        "Should have 'simple_method(' for calling method"
+    )
+    assert "obj.simple_method" not in comps, (
+        "Should NOT have plain 'simple_method' to avoid duplicates"
     )
