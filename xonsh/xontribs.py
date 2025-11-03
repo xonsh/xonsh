@@ -269,6 +269,8 @@ def xontribs_unload(
     ----------
     names
         name of xontribs to unload
+    verbose : -v, --verbose
+        verbose output
 
     Notes
     -----
@@ -303,6 +305,8 @@ def xontribs_reload(
     ----------
     names
         name of xontribs to reload
+    verbose : -v, --verbose
+        verbose output
     """
     for name in names:
         if verbose:
