@@ -1,0 +1,5 @@
+**Fixed**
+
+* Fixed ``$PATH`` not being an ``EnvPath`` when xonsh is initialized with ``--no-env`` flag.
+  This ensures that ``EnvPath`` methods like ``.prepend()`` and ``.append()`` work correctly
+  regardless of how xonsh is started.
