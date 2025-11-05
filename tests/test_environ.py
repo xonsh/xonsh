@@ -691,8 +691,8 @@ def test_numerical_envvar_with_underscores():
     assert env["1_2_3"] == "underscore_value"
     assert env["_123"] == "leading_underscore"
     assert env["123_"] == "trailing_underscore"
-    
-    
+
+
 def test_envpath_in_env_object():
     """Ensure PATH is stored as an EnvPath inside Env."""
     env = Env(PATH=["/usr/bin", "/bin"])
