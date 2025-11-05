@@ -157,13 +157,13 @@ Manages xonsh configuration information.
 
 .. command-help:: xonsh.xonfig.xonfig_main
 
-``xthread`` and ``xunthread``
+``@thread`` and ``@unthread``
 =============================
-Use ``xthread`` and ``xunthread`` to run command as threadable or unthreadable e.g.
+Use ``@thread`` and ``@unthread`` to run command as threadable or unthreadable e.g to have a result of ssh command:
 
 .. code-block:: console
 
-    @ !(xthread ssh host -T "echo 1")
+    @ !(@thread ssh host -T "echo 1")
 
 Windows cmd Aliases
 =======================

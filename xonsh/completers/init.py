@@ -15,7 +15,7 @@ from xonsh.completers.environment import complete_environment_vars
 from xonsh.completers.imports import complete_import
 from xonsh.completers.man import complete_from_man
 from xonsh.completers.path import complete_path
-from xonsh.completers.python import complete_python
+from xonsh.completers.python import complete_python, complete_xonsh_imp
 
 
 def default_completers(cmd_cache):
@@ -42,6 +42,7 @@ def default_completers(cmd_cache):
 
     defaults.extend(
         [
+            ("xonsh_imp", complete_xonsh_imp),
             ("python", complete_python),
             ("path", complete_path),
         ]

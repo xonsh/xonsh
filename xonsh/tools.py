@@ -861,7 +861,12 @@ def debian_command_not_found(cmd):
         stderr=subprocess.STDOUT,
         shell=True,
     )
-    s = "\n".join(s.rstrip().splitlines()).strip()
+    lines = [
+        line
+        for line in s.rstrip().splitlines()
+        if not line.endswith(": command not found")
+    ]
+    s = "\n".join(lines).strip()
     return s
 
 
