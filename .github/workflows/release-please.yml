@@ -1,4 +1,5 @@
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -6,6 +7,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 name: release-please
 
@@ -13,8 +15,12 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - uses: googleapis/release-please-action@v4
         with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-#      todo: add block to run rever's Authors and appimage activity on release
+          token: ${{ steps.app-token.outputs.token }}
+        # todo: add block to run rever's Authors and appimage activity on release

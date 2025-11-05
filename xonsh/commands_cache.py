@@ -66,7 +66,7 @@ class CaseInsensitiveDict(dict[tp.Any, tp.Any]):
         return CaseInsensitiveDict(self.items())
 
 
-CacheDict: tp.Union[type[CaseInsensitiveDict], type[dict]]
+CacheDict: type[CaseInsensitiveDict] | type[dict]
 if ON_WINDOWS:
     CacheDict = CaseInsensitiveDict
 else:
@@ -446,7 +446,7 @@ class CommandsCache(cabc.Mapping):
         first_args = []  # contains in reverse order args passed to the aliased command
         while cmd0 in self.aliases:
             alias_name = self.aliases
-            if isinstance(alias_name, (str, bytes)) or not isinstance(
+            if isinstance(alias_name, str | bytes) or not isinstance(
                 alias_name, cabc.Sequence
             ):
                 return predict_true

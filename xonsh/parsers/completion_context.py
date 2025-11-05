@@ -10,7 +10,6 @@ from typing import (
     Any,
     Generic,
     NamedTuple,
-    Optional,
     TypeVar,
     Union,
     cast,
@@ -114,7 +113,7 @@ class PythonContext(NamedTuple):
     """The cursor's index in the multiline code"""
     is_sub_expression: bool = False
     """Whether this is a sub expression (``@(...)``)"""
-    ctx: Optional[dict[str, Any]] = None
+    ctx: dict[str, Any] | None = None
     """Objects in the current execution context"""
 
     def __repr__(self):
@@ -132,12 +131,12 @@ class CompletionContext(NamedTuple):
     The object containing the current completion context.
     """
 
-    command: Optional[CommandContext] = None
+    command: CommandContext | None = None
     """
     The current command.
     This will be ``None`` when we can't be completing a command, e.g. ``echo @(<TAB>``.
     """
-    python: Optional[PythonContext] = None
+    python: PythonContext | None = None
     """
     The current python code.
     This will be ``None`` when we can't be completing python, e.g. ``echo $(<TAB>``.
@@ -174,7 +173,7 @@ class Spanned(Generic[T]):
         self,
         value: T,
         span: slice,
-        cursor_context: Optional[Union[CommandContext, PythonContext, int]] = None,
+        cursor_context: CommandContext | PythonContext | int | None = None,
         expansion_obj: Union["ExpandableObject", ExpansionOperation] = None,
     ):
         """
@@ -202,10 +201,12 @@ class Spanned(Generic[T]):
     def replace(
         self,
         value: Missing = Missing.MISSING,
-        span: Union[slice, Missing] = Missing.MISSING,
-        cursor_context: Optional[
-            Union[CommandContext, PythonContext, int, Missing]
-        ] = Missing.MISSING,
+        span: slice | Missing = Missing.MISSING,
+        cursor_context: CommandContext
+        | PythonContext
+        | int
+        | Missing
+        | None = Missing.MISSING,
         expansion_obj: Union[
             "ExpandableObject", ExpansionOperation, Missing
         ] = Missing.MISSING,
@@ -215,10 +216,12 @@ class Spanned(Generic[T]):
     def replace(
         self,
         value: T2,
-        span: Union[slice, Missing] = Missing.MISSING,
-        cursor_context: Optional[
-            Union[CommandContext, PythonContext, int, Missing]
-        ] = Missing.MISSING,
+        span: slice | Missing = Missing.MISSING,
+        cursor_context: CommandContext
+        | PythonContext
+        | int
+        | Missing
+        | None = Missing.MISSING,
         expansion_obj: Union[
             "ExpandableObject", ExpansionOperation, Missing
         ] = Missing.MISSING,
@@ -226,11 +229,13 @@ class Spanned(Generic[T]):
 
     def replace(
         self,
-        value: Union[T2, Missing] = Missing.MISSING,
-        span: Union[slice, Missing] = Missing.MISSING,
-        cursor_context: Optional[
-            Union[CommandContext, PythonContext, int, Missing]
-        ] = Missing.MISSING,
+        value: T2 | Missing = Missing.MISSING,
+        span: slice | Missing = Missing.MISSING,
+        cursor_context: CommandContext
+        | PythonContext
+        | int
+        | Missing
+        | None = Missing.MISSING,
         expansion_obj: Union[
             "ExpandableObject", ExpansionOperation, Missing
         ] = Missing.MISSING,
@@ -253,9 +258,9 @@ class Spanned(Generic[T]):
 
 
 Commands = Spanned[list[Spanned[CommandContext]]]
-ArgContext = Union[Spanned[CommandContext], Commands, Spanned[PythonContext]]
+ArgContext = Union[Spanned[CommandContext], Commands, Spanned[PythonContext]]  # noqa: UP007
 
-ExpandableObject = Union[Spanned[CommandArg], ArgContext]
+ExpandableObject = Union[Spanned[CommandArg], ArgContext]  # noqa: UP007
 # https://github.com/python/mypy/issues/9424#issuecomment-687865111 :
 Exp = TypeVar(
     "Exp",
@@ -373,8 +378,8 @@ class CompletionContextParser:
         self,
         multiline_text: str,
         cursor_index: int,
-        ctx: Optional[dict[str, Any]] = None,
-    ) -> Optional[CompletionContext]:
+        ctx: dict[str, Any] | None = None,
+    ) -> CompletionContext | None:
         """Returns a CompletionContext from a command line.
 
         Parameters
@@ -397,7 +402,7 @@ class CompletionContextParser:
                 f"Bad cursor index: {cursor_index}"
             )
 
-            context: Optional[CompletionContext] = self.parser.parse(
+            context: CompletionContext | None = self.parser.parse(
                 input=multiline_text, lexer=self, debug=1 if self.debug else 0
             )
         except (SyntaxError, AssertionError):
@@ -489,7 +494,7 @@ class CompletionContextParser:
         """context : command
         | commands
         """
-        spanned: Union[Spanned[CommandContext], Commands] = p[1]
+        spanned: Spanned[CommandContext] | Commands = p[1]
 
         # expand the commands to the complete input
         complete_span = slice(0, len(self.current_input))
@@ -539,7 +544,7 @@ class CompletionContextParser:
             span = EMPTY_SPAN  # this will be expanded in expand_command_span
 
         args = tuple(arg.value for arg in spanned_args)
-        cursor_context: Optional[Union[CommandContext, PythonContext]] = None
+        cursor_context: CommandContext | PythonContext | None = None
 
         context = CommandContext(args, arg_index=-1)
         if self.cursor_in_span(span):
@@ -785,21 +790,21 @@ class CompletionContextParser:
 
     # Utils:
 
-    def try_expand_right(self, obj: Exp, new_right: int) -> Optional[Exp]:
+    def try_expand_right(self, obj: Exp, new_right: int) -> Exp | None:
         if obj.span is EMPTY_SPAN:
             new_span = slice(new_right, new_right)
         else:
             new_span = slice(obj.span.start, new_right)
         return self.try_expand_span(obj, new_span)
 
-    def try_expand_left(self, obj: Exp, new_left: int) -> Optional[Exp]:
+    def try_expand_left(self, obj: Exp, new_left: int) -> Exp | None:
         if obj.span is EMPTY_SPAN:
             new_span = slice(new_left, new_left)
         else:
             new_span = slice(new_left, obj.span.stop)
         return self.try_expand_span(obj, new_span)
 
-    def try_expand_span(self, obj: Exp, new_span: slice) -> Optional[Exp]:
+    def try_expand_span(self, obj: Exp, new_span: slice) -> Exp | None:
         if obj.span.start <= new_span.start and new_span.stop <= obj.span.stop:
             # the new span doesn't expand the old one
             if obj.span is not EMPTY_SPAN:
@@ -898,7 +903,7 @@ class CompletionContextParser:
 
     def try_expand_arg_span(
         self, arg: Spanned[CommandArg], new_span: slice
-    ) -> Optional[Spanned[CommandArg]]:
+    ) -> Spanned[CommandArg] | None:
         """Try to expand the arg to a new span. This will return None if the arg can't be expanded to the new span.
 
         For example, expanding `"hi   ` will work since the added whitespace is part of the arg, but `"hi"   ` won't work.
@@ -933,7 +938,7 @@ class CompletionContextParser:
             sub_expr = cast(ArgContext, arg.expansion_obj)
 
             # this arg is a subcommand or multiple subcommands, e.g. `$(a && b)`
-            expanded_obj: Optional[ArgContext] = self.try_expand_span(  # type: ignore
+            expanded_obj: ArgContext | None = self.try_expand_span(  # type: ignore
                 sub_expr, new_span
             )
             if expanded_obj is None:
@@ -945,7 +950,7 @@ class CompletionContextParser:
 
     def try_expand_python_context(
         self, python_context: Spanned[PythonContext], new_span: slice
-    ) -> Optional[Spanned[PythonContext]]:
+    ) -> Spanned[PythonContext] | None:
         added_span = slice(python_context.span.stop, new_span.stop)
         added_code = self.current_input[added_span]
         new_code = python_context.value.multiline_code + added_code
@@ -965,7 +970,7 @@ class CompletionContextParser:
             # the last command is expandable
             # if it were an `ExpansionOperation`, `try_expand` would caught it instead
             expandable = cast(ExpandableObject, python_context.expansion_obj)
-            expanded_command: Optional[ExpandableObject] = self.try_expand_right(
+            expanded_command: ExpandableObject | None = self.try_expand_right(
                 expandable, new_span.stop
             )  # type: ignore
 
@@ -981,7 +986,7 @@ class CompletionContextParser:
                 )
 
         # the last command can't be expanded, but the python code is still valid
-        new_cursor_context: Optional[PythonContext] = None
+        new_cursor_context: PythonContext | None = None
         if self.cursor_in_span(new_span):
             new_cursor_context = new_python_context
         return python_context.replace(
@@ -990,7 +995,7 @@ class CompletionContextParser:
 
     def handle_command_arg(
         self, arg: Spanned[CommandArg]
-    ) -> tuple[CommandContext, Optional[Union[CommandContext, PythonContext]]]:
+    ) -> tuple[CommandContext, CommandContext | PythonContext | None]:
         """Create a command context from an arg which contains the cursor.
         Also return the internal cursor context if it exists.
         `args`, `arg_index`, and `subcmd_opening` aren't set by this function
@@ -1077,7 +1082,7 @@ class CompletionContextParser:
         return arg
 
     @staticmethod
-    def try_parse_string_literal(raw_arg: str) -> Optional[CommandArg]:
+    def try_parse_string_literal(raw_arg: str) -> CommandArg | None:
         """Try to parse this as a single string literal. can be partial
         For example:
             "wow"
@@ -1105,7 +1110,7 @@ class CompletionContextParser:
 
     def process_string_segment(
         self, string: str, span: slice
-    ) -> tuple[str, Optional[int]]:
+    ) -> tuple[str, int | None]:
         """Process a string segment:
         1. Return a relative_cursor if it's inside the span (for ``Spanned.cursor_context``).
         2. Handle line continuations in the string.

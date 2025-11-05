@@ -150,15 +150,19 @@ def _xhj_get_history_files(sort=True, newest_first=False, modified_since=None):
     return files
 
 
-def _xhj_pull_items(last_pull_time, src_sessionid=None):
+def _xhj_pull_items(pull_times, src_sessionid=None):
     """List all history items after a given start time.
     Optionally restrict to just items from a single session.
     """
+    last_full_pull_time = pull_times[None]
+
     if src_sessionid:
         filename = os.path.join(_xhj_get_data_dir(), f"xonsh-{src_sessionid}.json")
         src_paths = [filename]
     else:
-        src_paths = _xhj_get_history_files(sort=True, modified_since=last_pull_time)
+        src_paths = _xhj_get_history_files(
+            sort=True, modified_since=last_full_pull_time
+        )
 
     # src_paths may include the current session's file, so skip it to avoid duplicates
     custom_history_file = XSH.env.get("XONSH_HISTORY_FILE") or ""
@@ -172,13 +176,14 @@ def _xhj_pull_items(last_pull_time, src_sessionid=None):
         except (JSONDecodeError, ValueError):
             continue
 
+        sessionid = os.path.split(path)[-1][6:-5]
         cmds = lj["cmds"]
         if len(cmds) == 0:
             continue
         # the cutoff point is likely to be very near the end of the session, so iterate backward
         for i in range(len(cmds) - 1, -1, -1):
             item = cmds[i].load()
-            if item["ts"][1] > last_pull_time:
+            if item["ts"][1] > pull_times.get(sessionid, last_full_pull_time):
                 items.append(item)
             else:
                 break
@@ -494,7 +499,8 @@ class JsonHistory(History):
         self.last_cmd_out = None
         self.last_cmd_rtn = None
         self.gc = JsonHistoryGC() if gc else None
-        self.last_pull_time = time.time()
+        # pull times are tracked per-source-session; None means all sesssions
+        self.last_pull_times = {None: time.time()}
         # command fields that are known
         self.tss = JsonCommandField("ts", self)
         self.inps = JsonCommandField("inp", self)
@@ -588,9 +594,9 @@ class JsonHistory(History):
     def items(self, newest_first=False):
         """Display history items of current session."""
         if newest_first:
-            items = zip(reversed(self.inps), reversed(self.tss))
+            items = zip(reversed(self.inps), reversed(self.tss), strict=False)
         else:
-            items = zip(self.inps, self.tss)
+            items = zip(self.inps, self.tss, strict=False)
         for item, tss in items:
             yield {"inp": item.rstrip(), "ts": tss[0]}
 
@@ -643,7 +649,7 @@ class JsonHistory(History):
 
         cnt = 0
         prev = None
-        for item in _xhj_pull_items(self.last_pull_time, src_sessionid):
+        for item in _xhj_pull_items(self.last_pull_times, src_sessionid):
             line = item["inp"].rstrip()
             if show_commands:
                 print(line)
@@ -651,7 +657,12 @@ class JsonHistory(History):
                 XSH.shell.shell.prompter.history.append_string(line)
                 cnt += 1
             prev = line
-        self.last_pull_time = time.time()
+
+        # we can dump the session-specific pull times if this is a full pull
+        if src_sessionid is None:
+            self.last_pull_times = {}
+        self.last_pull_times[src_sessionid] = time.time()
+
         return cnt
 
     def run_gc(self, size=None, blocking=True, force=False, **_):

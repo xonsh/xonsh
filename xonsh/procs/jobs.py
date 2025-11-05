@@ -20,7 +20,7 @@ from xonsh.tools import get_signal_name, on_main_thread, unthreadable
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
-_last_exit_time: tp.Optional[float] = None
+_last_exit_time: float | None = None
 
 # Thread-local data for job control. Allows threadable callable aliases
 # (ProcProxyThread) to maintain job control information separate from the main
@@ -234,15 +234,8 @@ if ON_WINDOWS:
         proc = active_task["obj"]
         _continue(active_task)
         while proc.returncode is None:
-            try:
+            with contextlib.suppress(subprocess.TimeoutExpired, KeyboardInterrupt):
                 proc.wait(0.01)
-            except subprocess.TimeoutExpired:
-                pass
-            except KeyboardInterrupt:
-                try:
-                    _kill(active_task)
-                except subprocess.CalledProcessError:
-                    pass  # ignore error if process closed before we got here
         return wait_for_active_job(last_task=active_task)
 
 else:

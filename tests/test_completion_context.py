@@ -1,5 +1,4 @@
 import itertools
-import typing as tp
 from unittest import mock
 
 import pytest
@@ -16,7 +15,7 @@ from xonsh.pytest.tools import ON_WINDOWS
 DEBUG = False
 MISSING = object()
 X = "\x00"  # cursor marker
-PARSER: tp.Optional[CompletionContextParser] = None
+PARSER: CompletionContextParser | None = None
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -581,10 +580,10 @@ MULTIPLE_CMD_SIMPLE_EXAMPLES = [
 
 EXTENSIVE_COMMAND_PAIRS = tuple(
     itertools.chain(
-        zip(COMMAND_EXAMPLES, COMMAND_EXAMPLES[::-1]),
-        zip(COMMAND_EXAMPLES, EMPTY_COMMAND_EXAMPLES),
-        zip(EMPTY_COMMAND_EXAMPLES, COMMAND_EXAMPLES),
-        zip(EMPTY_COMMAND_EXAMPLES, EMPTY_COMMAND_EXAMPLES),
+        zip(COMMAND_EXAMPLES, COMMAND_EXAMPLES[::-1], strict=False),
+        zip(COMMAND_EXAMPLES, EMPTY_COMMAND_EXAMPLES, strict=False),
+        zip(EMPTY_COMMAND_EXAMPLES, COMMAND_EXAMPLES, strict=False),
+        zip(EMPTY_COMMAND_EXAMPLES, EMPTY_COMMAND_EXAMPLES, strict=False),
     )
 )
 
@@ -610,14 +609,20 @@ MULTIPLE_COMMAND_EXTENSIVE_EXAMPLES = tuple(
             # cursor in middle command
             ((first.replace(X, ""), second, third.replace(X, "")), second_context)
             for (first, _1), (second, second_context), (third, _3) in zip(
-                COMMAND_EXAMPLES[:3], COMMAND_EXAMPLES[3:6], COMMAND_EXAMPLES[6:9]
+                COMMAND_EXAMPLES[:3],
+                COMMAND_EXAMPLES[3:6],
+                COMMAND_EXAMPLES[6:9],
+                strict=False,
             )
         ),
         (
             # cursor in third command
             ((first.replace(X, ""), second.replace(X, ""), third), third_context)
             for (first, _1), (second, _2), (third, third_context) in zip(
-                COMMAND_EXAMPLES[:3], COMMAND_EXAMPLES[3:6], COMMAND_EXAMPLES[6:9]
+                COMMAND_EXAMPLES[:3],
+                COMMAND_EXAMPLES[3:6],
+                COMMAND_EXAMPLES[6:9],
+                strict=False,
             )
         ),
     )

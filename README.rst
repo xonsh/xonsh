@@ -90,7 +90,7 @@ First steps
 
 Install xonsh from pip:
 
-.. code-block:: xonshcon
+.. code-block:: shell
 
     python -m pip install 'xonsh[full]'
 
@@ -98,6 +98,8 @@ And visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
+
+Some beginners find the `xonsh cheatsheet <https://github.com/anki-code/xonsh-cheatsheet>`_ a helpful place to start.
 
 Extensions
 **********
@@ -140,7 +142,7 @@ The xonsh shell is developed by a community of volunteers. There are a few ways 
 - Contribute to `xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
 - Become xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
 - Implement and maintain xonsh support in third party tools e.g. conda, jupyter, zoxide, etc.
-- Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_.
+- Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_ (`src <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_).
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 - `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
 - Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
