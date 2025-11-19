@@ -72,14 +72,6 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
             :target: https://xonsh.zulipchat.com/
             :alt: Join to xonsh.zulipchat.com
 
-    .. image:: https://github.com/xonsh/xonsh/actions/workflows/test.yml/badge.svg
-            :target: https://github.com/xonsh/xonsh/actions/workflows/test.yml
-            :alt: GitHub Actions
-
-    .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graphs/badge.svg?branch=main
-            :target: https://codecov.io/github/xonsh/xonsh?branch=main
-            :alt: codecov.io
-
     .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
             :target: https://repology.org/project/xonsh/versions
             :alt: repology.org
@@ -91,6 +83,14 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
     .. image:: https://img.shields.io/badge/AppImage-xonsh-lightblue
             :target: https://xon.sh/appimage.html
             :alt: AppImage
+
+    .. image:: https://github.com/xonsh/xonsh/actions/workflows/test.yml/badge.svg
+            :target: https://github.com/xonsh/xonsh/actions/workflows/test.yml
+            :alt: GitHub Actions
+
+    .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graphs/badge.svg?branch=main
+            :target: https://codecov.io/github/xonsh/xonsh?branch=main
+            :alt: codecov.io
 
 First steps
 ***********
