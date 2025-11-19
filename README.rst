@@ -84,6 +84,13 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
             :target: https://repology.org/project/xonsh/versions
             :alt: repology.org
 
+    .. image:: https://img.shields.io/badge/Docker%20Hub-xonsh-blue
+            :target: https://hub.docker.com/u/xonsh
+            :alt: hub.docker.com
+
+    .. image:: https://img.shields.io/badge/AppImage-xonsh-lightblue
+            :target: https://xon.sh/appimage.html
+            :alt: AppImage
 
 First steps
 ***********
