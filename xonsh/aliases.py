@@ -780,10 +780,7 @@ def source_alias(args, stdin=None):
         # does not handle hidden files as we would like it to.
         fext = Path(fpath).suffix
         if not fext and (name := Path(fpath).name).startswith("."):
-            fhead = name  # hidden file with no extension
-        if not fext:
-            # file is a hidden file with no extension
-            fext = fhead
+            fext = name  # hidden file with no extension
         if fext not in {".xsh", ".py", ".xonshrc"} and not ignore_ext:
             raise RuntimeError(
                 "attempting to source non-xonsh file! If you are "
