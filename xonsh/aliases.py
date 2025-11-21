@@ -12,6 +12,7 @@ import sys
 import types
 import typing as tp
 from collections import abc as cabc
+from pathlib import Path
 from typing import Literal
 
 import xonsh.completers._aliases as xca
@@ -775,7 +776,14 @@ def source_alias(args, stdin=None):
                         "must source at least one file, " + fname + " does not exist."
                     )
                 break
-        _, fext = os.path.splitext(fpath)
+        # using Path to handle hidden files and extensions since os.path.splitext
+        # does not handle hidden files as we would like it to.
+        fext = Path(fpath).suffix
+        if not fext and (name := Path(fpath).name).startswith("."):
+            fhead = name  # hidden file with no extension
+        if not fext:
+            # file is a hidden file with no extension
+            fext = fhead
         if fext not in {".xsh", ".py", ".xonshrc"} and not ignore_ext:
             raise RuntimeError(
                 "attempting to source non-xonsh file! If you are "
@@ -784,7 +792,6 @@ def source_alias(args, stdin=None):
                 "For example, 'source-bash script.sh`. If you want to "
                 "source a xonsh file with a different extension, please "
                 "use the -i / --ingore-ext option."
-                
             )
         with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
