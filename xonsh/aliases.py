@@ -759,7 +759,11 @@ def source_alias(args, stdin=None):
     env = XSH.env
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
-    for i, fname in enumerate(args):
+    ignore_ext = False
+    if "-i" in args or "--ignore-ext" in args:
+        args = [a for a in args if a not in {"-i", "--ignore-ext"}]
+        ignore_ext = True 
+    for i, fname in enumerate(args): 
         fpath = fname
         if not os.path.isfile(fpath):
             fpath = locate_file(fname)
@@ -772,12 +776,15 @@ def source_alias(args, stdin=None):
                     )
                 break
         _, fext = os.path.splitext(fpath)
-        if fext and fext != ".xsh" and fext != ".py":
+        if fext not in {".xsh", ".py", ".xonshrc"} and not ignore_ext:
             raise RuntimeError(
                 "attempting to source non-xonsh file! If you are "
                 "trying to source a file in another language, "
                 "then please use the appropriate source command. "
-                "For example, source-bash script.sh"
+                "For example, 'source-bash script.sh`. If you want to "
+                "source a xonsh file with a different extension, please "
+                "use the -i / --ingore-ext option."
+                
             )
         with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
