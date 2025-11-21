@@ -763,8 +763,8 @@ def source_alias(args, stdin=None):
     ignore_ext = False
     if "-i" in args or "--ignore-ext" in args:
         args = [a for a in args if a not in {"-i", "--ignore-ext"}]
-        ignore_ext = True 
-    for i, fname in enumerate(args): 
+        ignore_ext = True
+    for i, fname in enumerate(args):
         fpath = fname
         if not os.path.isfile(fpath):
             fpath = locate_file(fname)
