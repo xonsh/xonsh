@@ -12,8 +12,8 @@ import sys
 import types
 import typing as tp
 from collections import abc as cabc
-from pathlib import Path
 from typing import Literal
+from pathlib import Path
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
@@ -552,11 +552,7 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
     if len(kwargs) != len(func_params):
         # There is unknown param. Switch to positional mode.
         kwargs = dict(
-            zip(
-                map(operator.itemgetter(0), func_params),
-                alias_params.values(),
-                strict=False,
-            )
+            zip(map(operator.itemgetter(0), func_params), alias_params.values())
         )
     return func(**kwargs)
 
@@ -752,19 +748,22 @@ source_foreign = SourceForeignAlias(
 
 
 @unthreadable
-def source_alias(args, stdin=None):
+def source_alias_fn(files: Annotated[list[str], Arg(nargs="+")], ignore_ext=False, _stdin=None):
     """Executes the contents of the provided files in the current context.
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
+
+    Parameters
+    ----------
+    files
+        paths to source files.
+    ignore_ext : -e, --ignore-ext
+        don't check the file extension
     """
     env = XSH.env
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
-    ignore_ext = False
-    if "-i" in args or "--ignore-ext" in args:
-        args = [a for a in args if a not in {"-i", "--ignore-ext"}]
-        ignore_ext = True
-    for i, fname in enumerate(args):
+    for i, fname in enumerate(files):
         fpath = fname
         if not os.path.isfile(fpath):
             fpath = locate_file(fname)
@@ -776,19 +775,17 @@ def source_alias(args, stdin=None):
                         "must source at least one file, " + fname + " does not exist."
                     )
                 break
-        # using Path to handle hidden files and extensions since os.path.splitext
-        # does not handle hidden files as we would like it to.
-        fext = Path(fpath).suffix
-        if not fext and (name := Path(fpath).name).startswith("."):
+        _, fext = os.path.splitext(fpath)
+        fext, name = Path(fpath).suffix, Path(fpath).name
+        if not fext and name.startswith("."):
             fext = name  # hidden file with no extension
-        if fext not in {".xsh", ".py", ".xonshrc"} and not ignore_ext:
+        if not ignore_ext and fext not in {".xsh", ".py", ".xonshrc"}:
             raise RuntimeError(
-                "attempting to source non-xonsh file! If you are "
-                "trying to source a file in another language, "
-                "then please use the appropriate source command. "
-                "For example, 'source-bash script.sh`. If you want to "
-                "source a xonsh file with a different extension, please "
-                "use the -i / --ingore-ext option."
+                f"attempting to source file with non-xonsh extension {repr(name)}! "
+                f"If you are trying to source a file in another language, "
+                "then please use the appropriate source command "
+                "e.g. `source-bash script.sh`. "
+                "Use `-e` to ignore extension checking and source the file."
             )
         with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
@@ -797,7 +794,7 @@ def source_alias(args, stdin=None):
         ctx = XSH.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
         with (
-            env.swap(XONSH_MODE="source", **make_args_env(args[i + 1 :])),
+            env.swap(XONSH_MODE="source", **make_args_env(files[i + 1 :])),
             swap_values(ctx, updates),
         ):
             try:
@@ -807,12 +804,13 @@ def source_alias(args, stdin=None):
                     "{RED}You may be attempting to source non-xonsh file! "
                     "{RESET}If you are trying to source a file in "
                     "another language, then please use the appropriate "
-                    "source command. For example, {GREEN}source-bash "
-                    "script.sh{RESET}",
+                    "source command. For example, {GREEN}`source-bash "
+                    "script.sh`{RESET}",
                     file=sys.stderr,
                 )
                 raise
 
+source_alias = ArgParserAlias(func=source_alias_fn, has_args=True, prog="source")
 
 def source_cmd_fn(
     files: Annotated[list[str], Arg(nargs="+")],
@@ -959,7 +957,7 @@ def xexec_fn(
     except FileNotFoundError as e:
         return (
             None,
-            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}\n",
+            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}" "\n",
             1,
         )
 
@@ -1139,7 +1137,9 @@ def make_default_aliases():
 
             def sudo(args):
                 if len(args) < 1:
-                    print("You need to provide an executable to run as Administrator.")
+                    print(
+                        "You need to provide an executable to run as " "Administrator."
+                    )
                     return
                 cmd = args[0]
                 if locate_binary(cmd):
