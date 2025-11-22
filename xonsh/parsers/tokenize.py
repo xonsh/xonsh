@@ -22,6 +22,7 @@ import itertools
 import re
 import sys
 import token
+import typing as tp
 from token import (
     AMPER,
     AMPEREQUAL,
@@ -184,7 +185,7 @@ for v in _xonsh_tokens.values():
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES: dict[str, str | int] = {
+EXACT_TOKEN_TYPES: dict[str, tp.Union[str, int]] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,
@@ -266,7 +267,7 @@ def maybe(*choices):
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
 Whitespace = r"[ \f\t]*"
-Comment = r"#[^\r\n]*"
+Comment = r" #[^\r\n]*"
 Ignore = Whitespace + tokany(r"\\\r?\n" + Whitespace) + maybe(Comment)
 Name_RE = r"\$?\w+"
 
@@ -1027,7 +1028,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         if async_def:
                             async_def_nl = True
 
-                elif initial == "#":
+                elif initial == " " and len(token) > 1 and token[1] == '#':
                     assert not token.endswith("\n")
                     if stashed:
                         yield stashed
