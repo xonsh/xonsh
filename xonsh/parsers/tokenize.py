@@ -1027,7 +1027,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         if async_def:
                             async_def_nl = True
 
-                elif initial == ' ' and len(token) > 1 and token[1] == '#':
+                elif initial == " " and len(token) > 1 and token[1] == "#":
                     assert not token.endswith("\n")
                     if stashed:
                         yield stashed
