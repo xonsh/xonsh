@@ -12,8 +12,8 @@ import sys
 import types
 import typing as tp
 from collections import abc as cabc
-from typing import Literal
 from pathlib import Path
+from typing import Literal
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
@@ -748,7 +748,9 @@ source_foreign = SourceForeignAlias(
 
 
 @unthreadable
-def source_alias_fn(files: Annotated[list[str], Arg(nargs="+")], ignore_ext=False, _stdin=None):
+def source_alias_fn(
+    files: Annotated[list[str], Arg(nargs="+")], ignore_ext=False, _stdin=None
+):
     """Executes the contents of the provided files in the current context.
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
@@ -810,7 +812,9 @@ def source_alias_fn(files: Annotated[list[str], Arg(nargs="+")], ignore_ext=Fals
                 )
                 raise
 
+
 source_alias = ArgParserAlias(func=source_alias_fn, has_args=True, prog="source")
+
 
 def source_cmd_fn(
     files: Annotated[list[str], Arg(nargs="+")],
@@ -957,7 +961,7 @@ def xexec_fn(
     except FileNotFoundError as e:
         return (
             None,
-            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}" "\n",
+            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}\n",
             1,
         )
 
@@ -1137,9 +1141,7 @@ def make_default_aliases():
 
             def sudo(args):
                 if len(args) < 1:
-                    print(
-                        "You need to provide an executable to run as " "Administrator."
-                    )
+                    print("You need to provide an executable to run as Administrator.")
                     return
                 cmd = args[0]
                 if locate_binary(cmd):
