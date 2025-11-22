@@ -266,7 +266,7 @@ def maybe(*choices):
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
 Whitespace = r"[ \f\t]*"
-Comment = r"#[^\r\n]*"
+Comment = r" #[^\r\n]*"
 Ignore = Whitespace + tokany(r"\\\r?\n" + Whitespace) + maybe(Comment)
 Name_RE = r"\$?\w+"
 
@@ -1027,7 +1027,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         if async_def:
                             async_def_nl = True
 
-                elif initial == "#":
+                elif initial == ' ' and len(token) > 1 and token[1] == '#':
                     assert not token.endswith("\n")
                     if stashed:
                         yield stashed
