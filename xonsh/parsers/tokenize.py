@@ -378,18 +378,17 @@ ContStr = group(
     StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' + group('"', r"\\\r?\n"),
 )
 
+
 def getPseudoToken(is_subproc=False):
     Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
     PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
-    return Whitespace + group(
-        PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE
-    )
+    return Whitespace + group(PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE)
+
 
 def getPseudoTokenWithoutIO(is_subproc=False):
     Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
     PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
     return Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
-
 
 
 def _compile(expr):
@@ -872,7 +871,9 @@ def tokopen(filename):
         raise
 
 
-def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True, is_subproc=False):
+def _tokenize(
+    readline, encoding, tolerant=False, tokenize_ioredirects=True, is_subproc=False
+):
     lnum = parenlev = continued = 0
     numchars = "0123456789"
     contstr, needcont = "", 0
@@ -896,7 +897,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True, is_
         except StopIteration:
             line = b""
 
-        is_subproc = is_subproc or line.startswith(b'![')
+        is_subproc = is_subproc or line.startswith(b"![")
 
         if encoding is not None:
             line = line.decode(encoding)
@@ -1009,8 +1010,9 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True, is_
 
         while pos < max:
             pseudomatch = _compile(
-                getPseudoToken(is_subproc=is_subproc) if tokenize_ioredirects else getPseudoTokenWithoutIO(
-                    is_subproc=is_subproc)
+                getPseudoToken(is_subproc=is_subproc)
+                if tokenize_ioredirects
+                else getPseudoTokenWithoutIO(is_subproc=is_subproc)
             ).match(line, pos)
             if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
@@ -1038,7 +1040,9 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True, is_
                         if async_def:
                             async_def_nl = True
 
-                elif initial == "#" or (is_subproc and initial == " " and len(token) > 1 and token[1] == "#"):
+                elif initial == "#" or (
+                    is_subproc and initial == " " and len(token) > 1 and token[1] == "#"
+                ):
                     assert not token.endswith("\n")
                     if stashed:
                         yield stashed
@@ -1185,7 +1189,7 @@ def tokenize(readline, tolerant=False, tokenize_ioredirects=True, is_subproc=Fal
         encoding,
         tolerant,
         tokenize_ioredirects,
-        is_subproc=is_subproc
+        is_subproc=is_subproc,
     )
 
 
