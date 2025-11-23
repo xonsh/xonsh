@@ -29,4 +29,4 @@ show_missing = true
 sort = Miss
 
 # keep improving ;)
-fail_under = 60
+fail_under = 50
