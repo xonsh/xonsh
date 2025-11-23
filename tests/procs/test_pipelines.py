@@ -139,3 +139,21 @@ def test_background_pgid(xonsh_session, monkeypatch):
     monkeypatch.setitem(xonsh_session.env, "XONSH_INTERACTIVE", True)
     pipeline = xonsh_session.execer.eval("![echo hi &]")
     assert pipeline.term_pgid is not None
+
+
+@pytest.mark.parametrize(
+    "cmdline, stdout, stderr, raw_stdout",
+    (
+        (r'!(echo "\001hidden\002abc")', "abc", "", "\001hidden\002abc\n"),
+        (r'!(echo "\u009b36mabc")', "abc", "", "\u009b36mabc\n"),
+        (r'!(echo "\u019b36mabc")', "\u019b36mabc", "", "\u019b36mabc\n"),
+    ),
+)
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_remove_hide_escape(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
+    pipeline = xonsh_execer.eval(cmdline)
+    pipeline.end()
+    assert pipeline.out == stdout
+    assert pipeline.err == (stderr or None)
+    assert pipeline.raw_out == raw_stdout.replace("\n", os.linesep).encode()
+    assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()

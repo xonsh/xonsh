@@ -24,18 +24,18 @@ def STDOUT_CAPTURE_KINDS():
 
 @xl.lazyobject
 def RE_HIDDEN_BYTES():
-    return re.compile(b"(\001.*?\002)")
+    return re.compile("(\001.*?\002)")
 
 
 @xl.lazyobject
 def RE_VT100_ESCAPE():
-    return re.compile(b"(\x9b|\x1b\\[)[0-?]*[ -\\/]*[@-~]")
+    return re.compile("(\u009b|\u001b\\[)[0-?]*[ -\\/]*[@-~]")
 
 
 @xl.lazyobject
 def RE_HIDE_ESCAPE():
     return re.compile(
-        b"(" + RE_HIDDEN_BYTES.pattern + b"|" + RE_VT100_ESCAPE.pattern + b")"
+        "(" + RE_HIDDEN_BYTES.pattern + "|" + RE_VT100_ESCAPE.pattern + ")"
     )
 
 
@@ -403,8 +403,8 @@ class CommandPipeline:
                 line = line[:-2] + nl
             elif line.endswith(cr):
                 line = line[:-1] + nl
-            line = RE_HIDE_ESCAPE.sub(b"", line)
             line = line.decode(encoding=enc, errors=err)
+            line = RE_HIDE_ESCAPE.sub("", line)
             # tee it up!
             lines.append(line)
             yield line
@@ -439,11 +439,11 @@ class CommandPipeline:
         self._raw_error = b
         # do some munging of the line before we save it to the attr
         b = b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-        b = RE_HIDE_ESCAPE.sub(b"", b)
         env = XSH.env
         s = b.decode(
             encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
         )
+        s = RE_HIDE_ESCAPE.sub("", s)
         # set the errors
         if self.errors is None:
             self.errors = s
