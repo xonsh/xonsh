@@ -266,7 +266,7 @@ def maybe(*choices):
 # Note: we use unicode matching for names ("\w") but ascii matching for
 # number literals.
 Whitespace = r"[ \f\t]*"
-Comment = r" #[^\r\n]*"
+Comment = r"#[^\r\n]*"
 Ignore = Whitespace + tokany(r"\\\r?\n" + Whitespace) + maybe(Comment)
 Name_RE = r"\$?\w+"
 
@@ -377,11 +377,19 @@ ContStr = group(
     StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" + group("'", r"\\\r?\n"),
     StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' + group('"', r"\\\r?\n"),
 )
-PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
-PseudoTokenWithoutIO = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
-PseudoToken = Whitespace + group(
-    PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE
-)
+
+def getPseudoToken(is_subproc=False):
+    Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
+    PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
+    return Whitespace + group(
+        PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE
+    )
+
+def getPseudoTokenWithoutIO(is_subproc=False):
+    Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
+    PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
+    return Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
+
 
 
 def _compile(expr):
@@ -864,7 +872,7 @@ def tokopen(filename):
         raise
 
 
-def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
+def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True, is_subproc=False):
     lnum = parenlev = continued = 0
     numchars = "0123456789"
     contstr, needcont = "", 0
@@ -887,6 +895,8 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
             line = readline()
         except StopIteration:
             line = b""
+
+        is_subproc = is_subproc or line.startswith(b'![')
 
         if encoding is not None:
             line = line.decode(encoding)
@@ -999,7 +1009,8 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
 
         while pos < max:
             pseudomatch = _compile(
-                PseudoToken if tokenize_ioredirects else PseudoTokenWithoutIO
+                getPseudoToken(is_subproc=is_subproc) if tokenize_ioredirects else getPseudoTokenWithoutIO(
+                    is_subproc=is_subproc)
             ).match(line, pos)
             if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
@@ -1027,7 +1038,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         if async_def:
                             async_def_nl = True
 
-                elif initial == " " and len(token) > 1 and token[1] == "#":
+                elif initial == "#" or (is_subproc and initial == " " and len(token) > 1 and token[1] == "#"):
                     assert not token.endswith("\n")
                     if stashed:
                         yield stashed
@@ -1140,7 +1151,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
     yield TokenInfo(ENDMARKER, "", (lnum, 0), (lnum, 0), "")
 
 
-def tokenize(readline, tolerant=False, tokenize_ioredirects=True):
+def tokenize(readline, tolerant=False, tokenize_ioredirects=True, is_subproc=False):
     """
     The tokenize() generator requires one argument, readline, which
     must be a callable object which provides the same interface as the
@@ -1174,6 +1185,7 @@ def tokenize(readline, tolerant=False, tokenize_ioredirects=True):
         encoding,
         tolerant,
         tokenize_ioredirects,
+        is_subproc=is_subproc
     )
 
 
