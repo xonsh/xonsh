@@ -515,8 +515,8 @@ def test_lexer_subproc():
     result_no_subproc = [t.value for t in list(lex)]
     lex.input(cmd, is_subproc=True)
     result_subproc = [t.value for t in list(lex)]
-    assert '#' not in result_no_subproc
-    assert '#' in result_subproc
+    assert "#" not in result_no_subproc
+    assert "#" in result_subproc
 
     cmd = "echo 1 #2"
     lex.input(cmd, is_subproc=False)
