@@ -473,7 +473,7 @@ def subproc_toks(
     if maxcol is None:
         maxcol = len(line) + 1
     lexer.reset()
-    lexer.input(line)
+    lexer.input(line, is_subproc=True)
     toks = []
     lparens = []
     saw_macro = False
