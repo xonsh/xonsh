@@ -5,7 +5,7 @@ xonsh
 
     <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="left" width="100px">
 
-**Xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives. The name Xonsh should be pronounced like conch (🐚, ``@``) and signifies belonging to the world of command shells.
+**Xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives. The name Xonsh should be pronounced like "consh" - a softer form of the word "conch" (🐚, ``@``), referring to the world of command shells.
 
 .. raw:: html
 
@@ -72,6 +72,18 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
             :target: https://xonsh.zulipchat.com/
             :alt: Join to xonsh.zulipchat.com
 
+    .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
+            :target: https://repology.org/project/xonsh/versions
+            :alt: repology.org
+
+    .. image:: https://img.shields.io/badge/Docker%20Hub-xonsh-blue
+            :target: https://hub.docker.com/u/xonsh
+            :alt: hub.docker.com
+
+    .. image:: https://img.shields.io/badge/AppImage-xonsh-lightblue
+            :target: https://xon.sh/appimage.html
+            :alt: AppImage
+
     .. image:: https://github.com/xonsh/xonsh/actions/workflows/test.yml/badge.svg
             :target: https://github.com/xonsh/xonsh/actions/workflows/test.yml
             :alt: GitHub Actions
@@ -79,11 +91,6 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
     .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graphs/badge.svg?branch=main
             :target: https://codecov.io/github/xonsh/xonsh?branch=main
             :alt: codecov.io
-
-    .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
-            :target: https://repology.org/project/xonsh/versions
-            :alt: repology.org
-
 
 First steps
 ***********
@@ -98,6 +105,8 @@ And visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
+
+Some beginners find the `xonsh cheatsheet <https://github.com/anki-code/xonsh-cheatsheet>`_ a helpful place to start.
 
 Extensions
 **********
