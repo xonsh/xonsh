@@ -897,7 +897,7 @@ def _tokenize(
         except StopIteration:
             line = b""
 
-        is_subproc = is_subproc or line[:2] in {b'![', b'$[', b'$(', b'!('}
+        is_subproc = is_subproc or line[:2] in {b"![", b"$[", b"$(", b"!("}
 
         if encoding is not None:
             line = line.decode(encoding)
