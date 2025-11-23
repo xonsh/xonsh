@@ -390,7 +390,10 @@ def get_tokens(s, tolerant, pymode=True, tokenize_ioredirects=True, is_subproc=F
         "last": None,
         "pymode": [(pymode, "", "", (0, 0))],
         "stream": tokenize(
-            io.BytesIO(s.encode("utf-8")).readline, tolerant, tokenize_ioredirects, is_subproc=is_subproc
+            io.BytesIO(s.encode("utf-8")).readline,
+            tolerant,
+            tokenize_ioredirects,
+            is_subproc=is_subproc,
         ),
         "tolerant": tolerant,
     }
@@ -469,7 +472,9 @@ class Lexer:
 
     def input(self, s, is_subproc=False):
         """Calls the lexer on the string s."""
-        self._token_stream = get_tokens(s, self._tolerant, self._pymode, is_subproc=is_subproc)
+        self._token_stream = get_tokens(
+            s, self._tolerant, self._pymode, is_subproc=is_subproc
+        )
 
     def token(self):
         """Retrieves the next token."""
