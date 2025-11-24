@@ -2,7 +2,7 @@
   "info": "This is verification file for ads.fund project",
   "project": {
     "name": "Xonsh",
-    "walletAddress": "YOUR_WALLET_ADDRESS",
+    "walletAddress": "0x199B36Ff70d3cb549f7De694fc7449fDFa9B1E60",
     "tokenAddress": "0xadf7478450b69a349ed9634b18584d2d3da81464"
   }
 }
