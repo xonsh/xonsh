@@ -34,15 +34,36 @@ def test_source_files(mockopen, monkeypatch, mocked_execx_checker):
     source_alias_fn([".xonshrc", "foo.xsh", "bar.xonshrc", "py.py"])
     assert mocked_execx_checker == [".xonshrc", "foo.xsh", "bar.xonshrc", "py.py"]
 
+
 def test_source_files_any_ext_exception(mockopen, monkeypatch, mocked_execx_checker):
     monkeypatch.setattr(os.path, "isfile", lambda x: True)
     with pytest.raises(RuntimeError):
         source_alias_fn(["foo.bar", "bar.foo", ".foobar"])
 
+
 def test_source_files_any_ext(mockopen, monkeypatch, mocked_execx_checker):
     monkeypatch.setattr(os.path, "isfile", lambda x: True)
-    source_alias_fn(["foo.bar", "bar.foo", ".foobar", ".xonshrc", "foo.xsh", "bar.xonshrc", "py.py"], ignore_ext=True)
-    assert mocked_execx_checker == ["foo.bar", "bar.foo", ".foobar", ".xonshrc", "foo.xsh", "bar.xonshrc", "py.py"]
+    source_alias_fn(
+        [
+            "foo.bar",
+            "bar.foo",
+            ".foobar",
+            ".xonshrc",
+            "foo.xsh",
+            "bar.xonshrc",
+            "py.py",
+        ],
+        ignore_ext=True,
+    )
+    assert mocked_execx_checker == [
+        "foo.bar",
+        "bar.foo",
+        ".foobar",
+        ".xonshrc",
+        "foo.xsh",
+        "bar.xonshrc",
+        "py.py",
+    ]
 
 
 def test_source_from_env_path(mockopen, mocked_execx_checker, xession):
