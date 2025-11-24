@@ -1,5 +1,47 @@
 # Xonsh Change Log
 
+## [0.20.0](https://github.com/xonsh/xonsh/compare/0.19.9...0.20.0) (2025-11-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for Python versions below 3.11
+* auto-load xontribs after loading RC files ([#5873](https://github.com/xonsh/xonsh/issues/5873))
+
+### Features
+
+* Allow sourcing files with different extensions ([#5938](https://github.com/xonsh/xonsh/issues/5938)) ([296a683](https://github.com/xonsh/xonsh/commit/296a6831e11380b37564f27e118629b78a19cfb9))
+* allow specifying special files as scripts ([d487f06](https://github.com/xonsh/xonsh/commit/d487f06f9ded99039dd2bce35b807fa48213f76f))
+* Allow specifying special files as scripts ([#5886](https://github.com/xonsh/xonsh/issues/5886)) ([d487f06](https://github.com/xonsh/xonsh/commit/d487f06f9ded99039dd2bce35b807fa48213f76f))
+* **completers:** add completion for inline xonsh importer ([#5917](https://github.com/xonsh/xonsh/issues/5917)) ([e10a3aa](https://github.com/xonsh/xonsh/commit/e10a3aae5f2aa64bf140f8bfb4c75acfb7e8fc98))
+* Keep hash (`#`) if it's part of the string in subprocess commands ([#5941](https://github.com/xonsh/xonsh/issues/5941)) ([2757a9a](https://github.com/xonsh/xonsh/commit/2757a9a79fe5c5854b60339d1ea99f12ceb1447c))
+
+
+### Bug Fixes
+
+* ensure PATH is EnvPath when using --no-env flag ([#5870](https://github.com/xonsh/xonsh/issues/5870)) ([#5903](https://github.com/xonsh/xonsh/issues/5903)) ([c73d599](https://github.com/xonsh/xonsh/commit/c73d599751d14c75aca15400fb3bfe21997a45a3))
+* filter escape sequences after decoding in captured stdout and stderr ([#5939](https://github.com/xonsh/xonsh/issues/5939)) ([#5940](https://github.com/xonsh/xonsh/issues/5940)) ([9df5cce](https://github.com/xonsh/xonsh/commit/9df5ccedf00c8114225625974db11f4fe58b320a))
+* map Name.Builtin to Color.GREEN when undefined ([#5908](https://github.com/xonsh/xonsh/issues/5908)) ([9a23e2e](https://github.com/xonsh/xonsh/commit/9a23e2ef40fce2f946bd01b2a9fc6855940ecc36))
+* missing docstring for argument "verbose" of xontribs_unload and xontribs_reload ([#5922](https://github.com/xonsh/xonsh/issues/5922)) ([97265ed](https://github.com/xonsh/xonsh/commit/97265edffc6ad1084644ca5d3e2f1844904a13a0))
+* remove redundant "command not found" ([#5915](https://github.com/xonsh/xonsh/issues/5915)) ([2db28a0](https://github.com/xonsh/xonsh/commit/2db28a0836374ad44e2ba34c5760b3353e06df67))
+* Update release-please-config.json ([4c21211](https://github.com/xonsh/xonsh/commit/4c21211272f1a03e6b8ffc5f3307a1f9dafccfbd))
+
+
+### Documentation
+
+* update devguide ([911a2f8](https://github.com/xonsh/xonsh/commit/911a2f84e6d25dd82c8a4957bb966a80a8d3f244))
+* update devguide ([eabf298](https://github.com/xonsh/xonsh/commit/eabf298c80e150faf76309c16eba735d4dd8b417))
+* update hardlink to external site ([41b4c85](https://github.com/xonsh/xonsh/commit/41b4c851cb5c024c0ad94012b11b0c7a2da2985f))
+* update TOC to include top level titles ([e21a326](https://github.com/xonsh/xonsh/commit/e21a326705d0317dd0218bf373b3ebbb5cc9f261))
+* use soft-links for external docs ([1a49358](https://github.com/xonsh/xonsh/commit/1a4935820b72848072ba6d3eebd704fe8cacb432))
+* use sphinx-autobuild for live reloaded docs ([174d2d8](https://github.com/xonsh/xonsh/commit/174d2d8551d3539c7f19c41c36c413b217d5f50d))
+
+
+### Code Refactoring
+
+* auto-load xontribs after loading RC files ([#5873](https://github.com/xonsh/xonsh/issues/5873)) ([bf4770a](https://github.com/xonsh/xonsh/commit/bf4770a0181f7019a695508cc05911d705a58d83))
+* drop support for Python versions below 3.11 ([02f0ec4](https://github.com/xonsh/xonsh/commit/02f0ec47423af6e810ed7cb1699dde05e3e2bc34))
+
 ## [0.19.9](https://github.com/xonsh/xonsh/compare/0.19.8...0.19.9) (2025-06-24)
 
 
