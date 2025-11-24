@@ -816,7 +816,9 @@ def source_alias_fn(
                 raise
 
 
-source_alias = ArgParserAlias(func=source_alias_fn, has_args=True, prog="source", threadable=False)
+source_alias = ArgParserAlias(
+    func=source_alias_fn, has_args=True, prog="source", threadable=False
+)
 
 
 def source_cmd_fn(
