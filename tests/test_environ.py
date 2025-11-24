@@ -20,6 +20,9 @@ from xonsh.environ import (
     default_value,
     locate_binary,
     make_args_env,
+    xonsh_cache_dir,
+    xonsh_config_dir,
+    xonsh_data_dir,
 )
 from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
@@ -367,9 +370,9 @@ def test_lscolors_events(key_in, old_in, new_in, test, xession):
     @xession.builtins.events.on_lscolors_change
     def handler(key, oldvalue, newvalue, **kwargs):
         nonlocal old_in, new_in, key_in, event_fired
-        assert (
-            key == key_in and oldvalue == old_in and newvalue == new_in
-        ), "Old and new event values match"
+        assert key == key_in and oldvalue == old_in and newvalue == new_in, (
+            "Old and new event values match"
+        )
         event_fired = True
 
     xession.env["LS_COLORS"] = lsc
@@ -648,3 +651,23 @@ def test_thread_local_dict_multiple():
         t.join()
 
     assert thread_values == [i**2 for i in range(num_threads)]
+
+
+def test_xonsh_dir_vars():
+    env = Env(
+        XONSH_CONFIG_DIR="/config", XONSH_CACHE_DIR="/cache", XONSH_DATA_DIR="/data"
+    )
+    assert xonsh_config_dir(env), "/config"
+    assert xonsh_cache_dir(env), "/cache"
+    assert xonsh_data_dir(env), "/data"
+
+
+def test_envpath_in_env_object():
+    """Ensure PATH is stored as an EnvPath inside Env."""
+    env = Env(PATH=["/usr/bin", "/bin"])
+    # PATH should exist in env
+    assert "PATH" in env
+    # PATH should behave like EnvPath (has .paths attribute)
+    assert hasattr(env["PATH"], "paths")
+    assert "/usr/bin" in env["PATH"].paths
+    assert "/bin" in env["PATH"].paths

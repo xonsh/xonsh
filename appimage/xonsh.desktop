@@ -3,6 +3,6 @@ Type=Application
 Name=xonsh
 Exec=xonsh
 Comment=Xonsh on Python {{ python-fullversion }}
-Icon=python
+Icon=xonsh_terminal_icon_256x256_cropped
 Categories=System;
 Terminal=true

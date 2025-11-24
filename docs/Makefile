@@ -130,5 +130,4 @@ push-root:
 	git push
 
 serve:
-	# disable file-watch with `make serve watch=no`
-	python serve_docs.py $(watch)
+	sphinx-autobuild . "$(BUILDDIR)"/html $(SPHINXOPTS) $(O)

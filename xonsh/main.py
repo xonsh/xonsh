@@ -372,9 +372,9 @@ def start_services(shell_kwargs, args, pre_env=None):
     for k, v in pre_env.items():
         env[k] = v
 
+    _load_rc_files(shell_kwargs, args, env, execer, ctx)
     if not shell_kwargs.get("norc"):
         _autoload_xontribs(env)
-    _load_rc_files(shell_kwargs, args, env, execer, ctx)
     # create shell
     XSH.shell = Shell(execer=execer, **shell_kwargs)
     ctx["__name__"] = "__main__"
@@ -573,7 +573,10 @@ def main_xonsh(args):
         elif args.mode == XonshMode.script_from_file:
             # run a script contained in a file
             path = os.path.abspath(os.path.expanduser(args.file))
-            if os.path.isfile(path):
+            if os.path.isdir(path):
+                print(f"xonsh: {args.file}: Is a directory.")
+                exit_code = 1
+            elif os.path.exists(path):
                 sys.argv = [args.file] + args.args
                 env.update(make_args_env())  # $ARGS is not sys.argv
                 env["XONSH_SOURCE"] = path
@@ -582,7 +585,7 @@ def main_xonsh(args):
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
             else:
-                print(f"xonsh: {args.file}: No such file or directory.")
+                print(f"xonsh: {args.file}: No such file.")
                 exit_code = 1
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
@@ -606,7 +609,14 @@ def main_xonsh(args):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
                 code = getattr(exc_info[1], "code", 0)
-                exit_code = int(code) if code is not None else 0
+                if code is None:
+                    exit_code = 0
+                else:
+                    exit_code = code
+                    try:
+                        exit_code = int(code)
+                    except ValueError:
+                        pass
                 XSH.exit = exit_code
             else:
                 exit_code = 1

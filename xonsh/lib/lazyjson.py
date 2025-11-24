@@ -143,7 +143,7 @@ class LJNode(cabc.Mapping, cabc.Sequence):
                 f.seek(self.root.dloc + offset)
                 s = f.read(size)
             val = json.loads(s)
-        elif isinstance(offset, (cabc.Mapping, cabc.Sequence)):
+        elif isinstance(offset, cabc.Mapping | cabc.Sequence):
             val = LJNode(offset, size, self.root)
         else:
             raise TypeError("incorrect types for offset node")

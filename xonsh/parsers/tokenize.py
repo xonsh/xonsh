@@ -22,7 +22,6 @@ import itertools
 import re
 import sys
 import token
-import typing as tp
 from token import (
     AMPER,
     AMPEREQUAL,
@@ -96,7 +95,7 @@ blank_re = LazyObject(
 #
 # token modifications
 #
-tok_name = tok_name.copy()
+tok_name = tok_name.copy()  # type: ignore
 __all__ = token.__all__ + [  # type:ignore
     "COMMENT",
     "tokenize",
@@ -132,31 +131,31 @@ NL = N_TOKENS + 1
 tok_name[NL] = "NL"
 ENCODING = N_TOKENS + 2
 tok_name[ENCODING] = "ENCODING"
-N_TOKENS += 3
+N_TOKENS += 3  # type: ignore
 SEARCHPATH = N_TOKENS
 tok_name[N_TOKENS] = "SEARCHPATH"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 IOREDIRECT1 = N_TOKENS
 tok_name[N_TOKENS] = "IOREDIRECT1"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 IOREDIRECT2 = N_TOKENS
 tok_name[N_TOKENS] = "IOREDIRECT2"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 DOLLARNAME = N_TOKENS
 tok_name[N_TOKENS] = "DOLLARNAME"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 ATDOLLAR = N_TOKENS
 tok_name[N_TOKENS] = "ATDOLLAR"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 ATEQUAL = N_TOKENS
 tok_name[N_TOKENS] = "ATEQUAL"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 MATCH = N_TOKENS
 tok_name[N_TOKENS] = "MATCH"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 CASE = N_TOKENS
 tok_name[N_TOKENS] = "CASE"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 _xonsh_tokens = {
     "?": "QUESTION",
     "@=": "ATEQUAL",
@@ -181,11 +180,11 @@ _glbs = globals()
 for v in _xonsh_tokens.values():
     _glbs[v] = N_TOKENS
     tok_name[N_TOKENS] = v
-    N_TOKENS += 1
+    N_TOKENS += 1  # type: ignore
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES: dict[str, tp.Union[str, int]] = {
+EXACT_TOKEN_TYPES: dict[str, str | int] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,

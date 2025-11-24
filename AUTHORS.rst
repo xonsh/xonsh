@@ -48,6 +48,7 @@ Authors are sorted by number of commits.
 * cryzed
 * Frank Sachsenheim
 * Kurtis Rader
+* Evgeny
 * Brian Visel
 * cafehaine
 * Andrew Hundt
@@ -55,7 +56,6 @@ Authors are sorted by number of commits.
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* Evgeny
 * Stephan Fitzpatrick
 * dev2718
 * Will S
@@ -154,6 +154,8 @@ Authors are sorted by number of commits.
 * Samuel Dion-Girardeau
 * Oliver Bestwalter
 * Ivan Ogasawara
+* jfmontanaro
+* Łukasz Langa
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -337,5 +339,8 @@ Authors are sorted by number of commits.
 * Jueun Lee
 * Simon Billinge
 * Bala
+* Artur Manuel
+* Đỗ Trung Nguyên
+* Ahmed
 * goodboy
 * Atsushi Morimoto

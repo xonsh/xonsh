@@ -22,3 +22,6 @@ li > p:last-child {
     margin-bottom: 0px;
 }
 
+.sidebar-logo {
+    height: 8em;
+}

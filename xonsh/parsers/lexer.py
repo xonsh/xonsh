@@ -8,7 +8,6 @@ import io
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
 import re
-import typing as tp
 
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.ply.lex import LexToken
@@ -429,7 +428,7 @@ def _new_token(type, value, pos):
 class Lexer:
     """Implements a lexer for the xonsh language."""
 
-    _tokens: tp.Optional[tuple[str, ...]] = None
+    _tokens: tuple[str, ...] | None = None
 
     def __init__(self, tolerant=False, pymode=True):
         """

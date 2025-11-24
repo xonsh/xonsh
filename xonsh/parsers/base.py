@@ -127,7 +127,7 @@ def load_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Load()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             load_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -139,7 +139,7 @@ def store_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Store()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             store_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -151,7 +151,7 @@ def del_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Del()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             del_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -186,10 +186,10 @@ def hasglobstar(x):
 
 
 def raise_parse_error(
-    msg: tp.Union[str, tuple[str]],
-    loc: tp.Optional[Location] = None,
-    code: tp.Optional[str] = None,
-    lines: tp.Optional[list[str]] = None,
+    msg: str | tuple[str],
+    loc: Location | None = None,
+    code: str | None = None,
+    lines: list[str] | None = None,
 ):
     err_line = None
     if loc is None or code is None or lines is None:
@@ -530,7 +530,7 @@ class BaseParser:
         def optfunc(self, p):
             p[0] = p[1]
 
-        optfunc.__doc__ = f"{rulename}_opt : empty\n" f"        | {rulename}"
+        optfunc.__doc__ = f"{rulename}_opt : empty\n        | {rulename}"
         optfunc.__name__ = "p_" + rulename + "_opt"
         setattr(self.__class__, optfunc.__name__, optfunc)
 
@@ -543,7 +543,7 @@ class BaseParser:
             p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
         listfunc.__doc__ = (
-            f"{rulename}_list : {rulename}\n" f"         | {rulename}_list {rulename}"
+            f"{rulename}_list : {rulename}\n         | {rulename}_list {rulename}"
         )
         listfunc.__name__ = "p_" + rulename + "_list"
         setattr(self.__class__, listfunc.__name__, listfunc)
@@ -2132,7 +2132,7 @@ class BaseParser:
             )
         else:
             left = p1
-            for op, right in zip(p2[::2], p2[1::2]):
+            for op, right in zip(p2[::2], p2[1::2], strict=False):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
                 left = ast.BinOp(
@@ -2173,7 +2173,7 @@ class BaseParser:
             )
         else:
             left = p1
-            for op, right in zip(p2[::2], p2[1::2]):
+            for op, right in zip(p2[::2], p2[1::2], strict=False):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
                 left = ast.BinOp(
@@ -2258,14 +2258,7 @@ class BaseParser:
         for trailer in trailers:
             if isinstance(
                 trailer,
-                (
-                    ast.Index,
-                    ast.Slice,
-                    ast.ExtSlice,
-                    ast.Constant,
-                    ast.Name,
-                    Index,
-                ),
+                ast.Index | ast.Slice | ast.ExtSlice | ast.Constant | ast.Name | Index,
             ):
                 # unpack types
                 slice = trailer.value if isinstance(trailer, Index) else trailer
@@ -2284,7 +2277,7 @@ class BaseParser:
                     col_offset=leader.col_offset,
                     **trailer,
                 )
-            elif isinstance(trailer, (ast.Tuple, tuple)):
+            elif isinstance(trailer, ast.Tuple | tuple):
                 # call macro functions
                 l, c = leader.lineno, leader.col_offset
                 gblcall = xonsh_call("globals", [], lineno=l, col=c)
@@ -2704,7 +2697,7 @@ class BaseParser:
             begins.extend([(x[0], x[1] + 1) for x in p2])
             ends = p2 + ends
         elts = []
-        for beg, end in zip(begins, ends):
+        for beg, end in zip(begins, ends, strict=False):
             s = self._source_slice(beg, end).strip()
             if not s:
                 if len(begins) == 1:
@@ -2938,7 +2931,7 @@ class BaseParser:
         p1, p4 = p[1], p[4]
         keys = [p1]
         vals = [p[3]]
-        for k, v in zip(p4[::2], p4[1::2]):
+        for k, v in zip(p4[::2], p4[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1)
@@ -2951,7 +2944,7 @@ class BaseParser:
         p1, p2 = p[1], p[2]
         keys = [p1[0]]
         vals = [p1[1]]
-        for k, v in zip(p2[::2], p2[1::2]):
+        for k, v in zip(p2[::2], p2[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1[0] or p1[1])

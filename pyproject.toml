@@ -1,8 +1,6 @@
 [build-system]
 # PEP 518 https://www.python.org/dev/peps/pep-0518/
-# https://discuss.python.org/t/help-testing-experimental-features-in-setuptools/13821
 requires = ["setuptools>=61", "wheel"]
-# PEP 517 https://peps.python.org/pep-0517/
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -14,12 +12,12 @@ description = "Python-powered shell. Full-featured and cross-platform."
 authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
 maintainers = [{ name = "Xonsh Community" }, { email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = []
 
 [tool.setuptools.dynamic]
 version = {attr = "xonsh.__version__"}
-readme = {file = ["README.rst"]}
+readme = {file = ["README.rst"], content-type = "text/plain"}
 
 [tool.setuptools]
 packages = [
@@ -82,7 +80,7 @@ xonsh = "xonsh.virtualenv:XonshActivator"
 Homepage = "https://xon.sh"
 documentation = "https://xon.sh/contents.html"
 repository = "https://github.com/xonsh/xonsh"
-changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst"
+changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.md"
 "Issue tracker" = "https://github.com/xonsh/xonsh/issues"
 
 [project.optional-dependencies]
@@ -137,9 +135,11 @@ doc = [
     "matplotlib",
     "tornado",
     "runthis-sphinxext",
-    "livereload",
     "myst-parser",
+    "sphinx-autobuild",
+    "sphinx-prompt",
 ]
+
 
 
 [project.scripts]
@@ -172,6 +172,10 @@ extend-exclude = [
     ".local.out*/",
 ]
 line-length = 88
+
+[tool.ruff.per-file-target-version]
+"xonsh/parsers/v310.py" = "py310"
+"xonsh/parsers/v313.py" = "py313"
 
 [tool.ruff.lint]
 ignore = [
@@ -259,4 +263,9 @@ convention = "numpy"
 ]
 "tests/test*.py" = [
     "E741", #  E741 Ambiguous variable name
+]
+
+[dependency-groups]
+dev = [
+    "xonsh[dev]",
 ]

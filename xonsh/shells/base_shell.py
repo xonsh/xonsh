@@ -406,14 +406,20 @@ class BaseShell:
         finally:
             ts1 = ts1 or time.time()
             tee_out = tee.getvalue()
-            self._append_history(
+            info = self._append_history(
                 inp=src,
                 ts=[ts0, ts1],
                 spc=self.src_starts_with_space,
                 tee_out=tee_out,
                 cwd=self.precwd,
             )
-            self.accumulated_inputs += src
+            if not isinstance(exc_info[1], SystemExit):
+                events.on_postcommand.fire(
+                    cmd=info["inp"],
+                    rtn=info["rtn"],
+                    out=info.get("out", None),
+                    ts=info["ts"],
+                )
             if (
                 tee_out
                 and env.get("XONSH_APPEND_NEWLINE")
@@ -444,12 +450,10 @@ class BaseShell:
             info["out"] = last_out
         else:
             info["out"] = tee_out + "\n" + last_out
-        events.on_postcommand.fire(
-            cmd=info["inp"], rtn=info["rtn"], out=info.get("out", None), ts=info["ts"]
-        )
         if hist is not None:
             hist.append(info)
             hist.last_cmd_rtn = hist.last_cmd_out = None
+        return info
 
     def _fix_cwd(self):
         """Check if the cwd changed out from under us."""

@@ -888,6 +888,14 @@ def _last_spec_update_captured(last: SubprocSpec):
 def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
+
+    if captured == "object":
+        """
+        In full capture mode the subprocess is running in background in fact
+        and we don't need to wait for it in downstream code e.g. `jobs.wait_for_active_job`.
+        """
+        last.background = True
+
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = xp.ON_POSIX and not callable_alias

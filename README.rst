@@ -1,10 +1,15 @@
 xonsh
 =====
 
-.. class:: center
+.. raw:: html
 
-    **xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives.  Xonsh word was made from *conch* (🐚, *@*) and indicates belonging to the command shells world.
+    <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="left" width="100px">
 
+**Xonsh** is a Python-powered shell. Full-featured and cross-platform. The language is a superset of Python 3.6+ with additional shell primitives. The name Xonsh should be pronounced like "consh" - a softer form of the word "conch" (🐚, ``@``), referring to the world of command shells.
+
+.. raw:: html
+
+    <br clear="left"/>
 
 .. list-table::
    :widths: 1 1
@@ -64,8 +69,20 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
 .. class:: center
 
     .. image:: https://img.shields.io/badge/Zulip%20Community-xonsh-green
-            :target: https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/
+            :target: https://xonsh.zulipchat.com/
             :alt: Join to xonsh.zulipchat.com
+
+    .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
+            :target: https://repology.org/project/xonsh/versions
+            :alt: repology.org
+
+    .. image:: https://img.shields.io/badge/Docker%20Hub-xonsh-blue
+            :target: https://hub.docker.com/u/xonsh
+            :alt: hub.docker.com
+
+    .. image:: https://img.shields.io/badge/AppImage-xonsh-lightblue
+            :target: https://xon.sh/appimage.html
+            :alt: AppImage
 
     .. image:: https://github.com/xonsh/xonsh/actions/workflows/test.yml/badge.svg
             :target: https://github.com/xonsh/xonsh/actions/workflows/test.yml
@@ -75,17 +92,12 @@ If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching 
             :target: https://codecov.io/github/xonsh/xonsh?branch=main
             :alt: codecov.io
 
-    .. image:: https://repology.org/badge/tiny-repos/xonsh.svg
-            :target: https://repology.org/project/xonsh/versions
-            :alt: repology.org
-
-
 First steps
 ***********
 
 Install xonsh from pip:
 
-.. code-block:: xonshcon
+.. code-block:: shell
 
     python -m pip install 'xonsh[full]'
 
@@ -93,6 +105,8 @@ And visit https://xon.sh for more information:
 
 - `Installation <https://xon.sh/contents.html#installation>`_ - using packages, docker or AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
+
+Some beginners find the `xonsh cheatsheet <https://github.com/anki-code/xonsh-cheatsheet>`_ a helpful place to start.
 
 Extensions
 **********
@@ -112,6 +126,7 @@ Projects that use xonsh or compatible
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
 - `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the SSH.
+- `Snakemake <https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#xonsh>`_: A workflow management system to create reproducible and scalable data analyses.
 - `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
 - `lix <https://github.com/lix-project/lix>`_: A modern, delicious implementation of the Nix package manager.
 - `x-cmd <https://www.x-cmd.com/>`_: x-cmd is a vast and interesting collection of tools guided by the Unix philosophy.
@@ -124,8 +139,8 @@ Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xon
 - `euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
 - `Jupytext <https://jupytext.readthedocs.io/>`_: Clear and meaningful diffs when doing Jupyter notebooks version control.
 
-The xonsh shell community
-*************************
+Welcome to the xonsh shell community
+************************************
 
 The xonsh shell is developed by a community of volunteers. There are a few ways to help out:
 
@@ -133,6 +148,8 @@ The xonsh shell is developed by a community of volunteers. There are a few ways 
 - Take an `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create a new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
 - Contribute to `xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
 - Become xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
+- Implement and maintain xonsh support in third party tools e.g. conda, jupyter, zoxide, etc.
+- Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_ (`src <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_).
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 - `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
 - Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
@@ -144,4 +161,4 @@ We welcome new contributors!
 Credits
 *******
 
-- Thanks to `Zulip <https://zulip.com/>`_ for supporting the xonsh community!
+- Thanks to `Zulip <https://zulip.com/>`_ for supporting the `xonsh community <https://xonsh.zulipchat.com/>`_!

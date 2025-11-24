@@ -25,7 +25,7 @@ jobs:
   ci:
     runs-on: ${{ matrix.os }}
     env:
-      UV_CACHE_DIR: .cache/uv
+      UV_SYSTEM_PYTHON: 1
       DEFAULT_PYTHON_VERSION: 3.12
     strategy:
       fail-fast: false
@@ -35,45 +35,31 @@ jobs:
           - macOS-latest
           - windows-latest
         python-version:
-          - "3.10"
           - "3.11"
           - "3.12"
           - "3.13"
+          - "3.14"
     name: Test Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: yezz123/setup-uv@v4
-      - name: set current week
-        run: echo WEEK=$(date +%V) >>$GITHUB_ENV
-        shell: bash
-      - name: Cache uv pip for a week
-        id: cache-uv
-        uses: actions/cache@v4
+      - uses: astral-sh/setup-uv@v7
         with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml') }}-${{ env.WEEK }}
-          restore-keys: ${{ runner.os }}-uv-
+          enable-cache: true
       - name: Install dependencies
         run: uv pip install --system -e ".[test]"
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tmate_debug_enabled }}
         timeout-minutes: 15
-      - name: Run QA Checks
-        if: ${{ startsWith(matrix.os, 'ubuntu') && startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
-        run: python -m xonsh run-tests.xsh validate-news-items
       - name: Run tests
         if: ${{ !startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
         run: |
-          python -m pip install . --no-deps
           python -m xonsh run-tests.xsh test -- --timeout=240
       - name: Run tests with coverage
         if: ${{ startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
         run: |
-          python -m pip install -e . --no-deps
           python -m xonsh run-tests.xsh test --report-coverage -- --timeout=240
-

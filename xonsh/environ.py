@@ -42,6 +42,7 @@ from xonsh.platform import (
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
+    EnvPath,
     adjust_shlvl,
     always_false,
     always_true,
@@ -98,6 +99,8 @@ from xonsh.tools import (
     to_int_or_none,
     to_itself,
     to_logfile_opt,
+    to_ptk_cursor_shape,
+    to_ptk_cursor_shape_display_value,
     to_repr_pretty_,
     to_shlvl,
     to_tok_color_dict,
@@ -567,7 +570,9 @@ DEFAULT_TITLE = "{current_job:{} | }{user}@{hostname}: {cwd} | xonsh"
 @default_value
 def xonsh_data_dir(env):
     """Ensures and returns the $XONSH_DATA_DIR"""
-    xdd = os.path.expanduser(os.path.join(env.get("XDG_DATA_HOME"), "xonsh"))
+    xdd = os.path.expanduser(
+        os.getenv("XONSH_DATA_DIR") or os.path.join(env.get("XDG_DATA_HOME"), "xonsh")
+    )
     os.makedirs(xdd, exist_ok=True)
     return xdd
 
@@ -575,7 +580,9 @@ def xonsh_data_dir(env):
 @default_value
 def xonsh_cache_dir(env):
     """Ensures and returns the $XONSH_CACHE_DIR"""
-    xdd = os.path.expanduser(os.path.join(env.get("XDG_CACHE_HOME"), "xonsh"))
+    xdd = os.path.expanduser(
+        os.getenv("XONSH_CACHE_DIR") or os.path.join(env.get("XDG_CACHE_HOME"), "xonsh")
+    )
     os.makedirs(xdd, exist_ok=True)
     return xdd
 
@@ -583,7 +590,10 @@ def xonsh_cache_dir(env):
 @default_value
 def xonsh_config_dir(env):
     """``$XDG_CONFIG_HOME/xonsh``"""
-    xcd = os.path.expanduser(os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh"))
+    xcd = os.path.expanduser(
+        os.getenv("XONSH_CONFIG_DIR")
+        or os.path.join(env.get("XDG_CONFIG_HOME"), "xonsh")
+    )
     os.makedirs(xcd, exist_ok=True)
     return xcd
 
@@ -712,7 +722,7 @@ def default_prompt_fields(env):
     return prompt.PromptFields(XSH)
 
 
-VarKeyType = tp.Union[str, tp.Pattern]
+VarKeyType = tp.Union[str, tp.Pattern]  # noqa: UP007
 
 
 class Var(tp.NamedTuple):
@@ -747,22 +757,22 @@ class Var(tp.NamedTuple):
         a regex pattern to match for the given variable
     """
 
-    validate: tp.Optional[tp.Callable] = always_true
-    convert: tp.Optional[tp.Callable] = None
-    detype: tp.Optional[tp.Callable] = ensure_string
+    validate: tp.Callable | None = always_true
+    convert: tp.Callable | None = None
+    detype: tp.Callable | None = ensure_string
     default: tp.Any = DefaultNotGiven
     doc: str = ""
-    is_configurable: tp.Union[bool, LazyBool] = True
-    doc_default: tp.Union[str, DefaultNotGivenType] = DefaultNotGiven
+    is_configurable: bool | LazyBool = True
+    doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
-    pattern: tp.Optional[VarKeyType] = None
+    pattern: VarKeyType | None = None
 
     @classmethod
     def with_default(
         cls,
         default: object,
         doc: str = "",
-        doc_default: tp.Union[str, DefaultNotGivenType] = DefaultNotGiven,
+        doc_default: str | DefaultNotGivenType = DefaultNotGiven,
         type_str: str = "",
         **kwargs,
     ):
@@ -813,9 +823,7 @@ class Xettings:
                 yield var.get_key(var_name), var
 
     @staticmethod
-    def _get_groups(
-        cls, _seen: tp.Optional[set["Xettings"]] = None, *bases: "Xettings"
-    ):
+    def _get_groups(cls, _seen: set["Xettings"] | None = None, *bases: "Xettings"):
         if _seen is None:
             _seen = set()
         subs = cls.__subclasses__()
@@ -965,6 +973,17 @@ class GeneralSetting(Xettings):
         "A list of directories where system level data files are stored.",
         type_str="env_path",
     )
+    XONSH_CONFIG_DIR = Var.with_default(
+        xonsh_config_dir,
+        "This is the location where xonsh user-level configuration information is stored.",
+        type_str="str",
+    )
+    XONSH_SYS_CONFIG_DIR = Var.with_default(
+        xonsh_sys_config_dir,
+        "This is the location where xonsh system-level configuration information is stored.",
+        is_configurable=False,
+        type_str="str",
+    )
     XONSHRC = Var.with_default(
         default_xonshrc,
         "A list of the locations of run control files, if they exist.  User "
@@ -980,26 +999,12 @@ class GeneralSetting(Xettings):
         "are loaded after any files in XONSHRC.",
         type_str="env_path",
     )
-
-    XONSH_CONFIG_DIR = Var.with_default(
-        xonsh_config_dir,
-        "This is the location where xonsh user-level configuration information is stored.",
-        is_configurable=False,
-        type_str="str",
-    )
-    XONSH_SYS_CONFIG_DIR = Var.with_default(
-        xonsh_sys_config_dir,
-        "This is the location where xonsh system-level configuration information is stored.",
-        is_configurable=False,
-        type_str="str",
-    )
     XONSH_COLOR_STYLE = Var.with_default(
         "default",
         "Sets the color style for xonsh colors. This is a style name, not "
         "a color map. Run ``xonfig styles`` to see the available styles.",
         type_str="str",
     )
-
     XONSH_DEBUG = Var(
         always_false,
         to_debug,
@@ -1017,7 +1022,6 @@ class GeneralSetting(Xettings):
         doc_default="``$XDG_DATA_HOME/xonsh``",
         type_str="str",
     )
-
     XONSH_ENCODING = Var.with_default(
         DEFAULT_ENCODING,
         "This is the encoding that xonsh should use for subprocess operations.",
@@ -1046,7 +1050,6 @@ class GeneralSetting(Xettings):
         "``True`` if xonsh is running as a login shell, and ``False`` otherwise.",
         is_configurable=False,
     )
-
     XONSH_MODE = Var.with_default(
         default="interactive",  # In sync with ``main.py``.
         doc="A string value representing the current xonsh execution mode: "
@@ -1056,7 +1059,6 @@ class GeneralSetting(Xettings):
         "you plan to ``source``, use ``$XONSH_INTERACTIVE`` as the flag instead.",
         type_str="str",
     )
-
     XONSH_SOURCE = Var.with_default(
         "",
         "When running a xonsh script, this variable contains the absolute path "
@@ -1080,7 +1082,6 @@ class GeneralSetting(Xettings):
         "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
         "(The rules above are all have the same effect.)",
     )
-
     STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
     STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
 
@@ -1114,7 +1115,7 @@ class SubprocessSetting(Xettings):
     XONSH_CAPTURE_ALWAYS = Var.with_default(
         False,
         "Try to capture output of commands run without explicit capturing.\n"
-        "If True, xonsh will capture the output of commands run directly or in ``![]``"
+        "If True, xonsh will capture the output of commands run directly or in ``![]`` "
         "to the session history.\n"
         "Setting to True has the following disadvantages:\n"
         "* Some interactive commands won't work properly (like when ``git`` invokes an interactive editor).\n"
@@ -1750,6 +1751,19 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         "``DEPTH_1_BIT``, ``DEPTH_4_BIT``, ``DEPTH_8_BIT``, ``DEPTH_24_BIT`` "
         "colors. Default is an empty string which means that prompt toolkit decide.",
     )
+    XONSH_PROMPT_CURSOR_SHAPE = Var(
+        always_false,
+        to_ptk_cursor_shape,
+        to_ptk_cursor_shape_display_value,
+        to_ptk_cursor_shape("modal-vi-mode-only"),
+        "The cursor shape. Possible values for prompt toolkit are: "
+        "``block``, ``beam``, ``underline``, "
+        "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "
+        "``modal``, ``modal-vi-mode-only``, ``never-change``. "
+        "Default value is ``modal-vi-mode-only`` which means "
+        "``modal`` if in vi mode and ``never-change`` if not in vi mode.",
+        doc_default="modal-vi-mode-only",
+    )
     PTK_STYLE_OVERRIDES = Var(
         is_tok_color_dict,
         to_tok_color_dict,
@@ -1862,7 +1876,7 @@ This is to reduce the noise in generated completions.""",
     )
     CASE_SENSITIVE_COMPLETIONS = Var.with_default(
         ON_LINUX,
-        "Sets whether completions should be case sensitive or case " "insensitive.",
+        "Sets whether completions should be case sensitive or case insensitive.",
         doc_default="True on Linux, False otherwise.",
     )
     COMPLETIONS_BRACKETS = Var.with_default(
@@ -2055,7 +2069,7 @@ class Env(cabc.MutableMapping):
         if "PATH" not in self._d:
             # this is here so the PATH is accessible to subprocs and so that
             # it can be modified in-place in the xonshrc file
-            self._d["PATH"] = list(PATH_DEFAULT)
+            self._d["PATH"] = EnvPath(PATH_DEFAULT)
         self._detyped = None
 
     def get_detyped(self, key: str):
@@ -2295,7 +2309,7 @@ class Env(cabc.MutableMapping):
             e = "Unknown environment variable: ${}"
             raise KeyError(e.format(key))
         if isinstance(
-            val, (cabc.MutableSet, cabc.MutableSequence, cabc.MutableMapping)
+            val, cabc.MutableSet | cabc.MutableSequence | cabc.MutableMapping
         ):
             self._detyped = None
         return val

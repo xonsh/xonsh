@@ -64,8 +64,8 @@ class RichCompletion(str):
     def __init__(
         self,
         value: str,
-        prefix_len: tp.Optional[int] = None,
-        display: tp.Optional[str] = None,
+        prefix_len: int | None = None,
+        display: str | None = None,
         description: str = "",
         style: str = "",
         append_closing_quote: bool = True,
@@ -136,8 +136,8 @@ def RICH_COMPLETION_DEFAULTS():
     ]
 
 
-Completion = tp.Union[RichCompletion, str]
-CompleterResult = tp.Union[set[Completion], tuple[set[Completion], int], None]
+Completion = tp.Union[RichCompletion, str]  # noqa: UP007
+CompleterResult = tp.Union[set[Completion], tuple[set[Completion], int], None]  # noqa: UP007
 ContextualCompleter = tp.Callable[[CompletionContext], CompleterResult]
 
 
@@ -275,7 +275,7 @@ def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars:
             lines = output.split(sep)
 
         # if there is a single completion candidate then maybe it is over
-        append_space = len(lines) == 1
+        append_space = len(lines) == 1 and not lines[0].rstrip().endswith(os.sep)
         for line in lines:
             if filter_prefix and (not filter_func(line, filter_prefix)):
                 continue

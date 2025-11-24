@@ -18,15 +18,13 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - "3.9"
-          - "3.10"
           - "3.11"
           - "3.12"
           - "3.13"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: setup-python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -38,5 +36,5 @@ jobs:
         run: python -m build . --sdist
       - name: build bdist(wheel) to dist/
         run: python -m build . --wheel
-      - name: publish to TestPyPI
+      - name: publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
