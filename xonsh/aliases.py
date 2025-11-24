@@ -12,6 +12,7 @@ import sys
 import types
 import typing as tp
 from collections import abc as cabc
+from pathlib import Path
 from typing import Literal
 
 import xonsh.completers._aliases as xca
@@ -750,16 +751,24 @@ source_foreign = SourceForeignAlias(
 )
 
 
-@unthreadable
-def source_alias(args, stdin=None):
+def source_alias_fn(
+    files: Annotated[list[str], Arg(nargs="+")], ignore_ext=False, _stdin=None
+):
     """Executes the contents of the provided files in the current context.
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
+
+    Parameters
+    ----------
+    files
+        paths to source files.
+    ignore_ext : -e, --ignore-ext
+        don't check the file extension
     """
     env = XSH.env
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
-    for i, fname in enumerate(args):
+    for i, fname in enumerate(files):
         fpath = fname
         if not os.path.isfile(fpath):
             fpath = locate_file(fname)
@@ -772,12 +781,16 @@ def source_alias(args, stdin=None):
                     )
                 break
         _, fext = os.path.splitext(fpath)
-        if fext and fext != ".xsh" and fext != ".py":
+        fext, name = Path(fpath).suffix, Path(fpath).name
+        if not fext and name.startswith("."):
+            fext = name  # hidden file with no extension
+        if not ignore_ext and fext not in {".xsh", ".py", ".xonshrc"}:
             raise RuntimeError(
-                "attempting to source non-xonsh file! If you are "
-                "trying to source a file in another language, "
-                "then please use the appropriate source command. "
-                "For example, source-bash script.sh"
+                f"attempting to source file with non-xonsh extension {repr(name)}! "
+                f"If you are trying to source a file in another language, "
+                "then please use the appropriate source command "
+                "e.g. `source-bash script.sh`. "
+                "Use `-e` to ignore extension checking and source the file."
             )
         with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
@@ -786,7 +799,7 @@ def source_alias(args, stdin=None):
         ctx = XSH.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
         with (
-            env.swap(XONSH_MODE="source", **make_args_env(args[i + 1 :])),
+            env.swap(XONSH_MODE="source", **make_args_env(files[i + 1 :])),
             swap_values(ctx, updates),
         ):
             try:
@@ -796,11 +809,16 @@ def source_alias(args, stdin=None):
                     "{RED}You may be attempting to source non-xonsh file! "
                     "{RESET}If you are trying to source a file in "
                     "another language, then please use the appropriate "
-                    "source command. For example, {GREEN}source-bash "
-                    "script.sh{RESET}",
+                    "source command. For example, {GREEN}`source-bash "
+                    "script.sh`{RESET}",
                     file=sys.stderr,
                 )
                 raise
+
+
+source_alias = ArgParserAlias(
+    func=source_alias_fn, has_args=True, prog="source", threadable=False
+)
 
 
 def source_cmd_fn(
