@@ -53,6 +53,6 @@ jobs:
           asset_path: ./xonsh-x86_64.AppImage
           asset_name:  xonsh-x86_64.AppImage
           asset_content_type: application/x-executable
-        
+
       - name: publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
