@@ -505,3 +505,22 @@ def test_pymode_not_ioredirect(s, exp):
     # test that Python code like `2>1` is lexed correctly
     # as opposed to being recognized as an IOREDIRECT token (issue #4994)
     assert check_tokens(s, exp)
+
+
+def test_lexer_subproc():
+    """Initial issue: https://github.com/xonsh/xonsh/pull/5941"""
+    lex = Lexer()
+    cmd = "echo 1#2"
+    lex.input(cmd, is_subproc=False)
+    result_no_subproc = [t.value for t in list(lex)]
+    lex.input(cmd, is_subproc=True)
+    result_subproc = [t.value for t in list(lex)]
+    assert "#" not in result_no_subproc
+    assert "#" in result_subproc
+
+    cmd = "echo 1 #2"
+    lex.input(cmd, is_subproc=False)
+    result_no_subproc = [t.value for t in list(lex)]
+    lex.input(cmd, is_subproc=True)
+    result_subproc = [t.value for t in list(lex)]
+    assert result_subproc == result_no_subproc
