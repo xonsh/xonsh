@@ -36,5 +36,23 @@ jobs:
         run: python -m build . --sdist
       - name: build bdist(wheel) to dist/
         run: python -m build . --wheel
+
+      - name: AppImage - Create xonsh AppImage
+        run: |
+          pip install python-appimage
+          echo $PWD > ./appimage/requirements.txt && cat ./appimage/pre-requirements.txt >> ./appimage/requirements.txt
+          python -m python_appimage build app -p 3.11 ./appimage  # Unpin python after fix https://github.com/xonsh/xonsh/issues/5166
+
+      - name: AppImage - Upload xonsh AppImage to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./xonsh-x86_64.AppImage
+          asset_name:  xonsh-x86_64.AppImage
+          asset_content_type: application/x-executable
+        
       - name: publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
