@@ -751,7 +751,6 @@ source_foreign = SourceForeignAlias(
 )
 
 
-@unthreadable
 def source_alias_fn(
     files: Annotated[list[str], Arg(nargs="+")], ignore_ext=False, _stdin=None
 ):
@@ -817,7 +816,7 @@ def source_alias_fn(
                 raise
 
 
-source_alias = ArgParserAlias(func=source_alias_fn, has_args=True, prog="source")
+source_alias = ArgParserAlias(func=source_alias_fn, has_args=True, prog="source", threadable=False)
 
 
 def source_cmd_fn(
