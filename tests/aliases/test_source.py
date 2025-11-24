@@ -45,14 +45,14 @@ def test_source_files_any_ext_exception(mockopen, monkeypatch, mocked_execx_chec
 def test_source_files_any_ext(mockopen, monkeypatch, mocked_execx_checker):
     monkeypatch.setattr(os.path, "isfile", lambda x: True)
     files = [
-            "foo.bar",
-            "bar.foo",
-            ".foobar",
-            ".xonshrc",
-            "foo.xsh",
-            "bar.xonshrc",
-            "py.py",
-        ]
+        "foo.bar",
+        "bar.foo",
+        ".foobar",
+        ".xonshrc",
+        "foo.xsh",
+        "bar.xonshrc",
+        "py.py",
+    ]
     source_alias_fn(files, ignore_ext=True)
     assert mocked_execx_checker == files
 
