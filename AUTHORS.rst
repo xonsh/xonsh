@@ -344,3 +344,4 @@ Authors are sorted by number of commits.
 * Ahmed
 * goodboy
 * Atsushi Morimoto
+* slacksystem
