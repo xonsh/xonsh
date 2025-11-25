@@ -1,3 +1,7 @@
+=======
+Authors
+=======
+
 All of the people who have made at least one contribution to xonsh.
 Authors are sorted by number of commits.
 
@@ -344,4 +348,10 @@ Authors are sorted by number of commits.
 * Ahmed
 * goodboy
 * Atsushi Morimoto
+
+.. note::
+
+   This list is generated from the ``.authors.yml`` file in the repository.
+   For information about how authors are credited in release notes,
+   see `issue #5950 <https://github.com/xonsh/xonsh/issues/5950>`_.
 * slacksystem
