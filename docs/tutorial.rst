@@ -125,9 +125,9 @@ You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
 
-    >>> @
-    <xonsh.built_ins.XonshSession>
     >>> __xonsh__
+    <xonsh.built_ins.XonshSession>
+    >>> @
     <xonsh.built_ins.XonshSession>
     >>> @.imp.json.loads('{"conch":"snail"}')
     {"conch":"snail"}
