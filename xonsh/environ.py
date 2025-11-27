@@ -2311,6 +2311,8 @@ class Env(cabc.MutableMapping):
         self._set_item(key, val)
 
     def _set_item(self, key, val, thread_local=False):
+        if not key.isidentifier():
+            raise Exception(f'Invalid name {repr(key)}. A valid Python identifier is expected.')        
         validator = self.get_validator(key)
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
