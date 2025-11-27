@@ -118,9 +118,9 @@ And that about wraps it up for the basics section.  It is just like Python.
 Xonsh Session Object
 =======================
 
-In every xonsh session there is a special global object called ``__xonsh__`` (or just ``@``). 
-It gives you access to the shell’s internal state and different parts of the current session. 
-For example, you can use @.env to change environment variables, or @.imp to import libraries. 
+In every xonsh session there is a special global object called ``__xonsh__`` (or just ``@``).
+It gives you access to the shell’s internal state and different parts of the current session.
+For example, you can use @.env to change environment variables, or @.imp to import libraries.
 You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
