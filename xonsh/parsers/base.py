@@ -688,6 +688,31 @@ class BaseParser:
     # Grammar as defined by BNF
     #
 
+    def p_atom_atdot_name(self, p):
+        """atom : at_tok period_tok name"""
+        p1, p3 = p[1], p[3]
+        lineno, col = p1.lineno, p1.lexpos
+        xonsh_obj = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
+        p[0] = ast.Attribute(
+            value=xonsh_obj,
+            attr=p3.value,
+            ctx=ast.Load(),
+            lineno=lineno,
+            col_offset=col,
+        )
+
+    def p_atom_atdot(self, p):
+        """atom : at_tok period_tok"""
+        p1 = p[1]
+        lineno, col = p1.lineno, p1.lexpos
+        p[0] = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
+
+    def p_atom_at(self, p):
+        """atom : at_tok"""
+        p1 = p[1]
+        lineno, col = p1.lineno, p1.lexpos
+        p[0] = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
+    
     def p_start_symbols(self, p):
         """
         start_symbols : single_input
