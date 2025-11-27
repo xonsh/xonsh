@@ -712,7 +712,7 @@ class BaseParser:
         p1 = p[1]
         lineno, col = p1.lineno, p1.lexpos
         p[0] = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
-    
+
     def p_start_symbols(self, p):
         """
         start_symbols : single_input
