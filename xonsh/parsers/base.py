@@ -701,12 +701,6 @@ class BaseParser:
             col_offset=col,
         )
 
-    def p_atom_atdot(self, p):
-        """atom : at_tok period_tok"""
-        p1 = p[1]
-        lineno, col = p1.lineno, p1.lexpos
-        p[0] = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
-
     def p_atom_at(self, p):
         """atom : at_tok"""
         p1 = p[1]
