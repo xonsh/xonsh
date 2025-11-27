@@ -137,6 +137,22 @@ def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
 #
 
 ALL_PLATFORMS = [
+    # conch in action
+    (
+        """
+print(isinstance(@, type(__xonsh__)))
+""",
+        "True\n",
+        0,
+    ),
+    (
+        """
+with @.env.swap(CONCH=1):
+    print(@.imp.json.loads('{"@":"~"}'))
+""",
+        "{'@': '~'}\n",
+        0,
+    ),
     # test calling a function alias
     (
         """
