@@ -3569,3 +3569,16 @@ match (...[...][...]):
 """,
         run=False,
     )
+
+def test_at_returns_xonsh(parser):
+    expr = parser.parse("@")
+    assert isinstance(expr.body, ast.Name)
+    assert expr.body.id == "__xonsh__"
+
+@pytest.mark.parametrize("exp", ["env", "imp"])
+def test_atdot_returns_xonsh_attr(parser, exp):
+    expr = parser.parse(f"@.{exp}")
+    assert isinstance(expr.body, ast.Attribute)
+    assert expr.body.attr == exp
+    assert isinstance(expr.body.value, ast.Name)
+    assert expr.body.value.id == "__xonsh__"
