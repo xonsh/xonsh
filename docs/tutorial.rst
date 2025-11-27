@@ -617,7 +617,7 @@ result is automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
-    >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
+    echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + " world\n")
     hello world
     >>> @(['echo', 'hello', 'world'])
     hello world
