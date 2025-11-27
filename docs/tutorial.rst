@@ -115,6 +115,25 @@ details, but this *is* pretty cool:
 For easier indentation, Shift+Tab will enter 4 spaces.
 And that about wraps it up for the basics section.  It is just like Python.
 
+Xonsh Session Object
+=======================
+
+In every xonsh session there is a special global object called ``__xonsh__`` (or just ``@``). 
+It gives you access to the shell’s internal state and different parts of the current session. 
+For example, you can use @.env to change environment variables, or @.imp to import libraries. 
+You will learn more about this in the following sections.
+
+.. code-block:: xonshcon
+
+    >>> @
+    <xonsh.built_ins.XonshSession>
+    >>> __xonsh__
+    <xonsh.built_ins.XonshSession>
+    >>> @.imp.json.loads('{"conch":"snail"}')
+    {"conch":"snail"}
+    >>> @.shell.shell_type
+    'prompt_toolkit'
+
 Environment Variables
 =======================
 Environment variables are written as ``$`` followed by a name.  For example,
@@ -157,7 +176,7 @@ Very nice.
 The Environment Itself ``${...}``
 ---------------------------------
 
-All environment variables live in the built-in ``${...}`` (aka ``__xonsh__.env``) mapping.
+All environment variables live in the built-in ``${...}`` (aka ``@.env``) mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -313,8 +332,8 @@ This should feel very natural.
 
 .. note::
 
-    Access the last run subprocess command using ``__xonsh__.last``;
-    e.g. to get the return code, run ``__xonsh__.last.rtn``.
+    Access the last run subprocess command using ``@.last``;
+    e.g. to get the return code, run ``@.last.rtn``.
 
 
 Python-mode vs Subprocess-mode
@@ -1257,7 +1276,7 @@ regex globbing:
 
 .. code-block:: xonshcon
 
-    >>> __xonsh__.regexsearch??
+    >>> @.regexsearch??
     Type:         function
     String form:  <function regexsearch at 0x7efc8b367d90>
     File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
