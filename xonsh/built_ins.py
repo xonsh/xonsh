@@ -142,7 +142,7 @@ def path_literal(s):
     s = expand_path(s)
     p = pathlib.Path(s)
     if XSH.env.get("XONSH_PSTR_CHECK_EXISTS", False) and not p.exists():
-        raise FileNotFoundError(f'Path {repr(str(p))} does not exist.')
+        raise FileNotFoundError(f"Path {repr(str(p))} does not exist.")
     return p
 
 
