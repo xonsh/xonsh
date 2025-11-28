@@ -36,8 +36,7 @@ To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines 
 
 .. code-block:: xonshcon
 
-    import os.path
-    if os.path.exists(f"{$HOME}/.nix-profile") and not @.env.get("NIX_PATH"):
+    if @.imp.os.path.exists(f"{$HOME}/.nix-profile") and not @.env.get("NIX_PATH"):
         $NIX_REMOTE="daemon"
         $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
         $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
