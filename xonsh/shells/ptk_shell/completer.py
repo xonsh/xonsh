@@ -68,7 +68,7 @@ class PromptToolkitCompleter(Completer):
 
         # completions from auto suggest
         sug_comp = None
-        if env.get("AUTO_SUGGEST") and env.get("AUTO_SUGGEST_IN_COMPLETIONS"):
+        if env.get("XONSH_PTK_AUTO_SUGGEST") and env.get("AUTO_SUGGEST_IN_COMPLETIONS"):
             sug_comp = self.suggestion_completion(document, line)
             if sug_comp is None:
                 pass

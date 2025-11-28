@@ -766,6 +766,8 @@ class Var(tp.NamedTuple):
     doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
     pattern: VarKeyType | None = None
+    sync : str = None
+    deprecated : bool = False
 
     @classmethod
     def with_default(
@@ -809,6 +811,8 @@ class Var(tp.NamedTuple):
     def get_key(self, var_name: str) -> VarKeyType:
         return self.pattern or var_name
 
+    def set_attrs(self, attrs: dict):
+        return self._replace(**attrs)
 
 class Xettings:
     """Parent class - All setting classes will be inheriting from this.
@@ -1715,13 +1719,14 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     """Prompt Toolkit shell
     Only usable with ``$SHELL_TYPE=prompt_toolkit.``
     """
-
-    AUTO_SUGGEST = Var.with_default(
+    XONSH_PTK_AUTO_SUGGEST = Var.with_default(
         True,
         "Enable automatic command suggestions based on history."
         "\n\nPressing the right arrow key inserts the currently "
         "displayed suggestion. ",
+        sync='AUTO_SUGGEST',
     )
+
     AUTO_SUGGEST_IN_COMPLETIONS = Var.with_default(
         False,
         "Places the auto-suggest result as the first option in the completions. "
@@ -2012,6 +2017,13 @@ class WindowsSetting(GeneralSetting):
         "generally replaced by their bright counter parts.",
         is_configurable=ON_WINDOWS,
     )
+
+
+class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
+    """Deprecated settings."""
+
+    # PTK
+    AUTO_SUGGEST = PTKSetting.XONSH_PTK_AUTO_SUGGEST.set_attrs({"sync": "XONSH_PTK_AUTO_SUGGEST", "deprecated": True})
 
 
 # Please keep the following in alphabetic order - scopatz
@@ -2310,7 +2322,16 @@ class Env(cabc.MutableMapping):
     def __setitem__(self, key, val):
         self._set_item(key, val)
 
-    def _set_item(self, key, val, thread_local=False):
+    def _set_item(self, key, val, thread_local=False, check_sync=True):
+        if check_sync and key in self._vars and self._vars[key].sync:
+            if self._vars[key].deprecated:
+                warnings.warn(
+                    f"env: Using deprecated env variable {key!r}. Replace it to {self._vars[key].sync!r}.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+            self._set_item(self._vars[key].sync, val, thread_local=thread_local, check_sync=False)
+
         validator = self.get_validator(key)
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
