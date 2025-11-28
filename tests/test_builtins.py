@@ -23,6 +23,7 @@ from xonsh.built_ins import (
     regexsearch,
     reglob,
     superhelper,
+    path_literal,
 )
 from xonsh.environ import Env
 from xonsh.pytest.tools import skip_if_on_windows
@@ -419,3 +420,15 @@ def test_enter_macro():
     assert obj.macro_block == "wakka"
     assert obj.macro_globals
     assert obj.macro_locals
+
+@skip_if_on_windows
+def test_path_literal(xession, tmp_path):
+    p = path_literal(tmp_path)
+    assert p.exists()
+
+    p = path_literal('/no/./no/./no')
+    assert not p.exists()
+
+    with xession.env.swap(XONSH_PSTR_CHECK_EXISTS=True):
+        with pytest.raises(FileNotFoundError):
+            path_literal('/no/no/no')
