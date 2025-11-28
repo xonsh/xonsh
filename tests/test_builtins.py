@@ -19,11 +19,11 @@ from xonsh.built_ins import (
     in_macro_call,
     list_of_list_of_strs_outer_product,
     list_of_strs_or_callables,
+    path_literal,
     pathsearch,
     regexsearch,
     reglob,
     superhelper,
-    path_literal,
 )
 from xonsh.environ import Env
 from xonsh.pytest.tools import skip_if_on_windows
@@ -421,14 +421,15 @@ def test_enter_macro():
     assert obj.macro_globals
     assert obj.macro_locals
 
+
 @skip_if_on_windows
 def test_path_literal(xession, tmp_path):
     p = path_literal(tmp_path)
     assert p.exists()
 
-    p = path_literal('/no/./no/./no')
+    p = path_literal("/no/./no/./no")
     assert not p.exists()
 
     with xession.env.swap(XONSH_PSTR_CHECK_EXISTS=True):
         with pytest.raises(FileNotFoundError):
-            path_literal('/no/no/no')
+            path_literal("/no/no/no")
