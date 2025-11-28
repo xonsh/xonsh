@@ -11,8 +11,8 @@ This page provides xonsh equivalents for common patterns in Bash.
       - Xonsh
       - Notes
     * - No special object for represent session.
-      - ``__xonsh__``/``@``
-      - The ``__xonsh__``/``@`` object has all about current xonsh session e.g. ``@.env``.
+      - ``__xonsh__`` or ``@``
+      - The ``__xonsh__`` or ``@`` object has all about current xonsh session e.g. ``@.env``.
     * - ``script.sh``
       - ``script.xsh``
       - The recommended file extension is ``.xsh``.
