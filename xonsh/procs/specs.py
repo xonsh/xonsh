@@ -79,21 +79,23 @@ def _un_shebang(x):
         return ["python", "-m", "xonsh.main"]
     return [x]
 
+
 def parse_shebang_from_file(filepath):
     """Returns shebang for a file or None."""
     shebang_parts = []
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         for i, line in enumerate(f):
             line = line.strip()
             if i == 0:
                 if not line.startswith("#!"):
                     return None
                 line = line.strip()
-            shebang_parts.append(line.rstrip('\\').strip())
+            shebang_parts.append(line.rstrip("\\").strip())
             if not line.endswith("\\"):
                 break
 
-    return ' '.join(shebang_parts)
+    return " ".join(shebang_parts)
+
 
 def get_script_subproc_command(fname, args):
     """Given the name of a script outside the path, returns a list representing
