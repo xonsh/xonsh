@@ -596,6 +596,7 @@ def test_auto_cd(xession, tmpdir):
     assert spec.alias.__name__ == "cd"
     assert spec.cmd[0] == dir
 
+
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "inp,exp",
