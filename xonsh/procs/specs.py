@@ -81,7 +81,9 @@ def _un_shebang(x):
 
 
 def parse_shebang_from_file(filepath):
-    """Returns shebang for a file or None."""
+    """Returns shebang for a file or None.
+    Doc: https://www.gnu.org/software/guile/manual/html_node/The-Meta-Switch.html
+    """
     shebang_parts = []
     with open(filepath, "rb") as f:
         for i, line in enumerate(f):
