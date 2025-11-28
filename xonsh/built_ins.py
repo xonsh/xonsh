@@ -140,7 +140,10 @@ def reglob(path, parts=None, i=None):
 
 def path_literal(s):
     s = expand_path(s)
-    return pathlib.Path(s)
+    p = pathlib.Path(s)
+    if XSH.env.get("XONSH_PSTR_CHECK_EXISTS", False) and not p.exists():
+        raise FileNotFoundError(f'Path {repr(str(p))} does not exist.')
+    return p
 
 
 def regexsearch(s):
