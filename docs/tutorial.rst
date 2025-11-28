@@ -120,7 +120,7 @@ Xonsh Session Object
 
 In every xonsh session there is a special global object called ``__xonsh__`` (or just ``@``).
 It gives you access to the shell’s internal state and different parts of the current session.
-For example, you can use @.env to change environment variables, or @.imp to import libraries.
+For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
 You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
@@ -176,7 +176,7 @@ Very nice.
 The Environment Itself ``${...}``
 ---------------------------------
 
-All environment variables live in the built-in ``${...}`` (aka ``@.env``) mapping.
+All environment variables live in the built-in ``${...}`` (aka ``__xonsh__.env`` or ``@.env``) mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -1276,7 +1276,7 @@ regex globbing:
 
 .. code-block:: xonshcon
 
-    >>> @.regexsearch??
+    >>> __xonsh__.regexsearch??
     Type:         function
     String form:  <function regexsearch at 0x7efc8b367d90>
     File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
