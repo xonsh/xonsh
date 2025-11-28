@@ -1185,6 +1185,11 @@ class SubprocessSetting(Xettings):
 class ErrorHandlingSetting(Xettings):
     """Error Handling Settings"""
 
+    XONSH_PSTR_CHECK_EXISTS = Var.with_default(
+        False,
+        "Set to ``True`` to verify that the path in the p-string exists "
+        "and raise an exception if it does not e.g. ``p'/a/b/c'`` will raise ``FileNotFoundError``."
+    )
     XONSH_SHOW_TRACEBACK = Var.with_default(
         False,
         "Controls if a traceback is shown if exceptions occur in the shell. "
