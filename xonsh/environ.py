@@ -766,8 +766,8 @@ class Var(tp.NamedTuple):
     doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
     pattern: VarKeyType | None = None
-    sync : str = None
-    deprecated : bool = False
+    sync: str = None
+    deprecated: bool = False
 
     @classmethod
     def with_default(
@@ -813,6 +813,7 @@ class Var(tp.NamedTuple):
 
     def set_attrs(self, attrs: dict):
         return self._replace(**attrs)
+
 
 class Xettings:
     """Parent class - All setting classes will be inheriting from this.
@@ -1719,12 +1720,13 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     """Prompt Toolkit shell
     Only usable with ``$SHELL_TYPE=prompt_toolkit.``
     """
+
     XONSH_PTK_AUTO_SUGGEST = Var.with_default(
         True,
         "Enable automatic command suggestions based on history."
         "\n\nPressing the right arrow key inserts the currently "
         "displayed suggestion. ",
-        sync='AUTO_SUGGEST',
+        sync="AUTO_SUGGEST",
     )
 
     AUTO_SUGGEST_IN_COMPLETIONS = Var.with_default(
@@ -2023,7 +2025,9 @@ class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
     """Deprecated settings."""
 
     # PTK
-    AUTO_SUGGEST = PTKSetting.XONSH_PTK_AUTO_SUGGEST.set_attrs({"sync": "XONSH_PTK_AUTO_SUGGEST", "deprecated": True})
+    AUTO_SUGGEST = PTKSetting.XONSH_PTK_AUTO_SUGGEST.set_attrs(
+        {"sync": "XONSH_PTK_AUTO_SUGGEST", "deprecated": True}
+    )
 
 
 # Please keep the following in alphabetic order - scopatz
@@ -2330,7 +2334,9 @@ class Env(cabc.MutableMapping):
                     DeprecationWarning,
                     stacklevel=2,
                 )
-            self._set_item(self._vars[key].sync, val, thread_local=thread_local, check_sync=False)
+            self._set_item(
+                self._vars[key].sync, val, thread_local=thread_local, check_sync=False
+            )
 
         validator = self.get_validator(key)
         converter = self.get_converter(key)
