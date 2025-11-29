@@ -755,6 +755,10 @@ class Var(tp.NamedTuple):
         potentially other non-trivial data types. default, False.
     pattern
         a regex pattern to match for the given variable
+    sync : str, optional
+        The name of env variable for mirroring the setting.
+    deprecated : bool, optional
+        Show warning about deprecated variable in case of setting.
     """
 
     validate: tp.Callable | None = always_true
@@ -766,6 +770,8 @@ class Var(tp.NamedTuple):
     doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
     pattern: VarKeyType | None = None
+    sync: str = ""
+    deprecated: bool = False
 
     @classmethod
     def with_default(
@@ -808,6 +814,9 @@ class Var(tp.NamedTuple):
 
     def get_key(self, var_name: str) -> VarKeyType:
         return self.pattern or var_name
+
+    def set_attrs(self, attrs: dict):
+        return self._replace(**attrs)
 
 
 class Xettings:
@@ -1716,12 +1725,14 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     Only usable with ``$SHELL_TYPE=prompt_toolkit.``
     """
 
-    AUTO_SUGGEST = Var.with_default(
+    XONSH_PROMPT_AUTO_SUGGEST = Var.with_default(
         True,
         "Enable automatic command suggestions based on history."
         "\n\nPressing the right arrow key inserts the currently "
-        "displayed suggestion. ",
+        "displayed suggestion. Set before starting the prompt e.g. in ``.xonshrc`` file.",
+        sync="AUTO_SUGGEST",
     )
+
     AUTO_SUGGEST_IN_COMPLETIONS = Var.with_default(
         False,
         "Places the auto-suggest result as the first option in the completions. "
@@ -2011,6 +2022,14 @@ class WindowsSetting(GeneralSetting):
         "which are hard to read, are replaced with cyan. Other colors are "
         "generally replaced by their bright counter parts.",
         is_configurable=ON_WINDOWS,
+    )
+
+
+class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
+    """Deprecated settings."""
+
+    AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs(
+        {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
     )
 
 
@@ -2310,7 +2329,27 @@ class Env(cabc.MutableMapping):
     def __setitem__(self, key, val):
         self._set_item(key, val)
 
-    def _set_item(self, key, val, thread_local=False):
+    def _set_item(self, key, val, thread_local=False, check_sync=True):
+        if check_sync and key in self._vars:
+            if self._vars[key].deprecated:
+                sync_txt = (
+                    f" Replace it to {self._vars[key].sync!r}."
+                    if self._vars[key].sync
+                    else ""
+                )
+                warnings.warn(
+                    f"env: Setting deprecated env variable {key!r}.{sync_txt}",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+            if self._vars[key].sync:
+                self._set_item(
+                    self._vars[key].sync,
+                    val,
+                    thread_local=thread_local,
+                    check_sync=False,
+                )
+
         validator = self.get_validator(key)
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
