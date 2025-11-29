@@ -4,6 +4,7 @@ import datetime
 import os
 import pathlib
 import re
+import warnings
 from random import shuffle
 from tempfile import TemporaryDirectory
 from threading import Thread
@@ -23,7 +24,9 @@ from xonsh.environ import (
     xonsh_cache_dir,
     xonsh_config_dir,
     xonsh_data_dir,
+    DeprecatedSetting,
 )
+from xonsh.environ import PTKSetting
 from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
 
@@ -702,3 +705,25 @@ def test_envpath_in_env_object():
     assert hasattr(env["PATH"], "paths")
     assert "/usr/bin" in env["PATH"].paths
     assert "/bin" in env["PATH"].paths
+
+def test_env_deprecated():
+    env = Env()
+    env._vars['XONSH_PROMPT_AUTO_SUGGEST'] = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST
+    env._vars['AUTO_SUGGEST'] = DeprecatedSetting.AUTO_SUGGEST
+    assert env['AUTO_SUGGEST'] is True
+    assert env['AUTO_SUGGEST'] == env['XONSH_PROMPT_AUTO_SUGGEST']
+    env['AUTO_SUGGEST'] = False
+    assert env['AUTO_SUGGEST'] == env['XONSH_PROMPT_AUTO_SUGGEST']
+    env['XONSH_PROMPT_AUTO_SUGGEST'] = True
+    assert env['AUTO_SUGGEST'] == env['XONSH_PROMPT_AUTO_SUGGEST']
+    with pytest.warns(DeprecationWarning):
+        env['AUTO_SUGGEST'] = True
+    with pytest.warns(DeprecationWarning):
+        env['AUTO_SUGGEST'] = False
+    with warnings.catch_warnings(record=True) as wrngs:
+        env['XONSH_PROMPT_AUTO_SUGGEST'] = True
+    assert len(wrngs) == 0
+    with warnings.catch_warnings(record=True) as wrngs:
+        env['XONSH_PROMPT_AUTO_SUGGEST'] = False
+    assert len(wrngs) == 0
+

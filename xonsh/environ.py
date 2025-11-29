@@ -1719,11 +1719,11 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     """Prompt Toolkit shell
     Only usable with ``$SHELL_TYPE=prompt_toolkit.``
     """
-    XONSH_PTK_AUTO_SUGGEST = Var.with_default(
+    XONSH_PROMPT_AUTO_SUGGEST = Var.with_default(
         True,
         "Enable automatic command suggestions based on history."
         "\n\nPressing the right arrow key inserts the currently "
-        "displayed suggestion. ",
+        "displayed suggestion. Set before starting the prompt e.g. in ``.xonshrc`` file.",
         sync='AUTO_SUGGEST',
     )
 
@@ -2021,9 +2021,7 @@ class WindowsSetting(GeneralSetting):
 
 class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
     """Deprecated settings."""
-
-    # PTK
-    AUTO_SUGGEST = PTKSetting.XONSH_PTK_AUTO_SUGGEST.set_attrs({"sync": "XONSH_PTK_AUTO_SUGGEST", "deprecated": True})
+    AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs({"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True})
 
 
 # Please keep the following in alphabetic order - scopatz
