@@ -1720,12 +1720,13 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     """Prompt Toolkit shell
     Only usable with ``$SHELL_TYPE=prompt_toolkit.``
     """
+
     XONSH_PROMPT_AUTO_SUGGEST = Var.with_default(
         True,
         "Enable automatic command suggestions based on history."
         "\n\nPressing the right arrow key inserts the currently "
         "displayed suggestion. Set before starting the prompt e.g. in ``.xonshrc`` file.",
-        sync='AUTO_SUGGEST',
+        sync="AUTO_SUGGEST",
     )
 
     AUTO_SUGGEST_IN_COMPLETIONS = Var.with_default(
@@ -2022,7 +2023,10 @@ class WindowsSetting(GeneralSetting):
 
 class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
     """Deprecated settings."""
-    AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs({"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True})
+
+    AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs(
+        {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
+    )
 
 
 # Please keep the following in alphabetic order - scopatz
@@ -2329,7 +2333,9 @@ class Env(cabc.MutableMapping):
                     DeprecationWarning,
                     stacklevel=2,
                 )
-            self._set_item(self._vars[key].sync, val, thread_local=thread_local, check_sync=False)
+            self._set_item(
+                self._vars[key].sync, val, thread_local=thread_local, check_sync=False
+            )
 
         validator = self.get_validator(key)
         converter = self.get_converter(key)
