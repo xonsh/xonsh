@@ -766,8 +766,8 @@ class Var(tp.NamedTuple):
     doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
     pattern: VarKeyType | None = None
-    sync : str = None
-    deprecated : bool = False
+    sync: str = None
+    deprecated: bool = False
 
     @classmethod
     def with_default(
@@ -813,6 +813,7 @@ class Var(tp.NamedTuple):
 
     def set_attrs(self, attrs: dict):
         return self._replace(**attrs)
+
 
 class Xettings:
     """Parent class - All setting classes will be inheriting from this.
