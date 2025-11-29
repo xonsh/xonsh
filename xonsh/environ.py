@@ -766,7 +766,7 @@ class Var(tp.NamedTuple):
     doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
     pattern: VarKeyType | None = None
-    sync: str = None
+    sync: str = ""
     deprecated: bool = False
 
     @classmethod
