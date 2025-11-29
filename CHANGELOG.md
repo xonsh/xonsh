@@ -1,5 +1,23 @@
 # Xonsh Change Log
 
+## [0.20.1](https://github.com/xonsh/xonsh/compare/0.20.0...0.20.1) (2025-11-29)
+
+
+### Features
+
+* added support for multiline shebang (guix fixed) ([#5957](https://github.com/xonsh/xonsh/issues/5957)) ([e9e0055](https://github.com/xonsh/xonsh/commit/e9e0055c6cd5fd867c4268fa311d098e81d2beeb))
+
+
+### Bug Fixes
+
+* allow numerical tokens in environment variable references ([#5891](https://github.com/xonsh/xonsh/issues/5891)) ([9ae6911](https://github.com/xonsh/xonsh/commit/9ae69117c65c305ef2511fe6a66e6965f01d174c))
+* Update tutorial example for piping into an alias ([#5955](https://github.com/xonsh/xonsh/issues/5955)) ([07d4334](https://github.com/xonsh/xonsh/commit/07d43341b981c251049855f04edaa025a4f1b1b7))
+
+
+### Documentation
+
+* Add verification file for ads.fund project ([#5946](https://github.com/xonsh/xonsh/issues/5946)) ([2482f06](https://github.com/xonsh/xonsh/commit/2482f06ef042d8a47f175e1eab45d6af4c9dcd0d))
+
 ## [0.20.0](https://github.com/xonsh/xonsh/compare/0.19.9...0.20.0) (2025-11-24)
 
 
