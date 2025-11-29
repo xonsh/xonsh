@@ -80,6 +80,23 @@ def _un_shebang(x):
     return [x]
 
 
+def parse_shebang_from_file(filepath):
+    """Returns shebang for a file or None.
+    Doc: https://www.gnu.org/software/guile/manual/html_node/The-Meta-Switch.html
+    """
+    shebang_parts = []
+    with open(filepath, "rb") as f:
+        for i, line in enumerate(f):
+            line = line.decode("utf-8", errors="replace").strip()
+            if i == 0:
+                if not line.startswith("#!"):
+                    return None
+            shebang_parts.append(line.rstrip("\\").strip())
+            if not line.endswith("\\"):
+                break
+    return " ".join(shebang_parts)
+
+
 def get_script_subproc_command(fname, args):
     """Given the name of a script outside the path, returns a list representing
     an appropriate subprocess command to execute the script or None if
@@ -111,9 +128,8 @@ def get_script_subproc_command(fname, args):
         if ext.upper() in XSH.env.get("PATHEXT"):
             return [fname] + args
     # find interpreter
-    with open(fname, "rb") as f:
-        first_line = f.readline().decode().strip()
-    m = RE_SHEBANG.match(first_line)
+    shebang = parse_shebang_from_file(fname)
+    m = RE_SHEBANG.match(shebang)
     # xonsh is the default interpreter
     if m is None:
         interp = ["xonsh"]

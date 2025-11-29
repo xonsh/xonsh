@@ -15,6 +15,7 @@ from xonsh.procs.specs import (
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
+    get_script_subproc_command,
     run_subproc,
 )
 from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
@@ -670,3 +671,27 @@ def test_auto_cd(xession, tmpdir):
         spec = cmds_to_specs([[dir]], captured="object")[-1]
     assert spec.alias.__name__ == "cd"
     assert spec.cmd[0] == dir
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        ["#!/bin/bash", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash\n\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash \\\n-i", ["/bin/bash", "-i", "{file}", "--arg", "1"]],
+        ["#!/bin/bash \\\n-i\necho 1", ["/bin/bash", "-i", "{file}", "--arg", "1"]],
+        [
+            "#!/bin/bash \\\n-i \\\n-i \necho 1",
+            ["/bin/bash", "-i", "-i", "{file}", "--arg", "1"],
+        ],
+    ],
+)
+def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
+    file = tmpdir / "script.sh"
+    file_str = str(file)
+    file.write_text(inp, encoding="utf-8")
+    file.chmod(0o755)
+    cmd = get_script_subproc_command(file_str, ["--arg", "1"])
+    assert [c if c != file_str else "{file}" for c in cmd] == exp
