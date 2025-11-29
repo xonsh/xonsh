@@ -2332,7 +2332,11 @@ class Env(cabc.MutableMapping):
     def _set_item(self, key, val, thread_local=False, check_sync=True):
         if check_sync and key in self._vars:
             if self._vars[key].deprecated:
-                sync_txt = f" Replace it to {self._vars[key].sync!r}." if self._vars[key].sync else ''
+                sync_txt = (
+                    f" Replace it to {self._vars[key].sync!r}."
+                    if self._vars[key].sync
+                    else ""
+                )
                 warnings.warn(
                     f"env: Setting deprecated env variable {key!r}.{sync_txt}",
                     DeprecationWarning,
@@ -2340,7 +2344,10 @@ class Env(cabc.MutableMapping):
                 )
             if self._vars[key].sync:
                 self._set_item(
-                    self._vars[key].sync, val, thread_local=thread_local, check_sync=False
+                    self._vars[key].sync,
+                    val,
+                    thread_local=thread_local,
+                    check_sync=False,
                 )
 
         validator = self.get_validator(key)
