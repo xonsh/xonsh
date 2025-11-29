@@ -755,6 +755,10 @@ class Var(tp.NamedTuple):
         potentially other non-trivial data types. default, False.
     pattern
         a regex pattern to match for the given variable
+    sync : str, optional
+        The name of env variable for mirroring the setting.
+    deprecated : bool, optional
+        Show warning about deprecated variable in case of setting.
     """
 
     validate: tp.Callable | None = always_true
