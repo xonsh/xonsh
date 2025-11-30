@@ -31,7 +31,6 @@ def _filter_ignorecase(text, prefix):
     return _filter_with_func(text, prefix, check_func)
 
 
-
 def get_filter_function():
     """
     Return an appropriate filtering function for completions, given the valid
