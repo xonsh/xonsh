@@ -15,6 +15,8 @@ import subprocess
 import sys
 import typing as tp
 
+from xonsh.completers.tools import RichCompletion
+
 __version__ = "0.2.8"
 
 
@@ -434,7 +436,23 @@ def bash_completions(
     elif ":" in prefix and ":" not in commprefix:
         strip_len = prefix.index(":") + 1
 
-    return out, max(len(prefix) - strip_len, 0)
+    # compute how many chars should be considered as prefix by the core
+    lprefix = max(len(prefix) - strip_len, 0)
+
+    # normalize completions: ensure we return full values and tell the core
+    # how many chars to replace via prefix_len. Some completers previously
+    # returned already-stripped suffixes which made the UI show only the
+    # tail of the string (e.g. "eload" instead of "reload").
+    normalized = set()
+    for comp in out:
+        if isinstance(comp, RichCompletion):
+            # preserve other RichCompletion attrs but set/override prefix_len
+            normalized.add(comp.replace(prefix_len=lprefix))
+        else:
+            # comp is a plain string -> wrap in RichCompletion with prefix_len
+            normalized.add(RichCompletion(comp, prefix_len=lprefix))
+
+    return normalized, lprefix
 
 
 def bash_complete_line(line, return_line=True, **kwargs):
