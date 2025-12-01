@@ -75,6 +75,17 @@ Returns:
 * ``None``: To let the error be raised normally
 
 Note: If the replacement command also fails, the original error is shown.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_command_not_found
+    def _vim_to_vi(cmd, **kwargs):
+        '''If vim not found let's try to use vi.'''
+        if cmd[0] == 'vim':
+            return ['vi'] + cmd[1:]
+
 """,
 )
 
