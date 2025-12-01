@@ -70,9 +70,12 @@ from xonsh.platform import (
 
 
 @contextmanager
-def chdir(adir, mkdir=False):
+def chdir(adir, mkdir=False, expanduser=True):
+    """Context manager for switching current directory to another."""
     adir = pathlib.Path(adir)
     old_dir = os.getcwd()
+    if expanduser:
+        adir = adir.expanduser()
     if mkdir:
         os.makedirs(adir, exist_ok=True)
     os.chdir(adir)
