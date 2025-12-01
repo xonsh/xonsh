@@ -70,9 +70,11 @@ from xonsh.platform import (
 
 
 @contextmanager
-def chdir(adir, mkdir=False):
+def chdir(adir, mkdir=False, expanduser=True):
     adir = pathlib.Path(adir)
     old_dir = os.getcwd()
+    if expanduser:
+        adir = adir.expanduser()
     if mkdir:
         os.makedirs(adir, exist_ok=True)
     os.chdir(adir)
