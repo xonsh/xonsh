@@ -446,11 +446,10 @@ def bash_completions(
     normalized = set()
     for comp in out:
         if isinstance(comp, RichCompletion):
-            # preserve other RichCompletion attrs but set/override prefix_len
             normalized.add(comp.replace(prefix_len=lprefix))
         else:
-            # comp is a plain string -> wrap in RichCompletion with prefix_len
-            normalized.add(RichCompletion(comp, prefix_len=lprefix))
+            text = str(comp).rstrip()
+            normalized.add(RichCompletion(text, prefix_len=lprefix))
 
     return normalized, lprefix
 
