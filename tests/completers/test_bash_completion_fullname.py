@@ -1,9 +1,11 @@
 import subprocess
+
 from xonsh.completers.bash_completion import bash_completions
-from contextlib import contextmanager
+
 
 def fake_check_output_success(*args, **kwargs):
     return "-F _func\nreload\neload\n"
+
 
 def test_bash_completion_preserves_full_name(monkeypatch):
     monkeypatch.setattr(subprocess, "check_output", fake_check_output_success)
