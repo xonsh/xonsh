@@ -620,10 +620,10 @@ class XonshSessionInterface:
 class XonshSession:
     """All components defining a xonsh session.
 
-    Warning! If you use this object for any reason and access ``__xonsh__`` 
-    or ``xonsh.built_ins.XSH`` attributes or functions, you do so at your 
-    own risk, as the internal contents and behavior of this object may 
-    change with any release. For repeatable use cases, find a way 
+    Warning! If you use this object for any reason and access ``__xonsh__``
+    or ``xonsh.built_ins.XSH`` attributes or functions, you do so at your
+    own risk, as the internal contents and behavior of this object may
+    change with any release. For repeatable use cases, find a way
     to improve ``XonshSessionInterface`` or ``xonsh.api``.
     """
 
