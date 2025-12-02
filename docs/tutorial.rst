@@ -173,10 +173,10 @@ Very nice.
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
 
 
-The Environment Itself ``${...}``
----------------------------------
+The Environment Itself ``@.env`` or ``__xonsh__.env``
+-----------------------------------------------------
 
-All environment variables live in the built-in ``${...}`` (aka ``__xonsh__.env`` or ``@.env``) mapping.
+All environment variables live in the built-in ``@.env`` (or ``__xonsh__.env``) mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -184,7 +184,9 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
 
 .. code-block:: xonshcon
 
-   >>> 'HOME' in ${...}
+   >>> 'HOME' in @.env
+   True
+   >>> 'PATH' in __xonsh__.env
    True
 
 To get information about a specific environment variable you can use the
@@ -192,20 +194,19 @@ To get information about a specific environment variable you can use the
 
 .. code-block:: xonshcon
 
-   >>> ${...}.help('XONSH_DEBUG')
+   >>> @.env.help('XONSH_DEBUG')
 
-One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
+One helpful method is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
 
 .. code-block:: xonshcon
 
-    >>> with ${...}.swap(SOMEVAR='foo'):
+    >>> with @.env.swap(SOMEVAR='foo'):
     ...     echo $SOMEVAR
-    ...
     ...
     foo
     >>> echo $SOMEVAR
-
+    $SOMEVAR
     >>>
 
 Environment Lookup with ``${<expr>}``
