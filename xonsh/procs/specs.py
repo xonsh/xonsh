@@ -1148,7 +1148,8 @@ def _run_command_pipeline(specs, cmds):
 
 def _run_specs(specs, cmds):
     cp = _run_command_pipeline(specs, cmds)
-    XSH.last, proc, captured, background = (
+    XSH.last, XSH.interface.lastcmd, proc, captured, background = (
+        cp,
         cp,
         cp.proc,
         specs[-1].captured,
