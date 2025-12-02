@@ -163,7 +163,7 @@ mycmd
 """,
         "ok",
         0,
-    ),        
+    ),
     # test calling a function alias
     (
         """
