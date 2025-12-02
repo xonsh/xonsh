@@ -597,21 +597,22 @@ class Cmd:
 
 class XonshSessionInterface:
     """Xonsh Session Interface
-    
+
     Attributes
     ----------
     env : xonsh.environ.Env
         A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
-        
+
     imp : xonsh.built_ins.InlineImporter
         Inline importer allows to access functions and attributes
         of libraries instantly e.g. `@.imp.time.time()`.
-        
+
     lastcmd : xonsh.procs.pipelines.CommandPipeline
         Last executed subprocess-mode command pipeline
         e.g. `@.lastcmd.rtn` returns exit code.
     """
-    imp : InlineImporter = InlineImporter()
+
+    imp: InlineImporter = InlineImporter()
     env = None
     lastcmd = None
 
@@ -736,7 +737,7 @@ class XonshSession:
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
         self.interface.env = self.env
-        
+
         self.exit = None
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
