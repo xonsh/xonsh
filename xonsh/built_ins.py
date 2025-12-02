@@ -613,8 +613,8 @@ class XonshSessionInterface:
     """
 
     imp: InlineImporter = InlineImporter()
-    env = None  # noqa
-    lastcmd = None  # noqa
+    env = None  # type: ignore
+    lastcmd = None  # type: ignore
 
 
 class XonshSession:
