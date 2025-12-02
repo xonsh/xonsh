@@ -11,8 +11,8 @@ This page provides xonsh equivalents for common patterns in Bash.
       - Xonsh
       - Notes
     * - No special object for represent session.
-      - ``__xonsh__`` or ``@``
-      - The ``__xonsh__`` or ``@`` object has all about current xonsh session e.g. ``@.env``.
+      - ``@``
+      - The ``@`` object has ``@.env`` - env variables, ``@.imp`` - importer, ``@.lastcmd`` - last command, etc.
     * - ``script.sh``
       - ``script.xsh``
       - The recommended file extension is ``.xsh``.
@@ -107,13 +107,10 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``os.getpid()``
       - Get PID of the current shell.
     * - ``$?``
-      - ``@.last.rtn`` anywhere or ``_.rtn`` in prompt mode
+      - ``@.lastcmd.rtn`` anywhere or ``_.rtn`` in prompt mode
       - Returns the exit code, or status, of the previous command. The underscore ``_`` is working
         in the prompt mode. To get the exit code of the command in xonsh script
         use ``!().rtn`` for not interactive processes.
-    * - ``!$``
-      - ``@.history[-1, -1]``
-      - Get the last argument of the last command
     * - ``$<n>``
       - ``$ARG<n>``
       - Command line argument at index ``n``,
