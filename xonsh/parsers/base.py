@@ -688,7 +688,6 @@ class BaseParser:
     # Grammar as defined by BNF
     #
 
-    # @.name
     def p_atom_atdot_name(self, p):
         """atom : at_tok period_tok name"""
         p1, p3 = p[1], p[3]
