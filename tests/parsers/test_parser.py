@@ -3615,4 +3615,3 @@ def test_decorator_atat_call(parser):
     assert dec.func.value.attr == "interface"
     assert dec.args == []
     assert dec.keywords == []
-    
