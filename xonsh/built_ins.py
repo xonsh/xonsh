@@ -595,6 +595,27 @@ class Cmd:
         return self
 
 
+class XonshSessionInterface:
+    """Xonsh Session Interface
+    
+    Attributes
+    ----------
+    env : xonsh.environ.Env
+        A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
+        
+    imp : xonsh.built_ins.InlineImporter
+        Inline importer allows to access functions and attributes
+        of libraries instantly e.g. `@.imp.time.time()`.
+        
+    lastcmd : xonsh.procs.pipelines.CommandPipeline
+        Last executed subprocess-mode command pipeline
+        e.g. `@.lastcmd.rtn` returns exit code.
+    """
+    imp : InlineImporter = InlineImporter()
+    env = None
+    lastcmd = None
+
+
 class XonshSession:
     """All components defining a xonsh session."""
 
@@ -606,13 +627,14 @@ class XonshSession:
             Session attribute. In case of integer value it signals xonsh to exit
             with returning this value as exit code.
         """
+        self.interface = XonshSessionInterface()
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
         self.history = None
         self.shell = None
         self.env = None
-        self.imp = InlineImporter()
+        self.imp = InlineImporter()  # DEPRECATED: moved to `self.interface`.
         self.rc_files = None
 
         # AST-invoked functions
@@ -649,7 +671,7 @@ class XonshSession:
         self._completers = None
         self.builtins = None
         self._initial_builtin_names = None
-        self.last = None  # Last executed CommandPipeline.
+        self.last = None  # Last executed CommandPipeline. DEPRECATED: moved to `self.interface`.
 
     def cmd(self, *args: str, **kwargs):
         return Cmd(self, *args, **kwargs)
@@ -713,7 +735,8 @@ class XonshSession:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
-
+        self.interface.env = self.env
+        
         self.exit = None
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
