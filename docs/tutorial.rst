@@ -115,24 +115,22 @@ details, but this *is* pretty cool:
 For easier indentation, Shift+Tab will enter 4 spaces.
 And that about wraps it up for the basics section.  It is just like Python.
 
-Xonsh Session Object
+Xonsh Session Interface
 =======================
 
-In every xonsh session there is a special global object called ``__xonsh__`` (or just ``@``).
-It gives you access to the shell’s internal state and different parts of the current session.
+Recently, each session has a special global object `@` that provides instant functionality.
+It gives you access to different parts of the current session.
 For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
 You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
 
-    >>> __xonsh__
-    <xonsh.built_ins.XonshSession>
     >>> @
-    <xonsh.built_ins.XonshSession>
+    <xonsh.built_ins.XonshSessionInterface>
     >>> @.imp.json.loads('{"conch":"snail"}')
     {"conch":"snail"}
-    >>> @.shell.shell_type
-    'prompt_toolkit'
+    >>> @.env.get('HOME')
+    '/home/snail'
 
 Environment Variables
 =======================
@@ -173,10 +171,10 @@ Very nice.
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
 
 
-The Environment Itself ``@.env`` or ``__xonsh__.env``
------------------------------------------------------
+The Environment Itself ``@.env``
+--------------------------------
 
-All environment variables live in the built-in ``@.env`` (or ``__xonsh__.env``) mapping.
+All environment variables live in the built-in ``@.env`` mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -185,8 +183,6 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
 .. code-block:: xonshcon
 
    >>> 'HOME' in @.env
-   True
-   >>> 'PATH' in __xonsh__.env
    True
 
 To get information about a specific environment variable you can use the
@@ -333,8 +329,8 @@ This should feel very natural.
 
 .. note::
 
-    Access the last run subprocess command using ``@.last``;
-    e.g. to get the return code, run ``@.last.rtn``.
+    Access the last run subprocess command using ``@.lastcmd``;
+    e.g. to get the return code, run ``@.lastcmd.rtn``.
 
 
 Python-mode vs Subprocess-mode
