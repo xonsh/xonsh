@@ -713,7 +713,7 @@ class BaseParser:
         Building ast.Attribute-chain: __xonsh__.first_attr[.more_attrs...]
         """
         node = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
-        for a in ([first_attr] + (more_attrs or [])):
+        for a in [first_attr] + (more_attrs or []):
             node = ast.Attribute(
                 value=node, attr=a, ctx=ast.Load(), lineno=lineno, col_offset=col
             )
@@ -740,7 +740,9 @@ class BaseParser:
         target = self._xonsh_attr_chain(lineno, col, p[4], [])
         call_args = p[5]  # dict(args=[...], keywords=[...]) или None
         if call_args is None:
-            p[0] = ast.Call(func=target, args=[], keywords=[], lineno=lineno, col_offset=col)
+            p[0] = ast.Call(
+                func=target, args=[], keywords=[], lineno=lineno, col_offset=col
+            )
         else:
             p[0] = ast.Call(func=target, lineno=lineno, col_offset=col, **call_args)
 
@@ -751,10 +753,12 @@ class BaseParser:
         target = self._xonsh_attr_chain(lineno, col, p[4], p[5])
         call_args = p[6]
         if call_args is None:
-            p[0] = ast.Call(func=target, args=[], keywords=[], lineno=lineno, col_offset=col)
+            p[0] = ast.Call(
+                func=target, args=[], keywords=[], lineno=lineno, col_offset=col
+            )
         else:
             p[0] = ast.Call(func=target, lineno=lineno, col_offset=col, **call_args)
-    
+
     def p_start_symbols(self, p):
         """
         start_symbols : single_input
