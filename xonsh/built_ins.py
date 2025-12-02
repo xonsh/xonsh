@@ -604,8 +604,8 @@ class XonshSessionInterface:
         A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
 
     imp : xonsh.built_ins.InlineImporter
-        Inline importer allows to access functions and attributes
-        of libraries instantly e.g. `@.imp.time.time()`.
+        The inline importer provides instant access to library
+        functions and attributes e.g. `@.imp.time.time()`.
 
     lastcmd : xonsh.procs.pipelines.CommandPipeline
         Last executed subprocess-mode command pipeline
