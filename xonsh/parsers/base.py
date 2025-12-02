@@ -737,7 +737,7 @@ class BaseParser:
         at2 = p[2]
         lineno, col = at2.lineno, at2.lexpos
         target = self._xonsh_attr_chain(lineno, col, p[4], [])
-        call_args = p[5]  # dict(args=[...], keywords=[...]) или None
+        call_args = p[5]
         if call_args is None:
             p[0] = ast.Call(
                 func=target, args=[], keywords=[], lineno=lineno, col_offset=col
