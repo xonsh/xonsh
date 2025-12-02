@@ -612,8 +612,8 @@ class XonshSessionInterface:
         e.g. `@.lastcmd.rtn` returns exit code.
     """
 
-    imp: InlineImporter = InlineImporter()
     env = None  # type: ignore
+    imp: InlineImporter = InlineImporter()
     lastcmd = None  # type: ignore
 
 
