@@ -3584,3 +3584,35 @@ def test_atdot_returns_xonsh_attr(parser, exp):
     assert expr.body.attr == exp
     assert isinstance(expr.body.value, ast.Name)
     assert expr.body.value.id == "__xonsh__"
+
+
+def test_decorator_atat_attr(parser):
+    code = "@@.contextmanager\ndef f():\n    pass\n"
+    mod = parser.parse(code)
+    assert isinstance(mod, ast.Module)
+    f = mod.body[0]
+    assert isinstance(f, ast.FunctionDef)
+    assert len(f.decorator_list) == 1
+    dec = f.decorator_list[0]
+    assert isinstance(dec, ast.Attribute)
+    assert dec.attr == "contextmanager"
+    assert isinstance(dec.value, ast.Name)
+    assert dec.value.id == "__xonsh__"
+
+
+def test_decorator_atat_call(parser):
+    code = "@@.contextmanager()\ndef f():\n    pass\n"
+    mod = parser.parse(code)
+    assert isinstance(mod, ast.Module)
+    f = mod.body[0]
+    assert isinstance(f, ast.FunctionDef)
+    assert len(f.decorator_list) == 1
+    dec = f.decorator_list[0]
+    assert isinstance(dec, ast.Call)
+    assert isinstance(dec.func, ast.Attribute)
+    assert dec.func.attr == "contextmanager"
+    assert isinstance(dec.func.value, ast.Name)
+    assert dec.func.value.id == "__xonsh__"
+    assert dec.args == []
+    assert dec.keywords == []
+
