@@ -692,7 +692,7 @@ class BaseParser:
         """atom : at_tok period_tok name"""
         p1, p3 = p[1], p[3]
         lineno, col = p1.lineno, p1.lexpos
-        xonsh_obj = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
+        xonsh_obj = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
         p[0] = ast.Attribute(
             value=xonsh_obj,
             attr=p3.value,
@@ -705,13 +705,13 @@ class BaseParser:
         """atom : at_tok"""
         p1 = p[1]
         lineno, col = p1.lineno, p1.lexpos
-        p[0] = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
+        p[0] = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
 
     def _xonsh_attr_chain(self, lineno, col, first_attr, more_attrs=None):
         """
         Building ast.Attribute-chain: __xonsh__.first_attr[.more_attrs...]
         """
-        node = load_attribute_chain("__xonsh__", lineno=lineno, col=col)
+        node = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
         for a in [first_attr] + (more_attrs or []):
             node = ast.Attribute(
                 value=node, attr=a, ctx=ast.Load(), lineno=lineno, col_offset=col
