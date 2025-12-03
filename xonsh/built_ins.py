@@ -694,7 +694,7 @@ class XonshSession:
     @last.setter
     def last(self, value):
         self._last = value
-    
+
     def cmd(self, *args: str, **kwargs):
         return Cmd(self, *args, **kwargs)
 
