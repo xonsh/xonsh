@@ -566,10 +566,22 @@ class SubprocSpec:
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:
-                e += "\n" + xt.suggest_commands(cmd0, env)
+                e += "\n" + sug
             if XSH.env.get("XONSH_INTERACTIVE"):
                 events = XSH.builtins.events
-                events.on_command_not_found.fire(cmd=self.cmd)
+                replacements = events.on_command_not_found.fire(cmd=self.cmd)
+                for replacement in replacements:
+                    if replacement is None:
+                        continue
+                    # Validate replacement format (accept list or tuple)
+                    if not isinstance(replacement, (list, tuple)) or not replacement:
+                        continue
+                    try:
+                        return self.cls(list(replacement), bufsize=bufsize, **kwargs)
+                    except (FileNotFoundError, PermissionError):
+                        # If replacement also fails, continue to next replacement
+                        # or fall through to original error with suggestions
+                        continue
             raise xt.XonshError(e) from ex
         return p
 
