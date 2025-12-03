@@ -679,7 +679,8 @@ class XonshSession:
         self._completers = None
         self.builtins = None
         self._initial_builtin_names = None
-        self.last = None  # Last executed CommandPipeline. DEPRECATED: moved to `self.interface`.
+        self.lastcmd = None
+        self.last = None  # Last executed CommandPipeline. DEPRECATED: renamed to lastcmd
 
     def cmd(self, *args: str, **kwargs):
         return Cmd(self, *args, **kwargs)
