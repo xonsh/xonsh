@@ -642,7 +642,7 @@ class XonshSession:
         self.history = None
         self.shell = None
         self.env = None
-        self.imp = InlineImporter()  # DEPRECATED: moved to `self.interface`.
+        self.imp = InlineImporter()
         self.rc_files = None
 
         # AST-invoked functions
