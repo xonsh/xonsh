@@ -108,7 +108,7 @@ This page provides xonsh equivalents for common patterns in Bash.
       - Get PID of the current shell.
     * - ``$?``
       - ``@.lastcmd.rtn``
-      - Returns the exit code, or status, of the previous command. 
+      - Returns the exit code, or status, of the previous command.
         To get the exit code of the command in xonsh script
         use ``!().rtn`` for not interactive processes.
     * - ``$<n>``
