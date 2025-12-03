@@ -680,10 +680,21 @@ class XonshSession:
         self.builtins = None
         self._initial_builtin_names = None
         self.lastcmd = None
-        self.last = (
-            None  # Last executed CommandPipeline. DEPRECATED: renamed to lastcmd
-        )
+        self._last = None
 
+    @property
+    def last(self):
+        warnings.warn(
+            "The `last` attribute is deprecated and will be removed. Use `lastcmd`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._last
+
+    @last.setter
+    def last(self, value):
+        self._last = value
+    
     def cmd(self, *args: str, **kwargs):
         return Cmd(self, *args, **kwargs)
 
