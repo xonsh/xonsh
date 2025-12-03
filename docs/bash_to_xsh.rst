@@ -107,9 +107,9 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``os.getpid()``
       - Get PID of the current shell.
     * - ``$?``
-      - ``@.lastcmd.rtn`` anywhere or ``_.rtn`` in prompt mode
-      - Returns the exit code, or status, of the previous command. The underscore ``_`` is working
-        in the prompt mode. To get the exit code of the command in xonsh script
+      - ``@.lastcmd.rtn``
+      - Returns the exit code, or status, of the previous command. 
+        To get the exit code of the command in xonsh script
         use ``!().rtn`` for not interactive processes.
     * - ``$<n>``
       - ``$ARG<n>``
