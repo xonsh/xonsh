@@ -36,13 +36,13 @@ To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines 
 
 .. code-block:: xonshcon
 
-    if @.imp.os.path.exists(f"{$HOME}/.nix-profile") and not @.env.get("NIX_PATH"):
+    if p"~/.nix-profile".exists() and not @.env.get("NIX_PATH"):
         $NIX_REMOTE="daemon"
         $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
         $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
         $NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
         $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
-        $PATH += [f"{$HOME}/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
+        $PATH += ["~/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
 
 Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is:
 
