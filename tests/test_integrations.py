@@ -147,7 +147,7 @@ print(isinstance(@, type(__xonsh__.interface)))
     ),
     (
         """
-$CONCH=24        
+$CONCH=24
 with @.env.swap(CONCH=42):
     print(@.imp.json.loads('{"@":"~"}'), $CONCH)
 """,
