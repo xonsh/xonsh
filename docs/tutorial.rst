@@ -118,7 +118,9 @@ And that about wraps it up for the basics section.  It is just like Python.
 Xonsh Session Interface
 =======================
 
-Recently, each session has a special global object `@` that provides instant functionality.
+**New in version 0.21.0
+
+Each session has a special global object `@` that provides instant functionality.
 It gives you access to different parts of the current session.
 For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
 You will learn more about this in the following sections.
