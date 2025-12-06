@@ -182,7 +182,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
             print("globals or ", file=stderr, end="")
         print("$PATH", file=stderr, end="")
         if not pargs.skip:
-            print(" or xonsh.builtins.aliases", file=stderr, end="")
+            print(" or aliases", file=stderr, end="")
         print("", file=stderr, end="\n")
         return len(failures)
 
