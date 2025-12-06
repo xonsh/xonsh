@@ -23,6 +23,7 @@ from xonsh.built_ins import (
     regexsearch,
     reglob,
     superhelper,
+    path_literal
 )
 from xonsh.environ import Env
 from xonsh.pytest.tools import skip_if_on_windows
@@ -419,3 +420,17 @@ def test_enter_macro():
     assert obj.macro_block == "wakka"
     assert obj.macro_globals
     assert obj.macro_locals
+
+
+def test_xonshpathliteral_contextmanager(tmp_path):
+    start_cwd = os.getcwd()
+    p = path_literal(str(tmp_path))
+    try:
+        with p:
+            assert os.getcwd() == str(p)
+        assert os.getcwd() == start_cwd
+    finally:
+        try:
+            os.chdir(start_cwd)
+        except Exception:
+            pass

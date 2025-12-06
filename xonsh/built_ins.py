@@ -138,9 +138,21 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
+class XonshPathLiteral(type(pathlib.Path())):
+    """Extension of ``pathlib.Path`` to support a context manager."""
+    def __enter__(self):
+        self._xonsh_old_cwd = os.getcwd()
+        os.chdir(self)
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        os.chdir(self._xonsh_old_cwd)
+        return False
+
+
 def path_literal(s):
     s = expand_path(s)
-    return pathlib.Path(s)
+    return XonshPathLiteral(s)
 
 
 def regexsearch(s):
