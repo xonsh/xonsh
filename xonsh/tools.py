@@ -71,7 +71,9 @@ from xonsh.platform import (
 
 @contextmanager
 def chdir(adir, mkdir=False, expanduser=True):
-    """Context manager for switching current directory to another."""
+    """Context manager for switching current directory to another.
+    Note! You can use ``with p'/path': $[ls]`` to achieve the same.
+    """
     adir = pathlib.Path(adir)
     old_dir = os.getcwd()
     if expanduser:
