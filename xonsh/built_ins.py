@@ -140,6 +140,7 @@ def reglob(path, parts=None, i=None):
 
 class XonshPathLiteral(type(pathlib.Path())):
     """Extension of ``pathlib.Path`` to support a context manager."""
+
     def __enter__(self):
         self._xonsh_old_cwd = os.getcwd()
         os.chdir(self)
