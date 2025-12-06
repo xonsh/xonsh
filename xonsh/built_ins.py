@@ -595,8 +595,37 @@ class Cmd:
         return self
 
 
+class XonshSessionInterface:
+    """Xonsh Session Interface
+
+    Attributes
+    ----------
+    env : xonsh.environ.Env
+        A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
+
+    imp : xonsh.built_ins.InlineImporter
+        The inline importer provides instant access to library
+        functions and attributes e.g. `@.imp.time.time()`.
+
+    lastcmd : xonsh.procs.pipelines.CommandPipeline
+        Last executed subprocess-mode command pipeline
+        e.g. `@.lastcmd.rtn` returns exit code.
+    """
+
+    env = None  # type: ignore
+    imp: InlineImporter = InlineImporter()
+    lastcmd = None  # type: ignore
+
+
 class XonshSession:
-    """All components defining a xonsh session."""
+    """All components defining a xonsh session.
+
+    Warning! If you use this object for any reason and access ``__xonsh__``
+    or ``xonsh.built_ins.XSH`` attributes or functions, you do so at your
+    own risk, as the internal contents and behavior of this object may
+    change with any release. For repeatable use cases, find a way
+    to improve ``XonshSessionInterface`` or ``xonsh.api``.
+    """
 
     def __init__(self):
         """
@@ -606,6 +635,7 @@ class XonshSession:
             Session attribute. In case of integer value it signals xonsh to exit
             with returning this value as exit code.
         """
+        self.interface = XonshSessionInterface()
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
@@ -649,7 +679,21 @@ class XonshSession:
         self._completers = None
         self.builtins = None
         self._initial_builtin_names = None
-        self.last = None  # Last executed CommandPipeline.
+        self.lastcmd = None
+        self._last = None
+
+    @property
+    def last(self):
+        warnings.warn(
+            "The `last` attribute is deprecated and will be removed. Use `lastcmd`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._last
+
+    @last.setter
+    def last(self, value):
+        self._last = value
 
     def cmd(self, *args: str, **kwargs):
         return Cmd(self, *args, **kwargs)
@@ -713,6 +757,7 @@ class XonshSession:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
+        self.interface.env = self.env
 
         self.exit = None
         self.stdout_uncaptured = None
