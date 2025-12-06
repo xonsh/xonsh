@@ -1228,6 +1228,12 @@ handled implicitly in subprocess mode.
     'bar'
     >>> echo @(mypath)
     /foo/bar
+    >>> pwd
+    /home/snail
+    >>> with p'/tmp':
+    ...     pwd
+    ...
+    /tmp
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 
