@@ -11,9 +11,8 @@ This page provides xonsh equivalents for common patterns in Bash.
       - Xonsh
       - Notes
     * - No special object for represent session.
-      - ``__xonsh__``
-      - The ``__xonsh__`` object has all about current xonsh session e.g. ``__xonsh__.env``.
-        You can set ``X = __xonsh__`` to have a shortcut for ``X.env`` and similar.
+      - ``@``
+      - The ``@`` object has ``@.env`` - env variables, ``@.imp`` - importer, ``@.lastcmd`` - last command, etc.
     * - ``script.sh``
       - ``script.xsh``
       - The recommended file extension is ``.xsh``.
@@ -66,7 +65,7 @@ This page provides xonsh equivalents for common patterns in Bash.
     * - ``ENV1=VAL1 command``
       - ``$ENV1=VAL1 command``
 
-        or ``with __xonsh__.env.swap(ENV1=VAL1): command``
+        or ``with @.env.swap(ENV1=VAL1): command``
       - Set temporary environment variable(s) and execute the command.
         Use the second notation with an indented block to execute many commands in the same context.
     * - ``alias ll='ls -la'``
@@ -108,13 +107,10 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``os.getpid()``
       - Get PID of the current shell.
     * - ``$?``
-      - ``__xonsh__.last.rtn`` anywhere or ``_.rtn`` in prompt mode
-      - Returns the exit code, or status, of the previous command. The underscore ``_`` is working
-        in the prompt mode. To get the exit code of the command in xonsh script
+      - ``@.lastcmd.rtn``
+      - Returns the exit code, or status, of the previous command.
+        To get the exit code of the command in xonsh script
         use ``!().rtn`` for not interactive processes.
-    * - ``!$``
-      - ``__xonsh__.history[-1, -1]``
-      - Get the last argument of the last command
     * - ``$<n>``
       - ``$ARG<n>``
       - Command line argument at index ``n``,

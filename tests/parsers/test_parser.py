@@ -3569,3 +3569,49 @@ match (...[...][...]):
 """,
         run=False,
     )
+
+
+def test_at_returns_xonsh(parser):
+    expr = parser.parse("@")
+    assert isinstance(expr.body, ast.Attribute)
+    assert expr.body.attr == "interface"
+
+
+@pytest.mark.parametrize("exp", ["env", "imp"])
+def test_atdot_returns_xonsh_attr(parser, exp):
+    expr = parser.parse(f"@.{exp}")
+    assert isinstance(expr.body, ast.Attribute)
+    assert expr.body.attr == exp
+    assert isinstance(expr.body.value, ast.Attribute)
+    assert expr.body.value.attr == "interface"
+
+
+def test_decorator_atat_attr(parser):
+    code = "@@.contextmanager\ndef f():\n    pass\n"
+    mod = parser.parse(code)
+    assert isinstance(mod, ast.Module)
+    f = mod.body[0]
+    assert isinstance(f, ast.FunctionDef)
+    assert len(f.decorator_list) == 1
+    dec = f.decorator_list[0]
+    assert isinstance(dec, ast.Attribute)
+    assert dec.attr == "contextmanager"
+    assert isinstance(dec.value, ast.Attribute)
+    assert dec.value.attr == "interface"
+
+
+def test_decorator_atat_call(parser):
+    code = "@@.contextmanager()\ndef f():\n    pass\n"
+    mod = parser.parse(code)
+    assert isinstance(mod, ast.Module)
+    f = mod.body[0]
+    assert isinstance(f, ast.FunctionDef)
+    assert len(f.decorator_list) == 1
+    dec = f.decorator_list[0]
+    assert isinstance(dec, ast.Call)
+    assert isinstance(dec.func, ast.Attribute)
+    assert dec.func.attr == "contextmanager"
+    assert isinstance(dec.func.value, ast.Attribute)
+    assert dec.func.value.attr == "interface"
+    assert dec.args == []
+    assert dec.keywords == []

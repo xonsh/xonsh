@@ -688,6 +688,76 @@ class BaseParser:
     # Grammar as defined by BNF
     #
 
+    def p_atom_atdot_name(self, p):
+        """atom : at_tok period_tok name"""
+        p1, p3 = p[1], p[3]
+        lineno, col = p1.lineno, p1.lexpos
+        xonsh_obj = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
+        p[0] = ast.Attribute(
+            value=xonsh_obj,
+            attr=p3.value,
+            ctx=ast.Load(),
+            lineno=lineno,
+            col_offset=col,
+        )
+
+    def p_atom_at(self, p):
+        """atom : at_tok"""
+        p1 = p[1]
+        lineno, col = p1.lineno, p1.lexpos
+        p[0] = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
+
+    def _xonsh_attr_chain(self, lineno, col, first_attr, more_attrs=None):
+        """
+        Building ast.Attribute-chain: __xonsh__.first_attr[.more_attrs...]
+        """
+        node = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
+        for a in [first_attr] + (more_attrs or []):
+            node = ast.Attribute(
+                value=node, attr=a, ctx=ast.Load(), lineno=lineno, col_offset=col
+            )
+        return node
+
+    def p_decorator_atat_nocall_simple(self, p):
+        """decorator : at_tok at_tok period_tok name_str NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], [])
+        p[0] = target
+
+    def p_decorator_atat_nocall_chain(self, p):
+        """decorator : at_tok at_tok period_tok name_str attr_period_name_list NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], p[5])
+        p[0] = target
+
+    def p_decorator_atat_call_simple(self, p):
+        """decorator : at_tok at_tok period_tok name_str func_call NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], [])
+        call_args = p[5]
+        if call_args is None:
+            p[0] = ast.Call(
+                func=target, args=[], keywords=[], lineno=lineno, col_offset=col
+            )
+        else:
+            p[0] = ast.Call(func=target, lineno=lineno, col_offset=col, **call_args)
+
+    def p_decorator_atat_call_chain(self, p):
+        """decorator : at_tok at_tok period_tok name_str attr_period_name_list func_call NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], p[5])
+        call_args = p[6]
+        if call_args is None:
+            p[0] = ast.Call(
+                func=target, args=[], keywords=[], lineno=lineno, col_offset=col
+            )
+        else:
+            p[0] = ast.Call(func=target, lineno=lineno, col_offset=col, **call_args)
+
     def p_start_symbols(self, p):
         """
         start_symbols : single_input

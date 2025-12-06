@@ -133,7 +133,7 @@ def XONSH_TOKENS():
 @xl.lazyobject
 def RE_XONSH_IMP():
     """Regex pattern to match __xonsh__.imp.<module> syntax."""
-    return re.compile(r"__xonsh__\.imp\.([a-zA-Z_][\w\.]*)?$")
+    return re.compile(r"(__xonsh__|@)\.imp\.([a-zA-Z_][\w\.]*)?$")
 
 
 @contextual_completer
@@ -152,8 +152,8 @@ def complete_xonsh_imp(context: CompletionContext) -> CompleterResult:
     if m is None:
         return None
 
-    # Extract the module path after __xonsh__.imp.
-    module_path = m.group(1) or ""
+    xsh = m.group(1)
+    module_path = m.group(2) or ""
 
     # Import the necessary functions from the imports completer
     from xonsh.completers.imports import (
@@ -172,7 +172,7 @@ def complete_xonsh_imp(context: CompletionContext) -> CompleterResult:
         # Try to get completions for the submodule
         try:
             submodule_completions = try_import(base_module, only_modules=True)
-            full_prefix = f"__xonsh__.imp.{base_module}."
+            full_prefix = f"{xsh}.imp.{base_module}."
             completions = {
                 full_prefix + comp
                 for comp in filter_completions(prefix_part, submodule_completions)
@@ -183,7 +183,7 @@ def complete_xonsh_imp(context: CompletionContext) -> CompleterResult:
     else:
         # Complete root-level module names
         modules = get_root_modules()
-        full_prefix = "__xonsh__.imp."
+        full_prefix = f"{xsh}.imp."
         completions = {
             full_prefix + mod for mod in filter_completions(module_path, modules)
         }
