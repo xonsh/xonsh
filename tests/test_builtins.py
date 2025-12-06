@@ -19,11 +19,11 @@ from xonsh.built_ins import (
     in_macro_call,
     list_of_list_of_strs_outer_product,
     list_of_strs_or_callables,
+    path_literal,
     pathsearch,
     regexsearch,
     reglob,
     superhelper,
-    path_literal
 )
 from xonsh.environ import Env
 from xonsh.pytest.tools import skip_if_on_windows
