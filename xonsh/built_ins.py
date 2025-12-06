@@ -137,8 +137,13 @@ def reglob(path, parts=None, i=None):
             paths += reglob(p, parts=parts, i=i1)
     return paths
 
+# mypy support
+if sys.platform == "win32":
+    BasePath = pathlib.WindowsPath
+else:
+    BasePath = pathlib.PosixPath
 
-class XonshPathLiteral(type(pathlib.Path())):
+class XonshPathLiteral(BasePath):  # type: ignore
     """Extension of ``pathlib.Path`` to support a context manager."""
 
     def __enter__(self):
