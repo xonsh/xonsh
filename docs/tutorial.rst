@@ -1234,6 +1234,10 @@ handled implicitly in subprocess mode.
     ...     pwd
     ...
     /tmp
+    >>> with p'/tmp/new'.mkdir():
+    ...     pwd
+    ...
+    /tmp/new
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 

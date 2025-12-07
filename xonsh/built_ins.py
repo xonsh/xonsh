@@ -157,6 +157,10 @@ class XonshPathLiteral(BasePath):  # type: ignore
         os.chdir(self._xonsh_old_cwd)
         return False
 
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """Extension of ``pathlib.Path.mkdir`` that returns ``self`` instead of ``None``."""
+        super().mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
+        return self
 
 def path_literal(s):
     s = expand_path(s)
