@@ -162,6 +162,7 @@ class XonshPathLiteral(BasePath):  # type: ignore
         super().mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
         return self
 
+
 def path_literal(s):
     s = expand_path(s)
     return XonshPathLiteral(s)
