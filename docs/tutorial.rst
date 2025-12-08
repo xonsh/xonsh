@@ -1230,11 +1230,11 @@ handled implicitly in subprocess mode.
     /foo/bar
     >>> pwd
     /home/snail
-    >>> with p'/tmp':
+    >>> with p'/tmp'.cd():
     ...     pwd
     ...
     /tmp
-    >>> with p'/tmp/new'.mkdir():
+    >>> with p'/tmp/new'.mkdir().cd():
     ...     pwd
     ...
     /tmp/new
