@@ -157,6 +157,12 @@ class XonshPathLiteral(BasePath):  # type: ignore
         os.chdir(self._xonsh_old_cwd)
         return False
 
+    def cd(self):
+        """Explicit way to call context manager
+        e.g. ``with p'/tmp'.cd(): $[ls]``
+        """
+        return self
+
     def mkdir(self, mode=0o777, parents=False, exist_ok=False):
         """Extension of ``pathlib.Path.mkdir`` that returns ``self`` instead of ``None``."""
         super().mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
