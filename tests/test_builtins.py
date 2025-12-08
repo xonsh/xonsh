@@ -426,7 +426,7 @@ def test_xonshpathliteral_contextmanager(tmp_path):
     start_cwd = os.getcwd()
     p = path_literal(str(tmp_path))
     try:
-        with p:
+        with p.cd():
             assert os.getcwd() == str(p)
         assert os.getcwd() == start_cwd
     finally:
