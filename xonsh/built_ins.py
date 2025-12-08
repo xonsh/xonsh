@@ -145,8 +145,6 @@ else:
     BasePath = pathlib.PosixPath
 
 
-
-
 class XonshPathLiteral(BasePath):  # type: ignore
     """Extension of ``pathlib.Path`` to support extended functionality."""
 
@@ -162,7 +160,6 @@ class XonshPathLiteral(BasePath):  # type: ignore
         def __exit__(self, exc_type, exc, tb):
             os.chdir(self._xonsh_old_cwd)
             return False
-
 
     def cd(self):
         """Returns context manager to change the directory
