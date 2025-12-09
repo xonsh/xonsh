@@ -147,6 +147,7 @@ else:
 
 class XonshPathLiteralChangeDirectoryContextManager:
     """Implements context manager to use in xonsh path literal."""
+
     def __init__(self, path: XonshPathLiteral):
         self.path = path
 
@@ -158,6 +159,7 @@ class XonshPathLiteralChangeDirectoryContextManager:
     def __exit__(self, exc_type, exc, tb):
         os.chdir(self._xonsh_old_cwd)
         return False
+
 
 class XonshPathLiteral(BasePath):  # type: ignore
     """Extension of ``pathlib.Path`` to support extended functionality."""
