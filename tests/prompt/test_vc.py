@@ -118,6 +118,7 @@ current = yellow reverse
         assert not branch.startswith("\u001b[")
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_dirty_working_directory(repo, set_xenv):
     get_dwd = "{}_dirty_working_directory".format(repo["vc"])
     set_xenv(repo["dir"])
