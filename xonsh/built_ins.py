@@ -168,7 +168,7 @@ class XonshPathLiteral(BasePath):  # type: ignore
         """Returns context manager to change the directory
         e.g. ``with p'/tmp'.cd(): $[ls]``
         """
-        return self.XonshPathLiteralChangeDirectoryContextManager(self)
+        return XonshPathLiteralChangeDirectoryContextManager(self)
 
     def mkdir(self, mode=0o777, parents=False, exist_ok=False):
         """Extension of ``pathlib.Path.mkdir`` that returns ``self`` instead of ``None``."""
