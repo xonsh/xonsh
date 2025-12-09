@@ -177,8 +177,6 @@ The Environment Itself ``@.env``
 --------------------------------
 
 All environment variables live in the built-in ``@.env`` mapping.
-
-(``@.env`` is a replacement for the somewhat ungainly ``${...}`` but code making use of ``${...}`` will still work.)
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -231,6 +229,8 @@ value in the environment. Here are a couple of examples in action:
     'snail'
     >>> ${'HO' + 'ME'}
     '/home/snail'
+    >>> ${...}  # the same as @.env
+    xonsh.environ.Env({'HOME':'/home/snail', ...})
 
 Not bad, xonsh, not bad.
 
