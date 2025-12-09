@@ -1234,10 +1234,11 @@ handled implicitly in subprocess mode.
     ...     pwd
     ...
     /tmp
-    >>> with p'/tmp/new'.mkdir().cd():
+    >>> with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=Truer).cd():
     ...     pwd
     ...
-    /tmp/new
+    /tmp/newdir
+    >>> p'/tmp/new.txt'.touch().chmod(0o700).write_text('hello')
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 
