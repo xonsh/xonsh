@@ -145,27 +145,28 @@ else:
     BasePath = pathlib.PosixPath
 
 
+class XonshPathLiteralChangeDirectoryContextManager:
+    """Implements context manager to use in xonsh path literal."""
+    def __init__(self, path: XonshPathLiteral):
+        self.path = path
+
+    def __enter__(self):
+        self._xonsh_old_cwd = os.getcwd()
+        os.chdir(self.path)
+        return self.path
+
+    def __exit__(self, exc_type, exc, tb):
+        os.chdir(self._xonsh_old_cwd)
+        return False
+
 class XonshPathLiteral(BasePath):  # type: ignore
     """Extension of ``pathlib.Path`` to support extended functionality."""
 
-    class _ChangeDirectoryContextManager:
-        def __init__(self, path: XonshPathLiteral):
-            self.path = path
-
-        def __enter__(self):
-            self._xonsh_old_cwd = os.getcwd()
-            os.chdir(self.path)
-            return self.path  # возвращаем сам путь
-
-        def __exit__(self, exc_type, exc, tb):
-            os.chdir(self._xonsh_old_cwd)
-            return False
-
-    def cd(self):
+    def cd(self) -> XonshPathLiteralChangeDirectoryContextManager:
         """Returns context manager to change the directory
         e.g. ``with p'/tmp'.cd(): $[ls]``
         """
-        return self._ChangeDirectoryContextManager(self)
+        return self.XonshPathLiteralChangeDirectoryContextManager(self)
 
     def mkdir(self, mode=0o777, parents=False, exist_ok=False):
         """Extension of ``pathlib.Path.mkdir`` that returns ``self`` instead of ``None``."""
