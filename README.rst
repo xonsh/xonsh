@@ -90,11 +90,11 @@ xonsh
                          output_search   \
                          powerline       \
                          homebrew        \
-                         chatgpt         \ 
+                         chatgpt         \
                          jupyter         \
                          dalias          \
                          django          \
-                         jedi           
+                         jedi
 
 
 
