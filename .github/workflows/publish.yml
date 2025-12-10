@@ -59,12 +59,7 @@ jobs:
         run: |
           python -m python_appimage build app -p 3.11 ./appimage  # Unpin python after fix https://github.com/xonsh/xonsh/issues/5166
       - name: upload xonsh AppImage to release
-        if: github.event_name == 'release'
-        uses: actions/upload-release-asset@v1
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./xonsh-x86_64.AppImage
-          asset_name: xonsh-x86_64.AppImage
-          asset_content_type: application/x-executable
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.ref_name }} ./xonsh-x86_64.AppImage
