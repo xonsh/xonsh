@@ -1,5 +1,37 @@
 # Xonsh Change Log
 
+## [0.21.0](https://github.com/xonsh/xonsh/compare/0.20.0...0.21.0) (2025-12-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* `$AUTO_SUGGEST` is now deprecated in favour of `$XONSH_PROMPT_AUTO_SUGGEST`
+
+### Features
+
+* Added `@` as a global object that provides easy access to `@.env`, `@. lastcmd ` and `@.imp`(inline-imports) ([#5956](https://github.com/xonsh/xonsh/issues/5956)) ([64e3a3c](https://github.com/xonsh/xonsh/commit/64e3a3c467e1b2a42083e5c2dae0dbd9e0910087))
+* added support for multiline shebang (guix fixed) ([#5957](https://github.com/xonsh/xonsh/issues/5957)) ([e9e0055](https://github.com/xonsh/xonsh/commit/e9e0055c6cd5fd867c4268fa311d098e81d2beeb))
+* added support for using a p-string as a context manager to temporarily change the working directory (e.g., with p'~/test'.mkdir().cd(): $[pwd]) ([d9a14c1](https://github.com/xonsh/xonsh/commit/d9a14c1f8c38d3e66c15a9ff39678b3f14893313))
+* allow on_command_not_found handlers to return replacement commands ([#5952](https://github.com/xonsh/xonsh/issues/5952)) ([#5962](https://github.com/xonsh/xonsh/issues/5962)) ([14d9686](https://github.com/xonsh/xonsh/commit/14d9686b3f82d72749700a07b6da9f95c6959308))
+
+
+### Bug Fixes
+
+* allow numerical tokens in environment variable references ([#5891](https://github.com/xonsh/xonsh/issues/5891)) ([9ae6911](https://github.com/xonsh/xonsh/commit/9ae69117c65c305ef2511fe6a66e6965f01d174c))
+* expand `~`(User's home path) in `xonsh.tools.chdir` function ([#5969](https://github.com/xonsh/xonsh/issues/5969)) ([192248a](https://github.com/xonsh/xonsh/commit/192248a0571a8a1dfa57e4bb7ac5fd784cad6a9f))
+* Update tutorial example for piping into an alias ([#5955](https://github.com/xonsh/xonsh/issues/5955)) ([07d4334](https://github.com/xonsh/xonsh/commit/07d43341b981c251049855f04edaa025a4f1b1b7))
+
+
+### Documentation
+
+* Add verification file for ads.fund project ([#5946](https://github.com/xonsh/xonsh/issues/5946)) ([2482f06](https://github.com/xonsh/xonsh/commit/2482f06ef042d8a47f175e1eab45d6af4c9dcd0d))
+* Update tutorial to reduce `${...}` accent ([#5975](https://github.com/xonsh/xonsh/issues/5975)) ([e229ea5](https://github.com/xonsh/xonsh/commit/e229ea555cd53902b3cc72033b6a25111fde6a55))
+
+
+### Code Refactoring
+
+* `$AUTO_SUGGEST` is now deprecated in favour of `$XONSH_PROMPT_AUTO_SUGGEST` ([1e5bda4](https://github.com/xonsh/xonsh/commit/1e5bda4402f4f3257b1aa68b01cb22a8c6c4b485))
+
 ## [0.20.0](https://github.com/xonsh/xonsh/compare/0.19.9...0.20.0) (2025-11-24)
 
 
