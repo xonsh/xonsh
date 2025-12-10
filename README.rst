@@ -21,9 +21,9 @@ xonsh
 
             cd $HOME
 
-            id $(whoami)
+            id $(whoami) > ~/id.txt
 
-            cat /etc/passwd | grep root > ~/root.txt
+            cat /etc/passwd | grep root
 
             $PROMPT = '@ '
 
@@ -50,7 +50,7 @@ xonsh
             p'/etc/passwd'.read_text().find('root')
 
             xontrib load dalias  # plugin
-            id = $(@json docker ps --format json)['ID']
+            $(@json docker ps --format json)['ID']
 
       -  .. code-block:: python
 
@@ -76,11 +76,11 @@ xonsh
               )
             )
 
-            @.imp.pandas.DataFrame(
-              @.imp.json.loads(
-                $(osqueryi --json \
+            @.imp.pandas.read_csv(
+              @.imp.io.StringIO(
+                $(osqueryi --csv \
                    'select * from mounts')
-              )
+              ), delimiter='|'
             )
 
       -  .. code-block:: python
@@ -89,12 +89,15 @@ xonsh
                          history_encrypt \
                          output_search   \
                          powerline       \
+                         1password       \
                          homebrew        \
+                         dracula         \
                          chatgpt         \ 
                          jupyter         \
                          dalias          \
                          django          \
-                         jedi           
+                         jedi            \
+                         github_copilot
 
 
 
