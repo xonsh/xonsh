@@ -1,4 +1,4 @@
-name: Build AppImage
+name: Build xonsh AppImage
 
 on:
   release:
