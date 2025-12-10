@@ -76,9 +76,9 @@ xonsh
                     $(nu -c @(cmd + ' | to json'))
                   )
                 )
-           
+
             nudf!(ls -la)
-           
+
 
       -  .. code-block:: python
 
@@ -86,7 +86,7 @@ xonsh
                          output_search   \
                          powerline       \
                          dracula         \
-                         chatgpt         \ 
+                         chatgpt         \
                          django          \
                          jupyter         \
                          1password       \
