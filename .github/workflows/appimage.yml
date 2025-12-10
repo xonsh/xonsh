@@ -1,4 +1,4 @@
-name: Build xonsh AppImage
+name: Build xonsh AppImage and attach to latest release
 
 on:
   release:
