@@ -1234,7 +1234,7 @@ handled implicitly in subprocess mode.
     ...     pwd
     ...
     /tmp
-    >>> with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=Truer).cd():
+    >>> with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=True).cd():
     ...     pwd
     ...
     /tmp/newdir
