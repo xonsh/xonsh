@@ -19,6 +19,7 @@ from xonsh.built_ins import (
     in_macro_call,
     list_of_list_of_strs_outer_product,
     list_of_strs_or_callables,
+    path_literal,
     pathsearch,
     regexsearch,
     reglob,
@@ -419,3 +420,17 @@ def test_enter_macro():
     assert obj.macro_block == "wakka"
     assert obj.macro_globals
     assert obj.macro_locals
+
+
+def test_xonshpathliteral_contextmanager(tmp_path):
+    start_cwd = os.getcwd()
+    p = path_literal(str(tmp_path))
+    try:
+        with p.cd():
+            assert os.getcwd() == str(p)
+        assert os.getcwd() == start_cwd
+    finally:
+        try:
+            os.chdir(start_cwd)
+        except Exception:
+            pass

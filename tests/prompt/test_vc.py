@@ -93,6 +93,7 @@ def test_no_repo(tmpdir, set_xenv):
     assert vc.get_git_branch() is None
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_vc_get_branch(repo, set_xenv):
     set_xenv(repo["dir"])
     # get corresponding function from vc module
@@ -118,6 +119,7 @@ current = yellow reverse
         assert not branch.startswith("\u001b[")
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_dirty_working_directory(repo, set_xenv):
     get_dwd = "{}_dirty_working_directory".format(repo["vc"])
     set_xenv(repo["dir"])

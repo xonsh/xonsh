@@ -138,9 +138,57 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
+# mypy support
+if sys.platform == "win32":
+    BasePath = pathlib.WindowsPath
+else:
+    BasePath = pathlib.PosixPath
+
+
+class XonshPathLiteralChangeDirectoryContextManager:
+    """Implements context manager to use in xonsh path literal."""
+
+    def __init__(self, path: XonshPathLiteral):
+        self.path = path
+
+    def __enter__(self):
+        self._xonsh_old_cwd = os.getcwd()
+        os.chdir(self.path)
+        return self.path
+
+    def __exit__(self, exc_type, exc, tb):
+        os.chdir(self._xonsh_old_cwd)
+        return False
+
+
+class XonshPathLiteral(BasePath):  # type: ignore
+    """Extension of ``pathlib.Path`` to support extended functionality."""
+
+    def cd(self) -> XonshPathLiteralChangeDirectoryContextManager:
+        """Returns context manager to change the directory
+        e.g. ``with p'/tmp'.cd(): $[ls]``
+        """
+        return XonshPathLiteralChangeDirectoryContextManager(self)
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """Extension of ``pathlib.Path.mkdir`` that returns ``self`` instead of ``None``."""
+        super().mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
+        return self
+
+    def chmod(self, mode, *, follow_symlinks=True):
+        """Extension of ``pathlib.Path.chmod`` that returns ``self`` instead of ``None``."""
+        super().chmod(mode, follow_symlinks=follow_symlinks)
+        return self
+
+    def touch(self, mode=0o666, exist_ok=True):
+        """Extension of ``pathlib.Path.touch`` that returns ``self`` instead of ``None``."""
+        super().touch(mode=mode, exist_ok=exist_ok)
+        return self
+
+
 def path_literal(s):
     s = expand_path(s)
-    return pathlib.Path(s)
+    return XonshPathLiteral(s)
 
 
 def regexsearch(s):
