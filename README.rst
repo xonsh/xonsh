@@ -70,18 +70,15 @@ xonsh
 
             xontrib load fish_completer sh
 
-            @.imp.pandas.DataFrame(
-              @.imp.json.loads(
-                $(nu -c 'ls -la | to json')
-              )
-            )
-
-            @.imp.pandas.read_csv(
-              @.imp.io.StringIO(
-                $(osqueryi --csv \
-                   'select * from mounts')
-              ), delimiter='|'
-            )
+            def nudf(cmd):
+                return @.imp.pandas.DataFrame(
+                  @.imp.json.loads(
+                    $(nu -c @(cmd + ' | to json'))
+                  )
+                )
+           
+            nudf!(ls -la)
+           
 
       -  .. code-block:: python
 
@@ -90,13 +87,10 @@ xonsh
                          output_search   \
                          powerline       \
                          1password       \
-                         homebrew        \
                          dracula         \
                          chatgpt         \ 
                          jupyter         \
-                         dalias          \
                          django          \
-                         jedi            \
                          github_copilot
 
 
