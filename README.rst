@@ -78,7 +78,7 @@ xonsh
 
             @.imp.pandas.DataFrame(
               @.imp.json.loads(
-                $(osqueryi --json 'select * from processes')
+                $(osqueryi --json 'select * from mounts')
               )
             )
 
