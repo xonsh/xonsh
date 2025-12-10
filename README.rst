@@ -34,7 +34,7 @@ xonsh
 
             var = "hello".upper()
 
-            import json; json.loads('{"a":1}')
+            @.imp.json.loads('{"a":1}')
 
             [i for i in range(0,10)]
 
