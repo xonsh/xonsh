@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.21.1](https://github.com/xonsh/xonsh/compare/0.21.0...0.21.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* conditional checks for docs deployment ([#5980](https://github.com/xonsh/xonsh/issues/5980)) ([addaffe](https://github.com/xonsh/xonsh/commit/addaffe986e006b9615091d6c7863e618edad5a0))
+
 ## [0.21.0](https://github.com/xonsh/xonsh/compare/0.20.0...0.21.0) (2025-12-10)
 
 
