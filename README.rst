@@ -71,12 +71,14 @@ xonsh
             xontrib load fish_completer sh
 
             @.imp.pandas.DataFrame(
-              @.imp.json.loads($(nu -c 'ls -la | to json'))
+              @.imp.json.loads(
+                $(nu -c 'ls -la | to json')
+              )
             )
 
             @.imp.pandas.DataFrame(
               @.imp.json.loads(
-                $(osqueryi --json 'select pid,name from processes')
+                $(osqueryi --json 'select pid from processes')
               )
             )
 
