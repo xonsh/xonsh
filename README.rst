@@ -83,15 +83,15 @@ xonsh
       -  .. code-block:: python
 
             xontrib load prompt_starship \
-                         history_encrypt \
                          output_search   \
                          powerline       \
-                         1password       \
                          dracula         \
                          chatgpt         \ 
-                         jupyter         \
                          django          \
-                         github_copilot
+                         jupyter         \
+                         1password       \
+                         github_copilot  \
+                         history_encrypt
 
 
 
