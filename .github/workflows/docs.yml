@@ -31,6 +31,15 @@ jobs:
         with:
           enable-cache: true
       - run: uv pip install --system -e '.[doc]'
+      - name: Cache build and autosummary
+        uses: actions/cache@v4
+        with:
+          path: |
+            docs/_build
+            docs/api/_autosummary
+          key: docs-${{ runner.os }}-${{ github.ref }}
+          restore-keys: |
+            docs-${{ runner.os }}-
       - name: Build Docs
         run: cd docs && make html
       - uses: tibdex/github-app-token@v2
