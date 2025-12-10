@@ -375,7 +375,9 @@ def test_history_getitem(index, exp, hist, xession):
     attrs = ("inp", "out", "rtn", "ts")
 
     for ts, cmd in enumerate(CMDS):  # populate the shell history
-        entry = {k: v for k, v in zip(attrs, [cmd, "out", 0, (ts, ts + 1)])}
+        entry = {
+            k: v for k, v in zip(attrs, [cmd, "out", 0, (ts, ts + 1)], strict=False)
+        }
         hist.append(entry)
 
     entry = hist[index]
@@ -408,7 +410,7 @@ def history_files_list(gen_count) -> (float, int, str, int):
                 # first day in sec + #days * 24hr + #hr * 60min + # sec * 60sec + sec= sec to date.
                 HF_FIRST_DAY + (((((i * 24) + 9) * 60) + 0) * 60) + 0,  # mod dt,
                 100,
-                f".argle/xonsh-{2*i:05n}.json",
+                f".argle/xonsh-{2 * i:05n}.json",
                 10000,
             )
         )
@@ -417,7 +419,7 @@ def history_files_list(gen_count) -> (float, int, str, int):
                 # first day in sec + #days * 24hr + #hr * 60min + # sec * 60sec + sec= sec to date.
                 HF_FIRST_DAY + (((((i * 24) + 23) * 60) + 0) * 60) + 0,  # mod dt,
                 50,
-                f".argle/xonsh-{2*i+1:05n}.json",
+                f".argle/xonsh-{2 * i + 1:05n}.json",
                 2500,
             )
         )
@@ -611,3 +613,93 @@ def test_hist_on_cmd(hist, xession, capsys, tmpdir):
         hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
 
     assert len(xession.history) == 6
+
+
+@pytest.mark.parametrize(
+    "src_sessionid", [None, "e2265764-041c-4c57-acba-49d4e4f676e5"]
+)
+def test_hist_pull(src_sessionid, ptk_shell, tmpdir, xonsh_session, monkeypatch):
+    """Test that `pull` method correctly loads history entries
+    added to the database by other sessions."""
+    xonsh_session.env["XONSH_DATA_DIR"] = str(tmpdir)
+    before = time.time()
+
+    # simulate commands being run in other sessions before this session starts
+    hist_a = JsonHistory(sessionid=src_sessionid, gc=False)
+    hist_a.append({"inp": "cmd hist_a before", "rtn": 0, "ts": [before, before]})
+    hist_b = JsonHistory(gc=False)
+    hist_b.append({"inp": "cmd hist_b before", "rtn": 0, "ts": [before, before]})
+
+    hist_main = JsonHistory(gc=False)
+
+    # simulate commands being run in other sessions after this session starts
+    after = time.time() + 1
+    hist_a.append({"inp": "cmd hist_a after", "rtn": 0, "ts": [after, after]})
+    hist_b.append({"inp": "cmd hist_b after", "rtn": 0, "ts": [after + 1, after + 1]})
+
+    # give the filesystem long enough that it will update the mtime
+    time.sleep(0.01)
+    # at_exit ensures that we run the flush synchronously instead of in a background thread
+    hist_a.flush(at_exit=True)
+    hist_b.flush(at_exit=True)
+
+    # pull only works with PTK shell
+    monkeypatch.setattr(xonsh_session.shell, "shell", ptk_shell[2])
+    hist_main.pull(src_sessionid=src_sessionid)
+    hist_strings = ptk_shell[2].prompter.history.get_strings()
+
+    if src_sessionid is None:
+        # ensure that only commands from after the pulling session started get pulled in
+        # order is ensured because files are ordered by mtime
+        assert hist_strings == ["cmd hist_a after", "cmd hist_b after"]
+    else:
+        # and that the commands are correctly filtered by session id if applicable
+        assert hist_strings == ["cmd hist_a after"]
+
+
+def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
+    """Test that mixing general pull with session-specific pull
+    does not result in missed or duplicate items.
+    """
+    xonsh_session.env["XONSH_DATA_DIR"] = str(tmpdir)
+    monkeypatch.setattr(xonsh_session.shell, "shell", ptk_shell[2])
+
+    # make sure that all of our fake commands have real, sequential timestamps
+    def cmd(inp):
+        start, end = time.time(), time.time()
+        return {"inp": inp, "rtn": 0, "ts": [start, end]}
+
+    hist_a = JsonHistory(gc=False)
+    hist_b = JsonHistory(gc=False)
+    hist_main = JsonHistory(gc=False)
+
+    # windows time.time() has ~16ms granularity, so we need to give it some time to increment
+    time.sleep(0.032)
+    hist_a.append(cmd("a1"))
+    time.sleep(0.032)
+    hist_b.append(cmd("b1"))
+
+    # filesystem mtimes and time.time() don't always match up perfectly,
+    # so we need a little bit of fudge time
+    time.sleep(0.032)
+    hist_a.flush()
+    hist_b.flush()
+    time.sleep(0.032)
+    hist_main.pull(src_sessionid=str(hist_a.sessionid))
+    # at this point, hist_main will only have "a1" in its history
+    assert ptk_shell[2].prompter.history.get_strings() == ["a1"]
+
+    time.sleep(0.032)
+    hist_a.append(cmd("a2"))
+    time.sleep(0.032)
+    hist_b.append(cmd("b2"))
+
+    time.sleep(0.032)
+    hist_a.flush()
+    hist_b.flush()
+    time.sleep(0.032)
+    hist_main.pull()
+    # hist_main should now have all the items we just added
+
+    hist_strings = ptk_shell[2].prompter.history.get_strings()
+    assert hist_strings == ["a1", "b1", "a2", "b2"]

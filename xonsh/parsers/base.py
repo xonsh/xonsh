@@ -127,7 +127,7 @@ def load_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Load()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             load_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -139,7 +139,7 @@ def store_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Store()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             store_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -151,7 +151,7 @@ def del_ctx(x):
     if not hasattr(x, "ctx"):
         return
     x.ctx = ast.Del()
-    if isinstance(x, (ast.Tuple, ast.List)):
+    if isinstance(x, ast.Tuple | ast.List):
         for e in x.elts:
             del_ctx(e)
     elif isinstance(x, ast.Starred):
@@ -186,10 +186,10 @@ def hasglobstar(x):
 
 
 def raise_parse_error(
-    msg: tp.Union[str, tuple[str]],
-    loc: tp.Optional[Location] = None,
-    code: tp.Optional[str] = None,
-    lines: tp.Optional[list[str]] = None,
+    msg: str | tuple[str],
+    loc: Location | None = None,
+    code: str | None = None,
+    lines: list[str] | None = None,
 ):
     err_line = None
     if loc is None or code is None or lines is None:
@@ -530,7 +530,7 @@ class BaseParser:
         def optfunc(self, p):
             p[0] = p[1]
 
-        optfunc.__doc__ = f"{rulename}_opt : empty\n" f"        | {rulename}"
+        optfunc.__doc__ = f"{rulename}_opt : empty\n        | {rulename}"
         optfunc.__name__ = "p_" + rulename + "_opt"
         setattr(self.__class__, optfunc.__name__, optfunc)
 
@@ -543,7 +543,7 @@ class BaseParser:
             p[0] = p[1] if len(p) == 2 else p[1] + p[2]
 
         listfunc.__doc__ = (
-            f"{rulename}_list : {rulename}\n" f"         | {rulename}_list {rulename}"
+            f"{rulename}_list : {rulename}\n         | {rulename}_list {rulename}"
         )
         listfunc.__name__ = "p_" + rulename + "_list"
         setattr(self.__class__, listfunc.__name__, listfunc)
@@ -687,6 +687,76 @@ class BaseParser:
     #
     # Grammar as defined by BNF
     #
+
+    def p_atom_atdot_name(self, p):
+        """atom : at_tok period_tok name"""
+        p1, p3 = p[1], p[3]
+        lineno, col = p1.lineno, p1.lexpos
+        xonsh_obj = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
+        p[0] = ast.Attribute(
+            value=xonsh_obj,
+            attr=p3.value,
+            ctx=ast.Load(),
+            lineno=lineno,
+            col_offset=col,
+        )
+
+    def p_atom_at(self, p):
+        """atom : at_tok"""
+        p1 = p[1]
+        lineno, col = p1.lineno, p1.lexpos
+        p[0] = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
+
+    def _xonsh_attr_chain(self, lineno, col, first_attr, more_attrs=None):
+        """
+        Building ast.Attribute-chain: __xonsh__.first_attr[.more_attrs...]
+        """
+        node = load_attribute_chain("__xonsh__.interface", lineno=lineno, col=col)
+        for a in [first_attr] + (more_attrs or []):
+            node = ast.Attribute(
+                value=node, attr=a, ctx=ast.Load(), lineno=lineno, col_offset=col
+            )
+        return node
+
+    def p_decorator_atat_nocall_simple(self, p):
+        """decorator : at_tok at_tok period_tok name_str NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], [])
+        p[0] = target
+
+    def p_decorator_atat_nocall_chain(self, p):
+        """decorator : at_tok at_tok period_tok name_str attr_period_name_list NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], p[5])
+        p[0] = target
+
+    def p_decorator_atat_call_simple(self, p):
+        """decorator : at_tok at_tok period_tok name_str func_call NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], [])
+        call_args = p[5]
+        if call_args is None:
+            p[0] = ast.Call(
+                func=target, args=[], keywords=[], lineno=lineno, col_offset=col
+            )
+        else:
+            p[0] = ast.Call(func=target, lineno=lineno, col_offset=col, **call_args)
+
+    def p_decorator_atat_call_chain(self, p):
+        """decorator : at_tok at_tok period_tok name_str attr_period_name_list func_call NEWLINE"""
+        at2 = p[2]
+        lineno, col = at2.lineno, at2.lexpos
+        target = self._xonsh_attr_chain(lineno, col, p[4], p[5])
+        call_args = p[6]
+        if call_args is None:
+            p[0] = ast.Call(
+                func=target, args=[], keywords=[], lineno=lineno, col_offset=col
+            )
+        else:
+            p[0] = ast.Call(func=target, lineno=lineno, col_offset=col, **call_args)
 
     def p_start_symbols(self, p):
         """
@@ -2132,7 +2202,7 @@ class BaseParser:
             )
         else:
             left = p1
-            for op, right in zip(p2[::2], p2[1::2]):
+            for op, right in zip(p2[::2], p2[1::2], strict=False):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
                 left = ast.BinOp(
@@ -2173,7 +2243,7 @@ class BaseParser:
             )
         else:
             left = p1
-            for op, right in zip(p2[::2], p2[1::2]):
+            for op, right in zip(p2[::2], p2[1::2], strict=False):
                 locer = left if left is p1 else op
                 lineno, col = lopen_loc(locer)
                 left = ast.BinOp(
@@ -2258,14 +2328,7 @@ class BaseParser:
         for trailer in trailers:
             if isinstance(
                 trailer,
-                (
-                    ast.Index,
-                    ast.Slice,
-                    ast.ExtSlice,
-                    ast.Constant,
-                    ast.Name,
-                    Index,
-                ),
+                ast.Index | ast.Slice | ast.ExtSlice | ast.Constant | ast.Name | Index,
             ):
                 # unpack types
                 slice = trailer.value if isinstance(trailer, Index) else trailer
@@ -2284,7 +2347,7 @@ class BaseParser:
                     col_offset=leader.col_offset,
                     **trailer,
                 )
-            elif isinstance(trailer, (ast.Tuple, tuple)):
+            elif isinstance(trailer, ast.Tuple | tuple):
                 # call macro functions
                 l, c = leader.lineno, leader.col_offset
                 gblcall = xonsh_call("globals", [], lineno=l, col=c)
@@ -2704,7 +2767,7 @@ class BaseParser:
             begins.extend([(x[0], x[1] + 1) for x in p2])
             ends = p2 + ends
         elts = []
-        for beg, end in zip(begins, ends):
+        for beg, end in zip(begins, ends, strict=False):
             s = self._source_slice(beg, end).strip()
             if not s:
                 if len(begins) == 1:
@@ -2938,7 +3001,7 @@ class BaseParser:
         p1, p4 = p[1], p[4]
         keys = [p1]
         vals = [p[3]]
-        for k, v in zip(p4[::2], p4[1::2]):
+        for k, v in zip(p4[::2], p4[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1)
@@ -2951,7 +3014,7 @@ class BaseParser:
         p1, p2 = p[1], p[2]
         keys = [p1[0]]
         vals = [p1[1]]
-        for k, v in zip(p2[::2], p2[1::2]):
+        for k, v in zip(p2[::2], p2[1::2], strict=False):
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1[0] or p1[1])

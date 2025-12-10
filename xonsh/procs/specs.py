@@ -80,6 +80,23 @@ def _un_shebang(x):
     return [x]
 
 
+def parse_shebang_from_file(filepath):
+    """Returns shebang for a file or None.
+    Doc: https://www.gnu.org/software/guile/manual/html_node/The-Meta-Switch.html
+    """
+    shebang_parts = []
+    with open(filepath, "rb") as f:
+        for i, line in enumerate(f):
+            line = line.decode("utf-8", errors="replace").strip()
+            if i == 0:
+                if not line.startswith("#!"):
+                    return None
+            shebang_parts.append(line.rstrip("\\").strip())
+            if not line.endswith("\\"):
+                break
+    return " ".join(shebang_parts)
+
+
 def get_script_subproc_command(fname, args):
     """Given the name of a script outside the path, returns a list representing
     an appropriate subprocess command to execute the script or None if
@@ -111,9 +128,8 @@ def get_script_subproc_command(fname, args):
         if ext.upper() in XSH.env.get("PATHEXT"):
             return [fname] + args
     # find interpreter
-    with open(fname, "rb") as f:
-        first_line = f.readline().decode().strip()
-    m = RE_SHEBANG.match(first_line)
+    shebang = parse_shebang_from_file(fname)
+    m = RE_SHEBANG.match(shebang)
     # xonsh is the default interpreter
     if m is None:
         interp = ["xonsh"]
@@ -550,10 +566,22 @@ class SubprocSpec:
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:
-                e += "\n" + xt.suggest_commands(cmd0, env)
+                e += "\n" + sug
             if XSH.env.get("XONSH_INTERACTIVE"):
                 events = XSH.builtins.events
-                events.on_command_not_found.fire(cmd=self.cmd)
+                replacements = events.on_command_not_found.fire(cmd=self.cmd)
+                for replacement in replacements:
+                    if replacement is None:
+                        continue
+                    # Validate replacement format (accept list or tuple)
+                    if not isinstance(replacement, (list, tuple)) or not replacement:
+                        continue
+                    try:
+                        return self.cls(list(replacement), bufsize=bufsize, **kwargs)
+                    except (FileNotFoundError, PermissionError):
+                        # If replacement also fails, continue to next replacement
+                        # or fall through to original error with suggestions
+                        continue
             raise xt.XonshError(e) from ex
         return p
 
@@ -888,6 +916,14 @@ def _last_spec_update_captured(last: SubprocSpec):
 def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
+
+    if captured == "object":
+        """
+        In full capture mode the subprocess is running in background in fact
+        and we don't need to wait for it in downstream code e.g. `jobs.wait_for_active_job`.
+        """
+        last.background = True
+
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = xp.ON_POSIX and not callable_alias
@@ -1124,8 +1160,8 @@ def _run_command_pipeline(specs, cmds):
 
 def _run_specs(specs, cmds):
     cp = _run_command_pipeline(specs, cmds)
-    XSH.last, proc, captured, background = (
-        cp,
+    XSH.last = XSH.lastcmd = XSH.interface.lastcmd = cp
+    proc, captured, background = (
         cp.proc,
         specs[-1].captured,
         cp.spec.background,

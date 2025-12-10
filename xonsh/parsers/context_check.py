@@ -13,9 +13,9 @@ def _not_assignable(x, augassign=False):
     Otherwise, return a string describing the object.  For use in generating
     meaningful syntax errors.
     """
-    if augassign and isinstance(x, (ast.Tuple, ast.List)):
+    if augassign and isinstance(x, ast.Tuple | ast.List):
         return "literal"
-    elif isinstance(x, (ast.Tuple, ast.List)):
+    elif isinstance(x, ast.Tuple | ast.List):
         if len(x.elts) == 0:
             return "()"
         for i in x.elts:
@@ -24,7 +24,7 @@ def _not_assignable(x, augassign=False):
                 return res
     elif any(
         [
-            isinstance(x, (ast.Set, ast.Dict)),
+            isinstance(x, ast.Set | ast.Dict),
             xast.is_const_num(x),
             xast.is_const_str(x),
             xast.is_const_bytes(x),
@@ -35,7 +35,7 @@ def _not_assignable(x, augassign=False):
         return "function call"
     elif isinstance(x, ast.Lambda):
         return "lambda"
-    elif isinstance(x, (ast.BoolOp, ast.BinOp, ast.UnaryOp)):
+    elif isinstance(x, ast.BoolOp | ast.BinOp | ast.UnaryOp):
         return "operator"
     elif isinstance(x, ast.IfExp):
         return "conditional expression"

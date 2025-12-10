@@ -8,7 +8,6 @@ import io
 # 'keyword' interferes with ast.keyword
 import keyword as kwmod
 import re
-import typing as tp
 
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.ply.lex import LexToken
@@ -381,7 +380,7 @@ def handle_token(state, token):
         yield _new_token("ERRORTOKEN", m, token.start)
 
 
-def get_tokens(s, tolerant, pymode=True, tokenize_ioredirects=True):
+def get_tokens(s, tolerant, pymode=True, tokenize_ioredirects=True, is_subproc=False):
     """
     Given a string containing xonsh code, generates a stream of relevant PLY
     tokens using ``handle_token``.
@@ -391,7 +390,10 @@ def get_tokens(s, tolerant, pymode=True, tokenize_ioredirects=True):
         "last": None,
         "pymode": [(pymode, "", "", (0, 0))],
         "stream": tokenize(
-            io.BytesIO(s.encode("utf-8")).readline, tolerant, tokenize_ioredirects
+            io.BytesIO(s.encode("utf-8")).readline,
+            tolerant,
+            tokenize_ioredirects,
+            is_subproc=is_subproc,
         ),
         "tolerant": tolerant,
     }
@@ -429,7 +431,7 @@ def _new_token(type, value, pos):
 class Lexer:
     """Implements a lexer for the xonsh language."""
 
-    _tokens: tp.Optional[tuple[str, ...]] = None
+    _tokens: tuple[str, ...] | None = None
 
     def __init__(self, tolerant=False, pymode=True):
         """
@@ -468,9 +470,11 @@ class Lexer:
         self.last = None
         self.beforelast = None
 
-    def input(self, s):
+    def input(self, s, is_subproc=False):
         """Calls the lexer on the string s."""
-        self._token_stream = get_tokens(s, self._tolerant, self._pymode)
+        self._token_stream = get_tokens(
+            s, self._tolerant, self._pymode, is_subproc=is_subproc
+        )
 
     def token(self):
         """Retrieves the next token."""

@@ -105,30 +105,34 @@ class DummyHistory:
 
 def nodes_equal(x, y):
     __tracebackhide__ = True
-    assert type(x) is type(
-        y
-    ), f"Ast nodes do not have the same type: '{type(x)}' != '{type(y)}' "
+    assert type(x) is type(y), (
+        f"Ast nodes do not have the same type: '{type(x)}' != '{type(y)}' "
+    )
     if isinstance(x, ast.Constant):
-        assert (
-            x.value == y.value
-        ), f"Constant ast nodes do not have the same value: {repr(x.value)} != {repr(y.value)}"
-    if isinstance(x, (ast.Expr, ast.FunctionDef, ast.ClassDef)):
-        assert (
-            x.lineno == y.lineno
-        ), f"Ast nodes do not have the same line number : {x.lineno} != {y.lineno}"
-        assert (
-            x.col_offset == y.col_offset
-        ), f"Ast nodes do not have the same column offset number : {x.col_offset} != {y.col_offset}"
-    for (xname, xval), (yname, yval) in zip(ast.iter_fields(x), ast.iter_fields(y)):
-        assert (
-            xname == yname
-        ), f"Ast nodes field names differ : {xname} (of type {type(xval)}) != {yname} (of type {type(yval)})"
+        assert x.value == y.value, (
+            f"Constant ast nodes do not have the same value: {repr(x.value)} != {repr(y.value)}"
+        )
+    if isinstance(x, ast.Expr | ast.FunctionDef | ast.ClassDef):
+        assert x.lineno == y.lineno, (
+            f"Ast nodes do not have the same line number : {x.lineno} != {y.lineno}"
+        )
+        assert x.col_offset == y.col_offset, (
+            f"Ast nodes do not have the same column offset number : {x.col_offset} != {y.col_offset}"
+        )
+    for (xname, xval), (yname, yval) in zip(
+        ast.iter_fields(x), ast.iter_fields(y), strict=False
+    ):
+        assert xname == yname, (
+            f"Ast nodes field names differ : {xname} (of type {type(xval)}) != {yname} (of type {type(yval)})"
+        )
         if isinstance(x, ast.Constant) and xname == "kind":
             continue
-        assert (
-            type(xval) is type(yval)
-        ), f"Ast nodes fields differ : {xname} (of type {type(xval)}) != {yname} (of type {type(yval)})"
-    for xchild, ychild in zip(ast.iter_child_nodes(x), ast.iter_child_nodes(y)):
+        assert type(xval) is type(yval), (
+            f"Ast nodes fields differ : {xname} (of type {type(xval)}) != {yname} (of type {type(yval)})"
+        )
+    for xchild, ychild in zip(
+        ast.iter_child_nodes(x), ast.iter_child_nodes(y), strict=False
+    ):
         assert nodes_equal(xchild, ychild), "Ast node children differs"
     return True
 

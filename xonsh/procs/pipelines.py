@@ -24,18 +24,18 @@ def STDOUT_CAPTURE_KINDS():
 
 @xl.lazyobject
 def RE_HIDDEN_BYTES():
-    return re.compile(b"(\001.*?\002)")
+    return re.compile("(\001.*?\002)")
 
 
 @xl.lazyobject
 def RE_VT100_ESCAPE():
-    return re.compile(b"(\x9b|\x1b\\[)[0-?]*[ -\\/]*[@-~]")
+    return re.compile("(\u009b|\u001b\\[)[0-?]*[ -\\/]*[@-~]")
 
 
 @xl.lazyobject
 def RE_HIDE_ESCAPE():
     return re.compile(
-        b"(" + RE_HIDDEN_BYTES.pattern + b"|" + RE_VT100_ESCAPE.pattern + b")"
+        "(" + RE_HIDDEN_BYTES.pattern + "|" + RE_VT100_ESCAPE.pattern + ")"
     )
 
 
@@ -267,7 +267,10 @@ class CommandPipeline:
             # we get here if the process is not threadable or the
             # class is the real Popen
             PrevProcCloser(pipeline=self)
-            task = xj.wait_for_active_job()
+            task = None
+            if not isinstance(sys.exc_info()[1], SystemExit):
+                task = xj.wait_for_active_job()
+
             if task is None or task["status"] != "stopped":
                 proc.wait()
                 self._endtime()
@@ -403,8 +406,8 @@ class CommandPipeline:
                 line = line[:-2] + nl
             elif line.endswith(cr):
                 line = line[:-1] + nl
-            line = RE_HIDE_ESCAPE.sub(b"", line)
             line = line.decode(encoding=enc, errors=err)
+            line = RE_HIDE_ESCAPE.sub("", line)
             # tee it up!
             lines.append(line)
             yield line
@@ -442,11 +445,11 @@ class CommandPipeline:
         self._raw_error = b
         # do some munging of the line before we save it to the attr
         b = b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-        b = RE_HIDE_ESCAPE.sub(b"", b)
         env = XSH.env
         s = b.decode(
             encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
         )
+        s = RE_HIDE_ESCAPE.sub("", s)
         # set the errors
         if self.errors is None:
             self.errors = s
@@ -457,7 +460,7 @@ class CommandPipeline:
         """Decode bytes into a str and apply universal newlines as needed."""
         if not b:
             return ""
-        if isinstance(b, (bytes, bytearray)):
+        if isinstance(b, bytes | bytearray):
             env = XSH.env
             s = b.decode(
                 encoding=env.get("XONSH_ENCODING"),
@@ -551,7 +554,7 @@ class CommandPipeline:
         is only a single process in the pipeline, this returns False.
         """
         any_running = False
-        for s, p in zip(self.specs[:-1], self.procs[:-1]):
+        for s, p in zip(self.specs[:-1], self.procs[:-1], strict=False):
             if p.poll() is None:
                 any_running = True
                 continue
@@ -567,7 +570,7 @@ class CommandPipeline:
 
     def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
-        for s, p in zip(self.specs[:-1], self.procs[:-1]):
+        for s, p in zip(self.specs[:-1], self.procs[:-1], strict=False):
             self._safe_close(s.stdin)
             self._safe_close(s.stdout)
             self._safe_close(s.stderr)
@@ -736,7 +739,7 @@ class CommandPipeline:
     @property
     def pid(self):
         """Process identifier."""
-        return self.proc.pid
+        return self.proc.pid if self.proc else None
 
     @property
     def returncode(self):

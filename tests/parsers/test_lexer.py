@@ -50,7 +50,7 @@ def assert_tokens_equal(x, y):
         msg = "The tokens sequences have different lengths: {0!r} != {1!r}\n"
         msg += "# x\n{2}\n\n# y\n{3}"
         pytest.fail(msg.format(len(x), len(y), pformat(x), pformat(y)))
-    diffs = [(a, b) for a, b in zip(x, y) if not tokens_equal(a, b)]
+    diffs = [(a, b) for a, b in zip(x, y, strict=False) if not tokens_equal(a, b)]
     if len(diffs) > 0:
         msg = ["The token sequences differ: "]
         for a, b in diffs:
@@ -246,11 +246,7 @@ def test_not_really_or_pre_post():
 
 
 def test_subproc_line_cont_space():
-    inp = (
-        "![echo --option1 value1 \\\n"
-        "     --option2 value2 \\\n"
-        "     --optionZ valueZ]"
-    )
+    inp = "![echo --option1 value1 \\\n     --option2 value2 \\\n     --optionZ valueZ]"
     exp = [
         ("BANG_LBRACKET", "![", 0),
         ("NAME", "echo", 2),
@@ -278,11 +274,7 @@ def test_subproc_line_cont_space():
 
 
 def test_subproc_line_cont_nospace():
-    inp = (
-        "![echo --option1 value1\\\n"
-        "     --option2 value2\\\n"
-        "     --optionZ valueZ]"
-    )
+    inp = "![echo --option1 value1\\\n     --option2 value2\\\n     --optionZ valueZ]"
     exp = [
         ("BANG_LBRACKET", "![", 0),
         ("NAME", "echo", 2),
@@ -513,3 +505,22 @@ def test_pymode_not_ioredirect(s, exp):
     # test that Python code like `2>1` is lexed correctly
     # as opposed to being recognized as an IOREDIRECT token (issue #4994)
     assert check_tokens(s, exp)
+
+
+def test_lexer_subproc():
+    """Initial issue: https://github.com/xonsh/xonsh/pull/5941"""
+    lex = Lexer()
+    cmd = "echo 1#2"
+    lex.input(cmd, is_subproc=False)
+    result_no_subproc = [t.value for t in list(lex)]
+    lex.input(cmd, is_subproc=True)
+    result_subproc = [t.value for t in list(lex)]
+    assert "#" not in result_no_subproc
+    assert "#" in result_subproc
+
+    cmd = "echo 1 #2"
+    lex.input(cmd, is_subproc=False)
+    result_no_subproc = [t.value for t in list(lex)]
+    lex.input(cmd, is_subproc=True)
+    result_subproc = [t.value for t in list(lex)]
+    assert result_subproc == result_no_subproc

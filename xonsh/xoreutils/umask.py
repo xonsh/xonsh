@@ -146,7 +146,7 @@ def umask(args, stdin, stdout, stderr):
             if len(num) != 1:
                 print("error: can't have more than one numeric argument", file=stderr)
                 return 1
-        for arg, isnum in zip(args, num):
+        for arg, isnum in zip(args, num, strict=False):
             if isnum:
                 cur = int(arg, 8)
             else:

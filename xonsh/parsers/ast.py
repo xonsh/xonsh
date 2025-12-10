@@ -143,8 +143,8 @@ STATEMENTS = (
 
 def const_str(
     s: str,
-    lineno: Optional[int] = None,
-    col_offset: Optional[int] = None,
+    lineno: int | None = None,
+    col_offset: int | None = None,
     is_raw: bool = True,
 ):
     if PYTHON_VERSION_INFO >= (3, 13):
@@ -194,9 +194,9 @@ def leftmostname(node):
     """Attempts to find the first name in the tree."""
     if isinstance(node, Name):
         rtn = node.id
-    elif isinstance(node, (BinOp, Compare)):
+    elif isinstance(node, BinOp | Compare):
         rtn = leftmostname(node.left)
-    elif isinstance(node, (Attribute, Subscript, Starred, Expr)):
+    elif isinstance(node, Attribute | Subscript | Starred | Expr):
         rtn = leftmostname(node.value)
     elif isinstance(node, Call):
         rtn = leftmostname(node.func)
@@ -338,7 +338,7 @@ def isdescendable(node):
     """Determines whether or not a node is worth visiting. Currently only
     UnaryOp and BoolOp nodes are visited.
     """
-    return isinstance(node, (UnaryOp, BoolOp))
+    return isinstance(node, UnaryOp | BoolOp)
 
 
 def isexpression(node, ctx=None, *args, **kwargs):
@@ -352,10 +352,10 @@ def isexpression(node, ctx=None, *args, **kwargs):
         ctx = XSH.ctx if ctx is None else ctx
         node = XSH.execer.parse(node, ctx, *args, **kwargs)
     # determine if expression-like enough
-    if isinstance(node, (Expr, Expression)):
+    if isinstance(node, Expr | Expression):
         isexpr = True
     elif isinstance(node, Module) and len(node.body) == 1:
-        isexpr = isinstance(node.body[0], (Expr, Expression))
+        isexpr = isinstance(node.body[0], Expr | Expression)
     else:
         isexpr = False
     return isexpr
@@ -481,7 +481,7 @@ class CtxAwareTransformer(NodeTransformer):
             increment_lineno(newnode, n=node.lineno - 1)
             newnode.col_offset = node.col_offset
             if self.debug_level >= 1:
-                msg = "{0}:{1}:{2}{3} - {4}\n" "{0}:{1}:{2}{3} + {5}"
+                msg = "{0}:{1}:{2}{3} - {4}\n{0}:{1}:{2}{3} + {5}"
                 mstr = "" if maxcol is None else ":" + str(maxcol)
                 msg = msg.format(self.filename, node.lineno, mincol, mstr, line, spline)
                 print(msg, file=sys.stderr)
@@ -570,7 +570,7 @@ class CtxAwareTransformer(NodeTransformer):
         """Handle visiting an assignment statement."""
         ups = set()
         for targ in node.targets:
-            if isinstance(targ, (Tuple, List)):
+            if isinstance(targ, Tuple | List):
                 ups.update(leftmostname(elt) for elt in targ.elts)
             elif isinstance(targ, BinOp):
                 newnode = self.try_subproc_toks(node)

@@ -31,7 +31,7 @@ def as_iterable(iterable_or_scalar):
 
     if iterable_or_scalar is None:
         return ()
-    elif isinstance(iterable_or_scalar, (str, bytes)):
+    elif isinstance(iterable_or_scalar, str | bytes):
         return (iterable_or_scalar,)
     elif hasattr(iterable_or_scalar, "__iter__"):
         return iterable_or_scalar

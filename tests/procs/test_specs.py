@@ -15,6 +15,7 @@ from xonsh.procs.specs import (
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
+    get_script_subproc_command,
     run_subproc,
 )
 from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
@@ -462,6 +463,82 @@ def test_on_command_not_found_doesnt_fire_in_non_interactive_mode(xession):
     assert not fired
 
 
+def test_on_command_not_found_replacement(xession):
+    """Test that returning a command from handler replaces the original."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def replacement_handler(cmd, **kwargs):
+        if cmd[0] == "xonshcommandnotfound":
+            return ["echo", "replaced"]
+        return None
+
+    xession.builtins.events.on_command_not_found(replacement_handler)
+    # Use run_subproc to capture output and verify replacement executed
+    out = run_subproc([["xonshcommandnotfound"]], captured="stdout")
+    assert out.strip() == "replaced"
+
+
+def test_on_command_not_found_no_replacement(xession):
+    """Test that returning None still raises error."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def no_replacement_handler(cmd, **kwargs):
+        return None  # Don't replace
+
+    xession.builtins.events.on_command_not_found(no_replacement_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
+
+
+def test_on_command_not_found_invalid_replacement_ignored(xession):
+    """Test that invalid replacements (non-list, empty) are ignored."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def invalid_replacement_handler(cmd, **kwargs):
+        # Return invalid types that should be ignored
+        return "not a list"  # Should be ignored
+
+    xession.builtins.events.on_command_not_found(invalid_replacement_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
+
+
+def test_on_command_not_found_fallback_on_bad_replacement(xession):
+    """Test that if replacement command also doesn't exist, original error is shown."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def bad_replacement_handler(cmd, **kwargs):
+        # Return a command that also doesn't exist
+        return ["anotherfakecommand999"]
+
+    xession.builtins.events.on_command_not_found(bad_replacement_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    # Should show original error, not error about the replacement
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
+
+
 def test_redirect_to_substitution(xession):
     s = SubprocSpec.build(
         # `echo hello > @('file')`
@@ -596,3 +673,27 @@ def test_auto_cd(xession, tmpdir):
         spec = cmds_to_specs([[dir]], captured="object")[-1]
     assert spec.alias.__name__ == "cd"
     assert spec.cmd[0] == dir
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        ["#!/bin/bash", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash\n\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash \\\n-i", ["/bin/bash", "-i", "{file}", "--arg", "1"]],
+        ["#!/bin/bash \\\n-i\necho 1", ["/bin/bash", "-i", "{file}", "--arg", "1"]],
+        [
+            "#!/bin/bash \\\n-i \\\n-i \necho 1",
+            ["/bin/bash", "-i", "-i", "{file}", "--arg", "1"],
+        ],
+    ],
+)
+def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
+    file = tmpdir / "script.sh"
+    file_str = str(file)
+    file.write_text(inp, encoding="utf-8")
+    file.chmod(0o755)
+    cmd = get_script_subproc_command(file_str, ["--arg", "1"])
+    assert [c if c != file_str else "{file}" for c in cmd] == exp

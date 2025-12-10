@@ -1736,7 +1736,7 @@ def test_if_switch(check_stmts):
 
 
 def test_if_switch_elif1_else(check_stmts):
-    check_stmts("x = 42\nif x == 1:\n  pass\n" "elif x == 2:\n  pass\nelse:\n  pass")
+    check_stmts("x = 42\nif x == 1:\n  pass\nelif x == 2:\n  pass\nelse:\n  pass")
 
 
 def test_if_switch_elif2_else(check_stmts):
@@ -1774,7 +1774,7 @@ def test_for_idx(check_stmts):
 
 
 def test_for_zip_idx(check_stmts):
-    check_stmts('x = [42]\nfor x[0], y in zip(range(6), "123456"):\n' "  pass")
+    check_stmts('x = [42]\nfor x[0], y in zip(range(6), "123456"):\n  pass')
 
 
 def test_for_attr(check_stmts):
@@ -1843,7 +1843,7 @@ def test_try_except_t_u_as_e(check_stmts):
 
 def test_try_except_t_except_u(check_stmts):
     check_stmts(
-        "try:\n  pass\nexcept TypeError:\n  pass\n" "except SyntaxError as f:\n  pass",
+        "try:\n  pass\nexcept TypeError:\n  pass\nexcept SyntaxError as f:\n  pass",
         False,
     )
 
@@ -1857,9 +1857,7 @@ def test_try_except_finally(check_stmts):
 
 
 def test_try_except_else_finally(check_stmts):
-    check_stmts(
-        "try:\n  pass\nexcept:\n  pass\nelse:\n  pass" "\nfinally:  pass", False
-    )
+    check_stmts("try:\n  pass\nexcept:\n  pass\nelse:\n  pass\nfinally:  pass", False)
 
 
 def test_try_finally(check_stmts):
@@ -2118,7 +2116,7 @@ def test_decorator_dot_dot_call_args(check_stmts):
 
 
 def test_broken_prompt_func(check_stmts):
-    code = "def prompt():\n" "    return '{user}'.format(\n" "       user='me')\n"
+    code = "def prompt():\n    return '{user}'.format(\n       user='me')\n"
     check_stmts(code, False)
 
 
@@ -2134,12 +2132,7 @@ def test_class_with_methods(check_stmts):
 
 
 def test_nested_functions(check_stmts):
-    code = (
-        "def test(x):\n"
-        "    def test2(y):\n"
-        "        return y+x\n"
-        "    return test2\n"
-    )
+    code = "def test(x):\n    def test2(y):\n        return y+x\n    return test2\n"
     check_stmts(code, False)
 
 
@@ -2519,7 +2512,7 @@ def test_bang_git_quotes_space(check_xonsh_ast):
 def test_bang_git_two_quotes_space(check_xonsh):
     check_xonsh(
         {},
-        '![git commit -am "wakka jawaka"]\n' '![git commit -am "flock jawaka"]\n',
+        '![git commit -am "wakka jawaka"]\n![git commit -am "flock jawaka"]\n',
         False,
     )
 
@@ -2612,7 +2605,7 @@ def test_git_quotes_space(check_xonsh_ast):
 def test_git_two_quotes_space(check_xonsh):
     check_xonsh(
         {},
-        '$[git commit -am "wakka jawaka"]\n' '$[git commit -am "flock jawaka"]\n',
+        '$[git commit -am "wakka jawaka"]\n$[git commit -am "flock jawaka"]\n',
         False,
     )
 
@@ -2959,7 +2952,7 @@ WITH_BANG_RAWSUITES = [
     "pass\n",
     "x = 42\ny = 12\n",
     'export PATH="yo:momma"\necho $PATH\n',
-    ("with q as t:\n" "    v = 10\n" "\n"),
+    ("with q as t:\n    v = 10\n\n"),
     (
         "with q as t:\n"
         "    v = 10\n"
@@ -3576,3 +3569,49 @@ match (...[...][...]):
 """,
         run=False,
     )
+
+
+def test_at_returns_xonsh(parser):
+    expr = parser.parse("@")
+    assert isinstance(expr.body, ast.Attribute)
+    assert expr.body.attr == "interface"
+
+
+@pytest.mark.parametrize("exp", ["env", "imp"])
+def test_atdot_returns_xonsh_attr(parser, exp):
+    expr = parser.parse(f"@.{exp}")
+    assert isinstance(expr.body, ast.Attribute)
+    assert expr.body.attr == exp
+    assert isinstance(expr.body.value, ast.Attribute)
+    assert expr.body.value.attr == "interface"
+
+
+def test_decorator_atat_attr(parser):
+    code = "@@.contextmanager\ndef f():\n    pass\n"
+    mod = parser.parse(code)
+    assert isinstance(mod, ast.Module)
+    f = mod.body[0]
+    assert isinstance(f, ast.FunctionDef)
+    assert len(f.decorator_list) == 1
+    dec = f.decorator_list[0]
+    assert isinstance(dec, ast.Attribute)
+    assert dec.attr == "contextmanager"
+    assert isinstance(dec.value, ast.Attribute)
+    assert dec.value.attr == "interface"
+
+
+def test_decorator_atat_call(parser):
+    code = "@@.contextmanager()\ndef f():\n    pass\n"
+    mod = parser.parse(code)
+    assert isinstance(mod, ast.Module)
+    f = mod.body[0]
+    assert isinstance(f, ast.FunctionDef)
+    assert len(f.decorator_list) == 1
+    dec = f.decorator_list[0]
+    assert isinstance(dec, ast.Call)
+    assert isinstance(dec.func, ast.Attribute)
+    assert dec.func.attr == "contextmanager"
+    assert isinstance(dec.func.value, ast.Attribute)
+    assert dec.func.value.attr == "interface"
+    assert dec.args == []
+    assert dec.keywords == []

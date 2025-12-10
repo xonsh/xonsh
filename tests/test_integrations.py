@@ -64,6 +64,7 @@ def run_xonsh(
     args=None,
     timeout=20,
     env=None,
+    blocking=True,
 ):
     # Env
     popen_env = dict(os.environ)
@@ -107,6 +108,9 @@ def run_xonsh(
         proc.stdin.write(stdin_cmd)
         proc.stdin.flush()
 
+    if not blocking:
+        return proc
+
     try:
         out, err = proc.communicate(input=input, timeout=timeout)
     except sp.TimeoutExpired:
@@ -133,6 +137,34 @@ def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
 #
 
 ALL_PLATFORMS = [
+    # conch in action
+    (
+        """
+print(isinstance(@, type(__xonsh__.interface)))
+""",
+        "True\n",
+        0,
+    ),
+    (
+        """
+$CONCH=24
+with @.env.swap(CONCH=42):
+    print(@.imp.json.loads('{"@":"~"}'), $CONCH)
+""",
+        "{'@': '~'} 42\n",
+        0,
+    ),
+    (
+        """
+@aliases.register
+@@.imp.xonsh.tools.unthreadable
+def _mycmd(args, stdin=None):
+    return 'ok'
+mycmd
+""",
+        "ok",
+        0,
+    ),
     # test calling a function alias
     (
         """
@@ -755,9 +787,9 @@ def test_script(case):
     out, err, rtn = run_xonsh(script)
     out = out.replace("bash: no job control in this shell\n", "")
     if callable(exp_out):
-        assert exp_out(
-            out
-        ), f"CASE:\nscript=***\n{script}\n***,\nExpected: {exp_out!r},\nActual: {out!r}"
+        assert exp_out(out), (
+            f"CASE:\nscript=***\n{script}\n***,\nExpected: {exp_out!r},\nActual: {out!r}"
+        )
     else:
         assert exp_out == out
     assert exp_rtn == rtn
@@ -1276,9 +1308,9 @@ echo f1f1f1 ; f ; echo f2f2f2
 def test_aliases_print(case):
     cmd, match = case
     out, err, ret = run_xonsh(cmd=cmd, single_command=False)
-    assert re.match(
-        match, out, re.MULTILINE | re.DOTALL
-    ), f"\nFailed:\n```\n{cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    assert re.match(match, out, re.MULTILINE | re.DOTALL), (
+        f"\nFailed:\n```\n{cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    )
 
 
 @skip_if_on_windows
@@ -1357,6 +1389,58 @@ def test_catching_exit_signal():
 
 
 @skip_if_on_windows
+def test_forwarding_sighup(tmpdir):
+    """We want to make sure that SIGHUP is forwarded to subprocesses when
+    received, so we spin up a Bash process that waits for SIGHUP and then
+    writes `SIGHUP` to a file, then exits. Then we check the content of
+    that file to ensure that the Bash process really did get SIGHUP."""
+    outfile = tmpdir.mkdir("xonsh_test_dir").join("sighup_test.out")
+
+    stdin_cmd = f"""
+sleep 0.2
+(sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
+bash -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
+"""
+    proc = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        stderr=sp.PIPE,
+        interactive=True,
+        single_command=False,
+        blocking=False,
+    )
+    proc.wait(timeout=5)
+    # if this raises FileNotFoundError, then the Bash subprocess probably did not get SIGHUP
+    assert outfile.read_text("utf-8").strip() == "SIGHUP"
+
+
+@skip_if_on_windows
+def test_on_postcommand_waiting(tmpdir):
+    """Ensure that running a subcommand in the on_postcommand hook doesn't
+    block xonsh from exiting when there is a running foreground process."""
+    outdir = tmpdir.mkdir("xonsh_test_dir")
+
+    stdin_cmd = f"""
+sleep 0.2
+@events.on_postcommand
+def postcmd_hook(**kwargs):
+    touch {outdir}/sighup_test_postcommand
+
+(sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
+bash -c "trap '' HUP; sleep 30"
+"""
+    proc = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        stderr=sp.PIPE,
+        interactive=True,
+        single_command=False,
+        blocking=False,
+    )
+    proc.wait(timeout=5)
+
+
+@skip_if_on_windows
 def test_suspended_captured_process_pipeline():
     """See also test_specs.py:test_specs_with_suspended_captured_process_pipeline"""
     stdin_cmd = "!(python -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
@@ -1364,9 +1448,9 @@ def test_suspended_captured_process_pipeline():
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
     )
     match = ".*suspended=True.*"
-    assert re.match(
-        match, out, re.MULTILINE | re.DOTALL
-    ), f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    assert re.match(match, out, re.MULTILINE | re.DOTALL), (
+        f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    )
 
 
 @skip_if_on_windows
@@ -1385,6 +1469,30 @@ def test_alias_stability():
         timeout=10,
     )
     assert re.match(".*sleep.*sleep.*sleep.*", out, re.MULTILINE | re.DOTALL)
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_captured_subproc_is_not_affected_next_command():
+    """Testing #5769."""
+    stdin_cmd = (
+        "t = __xonsh__.imp.time.time()\n"
+        "p = !(sleep 2)\n"
+        "print('OK_'+'TEST' if __xonsh__.imp.time.time() - t < 1 else 'FAIL_'+'TEST')\n"
+        "t = __xonsh__.imp.time.time()\n"
+        "echo 1\n"
+        "print('OK_'+'TEST' if __xonsh__.imp.time.time() - t < 1 else 'FAIL_'+'TEST')\n"
+    )
+    out, err, ret = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
+    )
+    assert not re.match(".*FAIL_TEST.*", out, re.MULTILINE | re.DOTALL), (
+        "The second command after running captured subprocess shouldn't wait the end of the first one."
+    )
 
 
 @skip_if_on_windows
@@ -1491,7 +1599,10 @@ def test_xonshrc(tmpdir, cmd, exp):
     (script_xsh := home / "script.xsh").write_text("echo SCRIPT_XSH", encoding="utf8")
 
     # Construct $XONSHRC and $XONSHRC_DIR.
-    xonshrc_files = [str(home_config_xonsh_rc_xsh), str(home_xonsh_rc_path)]
+    xonshrc_files = [
+        str(home_config_xonsh_rc_xsh),
+        str(home_xonsh_rc_path),
+    ]
     xonshrc_dir = [str(home_config_xonsh_rcd)]
 
     args = [
@@ -1511,7 +1622,6 @@ def test_xonshrc(tmpdir, cmd, exp):
         env=env,
     )
 
-    exp = exp
     assert re.match(
         exp,
         out,

@@ -118,7 +118,7 @@ class HistoryDiffer:
 
     def header(self):
         """Computes a header string difference."""
-        s = "{red}--- {aline}{reset}\n" "{green}+++ {bline}{reset}"
+        s = "{red}--- {aline}{reset}\n{green}+++ {bline}{reset}"
         s = s.format(
             aline=self._header_line(self.a),
             bline=self._header_line(self.b),
@@ -263,7 +263,7 @@ class HistoryDiffer:
                 for j, inp in enumerate(binps[j1:j2], j1):
                     s += self._cmd_in_one_diff(inp, j, self.b, bid, COLORS.GREEN)
             elif tag == EQUAL_S:
-                for i, j in zip(range(i1, i2), range(j1, j2)):
+                for i, j in zip(range(i1, i2), range(j1, j2), strict=False):
                     odiff = self._cmd_out_and_rtn_diff(i, j)
                     if len(odiff) > 0:
                         h = (

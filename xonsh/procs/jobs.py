@@ -20,7 +20,7 @@ from xonsh.tools import get_signal_name, on_main_thread, unthreadable
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
-_last_exit_time: tp.Optional[float] = None
+_last_exit_time: float | None = None
 
 # Thread-local data for job control. Allows threadable callable aliases
 # (ProcProxyThread) to maintain job control information separate from the main
@@ -115,7 +115,7 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
         proc.signal = None
         info["signal"] = None
 
-    info["signal_name"] = f'{info["signal"]} {get_signal_name(info["signal"])}'.strip()
+    info["signal_name"] = f"{info['signal']} {get_signal_name(info['signal'])}".strip()
     return info
 
 
@@ -234,15 +234,8 @@ if ON_WINDOWS:
         proc = active_task["obj"]
         _continue(active_task)
         while proc.returncode is None:
-            try:
+            with contextlib.suppress(subprocess.TimeoutExpired, KeyboardInterrupt):
                 proc.wait(0.01)
-            except subprocess.TimeoutExpired:
-                pass
-            except KeyboardInterrupt:
-                try:
-                    _kill(active_task)
-                except subprocess.CalledProcessError:
-                    pass  # ignore error if process closed before we got here
         return wait_for_active_job(last_task=active_task)
 
 else:
@@ -457,7 +450,11 @@ def add_job(info):
     info["status"] = info["status"] if "status" in info else "running"
     get_tasks().appendleft(num)
     get_jobs()[num] = info
-    if info["bg"] and XSH.env.get("XONSH_INTERACTIVE"):
+    if (
+        not info["pipeline"].spec.captured == "object"
+        and info["bg"]
+        and XSH.env.get("XONSH_INTERACTIVE")
+    ):
         print_one_job(num)
 
 

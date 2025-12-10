@@ -46,6 +46,7 @@ events.doc(
 on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 
 Fires just after a command is executed. The arguments are the same as history.
+This event only fires in interactive mode.
 
 Parameters:
 
@@ -59,13 +60,32 @@ Parameters:
 events.doc(
     "on_command_not_found",
     """
-on_command_not_found(cmd: list[str]) -> None
+on_command_not_found(cmd: list[str]) -> list[str] | tuple[str, ...] | None
 
 Fires if a command is not found (only in interactive sessions).
 
 Parameters:
 
 * ``cmd``: The command that was attempted
+
+Returns:
+
+* ``list[str]`` or ``tuple[str, ...]``: A replacement command to execute instead.
+  The first valid replacement from any handler will be used.
+* ``None``: To let the error be raised normally
+
+Note: If the replacement command also fails, the original error is shown.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_command_not_found
+    def _vim_to_vi(cmd, **kwargs):
+        '''If vim not found let's try to use vi.'''
+        if cmd[0] == 'vim':
+            return ['vi'] + cmd[1:]
+
 """,
 )
 

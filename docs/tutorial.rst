@@ -115,6 +115,25 @@ details, but this *is* pretty cool:
 For easier indentation, Shift+Tab will enter 4 spaces.
 And that about wraps it up for the basics section.  It is just like Python.
 
+Xonsh Session Interface
+=======================
+
+**New in version 0.21.0
+
+Each session has a special global object `@` that provides instant functionality.
+It gives you access to different parts of the current session.
+For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
+You will learn more about this in the following sections.
+
+.. code-block:: xonshcon
+
+    >>> @
+    <xonsh.built_ins.XonshSessionInterface>
+    >>> @.imp.json.loads('{"conch":"snail"}')
+    {"conch":"snail"}
+    >>> @.env.get('HOME')
+    '/home/snail'
+
 Environment Variables
 =======================
 Environment variables are written as ``$`` followed by a name.  For example,
@@ -154,10 +173,10 @@ Very nice.
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
 
 
-The Environment Itself ``${...}``
----------------------------------
+The Environment Itself ``@.env``
+--------------------------------
 
-All environment variables live in the built-in ``${...}`` (aka ``__xonsh__.env``) mapping.
+All environment variables live in the built-in ``@.env`` mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -165,7 +184,7 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
 
 .. code-block:: xonshcon
 
-   >>> 'HOME' in ${...}
+   >>> 'HOME' in @.env
    True
 
 To get information about a specific environment variable you can use the
@@ -173,20 +192,19 @@ To get information about a specific environment variable you can use the
 
 .. code-block:: xonshcon
 
-   >>> ${...}.help('XONSH_DEBUG')
+   >>> @.env.help('XONSH_DEBUG')
 
-One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
+One helpful method is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
 
 .. code-block:: xonshcon
 
-    >>> with ${...}.swap(SOMEVAR='foo'):
+    >>> with @.env.swap(SOMEVAR='foo'):
     ...     echo $SOMEVAR
-    ...
     ...
     foo
     >>> echo $SOMEVAR
-
+    $SOMEVAR
     >>>
 
 Environment Lookup with ``${<expr>}``
@@ -211,6 +229,8 @@ value in the environment. Here are a couple of examples in action:
     'snail'
     >>> ${'HO' + 'ME'}
     '/home/snail'
+    >>> ${...}  # the same as @.env
+    xonsh.environ.Env({'HOME':'/home/snail', ...})
 
 Not bad, xonsh, not bad.
 
@@ -313,8 +333,8 @@ This should feel very natural.
 
 .. note::
 
-    Access the last run subprocess command using ``__xonsh__.last``;
-    e.g. to get the return code, run ``__xonsh__.last.rtn``.
+    Access the last run subprocess command using ``@.lastcmd``;
+    e.g. to get the return code, run ``@.lastcmd.rtn``.
 
 
 Python-mode vs Subprocess-mode
@@ -617,7 +637,7 @@ result is automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
-    >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
+    echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + " world\n")
     hello world
     >>> @(['echo', 'hello', 'world'])
     hello world
@@ -1208,6 +1228,17 @@ handled implicitly in subprocess mode.
     'bar'
     >>> echo @(mypath)
     /foo/bar
+    >>> pwd
+    /home/snail
+    >>> with p'/tmp'.cd():
+    ...     pwd
+    ...
+    /tmp
+    >>> with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=Truer).cd():
+    ...     pwd
+    ...
+    /tmp/newdir
+    >>> p'/tmp/new.txt'.touch().chmod(0o700).write_text('hello')
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 

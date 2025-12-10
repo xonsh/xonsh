@@ -41,6 +41,19 @@ import typing as tp
 import warnings
 from contextlib import contextmanager
 
+try:
+    from prompt_toolkit.cursor_shapes import (
+        CursorShape,
+        CursorShapeConfig,
+        DynamicCursorShapeConfig,
+        ModalCursorShapeConfig,
+        SimpleCursorShapeConfig,
+    )
+
+    HAVE_CURSOR_SHAPE = True
+except ImportError:
+    HAVE_CURSOR_SHAPE = False
+
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
@@ -57,9 +70,14 @@ from xonsh.platform import (
 
 
 @contextmanager
-def chdir(adir, mkdir=False):
+def chdir(adir, mkdir=False, expanduser=True):
+    """Context manager for switching current directory to another.
+    Note! You can use ``with p'/path'.cd(): $[ls]`` to achieve the same.
+    """
     adir = pathlib.Path(adir)
     old_dir = os.getcwd()
+    if expanduser:
+        adir = adir.expanduser()
     if mkdir:
         os.makedirs(adir, exist_ok=True)
     os.chdir(adir)
@@ -202,7 +220,7 @@ class EnvPath(cabc.MutableSequence):
                 # in order to be able to retrieve it later, for cases such as
                 # when a generator expression was passed as an argument
                 args = list(args)
-                if not all(isinstance(i, (str, bytes, pathlib.Path)) for i in args):
+                if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence
                     raise TypeError(
@@ -455,10 +473,12 @@ def subproc_toks(
     """
     if lexer is None:
         lexer = xsh.execer.parser.lexer
+    if hasattr(lexer, "subproc_toks"):
+        return lexer.subproc_toks(line, mincol, maxcol, returnline, greedy)
     if maxcol is None:
         maxcol = len(line) + 1
     lexer.reset()
-    lexer.input(line)
+    lexer.input(line, is_subproc=True)
     toks = []
     lparens = []
     saw_macro = False
@@ -785,7 +805,7 @@ def fallback(cond, backup):
 # See the Python software license: https://docs.python.org/3/license.html
 # Copyright (c) Python Software Foundation. All rights reserved.
 class _RedirectStream:
-    _stream: tp.Optional[str] = None
+    _stream: str | None = None
 
     def __init__(self, new_target):
         self._new_target = new_target
@@ -846,7 +866,12 @@ def debian_command_not_found(cmd):
         stderr=subprocess.STDOUT,
         shell=True,
     )
-    s = "\n".join(s.rstrip().splitlines()).strip()
+    lines = [
+        line
+        for line in s.rstrip().splitlines()
+        if not line.endswith(": command not found")
+    ]
+    s = "\n".join(lines).strip()
     return s
 
 
@@ -943,7 +968,7 @@ def print_warning(msg):
         # Notify about the traceback output possibility if neither of
         # the two options have been manually set
         sys.stderr.write(
-            "xonsh: For full traceback set: " "$XONSH_SHOW_TRACEBACK = True\n"
+            "xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True\n"
         )
     # convert show_trace to bool if necessary
     if not is_bool(show_trace):
@@ -1020,7 +1045,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         # Notify about the traceback output possibility if neither of
         # the two options have been manually set
         sys.stderr.write(
-            "xonsh: For full traceback set: " "$XONSH_SHOW_TRACEBACK = True\n"
+            "xonsh: For full traceback set: $XONSH_SHOW_TRACEBACK = True\n"
         )
     # convert show_trace to bool if necessary
     if not is_bool(show_trace):
@@ -1442,7 +1467,7 @@ def to_itself(x):
     return x
 
 
-def to_int_or_none(x) -> tp.Optional[int]:
+def to_int_or_none(x) -> int | None:
     """Convert the given value to integer if possible. Otherwise return None"""
     if isinstance(x, str) and x.lower() == "none":
         return None
@@ -1728,6 +1753,48 @@ def ptk2_color_depth_setter(x):
     return x
 
 
+def ptk_cursor_shape_vi_modal():
+    if xsh.env.get("VI_MODE"):
+        return ModalCursorShapeConfig()
+    else:
+        return SimpleCursorShapeConfig()
+
+
+def to_ptk_cursor_shape(x):
+    if not HAVE_CURSOR_SHAPE:
+        return None
+    if isinstance(x, CursorShape | CursorShapeConfig):
+        return x
+    if not isinstance(x, str):
+        raise ValueError("invalid cursor shape")
+    x = str(x).upper().replace("-", "_")
+    if x == "MODAL":
+        return ModalCursorShapeConfig()
+    elif x == "MODAL_VI_MODE_ONLY":
+        return DynamicCursorShapeConfig(ptk_cursor_shape_vi_modal)
+    try:
+        return CursorShape[x]
+    except KeyError:
+        return SimpleCursorShapeConfig()
+
+
+def to_ptk_cursor_shape_display_value(x):
+    if not x:
+        return ""
+    if isinstance(x, SimpleCursorShapeConfig):
+        x = x.get_cursor_shape(None)
+    if isinstance(x, CursorShape):
+        x = x.value.lower().replace("_", "-")
+        if x.startswith("-"):
+            x = x[1:]
+        return x
+    if isinstance(x, ModalCursorShapeConfig):
+        return "modal"
+    if isinstance(x, DynamicCursorShapeConfig):
+        return "modal-vi-mode-only"
+    return "unknown"
+
+
 def is_completions_display_value(x):
     """Enumerated values of ``$COMPLETIONS_DISPLAY``"""
     return x in {"none", "single", "multi"}
@@ -1918,7 +1985,7 @@ def is_history_tuple(x):
     if (
         isinstance(x, cabc.Sequence)
         and len(x) == 2
-        and isinstance(x[0], (int, float))
+        and isinstance(x[0], int | float)
         and x[1].lower() in CANON_HISTORY_UNITS
     ):
         return True
@@ -1983,12 +2050,12 @@ RE_HISTORY_TUPLE = LazyObject(
 
 def to_history_tuple(x):
     """Converts to a canonical history tuple."""
-    if not isinstance(x, (cabc.Sequence, float, int)):
+    if not isinstance(x, cabc.Sequence | float | int):
         raise ValueError("history size must be given as a sequence or number")
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
         return to_history_tuple((m.group(1), m.group(3)))
-    elif isinstance(x, (float, int)):
+    elif isinstance(x, float | int):
         return to_history_tuple((x, "commands"))
     units, converter = HISTORY_UNITS[x[1]]
     value = converter(x[0])
@@ -2626,7 +2693,7 @@ def iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
 
 
 def ensure_timestamp(t, datetime_format=None):
-    if isinstance(t, (int, float)):
+    if isinstance(t, int | float):
         return t
     try:
         return float(t)

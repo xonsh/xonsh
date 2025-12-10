@@ -22,7 +22,6 @@ import itertools
 import re
 import sys
 import token
-import typing as tp
 from token import (
     AMPER,
     AMPEREQUAL,
@@ -96,7 +95,7 @@ blank_re = LazyObject(
 #
 # token modifications
 #
-tok_name = tok_name.copy()
+tok_name = tok_name.copy()  # type: ignore
 __all__ = token.__all__ + [  # type:ignore
     "COMMENT",
     "tokenize",
@@ -132,31 +131,31 @@ NL = N_TOKENS + 1
 tok_name[NL] = "NL"
 ENCODING = N_TOKENS + 2
 tok_name[ENCODING] = "ENCODING"
-N_TOKENS += 3
+N_TOKENS += 3  # type: ignore
 SEARCHPATH = N_TOKENS
 tok_name[N_TOKENS] = "SEARCHPATH"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 IOREDIRECT1 = N_TOKENS
 tok_name[N_TOKENS] = "IOREDIRECT1"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 IOREDIRECT2 = N_TOKENS
 tok_name[N_TOKENS] = "IOREDIRECT2"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 DOLLARNAME = N_TOKENS
 tok_name[N_TOKENS] = "DOLLARNAME"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 ATDOLLAR = N_TOKENS
 tok_name[N_TOKENS] = "ATDOLLAR"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 ATEQUAL = N_TOKENS
 tok_name[N_TOKENS] = "ATEQUAL"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 MATCH = N_TOKENS
 tok_name[N_TOKENS] = "MATCH"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 CASE = N_TOKENS
 tok_name[N_TOKENS] = "CASE"
-N_TOKENS += 1
+N_TOKENS += 1  # type: ignore
 _xonsh_tokens = {
     "?": "QUESTION",
     "@=": "ATEQUAL",
@@ -181,11 +180,11 @@ _glbs = globals()
 for v in _xonsh_tokens.values():
     _glbs[v] = N_TOKENS
     tok_name[N_TOKENS] = v
-    N_TOKENS += 1
+    N_TOKENS += 1  # type: ignore
     __all__.append(v)
 del _glbs, v
 
-EXACT_TOKEN_TYPES: dict[str, tp.Union[str, int]] = {
+EXACT_TOKEN_TYPES: dict[str, str | int] = {
     "(": LPAR,
     ")": RPAR,
     "[": LSQB,
@@ -378,11 +377,18 @@ ContStr = group(
     StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" + group("'", r"\\\r?\n"),
     StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' + group('"', r"\\\r?\n"),
 )
-PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
-PseudoTokenWithoutIO = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
-PseudoToken = Whitespace + group(
-    PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE
-)
+
+
+def getPseudoToken(is_subproc=False):
+    Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
+    PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
+    return Whitespace + group(PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE)
+
+
+def getPseudoTokenWithoutIO(is_subproc=False):
+    Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
+    PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
+    return Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
 
 
 def _compile(expr):
@@ -865,7 +871,9 @@ def tokopen(filename):
         raise
 
 
-def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
+def _tokenize(
+    readline, encoding, tolerant=False, tokenize_ioredirects=True, is_subproc=False
+):
     lnum = parenlev = continued = 0
     numchars = "0123456789"
     contstr, needcont = "", 0
@@ -888,6 +896,8 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
             line = readline()
         except StopIteration:
             line = b""
+
+        is_subproc = is_subproc or line[:2] in {b"![", b"$[", b"$(", b"!("}
 
         if encoding is not None:
             line = line.decode(encoding)
@@ -1000,7 +1010,9 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
 
         while pos < max:
             pseudomatch = _compile(
-                PseudoToken if tokenize_ioredirects else PseudoTokenWithoutIO
+                getPseudoToken(is_subproc=is_subproc)
+                if tokenize_ioredirects
+                else getPseudoTokenWithoutIO(is_subproc=is_subproc)
             ).match(line, pos)
             if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
@@ -1028,7 +1040,9 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         if async_def:
                             async_def_nl = True
 
-                elif initial == "#":
+                elif initial == "#" or (
+                    is_subproc and initial == " " and len(token) > 1 and token[1] == "#"
+                ):
                     assert not token.endswith("\n")
                     if stashed:
                         yield stashed
@@ -1064,7 +1078,9 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
                         break
                     else:  # ordinary string
                         yield TokenInfo(STRING, token, spos, epos, line)
-                elif token.startswith("$") and token[1:].isidentifier():
+                elif token.startswith("$") and (
+                    token[1:].isidentifier() or token[1:2].isalnum()
+                ):
                     yield TokenInfo(DOLLARNAME, token, spos, epos, line)
                 elif initial.isidentifier():  # ordinary name
                     if token in ("async", "await"):
@@ -1141,7 +1157,7 @@ def _tokenize(readline, encoding, tolerant=False, tokenize_ioredirects=True):
     yield TokenInfo(ENDMARKER, "", (lnum, 0), (lnum, 0), "")
 
 
-def tokenize(readline, tolerant=False, tokenize_ioredirects=True):
+def tokenize(readline, tolerant=False, tokenize_ioredirects=True, is_subproc=False):
     """
     The tokenize() generator requires one argument, readline, which
     must be a callable object which provides the same interface as the
@@ -1175,6 +1191,7 @@ def tokenize(readline, tolerant=False, tokenize_ioredirects=True):
         encoding,
         tolerant,
         tokenize_ioredirects,
+        is_subproc=is_subproc,
     )
 
 

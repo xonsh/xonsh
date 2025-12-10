@@ -38,7 +38,7 @@ def test_command_not_found(monkeypatch):
 
     assert xexec([command]) == (
         None,
-        f"xonsh: exec: file not found: {dummy_error_msg}: {command}" "\n",
+        f"xonsh: exec: file not found: {dummy_error_msg}: {command}\n",
         1,
     )
 
