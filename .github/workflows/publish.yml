@@ -1,15 +1,12 @@
 name: publish
-
 on:
   workflow_dispatch:
   release:
     types:
       - published
-
 permissions:
   contents: read
   id-token: write
-
 jobs:
   publish:
     if: github.repository_owner == 'xonsh'
@@ -36,14 +33,32 @@ jobs:
         run: python -m build . --sdist
       - name: build bdist(wheel) to dist/
         run: python -m build . --wheel
+      - name: publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
-      - name: AppImage - Create xonsh AppImage
+  build-appimage:
+    if: github.repository_owner == 'xonsh'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+      - name: install python-appimage
+        run: pip install python-appimage
+      - name: create requirements.txt
         run: |
-          pip install python-appimage
-          echo $PWD > ./appimage/requirements.txt && cat ./appimage/pre-requirements.txt >> ./appimage/requirements.txt
+          echo $PWD > ./appimage/requirements.txt
+          cat ./appimage/pre-requirements.txt >> ./appimage/requirements.txt
+      - name: build xonsh AppImage
+        run: |
           python -m python_appimage build app -p 3.11 ./appimage  # Unpin python after fix https://github.com/xonsh/xonsh/issues/5166
-
-      - name: AppImage - Upload xonsh AppImage to release
+      - name: upload xonsh AppImage to release
         if: github.event_name == 'release'
         uses: actions/upload-release-asset@v1
         env:
@@ -51,8 +66,5 @@ jobs:
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./xonsh-x86_64.AppImage
-          asset_name:  xonsh-x86_64.AppImage
+          asset_name: xonsh-x86_64.AppImage
           asset_content_type: application/x-executable
-
-      - name: publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
