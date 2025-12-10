@@ -57,11 +57,41 @@ xonsh
             name = 'foo'
             echo @(name) > /tmp/@(name)
 
-            touch @(input('file: '))
-            touch @([f"file{i}" for i in range(0,10)])
+            with p'/tmp/dir'.mkdir().cd():
+                touch @(input('file: '))
 
             aliases['e'] = 'echo @(2+2)'
             aliases['a'] = lambda args: print(args)
+
+   *  -  **Xonsh is a Meta-Shell**
+      -  **Xonsh is an Ecosystem**
+
+   *  -  .. code-block:: python
+
+            xontrib load fish_completer sh
+
+            @.imp.pandas.DataFrame(
+              @.imp.json.loads($(nu -c 'ls -la | to json'))
+            )
+
+            @.imp.pandas.DataFrame(
+              @.imp.json.loads(
+                $(osqueryi --json 'select pid,name from processes')
+              )
+            )
+
+      -  .. code-block:: python
+
+            xontrib load prompt_starship \
+                         history_encrypt \
+                         output_search   \
+                         powerline       \
+                         homebrew        \
+                         chatgpt         \ 
+                         jupyter         \
+                         dalias          \
+                         django          \
+                         jedi            
 
 
 If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
