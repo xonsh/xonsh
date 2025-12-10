@@ -54,11 +54,11 @@ xonsh
 
       -  .. code-block:: python
 
-            name = 'foo'
+            name = 'snail'
             echo @(name) > /tmp/@(name)
 
             with p'/tmp/dir'.mkdir().cd():
-                touch @(input('file: '))
+                touch @(input('File: '))
 
             aliases['e'] = 'echo @(2+2)'
             aliases['a'] = lambda args: print(args)
