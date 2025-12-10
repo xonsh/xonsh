@@ -78,7 +78,8 @@ xonsh
 
             @.imp.pandas.DataFrame(
               @.imp.json.loads(
-                $(osqueryi --json 'select * from mounts')
+                $(osqueryi --json \
+                   'select * from mounts')
               )
             )
 
@@ -93,7 +94,8 @@ xonsh
                          jupyter         \
                          dalias          \
                          django          \
-                         jedi            
+                         jedi           
+
 
 
 If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
