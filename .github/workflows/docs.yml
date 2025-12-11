@@ -45,7 +45,7 @@ jobs:
             docs/api/_autosummary
           key: docs-${{ runner.os }}-${{ github.ref }}
           restore-keys: |
-            docs-${{ runner.os }}-refs/heads/main-
+            docs-${{ runner.os }}-refs/heads/main
             docs-${{ runner.os }}-
       - name: Build Docs
         run: cd docs && make html
