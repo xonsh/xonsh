@@ -36,10 +36,6 @@ This page provides xonsh equivalents for common patterns in Bash.
         There is no notion of an escaping character in xonsh like the backslash (``\``) in bash.
         Single or double quotes can be used to remove the special meaning of certain
         characters, words or brackets.
-    * - ``IFS``
-      - ``$XONSH_SUBPROC_OUTPUT_FORMAT``
-      - Changing the output representation and splitting. Also take a look into ``DecoratorAlias``
-        to have an ability to return object e.g. ``j = $(@json echo '{}')``.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
@@ -52,8 +48,8 @@ This page provides xonsh equivalents for common patterns in Bash.
     * - ``echo "$HOME/hello"``
       - ``echo "$HOME/hello"``
       - Construct an argument using an environment variable.
-    * - ``something/$SOME_VAR/$(some_command)``
-      - ``@('something/' + $SOME_VAR + $(some_command).strip())``
+    * - ``echo $HOME/$(uname)``
+      - ``echo @($HOME + '/' + $(uname))``
       - Concatenate a variable or text with the result of running a command.
     * - ``echo 'my home is $HOME'``
       - ``echo @("my home is $HOME")``
@@ -126,6 +122,10 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``completer list``
       - As with many other shells, xonsh ships with the ability to complete partially-specified arguments
         upon hitting the “tab” key.
+    * - ``IFS``
+      - ``$XONSH_SUBPROC_OUTPUT_FORMAT``
+      - Changing the output representation and splitting. Also take a look into ``DecoratorAlias``
+        to have an ability to return object e.g. ``j = $(@json echo '{}')``.
     * - OhMyBash or BashIt
       - `awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_
       - Xontributions, or ``xontribs``, are a set of tools and conventions for extending the functionality
