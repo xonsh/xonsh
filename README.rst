@@ -82,17 +82,16 @@ xonsh
 
       -  .. code-block:: python
 
-            xontrib load prompt_starship \
-                         output_search   \
-                         powerline       \
-                         dracula         \
-                         chatgpt         \
-                         django          \
-                         jupyter         \
-                         1password       \
-                         github_copilot  \
-                         history_encrypt
-
+            xontrib load term_integration \
+                         prompt_starship  \
+                         powerline        \
+                         dracula          \
+                         chatgpt          \
+                         django           \
+                         jupyter          \
+                         1password        \
+                         github_copilot   \
+                         history_encrypt 
 
 
 If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
