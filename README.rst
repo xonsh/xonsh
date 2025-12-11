@@ -21,9 +21,9 @@ xonsh
 
             cd $HOME
 
-            id $(whoami)
+            id $(whoami) > ~/id.txt
 
-            cat /etc/passwd | grep root > ~/root.txt
+            cat /etc/passwd | grep root
 
             $PROMPT = '@ '
 
@@ -34,7 +34,7 @@ xonsh
 
             var = "hello".upper()
 
-            import json; json.loads('{"a":1}')
+            @.imp.json.loads('{"a":1}')
 
             [i for i in range(0,10)]
 
@@ -50,18 +50,49 @@ xonsh
             p'/etc/passwd'.read_text().find('root')
 
             xontrib load dalias  # plugin
-            id = $(@json docker ps --format json)['ID']
+            $(@json docker ps --format json)['ID']
 
       -  .. code-block:: python
 
-            name = 'foo'
+            name = 'snail'
             echo @(name) > /tmp/@(name)
 
-            touch @(input('file: '))
-            touch @([f"file{i}" for i in range(0,10)])
+            with p'/tmp/dir'.mkdir().cd():
+                touch @(input('File: '))
 
             aliases['e'] = 'echo @(2+2)'
             aliases['a'] = lambda args: print(args)
+
+   *  -  **Xonsh is a Meta-Shell**
+      -  **Xonsh is an Ecosystem**
+
+   *  -  .. code-block:: python
+
+            xontrib load fish_completer sh
+
+            def nudf(cmd):
+                return @.imp.pandas.DataFrame(
+                  @.imp.json.loads(
+                    $(nu -c @(cmd + ' | to json'))
+                  )
+                )
+
+            nudf!(ls -la)
+
+
+      -  .. code-block:: python
+
+            xontrib load prompt_starship \
+                         output_search   \
+                         powerline       \
+                         dracula         \
+                         chatgpt         \
+                         django          \
+                         jupyter         \
+                         1password       \
+                         github_copilot  \
+                         history_encrypt
+
 
 
 If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.

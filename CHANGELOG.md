@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.21.2](https://github.com/xonsh/xonsh/compare/0.21.1...0.21.2) (2025-12-10)
+
+
+### Bug Fixes
+
+* appimage upload to release ([#5982](https://github.com/xonsh/xonsh/issues/5982)) ([7965b1f](https://github.com/xonsh/xonsh/commit/7965b1ffef2d934484a121a39bf7f789b3c22e0b))
+
 ## [0.21.1](https://github.com/xonsh/xonsh/compare/0.21.0...0.21.1) (2025-12-10)
 
 
