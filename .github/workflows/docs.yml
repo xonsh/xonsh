@@ -70,4 +70,5 @@ jobs:
           personal_token: ${{ steps.generate-token.outputs.token }}
           external_repository: xonsh/xonsh-docs
           publish_dir: ./docs/_build/html
+          cname: xon.sh
 #          # todo: implement versioned docs
