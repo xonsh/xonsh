@@ -9,7 +9,7 @@ from collections import OrderedDict
 class ModuleFinder:
     """Reusable module matcher. Can be used by other completers like Python to find matching script completions"""
 
-    extensions = (".py", ".xsh")
+    extensions = (".py", ".xsh", ".xonsh")
 
     def __init__(self, *names: "str"):
         """Helper class to search and load Python modules
