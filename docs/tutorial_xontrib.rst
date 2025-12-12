@@ -34,7 +34,7 @@ took inspiration from for xonsh:
 Structure
 ================
 Xontribs are modules with some special functions written
-in either xonsh (``*.xsh``) or Python (``*.py``).
+in either xonsh (``*.xsh``, ``*.xonsh``) or Python (``*.py``).
 
 Here is a template:
 
@@ -180,7 +180,7 @@ it in a directory named ``xontrib/``. However, please do not place an
 
     Do not place an ``__init__.py`` in the ``xontrib/`` directory!
 
-If you plan on using ``*.xsh`` files in you xontrib, then you'll
+If you plan on using ``*.xsh`` or ``*.xonsh`` files in you xontrib, then you'll
 have to add some hooks to distutils, setuptools, pip, etc. to install these
 files. Try adding entries like the following entries to your ``setup()`` call
 in your ``setup.py``:
@@ -195,11 +195,11 @@ in your ``setup.py``:
     setup(...,
           packages=[..., 'xontrib'],
           package_dir={..., 'xontrib': 'xontrib'},
-          package_data={..., 'xontrib': ['*.xsh']},
+          package_data={..., 'xontrib': ['*.xsh', '*.xonsh']},
           ...)
 
 Something similar can be done for any non-xontrib package or sub-package
-that needs to distribute ``*.xsh`` files.
+that needs to distribute xonsh files.
 
 
 Tell Us About Your Xontrib!

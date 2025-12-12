@@ -14,8 +14,8 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``@``
       - The ``@`` object has ``@.env`` - env variables, ``@.imp`` - importer, ``@.lastcmd`` - last command, etc.
     * - ``script.sh``
-      - ``script.xsh``
-      - The recommended file extension is ``.xsh``.
+      - ``script.xsh`` or ``script.xonsh``
+      - The recommended file extension is ``.xsh`` or explicit ``.xonsh``.
     * - ``#!/bin/bash``
       - ``#!/usr/bin/env xonsh``
       - Use ``xonsh`` in the shebang.

@@ -2077,9 +2077,9 @@ Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivalent to
 Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
 
-Importing Xonsh (``*.xsh``)
+Importing Xonsh (``*.xsh``, ``*.xonsh``)
 ==============================
-You can import xonsh source files with the ``*.xsh`` file extension using
+You can import xonsh source files with the ``*.xsh`` or ``*.xonsh`` file extension using
 the normal Python syntax.  Say you had a file called ``mine.xsh``, you could,
 therefore, perform a Bash-like source into your current shell with the
 following:
