@@ -67,7 +67,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
         if dot not in fullname and dot not in path:
             path = [dot] + path
         name = fullname.rsplit(dot, 1)[-1]
-        fnames = [name + ".xsh", name + ".xonsh"]
+        fnames = [name + ".xonsh", name + ".xsh"]  # explicit first
         for p in path:
             if not isinstance(p, str):
                 continue
