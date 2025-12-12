@@ -68,8 +68,8 @@ xonsh
 
    *  -  .. code-block:: python
 
-            xontrib load sh
-            xontrib load fish_completer
+            xontrib load sh \
+                         fish_completer
 
             def nudf(cmd):
                 return @.imp.pandas.DataFrame(
