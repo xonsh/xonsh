@@ -1003,7 +1003,7 @@ class GeneralSetting(Xettings):
     )
     XONSHRC_DIR = Var.with_default(
         default_xonshrcdir,
-        "A list of directories, from which all .xsh|.py files will be loaded "
+        "A list of directories, from which all ``.xsh``, ``.xonsh``, ``.py`` files will be loaded "
         "at startup, sorted in lexographic order. Files in these directories "
         "are loaded after any files in XONSHRC.",
         type_str="env_path",
@@ -2629,7 +2629,7 @@ def scan_dir_for_source_files(path: str):
         return
     with os.scandir(path) as it:
         for entry in it:
-            if entry.is_file() and (entry.name.endswith((".py", ".xsh"))):
+            if entry.is_file() and (entry.name.endswith((".py", ".xsh", ".xonsh"))):
                 yield os.path.join(path, entry.name), entry
 
 
