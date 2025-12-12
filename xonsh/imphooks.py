@@ -79,6 +79,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
                     spec = ModuleSpec(fullname, self)
                     self._filenames[fullname] = os.path.abspath(os.path.join(p, fname))
                     return spec
+        return spec
 
     #
     # SourceLoader methods
