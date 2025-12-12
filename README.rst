@@ -91,7 +91,7 @@ xonsh
                          jupyter          \
                          1password        \
                          github_copilot   \
-                         history_encrypt 
+                         history_encrypt
 
 
 If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
