@@ -26,6 +26,10 @@ def test_import_empty():
 
     assert empty_xsh
 
+def test_import_explicit_ext():
+    from xpack import explicit_ext
+    assert explicit_ext.my_ext.strip() == '.xonsh'
+
 
 def test_absolute_import():
     from xpack import sample

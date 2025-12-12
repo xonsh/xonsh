@@ -60,8 +60,10 @@ def test_source_files_any_ext(mockopen, monkeypatch, mocked_execx_checker):
 def test_source_from_env_path(mockopen, mocked_execx_checker, xession):
     with xession.env.swap(PATH=[Path(__file__).parent.parent / "bin"]):
         source_alias_fn(["foo", "bar"], ignore_ext=True)
+        source_alias_fn(["explicit.xonsh"])
     assert mocked_execx_checker[0].endswith("foo")
     assert mocked_execx_checker[1].endswith("bar")
+    assert mocked_execx_checker[2].endswith("explicit.xonsh")
 
 
 @pytest.mark.parametrize(
