@@ -784,7 +784,7 @@ def source_alias_fn(
         fext, name = Path(fpath).suffix, Path(fpath).name
         if not fext and name.startswith("."):
             fext = name  # hidden file with no extension
-        if not ignore_ext and fext not in {".xsh", ".py", ".xonshrc"}:
+        if not ignore_ext and fext not in {".xsh", ".py", ".xonsh", ".xonshrc"}:
             raise RuntimeError(
                 f"attempting to source file with non-xonsh extension {repr(name)}! "
                 f"If you are trying to source a file in another language, "
