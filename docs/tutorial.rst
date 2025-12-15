@@ -301,6 +301,18 @@ Here is the example of callable environment variable:
     >>> env | grep DT
     DT=2024-11-11T11:11:44
 
+Registering Environment Variables
+---------------------------------
+
+You can manually register environment variables to define their type and documentation.
+This is particularly useful for extensions or complex configurations. The documentation provided
+will be shown during tab-completion.
+
+.. code-block:: xonsh
+
+    @.env.register('MY_VAR', type='int', default=0, doc='This is a demo variable')
+
+Now, when you type ``$MY_<Tab>``, you will see the description.
 
 Running Commands
 ==============================

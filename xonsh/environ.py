@@ -2479,7 +2479,8 @@ class Env(cabc.MutableMapping):
             Default value for variable. ``ValueError`` raised if type does not match
             that specified by `type` (or `validate`).
         doc : str, optional
-            Docstring for variable.
+            Docstring for variable. This description will be shown in the
+            autocomplete menu (tab-completion).
         validate : func, optional
             Function to validate type.
         convert : func, optional
