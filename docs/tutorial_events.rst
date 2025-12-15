@@ -45,6 +45,40 @@ Yes! It's even easy! In your xontrib, you just have to do something like::
 
 This will enable users to call ``help(events.myxontrib_on_spam)`` and get useful output.
 
+Listing Registered Handlers
+===========================
+
+You can easily inspect which handlers are registered for each event by simply
+printing the ``events`` object. This is useful for debugging and understanding
+which xontribs are active.
+
+.. code-block:: console
+
+    $ @events.on_precommand
+    . def my_handler(cmd, **_):
+    .     pass
+    .
+    $ print(events)
+
+This will produce output similar to the following:
+
+.. code-block:: text
+
+    on_lscolors_change:
+      - xonsh.pyghooks.on_lscolors_change
+    on_pre_spec_run_ls:
+      - xonsh.environ.ensure_ls_colors_in_env
+    on_precommand:
+      - __main__.my_handler
+
+To get this information programmatically, you can use the ``events.handlers()`` method,
+which returns a dictionary mapping event names to a list of handler strings.
+
+.. code-block:: console
+
+    $ events.handlers()
+    {'on_lscolors_change': ['xonsh.pyghooks.on_lscolors_change'], ...}
+
 Further Reading
 ===============
 
