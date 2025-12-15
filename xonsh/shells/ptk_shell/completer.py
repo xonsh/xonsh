@@ -130,7 +130,9 @@ class PromptToolkitCompleter(Completer):
         full_completion = prev + sug.text
         if len(full_completion) > 60:
             display_text = full_completion[:57] + "..."
-            return RichCompletion(full_completion, display=display_text, append_space=False)
+            return RichCompletion(
+                full_completion, display=display_text, append_space=False
+            )
         return full_completion
 
     def reserve_space(self):
