@@ -7,7 +7,6 @@ import warnings
 
 import xonsh.history.main as xhm
 from xonsh.built_ins import XSH
-from xonsh.events import events
 from xonsh.history.dummy import DummyHistory
 from xonsh.platform import (
     best_shell_type,
@@ -17,7 +16,7 @@ from xonsh.platform import (
 )
 from xonsh.tools import XonshError, is_class, print_exception, simple_random_choice
 
-events.doc(
+XSH.events.doc(
     "on_transform_command",
     """
 on_transform_command(cmd: str) -> str
@@ -31,7 +30,7 @@ output, so design any handlers for this carefully.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_precommand",
     """
 on_precommand(cmd: str) -> None
@@ -40,7 +39,7 @@ Fires just before a command is executed.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_postcommand",
     """
 on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
@@ -57,7 +56,7 @@ Parameters:
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_command_not_found",
     """
 on_command_not_found(cmd: list[str]) -> list[str] | tuple[str, ...] | None
@@ -80,7 +79,7 @@ Example:
 
 .. code-block:: python
 
-    @events.on_command_not_found
+    @XSH.events.on_command_not_found
     def _vim_to_vi(cmd, **kwargs):
         '''If vim not found let's try to use vi.'''
         if cmd[0] == 'vim':
@@ -89,7 +88,7 @@ Example:
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_pre_prompt_format",
     """
 on_pre_prompt_format() -> None
@@ -98,7 +97,7 @@ Fires before the prompt will be formatted
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_pre_prompt",
     """
 on_pre_prompt() -> None
@@ -108,7 +107,7 @@ Fires just before showing the prompt
 )
 
 
-events.doc(
+XSH.events.doc(
     "on_post_prompt",
     """
 on_post_prompt() -> None
@@ -126,7 +125,7 @@ def transform_command(src, show_diff=True):
     raw = src
     while src != lst:
         lst = src
-        srcs = events.on_transform_command.fire(cmd=src)
+        srcs = XSH.events.on_transform_command.fire(cmd=src)
         for s in srcs:
             if s != lst:
                 src = s

@@ -568,8 +568,7 @@ class SubprocSpec:
             if len(sug.strip()) > 0:
                 e += "\n" + sug
             if XSH.env.get("XONSH_INTERACTIVE"):
-                events = XSH.builtins.events
-                replacements = events.on_command_not_found.fire(cmd=self.cmd)
+                replacements = XSH.events.on_command_not_found.fire(cmd=self.cmd)
                 for replacement in replacements:
                     if replacement is None:
                         continue
@@ -636,7 +635,7 @@ class SubprocSpec:
             return os.path.basename(self.binary_loc)
 
     def _pre_run_event_fire(self, name):
-        events = XSH.builtins.events
+        events = XSH.events
         event_name = "on_pre_spec_run_" + name
         if events.exists(event_name):
             event = getattr(events, event_name)
@@ -646,7 +645,7 @@ class SubprocSpec:
             event.fire(spec=self)
 
     def _post_run_event_fire(self, name, proc):
-        events = XSH.builtins.events
+        events = XSH.events
         event_name = "on_post_spec_run_" + name
         if events.exists(event_name):
             event = getattr(events, event_name)

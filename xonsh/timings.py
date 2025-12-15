@@ -16,7 +16,6 @@ import time
 import timeit
 
 from xonsh.built_ins import XSH
-from xonsh.events import events
 from xonsh.lib.lazyasd import lazybool, lazyobject
 
 
@@ -249,7 +248,7 @@ _timings = {"start": clock()}
 def setup_timings(argv):
     global _timings
     if "--timings" in argv:
-        events.doc(
+        XSH.events.doc(
             "on_timingprobe",
             """
         on_timingprobe(name: str) -> None
@@ -258,67 +257,67 @@ def setup_timings(argv):
         """,
         )
 
-        @events.on_timingprobe
+        @XSH.events.on_timingprobe
         def timing_on_timingprobe(name, **kw):
             global _timings
             _timings[name] = clock()
 
-        @events.on_post_cmdloop
+        @XSH.events.on_post_cmdloop
         def timing_on_post_cmdloop(**kw):
             global _timings
             _timings["on_post_cmdloop"] = clock()
 
-        @events.on_post_init
+        @XSH.events.on_post_init
         def timing_on_post_init(**kw):
             global _timings
             _timings["on_post_init"] = clock()
 
-        @events.on_post_rc
+        @XSH.events.on_post_rc
         def timing_on_post_rc(**kw):
             global _timings
             _timings["on_post_rc"] = clock()
 
-        @events.on_postcommand
+        @XSH.events.on_postcommand
         def timing_on_postcommand(**kw):
             global _timings
             _timings["on_postcommand"] = clock()
 
-        @events.on_pre_cmdloop
+        @XSH.events.on_pre_cmdloop
         def timing_on_pre_cmdloop(**kw):
             global _timings
             _timings["on_pre_cmdloop"] = clock()
 
-        @events.on_pre_rc
+        @XSH.events.on_pre_rc
         def timing_on_pre_rc(**kw):
             global _timings
             _timings["on_pre_rc"] = clock()
 
-        @events.on_precommand
+        @XSH.events.on_precommand
         def timing_on_precommand(**kw):
             global _timings
             _timings["on_precommand"] = clock()
 
-        @events.on_ptk_create
+        @XSH.events.on_ptk_create
         def timing_on_ptk_create(**kw):
             global _timings
             _timings["on_ptk_create"] = clock()
 
-        @events.on_chdir
+        @XSH.events.on_chdir
         def timing_on_chdir(**kw):
             global _timings
             _timings["on_chdir"] = clock()
 
-        @events.on_pre_prompt_format
+        @XSH.events.on_pre_prompt_format
         def timing_on_pre_prompt_format(**kw):
             global _timings
             _timings["on_pre_prompt_format"] = clock()
 
-        @events.on_post_prompt
+        @XSH.events.on_post_prompt
         def timing_on_post_prompt(**kw):
             global _timings
             _timings = {"on_post_prompt": clock()}
 
-        @events.on_pre_prompt
+        @XSH.events.on_pre_prompt
         def timing_on_pre_prompt(**kw):
             global _timings
             _timings["on_pre_prompt"] = clock()

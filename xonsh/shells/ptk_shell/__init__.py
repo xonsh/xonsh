@@ -25,7 +25,6 @@ from prompt_toolkit.styles import Style, merge_styles
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
 from xonsh.built_ins import XSH
-from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
 from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS
 from xonsh.pygments_cache import get_all_styles
@@ -49,8 +48,8 @@ except ImportError:
 CAPITAL_PATTERN = re.compile(r"([a-z])([A-Z])")
 Token = _TokenType()
 
-events.transmogrify("on_ptk_create", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_ptk_create", "LoadEvent")
+XSH.events.doc(
     "on_ptk_create",
     """
 on_ptk_create(prompter: PromptSession, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindings) ->
@@ -213,7 +212,7 @@ class PromptToolkitShell(BaseShell):
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
         # This assumes that PromptToolkitShell is a singleton
-        events.on_ptk_create.fire(
+        XSH.events.on_ptk_create.fire(
             prompter=self.prompter,
             history=self.history,
             completer=self.pt_completer,
@@ -238,9 +237,9 @@ class PromptToolkitShell(BaseShell):
 
             yield "lexer", PygmentsLexer(pyghooks.XonshLexer)
 
-        events.on_timingprobe.fire(name="on_pre_prompt_style")
+        XSH.events.on_timingprobe.fire(name="on_pre_prompt_style")
         yield "style", self.get_prompt_style()
-        events.on_timingprobe.fire(name="on_post_prompt_style")
+        XSH.events.on_timingprobe.fire(name="on_post_prompt_style")
 
     def get_prompt_style(self):
         env = XSH.env
@@ -290,7 +289,7 @@ class PromptToolkitShell(BaseShell):
         kwarg flags whether the input should be stored in PTK's in-memory
         history.
         """
-        events.on_pre_prompt_format.fire()
+        XSH.events.on_pre_prompt_format.fire()
         env = XSH.env
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("XONSH_PROMPT_AUTO_SUGGEST") else None
@@ -308,7 +307,7 @@ class PromptToolkitShell(BaseShell):
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         completer = None if completions_display == "none" else self.pt_completer
 
-        events.on_timingprobe.fire(name="on_pre_prompt_tokenize")
+        XSH.events.on_timingprobe.fire(name="on_pre_prompt_tokenize")
 
         # clear prompt level cache
         env["PROMPT_FIELDS"].reset()
@@ -322,7 +321,7 @@ class PromptToolkitShell(BaseShell):
             get_rprompt_tokens = self.rprompt_tokens()
             if get_bottom_toolbar_tokens:
                 get_bottom_toolbar_tokens = get_bottom_toolbar_tokens()
-        events.on_timingprobe.fire(name="on_post_prompt_tokenize")
+        XSH.events.on_timingprobe.fire(name="on_post_prompt_tokenize")
 
         if env.get("VI_MODE"):
             editing_mode = EditingMode.VI
@@ -374,9 +373,9 @@ class PromptToolkitShell(BaseShell):
         if cursor_shape:
             prompt_args["cursor"] = cursor_shape
 
-        events.on_pre_prompt.fire()
+        XSH.events.on_pre_prompt.fire()
         line = self.prompter.prompt(**prompt_args)
-        events.on_post_prompt.fire()
+        XSH.events.on_post_prompt.fire()
         return line
 
     def _push(self, line):

@@ -14,7 +14,6 @@ from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
 from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
-from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
 from xonsh.lib.lazyasd import lazyobject
@@ -34,8 +33,8 @@ from xonsh.tools import (
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
 
-events.transmogrify("on_post_init", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_post_init", "LoadEvent")
+XSH.events.doc(
     "on_post_init",
     """
 on_post_init() -> None
@@ -46,8 +45,8 @@ NOTE: This is fired before the wizard is automatically started.
 """,
 )
 
-events.transmogrify("on_exit", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_exit", "LoadEvent")
+XSH.events.doc(
     "on_exit",
     """
 on_exit(exit_code : int) -> None
@@ -59,8 +58,8 @@ NOTE: All the caveats of the ``atexit`` module also apply to this event.
 )
 
 
-events.transmogrify("on_pre_cmdloop", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_pre_cmdloop", "LoadEvent")
+XSH.events.doc(
     "on_pre_cmdloop",
     """
 on_pre_cmdloop() -> None
@@ -69,8 +68,8 @@ Fired just before the command loop is started, if it is.
 """,
 )
 
-events.transmogrify("on_post_cmdloop", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_post_cmdloop", "LoadEvent")
+XSH.events.doc(
     "on_post_cmdloop",
     """
 on_post_cmdloop() -> None
@@ -81,8 +80,8 @@ NOTE: All the caveats of the ``atexit`` module also apply to this event.
 """,
 )
 
-events.transmogrify("on_xontribs_loaded", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_xontribs_loaded", "LoadEvent")
+XSH.events.doc(
     "on_xontribs_loaded",
     """
 on_xontribs_loaded() -> None
@@ -91,8 +90,8 @@ Fired after external xontribs with ``entrypoints defined`` are loaded.
 """,
 )
 
-events.transmogrify("on_pre_rc", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_pre_rc", "LoadEvent")
+XSH.events.doc(
     "on_pre_rc",
     """
 on_pre_rc() -> None
@@ -101,8 +100,8 @@ Fired just before rc files are loaded, if they are.
 """,
 )
 
-events.transmogrify("on_post_rc", "LoadEvent")
-events.doc(
+XSH.events.transmogrify("on_post_rc", "LoadEvent")
+XSH.events.doc(
     "on_post_rc",
     """
 on_post_rc() -> None
@@ -322,18 +321,18 @@ def _get_rc_files(shell_kwargs: dict, args, env):
 
 
 def _load_rc_files(shell_kwargs: dict, args, env, execer, ctx):
-    events.on_pre_rc.fire()
+    XSH.events.on_pre_rc.fire()
     # load rc files
     login = shell_kwargs.get("login", True)
     rc, rcd = _get_rc_files(shell_kwargs, args, env)
     XSH.rc_files = xonshrc_context(
         rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
     )
-    events.on_post_rc.fire()
+    XSH.events.on_post_rc.fire()
 
 
 def _autoload_xontribs(env):
-    events.on_timingprobe.fire(name="pre_xontribs_autoload")
+    XSH.events.on_timingprobe.fire(name="pre_xontribs_autoload")
     disabled = env.get("XONTRIBS_AUTOLOAD_DISABLED", False)
     if disabled is True:
         return
@@ -341,8 +340,8 @@ def _autoload_xontribs(env):
     auto_load_xontribs_from_entrypoints(
         blocked_xontribs, verbose=bool(env.get("XONSH_DEBUG", False))
     )
-    events.on_xontribs_loaded.fire()
-    events.on_timingprobe.fire(name="post_xontribs_autoload")
+    XSH.events.on_xontribs_loaded.fire()
+    XSH.events.on_timingprobe.fire(name="post_xontribs_autoload")
 
 
 def start_services(shell_kwargs, args, pre_env=None):
@@ -354,17 +353,17 @@ def start_services(shell_kwargs, args, pre_env=None):
     # create execer, which loads builtins
     ctx = shell_kwargs.get("ctx", {})
     debug = to_bool_or_int(os.getenv("XONSH_DEBUG", "0"))
-    events.on_timingprobe.fire(name="pre_execer_init")
+    XSH.events.on_timingprobe.fire(name="pre_execer_init")
     execer = Execer(
         filename="<stdin>",
         debug_level=debug,
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    events.on_timingprobe.fire(name="post_execer_init")
-    events.on_timingprobe.fire(name="pre_xonsh_session_load")
+    XSH.events.on_timingprobe.fire(name="post_execer_init")
+    XSH.events.on_timingprobe.fire(name="pre_xonsh_session_load")
     XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
-    events.on_timingprobe.fire(name="post_xonsh_session_load")
+    XSH.events.on_timingprobe.fire(name="post_xonsh_session_load")
 
     install_import_hooks(execer)
 
@@ -524,7 +523,7 @@ def main_xonsh(args):
         signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
         signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
 
-    events.on_post_init.fire()
+    XSH.events.on_post_init.fire()
 
     env = XSH.env
     shell = XSH.shell
@@ -554,11 +553,11 @@ def main_xonsh(args):
                 and not any(os.path.isdir(i) for i in env["XONSHRC_DIR"])
             ):
                 print_welcome_screen()
-            events.on_pre_cmdloop.fire()
+            XSH.events.on_pre_cmdloop.fire()
             try:
                 shell.shell.cmdloop()
             finally:
-                events.on_post_cmdloop.fire()
+                XSH.events.on_post_cmdloop.fire()
         elif args.mode == XonshMode.single_command:
             # run a single command and exit
             exc_info = run_code_with_cache(
@@ -624,7 +623,7 @@ def main_xonsh(args):
 
         if isinstance(XSH.exit, int):
             exit_code = XSH.exit
-        events.on_exit.fire(exit_code=exit_code)
+        XSH.events.on_exit.fire(exit_code=exit_code)
         postmain(args)
     return exit_code
 
