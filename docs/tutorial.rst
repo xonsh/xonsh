@@ -305,16 +305,12 @@ Registering Environment Variables
 ---------------------------------
 
 You can manually register environment variables to define their type and documentation.
-This is particularly useful for xontribs or complex configurations. The documentation provided
+This is particularly useful for extensions or complex configurations. The documentation provided
 will be shown during tab-completion.
 
 .. code-block:: xonsh
 
-    # In your .xonshrc or xontrib
-    __xonsh__.env.register('MY_VAR', type='int', doc='This is a demo variable')
-
-    # Or using the aliases interface
-    $XSH.env.register('ANOTHER_VAR', type='str', default='foo', doc='Description shows in completion')
+    @.env.register('MY_VAR', type='int', default=0, doc='This is a demo variable')
 
 Now, when you type ``$MY_<Tab>``, you will see the description.
 
