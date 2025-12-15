@@ -360,12 +360,16 @@ class EventManager:
         """
         Returns a formatted string representation of active AbstractEvent subscribers.
         """
-        return '\n'.join(
-            f'{name}:\n'
-            + '\n'.join(
-                map(lambda h: f'  - {getattr(h, "__module__", "unknown")}.{getattr(h, "__name__", repr(h))}', val))
+        return "\n".join(
+            f"{name}:\n"
+            + "\n".join(
+                map(
+                    lambda h: f"  - {getattr(h, '__module__', 'unknown')}.{getattr(h, '__name__', repr(h))}",
+                    val,
+                )
+            )
             for name in dir(self)
-            if not name.startswith('_')
+            if not name.startswith("_")
             for val in [getattr(self, name)]
             if isinstance(val, AbstractEvent) and val
         )
