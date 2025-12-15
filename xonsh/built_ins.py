@@ -6,10 +6,13 @@ special Python builtins module.
 
 from __future__ import annotations
 
+import abc
 import atexit
 import builtins
+import collections.abc
 import collections.abc as cabc
 import contextlib
+import inspect
 import itertools
 import os
 import pathlib
@@ -18,9 +21,6 @@ import signal
 import sys
 import types
 import warnings
-import abc
-import collections.abc
-import inspect
 from ast import AST
 from collections.abc import Iterator
 
@@ -34,6 +34,7 @@ from xonsh.tools import (
     globpath,
     print_color,
 )
+
 # from xonsh.events import EventManager
 
 INSPECTOR = Inspector()
@@ -646,7 +647,6 @@ class Cmd:
         return self
 
 
-
 def has_kwargs(func):
     return any(
         p.kind == p.VAR_KEYWORD for p in inspect.signature(func).parameters.values()
@@ -986,6 +986,7 @@ class EventManager:
         setattr(self, name, e)
         # Now it exists, and we won't be called again.
         return e
+
 
 class XonshSessionInterface:
     """Xonsh Session Interface

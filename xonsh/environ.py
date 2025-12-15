@@ -375,7 +375,9 @@ class LsColors(cabc.MutableMapping):
         if (
             old_value != value
         ):  # bug won't fire if new value is 'target' and old value happened to be no color.
-            XSH.events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=value)
+            XSH.events.on_lscolors_change.fire(
+                key=key, oldvalue=old_value, newvalue=value
+            )
 
     def __delitem__(self, key):
         self._detyped = None
