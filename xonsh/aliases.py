@@ -1102,7 +1102,9 @@ def make_default_aliases():
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
-        "xpython": [XSH.env.get("_", sys.executable)] if IN_APPIMAGE else [sys.executable],
+        "xpython": [XSH.env.get("_", sys.executable)]
+        if IN_APPIMAGE
+        else [sys.executable],
         "xonsh-reset": xonsh_reset,
         "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
