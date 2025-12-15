@@ -5,6 +5,7 @@ import subprocess
 import sys
 
 from xonsh.built_ins import XSH
+from xonsh.cli_utils import ArgParserAlias
 
 
 def _get_version(binary):
@@ -24,9 +25,9 @@ def _get_version(binary):
             return ""
 
 
-def xontext(args, stdin=None, stdout=None, stderr=None):
+def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
     """Report information about the current xonsh environment."""
-    stdout = stdout or sys.stdout
+    stdout = _stdout or sys.stdout
     print("[Current xonsh session]", file=stdout)
     xpy = sys.executable
     xpy_ver = _get_version(xpy)
@@ -62,3 +63,6 @@ def xontext(args, stdin=None, stdout=None, stderr=None):
         if val:
             print(f"{ev}: {val}", file=stdout)
     return 0
+
+
+xcontext = ArgParserAlias(func=xcontext_main, has_args=True, prog="xcontext")
