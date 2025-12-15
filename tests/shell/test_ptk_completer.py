@@ -227,3 +227,24 @@ def test_alias_expansion(code, index, expected_args, monkeypatch, xession):
         signature(Completer.complete).bind(None, *args, **kwargs).arguments
         == expected_args
     )
+
+
+def test_auto_suggest_completion_with_spaces(xession):
+    """Test that auto-suggestion includes spaces (full line) instead of truncating at first space."""
+    xession.env["AUTO_SUGGEST_IN_COMPLETIONS"] = True
+    xonsh_completer_mock = MagicMock()
+    xonsh_completer_mock.complete.return_value = set(), 0
+    shell_mock = MagicMock()
+    shell_mock.prompter.app = MagicMock()
+    ptk_completer = PromptToolkitCompleter(xonsh_completer_mock, None, shell_mock)
+    ptk_completer.reserve_space = lambda: None
+    suggestion_mock = MagicMock()
+    suggestion_mock.text = "ho hello world"
+    ptk_completer.hist_suggester = MagicMock()
+    ptk_completer.hist_suggester.get_suggestion.return_value = suggestion_mock
+    document_mock = MagicMock()
+    document_mock.text = "ec"
+    document_mock.current_line = "ec"
+    document_mock.cursor_position_col = 2
+    completion_item = ptk_completer.suggestion_completion(document_mock, "ec")
+    assert completion_item == "echo hello world"
