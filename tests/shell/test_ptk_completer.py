@@ -248,3 +248,12 @@ def test_auto_suggest_completion_with_spaces(xession):
     document_mock.cursor_position_col = 2
     completion_item = ptk_completer.suggestion_completion(document_mock, "ec")
     assert completion_item == "echo hello world"
+    long_cmd = "echo " + "a" * 100
+    suggestion_mock.text = "o " + "a" * 100
+    document_mock.text = "ech"
+    document_mock.current_line = "ech"
+    res = ptk_completer.suggestion_completion(document_mock, "ech")
+    assert isinstance(res, RichCompletion)
+    assert res == long_cmd
+    assert len(res.display) < len(res)
+    assert res.display.endswith("...")

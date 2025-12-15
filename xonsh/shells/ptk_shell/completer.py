@@ -127,7 +127,11 @@ class PromptToolkitCompleter(Completer):
         if sug is None:
             return None
         _, _, prev = line.rpartition(" ")
-        return prev + sug.text
+        full_completion = prev + sug.text
+        if len(full_completion) > 60:
+            display_text = full_completion[:57] + "..."
+            return RichCompletion(full_completion, display=display_text, append_space=False)
+        return full_completion
 
     def reserve_space(self):
         """Adjust the height for showing autocompletion menu."""
