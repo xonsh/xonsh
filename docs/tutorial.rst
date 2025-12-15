@@ -301,6 +301,22 @@ Here is the example of callable environment variable:
     >>> env | grep DT
     DT=2024-11-11T11:11:44
 
+Registering Environment Variables
+---------------------------------
+
+You can manually register environment variables to define their type and documentation.
+This is particularly useful for xontribs or complex configurations. The documentation provided
+will be shown during tab-completion.
+
+.. code-block:: xonsh
+
+    # In your .xonshrc or xontrib
+    __xonsh__.env.register('MY_VAR', type='int', doc='This is a demo variable')
+
+    # Or using the aliases interface
+    $XSH.env.register('ANOTHER_VAR', type='str', default='foo', doc='Description shows in completion')
+
+Now, when you type ``$MY_<Tab>``, you will see the description.
 
 Running Commands
 ==============================
