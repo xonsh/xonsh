@@ -154,6 +154,11 @@ In general, use ``xpip`` if you're configuring or adding features to xonsh, and 
 you're doing Python development.
 
 
+``xreset``
+=================
+Clean the xonsh context. All user variables will be deleted.
+
+
 ``@thread`` and ``@unthread``
 =============================
 Use ``@thread`` and ``@unthread`` to run command as threadable or unthreadable e.g to have a result of ssh command:
