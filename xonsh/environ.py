@@ -28,7 +28,6 @@ from xonsh.ansi_colors import (
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
-from xonsh.events import events
 from xonsh.lib.lazyasd import LazyBool, lazyobject
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
@@ -106,7 +105,7 @@ from xonsh.tools import (
     to_tok_color_dict,
 )
 
-events.doc(
+XSH.events.doc(
     "on_envvar_new",
     """
 on_envvar_new(name: str, value: Any) -> None
@@ -117,7 +116,7 @@ cause a recursion until the limit.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_envvar_change",
     """
 on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
@@ -128,7 +127,7 @@ cause a recursion until the limit.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_pre_spec_run_ls",
     """
 on_pre_spec_run_ls(spec: xonsh.built_ins.SubprocSpec) -> None
@@ -138,7 +137,7 @@ command.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_lscolors_change",
     """
 on_lscolors_change(key: str, oldvalue: Any, newvalue: Any) -> None
@@ -376,14 +375,14 @@ class LsColors(cabc.MutableMapping):
         if (
             old_value != value
         ):  # bug won't fire if new value is 'target' and old value happened to be no color.
-            events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=value)
+            XSH.events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=value)
 
     def __delitem__(self, key):
         self._detyped = None
         old_value = self._d.get(key, None)
         self._targets.discard(key)
         del self._d[key]
-        events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=None)
+        XSH.events.on_lscolors_change.fire(key=key, oldvalue=old_value, newvalue=None)
 
     def __len__(self):
         return len(self._d)
@@ -522,7 +521,7 @@ def is_lscolors(x):
     return isinstance(x, LsColors)
 
 
-@events.on_pre_spec_run_ls
+@XSH.events.on_pre_spec_run_ls
 def ensure_ls_colors_in_env(spec=None, **kwargs):
     """This ensures that the $LS_COLORS environment variable is in the
     environment. This fires exactly once upon the first time the
@@ -532,7 +531,7 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
     if "LS_COLORS" not in env._d:
         # this adds it to the env too
         default_lscolors(env)
-    events.on_pre_spec_run_ls.discard(ensure_ls_colors_in_env)
+    XSH.events.on_pre_spec_run_ls.discard(ensure_ls_colors_in_env)
 
 
 #
@@ -2372,9 +2371,9 @@ class Env(cabc.MutableMapping):
                 if deval is not None:
                     os_environ[key] = deval
         if old_value is self._no_value:
-            events.on_envvar_new.fire(name=key, value=val)
+            XSH.events.on_envvar_new.fire(name=key, value=val)
         elif old_value != val:
-            events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
+            XSH.events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
 
     def __delitem__(self, key):
         self._del_item(key)

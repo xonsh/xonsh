@@ -13,7 +13,6 @@ from importlib.abc import Loader, MetaPathFinder, SourceLoader
 from importlib.machinery import ModuleSpec
 
 from xonsh.built_ins import XSH
-from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
@@ -129,7 +128,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
 #
 # Import events
 #
-events.doc(
+XSH.events.doc(
     "on_import_pre_find_spec",
     """
 on_import_pre_find_spec(fullname: str, path: str, target: module or None) -> None
@@ -144,7 +143,7 @@ here are the same as importlib.abc.MetaPathFinder.find_spec(). Namely,
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_import_post_find_spec",
     """
 on_import_post_find_spec(spec, fullname, path, target) -> None
@@ -160,7 +159,7 @@ here the spec and the arguments importlib.abc.MetaPathFinder.find_spec(). Namely
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_import_pre_create_module",
     """
 on_import_pre_create_module(spec: ModuleSpec) -> None
@@ -170,7 +169,7 @@ is the spec object. See importlib for more details.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_import_post_create_module",
     """
 on_import_post_create_module(module: Module, spec: ModuleSpec) -> None
@@ -181,7 +180,7 @@ See importlib for more details.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_import_pre_exec_module",
     """
 on_import_pre_exec_module(module: Module) -> None
@@ -191,7 +190,7 @@ is the module itself. See importlib for more details.
 """,
 )
 
-events.doc(
+XSH.events.doc(
     "on_import_post_exec_module",
     """
 on_import_post_create_module(module: Module) -> None
@@ -205,10 +204,10 @@ The only parameter is the module itself. See importlib for more details.
 def _should_dispatch_xonsh_import_event_loader():
     """Figures out if we should dispatch to a load event"""
     return (
-        len(events.on_import_pre_create_module) > 0
-        or len(events.on_import_post_create_module) > 0
-        or len(events.on_import_pre_exec_module) > 0
-        or len(events.on_import_post_exec_module) > 0
+        len(XSH.events.on_import_pre_create_module) > 0
+        or len(XSH.events.on_import_post_create_module) > 0
+        or len(XSH.events.on_import_pre_exec_module) > 0
+        or len(XSH.events.on_import_post_exec_module) > 0
     )
 
 
@@ -236,11 +235,11 @@ class XonshImportEventHook(MetaPathFinder):
         if fullname in reversed(self._fullname_stack):
             # don't execute if we are already in the stack.
             return None
-        npre = len(events.on_import_pre_find_spec)
-        npost = len(events.on_import_post_find_spec)
+        npre = len(XSH.events.on_import_pre_find_spec)
+        npost = len(XSH.events.on_import_post_find_spec)
         dispatch_load = _should_dispatch_xonsh_import_event_loader()
         if npre > 0:
-            events.on_import_pre_find_spec.fire(
+            XSH.events.on_import_pre_find_spec.fire(
                 fullname=fullname, path=path, target=target
             )
         elif npost == 0 and not dispatch_load:
@@ -251,7 +250,7 @@ class XonshImportEventHook(MetaPathFinder):
             spec = importlib.util.find_spec(fullname)
         # fire post event
         if npost > 0:
-            events.on_import_post_find_spec.fire(
+            XSH.events.on_import_post_find_spec.fire(
                 spec=spec, fullname=fullname, path=path, target=target
             )
         if dispatch_load and spec is not None and hasattr(spec.loader, "create_module"):
@@ -292,16 +291,16 @@ class XonshImportEventLoader(Loader):
     #
     def create_module(self, spec):
         """Creates and returns the module object."""
-        events.on_import_pre_create_module.fire(spec=spec)
+        XSH.events.on_import_pre_create_module.fire(spec=spec)
         mod = self.loader.create_module(spec)
-        events.on_import_post_create_module.fire(module=mod, spec=spec)
+        XSH.events.on_import_post_create_module.fire(module=mod, spec=spec)
         return mod
 
     def exec_module(self, module):
         """Executes the module in its own namespace."""
-        events.on_import_pre_exec_module.fire(module=module)
+        XSH.events.on_import_pre_exec_module.fire(module=module)
         rtn = self.loader.exec_module(module)
-        events.on_import_post_exec_module.fire(module=module)
+        XSH.events.on_import_post_exec_module.fire(module=module)
         return rtn
 
     def __getattr__(self, name):

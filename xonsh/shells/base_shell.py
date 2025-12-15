@@ -16,7 +16,6 @@ from xonsh.codecache import (
     update_cache,
 )
 from xonsh.completer import Completer
-from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.prompt.base import PromptFormatter, multiline_prompt
@@ -377,7 +376,7 @@ class BaseShell:
         if code is None:
             return
 
-        events.on_precommand.fire(cmd=src)
+        XSH.events.on_precommand.fire(cmd=src)
 
         env = XSH.env
         hist = XSH.history  # pylint: disable=no-member
@@ -414,7 +413,7 @@ class BaseShell:
                 cwd=self.precwd,
             )
             if not isinstance(exc_info[1], SystemExit):
-                events.on_postcommand.fire(
+                XSH.events.on_postcommand.fire(
                     cmd=info["inp"],
                     rtn=info["rtn"],
                     out=info.get("out", None),
@@ -485,7 +484,7 @@ class BaseShell:
             old = env["PWD"]
             env["PWD"] = cwd
             env["OLDPWD"] = old
-            events.on_chdir.fire(olddir=old, newdir=cwd)
+            XSH.events.on_chdir.fire(olddir=old, newdir=cwd)
 
     def push(self, line):
         """Pushes a line onto the buffer and compiles the code in a way that

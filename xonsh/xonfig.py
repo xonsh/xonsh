@@ -17,7 +17,6 @@ import xonsh.wizard as wiz
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Arg, ArgParserAlias
-from xonsh.events import events
 from xonsh.foreign_shells import CANON_SHELL_NAMES
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers import ply
@@ -136,7 +135,7 @@ _XONFIG_SOURCE_FOREIGN_SHELL_COMMAND: dict[str, str] = collections.defaultdict(
 )
 
 
-events.doc(
+XSH.events.doc(
     "on_xonfig_info_requested",
     """
 on_xonfig_info_requested() -> list[tuple[str, str]]
@@ -554,7 +553,7 @@ def _info(
             ("encoding errors", env.get("XONSH_ENCODING_ERRORS")),
         ]
     )
-    for p in XSH.builtins.events.on_xonfig_info_requested.fire():
+    for p in XSH.events.on_xonfig_info_requested.fire():
         if p is not None:
             data.extend(p)
 

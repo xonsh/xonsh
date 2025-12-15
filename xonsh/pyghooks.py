@@ -38,7 +38,6 @@ from xonsh.color_tools import (
     make_palette,
     warn_deprecated_no_color,
 )
-from xonsh.events import events
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lib.lazyimps import html, os_listxattr, terminal256
 from xonsh.platform import (
@@ -1493,7 +1492,7 @@ def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
         file_color_tokens[key] = color_token_by_name(newvalue)
 
 
-events.on_lscolors_change(on_lscolors_change)
+XSH.events.on_lscolors_change(on_lscolors_change)
 
 
 def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, str]:

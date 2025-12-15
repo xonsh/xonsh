@@ -10,7 +10,6 @@ import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
-from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import get_sep
 
@@ -138,7 +137,7 @@ def _unc_unmap_temp_drive(left_drive, cwd):
     subprocess.check_output(["NET", "USE", left_drive, "/delete"], text=True)
 
 
-events.doc(
+XSH.events.doc(
     "on_chdir",
     """
 on_chdir(olddir: str, newdir: str) -> None
@@ -179,7 +178,7 @@ def _change_working_directory(newdir, follow_symlinks=False):
 
     # Fire event if the path actually changed
     if old != env["PWD"]:
-        events.on_chdir.fire(olddir=old, newdir=env["PWD"])
+        XSH.events.on_chdir.fire(olddir=old, newdir=env["PWD"])
 
 
 def _try_cdpath(apath):
