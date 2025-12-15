@@ -18,6 +18,7 @@ from typing import Literal
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
+import xonsh.xoreutils.xontext as xxt
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
@@ -1097,6 +1098,7 @@ def make_default_aliases():
         "showcmd": showcmd,
         "ipynb": ["jupyter", "notebook", "--no-browser"],
         "which": xxw.which,
+        "xontext": xxt.xontext,
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
