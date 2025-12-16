@@ -147,11 +147,11 @@ Manages xonsh configuration information.
 
     @ xcontext
     [Current xonsh session]
-    xpython: /path/to/xonsh/.venv/bin/python # Python 3.12.10
-    xpip: /path/to/xonsh/.venv/bin/python -m pip
+    xpython: /home/snail/.local/xonsh-env/bin/python # Python 3.12.10
+    xpip: /home/snail/.local/xonsh-env/bin/python -m pip
 
     [Current commands environment]
-    xonsh: /path/to/xonsh/.venv/bin/xonsh
+    xonsh: /home/snail/.local/xonsh-env/bin/xonsh
     python: /usr/bin/python # Python 3.11.6
     pip: /usr/bin/pip
 
@@ -181,11 +181,14 @@ Alias to the Python interpreter that is currently running xonsh (``sys.executabl
 
 .. code-block:: console
 
+    @ python -V
+    Python 3.12.10 
     @ xpython -V
-    Python 3.12.10
-
-    @ xpython -c "import sys; print(sys.prefix)"
-    /path/to/xonsh/.venv
+    Python 3.11.9
+    @ which python
+    /opt/homebrew/bin/python 
+    @ xpython -V
+    /home/snail/.local/xonsh-env/bin/python
 
 
 ``xreset``
