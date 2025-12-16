@@ -140,6 +140,26 @@ Manages xonsh configuration information.
 .. command-help:: xonsh.xonfig.xonfig_main
 
 
+``xcontext``
+=================
+
+.. code-block:: console
+
+    @ xcontext
+    [Current xonsh session]
+    xpython: /home/snail/.local/xonsh-env/bin/python # Python 3.12.10
+    xpip: /home/snail/.local/xonsh-env/bin/python -m pip
+
+    [Current commands environment]
+    xonsh: /home/snail/.local/xonsh-env/bin/xonsh
+    python: /usr/bin/python # Python 3.11.6
+    pip: /usr/bin/pip
+
+    CONDA_DEFAULT_ENV: my-env
+
+Report information about the current xonsh environment, including paths to the Python interpreter, pip, xonsh itself, and relevant environment variables.
+
+
 ``xontrib``
 ==============
 Manages xonsh extensions. More information is available at :doc:`tutorial_xontrib`
@@ -152,6 +172,23 @@ isolated environment (eg conda, homebrew).
 
 In general, use ``xpip`` if you're configuring or adding features to xonsh, and use ``pip`` if
 you're doing Python development.
+
+
+``xpython``
+=================
+
+Alias to the Python interpreter that is currently running xonsh (``sys.executable``). This is useful for running Python modules or scripts in the same environment as the shell itself, especially in complex setups like AppImage.
+
+.. code-block:: console
+
+    @ python -V
+    Python 3.12.10
+    @ xpython -V
+    Python 3.11.9
+    @ which python
+    /opt/homebrew/bin/python
+    @ xpython -V
+    /home/snail/.local/xonsh-env/bin/python
 
 
 ``xreset``
