@@ -68,15 +68,15 @@ table lists built in features and capabilities that various tools may or may not
       -
       -
       - ✓
-      - 
-      - 
+      -
+      -
       - ✓
     * - User-patchable
       -
       -
       - ✓
-      - 
-      - 
+      -
+      -
       - ✓
     * - Package and deps manager
       -
