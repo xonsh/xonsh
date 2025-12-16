@@ -1358,7 +1358,7 @@ def str_to_path(x):
 
 def str_to_abs_path(x):
     """Converts a string to an absolute path."""
-    return str_to_path(x).absolute() if x is not None else str_to_path(x)
+    return r.absolute() if (r := str_to_path(x)) is not None else r
 
 
 def str_to_env_path(x):
