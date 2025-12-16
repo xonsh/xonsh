@@ -182,11 +182,11 @@ Alias to the Python interpreter that is currently running xonsh (``sys.executabl
 .. code-block:: console
 
     @ python -V
-    Python 3.12.10 
+    Python 3.12.10
     @ xpython -V
     Python 3.11.9
     @ which python
-    /opt/homebrew/bin/python 
+    /opt/homebrew/bin/python
     @ xpython -V
     /home/snail/.local/xonsh-env/bin/python
 
