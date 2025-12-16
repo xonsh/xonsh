@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 import xonsh.completers.path as xcp
+from xonsh.pytest.tools import skip_if_on_windows
 
 
 @pytest.fixture(autouse=True)
@@ -109,6 +110,7 @@ def test_path_in_python_code(num_args, completion_context_parse):
         assert out == exp
 
 
+@skip_if_on_windows
 def test_complete_path_strip_check(xession, completion_context_parse):
     xession.env = {
         "CASE_SENSITIVE_COMPLETIONS": True,
