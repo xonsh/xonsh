@@ -6,6 +6,7 @@ import time
 import warnings
 
 import xonsh.history.main as xhm
+from pathlib import Path
 from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.history.dummy import DummyHistory
@@ -265,11 +266,13 @@ class Shell:
 
         # build history backend before creating shell
         if env.get("XONSH_INTERACTIVE"):
+            if (hist_file := env.get("XONSH_HISTORY_FILE", None)):
+                hist_file = str(Path(hist_file).absolute())
             XSH.history = hist = xhm.construct_history(
                 env=env.detype(),
                 ts=[time.time(), None],
                 locked=True,
-                filename=env.get("XONSH_HISTORY_FILE", None),
+                filename=hist_file,
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:
