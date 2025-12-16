@@ -157,7 +157,7 @@ Manages xonsh configuration information.
 
     CONDA_DEFAULT_ENV: my-env
 
-Report information about the current xonsh environment, including paths to the Python interpreter, pip, xonsh itself, and relevant environment variables. Useful for debugging environment issues.
+Report information about the current xonsh environment, including paths to the Python interpreter, pip, xonsh itself, and relevant environment variables.
 
 
 ``xontrib``
