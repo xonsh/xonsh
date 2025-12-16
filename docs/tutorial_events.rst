@@ -57,7 +57,7 @@ which xontribs are active.
     @events.on_precommand
     def my_handler(cmd, **_):
         pass
-    
+
     print(events)
 
 This will produce output similar to the following:
