@@ -946,6 +946,12 @@ class DynamicAccessProxy:
     def __dir__(self):
         return self.obj.__dir__()
 
+    def __repr__(self):
+        return repr(self.obj)
+
+    def __str__(self):
+        return str(self.obj)
+
 
 # singleton
 XSH = XonshSession()
