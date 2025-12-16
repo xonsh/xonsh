@@ -121,18 +121,9 @@ for more information all the history command and all of its sub-commands.
 Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
 
 
-``scp-resume``
-=================
-Simple alias defined as ``['rsync', '--partial', '-h', '--progress', '--rsh=ssh']``.
-
 ``showcmd``
 ============
 Displays how commands and arguments are evaluated.
-
-
-``ipynb``
-=================
-Simple alias defined as ``['ipython', 'notebook', '--no-browser']``.
 
 
 ``trace``
@@ -140,6 +131,18 @@ Simple alias defined as ``['ipython', 'notebook', '--no-browser']``.
 Provides an interface to printing lines of source code prior to their execution.
 
 .. command-help:: xonsh.tracer.tracermain
+
+
+``xonfig``
+=================
+Manages xonsh configuration information.
+
+.. command-help:: xonsh.xonfig.xonfig_main
+
+
+``xontrib``
+==============
+Manages xonsh extensions. More information is available at :doc:`tutorial_xontrib`
 
 
 ``xpip``
@@ -151,11 +154,10 @@ In general, use ``xpip`` if you're configuring or adding features to xonsh, and 
 you're doing Python development.
 
 
-``xonfig``
+``xreset``
 =================
-Manages xonsh configuration information.
+Clean the xonsh context. All user variables will be deleted.
 
-.. command-help:: xonsh.xonfig.xonfig_main
 
 ``@thread`` and ``@unthread``
 =============================
@@ -217,7 +219,3 @@ it is instead aliased to ``['ls', '-G']``.
 ====================
 The ``grep`` command is aliased to ``['grep', '--color=auto']``.
 
-
-``xontrib``
-==============
-Manages xonsh extensions. More information is available at :doc:`tutorial_xontrib`
