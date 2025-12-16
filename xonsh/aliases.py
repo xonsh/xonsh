@@ -1094,9 +1094,7 @@ def make_default_aliases():
         "trace": trace,
         "timeit": timeit_alias,
         "xonfig": xonfig,
-        "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
         "showcmd": showcmd,
-        "ipynb": ["jupyter", "notebook", "--no-browser"],
         "which": xxw.which,
         "xcontext": xxt.xcontext,
         "xontrib": xontribs_main,
@@ -1105,7 +1103,7 @@ def make_default_aliases():
         "xpython": [XSH.env.get("_", sys.executable)]
         if IN_APPIMAGE
         else [sys.executable],
-        "xonsh-reset": xonsh_reset,
+        "xreset": xonsh_reset,
         "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
