@@ -15,18 +15,11 @@ table lists built in features and capabilities that various tools may or may not
       - fish
       - IPython
       - xonsh
-    * - Practical language
-      -
-      -
+    * - Meant as a shell
       - ✓
       - ✓
-      - ✓
-      - ✓
-    * - Stays readable at scale
-      -
       -
       - ✓
-      -
       -
       - ✓
     * - Native cross-platform
@@ -36,18 +29,11 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       - ✓
       - ✓
-    * - Meant as a shell
-      - ✓
-      - ✓
-      -
-      - ✓
-      -
-      - ✓
-    * - Large standard library
-      -
-      - ✓
+    * - Practical language
       -
       -
+      - ✓
+      - ✓
       - ✓
       - ✓
     * - Typed variables and objects
@@ -59,23 +45,37 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
     * - Syntax highlighting
       -
-      - plugins
+      - ✓
       -
       - ✓
-      - in notebook
-      - prompt-toolkit
+      - ✓
+      - ✓
+    * - Large standard library
+      -
+      - ✓
+      -
+      -
+      - ✓
+      - ✓
+    * - Stays readable at scale
+      -
+      -
+      - ✓
+      -
+      -
+      - ✓
+    * - Testable
+      -
+      -
+      - ✓
+      - 
+      - 
+      - ✓
     * - Rich history backend
       -
       -
       -
       -
-      -
-      - ✓
-    * - Pun in name
-      - ✓
-      -
-      - ✓
-      - ✓
       -
       - ✓
 
