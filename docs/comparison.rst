@@ -64,12 +64,27 @@ table lists built in features and capabilities that various tools may or may not
       -
       -
       - ✓
+    * - Package and deps manager
+      -
+      -
+      -
+      -
+      -
+      - ✓
     * - Testable
       -
       -
       - ✓
       - 
       - 
+      - ✓
+
+    * - AI friendly
+      -
+      -
+      -
+      -
+      -
       - ✓
     * - Rich history backend
       -
