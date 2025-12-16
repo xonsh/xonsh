@@ -1360,6 +1360,7 @@ def str_to_abs_path(x):
     """Converts a string to an absolute path."""
     return str_to_path(x).absolute()
 
+
 def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
