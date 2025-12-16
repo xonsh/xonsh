@@ -4,15 +4,13 @@ import datetime as dt
 import os
 import pathlib
 import re
-import stat
 import subprocess
 import warnings
-from tempfile import TemporaryDirectory
 
 import pytest
 
 from xonsh import __version__
-from xonsh.lexer import Lexer
+from xonsh.parsers.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
@@ -35,7 +33,6 @@ from xonsh.tools import (
     ensure_timestamp,
     env_path_to_str,
     escape_windows_cmd_string,
-    executables_in,
     expand_case_matching,
     expand_path,
     expandvars,
@@ -101,7 +98,6 @@ INDENT = "    "
 
 TOOLS_ENV = {"EXPAND_ENV_VARS": True, "XONSH_ENCODING_ERRORS": "strict"}
 ENCODE_ENV_ONLY = {"XONSH_ENCODING_ERRORS": "strict"}
-PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
 
 
 def test_random_choice():
@@ -515,18 +511,14 @@ mom"""
     ),
     # test from start
     (
-        "echo --option1 value1 \\\n"
-        "     --option2 value2 \\\n"
-        "     --optionZ valueZ",
+        "echo --option1 value1 \\\n     --option2 value2 \\\n     --optionZ valueZ",
         0,
         "echo --option1 value1      --option2 value2      --optionZ valueZ",
         3,
     ),
     # test from second line
     (
-        "echo --option1 value1 \\\n"
-        "     --option2 value2 \\\n"
-        "     --optionZ valueZ",
+        "echo --option1 value1 \\\n     --option2 value2 \\\n     --optionZ valueZ",
         1,
         "echo --option1 value1      --option2 value2      --optionZ valueZ",
         3,
@@ -579,7 +571,7 @@ def test_is_balanced_parens(inp):
     assert obs
 
 
-@pytest.mark.parametrize("inp", ["f(x.", "f(1,x." "f((1,10),x.y"])
+@pytest.mark.parametrize("inp", ["f(x.", "f(1,x.f((1,10),x.y"])
 def test_is_not_balanced_parens(inp):
     obs = is_balanced(inp, "(", ")")
     assert not obs
@@ -1614,46 +1606,6 @@ def test_partial_string(leaders, prefix, quote):
     obs = check_for_partial_string(test_string)
     exp = l_len + t_len + f_len + l_len, None, s
     assert obs == exp
-
-
-def test_executables_in(xession):
-    expected = set()
-    types = ("file", "directory", "brokensymlink")
-    if ON_WINDOWS:
-        # Don't test symlinks on windows since it requires admin
-        types = ("file", "directory")
-    executables = (True, False)
-    with TemporaryDirectory() as test_path:
-        for _type in types:
-            for executable in executables:
-                fname = f"{_type}_{executable}"
-                if _type == "none":
-                    continue
-                if _type == "file" and executable:
-                    ext = ".exe" if ON_WINDOWS else ""
-                    expected.add(fname + ext)
-                else:
-                    ext = ""
-                path = os.path.join(test_path, fname + ext)
-                if _type == "file":
-                    with open(path, "w") as f:
-                        f.write(fname)
-                elif _type == "directory":
-                    os.mkdir(path)
-                elif _type == "brokensymlink":
-                    tmp_path = os.path.join(test_path, "i_wont_exist")
-                    with open(tmp_path, "w") as f:
-                        f.write("deleteme")
-                        os.symlink(tmp_path, path)
-                    os.remove(tmp_path)
-                if executable and not _type == "brokensymlink":
-                    os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-            if ON_WINDOWS:
-                xession.env = PATHEXT_ENV
-                result = set(executables_in(test_path))
-            else:
-                result = set(executables_in(test_path))
-    assert expected == result
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,8 @@ Note that this module is named 'built_ins' so as not to be confused with the
 special Python builtins module.
 """
 
+from __future__ import annotations
+
 import atexit
 import builtins
 import collections.abc as cabc
@@ -18,9 +20,10 @@ import sys
 import types
 import warnings
 from ast import AST
+from collections.abc import Iterator
 
-from xonsh.inspectors import Inspector
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.inspectors import Inspector
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX
 from xonsh.tools import (
     XonshCalledProcessError,
@@ -58,6 +61,15 @@ def resetting_signal_handle(sig, f):
     def new_signal_handler(s=None, frame=None):
         f(s, frame)
         signal.signal(sig, prev_signal_handler)
+        if sig == signal.SIGHUP:
+            """
+            SIGHUP means the controlling terminal has been lost. This should be
+            propagated to child processes so that they can decide what to do about it.
+            See also: https://www.gnu.org/software/bash/manual/bash.html#Signals
+            """
+            import xonsh.procs.jobs as xj
+
+            xj.hup_all_jobs()
         if sig != 0:
             """
             There is no immediate exiting here.
@@ -126,9 +138,57 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
+# mypy support
+if sys.platform == "win32":
+    BasePath = pathlib.WindowsPath
+else:
+    BasePath = pathlib.PosixPath
+
+
+class XonshPathLiteralChangeDirectoryContextManager:
+    """Implements context manager to use in xonsh path literal."""
+
+    def __init__(self, path: XonshPathLiteral):
+        self.path = path
+
+    def __enter__(self):
+        self._xonsh_old_cwd = os.getcwd()
+        os.chdir(self.path)
+        return self.path
+
+    def __exit__(self, exc_type, exc, tb):
+        os.chdir(self._xonsh_old_cwd)
+        return False
+
+
+class XonshPathLiteral(BasePath):  # type: ignore
+    """Extension of ``pathlib.Path`` to support extended functionality."""
+
+    def cd(self) -> XonshPathLiteralChangeDirectoryContextManager:
+        """Returns context manager to change the directory
+        e.g. ``with p'/tmp'.cd(): $[ls]``
+        """
+        return XonshPathLiteralChangeDirectoryContextManager(self)
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """Extension of ``pathlib.Path.mkdir`` that returns ``self`` instead of ``None``."""
+        super().mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
+        return self
+
+    def chmod(self, mode, *, follow_symlinks=True):
+        """Extension of ``pathlib.Path.chmod`` that returns ``self`` instead of ``None``."""
+        super().chmod(mode, follow_symlinks=follow_symlinks)
+        return self
+
+    def touch(self, mode=0o666, exist_ok=True):
+        """Extension of ``pathlib.Path.touch`` that returns ``self`` instead of ``None``."""
+        super().touch(mode=mode, exist_ok=exist_ok)
+        return self
+
+
 def path_literal(s):
     s = expand_path(s)
-    return pathlib.Path(s)
+    return XonshPathLiteral(s)
 
 
 def regexsearch(s):
@@ -248,7 +308,7 @@ def list_of_strs_or_callables(x):
     Ensures that x is a list of strings or functions.
     This is called when using the ``@()`` operator to expand it's content.
     """
-    if isinstance(x, (str, bytes)) or callable(x):
+    if isinstance(x, str | bytes) or callable(x):
         rtn = [ensure_str_or_callable(x)]
     elif isinstance(x, cabc.Iterable):
         rtn = list(map(ensure_str_or_callable, x))
@@ -364,7 +424,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
     elif kind is type:
         arg = type(execer.eval(raw_arg, glbs=glbs, locs=locs, filename=filename))
     else:
-        msg = "kind={0!r} and mode={1!r} was not recognized for macro " "argument {2!r}"
+        msg = "kind={0!r} and mode={1!r} was not recognized for macro argument {2!r}"
         raise TypeError(msg.format(kind, mode, name))
     return arg
 
@@ -419,7 +479,7 @@ def call_macro(f, raw_args, glbs, locs):
     macroname = f.__name__
     i = 0
     args = []
-    for (key, param), raw_arg in zip(sig.parameters.items(), raw_args):
+    for (key, param), raw_arg in zip(sig.parameters.items(), raw_args, strict=False):
         i += 1
         if raw_arg == "*":
             break
@@ -520,16 +580,117 @@ def xonsh_builtins(execer=None):
     XSH.unload()
 
 
+class InlineImporter:
+    """Inline importer allows to import and use module attribute or function in one line."""
+
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            return getattr(super(), name)
+        return __import__(name)
+
+
+class Cmd:
+    """A command group."""
+
+    def __init__(
+        self,
+        xsh: XonshSession,
+        *args: str,
+        bg=False,
+        redirects: dict[str, str] | None = None,
+    ):
+        self.xsh = xsh
+        self.args: list[list[str | tuple[str, str]] | str] = []
+        self._add_proc(*args, redirects=redirects or {})
+        if bg:
+            self.args.append("&")
+
+    def _expand(self, *args: str | list[str]) -> Iterator[str]:
+        for arg in args:
+            if isinstance(arg, str):
+                yield expand_path(arg)
+            else:
+                yield from (expand_path(str(a)) for a in arg)
+
+    def _add_proc(self, *args: str, redirects: dict[str, str] | None = None) -> None:
+        """a single Popen process args"""
+        cmds: list[str | tuple[str, str]] = list(self._expand(*args))
+        if redirects:
+            for k, v in redirects.items():
+                cmds.append((k, expand_path(v)))
+        self.args.append(cmds)
+
+    def out(self):
+        """dispatch $()"""
+        return self.xsh.subproc_captured_stdout(*self.args)
+
+    def run(self):
+        """dispatch $[]"""
+        return self.xsh.subproc_uncaptured(*self.args)
+
+    def hide(self):
+        """dispatch ![]"""
+        return self.xsh.subproc_captured_hiddenobject(*self.args)
+
+    def obj(self):
+        """dispatch !()"""
+        return self.xsh.subproc_captured_object(*self.args)
+
+    def pipe(self, *args):
+        """combine $() | $[]"""
+        self.args.append("|")
+        self._add_proc(*args)
+        return self
+
+
+class XonshSessionInterface:
+    """Xonsh Session Interface
+
+    Attributes
+    ----------
+    env : xonsh.environ.Env
+        A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
+
+    imp : xonsh.built_ins.InlineImporter
+        The inline importer provides instant access to library
+        functions and attributes e.g. `@.imp.time.time()`.
+
+    lastcmd : xonsh.procs.pipelines.CommandPipeline
+        Last executed subprocess-mode command pipeline
+        e.g. `@.lastcmd.rtn` returns exit code.
+    """
+
+    env = None  # type: ignore
+    imp: InlineImporter = InlineImporter()
+    lastcmd = None  # type: ignore
+
+
 class XonshSession:
-    """All components defining a xonsh session."""
+    """All components defining a xonsh session.
+
+    Warning! If you use this object for any reason and access ``__xonsh__``
+    or ``xonsh.built_ins.XSH`` attributes or functions, you do so at your
+    own risk, as the internal contents and behavior of this object may
+    change with any release. For repeatable use cases, find a way
+    to improve ``XonshSessionInterface`` or ``xonsh.api``.
+    """
 
     def __init__(self):
+        """
+        Attributes
+        ----------
+        exit: int or None
+            Session attribute. In case of integer value it signals xonsh to exit
+            with returning this value as exit code.
+        """
+        self.interface = XonshSessionInterface()
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
         self.history = None
         self.shell = None
         self.env = None
+        self.imp = InlineImporter()
         self.rc_files = None
 
         # AST-invoked functions
@@ -566,7 +727,24 @@ class XonshSession:
         self._completers = None
         self.builtins = None
         self._initial_builtin_names = None
-        self.last = None  # Last executed CommandPipeline.
+        self.lastcmd = None
+        self._last = None
+
+    @property
+    def last(self):
+        warnings.warn(
+            "The `last` attribute is deprecated and will be removed. Use `lastcmd`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._last
+
+    @last.setter
+    def last(self, value):
+        self._last = value
+
+    def cmd(self, *args: str, **kwargs):
+        return Cmd(self, *args, **kwargs)
 
     @property
     def aliases(self):
@@ -627,8 +805,9 @@ class XonshSession:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
+        self.interface.env = self.env
 
-        self.exit = False
+        self.exit = None
         self.stdout_uncaptured = None
         self.stderr_uncaptured = None
 
@@ -766,6 +945,12 @@ class DynamicAccessProxy:
 
     def __dir__(self):
         return self.obj.__dir__()
+
+    def __repr__(self):
+        return repr(self.obj)
+
+    def __str__(self):
+        return str(self.obj)
 
 
 # singleton

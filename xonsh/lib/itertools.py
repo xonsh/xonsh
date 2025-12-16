@@ -1,3 +1,6 @@
+from itertools import filterfalse
+
+
 def as_iterable(iterable_or_scalar):
     """Utility for converting an object to an iterable.
     Parameters
@@ -28,9 +31,32 @@ def as_iterable(iterable_or_scalar):
 
     if iterable_or_scalar is None:
         return ()
-    elif isinstance(iterable_or_scalar, (str, bytes)):
+    elif isinstance(iterable_or_scalar, str | bytes):
         return (iterable_or_scalar,)
     elif hasattr(iterable_or_scalar, "__iter__"):
         return iterable_or_scalar
     else:
         return (iterable_or_scalar,)
+
+
+def unique_everseen(iterable, key=None):
+    """Yield unique elements, preserving order. Remember all elements ever seen.
+
+    ```
+    unique_everseen('AAAABBBCCDAABBB') → A B C D
+    unique_everseen('ABBcCAD', str.casefold) → A B c D
+    ```
+
+    Source code: https://docs.python.org/3/library/itertools.html#itertools-recipes
+    """
+    seen = set()
+    if key is None:
+        for element in filterfalse(seen.__contains__, iterable):
+            seen.add(element)
+            yield element
+    else:
+        for element in iterable:
+            k = key(element)
+            if k not in seen:
+                seen.add(k)
+                yield element

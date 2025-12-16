@@ -1,11 +1,7 @@
 Bash to Xonsh Translation Guide
 ================================
-As you have probably figured out by now, xonsh is not ``sh``-lang compliant.
-If your muscles have memorized all of the Bash prestidigitations, this page
-will help you put a finger on how to do the equivalent task in xonsh.
-
-For shell scripts, the recommended file extension is ``xsh``, and shebang
-line is ``#!/usr/bin/env xonsh``.
+Xonsh relies primarily on the Python syntax and is not a suitable replacement for `sh` and is thus considered a non-POSIX shell.
+This page provides xonsh equivalents for common patterns in Bash.
 
 .. list-table::
     :widths: 30 30 40
@@ -14,6 +10,15 @@ line is ``#!/usr/bin/env xonsh``.
     * - Bash
       - Xonsh
       - Notes
+    * - No special object for represent session.
+      - ``@``
+      - The ``@`` object has ``@.env`` - env variables, ``@.imp`` - importer, ``@.lastcmd`` - last command, etc.
+    * - ``script.sh``
+      - ``script.xsh``
+      - The recommended file extension is ``.xsh``.
+    * - ``#!/bin/bash``
+      - ``#!/usr/bin/env xonsh``
+      - Use ``xonsh`` in the shebang.
     * - ``echo --arg="val"``
 
         ``echo {}``
@@ -31,9 +36,6 @@ line is ``#!/usr/bin/env xonsh``.
         There is no notion of an escaping character in xonsh like the backslash (``\``) in bash.
         Single or double quotes can be used to remove the special meaning of certain
         characters, words or brackets.
-    * - ``IFS``
-      - ``$XONSH_SUBPROC_OUTPUT_FORMAT``
-      - Changing the output representation and splitting.
     * - ``$NAME`` or ``${NAME}``
       - ``$NAME``
       - Look up an environment variable by name.
@@ -46,8 +48,8 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``echo "$HOME/hello"``
       - ``echo "$HOME/hello"``
       - Construct an argument using an environment variable.
-    * - ``something/$SOME_VAR/$(some_command)``
-      - ``@('something/' + $SOME_VAR + $(some_command).strip())``
+    * - ``echo $HOME/$(uname)``
+      - ``echo @($HOME + '/' + $(uname))``
       - Concatenate a variable or text with the result of running a command.
     * - ``echo 'my home is $HOME'``
       - ``echo @("my home is $HOME")``
@@ -59,7 +61,7 @@ line is ``#!/usr/bin/env xonsh``.
     * - ``ENV1=VAL1 command``
       - ``$ENV1=VAL1 command``
 
-        or ``with ${...}.swap(ENV1=VAL1): command``
+        or ``with @.env.swap(ENV1=VAL1): command``
       - Set temporary environment variable(s) and execute the command.
         Use the second notation with an indented block to execute many commands in the same context.
     * - ``alias ll='ls -la'``
@@ -82,7 +84,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Globbing files with ``*`` or ``**`` will also match dotfiles, or those ‘hidden’ files whose names
         begin with a literal `.`. Such files are filtered out by default like in bash.
     * - ``if [ -f "$FILE" ];``
-      - ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()``
+      - ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()`` or ``if !(test -f $FILE):``
       - Path objects can be instantiated and checked directly using p-string syntax.
     * - ``set -e``
       - ``$RAISE_SUBPROC_ERROR = True``
@@ -101,13 +103,10 @@ line is ``#!/usr/bin/env xonsh``.
       - ``os.getpid()``
       - Get PID of the current shell.
     * - ``$?``
-      - ``__xonsh__.last.rtn`` anywhere or ``_.rtn`` in prompt mode
-      - Returns the exit code, or status, of the previous command. The underscore ``_`` is working
-        in the prompt mode. To get the exit code of the command in xonsh script
+      - ``@.lastcmd.rtn``
+      - Returns the exit code, or status, of the previous command.
+        To get the exit code of the command in xonsh script
         use ``!().rtn`` for not interactive processes.
-    * - ``!$``
-      - ``__xonsh__.history[-1, -1]``
-      - Get the last argument of the last command
     * - ``$<n>``
       - ``$ARG<n>``
       - Command line argument at index ``n``,
@@ -123,6 +122,10 @@ line is ``#!/usr/bin/env xonsh``.
       - ``completer list``
       - As with many other shells, xonsh ships with the ability to complete partially-specified arguments
         upon hitting the “tab” key.
+    * - ``IFS``
+      - ``$XONSH_SUBPROC_OUTPUT_FORMAT``
+      - Changing the output representation and splitting. Also take a look into ``DecoratorAlias``
+        to have an ability to return object e.g. ``j = $(@json echo '{}')``.
     * - OhMyBash or BashIt
       - `awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_
       - Xontributions, or ``xontribs``, are a set of tools and conventions for extending the functionality
@@ -135,7 +138,7 @@ line is ``#!/usr/bin/env xonsh``.
       - Xonsh publishes a handful of containers, primarily targeting CI and automation use cases.
         All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`_.
     * - ``exit 1``
-      - ``exit(1)``
+      - ``exit 1`` or ``exit(1)``
       - Exiting from the current script.
 
 To understand how xonsh executes the subprocess commands try

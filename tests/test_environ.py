@@ -4,6 +4,7 @@ import datetime
 import os
 import pathlib
 import re
+import warnings
 from random import shuffle
 from tempfile import TemporaryDirectory
 from threading import Thread
@@ -12,14 +13,19 @@ from time import sleep
 import pytest
 
 from xonsh.environ import (
+    DeprecatedSetting,
     Env,
     InternalEnvironDict,
     LsColors,
+    PTKSetting,
     Var,
     default_env,
     default_value,
     locate_binary,
     make_args_env,
+    xonsh_cache_dir,
+    xonsh_config_dir,
+    xonsh_data_dir,
 )
 from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
@@ -367,9 +373,9 @@ def test_lscolors_events(key_in, old_in, new_in, test, xession):
     @xession.builtins.events.on_lscolors_change
     def handler(key, oldvalue, newvalue, **kwargs):
         nonlocal old_in, new_in, key_in, event_fired
-        assert (
-            key == key_in and oldvalue == old_in and newvalue == new_in
-        ), "Old and new event values match"
+        assert key == key_in and oldvalue == old_in and newvalue == new_in, (
+            "Old and new event values match"
+        )
         event_fired = True
 
     xession.env["LS_COLORS"] = lsc
@@ -576,6 +582,21 @@ def test_env_get_defaults():
     assert "TEST_REG_DNG" not in env
 
 
+def test_env_class_repr():
+    """Class with repr return string if env var."""
+
+    class Cls:
+        def __init__(self, var):
+            self.var = var
+
+        def __repr__(self):
+            return self.var
+
+    env = Env(CLS=Cls("hello"))
+    assert str(env.get("CLS")) == "hello"
+    assert str(env.__getitem__("CLS")) == "hello"
+
+
 @pytest.mark.parametrize(
     "val,validator",
     [
@@ -633,3 +654,76 @@ def test_thread_local_dict_multiple():
         t.join()
 
     assert thread_values == [i**2 for i in range(num_threads)]
+
+
+def test_xonsh_dir_vars():
+    env = Env(
+        XONSH_CONFIG_DIR="/config", XONSH_CACHE_DIR="/cache", XONSH_DATA_DIR="/data"
+    )
+    assert xonsh_config_dir(env), "/config"
+    assert xonsh_cache_dir(env), "/cache"
+    assert xonsh_data_dir(env), "/data"
+
+
+def test_numerical_envvar_defined():
+    """Test that numerical environment variables can be set and retrieved."""
+    env = Env()
+    env["123"] = "test_value"
+    assert env["123"] == "test_value"
+
+
+def test_numerical_envvar_mixed_alphanumeric():
+    """Test that mixed alphanumeric environment variables work."""
+    env = Env()
+    env["abc123"] = "value1"
+    env["123abc"] = "value2"
+    env["a1b2c3"] = "value3"
+
+    assert env["abc123"] == "value1"
+    assert env["123abc"] == "value2"
+    assert env["a1b2c3"] == "value3"
+
+
+def test_numerical_envvar_with_underscores():
+    """Test that numerical environment variables with underscores work."""
+    env = Env()
+    env["1_2_3"] = "underscore_value"
+    env["_123"] = "leading_underscore"
+    env["123_"] = "trailing_underscore"
+
+    assert env["1_2_3"] == "underscore_value"
+    assert env["_123"] == "leading_underscore"
+    assert env["123_"] == "trailing_underscore"
+
+
+def test_envpath_in_env_object():
+    """Ensure PATH is stored as an EnvPath inside Env."""
+    env = Env(PATH=["/usr/bin", "/bin"])
+    # PATH should exist in env
+    assert "PATH" in env
+    # PATH should behave like EnvPath (has .paths attribute)
+    assert hasattr(env["PATH"], "paths")
+    assert "/usr/bin" in env["PATH"].paths
+    assert "/bin" in env["PATH"].paths
+
+
+def test_env_deprecated():
+    env = Env()
+    env._vars["XONSH_PROMPT_AUTO_SUGGEST"] = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST
+    env._vars["AUTO_SUGGEST"] = DeprecatedSetting.AUTO_SUGGEST
+    assert env["AUTO_SUGGEST"] is True
+    assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
+    env["AUTO_SUGGEST"] = False
+    assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
+    env["XONSH_PROMPT_AUTO_SUGGEST"] = True
+    assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
+    with pytest.warns(DeprecationWarning):
+        env["AUTO_SUGGEST"] = True
+    with pytest.warns(DeprecationWarning):
+        env["AUTO_SUGGEST"] = False
+    with warnings.catch_warnings(record=True) as wrngs:
+        env["XONSH_PROMPT_AUTO_SUGGEST"] = True
+    assert len(wrngs) == 0
+    with warnings.catch_warnings(record=True) as wrngs:
+        env["XONSH_PROMPT_AUTO_SUGGEST"] = False
+    assert len(wrngs) == 0

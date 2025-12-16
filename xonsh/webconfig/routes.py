@@ -256,6 +256,34 @@ class XontribsPage(Routes):
         ]
 
     def get(self):
+        yield t.card()[
+            t.card_body()[
+                t.card_title()["Popular xontrib sources"],
+                t.card_body()[
+                    t.li()[
+                        t.a(href="https://github.com/topics/xontrib")[
+                            "Xontribs on Github"
+                        ]
+                    ],
+                    t.li()[
+                        t.a(href="https://github.com/xonsh/awesome-xontribs")[
+                            "Awesome xontribs"
+                        ]
+                    ],
+                    t.li()[
+                        t.a(
+                            href="https://xon.sh/api/_autosummary/xontribs/xontrib.html"
+                        )["Core xontribs"]
+                    ],
+                    t.li()[
+                        t.a(href="https://github.com/xonsh/xontrib-template")[
+                            "Create a xontrib step by step from template"
+                        ]
+                    ],
+                ],
+            ]
+        ]
+        yield t.br()
         for name, data in self.xontribs.items():
             yield t.row()[t.col()[self.xontrib_card(name, data),]]
             yield t.br()

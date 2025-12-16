@@ -35,7 +35,7 @@ xmain.setup()
 spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
     # hacky runaround to import PTK-specific events
-    from xonsh.ptk_shell.shell import events
+    from xonsh.shells.ptk_shell import events
 else:
     from xonsh.events import events
 
@@ -63,6 +63,7 @@ extensions = [
     "runthis.sphinxext",
     "extensions.jinja_rst_ext",
     "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
+    "sphinx_prompt",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

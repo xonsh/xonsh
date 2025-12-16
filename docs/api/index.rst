@@ -13,9 +13,9 @@ For those of you who want the gritty details.
     :template: api-summary-module.rst
     :recursive:
 
-    xonsh.lexer
+    xonsh.parsers.lexer
     xonsh.parser
-    xonsh.ast
+    xonsh.parsers.ast
     xonsh.execer
     xonsh.imphooks
 
@@ -31,19 +31,18 @@ For those of you who want the gritty details.
     xonsh.environ
     xonsh.aliases
     xonsh.dirstack
-    xonsh.jobs
     xonsh.procs
-    xonsh.inspectors
+    xonsh.lib.inspectors
     xonsh.history
     xonsh.completer
     xonsh.completers
     xonsh.prompt
-    xonsh.shell
-    xonsh.base_shell
-    xonsh.readline_shell
-    xonsh.ptk_shell
-    xonsh.pretty
-    xonsh.diff_history
+    xonsh.shells
+    xonsh.shells.base_shell
+    xonsh.shells.readline_shell
+    xonsh.shells.ptk_shell
+    xonsh.lib.pretty
+    xonsh.history.diff_history
     xonsh.xoreutils
 
 
@@ -58,17 +57,16 @@ For those of you who want the gritty details.
     xonsh.lib
     xonsh.tools
     xonsh.platform
-    xonsh.jsonutils
     xonsh.lazyjson
     xonsh.lazyasd
-    xonsh.openpy
+    xonsh.lib.openpy
     xonsh.foreign_shells
     xonsh.commands_cache
     xonsh.tracer
     xonsh.main
     xonsh.color_tools
     xonsh.pyghooks
-    xonsh.dumb_shell
+    xonsh.shells.dumb_shell
     xonsh.wizard
     xonsh.xonfig
     xonsh.xontribs

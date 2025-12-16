@@ -48,10 +48,16 @@ class Completer:
         suffix is not supported; text after last space is parsed as prefix.
         """
         ctx = self.parse(text)
-        cmd_ctx = ctx.command
-        if not cmd_ctx:
-            raise RuntimeError("Only Command context is empty")
-        prefix = cmd_ctx.prefix
+
+        if not ctx:
+            raise RuntimeError("CompletionContext is None")
+
+        if ctx.python is not None:
+            prefix = ctx.python.prefix
+        elif ctx.command is not None:
+            prefix = ctx.command.prefix
+        else:
+            raise RuntimeError("CompletionContext is empty")
 
         line = text
         begidx = text.rfind(prefix)
@@ -112,7 +118,7 @@ class Completer:
             and (cursor_index is not None)
             and (completion_context is None)
         ):
-            completion_context: tp.Optional[CompletionContext] = self.parse(
+            completion_context: CompletionContext | None = self.parse(
                 multiline_text,
                 cursor_index,
                 ctx,
@@ -284,9 +290,14 @@ class Completer:
                     )
                 break
 
-        prefix = None
         if completion_context:
-            prefix = completion_context.command.prefix
+            if completion_context.python is not None:
+                prefix = completion_context.python.prefix
+            elif completion_context.command is not None:
+                prefix = completion_context.command.prefix
+            else:
+                raise RuntimeError("Completion context is empty")
+
             if prefix.startswith("$"):
                 prefix = prefix[1:]
 

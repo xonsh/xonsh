@@ -1,8 +1,6 @@
 [build-system]
 # PEP 518 https://www.python.org/dev/peps/pep-0518/
-# https://discuss.python.org/t/help-testing-experimental-features-in-setuptools/13821
 requires = ["setuptools>=61", "wheel"]
-# PEP 517 https://peps.python.org/pep-0517/
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,25 +8,26 @@ build-backend = "setuptools.build_meta"
 # See https://www.python.org/dev/peps/pep-0621/
 name = "xonsh"
 dynamic = ["version", "readme"]
-description = "Python-powered, cross-platform, Unix-gazing shell"
+description = "Python-powered shell. Full-featured and cross-platform."
 authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
-maintainers = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
+maintainers = [{ name = "Xonsh Community" }, { email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
-requires-python = ">=3.9"
-dependencies = [
-    "case-insensitive-dictionary; platform_system=='Windows'",
-]
+requires-python = ">=3.11"
+dependencies = []
 
 [tool.setuptools.dynamic]
 version = {attr = "xonsh.__version__"}
-readme = {file = ["README.rst"]}
+readme = {file = ["README.rst"], content-type = "text/plain"}
 
 [tool.setuptools]
 packages = [
     "xonsh",
-    "xonsh.ply.ply",
-    "xonsh.ptk_shell",
+    "xonsh.api",
+    "xonsh.shells",
+    "xonsh.shells.ptk_shell",
+    "xonsh.parsers.ply",
     "xonsh.procs",
+    "xonsh.platforms",
     "xonsh.parsers",
     "xonsh.xoreutils",
     "xontrib",
@@ -81,7 +80,7 @@ xonsh = "xonsh.virtualenv:XonshActivator"
 Homepage = "https://xon.sh"
 documentation = "https://xon.sh/contents.html"
 repository = "https://github.com/xonsh/xonsh"
-changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst"
+changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.md"
 "Issue tracker" = "https://github.com/xonsh/xonsh/issues"
 
 [project.optional-dependencies]
@@ -134,12 +133,13 @@ doc = [
     "psutil",
     "pyzmq",
     "matplotlib",
-    "doctr",
     "tornado",
     "runthis-sphinxext",
-    "livereload",
     "myst-parser",
+    "sphinx-autobuild",
+    "sphinx-prompt",
 ]
+
 
 
 [project.scripts]
@@ -173,6 +173,10 @@ extend-exclude = [
 ]
 line-length = 88
 
+[tool.ruff.per-file-target-version]
+"xonsh/parsers/v310.py" = "py310"
+"xonsh/parsers/v313.py" = "py313"
+
 [tool.ruff.lint]
 ignore = [
     "D100", # Missing docstring in public module
@@ -201,6 +205,7 @@ ignore = [
     "E402", # Module level import not at top of file
     "E501", # line length
     "E731", # Do not assign a lambda expression, use a def
+    "UP031", # Use format specifiers instead of percent format
 ]
 select = [
     "B", # https://beta.ruff.rs/docs/rules/#flake8-bugbear-b
@@ -221,9 +226,9 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "xonsh/timings.py" = ["F401"]
 "xonsh/history.py" = ["F821"]
-"xonsh/lexer.py" = ["E741"]
+"xonsh/parsers/lexer.py" = ["E741"]
 "xonsh/parsers/completion_context.py" = ["B018"]
-"xonsh/tokenize.py" = [
+"xonsh/parsers/tokenize.py" = [
     "F821",
     "F841",
     "B904" # Within an `except` clause, raise exceptions with `raise ... from err`
@@ -241,11 +246,11 @@ convention = "numpy"
 "xonsh/style_tools.py" = ["F821"]
 "xonsh/xoreutils/*.py" = ["E722"]
 "xonsh/completers/python.py" = ["E722"]
-"xonsh/ptk/shell.py" = ["E731"]
-"xonsh/ast.py" = ["F401"]
-"xonsh/readline_shell.py" = ["F401"]
+"xonsh/parsers/ast.py" = ["F401"]
+"xonsh/shells/ptk_shell/__init__.py" = ["E731"]
+"xonsh/shells/readline_shell.py" = ["F401"]
 "xonsh/commands_cache.py" = ["F841"]
-"xonsh/ptk/key_bindings.py" = ["F841"]
+"xonsh/shells/ptk_shell/key_bindings.py" = ["F841"]
 "xonsh/tools.py" = [
     "E731",
 ]
@@ -254,8 +259,13 @@ convention = "numpy"
 "xonsh/inspectors.py" = ["E722"]
 "xonsh/platform.py" = ["F401"]
 "xonsh/parsers/*.py" = [
-    "E741", #  E741 Ambiguous variable name
+    "E741", # E741 Ambiguous variable name
 ]
 "tests/test*.py" = [
     "E741", #  E741 Ambiguous variable name
+]
+
+[dependency-groups]
+dev = [
+    "xonsh[dev]",
 ]

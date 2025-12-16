@@ -9,7 +9,7 @@ WTFPL http://sam.zoy.org/wtfpl/
 import math
 import re
 
-from xonsh.lazyasd import LazyObject, lazyobject
+from xonsh.lib.lazyasd import LazyObject, lazyobject
 from xonsh.tools import print_warning
 
 _NO_COLOR_WARNING_SHOWN = False
@@ -94,12 +94,7 @@ def RE_XONSH_COLOR():
         r"INTENSE_RED|INTENSE_GREEN|INTENSE_YELLOW|INTENSE_BLUE|INTENSE_PURPLE|"
         r"INTENSE_CYAN|INTENSE_WHITE|#" + hex + "{3}|#" + hex + "{6}|DEFAULT)"
     )
-    bghex = (
-        "bg#" + hex + "{3}|"
-        "bg#" + hex + "{6}|"
-        "BG#" + hex + "{3}|"
-        "BG#" + hex + "{6}"
-    )
+    bghex = "bg#" + hex + "{3}|bg#" + hex + "{6}|BG#" + hex + "{3}|BG#" + hex + "{6}"
     s = "^((?P<reset>RESET|NO_COLOR)|(?P<bghex>" + bghex + ")|" + s + ")$"
     return re.compile(s)
 

@@ -15,7 +15,7 @@ from importlib.machinery import ModuleSpec
 from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.execer import Execer
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_WINDOWS
 from xonsh.tools import print_warning
 
@@ -48,7 +48,7 @@ def find_source_encoding(src):
     return utf8
 
 
-class XonshImportHook(MetaPathFinder, SourceLoader):
+class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
     """Implements the import hook for xonsh source files."""
 
     def __init__(self, execer, *args, **kwargs):

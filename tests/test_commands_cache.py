@@ -1,18 +1,25 @@
 import os
 import pickle
+import stat
 import time
+from tempfile import TemporaryDirectory
 
 import pytest
 
 from xonsh.commands_cache import (
     SHELL_PREDICTOR_PARSER,
+    CaseInsensitiveDict,
     CommandsCache,
     _Commands,
+    executables_in,
     predict_false,
     predict_shell,
     predict_true,
 )
+from xonsh.platform import ON_WINDOWS
 from xonsh.pytest.tools import skip_if_on_windows
+
+PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
 
 
 def test_commands_cache_lazy(xession):
@@ -187,8 +194,15 @@ def test_update_cache(xession, tmp_path):
     file1.touch()
     file1.chmod(0o755)
 
-    cache = CommandsCache({"PATH": [subdir2, subdir1]})
+    paths = [subdir2, subdir1]
+    cache = CommandsCache({"PATH": paths})
     cached = cache.update_cache()
+
+    # Check there are no changes after update cache.
+    c1 = cache._update_and_check_changes(paths)
+    c2 = cache._update_and_check_changes(paths)
+    c3 = cache._update_and_check_changes(paths)
+    assert [c1, c2, c3] == [True, False, False]
 
     assert file1.samefile(cached[basename][0])
 
@@ -253,3 +267,117 @@ def test_nixos_coreutils(tmp_path):
 
     assert cache.predict_threadable(["echo", "1"]) is True
     assert cache.predict_threadable(["cat", "file"]) is False
+
+
+def test_executables_in(xession):
+    expected = set()
+    types = ("file", "directory", "brokensymlink")
+    if ON_WINDOWS:
+        # Don't test symlinks on windows since it requires admin
+        types = ("file", "directory")
+    executables = (True, False)
+    with TemporaryDirectory() as test_path:
+        for _type in types:
+            for executable in executables:
+                fname = f"{_type}_{executable}"
+                if _type == "none":
+                    continue
+                if _type == "file" and executable:
+                    ext = ".exe" if ON_WINDOWS else ""
+                    expected.add(fname + ext)
+                else:
+                    ext = ""
+                path = os.path.join(test_path, fname + ext)
+                if _type == "file":
+                    with open(path, "w") as f:
+                        f.write(fname)
+                elif _type == "directory":
+                    os.mkdir(path)
+                elif _type == "brokensymlink":
+                    tmp_path = os.path.join(test_path, "i_wont_exist")
+                    with open(tmp_path, "w") as f:
+                        f.write("deleteme")
+                        os.symlink(tmp_path, path)
+                    os.remove(tmp_path)
+                if executable and not _type == "brokensymlink":
+                    os.chmod(path, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+            if ON_WINDOWS:
+                xession.env = PATHEXT_ENV
+                result = set(executables_in(test_path))
+            else:
+                result = set(executables_in(test_path))
+    assert expected == result
+
+
+def test_caseinsdict_constructor():
+    actual = CaseInsensitiveDict({"key1": "val1", "Key2": "Val2"})
+    assert isinstance(actual, CaseInsensitiveDict)
+    assert actual["key1"] == "val1"
+    assert actual["Key2"] == "Val2"
+
+
+def test_caseinsdict_getitem():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual["Key1"] == "Val1"
+    assert actual["key1"] == "Val1"
+
+
+def test_caseinsdict_setitem():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    actual["Key1"] = "Val2"
+    assert actual["Key1"] == "Val2"
+    assert actual["key1"] == "Val2"
+    actual["key1"] = "Val3"
+    assert actual["Key1"] == "Val3"
+    assert actual["key1"] == "Val3"
+
+
+def test_caseinsdict_delitem():
+    actual = CaseInsensitiveDict({"Key1": "Val1", "Key2": "Val2"})
+    del actual["Key1"]
+    assert actual == CaseInsensitiveDict({"Key2": "Val2"})
+    del actual["key2"]
+    assert actual == CaseInsensitiveDict({})
+
+
+def test_caseinsdict_contains():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual.__contains__("Key1")
+    assert actual.__contains__("key1")
+    assert not actual.__contains__("key2")
+
+
+def test_caseinsdict_get():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual.get("Key1") == "Val1"
+    assert actual.get("key1") == "Val1"
+    assert actual.get("key2", "no val") == "no val"
+    assert actual.get("key1", "no val") == "Val1"
+
+
+def test_caseinsdict_update():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    actual.update({"Key2": "Val2"})
+    assert actual["key2"] == "Val2"
+
+
+def test_caseinsdict_keys():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert next(actual.keys()) == "Key1"
+
+
+def test_caseinsdict_items():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert next(actual.items()) == ("Key1", "Val1")
+
+
+def test_caseinsdict_repr():
+    actual = CaseInsensitiveDict({"Key1": "Val1"})
+    assert actual.__repr__() == "CaseInsensitiveDict({'Key1': 'Val1'})"
+
+
+def test_caseinsdict_copy():
+    initial = CaseInsensitiveDict({"Key1": "Val1"})
+    actual = initial.copy()
+    assert actual == initial
+    assert id(actual) != id(initial)

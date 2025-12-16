@@ -26,12 +26,12 @@ class _ParsedToken(tp.NamedTuple):
     """It can either be a literal value alone or a field and its resultant value"""
 
     value: str
-    field: tp.Optional[str] = None
+    field: str | None = None
 
 
 class ParsedTokens(tp.NamedTuple):
     tokens: list[_ParsedToken]
-    template: tp.Union[str, tp.Callable]
+    template: str | tp.Callable
 
     def process(self) -> str:
         """Wrapper that gets formatter-function from environment and returns final prompt."""
@@ -43,9 +43,9 @@ class ParsedTokens(tp.NamedTuple):
     def update(
         self,
         idx: int,
-        val: tp.Optional[str],
-        spec: tp.Optional[str],
-        conv: tp.Optional[str],
+        val: str | None,
+        spec: str | None,
+        conv: str | None,
     ) -> None:
         """Update tokens list in-place"""
         if idx < len(self.tokens):
@@ -132,7 +132,7 @@ class PromptFormatter:
         try:
             return self.fields.pick(field)
         except Exception:  # noqa
-            print(f"prompt: error: on field {field!r}" "", file=sys.stderr)
+            print(f"prompt: error: on field {field!r}", file=sys.stderr)
             xt.print_exception()
             value = f"{{BACKGROUND_RED}}{{ERROR:{field}}}{{RESET}}"
         return value

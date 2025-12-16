@@ -38,7 +38,7 @@ class ChainDB(ChainMap):
                 else:
                     res.maps.append(result)
         elif all(
-            [isinstance(result, (MutableSequence, MutableSet)) for result in results]
+            [isinstance(result, MutableSequence | MutableSet) for result in results]
         ):
             results_chain = itertools.chain(*results)
             # if all reults have the same type, cast into that type
@@ -64,7 +64,7 @@ class ChainDB(ChainMap):
 
 
 def _convert_to_dict(cm):
-    if isinstance(cm, (ChainMap, ChainDB)):
+    if isinstance(cm, ChainMap | ChainDB):
         r = {}
         for k, v in cm.items():
             r[k] = _convert_to_dict(v)

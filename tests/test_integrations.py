@@ -17,6 +17,7 @@ from xonsh.pytest.tools import (
     ON_DARWIN,
     ON_TRAVIS,
     ON_WINDOWS,
+    VER_FULL,
     skip_if_on_darwin,
     skip_if_on_msys,
     skip_if_on_unix,
@@ -40,6 +41,16 @@ skip_if_no_sleep = pytest.mark.skipif(
     shutil.which("sleep") is None, reason="sleep command not on PATH"
 )
 
+base_env = {
+    "PATH": PATH,
+    "XONSH_DEBUG": "0",
+    "XONSH_SHOW_TRACEBACK": "1",
+    "RAISE_SUBPROC_ERROR": "0",
+    "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": "1",
+    "PROMPT": "",
+    "TERM": "linux",  # disable ansi escape codes
+}
+
 
 def run_xonsh(
     cmd,
@@ -50,36 +61,43 @@ def run_xonsh(
     single_command=False,
     interactive=False,
     path=None,
-    add_args: list = None,
+    args=None,
     timeout=20,
+    env=None,
+    blocking=True,
 ):
-    env = dict(os.environ)
-    if path is None:
-        env["PATH"] = PATH
-    else:
-        env["PATH"] = path
-    env["XONSH_DEBUG"] = "0"  # was "1"
-    env["XONSH_SHOW_TRACEBACK"] = "1"
-    env["RAISE_SUBPROC_ERROR"] = "0"
-    env["FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE"] = "1"
-    env["PROMPT"] = ""
-    # disable ansi escape codes
-    env["TERM"] = "linux"
+    # Env
+    popen_env = dict(os.environ)
+    popen_env |= base_env
+    if path:
+        popen_env["PATH"] = path
+    if env:
+        popen_env |= env
+
+    # Args
     xonsh = shutil.which("xonsh", path=PATH)
-    args = [xonsh, "--no-rc"]
+    popen_args = [xonsh]
+
+    if not args:
+        popen_args += ["--no-rc"]
+    else:
+        popen_args += args
+
     if interactive:
-        args.append("-i")
+        popen_args.append("-i")
+        if cmd and isinstance(cmd, str) and not cmd.endswith("\n"):
+            # In interactive mode we need to emulate "Press Enter".
+            cmd += "\n"
+
     if single_command:
-        args += ["-c", cmd]
+        popen_args += ["-c", cmd]
         input = None
     else:
         input = cmd
-    if add_args:
-        args += add_args
 
     proc = sp.Popen(
-        args,
-        env=env,
+        popen_args,
+        env=popen_env,
         stdin=stdin,
         stdout=stdout,
         stderr=stderr,
@@ -89,6 +107,9 @@ def run_xonsh(
     if stdin_cmd:
         proc.stdin.write(stdin_cmd)
         proc.stdin.flush()
+
+    if not blocking:
+        return proc
 
     try:
         out, err = proc.communicate(input=input, timeout=timeout)
@@ -116,6 +137,34 @@ def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
 #
 
 ALL_PLATFORMS = [
+    # conch in action
+    (
+        """
+print(isinstance(@, type(__xonsh__.interface)))
+""",
+        "True\n",
+        0,
+    ),
+    (
+        """
+$CONCH=24
+with @.env.swap(CONCH=42):
+    print(@.imp.json.loads('{"@":"~"}'), $CONCH)
+""",
+        "{'@': '~'} 42\n",
+        0,
+    ),
+    (
+        """
+@aliases.register
+@@.imp.xonsh.tools.unthreadable
+def _mycmd(args, stdin=None):
+    return 'ok'
+mycmd
+""",
+        "ok",
+        0,
+    ),
     # test calling a function alias
     (
         """
@@ -313,6 +362,22 @@ f
         "hello\n",
         0,
     ),
+    # test system exit in unthreadable alias (see #5689)
+    (
+        """
+from xonsh.tools import unthreadable
+
+@unthreadable
+def _f():
+    import sys
+    sys.exit(42)
+
+aliases['f'] = _f
+print(![f].returncode)
+""",
+        "42\n",
+        0,
+    ),
     # test ambiguous globs
     (
         """
@@ -446,7 +511,7 @@ def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
 
-from xonsh.lib.subprocess import check_output
+from xonsh.api.subprocess import check_output
 
 print(check_output(["echo", "hello"]).decode("utf8"))
 """,
@@ -479,6 +544,24 @@ else:
     print("Var foo")
 """,
         "Var foo\n",
+        0,
+    ),
+    #
+    # test env with class
+    #
+    (
+        """
+class Cls:
+    def __init__(self, var):
+        self.var = var
+    def __repr__(self):
+        return self.var
+
+$VAR = Cls("hello")
+print($VAR)
+echo $VAR
+""",
+        "hello\nhello\n",
         0,
     ),
     #
@@ -560,8 +643,9 @@ first
     ),
     # testing alias stack: parallel threaded callable aliases.
     # This breaks if the __ALIAS_STACK variables leak between threads.
-    (
-        """
+    pytest.param(
+        (
+            """
 from time import sleep
 aliases['a'] = lambda: print(1, end="") or sleep(0.2) or print(1, end="")
 aliases['b'] = 'a'
@@ -570,8 +654,14 @@ a | a
 a | b | a
 a | a | b | b
 """,
-        "1" * 2 * 4,
-        0,
+            "1" * 2 * 4,
+            0,
+        ),
+        # TODO: investigate errors on Python 3.13
+        marks=pytest.mark.skipif(
+            VER_FULL > (3, 12) and not ON_WINDOWS,
+            reason="broken pipes on Python 3.13 likely due to changes in threading behavior",
+        ),
     ),
     # test $SHLVL
     (
@@ -607,7 +697,7 @@ echo $SHLVL # == 5
 # creating a subshell should increment the child's $SHLVL and maintain the parents $SHLVL
 
 $SHLVL = 5
-xonsh -c r'echo $SHLVL' # == 6
+xonsh --no-rc -c r'echo $SHLVL' # == 6
 echo $SHLVL # == 5
 
 # replacing the current process with another process should derease $SHLVL
@@ -689,12 +779,17 @@ if not ON_WINDOWS:
 
 @skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.flaky(reruns=4, reruns_delay=2)
 def test_script(case):
     script, exp_out, exp_rtn = case
+    if ON_DARWIN:
+        script = script.replace("tests/bin", str(Path(__file__).parent / "bin"))
     out, err, rtn = run_xonsh(script)
+    out = out.replace("bash: no job control in this shell\n", "")
     if callable(exp_out):
-        assert exp_out(out)
+        assert exp_out(out), (
+            f"CASE:\nscript=***\n{script}\n***,\nExpected: {exp_out!r},\nActual: {out!r}"
+        )
     else:
         assert exp_out == out
     assert exp_rtn == rtn
@@ -734,7 +829,7 @@ def test_script_stderr(case):
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
         (
-            "$FOO='foo' $BAR=2 xonsh -c r'echo -n $FOO$BAR'",
+            "$FOO='foo' $BAR=2 xonsh --no-rc -c r'echo -n $FOO$BAR'",
             None,
             "foo2",
         ),
@@ -953,8 +1048,18 @@ aliases['echo'] = _echo
 @pytest.mark.parametrize(
     "cmd, exp_rtn",
     [
+        ("2+2", 0),
         ("import sys; sys.exit(0)", 0),
         ("import sys; sys.exit(100)", 100),
+        ("@('exit')", 0),
+        ("exit 100", 100),
+        ("exit unknown", 1),
+        ("exit()", 0),
+        ("exit(100)", 100),
+        ("__xonsh__.exit=0", 0),
+        ("__xonsh__.exit=100", 100),
+        ("raise Exception()", 1),
+        ("raise SystemExit(100)", 100),
         ("sh -c 'exit 0'", 0),
         ("sh -c 'exit 1'", 1),
     ],
@@ -1203,9 +1308,9 @@ echo f1f1f1 ; f ; echo f2f2f2
 def test_aliases_print(case):
     cmd, match = case
     out, err, ret = run_xonsh(cmd=cmd, single_command=False)
-    assert re.match(
-        match, out, re.MULTILINE | re.DOTALL
-    ), f"\nFailed:\n```\n{cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    assert re.match(match, out, re.MULTILINE | re.DOTALL), (
+        f"\nFailed:\n```\n{cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    )
 
 
 @skip_if_on_windows
@@ -1257,7 +1362,7 @@ def test_main_d():
     assert out == "json\n"
 
     out, err, ret = run_xonsh(
-        add_args=["-DXONSH_HISTORY_BACKEND='dummy'"],
+        args=["--no-rc", "-DXONSH_HISTORY_BACKEND='dummy'"],
         cmd="print($XONSH_HISTORY_BACKEND)",
         single_command=True,
     )
@@ -1274,12 +1379,65 @@ def test_catching_system_exit():
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_catching_exit_signal():
     stdin_cmd = "sleep 0.2; kill -SIGHUP @(__import__('os').getpid())\n"
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=3
     )
     assert ret > 0
+
+
+@skip_if_on_windows
+def test_forwarding_sighup(tmpdir):
+    """We want to make sure that SIGHUP is forwarded to subprocesses when
+    received, so we spin up a Bash process that waits for SIGHUP and then
+    writes `SIGHUP` to a file, then exits. Then we check the content of
+    that file to ensure that the Bash process really did get SIGHUP."""
+    outfile = tmpdir.mkdir("xonsh_test_dir").join("sighup_test.out")
+
+    stdin_cmd = f"""
+sleep 0.2
+(sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
+bash -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
+"""
+    proc = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        stderr=sp.PIPE,
+        interactive=True,
+        single_command=False,
+        blocking=False,
+    )
+    proc.wait(timeout=5)
+    # if this raises FileNotFoundError, then the Bash subprocess probably did not get SIGHUP
+    assert outfile.read_text("utf-8").strip() == "SIGHUP"
+
+
+@skip_if_on_windows
+def test_on_postcommand_waiting(tmpdir):
+    """Ensure that running a subcommand in the on_postcommand hook doesn't
+    block xonsh from exiting when there is a running foreground process."""
+    outdir = tmpdir.mkdir("xonsh_test_dir")
+
+    stdin_cmd = f"""
+sleep 0.2
+@events.on_postcommand
+def postcmd_hook(**kwargs):
+    touch {outdir}/sighup_test_postcommand
+
+(sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
+bash -c "trap '' HUP; sleep 30"
+"""
+    proc = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        stderr=sp.PIPE,
+        interactive=True,
+        single_command=False,
+        blocking=False,
+    )
+    proc.wait(timeout=5)
 
 
 @skip_if_on_windows
@@ -1290,9 +1448,9 @@ def test_suspended_captured_process_pipeline():
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
     )
     match = ".*suspended=True.*"
-    assert re.match(
-        match, out, re.MULTILINE | re.DOTALL
-    ), f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    assert re.match(match, out, re.MULTILINE | re.DOTALL), (
+        f"\nFailed:\n```\n{stdin_cmd.strip()}\n```,\nresult: {out!r}\nexpected: {match!r}."
+    )
 
 
 @skip_if_on_windows
@@ -1311,6 +1469,50 @@ def test_alias_stability():
         timeout=10,
     )
     assert re.match(".*sleep.*sleep.*sleep.*", out, re.MULTILINE | re.DOTALL)
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_captured_subproc_is_not_affected_next_command():
+    """Testing #5769."""
+    stdin_cmd = (
+        "t = __xonsh__.imp.time.time()\n"
+        "p = !(sleep 2)\n"
+        "print('OK_'+'TEST' if __xonsh__.imp.time.time() - t < 1 else 'FAIL_'+'TEST')\n"
+        "t = __xonsh__.imp.time.time()\n"
+        "echo 1\n"
+        "print('OK_'+'TEST' if __xonsh__.imp.time.time() - t < 1 else 'FAIL_'+'TEST')\n"
+    )
+    out, err, ret = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
+    )
+    assert not re.match(".*FAIL_TEST.*", out, re.MULTILINE | re.DOTALL), (
+        "The second command after running captured subprocess shouldn't wait the end of the first one."
+    )
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_spec_decorator_alias():
+    """Testing spec modifier alias with `@` in the alias name."""
+    stdin_cmd = (
+        "from xonsh.procs.specs import SpecAttrDecoratorAlias as mod\n"
+        'aliases["@dict"] = mod({"output_format": lambda lines: eval("\\n".join(lines))})\n'
+        "d = $(@dict echo '{\"a\":42}')\n"
+        "print('Answer =', d['a'])\n"
+    )
+    out, err, ret = run_xonsh(
+        cmd=None,
+        stdin_cmd=stdin_cmd,
+        interactive=True,
+        single_command=False,
+        timeout=10,
+    )
+    assert "Answer = 42" in out
 
 
 @skip_if_on_windows
@@ -1335,3 +1537,146 @@ def test_alias_stability_exception():
         re.MULTILINE | re.DOTALL,
     )
     assert "Bad file descriptor" not in out
+
+
+@pytest.mark.parametrize(
+    "cmd,exp",
+    [
+        [
+            "-i",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*",
+        ],
+        ["--rc rc.xsh", ".*RCXSH.*"],
+        ["-i --rc rc.xsh", ".*RCXSH.*"],
+        [
+            "-c print('CMD')",
+            ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*CMD.*",
+        ],
+        [
+            "-i -c print('CMD')",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*CMD.*",
+        ],
+        [
+            "script.xsh",
+            ".*CONFIG_XONSH_RC_XSH.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*SCRIPT.*",
+        ],
+        [
+            "-i script.xsh",
+            ".*CONFIG_XONSH_RC_XSH.*HOME_XONSHRC.*CONFIG_XONSH_RCD.*CONFIG_XONSH_PY_RCD.*SCRIPT.*",
+        ],
+        ["--rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
+        ["-i --rc rc.xsh -- script.xsh", ".*RCXSH.*SCRIPT.*"],
+        ["--no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
+        ["-i --no-rc --rc rc.xsh -- script.xsh", ".*SCRIPT.*"],
+    ],
+)
+def test_xonshrc(tmpdir, cmd, exp):
+    # ~/.xonshrc
+    home = tmpdir.mkdir("home")
+    (home / ".xonshrc").write_text("echo HOME_XONSHRC", encoding="utf8")
+    home_xonsh_rc_path = str(  # crossplatform path
+        (Path(home) / ".xonshrc").expanduser()
+    )
+
+    # ~/.config/xonsh/rc.xsh
+    home_config_xonsh = tmpdir.mkdir("home_config_xonsh")
+    (home_config_xonsh_rc_xsh := home_config_xonsh / "rc.xsh").write_text(
+        "echo CONFIG_XONSH_RC_XSH", encoding="utf8"
+    )
+
+    # ~/.config/xonsh/rc.d/
+    home_config_xonsh_rcd = tmpdir.mkdir("home_config_xonsh_rcd")
+    (home_config_xonsh_rcd / "rcd1.xsh").write_text(
+        "echo CONFIG_XONSH_RCD", encoding="utf8"
+    )
+    (home_config_xonsh_rcd / "rcd2.py").write_text(
+        "__xonsh__.print(__xonsh__.subproc_captured_stdout(['echo', 'CONFIG_XONSH_PY_RCD']))",
+        encoding="utf8",
+    )
+
+    # ~/home/rc.xsh
+    (rc_xsh := home / "rc.xsh").write_text("echo RCXSH", encoding="utf8")
+    (script_xsh := home / "script.xsh").write_text("echo SCRIPT_XSH", encoding="utf8")
+
+    # Construct $XONSHRC and $XONSHRC_DIR.
+    xonshrc_files = [
+        str(home_config_xonsh_rc_xsh),
+        str(home_xonsh_rc_path),
+    ]
+    xonshrc_dir = [str(home_config_xonsh_rcd)]
+
+    args = [
+        f'-DHOME="{str(home)}"',
+        f'-DXONSHRC="{os.pathsep.join(xonshrc_files)}"',
+        f'-DXONSHRC_DIR="{os.pathsep.join(xonshrc_dir)}"',
+    ]
+    env = {"HOME": str(home)}
+
+    cmd = cmd.replace("rc.xsh", str(rc_xsh)).replace("script.xsh", str(script_xsh))
+    args = args + cmd.split()
+
+    # xonsh
+    out, err, ret = run_xonsh(
+        cmd=None,
+        args=args,
+        env=env,
+    )
+
+    assert re.match(
+        exp,
+        out,
+        re.MULTILINE | re.DOTALL,
+    ), f"Case: xonsh {cmd},\nExpected: {exp!r},\nResult: {out!r},\nargs={args!r}"
+
+
+@skip_if_no_xonsh
+@skip_if_on_windows
+def test_shebang_cr(tmpdir):
+    testdir = tmpdir.mkdir("xonsh_test_dir")
+    testfile = "shebang_cr.xsh"
+    expected_out = "I'm xonsh with shebang␍"
+    (f := testdir / testfile).write_text(
+        f"""#!/usr/bin/env xonsh\r\nprint("{expected_out}")""", encoding="utf8"
+    )
+    os.chmod(f, 0o777)
+    command = f"cd {testdir}; ./{testfile}\n"
+    out, err, rtn = run_xonsh(command)
+    assert out == f"{expected_out}\n"
+
+
+test_code = [
+    """
+$XONSH_SHOW_TRACEBACK = True
+@aliases.register
+def _e(a,i,o,e):
+    echo -n O
+    echo -n E 1>2
+    execx("echo -n O")
+    execx("echo -n E 1>2")
+    print("o")
+    print("O", file=o)
+    print("E", file=e)
+
+import tempfile
+for i in range(0, 12):
+    echo -n e
+    print($(e), !(e), $[e], ![e])
+    print($(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print(!(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
+    print($[e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+    print(![e > @(tempfile.NamedTemporaryFile(delete=False).name)])
+"""
+]
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("test_code", test_code)
+def test_callable_alias_no_bad_file_descriptor(test_code):
+    """Test no exceptions during any kind of capturing of callable alias. See also #5631."""
+
+    out, err, ret = run_xonsh(
+        test_code, interactive=True, single_command=True, timeout=60
+    )
+    assert ret == 0
+    assert "Error" not in out
+    assert "Exception" not in out

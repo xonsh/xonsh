@@ -19,7 +19,8 @@ from xonsh.built_ins import XSH
 from xonsh.cli_utils import Arg, ArgParserAlias
 from xonsh.events import events
 from xonsh.foreign_shells import CANON_SHELL_NAMES
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
+from xonsh.parsers import ply
 from xonsh.platform import (
     DEFAULT_ENCODING,
     ON_CYGWIN,
@@ -37,7 +38,6 @@ from xonsh.platform import (
     ptk_version,
     pygments_version,
 )
-from xonsh.ply import ply
 from xonsh.prompt.base import is_template_string
 from xonsh.tools import (
     color_style,
@@ -238,7 +238,7 @@ def make_fs_wiz():
                 path="/foreign_shells/{idx}/aliascmd",
             ),
             wiz.StoreNonEmpty(
-                ("extra command line arguments [list of str, " "default=[]]: "),
+                ("extra command line arguments [list of str, default=[]]: "),
                 converter=ast.literal_eval,
                 show_conversion=True,
                 path="/foreign_shells/{idx}/extra_args",
@@ -494,7 +494,7 @@ def _xonfig_format_human(data):
         if isinstance(val, list) and val:
             for i, subval in enumerate(val):
                 s += row.format(
-                    key=f"{key} {i+1}", wcol1=wcol1, val=subval, wcol2=wcol2
+                    key=f"{key} {i + 1}", wcol1=wcol1, val=subval, wcol2=wcol2
                 )
         else:
             s += row.format(key=key, wcol1=wcol1, val=val, wcol2=wcol2)

@@ -12,13 +12,13 @@ import stat
 import subprocess
 import sys
 
-import xonsh.environ as xenv
-import xonsh.jobs as xj
-import xonsh.lazyasd as xl
-import xonsh.lazyimps as xli
+import xonsh.lib.lazyasd as xl
+import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
+import xonsh.procs.jobs as xj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.procs.executables import locate_executable
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
@@ -80,6 +80,23 @@ def _un_shebang(x):
     return [x]
 
 
+def parse_shebang_from_file(filepath):
+    """Returns shebang for a file or None.
+    Doc: https://www.gnu.org/software/guile/manual/html_node/The-Meta-Switch.html
+    """
+    shebang_parts = []
+    with open(filepath, "rb") as f:
+        for i, line in enumerate(f):
+            line = line.decode("utf-8", errors="replace").strip()
+            if i == 0:
+                if not line.startswith("#!"):
+                    return None
+            shebang_parts.append(line.rstrip("\\").strip())
+            if not line.endswith("\\"):
+                break
+    return " ".join(shebang_parts)
+
+
 def get_script_subproc_command(fname, args):
     """Given the name of a script outside the path, returns a list representing
     an appropriate subprocess command to execute the script or None if
@@ -111,9 +128,8 @@ def get_script_subproc_command(fname, args):
         if ext.upper() in XSH.env.get("PATHEXT"):
             return [fname] + args
     # find interpreter
-    with open(fname, "rb") as f:
-        first_line = f.readline().decode().strip()
-    m = RE_SHEBANG.match(first_line)
+    shebang = parse_shebang_from_file(fname)
+    m = RE_SHEBANG.match(shebang)
     # xonsh is the default interpreter
     if m is None:
         interp = ["xonsh"]
@@ -277,10 +293,10 @@ def no_pg_xonsh_preexec_fn():
     signal.signal(signal.SIGTSTP, default_signal_pauser)
 
 
-class SpecModifierAlias:
-    """Spec modifier base class."""
+class DecoratorAlias:
+    """Decorator alias base class."""
 
-    descr = "Spec modifier base class."
+    descr = "DecoratorAlias base."
 
     def __call__(
         self,
@@ -294,24 +310,24 @@ class SpecModifierAlias:
     ):
         print(self.descr, file=stdout)
 
-    def on_modifer_added(self, spec):
+    def decorate_spec(self, spec):
         """Modify spec immediately after modifier added."""
         pass
 
-    def on_pre_run(self, pipeline, spec, spec_num):
+    def decorate_spec_pre_run(self, pipeline, spec, spec_num):
         """Modify spec before run."""
         pass
 
 
-class SpecAttrModifierAlias(SpecModifierAlias):
-    """Modifier for spec attributes."""
+class SpecAttrDecoratorAlias(DecoratorAlias):
+    """Decorator Alias for spec attributes."""
 
     def __init__(self, set_attributes: dict, descr=""):
         self.set_attributes = set_attributes
         self.descr = descr
         super().__init__()
 
-    def on_modifer_added(self, spec):
+    def decorate_spec(self, spec):
         for a, v in self.set_attributes.items():
             setattr(spec, a, v)
 
@@ -419,8 +435,9 @@ class SubprocSpec:
         self.captured_stdout = None
         self.captured_stderr = None
         self.stack = None
-        self.spec_modifiers = []  # List of SpecModifierAlias objects that applied to spec.
+        self.decorators = []  # List of DecoratorAlias objects that applied to spec.
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
+        self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
@@ -549,10 +566,22 @@ class SubprocSpec:
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:
-                e += "\n" + xt.suggest_commands(cmd0, env)
+                e += "\n" + sug
             if XSH.env.get("XONSH_INTERACTIVE"):
                 events = XSH.builtins.events
-                events.on_command_not_found.fire(cmd=self.cmd)
+                replacements = events.on_command_not_found.fire(cmd=self.cmd)
+                for replacement in replacements:
+                    if replacement is None:
+                        continue
+                    # Validate replacement format (accept list or tuple)
+                    if not isinstance(replacement, (list, tuple)) or not replacement:
+                        continue
+                    try:
+                        return self.cls(list(replacement), bufsize=bufsize, **kwargs)
+                    except (FileNotFoundError, PermissionError):
+                        # If replacement also fails, continue to next replacement
+                        # or fall through to original error with suggestions
+                        continue
             raise xt.XonshError(e) from ex
         return p
 
@@ -641,7 +670,7 @@ class SubprocSpec:
         # modifications that do not alter cmds may come before creating instance
         spec = kls(cmd, cls=cls, **kwargs)
         # modifications that alter cmds must come after creating instance
-        spec.resolve_spec_modifiers()  # keep this first
+        spec.resolve_decorators()  # keep this first
         spec.resolve_args_list()
         spec.resolve_redirects()
         spec.resolve_alias()
@@ -652,21 +681,19 @@ class SubprocSpec:
         spec.resolve_stack()
         return spec
 
-    def add_spec_modifier(self, mod: SpecModifierAlias):
+    def add_decorator(self, mod: DecoratorAlias):
         """Add spec modifier to the specification."""
-        mod.on_modifer_added(self)
-        self.spec_modifiers.append(mod)
+        mod.decorate_spec(self)
+        self.decorators.append(mod)
 
-    def resolve_spec_modifiers(self):
-        """Apply spec modifier."""
+    def resolve_decorators(self):
+        """Apply decorators."""
         if (ln := len(self.cmd)) == 1:
             return
         for i in range(ln):
             c = self.cmd[i]
-            if c in XSH.aliases and isinstance(
-                mod := XSH.aliases[c], SpecModifierAlias
-            ):
-                self.add_spec_modifier(mod)
+            if c in XSH.aliases and isinstance(mod := XSH.aliases[c], DecoratorAlias):
+                self.add_decorator(mod)
             else:
                 break
         self.cmd = self.cmd[i:]
@@ -704,42 +731,54 @@ class SubprocSpec:
         self.cmd = new_cmd
 
     def resolve_alias(self):
-        """Sets alias in command, if applicable."""
+        """Resolving alias and setting up command."""
         cmd0 = self.cmd[0]
-        spec_modifiers = []
         if cmd0 in self.alias_stack:
             # Disabling the alias resolving to prevent infinite loop in call stack
-            # and futher using binary_loc to resolve the alias name.
+            # and further using binary_loc to resolve the alias name.
             self.alias = None
             return
 
         if callable(cmd0):
-            alias = cmd0
+            self.alias = cmd0
         else:
+            decorators = []
             if isinstance(XSH.aliases, dict):
                 # Windows tests
                 alias = XSH.aliases.get(cmd0, None)
+                if alias is not None:
+                    alias = alias + self.cmd[1:]
             else:
-                alias = XSH.aliases.get(cmd0, None, spec_modifiers=spec_modifiers)
+                alias = XSH.aliases.get(
+                    self.cmd,
+                    None,
+                    decorators=decorators,
+                )
             if alias is not None:
                 self.alias_name = cmd0
-        self.alias = alias
-        if spec_modifiers:
-            for mod in spec_modifiers:
-                self.add_spec_modifier(mod)
+                if callable(alias[0]):
+                    # E.g. `alias == [FuncAlias({'name': 'cd'}), '/tmp']`
+                    self.alias = alias[0]
+                    self.cmd = [cmd0] + alias[1:]
+                else:
+                    # E.g. `alias == ['ls', '-la']`
+                    self.alias = alias
+
+            for mod in decorators:
+                self.add_decorator(mod)
 
     def resolve_binary_loc(self):
         """Sets the binary location"""
         alias = self.alias
         if alias is None:
             cmd0 = self.cmd[0]
-            binary_loc = xenv.locate_binary(cmd0)
-            if binary_loc == cmd0 and cmd0 in self.alias_stack:
+            binary_loc = locate_executable(cmd0)
+            if binary_loc is None and cmd0 and cmd0 in self.alias_stack:
                 raise Exception(f'Recursive calls to "{cmd0}" alias.')
         elif callable(alias):
             binary_loc = None
         else:
-            binary_loc = xenv.locate_binary(alias[0])
+            binary_loc = locate_executable(alias[0])
         self.binary_loc = binary_loc
 
     def resolve_auto_cd(self):
@@ -753,7 +792,7 @@ class SubprocSpec:
         ):
             return
         self.cmd.insert(0, "cd")
-        self.alias = XSH.aliases.get("cd", None)
+        self.alias = XSH.aliases.get("cd", None)[0]
 
     def resolve_executable_commands(self):
         """Resolve command executables, if applicable."""
@@ -764,8 +803,7 @@ class SubprocSpec:
             self.cmd.pop(0)
             return
         else:
-            self.cmd = alias + self.cmd[1:]
-            # resolve any redirects the aliases may have applied
+            self.cmd = alias
             self.resolve_redirects()
         if self.binary_loc is None:
             return
@@ -878,6 +916,14 @@ def _last_spec_update_captured(last: SubprocSpec):
 def _make_last_spec_captured(last: SubprocSpec):
     captured = last.captured
     callable_alias = callable(last.alias)
+
+    if captured == "object":
+        """
+        In full capture mode the subprocess is running in background in fact
+        and we don't need to wait for it in downstream code e.g. `jobs.wait_for_active_job`.
+        """
+        last.background = True
+
     # cannot used PTY pipes for aliases, for some dark reason,
     # and must use normal pipes instead.
     use_tty = xp.ON_POSIX and not callable_alias
@@ -970,7 +1016,13 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                 }
                 p |= {
                     a: getattr(s, a, None)
-                    for a in ["alias_name", "binary_loc", "threadable", "background"]
+                    for a in [
+                        "alias_name",
+                        "alias",
+                        "binary_loc",
+                        "threadable",
+                        "background",
+                    ]
                 }
                 if trace_mode == 3:
                     p |= {
@@ -1020,17 +1072,28 @@ def cmds_to_specs(cmds, captured=False, envs=None):
 
     # Apply boundary conditions
     if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
-        # Make sure sub-specs are always captured.
-        # I.e. ![some_alias | grep x] $(some_alias)
-        specs_to_capture = specs if captured in STDOUT_CAPTURE_KINDS else specs[:-1]
-        for spec in specs_to_capture:
-            if spec.env is None:
-                spec.env = {"XONSH_CAPTURE_ALWAYS": True}
-            else:
-                spec.env.setdefault("XONSH_CAPTURE_ALWAYS", True)
+        # Make sure sub-specs are always captured in case:
+        # `![some_alias | grep x]`, `$(some_alias)`, `some_alias > file`.
+        last = spec
+        is_redirected_stdout = bool(last.stdout)
+        specs_to_capture = (
+            specs
+            if captured in STDOUT_CAPTURE_KINDS or is_redirected_stdout
+            else specs[:-1]
+        )
+        _set_specs_capture_always(specs_to_capture)
 
     _update_last_spec(specs[-1])
     return specs
+
+
+def _set_specs_capture_always(specs_to_capture):
+    """Set XONSH_CAPTURE_ALWAYS for all specs."""
+    for spec in specs_to_capture:
+        if spec.env is None:
+            spec.env = {"XONSH_CAPTURE_ALWAYS": True}
+        else:
+            spec.env.setdefault("XONSH_CAPTURE_ALWAYS", True)
 
 
 def _shell_set_title(cmds):
@@ -1097,8 +1160,8 @@ def _run_command_pipeline(specs, cmds):
 
 def _run_specs(specs, cmds):
     cp = _run_command_pipeline(specs, cmds)
-    XSH.last, proc, captured, background = (
-        cp,
+    XSH.last = XSH.lastcmd = XSH.interface.lastcmd = cp
+    proc, captured, background = (
         cp.proc,
         specs[-1].captured,
         cp.spec.background,

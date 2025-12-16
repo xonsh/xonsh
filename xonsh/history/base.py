@@ -105,17 +105,15 @@ class History:
             cwds = self.cwds[item]
             return [
                 HistoryEntry(cmd=c, out=o, rtn=r, ts=t, cwd=cwd)
-                for c, o, r, t, cwd in zip(cmds, outs, rtns, tss, cwds)
+                for c, o, r, t, cwd in zip(cmds, outs, rtns, tss, cwds, strict=False)
             ]
         else:
             raise TypeError(
-                "history indices must be integers " f"or slices, not {type(item)}"
+                f"history indices must be integers or slices, not {type(item)}"
             )
 
     def __setitem__(self, *args):
-        raise PermissionError(
-            "You cannot change history! " "you can create new though."
-        )
+        raise PermissionError("You cannot change history! you can create new though.")
 
     def append(self, cmd):
         """Append a command item into history.
@@ -156,7 +154,7 @@ class History:
         """
         raise NotImplementedError
 
-    def run_gc(self, size=None, blocking=True):
+    def run_gc(self, size=None, blocking=True, **_):
         """Run the garbage collector.
 
         Parameters

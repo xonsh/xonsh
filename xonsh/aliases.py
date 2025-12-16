@@ -1,27 +1,31 @@
 """Aliases for the xonsh shell."""
 
 import argparse
-import collections.abc as cabc
 import functools
 import inspect
+import operator
 import os
+import pathlib
 import re
 import shutil
 import sys
 import types
 import typing as tp
+from collections import abc as cabc
+from pathlib import Path
+from typing import Literal
 
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
-from xonsh.ast import isexpression
+import xonsh.xoreutils.xcontext as xxt
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.jobs import bg, clean_jobs, disown, fg, jobs
-from xonsh.lazyasd import lazyobject
+from xonsh.lib.lazyasd import lazyobject
+from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
     IN_APPIMAGE,
     ON_ANACONDA,
@@ -32,7 +36,9 @@ from xonsh.platform import (
     ON_OPENBSD,
     ON_WINDOWS,
 )
-from xonsh.procs.specs import SpecAttrModifierAlias, SpecModifierAlias
+from xonsh.procs.executables import locate_file
+from xonsh.procs.jobs import bg, clean_jobs, disown, fg, jobs
+from xonsh.procs.specs import DecoratorAlias, SpecAttrDecoratorAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
     ALIAS_KWARG_NAMES,
@@ -41,6 +47,7 @@ from xonsh.tools import (
     argvquote,
     escape_windows_cmd_string,
     print_color,
+    print_exception,
     strip_simple_quotes,
     swap_values,
     to_repr_pretty_,
@@ -58,8 +65,9 @@ def EXEC_ALIAS_RE():
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
-    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__"]
+    attributes_show = ["__xonsh_threadable__", "__xonsh_capturable__", "return_what"]
     attributes_inherit = attributes_show + ["__doc__"]
+    return_what: Literal["command", "result"] = "result"
 
     def __init__(self, name, func=None):
         self.__name__ = self.name = name
@@ -78,12 +86,27 @@ class FuncAlias:
         return f"FuncAlias({repr(r)})"
 
     def __call__(
-        self, args=None, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self,
+        args=None,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        decorators=None,
     ):
-        func_args = [args, stdin, stdout, stderr, spec, stack][
-            : len(inspect.signature(self.func).parameters)
-        ]
-        return self.func(*func_args)
+        return run_alias_by_params(
+            self.func,
+            {
+                "args": args,
+                "stdin": stdin,
+                "stdout": stdout,
+                "stderr": stderr,
+                "spec": spec,
+                "stack": stack,
+                "decorators": decorators,
+            },
+        )
 
 
 class Aliases(cabc.MutableMapping):
@@ -131,28 +154,17 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
-    def get(self, key, default=None, spec_modifiers=None):
-        """Returns the (possibly modified) value. If the key is not present,
-        then `default` is returned.
-        If the value is callable, it is returned without modification. If it
-        is an iterable of strings it will be evaluated recursively to expand
-        other aliases, resulting in a new list or a "partially applied"
-        callable.
-        """
-        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
-        val = self._raw.get(key)
-        if val is None:
-            return default
-        elif isinstance(val, cabc.Iterable) or callable(val):
-            return self.eval_alias(
-                val, seen_tokens={key}, spec_modifiers=spec_modifiers
-            )
-        else:
-            msg = "alias of {!r} has an inappropriate type: {!r}"
-            raise TypeError(msg.format(key, val))
+    def return_command(self, f):
+        """Decorator that switches alias from returning result to return in new command for execution."""
+        f.return_what = "command"
+        return f
 
     def eval_alias(
-        self, value, seen_tokens=frozenset(), acc_args=(), spec_modifiers=None
+        self,
+        value,
+        seen_tokens=frozenset(),
+        acc_args=(),
+        decorators=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -164,20 +176,35 @@ class Aliases(cabc.MutableMapping):
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
         """
-        spec_modifiers = spec_modifiers if spec_modifiers is not None else []
+        decorators = decorators if decorators is not None else []
         # Beware of mutability: default values for keyword args are evaluated
         # only once.
         if (
             isinstance(value, cabc.Iterable)
             and hasattr(value, "__len__")
             and len(value) > 1
-            and (isinstance(mod := self._raw.get(str(value[0])), SpecModifierAlias))
         ):
-            spec_modifiers.append(mod)
-            value = value[1:]
+            i = 0
+            for v in value:
+                if isinstance(mod := self._raw.get(str(v)), DecoratorAlias):
+                    decorators.append(mod)
+                    i += 1
+                else:
+                    break
+            value = value[i:]
+
+        if callable(value) and getattr(value, "return_what", "result") == "command":
+            try:
+                value = value(acc_args, decorators=decorators)
+                acc_args = []
+            except Exception as e:
+                print_exception(f"Exception inside alias {value}: {e}")
+                return None
+            if not len(value):
+                raise ValueError("return_command alias: zero arguments.")
 
         if callable(value):
-            return partial_eval_alias(value, acc_args=acc_args)
+            return [value] + list(acc_args)
         else:
             expand_path = XSH.expand_path
             token, *rest = map(expand_path, value)
@@ -196,8 +223,56 @@ class Aliases(cabc.MutableMapping):
                     self._raw[token],
                     seen_tokens,
                     acc_args,
-                    spec_modifiers=spec_modifiers,
+                    decorators=decorators,
                 )
+
+    def get(
+        self,
+        key,
+        default=None,
+        decorators=None,
+    ):
+        """
+        Returns list that represent command with resolved aliases.
+        The ``key`` can be string with alias name or list for a command.
+        In the first position will be the resolved command name or callable alias.
+        If the key is not present, then `default` is returned.
+
+        ``decorators`` is the list of `DecoratorAlias` objects that found during
+        resolving aliases (#5443).
+
+        Note! The return value is always list because during resolving
+        we can find return_command alias that can completely replace
+        command and add new arguments.
+        """
+        decorators = decorators if decorators is not None else []
+        args = []
+        if isinstance(key, list):
+            args = key[1:]
+            key = key[0]
+        val = self._raw.get(key)
+        if callable(val) and getattr(val, "return_what", "result") == "command":
+            try:
+                val = val(args, decorators=decorators)
+                args = []
+            except Exception as e:
+                print_exception(f"Exception inside alias {key!r}: {e}")
+                return None
+            if not len(val):
+                raise ValueError("return_command alias: zero arguments.")
+
+        if val is None:
+            return default
+        elif isinstance(val, cabc.Iterable) or callable(val):
+            return self.eval_alias(
+                val,
+                seen_tokens={key},
+                decorators=decorators,
+                acc_args=args,
+            )
+        else:
+            msg = "alias of {!r} has an inappropriate type: {!r}"
+            raise TypeError(msg.format(key, val))
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
@@ -205,7 +280,7 @@ class Aliases(cabc.MutableMapping):
         The command won't be expanded if the cursor's inside/behind it.
         """
         word = (line.split(maxsplit=1) or [""])[0]
-        if word in XSH.aliases and isinstance(self.get(word), cabc.Sequence):  # type: ignore
+        if word in self and not callable(self.get(word)[0]):  # type: ignore
             word_idx = line.find(word)
             word_edge = word_idx + len(word)
             if cursor_index > word_edge:
@@ -402,6 +477,21 @@ class PartialEvalAlias6(PartialEvalAliasBase):
         return self.f(args, stdin, stdout, stderr, spec, stack)
 
 
+class PartialEvalAlias7(PartialEvalAliasBase):
+    def __call__(
+        self,
+        args,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        spec=None,
+        stack=None,
+        decorators=None,
+    ):
+        args = list(self.acc_args) + args
+        return self.f(args, stdin, stdout, stderr, spec, stack, decorators)
+
+
 PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias0,
     PartialEvalAlias1,
@@ -410,6 +500,7 @@ PARTIAL_EVAL_ALIASES = (
     PartialEvalAlias4,
     PartialEvalAlias5,
     PartialEvalAlias6,
+    PartialEvalAlias7,
 )
 
 
@@ -430,11 +521,45 @@ def partial_eval_alias(f, acc_args=()):
             numargs += 1
         elif name in ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
             numargs += 1
-    if numargs < 7:
+    if numargs < 8:
         return PARTIAL_EVAL_ALIASES[numargs](f, acc_args=acc_args)
     else:
-        e = "Expected proxy with 6 or fewer arguments for {}, not {}"
+        e = "Expected proxy with 7 or fewer arguments for {}, not {}"
         raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
+
+
+def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
+    """
+    Run alias function based on signature and params.
+    If function param names are in alias signature fill them.
+    If function params have unknown names fill using alias signature order.
+    """
+    alias_params = {
+        "args": None,
+        "stdin": None,
+        "stdout": None,
+        "stderr": None,
+        "spec": None,
+        "stack": None,
+        "decorators": None,
+    }
+    alias_params |= params
+    sign = inspect.signature(func)
+    func_params = sign.parameters.items()
+    kwargs = {
+        name: alias_params[name] for name, p in func_params if name in alias_params
+    }
+
+    if len(kwargs) != len(func_params):
+        # There is unknown param. Switch to positional mode.
+        kwargs = dict(
+            zip(
+                map(operator.itemgetter(0), func_params),
+                alias_params.values(),
+                strict=False,
+            )
+        )
+    return func(**kwargs)
 
 
 #
@@ -447,7 +572,14 @@ def xonsh_exit(args, stdin=None):
     if not clean_jobs():
         # Do not exit if jobs not cleaned up
         return None, None
-    XSH.exit = True
+    if args:
+        try:
+            code = int(args[0])
+        except ValueError:
+            code = 1
+    else:
+        code = 0
+    XSH.exit = code
     print()  # gimme a newline
     return None, None
 
@@ -620,19 +752,27 @@ source_foreign = SourceForeignAlias(
 )
 
 
-@unthreadable
-def source_alias(args, stdin=None):
+def source_alias_fn(
+    files: Annotated[list[str], Arg(nargs="+")], ignore_ext=False, _stdin=None
+):
     """Executes the contents of the provided files in the current context.
     If sourced file isn't found in cwd, search for file along $PATH to source
     instead.
+
+    Parameters
+    ----------
+    files
+        paths to source files.
+    ignore_ext : -e, --ignore-ext
+        don't check the file extension
     """
     env = XSH.env
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
-    for i, fname in enumerate(args):
+    for i, fname in enumerate(files):
         fpath = fname
         if not os.path.isfile(fpath):
-            fpath = locate_binary(fname)
+            fpath = locate_file(fname)
             if fpath is None:
                 if env.get("XONSH_DEBUG"):
                     print(f"source: {fname}: No such file", file=sys.stderr)
@@ -642,12 +782,16 @@ def source_alias(args, stdin=None):
                     )
                 break
         _, fext = os.path.splitext(fpath)
-        if fext and fext != ".xsh" and fext != ".py":
+        fext, name = Path(fpath).suffix, Path(fpath).name
+        if not fext and name.startswith("."):
+            fext = name  # hidden file with no extension
+        if not ignore_ext and fext not in {".xsh", ".py", ".xonshrc"}:
             raise RuntimeError(
-                "attempting to source non-xonsh file! If you are "
-                "trying to source a file in another language, "
-                "then please use the appropriate source command. "
-                "For example, source-bash script.sh"
+                f"attempting to source file with non-xonsh extension {repr(name)}! "
+                f"If you are trying to source a file in another language, "
+                "then please use the appropriate source command "
+                "e.g. `source-bash script.sh`. "
+                "Use `-e` to ignore extension checking and source the file."
             )
         with open(fpath, encoding=encoding, errors=errors) as fp:
             src = fp.read()
@@ -655,7 +799,10 @@ def source_alias(args, stdin=None):
             src += "\n"
         ctx = XSH.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
-        with env.swap(**make_args_env(args[i + 1 :])), swap_values(ctx, updates):
+        with (
+            env.swap(XONSH_MODE="source", **make_args_env(files[i + 1 :])),
+            swap_values(ctx, updates),
+        ):
             try:
                 XSH.builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
@@ -663,11 +810,16 @@ def source_alias(args, stdin=None):
                     "{RED}You may be attempting to source non-xonsh file! "
                     "{RESET}If you are trying to source a file in "
                     "another language, then please use the appropriate "
-                    "source command. For example, {GREEN}source-bash "
-                    "script.sh{RESET}",
+                    "source command. For example, {GREEN}`source-bash "
+                    "script.sh`{RESET}",
                     file=sys.stderr,
                 )
                 raise
+
+
+source_alias = ArgParserAlias(
+    func=source_alias_fn, has_args=True, prog="source", threadable=False
+)
 
 
 def source_cmd_fn(
@@ -815,7 +967,7 @@ def xexec_fn(
     except FileNotFoundError as e:
         return (
             None,
-            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}" "\n",
+            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}\n",
             1,
         )
 
@@ -898,6 +1050,17 @@ def detect_xpip_alias():
         return basecmd
 
 
+def _find_cmd_exe() -> str:
+    """
+    Resolve the cmd.exe executable.
+
+    Avoids using COMSPEC in order to allow COMSPEC to be used to
+    indicate Xonsh (or other shell) as the default shell. (#5701)
+    """
+    canonical = pathlib.Path(os.environ["SystemRoot"], "System32", "cmd.exe")
+    return str(canonical) if canonical.is_file() else os.environ["COMSPEC"]
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -931,19 +1094,21 @@ def make_default_aliases():
         "trace": trace,
         "timeit": timeit_alias,
         "xonfig": xonfig,
-        "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
         "showcmd": showcmd,
-        "ipynb": ["jupyter", "notebook", "--no-browser"],
         "which": xxw.which,
+        "xcontext": xxt.xcontext,
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
-        "xonsh-reset": xonsh_reset,
-        "xthread": SpecAttrModifierAlias(
+        "xpython": [XSH.env.get("_", sys.executable)]
+        if IN_APPIMAGE
+        else [sys.executable],
+        "xreset": xonsh_reset,
+        "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
         ),
-        "xunthread": SpecAttrModifierAlias(
+        "@unthread": SpecAttrDecoratorAlias(
             {"threadable": False, "force_threadable": False},
             "Mark current command as unthreadable.",
         ),
@@ -970,7 +1135,7 @@ def make_default_aliases():
             "vol",
         }
         for alias in windows_cmd_aliases:
-            default_aliases[alias] = [os.getenv("COMSPEC"), "/c", alias]
+            default_aliases[alias] = [_find_cmd_exe(), "/c", alias]
         default_aliases["call"] = ["source-cmd"]
         default_aliases["source-bat"] = ["source-cmd"]
         default_aliases["clear"] = "cls"
@@ -980,13 +1145,11 @@ def make_default_aliases():
             default_aliases["deactivate"] = ["source-cmd", "deactivate.bat"]
         if shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
             # XSH.commands_cache is not available during setup
-            import xonsh.winutils as winutils
+            import xonsh.platforms.winutils as winutils
 
             def sudo(args):
                 if len(args) < 1:
-                    print(
-                        "You need to provide an executable to run as " "Administrator."
-                    )
+                    print("You need to provide an executable to run as Administrator.")
                     return
                 cmd = args[0]
                 if locate_binary(cmd):

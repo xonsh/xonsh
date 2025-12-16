@@ -14,7 +14,7 @@ import signal
 import subprocess
 import sys
 
-from xonsh.lazyasd import LazyBool, lazybool, lazyobject
+from xonsh.lib.lazyasd import LazyBool, lazybool, lazyobject
 
 # do not import any xonsh-modules here to avoid circular dependencies
 
@@ -507,7 +507,7 @@ def BASH_COMPLETIONS_DEFAULT():
             ),
             os.path.join(
                 git_for_windows_path(),
-                "mingw64\\share\\git\\completion\\" "git-completion.bash",
+                "mingw64\\share\\git\\completion\\git-completion.bash",
             ),
         )
     else:

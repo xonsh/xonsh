@@ -37,14 +37,14 @@ def _which_create_parser():
         "--version",
         action="version",
         version=f"{_which.__version__}",
-        help="Display the version of the python which module " "used by xonsh",
+        help="Display the version of the python which module used by xonsh",
     )
     parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
         dest="verbose",
-        help="Print out how matches were located and show " "near misses on stderr",
+        help="Print out how matches were located and show near misses on stderr",
     )
     parser.add_argument(
         "-p",
@@ -162,14 +162,15 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         original_os_path = xp.os_environ["PATH"]
         xp.os_environ["PATH"] = XSH.env.detype()["PATH"]
         matches = _which.whichgen(arg, exts=exts, verbose=verbose)
-        for match in matches:
-            if match is None:
-                continue
-            abs_name, from_where = match
-            print_path(abs_name, from_where, stdout, verbose, captured)
-            nmatches += 1
-            if not pargs.all:
-                break
+        if matches is not None:
+            for match in matches:
+                if match is None:
+                    continue
+                abs_name, from_where = match
+                print_path(abs_name, from_where, stdout, verbose, captured)
+                nmatches += 1
+                if not pargs.all:
+                    break
         xp.os_environ["PATH"] = original_os_path
         if not nmatches:
             failures.append(arg)
@@ -181,7 +182,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
             print("globals or ", file=stderr, end="")
         print("$PATH", file=stderr, end="")
         if not pargs.skip:
-            print(" or xonsh.builtins.aliases", file=stderr, end="")
+            print(" or aliases", file=stderr, end="")
         print("", file=stderr, end="\n")
         return len(failures)
 

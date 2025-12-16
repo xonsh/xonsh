@@ -8,7 +8,7 @@ from xonsh.contexts import Block, Functor
 # helpers
 #
 
-X1_WITH = "x = 1\n" "with! Block() as b:\n"
+X1_WITH = "x = 1\nwith! Block() as b:\n"
 SIMPLE_WITH = "with! Block() as b:\n"
 FUNC_WITH = (
     "x = 1\n"
@@ -68,7 +68,7 @@ def block_checks_func(name, glbs, body, obsg=None, obsl=None):
 
 
 def test_block_noexec(xonsh_execer_exec):
-    s = "x = 1\n" "with! Block():\n" "    x += 42\n"
+    s = "x = 1\nwith! Block():\n    x += 42\n"
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
     assert 1 == glbs["x"]
@@ -83,7 +83,7 @@ def test_block_oneline(xonsh_execer_exec):
 
 
 def test_block_manylines(xonsh_execer_exec):
-    body = "    ![echo wow mom]\n" "# bad place for a comment\n" "    x += 42"
+    body = "    ![echo wow mom]\n# bad place for a comment\n    x += 42"
     s = X1_WITH + body
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -92,7 +92,7 @@ def test_block_manylines(xonsh_execer_exec):
 
 def test_block_leading_comment(xonsh_execer_exec):
     # leading comments do not show up in block lines
-    body = "    # I am a leading comment\n" "    x += 42\n"
+    body = "    # I am a leading comment\n    x += 42\n"
     s = X1_WITH + body
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -101,7 +101,7 @@ def test_block_leading_comment(xonsh_execer_exec):
 
 def test_block_trailing_comment(xonsh_execer_exec):
     # trailing comments show up in block lines
-    body = "    x += 42\n" "    # I am a trailing comment\n"
+    body = "    x += 42\n    # I am a trailing comment\n"
     s = X1_WITH + body
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -109,7 +109,7 @@ def test_block_trailing_comment(xonsh_execer_exec):
 
 
 def test_block_trailing_line_continuation(xonsh_execer_exec):
-    body = "    x += \\\n" "         42\n"
+    body = "    x += \\\n         42\n"
     s = X1_WITH + body
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -117,7 +117,7 @@ def test_block_trailing_line_continuation(xonsh_execer_exec):
 
 
 def test_block_trailing_close_paren(xonsh_execer_exec):
-    body = '    x += int("42"\n' "             )\n"
+    body = '    x += int("42"\n             )\n'
     s = X1_WITH + body
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -138,7 +138,7 @@ def test_block_trailing_close_many(xonsh_execer_exec):
 
 
 def test_block_trailing_triple_string(xonsh_execer_exec):
-    body = '    x = """This\n' "is\n" '"probably"\n' "'not' what I meant.\n" '"""\n'
+    body = '    x = """This\nis\n"probably"\n\'not\' what I meant.\n"""\n'
     s = SIMPLE_WITH + body
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -154,7 +154,7 @@ def test_block_func_oneline(xonsh_execer_exec):
 
 
 def test_block_func_manylines(xonsh_execer_exec):
-    body = "        ![echo wow mom]\n" "# bad place for a comment\n" "        x += 42\n"
+    body = "        ![echo wow mom]\n# bad place for a comment\n        x += 42\n"
     s = FUNC_WITH.format(body=body)
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -163,7 +163,7 @@ def test_block_func_manylines(xonsh_execer_exec):
 
 def test_block_func_leading_comment(xonsh_execer_exec):
     # leading comments do not show up in block lines
-    body = "        # I am a leading comment\n" "        x += 42\n"
+    body = "        # I am a leading comment\n        x += 42\n"
     s = FUNC_WITH.format(body=body)
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -172,7 +172,7 @@ def test_block_func_leading_comment(xonsh_execer_exec):
 
 def test_block_func_trailing_comment(xonsh_execer_exec):
     # trailing comments show up in block lines
-    body = "        x += 42\n" "        # I am a trailing comment\n"
+    body = "        x += 42\n        # I am a trailing comment\n"
     s = FUNC_WITH.format(body=body)
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -180,7 +180,7 @@ def test_block_func_trailing_comment(xonsh_execer_exec):
 
 
 def test_blockfunc__trailing_line_continuation(xonsh_execer_exec):
-    body = "        x += \\\n" "             42\n"
+    body = "        x += \\\n             42\n"
     s = FUNC_WITH.format(body=body)
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -188,7 +188,7 @@ def test_blockfunc__trailing_line_continuation(xonsh_execer_exec):
 
 
 def test_block_func_trailing_close_paren(xonsh_execer_exec):
-    body = '        x += int("42"\n' "                 )\n"
+    body = '        x += int("42"\n                 )\n'
     s = FUNC_WITH.format(body=body)
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -209,7 +209,7 @@ def test_block_func_trailing_close_many(xonsh_execer_exec):
 
 
 def test_block_func_trailing_triple_string(xonsh_execer_exec):
-    body = '        x = """This\n' "is\n" '"probably"\n' "'not' what I meant.\n" '"""\n'
+    body = '        x = """This\nis\n"probably"\n\'not\' what I meant.\n"""\n'
     s = FUNC_WITH.format(body=body)
     glbs = {"Block": Block}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -220,11 +220,11 @@ def test_block_func_trailing_triple_string(xonsh_execer_exec):
 # Functor tests
 #
 
-X2_WITH = "{var} = 1\n" "with! Functor() as f:\n" "{body}" "{var} += 1\n" "{calls}\n"
+X2_WITH = "{var} = 1\nwith! Functor() as f:\n{body}{var} += 1\n{calls}\n"
 
 
 def test_functor_oneline_onecall_class(xonsh_execer_exec):
-    body = "    global y\n" "    y += 42\n"
+    body = "    global y\n    y += 42\n"
     calls = "f()"
     s = X2_WITH.format(body=body, calls=calls, var="y")
     glbs = {"Functor": Functor}
@@ -233,7 +233,7 @@ def test_functor_oneline_onecall_class(xonsh_execer_exec):
 
 
 def test_functor_oneline_onecall_func(xonsh_execer_exec):
-    body = "    global z\n" "    z += 42\n"
+    body = "    global z\n    z += 42\n"
     calls = "f.func()"
     s = X2_WITH.format(body=body, calls=calls, var="z")
     glbs = {"Functor": Functor}
@@ -242,7 +242,7 @@ def test_functor_oneline_onecall_func(xonsh_execer_exec):
 
 
 def test_functor_oneline_onecall_both(xonsh_execer_exec):
-    body = "    global x\n" "    x += 42\n"
+    body = "    global x\n    x += 42\n"
     calls = "f()\nf.func()"
     s = X2_WITH.format(body=body, calls=calls, var="x")
     glbs = {"Functor": Functor}
@@ -250,7 +250,7 @@ def test_functor_oneline_onecall_both(xonsh_execer_exec):
     block_checks_glb("f", glbs, body, {"x": 86})
 
 
-XA_WITH = "x = [1]\n" "with! Functor() as f:\n" "{body}" "x.append(2)\n" "{calls}\n"
+XA_WITH = "x = [1]\nwith! Functor() as f:\n{body}x.append(2)\n{calls}\n"
 
 
 def test_functor_oneline_append(xonsh_execer_exec):
@@ -264,7 +264,7 @@ def test_functor_oneline_append(xonsh_execer_exec):
 
 def test_functor_return(xonsh_execer_exec):
     body = "    x = 42"
-    t = "res = 0\n" 'with! Functor(rtn="x") as f:\n' "{body}\n" "res = f()\n"
+    t = 'res = 0\nwith! Functor(rtn="x") as f:\n{body}\nres = f()\n'
     s = t.format(body=body)
     glbs = {"Functor": Functor}
     xonsh_execer_exec(s, glbs=glbs, locs=None)
@@ -273,12 +273,7 @@ def test_functor_return(xonsh_execer_exec):
 
 def test_functor_args(xonsh_execer_exec):
     body = "    x = 42 + a"
-    t = (
-        "res = 0\n"
-        'with! Functor(args=("a",), rtn="x") as f:\n'
-        "{body}\n"
-        "res = f(2)\n"
-    )
+    t = 'res = 0\nwith! Functor(args=("a",), rtn="x") as f:\n{body}\nres = f(2)\n'
     s = t.format(body=body)
     glbs = {"Functor": Functor}
     xonsh_execer_exec(s, glbs=glbs, locs=None)

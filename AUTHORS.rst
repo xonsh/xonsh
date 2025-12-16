@@ -14,19 +14,19 @@ Authors are sorted by number of commits.
 * Bob Hyman
 * anki-code
 * BlahGeek
+* pre-commit-ci[bot]
 * Daniel Shimon
 * Gyuri Horak
 * Jean-Benoist Leger
 * christopher
-* pre-commit-ci[bot]
 * Klaus Alexander Seistrup
 * Leonardo Santagada
 * Burak Yiğit Kaya
 * Matthias Bussonnier
 * Aaron Griffin
+* Peter Ye
 * Rob Brewer
 * virus
-* Peter Ye
 * Sagar Tewari
 * Gordon Ball
 * Eadaen1
@@ -44,10 +44,11 @@ Authors are sorted by number of commits.
 * VHarisop
 * JohnLunzer
 * Paul Goelz
+* Jason R. Coombs
 * cryzed
 * Frank Sachsenheim
 * Kurtis Rader
-* Jason R. Coombs
+* Evgeny
 * Brian Visel
 * cafehaine
 * Andrew Hundt
@@ -55,7 +56,6 @@ Authors are sorted by number of commits.
 * Justin Moen
 * Raphael Das Gupta
 * Caleb Hattingh
-* Evgeny
 * Stephan Fitzpatrick
 * dev2718
 * Will S
@@ -70,6 +70,7 @@ Authors are sorted by number of commits.
 * Yohei Tamura
 * Maximilian Köhl
 * Alexander Sosedkin
+* doronz88
 * Cody Scott
 * Jake Hedman
 * traverseda
@@ -95,7 +96,6 @@ Authors are sorted by number of commits.
 * Jay Tuckey
 * Alexander Steffen
 * Achim Herwig
-* doronz88
 * Randy Syring
 * Lucas Inojosa
 * adam j hartz
@@ -154,6 +154,8 @@ Authors are sorted by number of commits.
 * Samuel Dion-Girardeau
 * Oliver Bestwalter
 * Ivan Ogasawara
+* jfmontanaro
+* Łukasz Langa
 * Mark Wiebe
 * Nathan Hoad
 * Eric Dill
@@ -189,6 +191,8 @@ Authors are sorted by number of commits.
 * jbw3
 * Naveen
 * Blake Ramsdell
+* JamesParrott
+* jyn
 * Dan Allan
 * Ned Letcher
 * Zach Crownover
@@ -319,11 +323,25 @@ Authors are sorted by number of commits.
 * Jacqueline Leykam
 * Joshix-1
 * Nathan Monfils
-* JamesParrott
 * Airat Makhmutov
 * Matthieu LAURENT
 * Daniel Saunders
 * Andrew
 * l-no
+* amacfie-tc
+* lunrenyi
+* Spencer Bliven
+* Niraj Kulkarni
+* Aidan Courtney
+* Max Nordlund
+* Shawn Wallace
+* Faidon Liambotis
+* Jueun Lee
+* Simon Billinge
+* Bala
+* Artur Manuel
+* Đỗ Trung Nguyên
+* Ahmed
 * goodboy
 * Atsushi Morimoto
+* slacksystem

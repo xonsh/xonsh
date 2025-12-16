@@ -16,7 +16,7 @@ import sys
 import threading
 import time
 
-import xonsh.lazyimps as xli
+import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
@@ -511,7 +511,10 @@ class ProcProxyThread(threading.Thread):
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
         # and stdout & stderr must.
-        handles = [self.stdout, self.stderr]
+        if xp.ON_WINDOWS:
+            handles = [self.stdout, self.stderr]
+        else:
+            handles = [sp_stdout, sp_stderr]
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
 
@@ -789,6 +792,10 @@ class ProcProxy:
                         "stack": spec.stack,
                     },
                 )
+        except SystemExit as e:
+            # the alias function is running in the main thread, so we need to
+            # catch SystemExit to prevent the entire shell from exiting (see #5689)
+            r = e.code if isinstance(e.code, int) else int(bool(e.code))
         except Exception:
             xt.print_exception(source_msg="Exception in " + get_proc_proxy_name(self))
             r = 1

@@ -60,12 +60,12 @@ def test_echo_star_with_semi(xonsh_execer_parse):
 
 
 def test_simple_func(xonsh_execer_parse):
-    code = "def prompt():\n" "    return '{user}'.format(user='me')\n"
+    code = "def prompt():\n    return '{user}'.format(user='me')\n"
     assert xonsh_execer_parse(code)
 
 
 def test_lookup_alias(xonsh_execer_parse):
-    code = "def foo(a,  s=None):\n" '    return "bar"\n' "@(foo)\n"
+    code = 'def foo(a,  s=None):\n    return "bar"\n@(foo)\n'
     assert xonsh_execer_parse(code)
 
 
@@ -75,12 +75,12 @@ def test_lookup_anon_alias(xonsh_execer_parse):
 
 
 def test_simple_func_broken(xonsh_execer_parse):
-    code = "def prompt():\n" "    return '{user}'.format(\n" "       user='me')\n"
+    code = "def prompt():\n    return '{user}'.format(\n       user='me')\n"
     assert xonsh_execer_parse(code)
 
 
 def test_bad_indent(xonsh_execer_parse):
-    code = "if True:\n" "x = 1\n"
+    code = "if True:\nx = 1\n"
     with pytest.raises(SyntaxError):
         xonsh_execer_parse(code)
 
@@ -104,17 +104,17 @@ def test_bad_rhs_subproc(xonsh_execer_parse):
 
 
 def test_indent_with_empty_line(xonsh_execer_parse):
-    code = "if True:\n" "\n" "    some_command for_sub_process_mode\n"
+    code = "if True:\n\n    some_command for_sub_process_mode\n"
     assert xonsh_execer_parse(code)
 
 
 def test_command_in_func(xonsh_execer_parse):
-    code = "def f():\n" "    echo hello\n"
+    code = "def f():\n    echo hello\n"
     assert xonsh_execer_parse(code)
 
 
 def test_command_in_func_with_comment(xonsh_execer_parse):
-    code = "def f():\n" "    echo hello # comment\n"
+    code = "def f():\n    echo hello # comment\n"
     assert xonsh_execer_parse(code)
 
 

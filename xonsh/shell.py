@@ -46,6 +46,7 @@ events.doc(
 on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
 
 Fires just after a command is executed. The arguments are the same as history.
+This event only fires in interactive mode.
 
 Parameters:
 
@@ -59,13 +60,32 @@ Parameters:
 events.doc(
     "on_command_not_found",
     """
-on_command_not_found(cmd: list[str]) -> None
+on_command_not_found(cmd: list[str]) -> list[str] | tuple[str, ...] | None
 
 Fires if a command is not found (only in interactive sessions).
 
 Parameters:
 
 * ``cmd``: The command that was attempted
+
+Returns:
+
+* ``list[str]`` or ``tuple[str, ...]``: A replacement command to execute instead.
+  The first valid replacement from any handler will be used.
+* ``None``: To let the error be raised normally
+
+Note: If the replacement command also fails, the original error is shown.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_command_not_found
+    def _vim_to_vi(cmd, **kwargs):
+        '''If vim not found let's try to use vi.'''
+        if cmd[0] == 'vim':
+            return ['vi'] + cmd[1:]
+
 """,
 )
 
@@ -202,14 +222,24 @@ class Shell:
         if is_class(backend):
             cls = backend
         else:
+            """
+            There is an edge case that we're using mostly in integration tests:
+            `echo 'echo 1' | xonsh -i` and it's not working with `TERM=dumb` (#5462 #5517)
+            because `dumb` is readline where stdin is not supported yet. PR is very welcome!
+            So in this case we need to force using prompt_toolkit.
+            """
+            is_stdin_to_interactive = (
+                XSH.env.get("XONSH_INTERACTIVE", False) and not sys.stdin.isatty()
+            )
+
             if backend == "none":
-                from xonsh.base_shell import BaseShell as cls
-            elif backend == "prompt_toolkit":
-                from xonsh.ptk_shell.shell import PromptToolkitShell as cls
+                from xonsh.shells.base_shell import BaseShell as cls
+            elif backend == "prompt_toolkit" or is_stdin_to_interactive:
+                from xonsh.shells.ptk_shell import PromptToolkitShell as cls
             elif backend == "readline":
-                from xonsh.readline_shell import ReadlineShell as cls
+                from xonsh.shells.readline_shell import ReadlineShell as cls
             elif backend == "dumb":
-                from xonsh.dumb_shell import DumbShell as cls
+                from xonsh.shells.dumb_shell import DumbShell as cls
             else:
                 raise XonshError(f"{backend} is not recognized as a shell type")
         return cls(**kwargs)

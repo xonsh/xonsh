@@ -11,7 +11,7 @@ import textwrap
 import typing as tp
 
 from xonsh.built_ins import XSH
-from xonsh.jsonutils import serialize_xonsh_json
+from xonsh.lib.jsonutils import serialize_xonsh_json
 from xonsh.tools import backup_file, print_color, to_bool, to_bool_or_break
 
 
@@ -21,7 +21,7 @@ from xonsh.tools import backup_file, print_color, to_bool, to_bool_or_break
 class Node:
     """Base type of all nodes."""
 
-    attrs: tp.Union[tuple[str, ...], str] = ()
+    attrs: tuple[str, ...] | str = ()
 
     def __str__(self):
         return PrettyFormatter(self).visit()
@@ -488,7 +488,7 @@ class PrettyFormatter(Visitor):
         for aname in node.attrs:
             a = getattr(node, aname)
             t.append(self.visit(a) if isinstance(a, Node) else pprint.pformat(a))
-        t = [f"{n}={x}" for n, x in zip(node.attrs, t)]
+        t = [f"{n}={x}" for n, x in zip(node.attrs, t, strict=False)]
         s += textwrap.indent(",\n".join(t), self.indent)
         self.level -= 1
         s += "\n)"
@@ -583,7 +583,7 @@ def ensure_str_or_int(x):
         x = ast.literal_eval(x)
     except (ValueError, SyntaxError):
         pass
-    if not isinstance(x, (int, str)):
+    if not isinstance(x, int | str):
         msg = f"{x!r} could not be converted to int or str"
         raise ValueError(msg)
     return x
@@ -650,7 +650,7 @@ class StateVisitor(Visitor):
         """Stores a value at the path location."""
         path = canon_path(path, indices=indices)
         loc = self.state
-        for p, n in zip(path[:-1], path[1:]):
+        for p, n in zip(path[:-1], path[1:], strict=False):
             if isinstance(p, str) and p not in loc:
                 loc[p] = {} if isinstance(n, str) else []
             elif isinstance(p, int) and abs(p) + (p >= 0) > len(loc):
@@ -681,7 +681,7 @@ class StateVisitor(Visitor):
             for k, v in value.items():
                 p = path + k
                 self.flatten(path=p, value=v, flat=flat)
-        elif isinstance(value, (str, bytes)):
+        elif isinstance(value, str | bytes):
             flat[path] = value
         elif isinstance(value, cabc.Sequence):
             path = path if path.endswith("/") else path + "/"
@@ -695,7 +695,7 @@ class StateVisitor(Visitor):
 
 
 YN = "{GREEN}yes{RESET} or {RED}no{RESET} [default: no]? "
-YNB = "{GREEN}yes{RESET}, {RED}no{RESET}, or " "{YELLOW}break{RESET} [default: no]? "
+YNB = "{GREEN}yes{RESET}, {RED}no{RESET}, or {YELLOW}break{RESET} [default: no]? "
 
 
 class PromptVisitor(StateVisitor):
@@ -748,9 +748,7 @@ class PromptVisitor(StateVisitor):
                     raise
                 except Exception:
                     if node.retry:
-                        msg = (
-                            "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, " "please retry."
-                        )
+                        msg = "{{BOLD_RED}}Invalid{{RESET}} input {0!r}, please retry."
                         print_color(msg.format(raw))
                         continue
                     else:
@@ -829,7 +827,9 @@ class PromptVisitor(StateVisitor):
                 self.state = json.load(f)
             print_color(f"{{GREEN}}{fname!r} loaded.{{RESET}}")
         else:
-            print_color(f"{{RED}}{fname!r} could not be found, " "continuing.{{RESET}}")
+            print_color(
+                f"{{RED}}{fname!r} could not be found, continuing.{{{{RESET}}}}"
+            )
         return fname
 
     def visit_fileinserter(self, node):

@@ -115,6 +115,25 @@ details, but this *is* pretty cool:
 For easier indentation, Shift+Tab will enter 4 spaces.
 And that about wraps it up for the basics section.  It is just like Python.
 
+Xonsh Session Interface
+=======================
+
+**New in version 0.21.0
+
+Each session has a special global object `@` that provides instant functionality.
+It gives you access to different parts of the current session.
+For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
+You will learn more about this in the following sections.
+
+.. code-block:: xonshcon
+
+    >>> @
+    <xonsh.built_ins.XonshSessionInterface>
+    >>> @.imp.json.loads('{"conch":"snail"}')
+    {"conch":"snail"}
+    >>> @.env.get('HOME')
+    '/home/snail'
+
 Environment Variables
 =======================
 Environment variables are written as ``$`` followed by a name.  For example,
@@ -135,6 +154,17 @@ variable in Python.  The same is true for deleting them too.
     Become the Lord of the Files
     >>> del $GOAL
 
+    >>> $NUM = "123"
+    >>> $EXT = $NUM + "456"
+    >>> $EXT
+    '123456'
+    >>> $FNUM = f"{$NUM}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
+    >>> $FNUM = "{FILLME}456".format(FILLME=$NUM)
+    >>> $FNUM
+    '123456'
+    >>> "%s456" % $NUM
+    '123456'
+
 Very nice.
 
 .. note::
@@ -142,10 +172,11 @@ Very nice.
    To update ``os.environ`` when the xonsh environment changes set
    :ref:`$UPDATE_OS_ENVIRON <update_os_environ>` to ``True``.
 
-The Environment Itself ``${...}``
----------------------------------
 
-All environment variables live in the built-in ``${...}`` (aka ``__xonsh__.env``) mapping.
+The Environment Itself ``@.env``
+--------------------------------
+
+All environment variables live in the built-in ``@.env`` mapping.
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -153,7 +184,7 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
 
 .. code-block:: xonshcon
 
-   >>> 'HOME' in ${...}
+   >>> 'HOME' in @.env
    True
 
 To get information about a specific environment variable you can use the
@@ -161,20 +192,19 @@ To get information about a specific environment variable you can use the
 
 .. code-block:: xonshcon
 
-   >>> ${...}.help('XONSH_DEBUG')
+   >>> @.env.help('XONSH_DEBUG')
 
-One helpful method on the ``${...}`` is :func:`~xonsh.environ.Env.swap`.
+One helpful method is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
 
 .. code-block:: xonshcon
 
-    >>> with ${...}.swap(SOMEVAR='foo'):
+    >>> with @.env.swap(SOMEVAR='foo'):
     ...     echo $SOMEVAR
-    ...
     ...
     foo
     >>> echo $SOMEVAR
-
+    $SOMEVAR
     >>>
 
 Environment Lookup with ``${<expr>}``
@@ -199,6 +229,8 @@ value in the environment. Here are a couple of examples in action:
     'snail'
     >>> ${'HO' + 'ME'}
     '/home/snail'
+    >>> ${...}  # the same as @.env
+    xonsh.environ.Env({'HOME':'/home/snail', ...})
 
 Not bad, xonsh, not bad.
 
@@ -246,6 +278,41 @@ They can be seen on the `Environment Variables page <envvars.html>`_.
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
 
+Callable Environment Variables
+------------------------------
+
+In some cases you may want to have environment variable with dynamically created value.
+Here is the example of callable environment variable:
+
+.. code-block:: xonshcon
+
+    >>> class Stamp:
+    ...    """Return current date as string representation."""
+    ...    def __repr__(self):
+    ...       from datetime import datetime
+    ...       return str(datetime.now().isoformat())
+    ...
+    ...
+    >>> $DT = Stamp()
+    >>> $DT
+    2024-11-11T11:11:22
+    >>> echo $DT
+    2024-11-11T11:11:33
+    >>> env | grep DT
+    DT=2024-11-11T11:11:44
+
+Registering Environment Variables
+---------------------------------
+
+You can manually register environment variables to define their type and documentation.
+This is particularly useful for extensions or complex configurations. The documentation provided
+will be shown during tab-completion.
+
+.. code-block:: xonsh
+
+    @.env.register('MY_VAR', type='int', default=0, doc='This is a demo variable')
+
+Now, when you type ``$MY_<Tab>``, you will see the description.
 
 Running Commands
 ==============================
@@ -275,6 +342,11 @@ Running subprocess commands should work like in any other shell.
     >>> exit
 
 This should feel very natural.
+
+.. note::
+
+    Access the last run subprocess command using ``@.lastcmd``;
+    e.g. to get the return code, run ``@.lastcmd.rtn``.
 
 
 Python-mode vs Subprocess-mode
@@ -370,11 +442,6 @@ For example,
     By default the output is represented as one single block of output with new
     line characters. You can set ``$XONSH_SUBPROC_OUTPUT_FORMAT`` to ``list_lines``
     to have a list of distinct lines in the commands like ``du -h $(ls)``.
-
-.. note::
-
-    You can access a subprocess command you ran using ``__xonsh__.last``
-    e.g. to get the return code run ``__xonsh__.last.rtn``.
 
 
 The ``!()`` syntax captured more information about the command, as an instance
@@ -520,12 +587,12 @@ For example, the ``echo`` command has no interaction with the user and is captur
 However, some tools have mixed behavior and can be run for either interactive or non-interactive tasks.
 The best example of this is ``ssh``, which allows for remote terminal sessions and executing commands.
 
-To handle different types of tasks, xonsh has the ``xthread`` and ``xunthread`` built-in aliases.
-If you need to capture the output from an interactive tool that has a capturable mode use ``xthread`` to run:
+To handle different types of tasks, xonsh has the ``@thread`` and ``@unthread`` built-in decorator aliases.
+If you need to capture the output from an interactive tool that has a capturable mode use ``@thread`` to run:
 
 .. code-block:: xonshcon
 
-    @ !(xthread ssh host -T 'echo remote')
+    @ !(@thread ssh host -T 'echo remote')
     CommandPipeline(output="remote")
 
 
@@ -582,7 +649,7 @@ result is automatically converted to a string. For example,
     4
     >>> echo @([42, 'yo'])
     42 yo
-    >>> echo "hello" | @(lambda a, s=None: s.read().strip() + " world\n")
+    echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + " world\n")
     hello world
     >>> @(['echo', 'hello', 'world'])
     hello world
@@ -1173,6 +1240,17 @@ handled implicitly in subprocess mode.
     'bar'
     >>> echo @(mypath)
     /foo/bar
+    >>> pwd
+    /home/snail
+    >>> with p'/tmp'.cd():
+    ...     pwd
+    ...
+    /tmp
+    >>> with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=True).cd():
+    ...     pwd
+    ...
+    /tmp/newdir
+    >>> p'/tmp/new.txt'.touch().chmod(0o700).write_text('hello')
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 
@@ -1275,7 +1353,7 @@ functions. If you don't know what these do, you probably don't need them.
 
 
 Aliases
-==============================
+=======
 Another important xonsh built-in is the ``aliases`` mapping.  This is
 like a dictionary that affects how subprocess commands are run.  If you are
 familiar with the Bash ``alias`` built-in, this is similar.  Alias command
@@ -1304,6 +1382,44 @@ control software. Both styles (list of strings and single string) are shown:
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
 being executed.
+
+Alias to modify command
+-----------------------
+
+The best way to modify command on the fly is to use alias that returns modified command.
+One of the most interesting application is expanding an alias:
+
+.. code-block:: xonshcon
+
+    >>> @aliases.register
+    ... @aliases.return_command
+    ... def _xsudo(args):
+    ...     """Sudo with expanding aliases."""
+    ...     return ['sudo', '--', *aliases.eval_alias(args)]
+    ...
+    >>> aliases['install'] = "apt install cowsay"
+    >>> xsudo install
+    # Password:
+    # Install cowsay
+
+Or implement logic to run the right command:
+
+.. code-block:: xonshcon
+
+    >>> @aliases.register
+    ... @aliases.return_command
+    ... def _vi(args):
+    ...     """Universal vi editor."""
+    ...     if $(which vim 2>/dev/null):
+    ...         return ['vim'] + args
+    ...     else:
+    ...         return ['vi'] + args
+    ...
+    >>> vi file
+
+
+ExecAlias
+---------
 
 If the string is representing a block of xonsh code, the alias will be registered
 as an ``ExecAlias``, which is a callable alias. This block of code will then be
@@ -1339,37 +1455,13 @@ may have one of the following signatures:
     def mycmd0():
         """This form takes no arguments but may return output or a return code.
         """
-        return "some output."
-
-    def mycmd1(args):
-        """This form takes a single argument, args. This is a list of strings
-        representing the arguments to this command. Feel free to parse them
-        however you wish!
-        """
-        # perform some action.
-        return 0
-
-    def mycmd2(args, stdin=None):
-        """This form takes two arguments. The args list like above, as a well
-        as standard input. stdin will be a file like object that the command
-        can read from, if the user piped input to this command. If no input
-        was provided this will be None.
-        """
-        # do whatever you want! Anything you print to stdout or stderr
-        # will be captured for you automatically. This allows callable
-        # aliases to support piping.
-        print('I go to stdout and will be printed or piped')
-
-        # Note: that you have access to the xonsh
-        # built-ins if you 'import builtins'.  For example, if you need the
-        # environment, you could do the following:
-        import builtins
-        env = builtins.__xonsh__.env
-
         # The return value of the function can either be None,
         return
 
-        # a single string representing stdout
+        # a return code,
+        return 0
+
+        # a single string representing stdout,
         return  'I am out of here'
 
         # or you can build up strings for stdout and stderr and then
@@ -1384,6 +1476,37 @@ may have one of the following signatures:
         # return code indicating failure (> 0 return code). In the previous
         # examples the return code would be 0/success.
         return (None, "I failed", 2)
+
+        # Anything you print to stdout or stderr
+        # will be captured for you automatically. This allows callable
+        # aliases to support piping.
+        print('I go to stdout and will be printed or piped')
+
+        # Note: that you have access to the xonsh
+        # built-ins if you 'import builtins'.  For example, if you need the
+        # environment, you could do the following:
+        import builtins
+        env = builtins.__xonsh__.env
+
+    def mycmd1(args):
+        """This form takes a single argument, args. This is a list of strings
+        representing the arguments to this command. Feel free to parse them
+        however you wish!
+        """
+        # perform some action.
+        print(f"arg count: {len(args)}")
+        return 0
+
+    def mycmd2(args, stdin=None):
+        """This form takes two arguments. The args list like above, as a well
+        as standard input. stdin will be a file like object that the command
+        can read from, if the user piped input to this command. If no input
+        was provided this will be None.
+        """
+        # Read input either from piped input or the terminal
+        stdin = stdin or sys.stdin
+        for line in stdin.readlines():
+            print(line.strip().upper() + '!')
 
     def mycmd3(args, stdin=None, stdout=None):
         """This form has three parameters.  The first two are the same as above.
@@ -1406,10 +1529,8 @@ may have one of the following signatures:
         for i in range(5):
             time.sleep(i)
             print(i, file=stdout)
+            stdout.flush() # flush output to terminal immediately
 
-        # In this form, the return value should be a single integer
-        # representing the "return code" of the alias (zero if successful,
-        # non-zero otherwise)
         return 0
 
     def mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
@@ -1566,6 +1687,52 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
+Decorator Aliases
+-----------------
+
+Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
+convert subprocess command output into Python object:
+
+.. code-block:: xonshcon
+
+    import json, pathlib, yaml
+    from xonsh.procs.specs import SpecAttrDecoratorAlias
+
+    aliases['@lines'] = SpecAttrDecoratorAlias({"output_format": 'list_lines'},
+                                               "Set `list_lines` output format.")
+    aliases['@json'] = SpecAttrDecoratorAlias({"output_format": lambda lines: json.loads('\n'.join(lines))},
+                                               "Set `json` output format.")
+    aliases['@path'] = SpecAttrDecoratorAlias({"output_format": lambda lines: pathlib.Path(':'.join(lines))},
+                                               "Set `path` output format.")
+    aliases['@yaml'] = SpecAttrDecoratorAlias({"output_format": lambda lines: yaml.safe_load('\n'.join(lines))},
+                                               "Set `yaml` output format.")
+    aliases['@noerr'] = SpecAttrDecoratorAlias({"raise_subproc_error": False},
+                                               "Set `raise_subproc_error` to False.")
+
+
+Now you can run:
+
+.. code-block:: xonshcon
+
+    $(@lines ls /)
+    # ['/bin', '/etc', '/home']
+
+    $(echo '{}' | @json head -n 1)['answer']
+    # 42
+
+    j = $(@json echo '{"answer":42}')
+    j['answer']
+    # 42
+
+    $(@path which xonsh)
+    # Path('/path/to/xonsh')
+
+    aliases['ydig'] = '@yaml dig +yaml'
+    y = $(ydig google.com)
+    y[0]['type']
+    # 'MESSAGE'
+
+
 -------------
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
@@ -1609,10 +1776,10 @@ which will be replaced automatically:
 
 .. code-block:: xonshcon
 
-    >>> $PROMPT = '{user}@{hostname}:{cwd} > '
-    snail@home:~ > # it works!
-    snail@home:~ > $PROMPT = lambda: '{user}@{hostname}:{cwd} >> '
-    snail@home:~ >> # so does that!
+    >>> $PROMPT = '{user}@{hostname}:{cwd} @ '
+    snail@home:~ @ # it works!
+    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    snail@home:~ @> # so does that!
 
 -- todo: convert this to jinja template and generate these contents dynamically and mention about $PROMPT_FIELDS
 

@@ -4,8 +4,8 @@ import re
 import typing as tp
 
 import xonsh.platform as xp
-import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.commands_cache import executables_in
 from xonsh.completer import Completer
 from xonsh.completers.tools import (
     RichCompletion,
@@ -33,14 +33,14 @@ def complete_command(command: CommandContext):
             kwargs = {}
             if show_desc:
                 kwargs["description"] = "Alias" if is_alias else path
-            yield RichCompletion(s, append_space=True, **kwargs)
+            yield RichCompletion(s, append_space=True, **kwargs)  # type: ignore
     if xp.ON_WINDOWS:
-        for i in xt.executables_in("."):
+        for i in executables_in("."):
             if i.startswith(cmd):
                 yield RichCompletion(i, append_space=True)
     base = os.path.basename(cmd)
     if os.path.isdir(base):
-        for i in xt.executables_in(base):
+        for i in executables_in(base):
             if i.startswith(cmd):
                 yield RichCompletion(os.path.join(base, i))
 

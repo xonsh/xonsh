@@ -9,15 +9,26 @@ import threading
 import typing as tp
 
 import xonsh.cli_utils as xcli
-import xonsh.diff_history as xdh
+import xonsh.history.diff_history as xdh
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.history.base import History
 from xonsh.history.dummy import DummyHistory
 from xonsh.history.json import JsonHistory
-from xonsh.history.sqlite import SqliteHistory
 
-HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory, "sqlite": SqliteHistory}
+HISTORY_BACKENDS = {"dummy": DummyHistory, "json": JsonHistory}
+
+try:
+    from xonsh.history.sqlite import SqliteHistory
+
+    HISTORY_BACKENDS |= {"sqlite": SqliteHistory}
+except Exception:
+    """
+    On some linux systems (e.g. alt linux) sqlite3 is not installed
+    and it's hard to install it and maybe user can't install it.
+    We need to just go forward.
+    """
+    pass
 
 
 def construct_history(backend=None, **kwargs) -> "History":
@@ -92,9 +103,17 @@ def _xh_bash_hist_parser(location=None, **kwargs):
             os.path.join("~", ".bash_history"),
         )
     if location:
-        with open(location, errors="backslashreplace") as bash_hist:
-            for ind, line in enumerate(bash_hist):
-                yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
+        try:
+            with open(location, errors="backslashreplace") as bash_hist:
+                for ind, line in enumerate(bash_hist):
+                    yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
+        except PermissionError:
+            print(f"Bash history permission error in {location!r}", file=sys.stderr)
+            yield {
+                "inp": f"# Bash history permission error in {location!r}",
+                "ts": 0.0,
+                "ind": 0,
+            }
     else:
         print("No bash history file", file=sys.stderr)
 
@@ -211,10 +230,10 @@ class HistoryAlias(xcli.ArgParserAlias):
             str, xcli.Arg(nargs="?", action=SessionAction)
         ] = "session",
         slices: xcli.Annotated[list[int], xcli.Arg(nargs="*")] = None,
-        datetime_format: tp.Optional[str] = None,
-        start_time: tp.Optional[str] = None,
-        end_time: tp.Optional[str] = None,
-        location: tp.Optional[str] = None,
+        datetime_format: str | None = None,
+        start_time: str | None = None,
+        end_time: str | None = None,
+        location: str | None = None,
         reverse=False,
         numerate=False,
         timestamp=False,
@@ -301,13 +320,16 @@ class HistoryAlias(xcli.ArgParserAlias):
         print(str(hist.sessionid), file=_stdout)
 
     @staticmethod
-    def pull(show_commands=False, _stdout=None):
+    def pull(show_commands=False, session_id=None, _stdout=None):
         """Pull history from other parallel sessions.
 
         Parameters
         ----------
         show_commands: -c, --show-commands
             show pulled commands
+
+        session_id: -s, --session-id
+            pull from specified session only
         """
 
         hist = XSH.history
@@ -319,7 +341,7 @@ class HistoryAlias(xcli.ArgParserAlias):
                 file=_stdout,
             )
 
-        lines_added = hist.pull(show_commands)
+        lines_added = hist.pull(show_commands, session_id)
         if lines_added:
             print(f"Added {lines_added} records!", file=_stdout)
         else:

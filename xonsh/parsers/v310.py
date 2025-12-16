@@ -10,8 +10,8 @@ handle
 
 import ast
 
+from xonsh.parsers.ply import yacc
 from xonsh.parsers.v39 import Parser as ThreeNineParser
-from xonsh.ply.ply import yacc
 
 
 class Parser(ThreeNineParser):
@@ -269,9 +269,9 @@ class Parser(ThreeNineParser):
 
         if build_complex:
             # TODO raise syntax error instead (see reason in p_literal_expr_number_or_string_literal_list)
-            assert isinstance(
-                right.value, complex
-            ), "right part of complex literal must be imaginary"
+            assert isinstance(right.value, complex), (
+                "right part of complex literal must be imaginary"
+            )
 
             if negate_left_side:
                 left = ast.UnaryOp(op=ast.USub(), operand=left, **loc)
@@ -407,7 +407,9 @@ class Parser(ThreeNineParser):
 
         if keyword_patterns_key_value_tuple_list:
             # transpose, e.g. [ (a, 1), (b, 2) ] to [a, b], [1, 2]
-            kwd_attrs, kwd_patterns = list(zip(*keyword_patterns_key_value_tuple_list))
+            kwd_attrs, kwd_patterns = list(
+                zip(*keyword_patterns_key_value_tuple_list, strict=False)
+            )
         else:
             kwd_attrs, kwd_patterns = [], []
 

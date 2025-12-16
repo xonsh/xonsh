@@ -15,27 +15,6 @@ table lists built in features and capabilities that various tools may or may not
       - fish
       - IPython
       - xonsh
-    * - Practical language
-      -
-      -
-      - ✓
-      - ✓
-      - ✓
-      - ✓
-    * - Easily scriptable
-      - ✓
-      - ✓
-      - ✓
-      - ✓
-      -
-      - ✓
-    * - Native cross-platform support
-      -
-      -
-      - ✓
-      - ✓
-      - ✓
-      - ✓
     * - Meant as a shell
       - ✓
       - ✓
@@ -43,28 +22,21 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
       -
       - ✓
-    * - Tab completion
-      - ✓
-      - ✓
-      -
-      - ✓
-      - ✓
-      - ✓
-    * - Completion from man-page parsing
-      -
-      -
-      -
-      - ✓
-      -
-      - ✓
-    * - Large standard library
-      -
-      - ✓
+    * - Native cross-platform
       -
       -
       - ✓
       - ✓
-    * - Typed variables
+      - ✓
+      - ✓
+    * - Practical language
+      -
+      -
+      - ✓
+      - ✓
+      - ✓
+      - ✓
+    * - Typed variables and objects
       -
       -
       - ✓
@@ -73,24 +45,58 @@ table lists built in features and capabilities that various tools may or may not
       - ✓
     * - Syntax highlighting
       -
-      -
-      -
-      - ✓
-      - in notebook
-      - w/ prompt-toolkit
-    * - Pun in name
       - ✓
       -
       - ✓
       - ✓
+      - ✓
+    * - Large standard library
       -
       - ✓
-    * - Rich history
-      -
-      -
-      -
       -
       -
       - ✓
-
+      - ✓
+    * - Stays readable at scale
+      -
+      -
+      - ✓
+      -
+      -
+      - ✓
+    * - Testable
+      -
+      -
+      - ✓
+      -
+      -
+      - ✓
+    * - User-patchable
+      -
+      -
+      - ✓
+      -
+      -
+      - ✓
+    * - Package and deps manager
+      -
+      -
+      -
+      -
+      -
+      - ✓
+    * - AI friendly
+      -
+      -
+      -
+      -
+      -
+      - ✓
+    * - Rich history backend
+      -
+      -
+      -
+      -
+      -
+      - ✓
 

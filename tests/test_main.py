@@ -6,6 +6,8 @@ import os
 import os.path
 import sys
 from contextlib import contextmanager
+from pathlib import Path
+from tempfile import TemporaryFile
 
 import pytest
 
@@ -353,7 +355,9 @@ def test_force_interactive_custom_rc_with_script(shell, tmpdir, monkeypatch, xes
     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["-i", "--rc", f.strpath, "tests/sample.xsh"])
+    args = xonsh.main.premain(
+        ["-i", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert args.mode == XonshMode.interactive
     assert f.strpath in xession.rc_files
 
@@ -364,7 +368,9 @@ def test_force_interactive_custom_rc_with_script_and_no_rc(
     monkeypatch.setitem(os.environ, "XONSH_CACHE_SCRIPTS", "False")
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["-i", "--no-rc", "--rc", f.strpath, "tests/sample.xsh"])
+    args = xonsh.main.premain(
+        ["-i", "--no-rc", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert args.mode == XonshMode.interactive
     assert len(xession.rc_files) == 0
 
@@ -375,7 +381,9 @@ def test_custom_rc_with_script(shell, tmpdir, xession):
     """
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["--rc", f.strpath, "tests/sample.xsh"])
+    args = xonsh.main.premain(
+        ["--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert not (args.mode == XonshMode.interactive)
     assert f.strpath in xession.rc_files
 
@@ -386,7 +394,9 @@ def test_custom_rc_with_script_and_no_rc(shell, tmpdir, xession):
     """
     f = tmpdir.join("wakkawakka")
     f.write("print('hi')")
-    args = xonsh.main.premain(["--no-rc", "--rc", f.strpath, "tests/sample.xsh"])
+    args = xonsh.main.premain(
+        ["--no-rc", "--rc", f.strpath, str(Path(__file__).parent / "sample.xsh")]
+    )
     assert not (args.mode == XonshMode.interactive)
     assert len(xession.rc_files) == 0
 
@@ -530,6 +540,7 @@ def test_xonsh_no_file_returncode(shell, monkeypatch, monkeypatch_stderr):
 
 
 def test_auto_loading_xontribs(xession, shell, mocker):
+    # GIVEN a xontrib is installed
     from importlib.metadata import EntryPoint
 
     group = "xonsh.xontribs"
@@ -542,6 +553,104 @@ def test_auto_loading_xontribs(xession, shell, mocker):
         },
     )
     xontribs_load = mocker.patch("xonsh.xontribs.xontribs_load")
+
+    # AND auto-loading xontribs is enabled by default
+    assert xession.env["XONTRIBS_AUTOLOAD_DISABLED"] is False
+
+    # WHEN xonsh is initialized
     xonsh.main.premain([])
+
+    # THEN auto-loading xontribs is still enabled
+    assert xession.env["XONTRIBS_AUTOLOAD_DISABLED"] is False
+
+    # AND installed xontrib should be auto-loaded
     assert xession.builtins.autoloaded_xontribs == {"test": "test.module"}
     xontribs_load.assert_called()
+
+
+def test_xontribs_autoload_disabled_in_custom_rc(xession, shell, mocker, tmpdir):
+    """As a Xonsh user, if I set `$XONTRIBS_AUTOLOAD_DISABLED = True`
+    in my RC file, then Xontribs should not be auto-loaded.
+
+    https://github.com/xonsh/xonsh/issues/5872
+    """
+    # GIVEN a xontrib is installed
+    from importlib.metadata import EntryPoint
+
+    group = "xonsh.xontribs"
+    mocker.patch(
+        "importlib.metadata.entry_points",
+        autospec=True,
+        return_value={
+            group: [EntryPoint(name="test", group=group, value="test.module")]
+        },
+    )
+    xontribs_load = mocker.patch("xonsh.xontribs.xontribs_load")
+
+    # AND auto-loading xontribs is disabled in a custom RC file
+    f = tmpdir.join("wakkawakka")
+    f.write("$XONTRIBS_AUTOLOAD_DISABLED = True\n")
+
+    # AND auto-loading xontribs is not explicitly disabled
+    assert xession.env["XONTRIBS_AUTOLOAD_DISABLED"] is False
+
+    # WHEN xonsh is initialized
+    xonsh.main.premain(["--rc", f.strpath])
+
+    # THEN custom RC file should have been processed
+    assert f.strpath in xession.rc_files
+    assert xession.env["XONTRIBS_AUTOLOAD_DISABLED"] is True
+
+    # AND installed xontrib should not be auto-loaded
+    assert not hasattr(xession.builtins, "autoloaded_xontribs")
+    xontribs_load.assert_not_called()
+
+
+def test_script_normal_file(xession, monkeypatch, capsys, tmpdir):
+    script_path = tmpdir / "script.xsh"
+    with open(script_path, "w") as script:
+        script.write("print('Hello, World!')")
+    monkeypatch.setattr(sys, "argv", ["xonsh", str(script_path)])
+
+    with pytest.raises(SystemExit, match="0"):
+        xonsh.main.main()
+
+    stdout, stderr = capsys.readouterr()
+    assert "Hello, World!" in stdout
+
+
+@pytest.mark.skipif(
+    ON_WINDOWS,
+    reason="Windows does not support specifying file descriptors as paths",
+)
+def test_script_file_descriptor(xession, monkeypatch, capsys):
+    with TemporaryFile("w+t") as script:
+        script.write("print('Hello, World!')")
+        script.seek(0)
+        monkeypatch.setattr(sys, "argv", ["xonsh", f"/dev/fd/{script.fileno()}"])
+
+        with pytest.raises(SystemExit, match="0"):
+            xonsh.main.main()
+
+        stdout, stderr = capsys.readouterr()
+        assert "Hello, World!" in stdout
+
+
+def test_script_directory(xession, monkeypatch, capsys, tmpdir):
+    monkeypatch.setattr(sys, "argv", ["xonsh", str(tmpdir)])
+
+    with pytest.raises(SystemExit, match="1"):
+        xonsh.main.main()
+
+    stdout, stderr = capsys.readouterr()
+    assert "Is a directory." in stdout
+
+
+def test_script_missing_file(xession, monkeypatch, capsys, tmpdir):
+    monkeypatch.setattr(sys, "argv", ["xonsh", str(tmpdir / "invalid.xsh")])
+
+    with pytest.raises(SystemExit, match="1"):
+        xonsh.main.main()
+
+    stdout, stderr = capsys.readouterr()
+    assert "No such file." in stdout

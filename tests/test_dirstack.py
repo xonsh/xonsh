@@ -19,6 +19,16 @@ def test_simple(xession):
         assert os.getcwd() == HERE
 
 
+def test_chdir_mkdir(tmpdir):
+    d = str(tmpdir.join("chdir_mkdir"))
+    with chdir(d, mkdir=True):
+        assert os.getcwd() == d
+    assert os.getcwd() != d
+    with chdir(d, mkdir=True):
+        # Repeat to check there is no error for existing dir.
+        assert os.getcwd() == d
+
+
 def test_cdpath_simple(xession):
     xession.env.update(dict(CDPATH=PARENT, PWD=HERE))
     with chdir(os.path.normpath("/")):
@@ -48,9 +58,9 @@ def test_cdpath_expansion(xession):
         for d in test_dirs:
             if not os.path.exists(d):
                 os.mkdir(d)
-            assert os.path.exists(
-                dirstack._try_cdpath(d)
-            ), f"dirstack._try_cdpath: could not resolve {d}"
+            assert os.path.exists(dirstack._try_cdpath(d)), (
+                f"dirstack._try_cdpath: could not resolve {d}"
+            )
     finally:
         for d in test_dirs:
             if os.path.exists(d):

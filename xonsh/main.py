@@ -13,15 +13,15 @@ import xonsh.procs.pipelines as xpp
 from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
-from xonsh.environ import make_args_env, xonshrc_context
+from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
-from xonsh.jobs import ignore_sigtstp
-from xonsh.lazyasd import lazyobject
-from xonsh.lazyimps import pyghooks, pygments
+from xonsh.lib.lazyasd import lazyobject
+from xonsh.lib.lazyimps import pyghooks, pygments
+from xonsh.lib.pretty import pretty
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
-from xonsh.pretty import pretty
+from xonsh.procs.jobs import ignore_sigtstp
 from xonsh.shell import Shell
 from xonsh.timings import setup_timings
 from xonsh.tools import (
@@ -50,7 +50,7 @@ events.transmogrify("on_exit", "LoadEvent")
 events.doc(
     "on_exit",
     """
-on_exit() -> None
+on_exit(exit_code : int) -> None
 
 Fired after all commands have been executed, before tear-down occurs.
 
@@ -308,6 +308,16 @@ def _get_rc_files(shell_kwargs: dict, args, env):
     # otherwise, get the RC files from XONSHRC, and RC dirs from XONSHRC_DIR
     rc = env.get("XONSHRC")
     rcd = env.get("XONSHRC_DIR")
+
+    if not env.get("XONSH_INTERACTIVE", False):
+        """
+        Home based ``~/.xonshrc`` file has special meaning and history. The ecosystem around shells treats this kind of files
+        as the place where interactive tools can add configs. To avoid unintended and unexpected affection
+        of this file to non-interactive behavior we remove this file in non-interactive mode e.g. script with shebang.
+        """
+        home_xonshrc = get_home_xonshrc_path()
+        rc = tuple(c for c in rc if c != home_xonshrc)
+
     return rc, rcd
 
 
@@ -351,8 +361,10 @@ def start_services(shell_kwargs, args, pre_env=None):
         scriptcache=shell_kwargs.get("scriptcache", True),
         cacheall=shell_kwargs.get("cacheall", False),
     )
-    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
     events.on_timingprobe.fire(name="post_execer_init")
+    events.on_timingprobe.fire(name="pre_xonsh_session_load")
+    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
+    events.on_timingprobe.fire(name="post_xonsh_session_load")
 
     install_import_hooks(execer)
 
@@ -360,8 +372,9 @@ def start_services(shell_kwargs, args, pre_env=None):
     for k, v in pre_env.items():
         env[k] = v
 
-    _autoload_xontribs(env)
     _load_rc_files(shell_kwargs, args, env, execer, ctx)
+    if not shell_kwargs.get("norc"):
+        _autoload_xontribs(env)
     # create shell
     XSH.shell = Shell(execer=execer, **shell_kwargs)
     ctx["__name__"] = "__main__"
@@ -400,22 +413,28 @@ def premain(argv=None):
     if args.command is not None:
         args.mode = XonshMode.single_command
         shell_kwargs["shell_type"] = "none"
+        xonsh_mode = "single_command"
     elif args.file is not None:
         args.mode = XonshMode.script_from_file
         shell_kwargs["shell_type"] = "none"
+        xonsh_mode = "script_from_file"
     elif not sys.stdin.isatty() and not args.force_interactive:
         args.mode = XonshMode.script_from_stdin
         shell_kwargs["shell_type"] = "none"
+        xonsh_mode = "script_from_stdin"
     else:
         args.mode = XonshMode.interactive
         shell_kwargs["completer"] = True
         shell_kwargs["login"] = True
+        xonsh_mode = "interactive"
 
     pre_env = {
         "XONSH_LOGIN": shell_kwargs["login"],
         "XONSH_INTERACTIVE": args.force_interactive
         or (args.mode == XonshMode.interactive),
+        "XONSH_MODE": xonsh_mode,
     }
+    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
     # Load -DVAR=VAL arguments.
     if args.defines is not None:
@@ -478,7 +497,8 @@ def _failback_to_other_shells(args, err):
 
     if foreign_shell:
         traceback.print_exc()
-        print("Xonsh encountered an issue during launch", file=sys.stderr)
+        print("Xonsh encountered an issue during launch.", file=sys.stderr)
+        print("Please report to https://github.com/xonsh/xonsh/issues", file=sys.stderr)
         print(f"Failback to {foreign_shell}", file=sys.stderr)
         os.execlp(foreign_shell, foreign_shell)
     else:
@@ -528,6 +548,7 @@ def main_xonsh(args):
             ignore_sigtstp()
             if (
                 env["XONSH_INTERACTIVE"]
+                and not env["XONSH_SUPPRESS_WELCOME"]
                 and sys.stdin.isatty()  # In case the interactive mode is forced but no tty (input from pipe).
                 and not any(os.path.isfile(i) for i in env["XONSHRC"])
                 and not any(os.path.isdir(i) for i in env["XONSHRC_DIR"])
@@ -552,7 +573,10 @@ def main_xonsh(args):
         elif args.mode == XonshMode.script_from_file:
             # run a script contained in a file
             path = os.path.abspath(os.path.expanduser(args.file))
-            if os.path.isfile(path):
+            if os.path.isdir(path):
+                print(f"xonsh: {args.file}: Is a directory.")
+                exit_code = 1
+            elif os.path.exists(path):
                 sys.argv = [args.file] + args.args
                 env.update(make_args_env())  # $ARGS is not sys.argv
                 env["XONSH_SOURCE"] = path
@@ -561,7 +585,7 @@ def main_xonsh(args):
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
             else:
-                print(f"xonsh: {args.file}: No such file or directory.")
+                print(f"xonsh: {args.file}: No such file.")
                 exit_code = 1
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
@@ -584,13 +608,23 @@ def main_xonsh(args):
         if exc_info != (None, None, None):
             err_type, err, _ = exc_info
             if err_type is SystemExit:
-                XSH.exit = True
                 code = getattr(exc_info[1], "code", 0)
-                exit_code = int(code) if code is not None else 0
+                if code is None:
+                    exit_code = 0
+                else:
+                    exit_code = code
+                    try:
+                        exit_code = int(code)
+                    except ValueError:
+                        pass
+                XSH.exit = exit_code
             else:
                 exit_code = 1
                 print_exception(None, exc_info)
-        events.on_exit.fire()
+
+        if isinstance(XSH.exit, int):
+            exit_code = XSH.exit
+        events.on_exit.fire(exit_code=exit_code)
         postmain(args)
     return exit_code
 

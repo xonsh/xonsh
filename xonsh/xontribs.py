@@ -34,7 +34,7 @@ class Xontrib(tp.NamedTuple):
 
     module: str
     """path to the xontrib module"""
-    distribution: "tp.Optional[Distribution]" = None
+    distribution: "Distribution | None" = None
     """short description about the xontrib."""
 
     def get_description(self):
@@ -269,6 +269,8 @@ def xontribs_unload(
     ----------
     names
         name of xontribs to unload
+    verbose : -v, --verbose
+        verbose output
 
     Notes
     -----
@@ -303,6 +305,8 @@ def xontribs_reload(
     ----------
     names
         name of xontribs to reload
+    verbose : -v, --verbose
+        verbose output
     """
     for name in names:
         if verbose:

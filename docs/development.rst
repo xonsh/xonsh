@@ -4,7 +4,7 @@ Development Spiral
 
 .. toctree::
     :titlesonly:
-    :maxdepth: 2
+    :maxdepth: 1
 
     api/index
     advanced_events

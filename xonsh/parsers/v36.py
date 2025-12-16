@@ -1,6 +1,6 @@
 """Implements the xonsh parser for Python v3.6."""
 
-import xonsh.ast as ast
+import xonsh.parsers.ast as ast
 from xonsh.parsers.base import BaseParser, lopen_loc, store_ctx
 
 
@@ -160,7 +160,7 @@ class Parser(BaseParser):
         p1 = p[1][0]
         lineno, col = lopen_loc(p1)
         if len(p[1]) > 1 or not isinstance(
-            p1, (ast.Name, ast.Attribute, ast.Subscript)
+            p1, ast.Name | ast.Attribute | ast.Subscript
         ):
             loc = self.currloc(lineno, col)
             self._set_error("only single target can be annotated", loc)

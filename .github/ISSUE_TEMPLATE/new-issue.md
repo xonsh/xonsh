@@ -26,7 +26,7 @@ Traceback (if applicable):
 </details>
 
 ## Expected Behavior
-<!--- What you expect -->
+<!--- What you expect and what is your real life use case. -->
 
 ## xonfig
 

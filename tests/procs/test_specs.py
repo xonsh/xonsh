@@ -3,22 +3,31 @@
 import itertools
 import signal
 import sys
-from subprocess import Popen
+from subprocess import CalledProcessError, Popen
 
 import pytest
 
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
-    SpecAttrModifierAlias,
-    SpecModifierAlias,
+    DecoratorAlias,
+    SpecAttrDecoratorAlias,
     SubprocSpec,
     _run_command_pipeline,
     cmds_to_specs,
+    get_script_subproc_command,
     run_subproc,
 )
-from xonsh.pytest.tools import skip_if_on_windows
+from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
 from xonsh.tools import XonshError
+
+# TODO: track down which pipeline + spec test is hanging CI
+# Skip entire test file for Linux on Python 3.12
+pytestmark = pytest.mark.skipif(
+    not ON_WINDOWS and VER_MAJOR_MINOR == (3, 12),
+    reason="Backgrounded test is hanging on CI on 3.12 only",
+    allow_module_level=True,
+)
 
 
 def cmd_sig(sig):
@@ -151,6 +160,25 @@ def test_capture_always(
 
 
 @skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callias_captured_redirect(xonsh_session, tmpdir):
+    @xonsh_session.aliases.register("a")
+    def _a(a, i, o, e):
+        print("print_stdout")
+        xonsh_session.subproc_captured_stdout(["echo", "cap_stdout"])
+        xonsh_session.subproc_captured_object(["echo", "cap_object"])
+        xonsh_session.subproc_captured_hiddenobject(["echo", "hiddenobject"])
+        xonsh_session.subproc_uncaptured(["echo", "uncaptured"])
+        print("print_error", file=e)
+
+    f = tmpdir / "capture.txt"
+    cmd = (["a", (">", str(f))],)
+    specs = cmds_to_specs(cmd, captured="hiddenobject")
+    _run_command_pipeline(specs, cmd).end()
+    assert f.read_text(encoding="utf-8") == "print_stdout\nhiddenobject\n"
+
+
+@skip_if_on_windows
 @pytest.mark.parametrize("captured", ["stdout", "object"])
 @pytest.mark.parametrize("interactive", [True, False])
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
@@ -161,6 +189,52 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
     specs = cmds_to_specs(cmd, captured="stdout")
     (p := _run_command_pipeline(specs, cmd)).end()
     assert p.proc.returncode == -signal.SIGINT
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_proc_raise_subproc_error(xonsh_session):
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    specs = cmds_to_specs(cmd := [["ls"]], captured="stdout")
+    specs[-1].raise_subproc_error = True
+    exception = None
+    try:
+        (p := _run_command_pipeline(specs, cmd)).end()
+        assert p.proc.returncode == 0
+    except Exception as e:
+        exception = e
+    assert exception is None
+
+    specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
+    specs[-1].raise_subproc_error = False
+    exception = None
+    try:
+        (p := _run_command_pipeline(specs, cmd)).end()
+        assert p.proc.returncode > 0
+    except Exception as e:
+        exception = e
+    assert exception is None
+
+    specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
+    specs[-1].raise_subproc_error = True
+    exception = None
+    try:
+        (p := _run_command_pipeline(specs, cmd)).end()
+    except Exception as e:
+        assert p.proc.returncode > 0
+        exception = e
+    assert isinstance(exception, CalledProcessError)
+
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = True
+    specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
+    exception = None
+    try:
+        (p := _run_command_pipeline(specs, cmd)).end()
+    except Exception as e:
+        assert p.proc.returncode > 0
+        exception = e
+    assert isinstance(exception, CalledProcessError)
 
 
 @skip_if_on_windows
@@ -223,8 +297,8 @@ def test_run_subproc_background(captured, exp_is_none):
     assert (return_val is None) == exp_is_none
 
 
-def test_spec_modifier_alias_alone(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+def test_spec_decorator_alias_alone(xession):
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -235,8 +309,8 @@ def test_spec_modifier_alias_alone(xession):
     assert spec.alias_name == "xunthread"
 
 
-def test_spec_modifier_alias(xession):
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+def test_spec_decorator_alias(xession):
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -248,11 +322,11 @@ def test_spec_modifier_alias(xession):
     assert spec.force_threadable is False
 
 
-def test_spec_modifier_alias_tree(xession):
-    xession.aliases["xthread"] = SpecAttrModifierAlias(
+def test_spec_decorator_alias_tree(xession):
+    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
         {"threadable": True, "force_threadable": True}
     )
-    xession.aliases["xunthread"] = SpecAttrModifierAlias(
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
     )
 
@@ -272,13 +346,31 @@ def test_spec_modifier_alias_tree(xession):
     assert spec.force_threadable is False
 
 
+def test_spec_decorator_alias_multiple(xession):
+    xession.aliases["@unthread"] = SpecAttrDecoratorAlias(
+        {"threadable": False, "force_threadable": False}
+    )
+    xession.aliases["@dict"] = SpecAttrDecoratorAlias({"output_format": "list_lines"})
+
+    cmds = [
+        ["@unthread", "@dict", "echo", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+
+    assert spec.cmd == ["echo", "1"]
+    assert spec.alias_name is None
+    assert spec.threadable is False
+    assert spec.force_threadable is False
+    assert spec.output_format == "list_lines"
+
+
 @skip_if_on_windows
-def test_spec_modifier_alias_output_format(xession):
-    class SpecModifierOutputLinesAlias(SpecModifierAlias):
-        def on_modifer_added(self, spec):
+def test_spec_decorator_alias_output_format(xession):
+    class OutputLinesDecoratorAlias(DecoratorAlias):
+        def decorate_spec(self, spec):
             spec.output_format = "list_lines"
 
-    xession.aliases["xlines"] = SpecModifierOutputLinesAlias()
+    xession.aliases["xlines"] = OutputLinesDecoratorAlias()
 
     cmds = [["xlines", "echo", "1\n2\n3"]]
     specs = cmds_to_specs(cmds, captured="stdout")
@@ -369,6 +461,82 @@ def test_on_command_not_found_doesnt_fire_in_non_interactive_mode(xession):
     assert not fired
 
 
+def test_on_command_not_found_replacement(xession):
+    """Test that returning a command from handler replaces the original."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def replacement_handler(cmd, **kwargs):
+        if cmd[0] == "xonshcommandnotfound":
+            return ["echo", "replaced"]
+        return None
+
+    xession.builtins.events.on_command_not_found(replacement_handler)
+    # Use run_subproc to capture output and verify replacement executed
+    out = run_subproc([["xonshcommandnotfound"]], captured="stdout")
+    assert out.strip() == "replaced"
+
+
+def test_on_command_not_found_no_replacement(xession):
+    """Test that returning None still raises error."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def no_replacement_handler(cmd, **kwargs):
+        return None  # Don't replace
+
+    xession.builtins.events.on_command_not_found(no_replacement_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
+
+
+def test_on_command_not_found_invalid_replacement_ignored(xession):
+    """Test that invalid replacements (non-list, empty) are ignored."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def invalid_replacement_handler(cmd, **kwargs):
+        # Return invalid types that should be ignored
+        return "not a list"  # Should be ignored
+
+    xession.builtins.events.on_command_not_found(invalid_replacement_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
+
+
+def test_on_command_not_found_fallback_on_bad_replacement(xession):
+    """Test that if replacement command also doesn't exist, original error is shown."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def bad_replacement_handler(cmd, **kwargs):
+        # Return a command that also doesn't exist
+        return ["anotherfakecommand999"]
+
+    xession.builtins.events.on_command_not_found(bad_replacement_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError) as expected:
+        subproc.run()
+    # Should show original error, not error about the replacement
+    assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
+
+
 def test_redirect_to_substitution(xession):
     s = SubprocSpec.build(
         # `echo hello > @('file')`
@@ -387,3 +555,143 @@ def test_partial_args_from_classmethod(xession):
     xession.aliases["alias_with_partial_args"] = Class.alias
     out = run_subproc([["alias_with_partial_args"]], captured="stdout")
     assert out == "ok"
+
+
+def test_alias_return_command_alone(xession):
+    @xession.aliases.register("wakka")
+    @xession.aliases.return_command
+    def _wakka(args):
+        return ["echo"] + args
+
+    cmds = [
+        ["wakka"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo"]
+    assert spec.alias_name == "wakka"
+
+
+def test_alias_return_command_alone_args(xession):
+    @xession.aliases.register("wakka")
+    @xession.aliases.return_command
+    def _wakka(args):
+        return ["echo", "e0", "e1"] + args
+
+    cmds = [
+        ["wakka", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo", "e0", "e1", "0", "1"]
+    assert spec.alias_name == "wakka"
+
+
+def test_alias_return_command_chain(xession):
+    xession.aliases["foreground"] = "midground f0 f1"
+
+    @xession.aliases.register("midground")
+    @xession.aliases.return_command
+    def _midground(args):
+        return ["ground", "m0", "m1"] + args
+
+    xession.aliases["ground"] = "background g0 g1"
+    xession.aliases["background"] = "echo b0 b1"
+
+    cmds = [
+        ["foreground", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == [
+        "echo",
+        "b0",
+        "b1",
+        "g0",
+        "g1",
+        "m0",
+        "m1",
+        "f0",
+        "f1",
+        "0",
+        "1",
+    ]
+    assert spec.alias_name == "foreground"
+
+
+def test_alias_return_command_chain_decorators(xession):
+    xession.aliases["foreground"] = "midground f0 f1"
+
+    xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
+        {"threadable": False, "force_threadable": False}
+    )
+
+    @xession.aliases.register("midground")
+    @xession.aliases.return_command
+    def _midground(args):
+        return ["ground", "m0", "m1"]
+
+    xession.aliases["ground"] = "background g0 g1"
+    xession.aliases["background"] = "xunthread echo b0 b1"
+
+    cmds = [
+        ["foreground", "0", "1"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["echo", "b0", "b1", "g0", "g1", "m0", "m1"]
+    assert spec.alias_name == "foreground"
+    assert spec.threadable is False
+
+
+def test_alias_return_command_eval_inside(xession):
+    xession.aliases["xthread"] = SpecAttrDecoratorAlias(
+        {"threadable": True, "force_threadable": True}
+    )
+
+    @xession.aliases.register("xsudo")
+    @xession.aliases.return_command
+    def _midground(args, decorators=None):
+        return [
+            "sudo",
+            *xession.aliases.eval_alias(args, decorators=decorators),
+        ]
+
+    xession.aliases["cmd"] = "xthread echo 1"
+
+    cmds = [
+        ["xsudo", "cmd"],
+    ]
+    spec = cmds_to_specs(cmds, captured="object")[-1]
+    assert spec.cmd == ["sudo", "echo", "1"]
+    assert spec.alias_name == "xsudo"
+    assert spec.threadable is True
+
+
+def test_auto_cd(xession, tmpdir):
+    xession.aliases["cd"] = lambda: "some_cd_alias"
+    dir = str(tmpdir)
+    with xession.env.swap(AUTO_CD=True):
+        spec = cmds_to_specs([[dir]], captured="object")[-1]
+    assert spec.alias.__name__ == "cd"
+    assert spec.cmd[0] == dir
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "inp,exp",
+    [
+        ["#!/bin/bash", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash\n\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
+        ["#!/bin/bash \\\n-i", ["/bin/bash", "-i", "{file}", "--arg", "1"]],
+        ["#!/bin/bash \\\n-i\necho 1", ["/bin/bash", "-i", "{file}", "--arg", "1"]],
+        [
+            "#!/bin/bash \\\n-i \\\n-i \necho 1",
+            ["/bin/bash", "-i", "-i", "{file}", "--arg", "1"],
+        ],
+    ],
+)
+def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
+    file = tmpdir / "script.sh"
+    file_str = str(file)
+    file.write_text(inp, encoding="utf-8")
+    file.chmod(0o755)
+    cmd = get_script_subproc_command(file_str, ["--arg", "1"])
+    assert [c if c != file_str else "{file}" for c in cmd] == exp

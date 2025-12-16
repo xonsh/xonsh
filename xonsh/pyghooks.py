@@ -38,16 +38,16 @@ from xonsh.color_tools import (
     make_palette,
     warn_deprecated_no_color,
 )
-from xonsh.commands_cache import CommandsCache
 from xonsh.events import events
-from xonsh.lazyasd import LazyDict, LazyObject, lazyobject
-from xonsh.lazyimps import html, os_listxattr, terminal256
+from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.lib.lazyimps import html, os_listxattr, terminal256
 from xonsh.platform import (
     os_environ,
     ptk_version_info,
     pygments_version_info,
     win_ansi_support,
 )
+from xonsh.procs.executables import locate_executable
 from xonsh.pygments_cache import add_custom_style, get_style_by_name
 from xonsh.style_tools import DEFAULT_STYLE_DICT, norm_name
 from xonsh.tools import (
@@ -397,6 +397,8 @@ class XonshStyle(Style):
             try:
                 style_obj = get_style_by_name(value)()
                 self._smap = style_obj.styles.copy()
+                if not self._smap.get(Name.Builtin):
+                    self._smap[Name.Builtin] = cmap.get(Color.GREEN, "ansigreen")
                 self.highlight_color = style_obj.highlight_color
                 self.background_color = style_obj.background_color
             except (ImportError, pygments.util.ClassNotFound):
@@ -1596,13 +1598,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 
 def _command_is_valid(cmd):
-    try:
-        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except OSError:
-        return False
-    return (cmd in XSH.commands_cache and not iskeyword(cmd)) or (
-        os.path.isfile(cmd_abspath) and os.access(cmd_abspath, os.X_OK)
-    )
+    return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
 
 
 def _command_is_autocd(cmd):
@@ -1649,15 +1645,12 @@ class XonshLexer(Python3Lexer):
 
     def __init__(self, *args, **kwargs):
         # If the lexer is loaded as a pygment plugin, we have to mock
-        # __xonsh__.env and __xonsh__.commands_cache
+        # __xonsh__.env
         if getattr(XSH, "env", None) is None:
             XSH.env = {}
             if ON_WINDOWS:
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
                 XSH.env["PATHEXT"] = pathext.split(os.pathsep)
-        if getattr(XSH, "commands_cache", None) is None:
-            XSH.commands_cache = CommandsCache(XSH.env)
-        _ = XSH.commands_cache.all_commands  # NOQA
         super().__init__(*args, **kwargs)
 
     tokens = {
