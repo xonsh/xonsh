@@ -1,4 +1,5 @@
 import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -106,3 +107,39 @@ def test_path_in_python_code(num_args, completion_context_parse):
         line = "@(" + inner_line
         out = xcp.complete_path(completion_context_parse(line, len(line)))
         assert out == exp
+
+
+def test_complete_path_strip_check(xession, completion_context_parse):
+    xession.env = {
+        "CASE_SENSITIVE_COMPLETIONS": True,
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 1,
+        "CDPATH": set(),
+    }
+
+    with tempfile.TemporaryDirectory() as tmp:
+        name_newline = "newline\n"
+        (Path(tmp) / name_newline).touch()
+
+        name_space = "space "
+        (Path(tmp) / name_space).touch()
+
+        prefix = str(Path(tmp) / "new")
+        line = f"ls {prefix}"
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        completions = {c.value if isinstance(c, xcp.RichCompletion) else c for c in out[0]}
+
+        print(f"DEBUG Newline: {completions}")
+        assert any(name_newline in c for c in completions), \
+            f"Expected filename with trailing newline, got: {completions}"
+
+        prefix = str(Path(tmp) / "spa")
+        line = f"ls {prefix}"
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        completions = {c.value if isinstance(c, xcp.RichCompletion) else c for c in out[0]}
+
+        print(f"DEBUG Space: {completions}")
+        assert any(name_space in c for c in completions), \
+            f"Expected filename with trailing space, got: {completions}"
