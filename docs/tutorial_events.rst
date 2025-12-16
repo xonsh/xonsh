@@ -54,11 +54,11 @@ which xontribs are active.
 
 .. code-block:: console
 
-    $ @events.on_precommand
-    . def my_handler(cmd, **_):
-    .     pass
-    .
-    $ print(events)
+    @events.on_precommand
+    def my_handler(cmd, **_):
+        pass
+    
+    print(events)
 
 This will produce output similar to the following:
 
@@ -76,8 +76,8 @@ which returns a dictionary mapping event names to a list of handler strings.
 
 .. code-block:: console
 
-    $ events.handlers()
-    {'on_lscolors_change': ['xonsh.pyghooks.on_lscolors_change'], ...}
+    events.handlers()
+    # {'on_lscolors_change': ['xonsh.pyghooks.on_lscolors_change'], ...}
 
 Further Reading
 ===============
