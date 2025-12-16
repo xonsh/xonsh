@@ -129,17 +129,23 @@ def test_complete_path_strip_check(xession, completion_context_parse):
         prefix = str(Path(tmp) / "new")
         line = f"ls {prefix}"
         out = xcp.complete_path(completion_context_parse(line, len(line)))
-        completions = {c.value if isinstance(c, xcp.RichCompletion) else c for c in out[0]}
+        completions = {
+            c.value if isinstance(c, xcp.RichCompletion) else c for c in out[0]
+        }
 
         print(f"DEBUG Newline: {completions}")
-        assert any(name_newline in c for c in completions), \
+        assert any(name_newline in c for c in completions), (
             f"Expected filename with trailing newline, got: {completions}"
+        )
 
         prefix = str(Path(tmp) / "spa")
         line = f"ls {prefix}"
         out = xcp.complete_path(completion_context_parse(line, len(line)))
-        completions = {c.value if isinstance(c, xcp.RichCompletion) else c for c in out[0]}
+        completions = {
+            c.value if isinstance(c, xcp.RichCompletion) else c for c in out[0]
+        }
 
         print(f"DEBUG Space: {completions}")
-        assert any(name_space in c for c in completions), \
+        assert any(name_space in c for c in completions), (
             f"Expected filename with trailing space, got: {completions}"
+        )
