@@ -49,10 +49,6 @@ simple:
     @ 1 + 1
     2
 
-.. note:: From here on we'll be using ``>>>`` to prefix (or prompt) any
-          xonsh input. This follows the Python convention and helps trick
-          syntax highlighting, though ``$`` is more traditional for shells.
-
 Since this is just Python, we are able to import modules, print values,
 and use other built-in Python functionality:
 
@@ -205,7 +201,7 @@ It can be used to temporarily set an environment variable:
     foo
     @ echo $SOMEVAR
     $SOMEVAR
-    >>>
+    @ 
 
 Environment Lookup with ``${<expr>}``
 -------------------------------------
@@ -976,7 +972,7 @@ The following shows an example with ``emacs``.
 .. code-block:: xonshcon
 
     @ emacs &
-    >>>
+    @ 
 
 Note that the prompt is returned to you after emacs is started.
 
@@ -1850,7 +1846,7 @@ For example:
     ~~ACTIVE~~ @ $VIRTUAL_ENV_DISABLE_PROMPT = 1
     @ del $VIRTUAL_ENV_PROMPT
     @ del $VIRTUAL_ENV_DISABLE_PROMPT
-    (env) >>>
+    (env) @
 
 
 You can also color your prompt (or print colored messages using ``print_color`` function) easily by inserting
