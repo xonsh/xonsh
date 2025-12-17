@@ -12,8 +12,8 @@ language.
 
 While all Python code is also xonsh, not all Bash code can be used in xonsh.
 That would defeat the purpose, and Python is better anyway! Still, xonsh is
-Bash-wards compatible in the ways that matter, such as for running commands,
-reading in the Bash environment, and utilizing Bash tab completion.
+compatible with shell commands in the ways that matter, such as for running commands,
+reading the environment, and utilizing tab completion.
 
 The purpose of this tutorial is to teach you xonsh. There are many excellent
 guides out there for learning Python, and this will not join their ranks.
@@ -24,7 +24,7 @@ Let's dive in!
 
 Starting xonsh
 ========================
-Assuming you have successfully installed xonsh (see http://xon.sh),
+Assuming you have successfully installed xonsh,
 you can start up the xonsh interpreter via the ``xonsh`` command. Suppose
 you are in a lesser terminal:
 
@@ -415,7 +415,7 @@ must be used to force xonsh to not interpret them.
     ${
 
 .. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\\) in bash.
+             backslash (\\) in Bash.
 
 
 Captured Subprocess with ``$()`` and ``!()``
