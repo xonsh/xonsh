@@ -228,13 +228,13 @@ back-end. To enable that behaviour run the following:
 
 .. code-block:: xonshcon
 
-   >>> xpip install xontrib-free-cwd
+   @ xpip install xontrib-free-cwd
 
 Add this line to your ``~/.xonshrc`` file to have it always enabled.
 
 .. code-block:: xonshcon
 
-   >>> xontrib load free_cwd
+   @ xontrib load free_cwd
 
 
 Name space conflicts
@@ -245,7 +245,7 @@ you must explicitly request the ``.``, like this:
 
 .. code-block:: xonshcon
 
-   >>> dir .
+   @ dir .
     Volume in drive C is Windows
     Volume Serial Number is 30E8-8B86
 
@@ -264,7 +264,7 @@ typing and avoid the ambiguity altogether:
 
 .. code-block:: xonshcon
 
-   >>> aliases['d'] = ['cmd', '/c', 'dir']
+   @ aliases['d'] = ['cmd', '/c', 'dir']
 
 You can add aliases to your `xonshrc <xonshrc.rst>`_ to have it always
 available when xonsh starts.
@@ -285,13 +285,13 @@ explicitly:
 
 .. code-block:: xonshcon
 
-    >>> ./my-program
+    @ ./my-program
 
 Although not recommended, to restore the behavior found in the
 ``cmd.exe`` shell, simply append ``.`` to the ``PATH``:
 
 .. code-block:: xonshcon
 
-    >>> $PATH.append('.')
+    @ $PATH.append('.')
 
 Add that to ``~/.xonshrc`` to enable that as the default behavior.

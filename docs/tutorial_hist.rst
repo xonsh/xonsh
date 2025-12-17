@@ -69,7 +69,7 @@ the ``show`` action, see below.
 
 .. code-block:: xonshcon
 
-    >>> history
+    @ history
 
 Also note that the history object itself can be accessed through the xonsh built-in variable
 ``__xonsh__.history``.
@@ -84,11 +84,11 @@ the ``history`` command. For example,
 
 .. code-block:: xonshcon
 
-    >>> 1 + 1
+    @ 1 + 1
     2
-    >>> history show
+    @ history show
      0  1 + 1
-    >>> history
+    @ history
      0  1 + 1
      1  history show
 
@@ -101,7 +101,7 @@ only the even indices from above, you could write:
 
 .. code-block:: xonshcon
 
-    >>> history show ::2
+    @ history show ::2
      0  1 + 1
      2  history
 
@@ -141,7 +141,7 @@ display this identified. For instance,
 
 .. code-block:: xonshcon
 
-    >>> history id
+    @ history id
     ace97177-f8dd-4a8d-8a91-a98ffd0b3d17
 
 ``file`` action
@@ -151,7 +151,7 @@ how you display the path to this file. For example,
 
 .. code-block:: xonshcon
 
-    >>> history file
+    @ history file
     /home/me/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json
 
 Note that by these files are stored in ``$XONSH_DATA_DIR`` environment variable. This
@@ -168,7 +168,7 @@ series of lines. However, it can also return a JSON formatted string.
 
 .. code-block:: xonshcon
 
-    >>> history info
+    @ history info
     sessionid: ace97177-f8dd-4a8d-8a91-a98ffd0b3d17
     filename: /home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json
     length: 6
@@ -177,7 +177,7 @@ series of lines. However, it can also return a JSON formatted string.
 
 .. code-block:: xonshcon
 
-    >>> history info --json
+    @ history info --json
     {"sessionid": "ace97177-f8dd-4a8d-8a91-a98ffd0b3d17",
      "filename": "/home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json",
      "length": 7, "buffersize": 100, "bufferlength": 7}
@@ -198,7 +198,7 @@ the new and next examples, we see the diff looks like:
 
 .. code-block:: xonshcon
 
-    >>> history diff ~/new.json ~/next.json
+    @ history diff ~/new.json ~/next.json
     --- /home/scopatz/new.json (35712b6f-4b15-4ef9-8ce3-b4c781601bc2) [unlocked]
     started: 2015-08-27 15:13:44.873869 stopped: 2015-08-27 15:13:44.918903 runtime: 0:00:00.045034
     +++ /home/scopatz/next.json (70d7186e-3eb9-4b1c-8f82-45bb8a1b7967) [unlocked]
@@ -331,7 +331,7 @@ you could run the following command:
 
 .. code-block:: xonshcon
 
-    >>> history gc --size 1 month
+    @ history gc --size 1 month
 
 
 History Indexing
@@ -366,11 +366,11 @@ examples:
 
 .. code-block:: xonshcon
 
-    >>> echo mkdir with/a/huge/name/
+    @ echo mkdir with/a/huge/name/
     mkdir with/a/huge/name
-    >>> __xonsh__.history[-1, -1]
+    @ __xonsh__.history[-1, -1]
     'with/a/huge/name/'
-    >>> __xonsh__.history[0, 1:]
+    @ __xonsh__.history[0, 1:]
     'mkdir with/a/huge/name'
 
 
