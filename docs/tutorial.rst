@@ -201,7 +201,7 @@ It can be used to temporarily set an environment variable:
     foo
     @ echo $SOMEVAR
     $SOMEVAR
-    @ 
+    @
 
 Environment Lookup with ``${<expr>}``
 -------------------------------------
@@ -972,7 +972,7 @@ The following shows an example with ``emacs``.
 .. code-block:: xonshcon
 
     @ emacs &
-    @ 
+    @
 
 Note that the prompt is returned to you after emacs is started.
 
