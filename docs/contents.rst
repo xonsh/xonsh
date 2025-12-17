@@ -1,8 +1,5 @@
 #########################
-
-.. centered::
-  **the xonsh shell**
-
+the xonsh shell
 #########################
 
 .. include:: intro.rst
