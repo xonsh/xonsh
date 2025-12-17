@@ -127,8 +127,8 @@ You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
 
-    @ @
-    <xonsh.built_ins.XonshSessionInterface>
+    @ type(@)
+    xonsh.built_ins.XonshSessionInterface
     @ @.imp.json.loads('{"conch":"snail"}')
     {"conch":"snail"}
     @ @.env.get('HOME')
