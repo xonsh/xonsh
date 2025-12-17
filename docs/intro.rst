@@ -2,7 +2,7 @@
 
 .. raw:: html
 
-    <p style="text-align:center;">
+    <p style="text-align:left;">
     <span style="font-family:Times;font-size:28px;font-style:normal;font-weight:normal;text-decoration:none;text-transform:none;font-variant:small-caps;color:000000;">
     ~
     <script>
