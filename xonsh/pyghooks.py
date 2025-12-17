@@ -1753,8 +1753,8 @@ class XonshConsoleLexer(XonshLexer):
         "root": [
             (r"^(>>>|\.\.\.) ", Generic.Prompt),
             (r"\n(>>>|\.\.\.)", Generic.Prompt),
-            (r"^(  @|\.\.\.) ", Generic.Prompt),
-            (r"\n(  @|\.\.\.)", Generic.Prompt),
+            (r"^(@|\.) ", Generic.Prompt),
+            (r"\n(@|\.)", Generic.Prompt),
             (r"\n(?![>.][>.][>.] )([^\n]*)", Generic.Output),
             (r"\n(?![>.][>.][>.] )(.*?)$", Generic.Output),
             inherit,
