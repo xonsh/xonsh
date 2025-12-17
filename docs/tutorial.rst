@@ -12,8 +12,8 @@ language.
 
 While all Python code is also xonsh, not all Bash code can be used in xonsh.
 That would defeat the purpose, and Python is better anyway! Still, xonsh is
-Bash-wards compatible in the ways that matter, such as for running commands,
-reading in the Bash environment, and utilizing Bash tab completion.
+compatible with shell commands in the ways that matter, such as for running commands,
+reading the environment, and utilizing tab completion.
 
 The purpose of this tutorial is to teach you xonsh. There are many excellent
 guides out there for learning Python, and this will not join their ranks.
@@ -24,7 +24,7 @@ Let's dive in!
 
 Starting xonsh
 ========================
-Assuming you have successfully installed xonsh (see http://xon.sh),
+Assuming you have successfully installed xonsh,
 you can start up the xonsh interpreter via the ``xonsh`` command. Suppose
 you are in a lesser terminal:
 
@@ -48,10 +48,6 @@ simple:
 
     @ 1 + 1
     2
-
-.. note:: From here on we'll be using ``>>>`` to prefix (or prompt) any
-          xonsh input. This follows the Python convention and helps trick
-          syntax highlighting, though ``$`` is more traditional for shells.
 
 Since this is just Python, we are able to import modules, print values,
 and use other built-in Python functionality:
@@ -205,7 +201,7 @@ It can be used to temporarily set an environment variable:
     foo
     @ echo $SOMEVAR
     $SOMEVAR
-    >>>
+    @
 
 Environment Lookup with ``${<expr>}``
 -------------------------------------
@@ -419,7 +415,7 @@ must be used to force xonsh to not interpret them.
     ${
 
 .. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\\) in bash.
+             backslash (\\) in Bash.
 
 
 Captured Subprocess with ``$()`` and ``!()``
@@ -976,7 +972,7 @@ The following shows an example with ``emacs``.
 .. code-block:: xonshcon
 
     @ emacs &
-    >>>
+    @
 
 Note that the prompt is returned to you after emacs is started.
 
@@ -1850,7 +1846,7 @@ For example:
     ~~ACTIVE~~ @ $VIRTUAL_ENV_DISABLE_PROMPT = 1
     @ del $VIRTUAL_ENV_PROMPT
     @ del $VIRTUAL_ENV_DISABLE_PROMPT
-    (env) >>>
+    (env) @
 
 
 You can also color your prompt (or print colored messages using ``print_color`` function) easily by inserting
