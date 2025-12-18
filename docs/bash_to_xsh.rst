@@ -146,8 +146,8 @@ to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
 .. code-block:: console
 
-    >>> $XONSH_TRACE_SUBPROC = True
-    >>> echo $(echo @('hello')) @('wor' + 'ld') | grep hello
+    @ $XONSH_TRACE_SUBPROC = True
+    @ echo $(echo @('hello')) @('wor' + 'ld') | grep hello
     TRACE SUBPROC: (['echo', 'hello'],)
     TRACE SUBPROC: (['echo', 'hello\n', 'world'], '|', ['grep', 'hello'])
 

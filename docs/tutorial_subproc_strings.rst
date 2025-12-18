@@ -34,7 +34,7 @@ to try this in xonsh, you'd see:
 
 .. code-block:: bash
 
-    $ echo Actually\ Three\ Arguments
+    @ echo Actually\ Three\ Arguments
     Actually\ Three\ Arguments
 
 In this example, echo recives three arguments:: ``"Actually\\"``, ``"Three\\"``,
@@ -73,7 +73,7 @@ For example,
 
 .. code-block:: bash
 
-    $ echo! A  Single     Argument
+    @ echo! A  Single     Argument
     A  Single     Argument
 
 Subprocess macros are the ultimate escape mechanism.
@@ -99,10 +99,10 @@ when leading and trailing quotes are not matched.
 
 .. code-block:: bash
 
-    $ echo foo"bar"baz
+    @ echo foo"bar"baz
     foo"bar"baz
 
-    $ echo --key="value"
+    @ echo --key="value"
     --key="value"
 
 You can think of these being equivalent to,
@@ -112,10 +112,10 @@ You can think of these being equivalent to,
 
 .. code-block:: bash
 
-    $ echo 'foo"bar"baz'
+    @ echo 'foo"bar"baz'
     foo"bar"baz
 
-    $ echo '--key="value"'
+    @ echo '--key="value"'
     --key="value"
 
 This is yet another major point of departure for xonsh from traditional
