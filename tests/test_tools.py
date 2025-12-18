@@ -2088,3 +2088,15 @@ def test_print_exception_error(xession, capsys):
         cap.err,
         re.MULTILINE | re.DOTALL,
     ), f"\nAssert: {cap.err!r},\nexpected {match!r}"
+
+
+def test_expand_path_tilde_in_env_var(xession, monkeypatch):
+    """Regression test for #5970: tilde inside env var should not be expanded to home."""
+    from xonsh.tools import expand_path
+    monkeypatch.setenv("HOME", "/fake/home")
+    xession.env["EXPAND_ENV_VARS"] = True
+    xession.env["QWE"] = "~"
+    assert expand_path("$QWE") == "~"
+    assert expand_path("~") == "/fake/home"
+    xession.env["MYDIR"] = "docs"
+    assert expand_path("~/ $MYDIR") == "/fake/home/ docs"

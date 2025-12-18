@@ -140,8 +140,6 @@ def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
     env = xsh.env or os_environ
-    if env.get("EXPAND_ENV_VARS", False):
-        s = expandvars(s)
     if expand_user:
         # expand ~ according to Bash unquoted rules "Each variable assignment is
         # checked for unquoted tilde-prefixes immediately following a ':' or the
@@ -153,6 +151,8 @@ def expand_path(s, expand_user=True):
             s += os.pathsep.join(map(expanduser, post.split(os.pathsep)))
         else:
             s = expanduser(s)
+    if env.get("EXPAND_ENV_VARS", False):
+        s = expandvars(s)
     return s
 
 
