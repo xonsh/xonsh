@@ -1362,6 +1362,14 @@ class InterpreterSetting(Xettings):
         "Toggles whether globbing results are manually sorted. If ``False``, "
         "the results are returned in arbitrary order.",
     )
+    XONSH_ENV_EXPANDUSER = Var.with_default(
+        False,
+        "If ``True``, environment variables are expanded before tilde expansion "
+        "in subprocess mode. This allows variables containing ``~`` to be expanded "
+        "to the home directory (e.g. ``ROOT=~; ls $ROOT``). "
+        "If ``False`` (default), tilde expansion happens first, preventing "
+        "accidental expansion of tildes inside variables (e.g. passwords).",
+    )
 
 
 class XontribSetting(Xettings):

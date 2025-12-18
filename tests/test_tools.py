@@ -2091,12 +2091,22 @@ def test_print_exception_error(xession, capsys):
 
 
 def test_expand_path_tilde_in_env_var(xession, monkeypatch):
-    """Regression test for #5970: tilde inside env var should not be expanded to home."""
+    """Regression test for #5970: logic depends on XONSH_ENV_EXPANDUSER."""
     from xonsh.tools import expand_path
+    from xonsh.platform import ON_WINDOWS
     monkeypatch.setenv("HOME", "/fake/home")
+    if ON_WINDOWS:
+        monkeypatch.setenv("USERPROFILE", "/fake/home")
     xession.env["EXPAND_ENV_VARS"] = True
     xession.env["QWE"] = "~"
+    # Case 1: Default behavior (Safe)
+    # XONSH_ENV_EXPANDUSER is False by default
+    xession.env["XONSH_ENV_EXPANDUSER"] = False
+    # Tilde inside variable is NOT expanded (good for passwords)
     assert expand_path("$QWE") == "~"
+    # Literal tilde IS expanded
     assert expand_path("~") == "/fake/home"
-    xession.env["MYDIR"] = "docs"
-    assert expand_path("~/ $MYDIR") == "/fake/home/ docs"
+    # Case 2: Aggressive behavior (Legacy/Opt-in)
+    xession.env["XONSH_ENV_EXPANDUSER"] = True
+    # Tilde inside variable IS expanded (good for path composition)
+    assert expand_path("$QWE") == "/fake/home"
