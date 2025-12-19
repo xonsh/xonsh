@@ -95,7 +95,7 @@ xonsh
                          history_encrypt
 
 
-If you like xonsh, :star: the repo, `write a tweet`_ and stay tuned by watching releases.
+If you like xonsh, :star: the repo and spread the word about xonsh.
 
 .. class:: center
 
@@ -175,19 +175,17 @@ Welcome to the xonsh shell community
 
 The xonsh shell is developed by a community of volunteers. There are a few ways to help out:
 
-- Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_ or `high priority issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3Apriority-high+sort%3Areactions-%2B1-desc>`_ or a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_. You can start with the `Developer guide <https://xon.sh/devguide.html>`_.
+- Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_ or `high priority issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3Apriority-high+sort%3Areactions-%2B1-desc>`_ or a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_. You can start with the `Developer guide <https://xon.sh/devguide.html>`_. Feel free to use LLM e.g. `Github Copilot <https://github.com/copilot>`_.
 - Take an `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create a new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
 - Contribute to `xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
 - Become xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
-- Add xonsh support in third party tool e.g. conda, jupyter, zoxide, etc.
+- Add xonsh support in third party tool: `package manager <https://github.com/topics/package-manager>`_, `terminal emulator <https://github.com/topics/terminal-emulators>`_, `console tool <https://github.com/topics/console>`_, `IDE <https://github.com/topics/ide>`_.
 - Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_ (`src <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_).
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
-- `Write a tweet`_, post or an article to spread the good word about xonsh in the world.
+- Spread the good word about xonsh in the world by sharing news and notes about xonsh.
 - Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
 
 We welcome new contributors!
-
-.. _write a tweet: https://twitter.com/intent/tweet?text=xonsh%20is%20a%20Python-powered,%20cross-platform,%20Unix-gazing%20shell%20language%20and%20command%20prompt.&url=https://github.com/xonsh/xonsh
 
 Credits
 *******
