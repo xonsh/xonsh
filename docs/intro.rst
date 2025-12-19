@@ -2,7 +2,7 @@
 
 .. raw:: html
 
-    <p style="text-align:center;">
+    <p style="text-align:left;">
     <span style="font-family:Times;font-size:28px;font-style:normal;font-weight:normal;text-decoration:none;text-transform:none;font-variant:small-caps;color:000000;">
     ~
     <script>
@@ -17,9 +17,8 @@
         "Pass the xonsh, Piggy",
         "Piggy glanced nervously into hell and cradled the xonsh",
         "The xonsh is a symbol",
-        "It is pronounced <i>conch</i>",
+        "It is pronounced <i>consh</i>",
         "It is pronounced <i>🐚</i>",
-        "It is pronounced <i>kɒntʃ</i>",
         "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
@@ -42,8 +41,9 @@
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
         "This fix was trickier than expected",
-        "The unholy cross of Bash/Python",
-        "Exploiting the workers and hanging on to outdated imperialist dogma since 2015."
+        "The unholy cross of Shell/Python",
+        "Exploiting the workers and hanging on to outdated imperialist dogma since 2015.",
+        "Not perfect but ahead"
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
@@ -53,8 +53,8 @@
     </span>
     </p>
 
-Xonsh is a Python-powered, cross-platform, Unix-gazing shell language and
-command prompt. The language is a superset of Python 3.6+ with additional
-shell primitives that you are used to from Bash and IPython. It works on
-all major systems including Linux, Mac OSX, and Windows. Xonsh is meant
-for the daily use of experts and novices alike.
+Xonsh (sounds like "consh") is a modern, full-featured and cross-platform python shell.
+The language is a superset of Python 3.6+ with additional shell
+primitives that you are used to from Bash and IPython. It works
+on all major systems including Linux, OSX, and Windows.
+Xonsh is meant for the daily use of experts and novices.

@@ -87,13 +87,13 @@ even if that object is not a string:
 
 .. code-block:: xonshcon
 
-    >>> identity('me')
+    @ identity('me')
     'me'
 
-    >>> identity(42)
+    @ identity(42)
     42
 
-    >>> identity(identity)
+    @ identity(identity)
     <function __main__.identity>
 
 However, if we perform macro calls instead we are now guaranteed to get
@@ -101,13 +101,13 @@ the string of the source code that is in the macro call:
 
 .. code-block:: xonshcon
 
-    >>> identity!('me')
+    @ identity!('me')
     "'me'"
 
-    >>> identity!(42)
+    @ identity!(42)
     '42'
 
-    >>> identity!(identity)
+    @ identity!(identity)
     'identity'
 
 Also note that each macro argument is stripped prior to passing it to the
@@ -115,10 +115,10 @@ macro itself. This is done for consistency.
 
 .. code-block:: xonshcon
 
-    >>> identity!(42)
+    @ identity!(42)
     '42'
 
-    >>> identity!(  42 )
+    @ identity!(  42 )
     '42'
 
 Importantly, because we are capturing and not evaluating the source code,
@@ -127,14 +127,14 @@ is sort of the whole point. Here are some cases to start your gears turning:
 
 .. code-block:: xonshcon
 
-    >>> identity!(import os)
+    @ identity!(import os)
     'import os'
 
-    >>> identity!(if True:
-    >>>     pass)
+    @ identity!(if True:
+    @     pass)
     'if True:\n    pass'
 
-    >>> identity!(std::vector<std::string> x = {"yoo", "hoo"})
+    @ identity!(std::vector<std::string> x = {"yoo", "hoo"})
     'std::vector<std::string> x = {"yoo", "hoo"}'
 
 You do you, ``identity()``.
@@ -148,7 +148,7 @@ function from above:
 
 .. code-block:: xonshcon
 
-    >>> identity!(x=42)
+    @ identity!(x=42)
     'x=42'
 
 Performing a macro call uses only argument order to pass in values.
@@ -169,19 +169,19 @@ argument:
 
 .. code-block:: xonshcon
 
-    >>> g!(42, 65)
+    @ g!(42, 65)
     x = '42'
     y = '65'
 
-    >>> g!(42, 65,)
+    @ g!(42, 65,)
     x = '42'
     y = '65'
 
-    >>> g!( 42, 65, )
+    @ g!( 42, 65, )
     x = '42'
     y = '65'
 
-    >>> g!(['x', 'y'], {1: 1, 2: 3})
+    @ g!(['x', 'y'], {1: 1, 2: 3})
     x = "['x', 'y']"
     y = '{1: 1, 2: 3}'
 
@@ -193,11 +193,11 @@ example:
 
 .. code-block:: xonshcon
 
-    >>> g!(42, *, 65)
+    @ g!(42, *, 65)
     x = '42'
     y = 65
 
-    >>> g!(42, *, y=65)
+    @ g!(42, *, y=65)
     x = '42'
     y = 65
 
@@ -328,14 +328,14 @@ Running this with a few of different inputs, we see:
 
 .. code-block:: xonshcon
 
-    >>> one_to_two!(1 + 1)
+    @ one_to_two!(1 + 1)
     4
 
-    >>> one_to_two!(11)
+    @ one_to_two!(11)
     22
 
-    >>> x = 1
-    >>> one_to_two!(x + 1)
+    @ x = 1
+    @ one_to_two!(x + 1)
     3
 
 Of course, many other more sophisticated options are available depending on the
@@ -355,7 +355,7 @@ function macro counterparts:
 
 .. code-block:: xonshcon
 
-    >>> echo! I'm Mr. Meeseeks.
+    @ echo! I'm Mr. Meeseeks.
     I'm Mr. Meeseeks.
 
 Again, note that everything to the right of the ``!`` is passed down to the
@@ -366,16 +366,16 @@ like wrapping with quotes:
 
     # normally, xonsh will split on whitespace,
     # so each argument is passed in separately
-    >>> echo x  y       z
+    @ echo x  y       z
     x y z
 
     # usually space can be preserved with quotes
-    >>> echo "x  y       z"
+    @ echo "x  y       z"
     x  y       z
 
     # however, subprocess macros will pause and then strip
     # all input after the exclamation point
-    >>> echo! x  y       z
+    @ echo! x  y       z
     x  y       z
 
 However, the macro will pause everything, including path and environment variable
@@ -384,11 +384,11 @@ expansion, that might be present even with quotes.  For example:
 .. code-block:: xonshcon
 
     # without macros, environment variable are expanded
-    >>> echo $USER
+    @ echo $USER
     lou
 
     # inside of a macro, all additional munging is turned off.
-    >>> echo! $USER
+    @ echo! $USER
     $USER
 
 Everything to the right of the exclamation point, except the leading and trailing
@@ -400,11 +400,11 @@ but will be easily executable as a macro:
 .. code-block:: xonshcon
 
     # fails normally
-    >>> timeit "hello mom " + "and dad"
+    @ timeit "hello mom " + "and dad"
     xonsh: subprocess mode: command not found: hello
 
     # macro success!
-    >>> timeit! "hello mom " + "and dad"
+    @ timeit! "hello mom " + "and dad"
     100000000 loops, best of 3: 8.24 ns per loop
 
 All expressions to the left of the exclamation point are passed in normally and
@@ -415,11 +415,11 @@ really want to write some code in another language:
 .. code-block:: xonshcon
 
     # don't worry, it is temporary!
-    >>> bash -c ! export var=42; echo $var
+    @ bash -c ! export var=42; echo $var
     42
 
     # that's better!
-    >>> python -c ! import os; print(os.path.abspath("/"))
+    @ python -c ! import os; print(os.path.abspath("/"))
     /
 
 Compared to function macros, subprocess macros are relatively simple.
@@ -520,7 +520,7 @@ XML object.
 
 .. code-block:: xonshcon
 
-    >>> print(tree.tag)
+    @ print(tree.tag)
     note
 
 

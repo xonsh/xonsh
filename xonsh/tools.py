@@ -1364,6 +1364,11 @@ def str_to_path(x):
         )
 
 
+def str_to_abs_path(x):
+    """Converts a string to an absolute path."""
+    return r.absolute() if (r := str_to_path(x)) is not None else r
+
+
 def str_to_env_path(x):
     """Converts a string to an environment path, ie a list of strings,
     splitting on the OS separator.
@@ -1375,6 +1380,11 @@ def str_to_env_path(x):
 def path_to_str(x):
     """Converts a path to a string."""
     return str(x) if x is not None else ""
+
+
+def abs_path_to_str(x):
+    """Converts an absolute path to a string."""
+    return path_to_str(x.absolute()) if x is not None else path_to_str(x)
 
 
 def env_path_to_str(x):
