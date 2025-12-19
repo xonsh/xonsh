@@ -1,5 +1,6 @@
 """An implementation of yes for xonsh."""
 
+
 def yes(args, stdin, stdout, stderr):
     """A yes command."""
     if "--help" in args:
@@ -13,6 +14,7 @@ def yes(args, stdin, stdout, stderr):
             print(*to_print, file=stdout)
     except KeyboardInterrupt:
         return 130
+
 
 YES_HELP = """Usage: yes [STRING]...
   or:  yes OPTION
