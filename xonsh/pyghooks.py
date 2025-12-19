@@ -1641,7 +1641,7 @@ class XonshLexer(Python3Lexer):
 
     name = "Xonsh lexer"
     aliases = ["xonsh", "xsh"]
-    filenames = ["*.xsh", "*xonshrc"]
+    filenames = ["*.xsh", "*.xonsh", "*xonshrc"]
 
     def __init__(self, *args, **kwargs):
         # If the lexer is loaded as a pygment plugin, we have to mock
