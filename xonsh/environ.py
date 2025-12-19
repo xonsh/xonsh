@@ -1624,6 +1624,13 @@ class PromptSetting(Xettings):
         "match command history anywhere in a given line (not just the start)",
         doc_default="False",
     )
+    XONSH_PROMPT_HIGHLIGHT_EXECUTABLE = Var.with_default(
+        False,
+        "Flag for coloring executable commands in a prompt. "
+        "Aliases are still colored. "
+        "Disable this if you have slow I/O operations or "
+        " have an antivirus enabled with on-access scanning.",
+    )
     XONSH_STDERR_PREFIX = Var.with_default(
         "",
         "A format string, using the same keys and colors as ``$PROMPT``, that "
