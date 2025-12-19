@@ -43,6 +43,7 @@ from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
     EnvPath,
+    abs_path_to_str,
     adjust_shlvl,
     always_false,
     always_true,
@@ -86,6 +87,7 @@ from xonsh.tools import (
     ptk2_color_depth_setter,
     seq_to_upper_pathsep,
     set_to_csv,
+    str_to_abs_path,
     str_to_env_path,
     str_to_path,
     swap_values,
@@ -545,6 +547,7 @@ ENSURERS = {
     "str": (is_string, ensure_string, ensure_string),
     "path": (is_path, str_to_path, path_to_str),
     "env_path": (is_env_path, str_to_env_path, env_path_to_str),
+    "abs_path": (is_path, str_to_abs_path, abs_path_to_str),
     "float": (is_float, float, str),
     "int": (is_int, int, str),
 }
@@ -1661,7 +1664,7 @@ class PromptHistorySetting(Xettings):
         "Location of history file set by history backend (default) or set by the user.",
         is_configurable=False,
         doc_default="None",
-        type_str="path",
+        type_str="abs_path",
     )
     HISTCONTROL = Var(
         is_string_set,
