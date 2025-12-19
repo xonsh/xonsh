@@ -1,5 +1,36 @@
 # Xonsh Change Log
 
+## [0.22.0](https://github.com/xonsh/xonsh/compare/0.21.2...0.22.0) (2025-12-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove aliases `ipynb`, `scp-resume` from builtin aliases and rename `xonsh-reset` to `xreset` ([#5992](https://github.com/xonsh/xonsh/issues/5992))
+
+### Features
+
+* added `xpython` and `xсontext` builtin aliases ([#5989](https://github.com/xonsh/xonsh/issues/5989)) ([4382735](https://github.com/xonsh/xonsh/commit/43827358d205855c6c1c68bed138d656f3657bc3))
+* **events:** added `events.handlers()` to get info about registered event handlers and also `events.__repr__` to just `print(events)`. ([#5994](https://github.com/xonsh/xonsh/issues/5994)) ([166a1a6](https://github.com/xonsh/xonsh/commit/166a1a6a826669a24ae5df7a69193fa7bd1604c5))
+
+
+### Bug Fixes
+
+* allow spaces in auto-suggest completions ([#5993](https://github.com/xonsh/xonsh/issues/5993)) ([4332701](https://github.com/xonsh/xonsh/commit/4332701179c06d7a7ce2853043271eb1aa2e3214))
+* docs publish ([#5985](https://github.com/xonsh/xonsh/issues/5985)) ([e666ea9](https://github.com/xonsh/xonsh/commit/e666ea9674d8715bf6e7e6b38f8d2cbfbeb9e284))
+* **history:** Using absolute path to history file to prevent downstream issues ([#6002](https://github.com/xonsh/xonsh/issues/6002)) ([f1501b2](https://github.com/xonsh/xonsh/commit/f1501b257ce8ec40c10006c763321577bf5550fe))
+
+
+### Documentation
+
+* add description and examples for `@.env.register` ([#5990](https://github.com/xonsh/xonsh/issues/5990)) ([9ce5d5d](https://github.com/xonsh/xonsh/commit/9ce5d5d3d58b00b642856f4dc48dbac9b25f63c1))
+* Update tutorial to replace prompt ([#6007](https://github.com/xonsh/xonsh/issues/6007)) ([3260b77](https://github.com/xonsh/xonsh/commit/3260b77ab4d4d8fa2dc5fb61e7509a0a7eaaa9bc))
+* Update xonsh logo in the docs ([#6004](https://github.com/xonsh/xonsh/issues/6004)) ([dbeb276](https://github.com/xonsh/xonsh/commit/dbeb27688bdbbd5efd6ffcc246ce4181df4f66bc))
+
+
+### Code Refactoring
+
+* Remove aliases `ipynb`, `scp-resume` from builtin aliases and rename `xonsh-reset` to `xreset` ([#5992](https://github.com/xonsh/xonsh/issues/5992)) ([df3ff49](https://github.com/xonsh/xonsh/commit/df3ff497e9e73dbc3a1e86c6f14ad7e5e57bccaa))
+
 ## [0.21.2](https://github.com/xonsh/xonsh/compare/0.21.1...0.21.2) (2025-12-10)
 
 
