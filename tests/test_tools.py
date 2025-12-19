@@ -2092,8 +2092,9 @@ def test_print_exception_error(xession, capsys):
 
 def test_expand_path_tilde_in_env_var(xession, monkeypatch):
     """Regression test for #5970: logic depends on XONSH_ENV_EXPANDUSER."""
-    from xonsh.tools import expand_path
     from xonsh.platform import ON_WINDOWS
+    from xonsh.tools import expand_path
+
     monkeypatch.setenv("HOME", "/fake/home")
     if ON_WINDOWS:
         monkeypatch.setenv("USERPROFILE", "/fake/home")
