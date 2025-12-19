@@ -43,7 +43,15 @@
         "This fix was trickier than expected",
         "The unholy cross of Shell/Python",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015.",
-        "Not perfect but ahead"
+        "Not perfect but ahead",
+        "We call @ a conch",
+        "Still a shell, now with feelings",
+        "The only shell that knows what your code meant",
+        "Shell yeah",
+        "Tab completion as a service",
+        "Now powered by vibes and unit tests",
+        "Infrastructure as a conchline",
+        "Reproducibility is a lifestyle"        
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
