@@ -19,7 +19,6 @@
         "The xonsh is a symbol",
         "It is pronounced <i>consh</i>",
         "It is pronounced <i>🐚</i>",
-        "It is pronounced <i>kɒntʃ</i>",
         "The shell, bourne again",
         "Snailed it",
         "Starfish loves you",
@@ -42,7 +41,7 @@
         "Python-powered, cross-platform, Unix-gazing shell",
         "Tab completion in Alderaan places",
         "This fix was trickier than expected",
-        "The unholy cross of Bash/Python",
+        "The unholy cross of Shell/Python",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015.",
         "Not perfect but ahead"
         ];
