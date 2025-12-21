@@ -7,6 +7,7 @@ import operator
 import os
 import pathlib
 import re
+import shlex
 import shutil
 import sys
 import types
@@ -670,7 +671,13 @@ def source_foreign_fn(
         if not sourcer:
             return (None, "xonsh: error: `sourcer` command is not mentioned.\n", 1)
         # we have filenames to source
-        prevcmd = "".join([f"{sourcer} {f}\n" for f in files_or_code])
+        shell_name = os.path.basename(shell).lower()
+        quote = (
+            functools.partial(argvquote, force=True)
+            if shell_name in {"cmd", "cmd.exe"}
+            else shlex.quote
+        )
+        prevcmd = "".join(f"{sourcer} {quote(f)}\n" for f in files_or_code)
         files = tuple(files_or_code)
     elif not prevcmd:
         prevcmd = " ".join(files_or_code)  # code to run, no files
