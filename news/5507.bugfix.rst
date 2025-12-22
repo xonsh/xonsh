@@ -1,0 +1,3 @@
+**Fixed:**
+
+* Fixed an issue where path completion would strip trailing newlines and spaces from filenames.
