@@ -51,7 +51,7 @@
         "Tab completion as a service",
         "Now powered by vibes and unit tests",
         "Infrastructure as a conchline",
-        "Reproducibility is a lifestyle"        
+        "Reproducibility is a lifestyle"
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
