@@ -390,6 +390,115 @@ def getPseudoTokenWithoutIO(is_subproc=False):
     PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
     return Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
 
+_FSTRING_PREFIX_RE = re.compile(r"(?i)^[brufp]*")  # любые допустимые префиксы, порядок не важен
+_QUOTE_RE = re.compile(r"^('''|\"\"\"|'|\")", re.S)
+_ENV_FIELD_RE = re.compile(r"^\s*\$([A-Za-z_][A-Za-z0-9_]*)\s*$")
+
+def _fstring_rewrite_env_var(token: str) -> str:
+    """
+    After Python 3.12 with https://peps.python.org/pep-0701/ we can't use `$` in string literals as before
+    and f"{$HOME}" produces "Unsupported fstring syntax".
+    This function is to treat the situation and implement single token support so f"{$HOME}" will work so
+    the cases like `fp"{$HOME}/dir"` will work.
+
+    If `token` is an f-string (in any combination with r/p), perform a narrow rewrite:
+    `{$NAME} -> {__xonsh__.env['NAME']}` only for top-level fields. Recognizes `{{` and `}}` as literal braces.
+    Otherwise returns `token` unchanged.
+    """
+    if not token:
+        return token
+
+    # 1) Separate prefix and quotes
+    i = 0
+    m = _FSTRING_PREFIX_RE.match(token)
+    if m:
+        i = m.end()
+    if i >= len(token):
+        return token
+
+    qm = _QUOTE_RE.match(token[i:])
+    if not qm:
+        return token  # quotes not recognized — leave as-is
+    quote = qm.group(1)
+    qlen = len(quote)
+    start = i + qlen
+    end = len(token) - qlen
+    if end < start:
+        return token
+
+    prefix = token[:i]
+    body = token[start:end]
+
+    # 2) Require an 'f' in the prefix (case-insensitive, any combination)
+    if "f" not in prefix.lower():
+        return token
+
+    # 3) Walk the body and rewrite only top-level fields of the form {$NAME}
+    out = []
+    n = len(body)
+    j = 0
+    changed = False
+    while j < n:
+        ch = body[j]
+        if ch == "{":
+            # Escaped opening brace {{
+            if j + 1 < n and body[j + 1] == "{":
+                out.append("{{")
+                j += 2
+                continue
+            # Start of a field: find the closing '}' without full nesting support.
+            # For the narrow case {$NAME}, take the nearest non-'}}' '}'.
+            k = j + 1
+            while k < n:
+                if body[k] == "}":
+                    # Escaped closing }} does not end a field
+                    if k + 1 < n and body[k + 1] == "}":
+                        k += 2
+                        continue
+                    break
+                k += 1
+            if k >= n:
+                # Incomplete field — emit as-is
+                out.append(body[j:])
+                j = n
+                break
+
+            field = body[j + 1 : k]  # content between { ... }
+            # Narrow rule: only accept {$NAME} without ! or :
+            if "!" in field or ":" in field:
+                out.append("{" + field + "}")
+            else:
+                mfield = _ENV_FIELD_RE.match(field)
+                if mfield:
+                    name = mfield.group(1)
+                    out.append("{__xonsh__.env[%r]}" % name)
+                    changed = True
+                else:
+                    out.append("{" + field + "}")
+            j = k + 1
+            continue
+
+        if ch == "}":
+            # Escaped closing brace }}
+            if j + 1 < n and body[j + 1] == "}":
+                out.append("}}")
+                j += 2
+                continue
+            # Lone '}' in text — keep as-is
+            out.append("}")
+            j += 1
+            continue
+
+        # Regular character
+        out.append(ch)
+        j += 1
+
+    if not changed:
+        return token
+
+    new_body = "".join(out)
+    return f"{prefix}{quote}{new_body}{quote}"
+
 
 def _compile(expr):
     return re.compile(expr, re.UNICODE)
@@ -917,8 +1026,10 @@ def _tokenize(
             endmatch = endprog.match(line)
             if endmatch:
                 pos = end = endmatch.end(0)
+                token = contstr + line[:end]
+                token = _fstring_rewrite_env_var(token)
                 yield TokenInfo(
-                    STRING, contstr + line[:end], strstart, (lnum, end), contline + line
+                    STRING, token, strstart, (lnum, end), contline + line
                 )
                 contstr, needcont = "", 0
                 contline = None
@@ -1057,6 +1168,8 @@ def _tokenize(
                     if endmatch:  # all on one line
                         pos = endmatch.end(0)
                         token = line[start:pos]
+                        token = _fstring_rewrite_env_var(token)
+
                         yield TokenInfo(STRING, token, spos, (lnum, pos), line)
                     else:
                         strstart = (lnum, start)  # multiple lines
@@ -1077,6 +1190,7 @@ def _tokenize(
                         contline = line
                         break
                     else:  # ordinary string
+                        token = _fstring_rewrite_env_var(token)
                         yield TokenInfo(STRING, token, spos, epos, line)
                 elif token.startswith("$") and (
                     token[1:].isidentifier() or token[1:2].isalnum()

@@ -524,3 +524,60 @@ def test_lexer_subproc():
     lex.input(cmd, is_subproc=True)
     result_subproc = [t.value for t in list(lex)]
     assert result_subproc == result_no_subproc
+
+
+def test_fstring_env_rewrite_simple():
+    # Basic replacement: f"{$HOME}" -> f"{__xonsh__.env['HOME']}"
+    inp = 'f"{$HOME}"'
+    exp_val = 'f"{__xonsh__.env[\'HOME\']}"'
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+
+@pytest.mark.parametrize("prefix", ["f", "rf", "fr", "pf", "fp", "pF", "Fp", "F"])
+def test_fstring_env_rewrite_with_prefixes(prefix):
+    # Replacement should work for any prefix combination that includes 'f' (case-insensitive)
+    inp = f'{prefix}"{{$HOME}}"'.replace("{{", "{").replace("}}", "}")  # ensure single braces
+    exp_val = f'{prefix}"{{__xonsh__.env[\'HOME\']}}"'.replace("{{", "{").replace("}}", "}")
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+
+def test_fstring_env_rewrite_multiple_fields():
+    # Multiple fields get rewritten independently
+    inp = 'f"{$HOME}{$USER}"'
+    exp_val = 'f"{__xonsh__.env[\'HOME\']}{__xonsh__.env[\'USER\']}"'
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+
+def test_fstring_env_rewrite_with_whitespace():
+    # Whitespace inside the field is tolerated: {$  HOME   } -> {__xonsh__.env['HOME']}
+    inp = 'f"{   $HOME   }"'
+    exp_val = 'f"{__xonsh__.env[\'HOME\']}"'
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+
+def test_fstring_env_no_rewrite_escaped_braces():
+    # Escaped braces are literals and must not trigger rewriting
+    inp = 'f"{{ $HOME }}"'
+    exp_val = 'f"{{ $HOME }}"'
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+
+def test_fstring_env_no_rewrite_with_conversion():
+    # Fields with conversion are out of scope for the narrow pass and must remain unchanged
+    inp = 'f"{$HOME!r}"'
+    exp_val = 'f"{$HOME!r}"'
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+
+def test_fstring_env_no_rewrite_with_format_spec():
+    # Fields with format spec are out of scope for the narrow pass and must remain unchanged
+    inp = 'f"{$HOME:>10}"'
+    exp_val = 'f"{$HOME:>10}"'
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+
+def test_fstring_env_rewrite_triple_quoted_multiline():
+    # Multiline triple-quoted f-string should also be rewritten on completion
+    inp = 'f"""{$HOME}\n{$USER}"""'
+    exp_val = 'f"""{__xonsh__.env[\'HOME\']}\n{__xonsh__.env[\'USER\']}"""'
+    assert check_token(inp, ["STRING", exp_val, 0])
