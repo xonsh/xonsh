@@ -390,9 +390,13 @@ def getPseudoTokenWithoutIO(is_subproc=False):
     PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
     return Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
 
-_FSTRING_PREFIX_RE = re.compile(r"(?i)^[brufp]*")  # любые допустимые префиксы, порядок не важен
+
+_FSTRING_PREFIX_RE = re.compile(
+    r"(?i)^[brufp]*"
+)  # любые допустимые префиксы, порядок не важен
 _QUOTE_RE = re.compile(r"^('''|\"\"\"|'|\")", re.S)
 _ENV_FIELD_RE = re.compile(r"^\s*\$([A-Za-z_][A-Za-z0-9_]*)\s*$")
+
 
 def _fstring_rewrite_env_var(token: str) -> str:
     """
@@ -1028,9 +1032,7 @@ def _tokenize(
                 pos = end = endmatch.end(0)
                 token = contstr + line[:end]
                 token = _fstring_rewrite_env_var(token)
-                yield TokenInfo(
-                    STRING, token, strstart, (lnum, end), contline + line
-                )
+                yield TokenInfo(STRING, token, strstart, (lnum, end), contline + line)
                 contstr, needcont = "", 0
                 contline = None
             elif needcont and line[-2:] != "\\\n" and line[-3:] != "\\\r\n":
