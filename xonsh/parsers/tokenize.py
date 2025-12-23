@@ -433,6 +433,9 @@ def _fstring_rewrite_env_var(token: str) -> str:
     if "f" not in prefix.lower():
         return token
 
+    outer = quote[0]  # "'" or '"'
+    inner_quote = '"' if outer == "'" else "'"
+
     # 3) Walk the body and rewrite only top-level fields of the form {$NAME}
     out = []
     n = len(body)
@@ -471,7 +474,7 @@ def _fstring_rewrite_env_var(token: str) -> str:
                 mfield = _ENV_FIELD_RE.match(field)
                 if mfield:
                     name = mfield.group(1)
-                    out.append("{__xonsh__.env[%r]}" % name)
+                    out.append("{__xonsh__.env[" + inner_quote + name + inner_quote + "]}")
                     changed = True
                 else:
                     out.append("{" + field + "}")

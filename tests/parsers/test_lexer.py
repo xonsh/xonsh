@@ -581,3 +581,15 @@ def test_fstring_env_rewrite_triple_quoted_multiline():
     inp = 'f"""{$HOME}\n{$USER}"""'
     exp_val = 'f"""{__xonsh__.env[\'HOME\']}\n{__xonsh__.env[\'USER\']}"""'
     assert check_token(inp, ["STRING", exp_val, 0])
+
+def test_fstring_env_rewrite_simple_double_outer():
+    # f"{$HOME}" -> f"{__xonsh__.env['HOME']}"
+    inp = 'f"{$HOME}"'
+    exp_val = 'f"{__xonsh__.env[\'HOME\']}"'
+    assert check_token(inp, ["STRING", exp_val, 0])
+
+def test_fstring_env_rewrite_simple_single_outer():
+    # f'{$HOME}' -> f'{__xonsh__.env["HOME"]}'
+    inp = "f'{$HOME}'"
+    exp_val = 'f\'{__xonsh__.env["HOME"]}\''
+    assert check_token(inp, ["STRING", exp_val, 0])
