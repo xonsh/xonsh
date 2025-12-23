@@ -391,9 +391,7 @@ def getPseudoTokenWithoutIO(is_subproc=False):
     return Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
 
 
-_FSTRING_PREFIX_RE = re.compile(
-    r"(?i)^[brufp]*"
-)  # любые допустимые префиксы, порядок не важен
+_FSTRING_PREFIX_RE = re.compile(r"(?i)^[brufp]*")
 _QUOTE_RE = re.compile(r"^('''|\"\"\"|'|\")", re.S)
 _ENV_FIELD_RE = re.compile(r"^\s*\$([A-Za-z_][A-Za-z0-9_]*)\s*$")
 
