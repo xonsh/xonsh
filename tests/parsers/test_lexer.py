@@ -529,29 +529,33 @@ def test_lexer_subproc():
 def test_fstring_env_rewrite_simple():
     # Basic replacement: f"{$HOME}" -> f"{__xonsh__.env['HOME']}"
     inp = 'f"{$HOME}"'
-    exp_val = 'f"{__xonsh__.env[\'HOME\']}"'
+    exp_val = "f\"{__xonsh__.env['HOME']}\""
     assert check_token(inp, ["STRING", exp_val, 0])
 
 
 @pytest.mark.parametrize("prefix", ["f", "rf", "fr", "pf", "fp", "pF", "Fp", "F"])
 def test_fstring_env_rewrite_with_prefixes(prefix):
     # Replacement should work for any prefix combination that includes 'f' (case-insensitive)
-    inp = f'{prefix}"{{$HOME}}"'.replace("{{", "{").replace("}}", "}")  # ensure single braces
-    exp_val = f'{prefix}"{{__xonsh__.env[\'HOME\']}}"'.replace("{{", "{").replace("}}", "}")
+    inp = f'{prefix}"{{$HOME}}"'.replace("{{", "{").replace(
+        "}}", "}"
+    )  # ensure single braces
+    exp_val = f"{prefix}\"{{__xonsh__.env['HOME']}}\"".replace("{{", "{").replace(
+        "}}", "}"
+    )
     assert check_token(inp, ["STRING", exp_val, 0])
 
 
 def test_fstring_env_rewrite_multiple_fields():
     # Multiple fields get rewritten independently
     inp = 'f"{$HOME}{$USER}"'
-    exp_val = 'f"{__xonsh__.env[\'HOME\']}{__xonsh__.env[\'USER\']}"'
+    exp_val = "f\"{__xonsh__.env['HOME']}{__xonsh__.env['USER']}\""
     assert check_token(inp, ["STRING", exp_val, 0])
 
 
 def test_fstring_env_rewrite_with_whitespace():
     # Whitespace inside the field is tolerated: {$  HOME   } -> {__xonsh__.env['HOME']}
     inp = 'f"{   $HOME   }"'
-    exp_val = 'f"{__xonsh__.env[\'HOME\']}"'
+    exp_val = "f\"{__xonsh__.env['HOME']}\""
     assert check_token(inp, ["STRING", exp_val, 0])
 
 
@@ -582,14 +586,16 @@ def test_fstring_env_rewrite_triple_quoted_multiline():
     exp_val = 'f"""{__xonsh__.env[\'HOME\']}\n{__xonsh__.env[\'USER\']}"""'
     assert check_token(inp, ["STRING", exp_val, 0])
 
+
 def test_fstring_env_rewrite_simple_double_outer():
     # f"{$HOME}" -> f"{__xonsh__.env['HOME']}"
     inp = 'f"{$HOME}"'
-    exp_val = 'f"{__xonsh__.env[\'HOME\']}"'
+    exp_val = "f\"{__xonsh__.env['HOME']}\""
     assert check_token(inp, ["STRING", exp_val, 0])
+
 
 def test_fstring_env_rewrite_simple_single_outer():
     # f'{$HOME}' -> f'{__xonsh__.env["HOME"]}'
     inp = "f'{$HOME}'"
-    exp_val = 'f\'{__xonsh__.env["HOME"]}\''
+    exp_val = "f'{__xonsh__.env[\"HOME\"]}'"
     assert check_token(inp, ["STRING", exp_val, 0])

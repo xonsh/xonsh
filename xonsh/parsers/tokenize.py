@@ -478,7 +478,9 @@ def _fstring_rewrite_env_var(token: str) -> str:
                 mfield = _ENV_FIELD_RE.match(field)
                 if mfield:
                     name = mfield.group(1)
-                    out.append("{__xonsh__.env[" + inner_quote + name + inner_quote + "]}")
+                    out.append(
+                        "{__xonsh__.env[" + inner_quote + name + inner_quote + "]}"
+                    )
                     changed = True
                 else:
                     out.append("{" + field + "}")
