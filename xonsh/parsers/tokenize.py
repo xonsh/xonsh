@@ -400,8 +400,7 @@ def _fstring_rewrite_env_var(token: str) -> str:
     """
     After Python 3.12 with https://peps.python.org/pep-0701/ we can't use `$` in string literals as before
     and f"{$HOME}" produces "Unsupported fstring syntax".
-    This function is to treat the situation and implement single token support so f"{$HOME}" will work so
-    the cases like `fp"{$HOME}/dir"` will work.
+    This function is to treat the situation.
 
     If `token` is an f-string (in any combination with r/p), perform a narrow rewrite:
     `{$NAME} -> {__xonsh__.env['NAME']}` only for top-level fields. Recognizes `{{` and `}}` as literal braces.
