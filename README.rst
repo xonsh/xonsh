@@ -187,6 +187,7 @@ The xonsh shell is developed by a community of volunteers. There are a few ways 
 - Contribute to `xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
 - Become xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
 - Add xonsh support in third party tool: `package manager <https://github.com/topics/package-manager>`_, `terminal emulator <https://github.com/topics/terminal-emulators>`_, `console tool <https://github.com/topics/console>`_, `IDE <https://github.com/topics/ide>`_.
+- Test xonsh with compiler, interpreter, optimizer and report upstream issues (e.g. `Nuitka <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_, `RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_).
 - Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_ (`src <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_).
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 - Spread the good word about xonsh in the world by sharing news and notes about xonsh.
