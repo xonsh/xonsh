@@ -170,6 +170,13 @@ Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xon
 - `euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
 - `Jupytext <https://jupytext.readthedocs.io/>`_: Clear and meaningful diffs when doing Jupyter notebooks version control.
 
+Compile, packaging or accelerate xonsh:
+
+- `AppImage <https://github.com/appimage>`_ is a format for distributing Linux applications and can be used to `create a standalone xonsh package <https://xon.sh/appimage.html>`_.
+- `Nuitka <https://github.com/Nuitka/Nuitka>`_ is an optimizing Python compiler that can `build a native xonsh binary <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_.
+- `RustPython <https://github.com/RustPython/RustPython/>`_ is a Python interpreter written in Rust that can `run xonsh on top of Rust <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_.
+
+
 Welcome to the xonsh shell community
 ************************************
 
