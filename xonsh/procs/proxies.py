@@ -457,7 +457,7 @@ class ProcProxyThread(threading.Thread):
         # run the function itself
         try:
             alias_stack = XSH.env.get("__ALIAS_STACK", "")
-            alias_name = self.env.get("__ALIAS_NAME") if self.env else None
+            alias_name = (self.env or {}).get("__ALIAS_NAME")
             if alias_name:
                 alias_stack += ":" + alias_name
 
@@ -782,7 +782,7 @@ class ProcProxy:
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
-            alias_name = self.env.get("__ALIAS_NAME") if self.env else None
+            alias_name = (self.env or {}).get("__ALIAS_NAME")
             with XSH.env.swap(self.env):
                 r = run_with_partial_args(
                     self.f,
