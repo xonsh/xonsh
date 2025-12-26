@@ -256,3 +256,69 @@ def test_run_alias_by_params():
         None,
         4,
     )
+
+
+def test_run_alias_by_params_with_alias():
+    """Test that the 'alias' parameter is correctly passed to alias functions."""
+
+    def alias_with_alias_param(alias):
+        return alias
+
+    def alias_with_alias_and_args(alias, args):
+        return (alias, args)
+
+    def alias_all_params(args, stdin, stdout, stderr, spec, stack, alias):
+        return (alias, args)
+
+    # Test with only alias parameter
+    assert run_alias_by_params(alias_with_alias_param, {"alias": "myalias"}) == "myalias"
+
+    # Test with alias and args
+    assert run_alias_by_params(
+        alias_with_alias_and_args, {"alias": "myalias", "args": ["arg1", "arg2"]}
+    ) == ("myalias", ["arg1", "arg2"])
+
+    # Test with all parameters including alias
+    assert run_alias_by_params(
+        alias_all_params,
+        {
+            "args": ["a1"],
+            "stdin": None,
+            "stdout": None,
+            "stderr": None,
+            "spec": None,
+            "stack": None,
+            "alias": "testalias",
+        },
+    ) == ("testalias", ["a1"])
+
+
+def test_callable_alias_with_alias_param(xession):
+    """Test that callable aliases can access the alias name via the 'alias' parameter."""
+
+    def alias_func_with_alias(alias):
+        return f"Called from: {alias}"
+
+    ales = Aliases({"mycommand": alias_func_with_alias})
+    alias = ales.get("mycommand")[0]
+    assert callable(alias)
+
+    # The alias should be able to receive the alias parameter
+    result = alias([], alias="mycommand")
+    assert result == "Called from: mycommand"
+
+
+def test_recursive_callable_with_alias_param(xession):
+    """Test that alias parameter works with recursive aliases."""
+
+    def return_alias_and_args(alias, args):
+        return (alias, args)
+
+    ales = Aliases(
+        {"base": return_alias_and_args, "recursive": ["base", "prearg"]}
+    )
+    alias = ales.get("recursive")[0]
+    assert callable(alias)
+
+    result = alias(["prearg", "arg2"], alias="recursive")
+    assert result == ("recursive", ["prearg", "arg2"])

@@ -94,6 +94,7 @@ class FuncAlias:
         stderr=None,
         spec=None,
         stack=None,
+        alias=None,
         decorators=None,
     ):
         return run_alias_by_params(
@@ -105,6 +106,7 @@ class FuncAlias:
                 "stderr": stderr,
                 "spec": spec,
                 "stack": stack,
+                "alias": alias or self.name,
                 "decorators": decorators,
             },
         )
