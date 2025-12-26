@@ -32,7 +32,27 @@ def complete_command(command: CommandContext):
         if get_filter_function()(s, cmd):
             kwargs = {}
             if show_desc:
-                kwargs["description"] = "Alias" if is_alias else path
+                if is_alias:
+                    # Try to get the alias description from __doc__
+                    from xonsh.aliases import FuncAlias
+                    alias_obj = XSH.aliases.get(s)
+                    if alias_obj and len(alias_obj) > 0:
+                        first_elem = alias_obj[0]
+                        # Only check for docstrings if it's a FuncAlias
+                        if isinstance(first_elem, FuncAlias):
+                            # Check if the wrapped function has a docstring
+                            if (hasattr(first_elem, 'func') and 
+                                hasattr(first_elem.func, '__doc__') and 
+                                first_elem.func.__doc__):
+                                kwargs["description"] = first_elem.func.__doc__.strip()
+                            else:
+                                kwargs["description"] = "Alias"
+                        else:
+                            kwargs["description"] = "Alias"
+                    else:
+                        kwargs["description"] = "Alias"
+                else:
+                    kwargs["description"] = path
             yield RichCompletion(s, append_space=True, **kwargs)  # type: ignore
     if xp.ON_WINDOWS:
         for i in executables_in("."):
