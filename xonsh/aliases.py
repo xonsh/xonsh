@@ -542,6 +542,7 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
         "stderr": None,
         "spec": None,
         "stack": None,
+        "alias": None,
         "decorators": None,
     }
     alias_params |= params
