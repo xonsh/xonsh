@@ -2771,7 +2771,7 @@ def columnize(elems, width=80, newline="\n"):
     return lines
 
 
-ALIAS_KWARG_NAMES = frozenset(["args", "stdin", "stdout", "stderr", "spec", "stack", "alias"])
+ALIAS_KWARG_NAMES = frozenset(["args", "stdin", "stdout", "stderr", "spec", "stack", "alias_stack"])
 
 
 def unthreadable(f):

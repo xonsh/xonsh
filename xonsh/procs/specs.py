@@ -518,7 +518,7 @@ class SubprocSpec:
         self._pre_run_event_fire(event_name)
         kwargs = {n: getattr(self, n) for n in self.kwnames}
         if callable(self.alias):
-            kwargs["env"] = self.env or {}
+            kwargs["env"] = (self.env or {}).copy()
             kwargs["env"]["__ALIAS_NAME"] = self.alias_name or ""
             p = self.cls(self.alias, self.cmd, **kwargs)
         else:
@@ -755,14 +755,23 @@ class SubprocSpec:
                     decorators=decorators,
                 )
             if alias is not None:
-                self.alias_name = cmd0
                 if callable(alias[0]):
                     # E.g. `alias == [FuncAlias({'name': 'cd'}), '/tmp']`
                     self.alias = alias[0]
                     self.cmd = [cmd0] + alias[1:]
+                    # For alias stack tracking: if the typed command (cmd0) is different
+                    # from the resolved alias name, we want to track both in the stack
+                    resolved_name = getattr(alias[0], 'name', cmd0)
+                    if cmd0 != resolved_name:
+                        # User typed cmd0, which resolved to resolved_name
+                        # We'll store both so the stack shows the full chain
+                        self.alias_name = f"{cmd0}:{resolved_name}"
+                    else:
+                        self.alias_name = resolved_name
                 else:
                     # E.g. `alias == ['ls', '-la']`
                     self.alias = alias
+                    self.alias_name = cmd0
 
             for mod in decorators:
                 self.add_decorator(mod)

@@ -258,27 +258,27 @@ def test_run_alias_by_params():
     )
 
 
-def test_run_alias_by_params_with_alias():
-    """Test that the 'alias' parameter is correctly passed to alias functions."""
+def test_run_alias_by_params_with_alias_stack():
+    """Test that the 'alias_stack' parameter is correctly passed to alias functions."""
 
-    def alias_with_alias_param(alias):
-        return alias
+    def alias_with_alias_stack_param(alias_stack):
+        return alias_stack
 
-    def alias_with_alias_and_args(alias, args):
-        return (alias, args)
+    def alias_with_alias_stack_and_args(alias_stack, args):
+        return (alias_stack, args)
 
-    def alias_all_params(args, stdin, stdout, stderr, spec, stack, alias):
-        return (alias, args)
+    def alias_all_params(args, stdin, stdout, stderr, spec, stack, alias_stack):
+        return (alias_stack, args)
 
-    # Test with only alias parameter
-    assert run_alias_by_params(alias_with_alias_param, {"alias": "myalias"}) == "myalias"
+    # Test with only alias_stack parameter
+    assert run_alias_by_params(alias_with_alias_stack_param, {"alias_stack": ["myalias"]}) == ["myalias"]
 
-    # Test with alias and args
+    # Test with alias_stack and args
     assert run_alias_by_params(
-        alias_with_alias_and_args, {"alias": "myalias", "args": ["arg1", "arg2"]}
-    ) == ("myalias", ["arg1", "arg2"])
+        alias_with_alias_stack_and_args, {"alias_stack": ["myalias"], "args": ["arg1", "arg2"]}
+    ) == (["myalias"], ["arg1", "arg2"])
 
-    # Test with all parameters including alias
+    # Test with all parameters including alias_stack
     assert run_alias_by_params(
         alias_all_params,
         {
@@ -288,37 +288,37 @@ def test_run_alias_by_params_with_alias():
             "stderr": None,
             "spec": None,
             "stack": None,
-            "alias": "testalias",
+            "alias_stack": ["testalias"],
         },
-    ) == ("testalias", ["a1"])
+    ) == (["testalias"], ["a1"])
 
 
-def test_callable_alias_with_alias_param(xession):
-    """Test that callable aliases can access the alias name via the 'alias' parameter."""
+def test_callable_alias_with_alias_stack_param(xession):
+    """Test that callable aliases can access the alias stack via the 'alias_stack' parameter."""
 
-    def alias_func_with_alias(alias):
-        return f"Called from: {alias}"
+    def alias_func_with_alias_stack(alias_stack):
+        return f"Called from: {alias_stack}"
 
-    ales = Aliases({"mycommand": alias_func_with_alias})
+    ales = Aliases({"mycommand": alias_func_with_alias_stack})
     alias = ales.get("mycommand")[0]
     assert callable(alias)
 
-    # The alias should be able to receive the alias parameter
-    result = alias([], alias="mycommand")
-    assert result == "Called from: mycommand"
+    # The alias should be able to receive the alias_stack parameter
+    result = alias([], alias_stack=["mycommand"])
+    assert result == "Called from: ['mycommand']"
 
 
-def test_recursive_callable_with_alias_param(xession):
-    """Test that alias parameter works with recursive aliases."""
+def test_recursive_callable_with_alias_stack_param(xession):
+    """Test that alias_stack parameter works with recursive aliases."""
 
-    def return_alias_and_args(alias, args):
-        return (alias, args)
+    def return_alias_stack_and_args(alias_stack, args):
+        return (alias_stack, args)
 
     ales = Aliases(
-        {"base": return_alias_and_args, "recursive": ["base", "prearg"]}
+        {"base": return_alias_stack_and_args, "recursive": ["base", "prearg"]}
     )
     alias = ales.get("recursive")[0]
     assert callable(alias)
 
-    result = alias(["prearg", "arg2"], alias="recursive")
-    assert result == ("recursive", ["prearg", "arg2"])
+    result = alias(["prearg", "arg2"], alias_stack=["recursive"])
+    assert result == (["recursive"], ["prearg", "arg2"])

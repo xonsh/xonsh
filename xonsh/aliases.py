@@ -94,7 +94,7 @@ class FuncAlias:
         stderr=None,
         spec=None,
         stack=None,
-        alias=None,
+        alias_stack=None,
         decorators=None,
     ):
         return run_alias_by_params(
@@ -106,7 +106,7 @@ class FuncAlias:
                 "stderr": stderr,
                 "spec": spec,
                 "stack": stack,
-                "alias": alias or self.name,
+                "alias_stack": alias_stack or [self.name],
                 "decorators": decorators,
             },
         )
@@ -411,7 +411,7 @@ class PartialEvalAliasBase:
         self.__name__ = getattr(f, "__name__", self.__class__.__name__)
 
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias_stack=None
     ):
         args = list(self.acc_args) + args
         return run_alias_by_params(
@@ -423,7 +423,7 @@ class PartialEvalAliasBase:
                 "stderr": stderr,
                 "spec": spec,
                 "stack": stack,
-                "alias": alias,
+                "alias_stack": alias_stack,
             },
         )
 
@@ -433,7 +433,7 @@ class PartialEvalAliasBase:
 
 class PartialEvalAlias0(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias_stack=None
     ):
         args = list(self.acc_args) + args
         if args:
@@ -520,7 +520,7 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
         "stderr": None,
         "spec": None,
         "stack": None,
-        "alias": None,
+        "alias_stack": None,
         "decorators": None,
     }
     alias_params |= params
