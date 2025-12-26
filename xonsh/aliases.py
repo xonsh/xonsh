@@ -411,7 +411,7 @@ class PartialEvalAliasBase:
         self.__name__ = getattr(f, "__name__", self.__class__.__name__)
 
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec, stack)
@@ -422,7 +422,7 @@ class PartialEvalAliasBase:
 
 class PartialEvalAlias0(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         if args:
@@ -434,7 +434,7 @@ class PartialEvalAlias0(PartialEvalAliasBase):
 
 class PartialEvalAlias1(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         return self.f(args)
@@ -442,7 +442,7 @@ class PartialEvalAlias1(PartialEvalAliasBase):
 
 class PartialEvalAlias2(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         return self.f(args, stdin)
@@ -450,7 +450,7 @@ class PartialEvalAlias2(PartialEvalAliasBase):
 
 class PartialEvalAlias3(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout)
@@ -458,7 +458,7 @@ class PartialEvalAlias3(PartialEvalAliasBase):
 
 class PartialEvalAlias4(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr)
@@ -466,7 +466,7 @@ class PartialEvalAlias4(PartialEvalAliasBase):
 
 class PartialEvalAlias5(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec)
@@ -474,7 +474,7 @@ class PartialEvalAlias5(PartialEvalAliasBase):
 
 class PartialEvalAlias6(PartialEvalAliasBase):
     def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
+        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None, alias=None
     ):
         args = list(self.acc_args) + args
         return self.f(args, stdin, stdout, stderr, spec, stack)
@@ -489,6 +489,7 @@ class PartialEvalAlias7(PartialEvalAliasBase):
         stderr=None,
         spec=None,
         stack=None,
+        alias=None,
         decorators=None,
     ):
         args = list(self.acc_args) + args
