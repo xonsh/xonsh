@@ -80,3 +80,55 @@ def test_argparse_completer_after_option(check_completer, tmp_path):
     prefix = str(tmp_path)[:-1]
     # has one or more completions including the above tmp_path
     assert check_completer("xonsh --no-rc", prefix)
+
+
+def test_complete_command_with_alias_description(completion_context_parse, xession):
+    """Test that alias descriptions are included in completions"""
+    # Create test aliases with and without descriptions
+    def test_alias_with_desc():
+        """Test alias description"""
+        return "echo test"
+    
+    def test_alias_no_desc():
+        return "echo no desc"
+    
+    xession.aliases["testalias"] = test_alias_with_desc
+    xession.aliases["nodescalias"] = test_alias_no_desc
+    
+    # Enable description display
+    xession.env["CMD_COMPLETIONS_SHOW_DESC"] = True
+    
+    # Force cache update
+    xession.commands_cache.update_cache()
+    
+    # Get completions for alias with description
+    comps_with_desc = list(complete_command(
+        completion_context_parse("testalia", 8).command
+    ))
+    
+    # Find the completion for our alias
+    alias_comp = None
+    for comp in comps_with_desc:
+        if str(comp) == "testalias":
+            alias_comp = comp
+            break
+    
+    assert alias_comp is not None, "testalias should be in completions"
+    assert hasattr(alias_comp, 'description'), "Completion should have description"
+    assert alias_comp.description == "Test alias description", f"Expected 'Test alias description', got '{alias_comp.description}'"
+    
+    # Get completions for alias without description
+    comps_no_desc = list(complete_command(
+        completion_context_parse("nodescalia", 10).command
+    ))
+    
+    # Find the completion for alias without description
+    alias_comp_no_desc = None
+    for comp in comps_no_desc:
+        if str(comp) == "nodescalias":
+            alias_comp_no_desc = comp
+            break
+    
+    assert alias_comp_no_desc is not None, "nodescalias should be in completions"
+    assert hasattr(alias_comp_no_desc, 'description'), "Completion should have description"
+    assert alias_comp_no_desc.description == "Alias", f"Expected 'Alias', got '{alias_comp_no_desc.description}'"
