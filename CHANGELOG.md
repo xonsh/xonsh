@@ -1,5 +1,13 @@
 # Xonsh Change Log
 
+## [0.22.1](https://github.com/xonsh/xonsh/compare/0.22.0...0.22.1) (2025-12-26)
+
+
+### Bug Fixes
+
+* **source-foreign:** Quote pathnames when sourcing a foreign function ([#6014](https://github.com/xonsh/xonsh/issues/6014)) ([818b19a](https://github.com/xonsh/xonsh/commit/818b19a5fac0c1b1407e2f497f37f895c8187534))
+* **xoreutils:** Added KeyboardInterrupt handling in xoreutils yes command ([#6012](https://github.com/xonsh/xonsh/issues/6012)) ([cb71a8d](https://github.com/xonsh/xonsh/commit/cb71a8d06b12fd71d4b1c87f4f9f516802f6e5f1))
+
 ## [0.22.0](https://github.com/xonsh/xonsh/compare/0.21.2...0.22.0) (2025-12-19)
 
 
