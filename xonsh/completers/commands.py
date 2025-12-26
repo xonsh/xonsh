@@ -4,6 +4,7 @@ import re
 import typing as tp
 
 import xonsh.platform as xp
+from xonsh.aliases import FuncAlias
 from xonsh.built_ins import XSH
 from xonsh.commands_cache import executables_in
 from xonsh.completer import Completer
@@ -34,19 +35,12 @@ def complete_command(command: CommandContext):
             if show_desc:
                 if is_alias:
                     # Try to get the alias description from __doc__
-                    from xonsh.aliases import FuncAlias
                     alias_obj = XSH.aliases.get(s)
                     if alias_obj and len(alias_obj) > 0:
                         first_elem = alias_obj[0]
                         # Only check for docstrings if it's a FuncAlias
-                        if isinstance(first_elem, FuncAlias):
-                            # Check if the wrapped function has a docstring
-                            if (hasattr(first_elem, 'func') and 
-                                hasattr(first_elem.func, '__doc__') and 
-                                first_elem.func.__doc__):
-                                kwargs["description"] = first_elem.func.__doc__.strip()
-                            else:
-                                kwargs["description"] = "Alias"
+                        if isinstance(first_elem, FuncAlias) and first_elem.func.__doc__:
+                            kwargs["description"] = first_elem.func.__doc__.strip()
                         else:
                             kwargs["description"] = "Alias"
                     else:
