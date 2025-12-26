@@ -457,8 +457,12 @@ class ProcProxyThread(threading.Thread):
         # run the function itself
         try:
             alias_stack = XSH.env.get("__ALIAS_STACK", "")
-            if self.env and self.env.get("__ALIAS_NAME"):
-                alias_stack += ":" + self.env["__ALIAS_NAME"]
+            alias_name = (self.env or {}).get("__ALIAS_NAME")
+            if alias_name:
+                alias_stack += ":" + alias_name
+            
+            # Parse alias stack into a list
+            alias_stack_list = [a for a in alias_stack.split(":") if a]
 
             with (
                 STDOUT_DISPATCHER.register(sp_stdout),
@@ -476,6 +480,7 @@ class ProcProxyThread(threading.Thread):
                         "stderr": sp_stderr,
                         "spec": spec,
                         "stack": spec.stack,
+                        "alias_stack": alias_stack_list,
                     },
                 )
         except SystemExit as e:
@@ -780,6 +785,14 @@ class ProcProxy:
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
+            alias_stack = XSH.env.get("__ALIAS_STACK", "")
+            alias_name = (self.env or {}).get("__ALIAS_NAME")
+            if alias_name:
+                alias_stack += ":" + alias_name
+            
+            # Parse alias stack into a list
+            alias_stack_list = [a for a in alias_stack.split(":") if a]
+            
             with XSH.env.swap(self.env):
                 r = run_with_partial_args(
                     self.f,
@@ -790,6 +803,7 @@ class ProcProxy:
                         "stderr": stderr,
                         "spec": spec,
                         "stack": spec.stack,
+                        "alias_stack": alias_stack_list,
                     },
                 )
         except SystemExit as e:
