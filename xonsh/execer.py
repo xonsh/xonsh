@@ -261,6 +261,17 @@ class Execer:
                     if input.endswith("\n"):
                         lines.append("")
                     line, nlogical, idx = get_logical_line(lines, idx)
+                    # When error is on a line within a multiline logical line,
+                    # convert the line-relative column to an absolute position
+                    # in the combined logical line string.
+                    if nlogical > 1:
+                        # Calculate which physical line within the logical block has the error
+                        error_line_within_logical = last_error_line - (idx + 1)
+                        if error_line_within_logical > 0:
+                            # Add lengths of previous lines (including newlines)
+                            logical_lines = line.splitlines(keepends=True)
+                            offset = sum(len(l) for l in logical_lines[:error_line_within_logical])
+                            last_error_col += offset
                     if nlogical > 1 and not logical_input:
                         _, sbpline = self._parse_ctx_free(
                             line, mode=mode, filename=filename, logical_input=True
