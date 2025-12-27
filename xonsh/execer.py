@@ -270,7 +270,10 @@ class Execer:
                         if error_line_within_logical > 0:
                             # Add lengths of previous lines (including newlines)
                             logical_lines = line.splitlines(keepends=True)
-                            offset = sum(len(l) for l in logical_lines[:error_line_within_logical])
+                            offset = sum(
+                                len(l)
+                                for l in logical_lines[:error_line_within_logical]
+                            )
                             last_error_col += offset
                     if nlogical > 1 and not logical_input:
                         _, sbpline = self._parse_ctx_free(

@@ -469,15 +469,15 @@ def find_next_break(line, mincol=0, lexer=None):
 
 def _offset_from_prev_lines(line, lineno):
     """Calculate the character offset to the start of a given line number.
-    
+
     Args:
         line: The full string
         lineno: 1-based line number. Returns offset to the start of this line.
-    
+
     Returns:
         The sum of lengths of all lines before lineno.
     """
-    lines = line.splitlines(keepends=True)[:lineno - 1]
+    lines = line.splitlines(keepends=True)[: lineno - 1]
     return sum(map(len, lines))
 
 
