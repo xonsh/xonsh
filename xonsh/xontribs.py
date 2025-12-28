@@ -110,7 +110,7 @@ def _get_installed_xontribs(pkg_name="xontrib"):
     def iter_modules():
         # pkgutil is not finding `*.xsh` files
         for path in iter_paths():
-            if path.suffix in {".py", ".xsh"}:
+            if path.suffix in {".py", ".xsh", ".xonsh"}:
                 yield path.stem
 
             elif path.is_dir():

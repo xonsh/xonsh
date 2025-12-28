@@ -15,7 +15,7 @@ and infrastructure for packaging pure Python code.
 
 Structure
 ==========
-Xonsh modules are written in xonsh files (``*.xsh``), side-by-side with Python files
+Xonsh modules are written in xonsh files (``*.xsh``, ``*.xonsh``), side-by-side with Python files
 (``*.py``). Suppose we have a package called ``mypkg`` which uses xonsh files.
 Here is a sample file system layout would be::
 
