@@ -1,4 +1,4 @@
-Installation
+Packages
 ============
 
 Xonsh can be installed and run with various methods:
