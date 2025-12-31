@@ -8,6 +8,5 @@ Xonsh can be installed and run with various methods:
     :maxdepth: 2
 
     install
-    packages
     appimage
     containers
