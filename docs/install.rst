@@ -10,7 +10,7 @@ Since there are many ways to install Python, there are also many ways to run xon
 the main approaches and their advantages.
 
 .. list-table::
-    :widths: 3 1 1 1 1 1 1 1
+    :widths: 3 1 1 1 1
     :header-rows: 1
     :stub-columns: 1
 
