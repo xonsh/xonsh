@@ -18,18 +18,17 @@ the main approaches and their advantages.
       - Use as core shell
       - Isolated env
       - Fresh version
+      - Automation
     * - Independent install
       - ✓
       - ✓
       - ✓
+      -
     * - PyPi package
       -
       -
       - ✓
-    * - Platform package
-      -
-      -
-      -
+      - ✓
     * - Portable AppImage
       - ✓
       - ✓
@@ -38,11 +37,9 @@ the main approaches and their advantages.
       -
       - ✓
       - ✓
-    * - WIP Binary build
+      - ✓
+    * - Platform package
       -
-      -
-      -
-    * - WIP RustPython build
       -
       -
       -
