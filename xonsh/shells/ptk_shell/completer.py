@@ -10,6 +10,12 @@ from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
 
 
+def unquote(s):
+    if s.startswith("r'") or s.startswith('r"'):
+        s = s[1:]
+    return s.strip("'\"")
+
+
 class PromptToolkitCompleter(Completer):
     """Simple prompt_toolkit Completer object.
 
@@ -87,7 +93,7 @@ class PromptToolkitCompleter(Completer):
         elif len(os.path.commonprefix(completions)) <= len(prefix):
             self.reserve_space()
         # Find common prefix (strip quoting)
-        c_prefix = os.path.commonprefix([a.strip("'\"") for a in completions])
+        c_prefix = os.path.commonprefix([unquote(a) for a in completions])
         # Find last split symbol, do not trim the last part
         while c_prefix:
             if c_prefix[-1] in r"/\.:@,":
@@ -110,14 +116,14 @@ class PromptToolkitCompleter(Completer):
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display or comp[pre:].strip("'\""),
+                    display=comp.display or unquote(comp[pre:]),
                     display_meta=desc,
                     style=comp.style or "",
                 )
             elif isinstance(comp, Completion):
                 yield comp
             else:
-                disp = comp[pre:].strip("'\"")
+                disp = unquote(comp[pre:])
                 yield Completion(comp, -plen, display=disp)
 
     def suggestion_completion(self, document, line):
