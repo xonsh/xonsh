@@ -88,6 +88,34 @@ Pip can also install the most recent xonsh source code from the
     conda install xonsh
 
 
+Portable AppImage
+========================
+
+Xonsh is available as a single AppImage bundled with Python, allowing you to run it on Linux without installation:
+
+.. code-block:: console
+
+    wget 'https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage' -O xonsh
+    chmod +x xonsh
+    ./xonsh
+
+Learn more: `Xonsh AppImage <appimage.html>`_.
+
+Container
+========================
+
+Xonsh publishes a handful of containers, primarily targeting CI and automation use cases.
+All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`__.
+
+Example of running an interactive xonsh session in a container:
+
+.. code-block:: console
+
+    docker run --rm -it xonsh/interactive
+
+Learn more: `Containers <containers.html>`_.
+
+
 Platform package
 ========================
 
@@ -127,34 +155,6 @@ This approach is **not recommended** for the following reasons:
 .. code-block:: console
 
     brew install xonsh
-
-
-Portable AppImage
-========================
-
-Xonsh is available as a single AppImage bundled with Python, allowing you to run it on Linux without installation:
-
-.. code-block:: console
-
-    wget 'https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage' -O xonsh
-    chmod +x xonsh
-    ./xonsh
-
-Learn more: `Xonsh AppImage <appimage.html>`_.
-
-Container
-========================
-
-Xonsh publishes a handful of containers, primarily targeting CI and automation use cases.
-All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`__.
-
-Example of running an interactive xonsh session in a container:
-
-.. code-block:: console
-
-    docker run --rm -it xonsh/interactive
-
-Learn more: `Containers <containers.html>`_.
 
 WIP Binary build
 ========================
