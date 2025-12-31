@@ -15,43 +15,43 @@ the main approaches and their advantages.
     :stub-columns: 1
 
     * -
-      - Isolated install
-      - Python package
-      - OS package
-      - AppImage
-      - Docker
-      - WIP Binary build
-      - WIP RustPython build
-    * - Recommended
+      - Recommended
+      - Not recommended
+      - Isolated environment
+      - Fresh version
+    * - Isolated install
       - ✓
       -
       -
       -
-      -
-      -
-      -
-    * - Not recommended
+    * - Python package
       -
       -
       - ✓
       -
-      -
-      -
-      -
-    * - Isolated environment
+    * - OS package
       - ✓
       - ✓
       -
       - ✓
-      -
-      -
-      -
-    * - Fresh version
+    * - AppImage
       - ✓
       - ✓
       -
       - ✓
-      - ✓
+    * - Docker
+      -
+      -
+      -
+      -
+    * - WIP Binary build
+      -
+      -
+      -
+      -
+    * - WIP RustPython build
+      -
+      -
       -
       -
 
