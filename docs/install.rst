@@ -61,6 +61,9 @@ Install xonsh with Micromamba:
     TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
       /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
+Learn more: `Mamba installer <install_mamba.html>`_.
+
+
 PyPi package
 ========================
 
