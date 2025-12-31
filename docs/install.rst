@@ -33,6 +33,7 @@ the main approaches and their advantages.
       - ✓
       - ✓
       - ✓
+      -
     * - Conainer
       -
       - ✓
