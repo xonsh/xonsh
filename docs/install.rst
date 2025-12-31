@@ -17,33 +17,33 @@ the main approaches and their advantages.
     * -
       - Recommended
       - Not recommended
-      - Isolated environment
+      - Isolated env
       - Fresh version
     * - Isolated install
       - ✓
       -
-      -
-      -
+      - ✓
+      - ✓
     * - Python package
       -
       -
-      - ✓
       -
+      - ✓
     * - OS package
-      - ✓
-      - ✓
       -
       - ✓
+      -
+      -
     * - AppImage
       - ✓
-      - ✓
       -
+      - ✓
       - ✓
     * - Docker
       -
       -
-      -
-      -
+      - ✓
+      - ✓
     * - WIP Binary build
       -
       -
