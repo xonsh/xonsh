@@ -30,7 +30,7 @@ the main approaches and their advantages.
       - ✓
       - ✓
     * - Portable AppImage
-      - ✓
+      -
       - ✓
       - ✓
       -
