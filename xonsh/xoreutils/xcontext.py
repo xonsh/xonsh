@@ -1,9 +1,10 @@
 """The xontext command."""
 
+import os
 import shutil
 import subprocess
 import sys
-import os
+
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
 
