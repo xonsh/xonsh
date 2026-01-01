@@ -19,27 +19,33 @@ the main approaches and their advantages.
       - Isolated env
       - Fresh version
       - Automation
+      - Portable
     * - Independent install
       - ✓
       - ✓
       - ✓
+      -
       -
     * - PyPi package
       -
       -
       - ✓
       - ✓
-    * - Portable AppImage
+      -
+    * - AppImage
       -
       - ✓
       - ✓
       -
+      - ✓
     * - Conainer
       -
       - ✓
       - ✓
       - ✓
+      -
     * - Platform package
+      -
       -
       -
       -
