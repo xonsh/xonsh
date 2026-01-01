@@ -97,7 +97,7 @@ Pip can also install the most recent xonsh source code from the
     conda install xonsh
 
 
-Portable AppImage
+AppImage
 ========================
 
 Xonsh is available as a single AppImage bundled with Python, allowing you to run it on Linux without installation:
