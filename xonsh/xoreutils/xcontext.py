@@ -3,9 +3,25 @@
 import shutil
 import subprocess
 import sys
-
+import os
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
+
+
+def get_real_python():
+    """Return the actual Python interpreter for the current xonsh session.
+    Prefers XONSH_PYTHON over sys.executable to avoid wrapper binaries (e.g. AppImage)."""
+    xpy = XSH.env.get("XONSH_PYTHON")
+    if xpy and os.path.isfile(xpy):
+        return xpy
+
+    executable = sys.executable
+    if executable:
+        name = os.path.basename(executable).lower()
+        if name.startswith("python") or name in ("python.exe", "pythonw.exe"):
+            return executable
+
+    return shutil.which("python") or executable
 
 
 def _get_version(binary):
@@ -29,7 +45,7 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
     """Report information about the current xonsh environment."""
     stdout = _stdout or sys.stdout
     print("[Current xonsh session]", file=stdout)
-    xpy = sys.executable
+    xpy = get_real_python()
     xpy_ver = _get_version(xpy)
     print(f"xpython: {xpy} # {xpy_ver}", file=stdout)
     xpip = XSH.aliases.get("xpip")
