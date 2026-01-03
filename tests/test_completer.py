@@ -174,6 +174,7 @@ def test_python_only_context(completer, completers_mock):
     assert completer.complete_line("echo @(") != ()
     assert completer.complete("", "echo @(", 0, 0, {}, "echo @(", 7) != ()
 
+
 def test_exact_match(completer, completers_mock):
     @contextual_command_completer
     def comp(context: CommandContext):
