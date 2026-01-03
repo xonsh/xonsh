@@ -173,3 +173,25 @@ def test_env_completer_sort(completer, completers_mock):
 def test_python_only_context(completer, completers_mock):
     assert completer.complete_line("echo @(") != ()
     assert completer.complete("", "echo @(", 0, 0, {}, "echo @(", 7) != ()
+
+def test_exact_match(completer, completers_mock):
+    @contextual_command_completer
+    def comp(context: CommandContext):
+        return {
+            RichCompletion(context.prefix, append_closing_quote=True),
+            RichCompletion(context.prefix + "a", append_closing_quote=True),
+            RichCompletion(context.prefix + "b", append_closing_quote=True),
+        }
+
+    completers_mock["a"] = comp
+
+    assert completer.complete(
+        "", "", 0, 0, {}, multiline_text="'test'", cursor_index=6
+    ) == (
+        (
+            "test'",
+            "testa'",
+            "testb'",
+        ),
+        5,
+    )

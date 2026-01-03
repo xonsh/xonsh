@@ -302,8 +302,8 @@ class Completer:
                 prefix = prefix[1:]
 
             def sortkey(s):
-                """Sort values by prefix position then by length then alphabetically."""
-                return (s.lower().find(prefix.lower()), len(s), s.lower())
+                """Sort values by prefix position then alphabetically. Exact match should be the first option"""
+                return (s.lower().find(prefix.lower()), not prefix.lower().endswith(s.lower()), s.lower())
         else:
             # Fallback sort.
             sortkey = lambda s: s.lstrip(''''"''').lower()
