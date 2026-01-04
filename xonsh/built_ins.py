@@ -138,9 +138,57 @@ def reglob(path, parts=None, i=None):
     return paths
 
 
+# mypy support
+if sys.platform == "win32":
+    BasePath = pathlib.WindowsPath
+else:
+    BasePath = pathlib.PosixPath
+
+
+class XonshPathLiteralChangeDirectoryContextManager:
+    """Implements context manager to use in xonsh path literal."""
+
+    def __init__(self, path: XonshPathLiteral):
+        self.path = path
+
+    def __enter__(self):
+        self._xonsh_old_cwd = os.getcwd()
+        os.chdir(self.path)
+        return self.path
+
+    def __exit__(self, exc_type, exc, tb):
+        os.chdir(self._xonsh_old_cwd)
+        return False
+
+
+class XonshPathLiteral(BasePath):  # type: ignore
+    """Extension of ``pathlib.Path`` to support extended functionality."""
+
+    def cd(self) -> XonshPathLiteralChangeDirectoryContextManager:
+        """Returns context manager to change the directory
+        e.g. ``with p'/tmp'.cd(): $[ls]``
+        """
+        return XonshPathLiteralChangeDirectoryContextManager(self)
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """Extension of ``pathlib.Path.mkdir`` that returns ``self`` instead of ``None``."""
+        super().mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
+        return self
+
+    def chmod(self, mode, *, follow_symlinks=True):
+        """Extension of ``pathlib.Path.chmod`` that returns ``self`` instead of ``None``."""
+        super().chmod(mode, follow_symlinks=follow_symlinks)
+        return self
+
+    def touch(self, mode=0o666, exist_ok=True):
+        """Extension of ``pathlib.Path.touch`` that returns ``self`` instead of ``None``."""
+        super().touch(mode=mode, exist_ok=exist_ok)
+        return self
+
+
 def path_literal(s):
     s = expand_path(s)
-    return pathlib.Path(s)
+    return XonshPathLiteral(s)
 
 
 def regexsearch(s):
@@ -595,8 +643,37 @@ class Cmd:
         return self
 
 
+class XonshSessionInterface:
+    """Xonsh Session Interface
+
+    Attributes
+    ----------
+    env : xonsh.environ.Env
+        A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
+
+    imp : xonsh.built_ins.InlineImporter
+        The inline importer provides instant access to library
+        functions and attributes e.g. `@.imp.time.time()`.
+
+    lastcmd : xonsh.procs.pipelines.CommandPipeline
+        Last executed subprocess-mode command pipeline
+        e.g. `@.lastcmd.rtn` returns exit code.
+    """
+
+    env = None  # type: ignore
+    imp: InlineImporter = InlineImporter()
+    lastcmd = None  # type: ignore
+
+
 class XonshSession:
-    """All components defining a xonsh session."""
+    """All components defining a xonsh session.
+
+    Warning! If you use this object for any reason and access ``__xonsh__``
+    or ``xonsh.built_ins.XSH`` attributes or functions, you do so at your
+    own risk, as the internal contents and behavior of this object may
+    change with any release. For repeatable use cases, find a way
+    to improve ``XonshSessionInterface`` or ``xonsh.api``.
+    """
 
     def __init__(self):
         """
@@ -606,6 +683,7 @@ class XonshSession:
             Session attribute. In case of integer value it signals xonsh to exit
             with returning this value as exit code.
         """
+        self.interface = XonshSessionInterface()
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
@@ -649,7 +727,21 @@ class XonshSession:
         self._completers = None
         self.builtins = None
         self._initial_builtin_names = None
-        self.last = None  # Last executed CommandPipeline.
+        self.lastcmd = None
+        self._last = None
+
+    @property
+    def last(self):
+        warnings.warn(
+            "The `last` attribute is deprecated and will be removed. Use `lastcmd`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._last
+
+    @last.setter
+    def last(self, value):
+        self._last = value
 
     def cmd(self, *args: str, **kwargs):
         return Cmd(self, *args, **kwargs)
@@ -713,6 +805,7 @@ class XonshSession:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
+        self.interface.env = self.env
 
         self.exit = None
         self.stdout_uncaptured = None
@@ -852,6 +945,12 @@ class DynamicAccessProxy:
 
     def __dir__(self):
         return self.obj.__dir__()
+
+    def __repr__(self):
+        return repr(self.obj)
+
+    def __str__(self):
+        return str(self.obj)
 
 
 # singleton

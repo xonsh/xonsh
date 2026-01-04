@@ -26,10 +26,13 @@
     <!-- The end of SEO section. -->
 
     <!-- Modern browser. -->
+    <link rel="icon" type="image/svg+xml" href="_static/xonsh_terminal_icon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="_static/landing2/images/xonsh_term_icon_32x32.png">
     <link rel="icon" type="image/png" sizes="128x128" href="_static/landing2/images/xonsh_term_icon_128x128.png">
     <link rel="icon" type="image/png" sizes="256x256" href="_static/landing2/images/xonsh_term_icon_256x256.png">
     <link rel="icon" type="image/png" sizes="512x512" href="_static/landing2/images/xonsh_term_icon_512x512.png">
+    <!-- Apple devices -->
+    <link rel="apple-touch-icon" sizes="180x180" href="_static/landing2/images/xonsh_term_icon_180x180.png">
     <!-- Old browser. -->
     <link rel="shortcut icon" type="image/png" href="_static/landing2/images/xonsh_term_icon_256x256.png">
 
@@ -120,7 +123,7 @@
                 <div class="col-lg-6 col-md-5">
                     <div class="caption-img text-center d-table">
                         <div class="d-table-cell align-middle">
-                            <img src="_static/landing2/images/conch_ascii.png" class="img-fluid" alt="" width="260px">
+                            <img src="_static/landing2/images/conch_ascii_with_icon.png" class="img-fluid" alt="" width="260px">
                         </div>
                     </div>
                 </div>
@@ -130,12 +133,12 @@
                         <div class="d-table-cell align-middle" >
                             <h2 style="color:white;"><b>XONSH</b> is a Python-powered shell</h2>
                             <br>
-                            <p style="font-size: 20px; font-weight: 1;">Xonsh is a modern, full-featured and cross-platform python shell.  The language is a superset of Python 3.6+ with additional shell primitives that you are used to from Bash and IPython.
+                            <p style="font-size: 20px; font-weight: 1;">Xonsh <span style="color:#CCC;">(sounds like "consh")</span> is a modern, full-featured and cross-platform python shell.  The language is a superset of Python 3.6+ with additional shell primitives that you are used to from Bash and IPython.
                                 It works on all major systems including Linux, OSX, and Windows. Xonsh is meant for the daily use of experts and novices.</p>
                             <a href="#" data-scroll-nav="3"><i class="icofont-download"></i> Install</a>
                             <a href="contents.html" target="_blank"><i class="icofont-ui-note"></i> Docs</a>
                             <a href="https://github.com/xonsh/xonsh" target="_blank"><i class="icofont-github"></i> Github</a>
-                            <a href="https://github.com/sponsors/xonsh" target="_blank"><i class="icofont-dollar"></i> Donate</a>
+                            <a href="https://github.com/sponsors/xonsh" target="_blank"><i class="icofont-dollar"></i> Sponsor</a>
                         </div>
                     </div>
                 </div>
@@ -154,7 +157,7 @@
                 <div class="col-lg-6 col-md-7">
                     <div class="about-content">
                         <h3>Xonsh is the Shell</h3>
-                        <p>The xonsh language has shell primitives that you are used to from Bash. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>The xonsh language provides the shell primitives commonly found in traditional Unix shells, including interaction with standard utilities, pipelines, and input/output streams. <a href="tutorial.html" target="_blank">Read more →</a></p>
                     </div>
                 </div>
 
@@ -162,7 +165,7 @@
                     <div class="text-center">
 
                         <pre class="code">
-<span unselectable-text="@ "></span><b>cd</b> /home
+<span unselectable-text="@ "></span><b>cd</b> $HOME
 
 <span unselectable-text="@ "></span><b>cat</b> /etc/passwd | <b>grep</b> root
 
@@ -180,7 +183,7 @@
                     <div class="about-content">
                         <h3>Xonsh is Python</h3>
 
-                        <p>The xonsh language is a superset of Python 3.6+ and you can run Python code and import modules. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>The xonsh language is a superset of Python 3.6+, allowing you to execute Python code directly, install and use third-party libraries, import modules, and take advantage of the broader Python ecosystem and tooling. <a href="tutorial.html" target="_blank">Read more →</a></p>
                     </div>
                 </div>
 
@@ -207,7 +210,7 @@
                     <div class="about-content">
                         <h3>Xonsh is the Shell in Python</h3>
 
-                        <p>With xonsh you can combine Python with shell commands. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>Xonsh provides a unified environment where shell functionality and Python code work together naturally. <a href="tutorial.html" target="_blank">Read more →</a></p>
                     </div>
                 </div>
 
@@ -235,7 +238,7 @@
                     <div class="about-content">
                         <h3>Xonsh is Python in the Shell</h3>
 
-                        <p>Prepare environment variables and arguments in Python and use them in shell commands. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>Xonsh shell session builtins allow xonsh to function as a fully featured shell, tightly integrated with the operating system and its environment. <a href="tutorial.html" target="_blank">Read more →</a></p>
                     </div>
                 </div>
 
@@ -610,7 +613,7 @@ chmod +x xonsh-x86_64.AppImage
                             <a href="https://hub.docker.com/u/xonsh">Docker Hub</a>
                         </p>
                         <p>
-                            <a href="https://github.com/sponsors/xonsh">Donate</a>
+                            <a href="https://github.com/sponsors/xonsh">Sponsor</a>
                         </p>
                     </div>
                     <div class="col-lg-3 col-sm-6">

@@ -36,14 +36,13 @@ To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines 
 
 .. code-block:: xonshcon
 
-    import os.path
-    if os.path.exists(f"{$HOME}/.nix-profile") and not __xonsh__.env.get("NIX_PATH"):
+    if p"~/.nix-profile".exists() and not @.env.get("NIX_PATH"):
         $NIX_REMOTE="daemon"
         $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
         $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
         $NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
         $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
-        $PATH += [f"{$HOME}/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
+        $PATH += ["~/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
 
 Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is:
 
@@ -229,13 +228,13 @@ back-end. To enable that behaviour run the following:
 
 .. code-block:: xonshcon
 
-   >>> xpip install xontrib-free-cwd
+   @ xpip install xontrib-free-cwd
 
 Add this line to your ``~/.xonshrc`` file to have it always enabled.
 
 .. code-block:: xonshcon
 
-   >>> xontrib load free_cwd
+   @ xontrib load free_cwd
 
 
 Name space conflicts
@@ -246,7 +245,7 @@ you must explicitly request the ``.``, like this:
 
 .. code-block:: xonshcon
 
-   >>> dir .
+   @ dir .
     Volume in drive C is Windows
     Volume Serial Number is 30E8-8B86
 
@@ -265,7 +264,7 @@ typing and avoid the ambiguity altogether:
 
 .. code-block:: xonshcon
 
-   >>> aliases['d'] = ['cmd', '/c', 'dir']
+   @ aliases['d'] = ['cmd', '/c', 'dir']
 
 You can add aliases to your `xonshrc <xonshrc.rst>`_ to have it always
 available when xonsh starts.
@@ -286,13 +285,13 @@ explicitly:
 
 .. code-block:: xonshcon
 
-    >>> ./my-program
+    @ ./my-program
 
 Although not recommended, to restore the behavior found in the
 ``cmd.exe`` shell, simply append ``.`` to the ``PATH``:
 
 .. code-block:: xonshcon
 
-    >>> $PATH.append('.')
+    @ $PATH.append('.')
 
 Add that to ``~/.xonshrc`` to enable that as the default behavior.

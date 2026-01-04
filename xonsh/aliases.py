@@ -7,6 +7,7 @@ import operator
 import os
 import pathlib
 import re
+import shlex
 import shutil
 import sys
 import types
@@ -18,6 +19,7 @@ from typing import Literal
 import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
+import xonsh.xoreutils.xcontext as xxt
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
@@ -669,7 +671,13 @@ def source_foreign_fn(
         if not sourcer:
             return (None, "xonsh: error: `sourcer` command is not mentioned.\n", 1)
         # we have filenames to source
-        prevcmd = "".join([f"{sourcer} {f}\n" for f in files_or_code])
+        shell_name = os.path.basename(shell).lower()
+        quote = (
+            functools.partial(argvquote, force=True)
+            if shell_name in {"cmd", "cmd.exe"}
+            else shlex.quote
+        )
+        prevcmd = "".join(f"{sourcer} {quote(f)}\n" for f in files_or_code)
         files = tuple(files_or_code)
     elif not prevcmd:
         prevcmd = " ".join(files_or_code)  # code to run, no files
@@ -1093,14 +1101,16 @@ def make_default_aliases():
         "trace": trace,
         "timeit": timeit_alias,
         "xonfig": xonfig,
-        "scp-resume": ["rsync", "--partial", "-h", "--progress", "--rsh=ssh"],
         "showcmd": showcmd,
-        "ipynb": ["jupyter", "notebook", "--no-browser"],
         "which": xxw.which,
+        "xcontext": xxt.xcontext,
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
-        "xonsh-reset": xonsh_reset,
+        "xpython": [XSH.env.get("_", sys.executable)]
+        if IN_APPIMAGE
+        else [sys.executable],
+        "xreset": xonsh_reset,
         "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Mark current command as threadable.",
