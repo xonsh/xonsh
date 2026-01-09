@@ -14,6 +14,7 @@ For now we use Python syntax by adding the ``language`` to ``.gitattributes``:
 
     *xonshrc text linguist-language=Python
     *.xsh text linguist-language=Python
+    *.xonsh text linguist-language=Python
 
 
 Tab completion from man pages
