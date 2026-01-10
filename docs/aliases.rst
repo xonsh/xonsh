@@ -123,7 +123,7 @@ Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
 
 ``showcmd``
 ============
-Displays how commands and arguments are evaluated.
+Displays how commands and arguments are evaluated. Use ``-e`` to expand aliases.
 
 
 ``trace``
