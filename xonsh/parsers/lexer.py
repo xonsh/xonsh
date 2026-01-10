@@ -238,6 +238,47 @@ def handle_ignore(state, token):
     yield from []
 
 
+def handle_comment(state, token):
+    """
+    Treat '#' as a comment only if it is preceded by whitespace.
+    If '#' is adjacent to the previous token, keep it as data:
+    - emit NAME for the contiguous '#...' chunk (no spaces)
+    - then emit WS/NAME for the rest to preserve following args.
+    """
+    prev = state["last"]
+
+    # If there's whitespace before '#', ignore as a comment
+    if prev is not None and prev.end != token.start:
+        yield from []
+        return
+
+    # No whitespace before '#': keep it as ordinary text
+    l, c = token.start
+    s = token.string
+    state["last"] = token
+
+    # Head: contiguous non-space starting with '#'
+    m = re.match(r"#\S+", s)
+    if m is None:
+        # Only '#' or empty: still keep it
+        yield _new_token("NAME", s, (l, c))
+        return
+
+    head = m.group(0)
+    yield _new_token("NAME", head, (l, c))
+
+    # Tail: split into WS and NAME segments so split() can separate them
+    pos = c + len(head)
+    tail = s[len(head) :]
+    for seg in re.finditer(r"\s+|\S+", tail):
+        g = seg.group(0)
+        if g.isspace():
+            yield _new_token("WS", g, (l, pos))
+        else:
+            yield _new_token("NAME", g, (l, pos))
+        pos += len(g)
+
+
 def handle_double_amps(state, token):
     yield _new_token("AND", "and", token.start)
 
@@ -307,7 +348,7 @@ def special_handlers():
     """
     sh = {
         NL: handle_ignore,
-        COMMENT: handle_ignore,
+        COMMENT: handle_comment,
         ENCODING: handle_ignore,
         ENDMARKER: handle_ignore,
         NAME: handle_name,
