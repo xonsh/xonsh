@@ -1002,7 +1002,7 @@ def trace(args, stdin=None, stdout=None, stderr=None, spec=None):
 
 
 def showcmd(args, stdin=None):
-    """usage: showcmd [-h|--help|cmd args]
+    """usage: showcmd [-a|--expand-alias] [-h|--help] cmd
 
     Displays the command and arguments as a list of strings that xonsh would
     run in subprocess mode. This is useful for determining how xonsh evaluates
