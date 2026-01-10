@@ -1736,6 +1736,11 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         sync="AUTO_SUGGEST",
     )
 
+    XONSH_PROMPT_NEXT_CMD = Var.with_default(
+        "",
+        "The text of the next command that will be inserted in the next prompt.",
+    )
+
     AUTO_SUGGEST_IN_COMPLETIONS = Var.with_default(
         False,
         "Places the auto-suggest result as the first option in the completions. "
