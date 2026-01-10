@@ -1014,8 +1014,13 @@ def showcmd(args, stdin=None):
 
     Examples
     --------
-      >>> showcmd echo $USER "can't" hear "the sea"
+      @ showcmd echo $USER "can't" hear "the sea"
       ['echo', 'I', "can't", 'hear', 'the sea']
+
+      @ aliases['ali'] = 'echo 1'
+      @ showcmd -a ali 2
+      ['echo', '1', '2']
+
     """
     if len(args) == 0 or (len(args) == 1 and args[0] in {"-h", "--help"}):
         print(showcmd.__doc__.rstrip().replace("\n    ", "\n"))
