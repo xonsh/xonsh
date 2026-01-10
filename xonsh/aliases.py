@@ -1009,6 +1009,7 @@ def showcmd(args, stdin=None):
     your commands and arguments prior to running these commands.
 
     optional arguments:
+      -a, --expand-alias    expand alias
       -h, --help            show this help message and exit
 
     Examples
@@ -1018,6 +1019,8 @@ def showcmd(args, stdin=None):
     """
     if len(args) == 0 or (len(args) == 1 and args[0] in {"-h", "--help"}):
         print(showcmd.__doc__.rstrip().replace("\n    ", "\n"))
+    elif args[0] in {'-a', '--expand-alias'}:
+        sys.displayhook(XSH.aliases.eval_alias(args[1:]))
     else:
         sys.displayhook(args)
 
