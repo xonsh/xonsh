@@ -1002,14 +1002,14 @@ def trace(args, stdin=None, stdout=None, stderr=None, spec=None):
 
 
 def showcmd(args, stdin=None):
-    """usage: showcmd [-a|--expand-alias] [-h|--help] cmd
+    """usage: showcmd [-e|--expand-alias] [-h|--help] cmd
 
     Displays the command and arguments as a list of strings that xonsh would
     run in subprocess mode. This is useful for determining how xonsh evaluates
     your commands and arguments prior to running these commands.
 
     optional arguments:
-      -a, --expand-alias    expand alias
+      -e, --expand-alias    expand alias
       -h, --help            show this help message and exit
 
     Examples
@@ -1018,13 +1018,13 @@ def showcmd(args, stdin=None):
       ['echo', 'I', "can't", 'hear', 'the sea']
 
       @ aliases['ali'] = 'echo 1'
-      @ showcmd -a ali 2
+      @ showcmd -e ali 2
       ['echo', '1', '2']
 
     """
     if len(args) == 0 or (len(args) == 1 and args[0] in {"-h", "--help"}):
         print(showcmd.__doc__.rstrip().replace("\n    ", "\n"))
-    elif args[0] in {'-a', '--expand-alias'}:
+    elif args[0] in {'-e', '--expand-alias'}:
         sys.displayhook(XSH.aliases.eval_alias(args[1:]))
     else:
         sys.displayhook(args)
