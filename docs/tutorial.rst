@@ -407,10 +407,7 @@ must be used to force xonsh to not interpret them.
 .. code-block:: xonshcon
 
     @ echo ${
-    .
-    SyntaxError: <xonsh-code>:1:5: ('code: {',)
-    echo ${
-         ^
+    SyntaxError
     @ echo '${'
     ${
 
