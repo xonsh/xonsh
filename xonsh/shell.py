@@ -54,6 +54,16 @@ Parameters:
 * ``rtn``: The result of the command executed (``0`` for success)
 * ``out``: If xonsh stores command output, this is the output
 * ``ts``: Timestamps, in the order of ``[starting, ending]``
+
+Example:
+
+.. code-block:: python
+
+    @events.on_postcommand
+    def _prompt_err_command_again(cmd, rtn, out, ts):
+        '''If the result of executing the command is not zero, repeat the command on the next command prompt.'''
+        if rtn != 0:
+            $XONSH_PROMPT_NEXT_CMD = cmd.rstrip()
 """,
 )
 
