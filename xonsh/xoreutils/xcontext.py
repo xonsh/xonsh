@@ -11,10 +11,17 @@ from xonsh.cli_utils import ArgParserAlias
 
 def get_real_python():
     """Return the actual Python interpreter for the current xonsh session.
-    Prefers XONSH_PYTHON over sys.executable to avoid wrapper binaries (e.g. AppImage)."""
+    Prefers XONSH_PYTHON and handles AppImage wrapper binaries.
+    """
     xpy = XSH.env.get("XONSH_PYTHON")
     if xpy and os.path.isfile(xpy):
         return xpy
+    
+    underscore = XSH.env.get("_")
+    if underscore and os.path.isfile(underscore):
+        name = os.path.basename(underscore).lower()
+        if name.startswith("python"):
+            return underscore
 
     executable = sys.executable
     if executable:
