@@ -2,6 +2,20 @@
 Xonsh Installation General Guide
 *******************
 
+**The guide is new so in case of error please open the issue in the `tracker <https://github.com/xonsh/xonsh/issues>`_.
+
+Important
+========================
+
+Xonsh is a full-featured shell and can technically be used as a login shell, 
+but since it is not a POSIX‑compatible shell, we strongly discourage doing 
+so unless you clearly understand the purpose and consequences. 
+Do not attempt to set it as your default shell using ``chsh`` 
+or by any other method that would replace the system shell.
+
+The recommended practice is to create a Xonsh profile in your terminal emulator.
+
+
 Overview
 ========================
 
@@ -34,7 +48,7 @@ the main approaches and their advantages.
       -
     * - AppImage
       -
-      - ✓
+      - ~
       - ✓
       -
       - ✓
@@ -50,6 +64,10 @@ the main approaches and their advantages.
       -
       -
       -
+
+Work in progress: 
+`binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_, 
+`running in RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_.
 
 Independent install
 ========================
@@ -79,7 +97,7 @@ You can install xonsh package from PyPi using an existing installation of ``pip`
 
 .. code-block:: console
 
-    pip install 'xonsh[full]'  # or just xonsh for minimal dependencies
+    pip install 'xonsh[full]'
 
 Pip can also install the most recent xonsh source code from the
 `xonsh project repository <https://github.com/xonsh/xonsh>`_:
@@ -108,7 +126,7 @@ Xonsh is available as a single AppImage bundled with Python, allowing you to run
     chmod +x xonsh
     ./xonsh
 
-Learn more: `Xonsh AppImage <appimage.html>`_.
+Study how to package your libraries in `Xonsh AppImage <appimage.html>`_ article.
 
 Container
 ========================
