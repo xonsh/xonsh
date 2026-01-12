@@ -8,7 +8,7 @@ Important
 ========================
 
 Xonsh is a full-featured shell and can technically be used as a login shell, 
-but since it is not a POSIX‑compatible shell, we strongly discourage doing 
+but since it is not a POSIX‑compatible shell, we don't recommend doing 
 so unless you clearly understand the purpose and consequences. 
 Do not attempt to set it as your default shell using ``chsh`` 
 or by any other method that would replace the system shell.
