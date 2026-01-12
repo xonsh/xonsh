@@ -138,32 +138,32 @@ This approach is **not recommended** for the following reasons:
 
 .. code-block:: console
 
-    pacman -S xonsh
+    pacman -S xonsh  # not recommended but possible
 
 **Debian/Ubuntu:**
 
 .. code-block:: console
 
-    apt install xonsh
+    apt install xonsh  # not recommended but possible
 
 
 **Fedora:**
 
 .. code-block:: console
 
-    dnf install xonsh
+    dnf install xonsh  # not recommended but possible
 
 **GNU guix:**
 
 .. code-block:: console
 
-    guix install xonsh
+    guix install xonsh  # not recommended but possible
 
 **OSX:**
 
 .. code-block:: console
 
-    brew install xonsh
+    brew install xonsh  # not recommended but possible
 
 WIP Binary build
 ========================
