@@ -16,7 +16,7 @@ def get_real_python():
     xpy = XSH.env.get("XONSH_PYTHON")
     if xpy and os.path.isfile(xpy):
         return xpy
-    
+
     underscore = XSH.env.get("_")
     if underscore and os.path.isfile(underscore):
         name = os.path.basename(underscore).lower()
