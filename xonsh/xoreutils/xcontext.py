@@ -20,7 +20,7 @@ def get_real_python():
     underscore = XSH.env.get("_")
     if underscore and os.path.isfile(underscore):
         name = os.path.basename(underscore).lower()
-        if name.startswith("python"):
+        if "python" in name:
             return underscore
 
     executable = sys.executable
