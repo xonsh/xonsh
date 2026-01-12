@@ -141,8 +141,7 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``exit 1`` or ``exit(1)``
       - Exiting from the current script.
 
-To understand how xonsh executes the subprocess commands try
-to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+To understand how xonsh executes the subprocess commands try ``showcmd`` or set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
 .. code-block:: console
 
