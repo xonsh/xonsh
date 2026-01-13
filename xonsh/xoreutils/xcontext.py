@@ -8,30 +8,6 @@ import sys
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
 
-
-def get_real_python():
-    """Return the actual Python interpreter for the current xonsh session.
-    Prefers XONSH_PYTHON and handles AppImage wrapper binaries.
-    """
-    xpy = XSH.env.get("XONSH_PYTHON")
-    if xpy and os.path.isfile(xpy):
-        return xpy
-
-    underscore = XSH.env.get("_")
-    if underscore and os.path.isfile(underscore):
-        name = os.path.basename(underscore).lower()
-        if "python" in name:
-            return underscore
-
-    executable = sys.executable
-    if executable:
-        name = os.path.basename(executable).lower()
-        if name.startswith("python") or name in ("python.exe", "pythonw.exe"):
-            return executable
-
-    return shutil.which("python") or executable
-
-
 def _get_version(binary):
     """Helper to get version string from a binary."""
     try:
