@@ -1,12 +1,12 @@
 """The xontext command."""
 
-import os
 import shutil
 import subprocess
 import sys
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
+
 
 def _get_version(binary):
     """Helper to get version string from a binary."""
