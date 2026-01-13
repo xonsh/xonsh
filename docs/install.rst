@@ -7,10 +7,10 @@ Xonsh Installation General Guide
 Important
 ========================
 
-Xonsh is a full-featured shell and can technically be used as a login shell, 
-but since it is not a POSIX‑compatible shell, we don't recommend doing 
-so unless you clearly understand the purpose and consequences. 
-Do not attempt to set it as your default shell using ``chsh`` 
+Xonsh is a full-featured shell and can technically be used as a login shell,
+but since it is not a POSIX‑compatible shell, we don't recommend doing
+so unless you clearly understand the purpose and consequences.
+Do not attempt to set it as your default shell using ``chsh``
 or by any other method that would replace the system shell.
 
 The recommended practice is to create a Xonsh profile in your terminal emulator.
@@ -65,8 +65,8 @@ the main approaches and their advantages.
       -
       -
 
-Work in progress: 
-`binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_, 
+Work in progress:
+`binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_,
 `running in RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_.
 
 Independent install
