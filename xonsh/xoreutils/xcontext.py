@@ -3,7 +3,7 @@
 import shutil
 import subprocess
 import sys
-
+from xonsh.platform import IN_APPIMAGE
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
 
@@ -29,7 +29,8 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
     """Report information about the current xonsh environment."""
     stdout = _stdout or sys.stdout
     print("[Current xonsh session]", file=stdout)
-    xpy = get_real_python()
+    appimage_python = XSH.env.get('_') if IN_APPIMAGE else None
+    xpy = appimage_python if appimage_python else sys.executable
     xpy_ver = _get_version(xpy)
     print(f"xpython: {xpy} # {xpy_ver}", file=stdout)
     xpip = XSH.aliases.get("xpip")
