@@ -4,32 +4,6 @@ Platform-specific tips and tricks
 Linux
 ------
 
-Possible conflicts with Bash
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Depending on how your installation of Bash is configured, Xonsh may have trouble
-loading certain shell modules. If you see errors similar to this
-when launching Xonsh:
-
-.. code-block:: console
-
-    bash: module: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_module'
-    bash: scl: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_scl'
-    bash: module: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_module'
-    bash: scl: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_scl'
-
-...You can correct the problem by unsetting the modules, by adding the following
-lines to your ``~/.bashrc file``:
-
-.. code-block:: console
-
-    unset module
-    unset scl
-
 Use the Nix Package manager with Xonsh
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines might be life-savers:
@@ -59,6 +33,32 @@ Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` 
     python -m pip install --user -U pip xontrib-z xonsh-direnv
 
 Just run the last three lines, do not put them in your `xonshrc`!
+
+Possible conflicts with Bash
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Depending on how your installation of Bash is configured, Xonsh may have trouble
+loading certain shell modules. If you see errors similar to this
+when launching Xonsh:
+
+.. code-block:: console
+
+    bash: module: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for 'BASH_FUNC_module'
+    bash: scl: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for 'BASH_FUNC_scl'
+    bash: module: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for 'BASH_FUNC_module'
+    bash: scl: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for 'BASH_FUNC_scl'
+
+...You can correct the problem by unsetting the modules, by adding the following
+lines to your ``~/.bashrc file``:
+
+.. code-block:: console
+
+    unset module
+    unset scl
 
 MacOS, OSX
 ----------
@@ -101,6 +101,9 @@ To incorporate the whole functionality of ``/etc/profile``:
 
 Tab completion
 ^^^^^^^^^^^^^^
+
+First of all take a look `xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_ for a modern approach.
+
 Xonsh has support for using bash completion files on the shell, to use it you need to install
 the bash-completion package.
 The regular bash-completion package uses v1 which mostly works, but `occasionally has rough edges <https://github.com/xonsh/xonsh/issues/2111>`_ so we recommend using bash-completion v2.
