@@ -1,13 +1,3 @@
-## xonfig
-
-<details>
-
-```xsh
-<Put here the output of `xonfig` command.>
-```
-
-</details>
-
 ## Expected Behavior
 <!--- Put here what should happen. -->
 
@@ -26,6 +16,16 @@
 
 ## Steps to Reproduce
 <!--- Put here the minimal reproducible snippet to trigger the bug. -->
+
+## xonfig
+
+<details>
+
+```xsh
+<Put here the output of `xonfig` command.>
+```
+
+</details>
 
 ## For community
 ⬇️  **Please click the 👍 reaction instead of leaving a `+1` or 👍  comment**
