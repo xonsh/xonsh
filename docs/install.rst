@@ -194,12 +194,3 @@ WIP RustPython build
 
 Using RustPython (a Python Interpreter written in Rust), it is possible to run xonsh using Rust.
 Learn more in `xonsh/5082 <https://github.com/xonsh/xonsh/issues/5082>`_.
-
-See also
-========================
-
-.. toctree::
-    :titlesonly:
-    :maxdepth: 2
-
-    platform-issues
