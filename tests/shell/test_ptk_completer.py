@@ -23,6 +23,26 @@ from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
         ),
         (RichCompletion("x"), 5, PTKCompletion(RichCompletion("x"), -5, "x")),
         ("x", 5, PTKCompletion("x", -5, "x")),
+        ("rrr", 5, PTKCompletion("rrr", -5, "rrr")),
+        (
+            RichCompletion('r"with\\backslash"'),
+            0,
+            PTKCompletion(RichCompletion('r"with\\backslash"'), 0, "with\\backslash"),
+        ),
+        (
+            RichCompletion("'with space'"),
+            0,
+            PTKCompletion(RichCompletion("'with space'"), 0, "with space"),
+        ),
+        (
+            RichCompletion("r'./hello/world with space'"),
+            2,
+            PTKCompletion(
+                RichCompletion("r'./hello/world with space'"),
+                -2,
+                "hello/world with space",
+            ),
+        ),
     ],
 )
 def test_rich_completion(completion, lprefix, ptk_completion, monkeypatch, xession):
@@ -35,8 +55,8 @@ def test_rich_completion(completion, lprefix, ptk_completion, monkeypatch, xessi
 
     document_mock = MagicMock()
     document_mock.text = ""
-    document_mock.current_line = ""
-    document_mock.cursor_position_col = 0
+    document_mock.current_line = "x" * lprefix
+    document_mock.cursor_position_col = lprefix
 
     monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
 
