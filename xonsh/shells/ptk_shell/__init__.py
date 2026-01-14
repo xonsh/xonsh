@@ -229,7 +229,6 @@ class PromptToolkitShell(BaseShell):
             if not app.current_buffer.text and (suggestion := XSH.env.get('XONSH_PROMPT_NEXT_CMD_SUGGESTION')):
                 app.current_buffer.suggestion = Suggestion(suggestion)
                 XSH.env["XONSH_PROMPT_NEXT_CMD_SUGGESTION"] = ""
-
         self.prompter.app.before_render.add_handler(handler_before_render)
 
 
