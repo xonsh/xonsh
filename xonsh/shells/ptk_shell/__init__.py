@@ -8,7 +8,7 @@ from types import MethodType
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, Suggestion
 from prompt_toolkit.clipboard import InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
@@ -225,6 +225,16 @@ class PromptToolkitShell(BaseShell):
             [self.key_bindings, load_emacs_shift_selection_bindings()]
         )
 
+        def handler_before_render(app):
+            if (suggestion := XSH.env.get('XONSH_PROMPT_NEXT_CMD_SUGGESTION')):
+                buf = app.current_buffer
+                if not buf.text:
+                    buf.suggestion = Suggestion(suggestion)
+                    XSH.env["XONSH_PROMPT_NEXT_CMD_SUGGESTION"] = ""
+
+        self.prompter.app.before_render.add_handler(handler_before_render)
+
+
     def get_lazy_ptk_kwargs(self):
         """These are non-essential attributes for the PTK shell to start.
         Lazy loading these later would save some startup time.
@@ -293,6 +303,7 @@ class PromptToolkitShell(BaseShell):
         events.on_pre_prompt_format.fire()
         env = XSH.env
         next_command = env.get("XONSH_PROMPT_NEXT_CMD", "")
+        env["XONSH_PROMPT_NEXT_CMD"] = ""
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("XONSH_PROMPT_AUTO_SUGGEST") else None
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
@@ -365,7 +376,6 @@ class PromptToolkitShell(BaseShell):
             "refresh_interval": refresh_interval,
             "complete_in_thread": complete_in_thread,
         }
-        env["XONSH_PROMPT_NEXT_CMD"] = ""
         if env["ENABLE_ASYNC_PROMPT"]:
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
