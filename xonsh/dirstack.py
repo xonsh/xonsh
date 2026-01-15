@@ -144,6 +144,18 @@ events.doc(
 on_chdir(olddir: str, newdir: str) -> None
 
 Fires when the current directory is changed for any reason.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_chdir
+    def _source_env_xsh(olddir, newdir):
+        '''Source `env.xsh` file if it's exist in the new directory.'''
+        env_file = @.imp.pathlib.Path(newdir) / 'env.xsh'
+        if env_file.exists():
+            print(f'Source {env_file}')
+            source @(env_file)
 """,
 )
 
