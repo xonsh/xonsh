@@ -98,7 +98,7 @@ class PromptToolkitCompleter(Completer):
             pre = min(document.cursor_position_col - begidx, len(c_prefix))
         else:
             pre = len(c_prefix)
-        
+
         # Yield completions with suffix-only display
         for comp in completions:
             # do not display quote
