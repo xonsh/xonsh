@@ -109,28 +109,18 @@ class PromptToolkitCompleter(Completer):
                     if comp.description
                     else None
                 )
-                suffix = comp[pre:]
-                # strip quotes efficiently
-                if suffix.startswith(("r'", 'r"')):
-                    suffix = 'r' + suffix[2:-1]  # keep leading 'r', remove quotes
-                elif (suffix.startswith("'") and suffix.endswith("'")) or (suffix.startswith('"') and suffix.endswith('"')):
-                    suffix = suffix[1:-1]
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display or suffix,
+                    display=comp.display or comp[pre:].strip("'\""),
                     display_meta=desc,
                     style=comp.style or "",
                 )
             elif isinstance(comp, Completion):
                 yield comp
             else:
-                suffix = comp[pre:]
-                if suffix.startswith(("r'", 'r"')):
-                    suffix = 'r' + suffix[2:-1]
-                elif (suffix.startswith("'") and suffix.endswith("'")) or (suffix.startswith('"') and suffix.endswith('"')):
-                    suffix = suffix[1:-1]
-                yield Completion(comp, -plen, display=suffix)
+                disp = comp[pre:].strip("'\"")
+                yield Completion(comp, -plen, display=disp)
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""
