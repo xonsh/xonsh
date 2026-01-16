@@ -127,6 +127,15 @@ on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
 Fires after an environment variable is changed.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
+
+.. code-block:: python
+
+    @events.on_envvar_change
+    def _on_env_path_change(name, oldvalue, newvalue):
+        '''Keep `/tmp/bin` on top of PATH.'''
+        if name == 'PATH' and (newvalue == [] or newvalue[0] != '/tmp/bin'):
+            $PATH = ['/tmp/bin'] + [v for v in newvalue if v != '/tmp/bin']
+
 """,
 )
 
