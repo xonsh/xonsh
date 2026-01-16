@@ -10,10 +10,15 @@ from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
 
 
-def unquote(s):
-    if s.startswith("r'") or s.startswith('r"'):
-        s = s[1:]
-    return s.strip("'\"")
+def unquote(s: str):
+    if (s.startswith("r'") and s.endswith("'")) or (
+        s.startswith('r"') and s.endswith('"')
+    ):
+        return s[2:-1]
+    elif s[0] == s[-1] and s[0] in {"'", '"'}:
+        return s[1:-1]
+    else:
+        return s
 
 
 class PromptToolkitCompleter(Completer):
@@ -116,14 +121,16 @@ class PromptToolkitCompleter(Completer):
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display or unquote(comp[pre:]),
+                    display=comp.display or unquote(comp)[pre:],
                     display_meta=desc,
                     style=comp.style or "",
                 )
             elif isinstance(comp, Completion):
                 yield comp
             else:
-                disp = unquote(comp[pre:])
+                # pre is calculated after unquote,
+                # so prefix cutting shoul also be performed afterwards
+                disp = unquote(comp)[pre:]
                 yield Completion(comp, -plen, display=disp)
 
     def suggestion_completion(self, document, line):
