@@ -1,5 +1,14 @@
 # Xonsh Change Log
 
+## [0.22.2](https://github.com/xonsh/xonsh/compare/0.22.1...0.22.2) (2026-01-16)
+
+
+### Bug Fixes
+
+* **docs:** Update ErrorString import handling in cmdhelp.py ([#6054](https://github.com/xonsh/xonsh/issues/6054)) ([4d8d504](https://github.com/xonsh/xonsh/commit/4d8d504419ac09673301592aea6a8dcebae2d867))
+* **mamba-installer:** Rename xmamba to xmamba.xsh ([#6059](https://github.com/xonsh/xonsh/issues/6059)) ([82b9210](https://github.com/xonsh/xonsh/commit/82b921062487b60efd08e39f291789dfcddb67b7))
+* Revert "Fix for completer issue with file name containing backslash" because of a regress ([#6052](https://github.com/xonsh/xonsh/issues/6052)) ([1bfcba6](https://github.com/xonsh/xonsh/commit/1bfcba635745eb122780ccebf87a03baf5a7130b))
+
 ## [0.22.1](https://github.com/xonsh/xonsh/compare/0.22.0...0.22.1) (2026-01-14)
 
 
