@@ -1,5 +1,5 @@
 *******************
-Xonsh Mamba Installer
+Mamba Install Xonsh
 *******************
 
 Xonsh is a Python-based shell, and running xonsh requires Python to be installed.
