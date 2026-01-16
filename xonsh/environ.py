@@ -2366,6 +2366,8 @@ class Env(cabc.MutableMapping):
             val, cabc.MutableSet | cabc.MutableSequence | cabc.MutableMapping
         ):
             self._detyped = None
+        if isinstance(val, EnvPath):
+            val.target_env_var = key
         return val
 
     def __setitem__(self, key, val):
@@ -2814,6 +2816,8 @@ class EnvPath(cabc.MutableSequence):
     """
 
     def __init__(self, args=None):
+        self.target_env_var = None  # Will be populated by Env
+
         if not args:
             self._l = []
         else:
@@ -2851,30 +2855,36 @@ class EnvPath(cabc.MutableSequence):
             return _expandpath(self._l[item])
 
     def __setitem__(self, index, item):
-        self._l.__setitem__(index, item)
+        with EnvPath._OnPathChange(self):
+            self._l.__setitem__(index, item)
 
     def __len__(self):
         return len(self._l)
 
     def __delitem__(self, key):
-        self._l.__delitem__(key)
+        with EnvPath._OnPathChange(self):
+            self._l.__delitem__(key)
 
     @staticmethod
     def _prepare_path(p):
         return str(expand_path(p))
 
     def insert(self, index, value):
-        self._l.insert(index, self._prepare_path(value))
+        with EnvPath._OnPathChange(self):
+            self._l.insert(index, self._prepare_path(value))
 
     def append(self, value):
-        self._l.append(self._prepare_path(value))
+        with EnvPath._OnPathChange(self):
+            self._l.append(self._prepare_path(value))
 
     def prepend(self, value):
-        self._l.insert(0, self._prepare_path(value))
+        with EnvPath._OnPathChange(self):
+            self._l.insert(0, self._prepare_path(value))
 
     def remove(self, value):
         try:
-            self._l.remove(self._prepare_path(value))
+            with EnvPath._OnPathChange(self):
+                self._l.remove(self._prepare_path(value))
         except ValueError:
             print(f"EnvPath warning: path {repr(value)} not found.", file=sys.stderr)
 
@@ -2939,10 +2949,21 @@ class EnvPath(cabc.MutableSequence):
         None
 
         """
-        data = self._prepare_path(data)
-        if data not in self._l:
-            self._l.insert(0 if front else len(self._l), data)
-        elif replace:
-            # https://stackoverflow.com/a/25251306/1621381
-            self._l = list(filter(lambda x: x != data, self._l))
-            self._l.insert(0 if front else len(self._l), data)
+        with EnvPath._OnPathChange(self):
+            data = self._prepare_path(data)
+            if data not in self._l:
+                self._l.insert(0 if front else len(self._l), data)
+            elif replace:
+                # https://stackoverflow.com/a/25251306/1621381
+                self._l = list(filter(lambda x: x != data, self._l))
+                self._l.insert(0 if front else len(self._l), data)
+
+    class _OnPathChange:
+        """Track paths change event."""
+        def __init__(self, obj):
+            self.obj = obj
+        def __enter__(self):
+            self.before = list(self.obj._l)
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if self.obj.target_env_var and self.before != self.obj._l:
+                events.on_envvar_change.fire(name=self.obj.target_env_var, oldvalue=self.before, newvalue=self.obj._l)
