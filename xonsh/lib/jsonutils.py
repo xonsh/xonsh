@@ -4,7 +4,7 @@ objects.
 
 import functools
 
-from xonsh.tools import EnvPath
+from xonsh.environ import EnvPath
 
 
 @functools.singledispatch
