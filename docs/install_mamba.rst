@@ -24,14 +24,14 @@ Python version changes, or other experiments with environments. You can use
 
 Install the latest xonsh release with a well-tested Python version:
 
-.. code-block:: console
+.. code-block:: bash
 
    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 Install xonsh from the ``main`` Git branch with a stable Python version
 
-.. code-block:: console
+.. code-block:: bash
 
    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='git+https://github.com/xonsh/xonsh#egg=xonsh[full]' \
     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
@@ -39,7 +39,7 @@ Install xonsh from the ``main`` Git branch with a stable Python version
 
 Preinstall and preload `xontribs <https://github.com/topics/xontrib>`_:
 
-.. code-block:: console
+.. code-block:: bash
 
    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='git+https://github.com/xonsh/xonsh#egg=xonsh[full]' \
     PIP_INSTALL="uv xontrib-sh xontrib-jump-to-dir xontrib-dalias xontrib-pipeliner xontrib-whole-word-jumping" \
