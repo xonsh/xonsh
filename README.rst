@@ -126,23 +126,9 @@ If you like xonsh, :star: the repo and spread the word about xonsh.
 First steps
 ***********
 
-We're refactoring the docs about xonsh installation so you can try the new way:
-
-* Install xonsh using `xonsh-install <https://github.com/anki-code/xonsh-install>`_
-* `Draft "Xonsh Installation General Guide" <https://github.com/xonsh/xonsh/blob/refactor_install_docs/docs/install.rst>`_
-
-The old way is to install xonsh from pip:
-
-.. code-block:: shell
-
-    python -m pip install 'xonsh[full]'
-
-Visit https://xon.sh for more information:
-
-- `Installation <https://xon.sh/contents.html#installation>`_ - using `xonsh-install <https://github.com/anki-code/xonsh-install>`_, packages, docker or AppImage.
+- `Xonsh Installation <https://github.com/xonsh/xonsh/blob/refactor_install_docs/docs/install.rst>`_ - isolated environment, package, container or portable AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
-
-Some beginners find the `xonsh cheatsheet <https://github.com/anki-code/xonsh-cheatsheet>`_ a helpful place to start.
+- Some beginners find the `xonsh cheatsheet <https://github.com/anki-code/xonsh-cheatsheet>`_ a helpful place to start.
 
 Extensions
 **********
