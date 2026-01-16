@@ -65,7 +65,7 @@ Fired after prompt toolkit has been initialized. Use this event in xonsh RC file
         @bindings.add(@.imp.prompt_toolkit.keys.Keys.ControlW)
         def say_hi(event):
             event.current_buffer.insert_text('hi')
-            
+
 """,
 )
 
@@ -303,9 +303,9 @@ class PromptToolkitShell(BaseShell):
         events.on_pre_prompt_format.fire()
         env = XSH.env
 
-        if (next_command := env.get("XONSH_PROMPT_NEXT_CMD", "")):
+        if next_command := env.get("XONSH_PROMPT_NEXT_CMD", ""):
             env["XONSH_PROMPT_NEXT_CMD"] = ""
-    
+
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("XONSH_PROMPT_AUTO_SUGGEST") else None
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")

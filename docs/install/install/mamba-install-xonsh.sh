@@ -99,14 +99,14 @@ echo
 echo Install xonsh
 echo
 
-cat > ./xbin/xmamba <<EOF
+cat > ./xbin/xmamba.xsh <<EOF
 if \$XONSH_MODE != 'source':
-    printx('Run: source xmamba', 'YELLOW')
+    printx('Run: source xmamba.xsh', 'YELLOW')
     exit(1)
 \$MAMBA_ROOT_PREFIX = \$(which xonsh)[:-10]
 execx(\$(@(\$MAMBA_ROOT_PREFIX+'/bin/micromamba') shell hook --shell xonsh).replace("aliases['micromamba']", "aliases['xmamba']"))
 EOF
-chmod +x ./xbin/xmamba
+chmod +x ./xbin/xmamba.xsh
 
 cat > ./xbin/xbin-add <<EOF
 #!/bin/bash
