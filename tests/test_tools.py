@@ -49,7 +49,6 @@ from xonsh.tools import (
     is_completion_mode,
     is_completions_display_value,
     is_dynamic_cwd_width,
-    is_env_path,
     is_float,
     is_int,
     is_int_as_str,
@@ -75,8 +74,6 @@ from xonsh.tools import (
     seq_to_upper_pathsep,
     set_to_pathsep,
     simple_random_choice,
-    str_to_env_path,
-    str_to_path,
     subexpr_before_unbalanced,
     subexpr_from_unbalanced,
     subproc_toks,
@@ -89,6 +86,11 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple,
     to_int_or_none,
     to_logfile_opt,
+)
+from xonsh.environ import (
+    is_env_path,
+    str_to_env_path,
+    str_to_path,
 )
 
 LEXER = Lexer()
