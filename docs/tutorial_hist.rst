@@ -71,8 +71,8 @@ the ``show`` action, see below.
 
     @ history
 
-Also note that the history object itself can be accessed through the xonsh built-in variable
-``__xonsh__.history``.
+Also note that the history object itself can be accessed through the xonsh built-in variables
+``@.history`` and ``__xonsh__.history``.
 
 
 ``show`` action
@@ -336,7 +336,7 @@ you could run the following command:
 
 History Indexing
 =======================
-History object (``__xonsh__.history``) acts like a sequence that can be indexed in a special way
+History object (``@.history``, ``__xonsh__.history``) acts like a sequence that can be indexed in a special way
 that adds extra functionality. At the moment only history from the
 current session can be retrieved. Note that the most recent command
 is the last item in history.
@@ -368,9 +368,9 @@ examples:
 
     @ echo mkdir with/a/huge/name/
     mkdir with/a/huge/name
-    @ __xonsh__.history[-1, -1]
+    @ @.history[-1, -1]
     'with/a/huge/name/'
-    @ __xonsh__.history[0, 1:]
+    @ @.history[0, 1:]
     'mkdir with/a/huge/name'
 
 
@@ -416,7 +416,7 @@ the JSON version mentioned all above in this tutorial). It shares the same
 functionality as the JSON version in most ways, except it currently doesn't
 support the ``history diff`` action and does not store the output of commands,
 as the json-backend does. E.g.
-`__xonsh__.history[-1].out` will always be `None`.
+`@.history[-1].out` will always be `None`.
 
 The Sqlite history backend can provide a speed advantage in loading history
 into a just-started xonsh session. The JSON history backend may need to read
