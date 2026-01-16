@@ -55,7 +55,17 @@ events.doc(
     """
 on_ptk_create(prompter: PromptSession, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindings) ->
 
-Fired after prompt toolkit has been initialized
+Fired after prompt toolkit has been initialized. Use this event in xonsh RC file.
+
+.. code-block:: python
+
+    # ~/.xonshrc
+    @events.on_ptk_create
+    def _custom_keybindings(bindings, **kw):
+        @bindings.add(@.imp.prompt_toolkit.keys.Keys.ControlW)
+        def say_hi(event):
+            event.current_buffer.insert_text('hi')
+            
 """,
 )
 
