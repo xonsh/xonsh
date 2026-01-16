@@ -82,15 +82,15 @@ which returns a dictionary mapping event names to a list of handler strings.
 Notes for developers
 ====================
 
-- Handler call order is not guaranteed now. 
+- Handler call order is not guaranteed now.
 
 - ``Event.fire()`` returns a list of the returns from the handlers. You should merge this list if it's needed.
 
 - In xonsh, events come in species. Each one may look like an event and quack like an event, but they
   behave differently. This was done because load hooks look like events and quack like events, but they have different
-  semantics. See `LoadEvents <api/events.html#xonsh.events.LoadEvent>`_ for details. In order to turn an event from 
-  the default ``Event``, you must transmogrify it, using ``events.transmogrify()``. The class the event is turned 
-  in to must be a subclass of ``AbstractEvent``. Under the hood, transmogrify creates a new instance and copies 
+  semantics. See `LoadEvents <api/events.html#xonsh.events.LoadEvent>`_ for details. In order to turn an event from
+  the default ``Event``, you must transmogrify it, using ``events.transmogrify()``. The class the event is turned
+  in to must be a subclass of ``AbstractEvent``. Under the hood, transmogrify creates a new instance and copies
   the handlers and docstring from the old instance to the new one.
 
 
