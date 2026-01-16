@@ -22,7 +22,7 @@ except ImportError:
             # docutils >= 0.22.4
             def ErrorString(exc):
                 return str(exc)
-                
+
 from docutils.parsers.rst import Directive
 from docutils.statemachine import ViewList
 
