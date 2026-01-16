@@ -59,7 +59,7 @@ After installation:
 * ``xpython`` refers to ``~/.local/xonsh-env/bin/python``.
 * ``xpip`` refers to ``~/.local/xonsh-env/bin/python -m pip``.
 * ``xcontext`` shows the current context.
-* You can run ``source xmamba`` to activate mamba (see below).
+* You can run ``source -e xmamba`` to activate mamba (see below).
 
 Additions:
 
@@ -85,7 +85,7 @@ To bind the xonsh-env micromamba to the ``xmamba`` alias, run:
 
 .. code-block:: console
 
-   source xmamba
+   source -e xmamba
 
 You can then use:
 
@@ -108,7 +108,7 @@ If you do not plan to use ``xmamba``, you can reclaim disk space using
 
 .. code-block:: console
 
-   source xmamba
+   source -e xmamba
    xmamba clean -a
 
 Uninstall
