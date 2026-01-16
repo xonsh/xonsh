@@ -14,9 +14,15 @@ import textwrap
 from docutils import nodes
 
 try:
-    from docutils.utils.error_reporting import ErrorString  # the new way
+    from docutils.utils.error_reporting import ErrorString  # docutils <= 0.20
 except ImportError:
-    from docutils.error_reporting import ErrorString  # the old way
+    try:
+        from docutils.error_reporting import ErrorString  # docutils old
+    except Exception:
+            # docutils >= 0.22.4
+            def ErrorString(exc):
+                return str(exc)
+
 from docutils.parsers.rst import Directive
 from docutils.statemachine import ViewList
 
