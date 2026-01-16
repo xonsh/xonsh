@@ -87,7 +87,7 @@ class PromptToolkitCompleter(Completer):
         elif len(os.path.commonprefix(completions)) <= len(prefix):
             self.reserve_space()
         # Find common prefix (strip quoting)
-        c_prefix = os.path.commonprefix([a.strip("r'\"") for a in completions])
+        c_prefix = os.path.commonprefix([a.strip("'\"") for a in completions])
         # Find last split symbol, do not trim the last part
         while c_prefix:
             if c_prefix[-1] in r"/\.:@,":
@@ -110,14 +110,14 @@ class PromptToolkitCompleter(Completer):
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display or comp[pre:].strip("r'\""),
+                    display=comp.display or comp[pre:].strip("'\""),
                     display_meta=desc,
                     style=comp.style or "",
                 )
             elif isinstance(comp, Completion):
                 yield comp
             else:
-                disp = comp[pre:].strip("r'\"")
+                disp = comp[pre:].strip("'\"")
                 yield Completion(comp, -plen, display=disp)
 
     def suggestion_completion(self, document, line):
