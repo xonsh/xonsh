@@ -651,6 +651,9 @@ class XonshSessionInterface:
     env : xonsh.environ.Env
         A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
 
+    history : xonsh.history.History
+        Xonsh history backend e.g. `@.history[-1].cmd`.
+
     imp : xonsh.built_ins.InlineImporter
         The inline importer provides instant access to library
         functions and attributes e.g. `@.imp.time.time()`.
@@ -661,6 +664,7 @@ class XonshSessionInterface:
     """
 
     env = None  # type: ignore
+    history = None  # type: ignore
     imp: InlineImporter = InlineImporter()
     lastcmd = None  # type: ignore
 
