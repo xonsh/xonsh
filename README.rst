@@ -126,9 +126,9 @@ If you like xonsh, :star: the repo and spread the word about xonsh.
 First steps
 ***********
 
-- `Xonsh Installation <https://github.com/xonsh/xonsh/blob/refactor_install_docs/docs/install.rst>`_ - isolated environment, package, container or portable AppImage.
+- `Installation <https://github.com/xonsh/xonsh/blob/refactor_install_docs/docs/install.rst>`_ - isolated environment, package, container or portable AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
-- Some beginners find the `xonsh cheatsheet <https://github.com/anki-code/xonsh-cheatsheet>`_ a helpful place to start.
+- `Cheatsheet <https://github.com/anki-code/xonsh-cheatsheet>`_ - some beginners may find this a helpful place to start.
 
 Extensions
 **********
