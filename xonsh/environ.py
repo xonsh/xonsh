@@ -44,6 +44,7 @@ from xonsh.platform import (
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
+    _expandpath,
     abs_path_to_str,
     adjust_shlvl,
     always_false,
@@ -52,11 +53,13 @@ from xonsh.tools import (
     bool_or_none_to_str,
     bool_to_str,
     csv_to_set,
+    decode_bytes,
     detype,
     dict_to_str,
     dynamic_cwd_tuple_to_str,
     ensure_string,
     env_path_to_str,
+    expand_path,
     history_tuple_to_str,
     intensify_colors_on_win_setter,
     is_bool,
@@ -104,9 +107,6 @@ from xonsh.tools import (
     to_shlvl,
     to_tok_color_dict,
 )
-from xonsh.tools import _expandpath
-from xonsh.tools import decode_bytes
-from xonsh.tools import expand_path
 
 events.doc(
     "on_envvar_new",
@@ -2969,10 +2969,17 @@ class EnvPath(cabc.MutableSequence):
 
     class _OnPathChange:
         """Track paths change event."""
+
         def __init__(self, obj):
             self.obj = obj
+
         def __enter__(self):
             self.before = list(self.obj._l)
+
         def __exit__(self, exc_type, exc_val, exc_tb):
             if self.obj.target_env_var and self.before != self.obj._l:
-                events.on_envvar_change.fire(name=self.obj.target_env_var, oldvalue=self.before, newvalue=self.obj._l)
+                events.on_envvar_change.fire(
+                    name=self.obj.target_env_var,
+                    oldvalue=self.before,
+                    newvalue=self.obj._l,
+                )
