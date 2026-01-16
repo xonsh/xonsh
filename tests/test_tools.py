@@ -10,7 +10,12 @@ import warnings
 import pytest
 
 from xonsh import __version__
-from xonsh.environ import EnvPath
+from xonsh.environ import (
+    EnvPath,
+    is_env_path,
+    str_to_env_path,
+    str_to_path,
+)
 from xonsh.parsers.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
@@ -86,11 +91,6 @@ from xonsh.tools import (
     to_dynamic_cwd_tuple,
     to_int_or_none,
     to_logfile_opt,
-)
-from xonsh.environ import (
-    is_env_path,
-    str_to_env_path,
-    str_to_path,
 )
 
 LEXER = Lexer()
