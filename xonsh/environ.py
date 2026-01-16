@@ -1,6 +1,5 @@
 """Environment for the xonsh shell."""
 
-import collections.abc as cabc
 import contextlib
 import inspect
 import locale
