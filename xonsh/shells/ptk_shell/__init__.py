@@ -365,7 +365,8 @@ class PromptToolkitShell(BaseShell):
             "refresh_interval": refresh_interval,
             "complete_in_thread": complete_in_thread,
         }
-        env["XONSH_PROMPT_NEXT_CMD"] = ""
+        if next_command:
+            env["XONSH_PROMPT_NEXT_CMD"] = ""
         if env["ENABLE_ASYNC_PROMPT"]:
             # once the prompt is done, update it in background as each future is completed
             prompt_args["pre_run"] = self.prompt_formatter.start_update
