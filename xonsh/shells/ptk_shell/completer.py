@@ -1,6 +1,7 @@
 """Completer implementation to use with prompt_toolkit."""
 
 import os
+import ast
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -8,17 +9,42 @@ from prompt_toolkit.completion import Completer, Completion
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
+from xonsh.tools import print_exception
 
 
 def unquote(s: str):
-    if (s.startswith("r'") and s.endswith("'")) or (
-        s.startswith('r"') and s.endswith('"')
-    ):
-        return s[2:-1]
-    elif s[0] == s[-1] and s[0] in {"'", '"'}:
-        return s[1:-1]
+    quote: str
+    if s.startswith("r'") or s.startswith("'"):
+        quote = "'"
+    elif s.startswith('r"') or s.startswith('"'):
+        quote = '"'
     else:
+        # No quote
         return s
+    if not s.endswith(quote):
+        return s
+    if s[0] == "r" or "\\" not in s:
+        # Simple path for raw strings and strings without escaping backslash
+        if s[0] == "r":
+            s = s[1:]
+        if s.startswith(quote * 3) and s.endswith(quote * 3):
+            return s[3:-3]
+        else:
+            return s[1:-1]
+    else:
+        # Theoretically this should happen only when both " and '
+        # appears in the original completion,
+        # and ' is escaped as \' while " is retained as " in a '...' quoted string
+        # There may also be \\ in such quoted strings
+        try:
+            # Use literal eval for this rare case for simplicity
+            # https://docs.python.org/3/library/ast.html#ast.literal_eval
+            return ast.literal_eval(s)
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+            # Give up if something unexpected happen
+            if XSH.env.get("XONSH_DEBUG"):
+                print_exception(f"Unable to unquote completion {s}")
+            return s
 
 
 class PromptToolkitCompleter(Completer):
