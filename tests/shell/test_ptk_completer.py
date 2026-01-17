@@ -274,6 +274,12 @@ def test_auto_suggest_completion_with_spaces(xession):
         ("./", ["./'''"], 2, ["'''"]),  # file name contains quotes
         ("./", ["\"./r'abc'\""], 3, ["r'abc'"]),  # file name mimicing raw string syntax
         ('"""/pr', ['"""/proc"""'], 6, ["proc"]),  # triple quotes unquoting
+        (  # file name containing ' " \
+            "./",
+            ["'./r\\'\\\\\"'", "./abc"],
+            3,
+            ["r'\\\"", "abc"],
+        ),
     ],
 )
 def test_completion_display(
