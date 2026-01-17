@@ -730,6 +730,10 @@ class SubprocSpec:
                 new_cmd.append(c)
         self.cmd = new_cmd
 
+        # if the command is empty add an empty string in order to avoid out of bound exceptions
+        if len(self.cmd) == 0:
+            self.cmd.append("")
+
     def resolve_alias(self):
         """Resolving alias and setting up command."""
         cmd0 = self.cmd[0]
