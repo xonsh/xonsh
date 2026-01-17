@@ -1,7 +1,7 @@
 """Completer implementation to use with prompt_toolkit."""
 
-import os
 import ast
+import os
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -12,7 +12,8 @@ from xonsh.completers.tools import RichCompletion
 from xonsh.tools import print_exception
 
 
-def unquote(s: str):
+def unquote(completion):
+    s: str = str(completion)
     quote: str
     if s.startswith("r'") or s.startswith("'"):
         quote = "'"
