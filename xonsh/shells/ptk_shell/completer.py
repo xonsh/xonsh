@@ -156,7 +156,7 @@ class PromptToolkitCompleter(Completer):
                 yield comp
             else:
                 # pre is calculated after unquote,
-                # so prefix cutting shoul also be performed afterwards
+                # so prefix cutting should also be performed afterwards
                 disp = unquote(comp)[pre:]
                 yield Completion(comp, -plen, display=disp)
 
