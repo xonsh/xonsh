@@ -695,3 +695,9 @@ def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
     file.chmod(0o755)
     cmd = get_script_subproc_command(file_str, ["--arg", "1"])
     assert [c if c != file_str else "{file}" for c in cmd] == exp
+
+
+def test_redirect_without_left_part():
+    with pytest.raises(XonshError) as expected:
+        SubprocSpec.build([(">", "1.txt")])
+    assert "subprocess mode: command is empty" in str(expected.value)
