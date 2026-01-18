@@ -18,7 +18,7 @@ from xonsh.procs.specs import (
     get_script_subproc_command,
     run_subproc,
 )
-from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
+from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import XonshError
 
 # TODO: track down which pipeline + spec test is hanging CI
