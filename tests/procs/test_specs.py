@@ -23,11 +23,11 @@ from xonsh.tools import XonshError
 
 # TODO: track down which pipeline + spec test is hanging CI
 # Skip entire test file for Linux on Python 3.12
-pytestmark = pytest.mark.skipif(
-    not ON_WINDOWS and VER_MAJOR_MINOR == (3, 12),
-    reason="Backgrounded test is hanging on CI on 3.12 only",
-    allow_module_level=True,
-)
+# pytestmark = pytest.mark.skipif(
+#     not ON_WINDOWS and VER_MAJOR_MINOR == (3, 12),
+#     reason="Backgrounded test is hanging on CI on 3.12 only",
+#     allow_module_level=True,
+# )
 
 
 def cmd_sig(sig):
@@ -695,3 +695,9 @@ def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
     file.chmod(0o755)
     cmd = get_script_subproc_command(file_str, ["--arg", "1"])
     assert [c if c != file_str else "{file}" for c in cmd] == exp
+
+
+def test_redirect_without_left_part():
+    with pytest.raises(XonshError) as expected:
+        SubprocSpec.build([(">", "1.txt")])
+    assert "subprocess mode: command is empty" in str(expected.value)
