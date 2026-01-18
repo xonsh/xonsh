@@ -861,11 +861,17 @@ def _safe_pipe_properties(fd, use_tty=False):
     # than the current terminal
     winsize = None
     if sys.stdin.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+        winsize = xli.fcntl.ioctl(
+            sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"00000000"
+        )
     elif sys.stdout.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+        winsize = xli.fcntl.ioctl(
+            sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"00000000"
+        )
     elif sys.stderr.isatty():
-        winsize = xli.fcntl.ioctl(sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+        winsize = xli.fcntl.ioctl(
+            sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"00000000"
+        )
     if winsize is not None:
         xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
 
