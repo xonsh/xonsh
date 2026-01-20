@@ -90,7 +90,6 @@ def _normpath(p):
     """
     initial_dotslash = p.startswith(os.curdir + os.sep)
     initial_dotslash |= xp.ON_WINDOWS and p.startswith(os.curdir + os.altsep)
-    p = p.rstrip()
     trailing_slash = p.endswith(os.sep)
     trailing_slash |= xp.ON_WINDOWS and p.endswith(os.altsep)
     p = os.path.normpath(p)
