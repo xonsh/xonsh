@@ -36,10 +36,8 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
     print(f"xpython: {xpy} # {xpy_ver}", file=stdout)
     xpip = XSH.aliases.get("xpip")
     if xpip:
-        if isinstance(xpip, list):
+        if isinstance(xpip, list) and all(isinstance(x, str) for x in xpip):
             print(f"xpip: {' '.join(xpip)}", file=stdout)
-        elif callable(xpip):
-            print(f"xpip: {xpip}", file=stdout)
         else:
             print(f"xpip: {xpip}", file=stdout)
     else:
