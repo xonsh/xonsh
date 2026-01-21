@@ -13,10 +13,10 @@ def _deactivate(args):
         $PYTHONHOME = $_OLD_VIRTUAL_PYTHONHOME
         del $_OLD_VIRTUAL_PYTHONHOME
 
-    if "VIRTUAL_ENV" in ${...}:
+    if "VIRTUAL_ENV" in @.env:
         del $VIRTUAL_ENV
 
-    if "VIRTUAL_ENV_PROMPT" in ${...}:
+    if "VIRTUAL_ENV_PROMPT" in @.env:
         del $VIRTUAL_ENV_PROMPT
 
     if "nondestructive" not in args:
