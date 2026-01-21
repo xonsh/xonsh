@@ -309,7 +309,7 @@ class PopenThread(threading.Thread):
             return
         # Get the terminal size of the real terminal, set it on the
         #       pseudoterminal.
-        buf = array.array("h", [0, 0, 0, 0])
+        buf = array.array("h", [0, 0, 0, 0, 0, 0, 0, 0])
         # 1 = stdout here
         try:
             xli.fcntl.ioctl(1, xli.termios.TIOCGWINSZ, buf, True)
