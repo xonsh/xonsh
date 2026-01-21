@@ -5,11 +5,11 @@ def _deactivate(args):
     if "pydoc" in aliases:
         del aliases["pydoc"]
 
-    if ${...}.get("_OLD_VIRTUAL_PATH", ""):
+    if @.env.get("_OLD_VIRTUAL_PATH", ""):
         $PATH = $_OLD_VIRTUAL_PATH
         del $_OLD_VIRTUAL_PATH
 
-    if ${...}.get("_OLD_VIRTUAL_PYTHONHOME", ""):
+    if @.env.get("_OLD_VIRTUAL_PYTHONHOME", ""):
         $PYTHONHOME = $_OLD_VIRTUAL_PYTHONHOME
         del $_OLD_VIRTUAL_PYTHONHOME
 
@@ -34,7 +34,7 @@ $_OLD_VIRTUAL_PATH = $PATH
 $PATH = $PATH[:]
 $PATH.add($VIRTUAL_ENV + _get_sep() + "__BIN_NAME__", front=True, replace=True)
 
-if ${...}.get("PYTHONHOME", ""):
+if @.env.get("PYTHONHOME", ""):
     # unset PYTHONHOME if set
     $_OLD_VIRTUAL_PYTHONHOME = $PYTHONHOME
     del $PYTHONHOME
