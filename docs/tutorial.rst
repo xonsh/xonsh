@@ -31,7 +31,7 @@ you are in a lesser terminal:
 .. code-block:: console
 
     $ xonsh
-    snail@home ~ @
+    snail@home ~ @ █
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
 hostname happens to be ``home``, and we are in our home directory (``~``).
