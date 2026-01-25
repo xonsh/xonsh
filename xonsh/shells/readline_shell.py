@@ -96,7 +96,11 @@ def setup_readline():
     uses_libedit = readline.__doc__ and "libedit" in readline.__doc__
     readline.set_completer_delims(" \t\n")
     # Cygwin seems to hang indefinitely when querying the readline lib
-    if (not ON_CYGWIN) and (not ON_MSYS) and (not readline.__file__.endswith(".py")):
+    if (
+        (not ON_CYGWIN)
+        and (not ON_MSYS)
+        and (readline.__spec__.has_location and (not readline.__file__.endswith(".py")))
+    ):
         RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
         try:
             RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(
@@ -129,7 +133,7 @@ def setup_readline():
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997
-    if uses_libedit and ON_DARWIN:
+    if uses_libedit:
         readline.parse_and_bind("bind ^I rl_complete")
         print(
             "\n".join(
@@ -167,7 +171,7 @@ def setup_readline():
         try:
             readline.read_init_file(inputrc_name)
         except Exception:
-            # this seems to fail with libedit
+            # this fails with libedit
             print_exception("xonsh: could not load readline default init file.")
 
     # Protection against paste jacking (issue #1154)
