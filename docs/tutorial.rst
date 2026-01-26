@@ -31,7 +31,7 @@ you are in a lesser terminal:
 .. code-block:: console
 
     $ xonsh
-    snail@home ~ @
+    snail@home ~ @ █
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
 hostname happens to be ``home``, and we are in our home directory (``~``).
@@ -202,6 +202,13 @@ It can be used to temporarily set an environment variable:
     @ echo $SOMEVAR
     $SOMEVAR
     @
+
+You can also change the value using preset on the command line:
+
+.. code-block:: xonshcon
+
+    @ $HELLO='snail' xonsh -c 'echo Hello $HELLO'
+    Hello snail
 
 Environment Lookup with ``${<expr>}``
 -------------------------------------
