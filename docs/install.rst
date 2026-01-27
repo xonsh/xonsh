@@ -4,7 +4,7 @@ Xonsh Installation General Guide
 
 **The guide is new so in case of error please open the issue in the `tracker <https://github.com/xonsh/xonsh/issues>`_.
 
-Important
+Before Installing
 ========================
 
 Xonsh is a full-featured shell and can technically be used as a login shell,
@@ -39,7 +39,7 @@ the main approaches and their advantages.
       - ✓
       - ✓
       -
-      -
+      - ~
     * - PyPi package
       -
       -
