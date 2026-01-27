@@ -187,7 +187,7 @@ Alias to the Python interpreter that is currently running xonsh (``sys.executabl
     Python 3.11.9
     @ which python
     /opt/homebrew/bin/python
-    @ xpython -V
+    @ which xpython
     /home/snail/.local/xonsh-env/bin/python
 
 
