@@ -38,7 +38,7 @@ the main approaches and their advantages.
       - ✓
       - ✓
       - ✓
-      -
+      - ~
       - 
     * - PyPi package
       -
@@ -61,8 +61,8 @@ the main approaches and their advantages.
     * - System package
       -
       -
-      -
-      -
+      - ~
+      - 
       -
 
 Work in progress:
