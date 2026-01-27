@@ -1,5 +1,5 @@
 *******************
-Xonsh Mamba Installer
+Mamba Install Xonsh
 *******************
 
 Xonsh is a Python-based shell, and running xonsh requires Python to be installed.
@@ -24,14 +24,14 @@ Python version changes, or other experiments with environments. You can use
 
 Install the latest xonsh release with a well-tested Python version:
 
-.. code-block:: console
+.. code-block:: bash
 
    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 Install xonsh from the ``main`` Git branch with a stable Python version
 
-.. code-block:: console
+.. code-block:: bash
 
    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='git+https://github.com/xonsh/xonsh#egg=xonsh[full]' \
     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
@@ -39,7 +39,7 @@ Install xonsh from the ``main`` Git branch with a stable Python version
 
 Preinstall and preload `xontribs <https://github.com/topics/xontrib>`_:
 
-.. code-block:: console
+.. code-block:: bash
 
    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='git+https://github.com/xonsh/xonsh#egg=xonsh[full]' \
     PIP_INSTALL="uv xontrib-sh xontrib-jump-to-dir xontrib-dalias xontrib-pipeliner xontrib-whole-word-jumping" \
@@ -59,7 +59,7 @@ After installation:
 * ``xpython`` refers to ``~/.local/xonsh-env/bin/python``.
 * ``xpip`` refers to ``~/.local/xonsh-env/bin/python -m pip``.
 * ``xcontext`` shows the current context.
-* You can run ``source xmamba`` to activate mamba (see below).
+* You can run ``source xmamba.xsh`` to activate mamba (see below).
 
 Additions:
 
@@ -85,7 +85,7 @@ To bind the xonsh-env micromamba to the ``xmamba`` alias, run:
 
 .. code-block:: console
 
-   source xmamba
+   source xmamba.xsh
 
 You can then use:
 
@@ -108,7 +108,7 @@ If you do not plan to use ``xmamba``, you can reclaim disk space using
 
 .. code-block:: console
 
-   source xmamba
+   source xmamba.xsh
    xmamba clean -a
 
 Uninstall
