@@ -2,7 +2,7 @@
 Xonsh Installation General Guide
 *******************
 
-**The guide is new so in case of error please open the issue in the `tracker <https://github.com/xonsh/xonsh/issues>`_.
+The guide is new so in case of error please open the issue in the `tracker <https://github.com/xonsh/xonsh/issues>`_.
 
 Before Installing
 ========================
@@ -35,33 +35,33 @@ the main approaches and their advantages.
       - Automation
       - Portable
     * - Independent install
-      - ✓
-      - ✓
-      - ✓
-      - ~
+      - ●
+      - ●
+      - ●
+      - 
       - 
     * - PyPi package
       -
       -
-      - ✓
-      - ✓
+      - ●
+      - ●
       -
     * - AppImage
       -
-      - ~
-      - ✓
-      -
-      - ✓
+      - ●
+      - ●
+      - ◯
+      - ●
     * - Conainer
       -
-      - ✓
-      - ✓
-      - ✓
+      - ●
+      - ●
+      - ●
       -
     * - System package
       -
       -
-      - ~
+      - ◯
       - 
       -
 
