@@ -83,7 +83,8 @@ pressing enter.
 ``source``
 ====================
 Executes the contents of the provided files in the current context. This, of course,
-only works on xonsh and Python files.
+only works on xonsh and Python files (``*.xsh``, ``*.py``). Use ``-e`` to ignore
+extension.
 
 
 ``source-bash``
@@ -125,6 +126,14 @@ Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
 ============
 Displays how commands and arguments are evaluated. Use ``-e`` to expand aliases.
 
+.. code-block:: console
+
+    @ showcmd echo The @('args') @(['list', 'is']) $(echo here) "and" --say="hello" to @([]) you
+    ['echo', 'The', 'args', 'list', 'is', 'here', 'and', '--say="hello"', 'to', 'you']
+    @ showcmd ls
+    ls
+    @ showcmd -e ls
+    ['ls', '--group-directories-first', '-A', '--color']
 
 ``trace``
 =================
@@ -168,10 +177,17 @@ Manages xonsh extensions. More information is available at :doc:`tutorial_xontri
 ``xpip``
 =================
 Runs the ``pip`` package manager for xonsh itself. Useful for installations where xonsh is in an
-isolated environment (eg conda, homebrew).
+isolated environment (e.g. conda, mamba, homebrew).
 
-In general, use ``xpip`` if you're configuring or adding features to xonsh, and use ``pip`` if
-you're doing Python development.
+.. code-block:: console
+    @ which pip 
+    /usr/bin/pip  # system pip
+    @ which xpip
+    /home/snail/.local/xonsh-env/bin/python -m pip  # current xonsh session pip
+    @ xpip install fire
+    @ import fire
+    @ fire
+    <module 'fire' from '/home/snail/.local/xonsh-env/lib/python3.11/site-packages/fire/__init__.py'>
 
 
 ``xpython``
@@ -195,6 +211,13 @@ Alias to the Python interpreter that is currently running xonsh (``sys.executabl
 =================
 Clean the xonsh context. All user variables will be deleted.
 
+.. code-block:: console
+    @ a=1
+    @ a
+    1
+    @ xreset
+    @ a
+    Not found
 
 ``@thread`` and ``@unthread``
 =============================
