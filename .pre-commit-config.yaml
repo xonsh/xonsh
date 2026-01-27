@@ -9,7 +9,7 @@ ci:
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: 'v0.14.10'
+    rev: 'v0.14.14'
     hooks:
       - id: ruff
         args: [., --fix, --exit-non-zero-on-fix]
