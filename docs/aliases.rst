@@ -180,6 +180,7 @@ Runs the ``pip`` package manager for xonsh itself. Useful for installations wher
 isolated environment (e.g. conda, mamba, homebrew).
 
 .. code-block:: console
+
     @ which pip 
     /usr/bin/pip  # system pip
     @ which xpip
