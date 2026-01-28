@@ -653,6 +653,8 @@ class XonshSessionInterface:
 
     history : xonsh.history.History
         Xonsh history backend e.g. `@.history[-1].cmd`.
+        See also `history --help` to manage history from
+        command line.
 
     imp : xonsh.built_ins.InlineImporter
         The inline importer provides instant access to library
