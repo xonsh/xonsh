@@ -37,7 +37,7 @@ output, so design any handlers for this carefully.
         if cmd and cmd.startswith('| ') and __xonsh__.history:
             return __xonsh__.history[-1].cmd.rstrip() + cmd.rstrip()
         return cmd
-        
+
 """,
 )
 
