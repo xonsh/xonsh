@@ -37,7 +37,7 @@ output, so design any handlers for this carefully.
         if cmd and cmd.startswith('| ') and __xonsh__.history:
             return __xonsh__.history[-1].cmd.rstrip() + cmd.rstrip()
         return cmd
-        
+
 """,
 )
 
@@ -296,6 +296,7 @@ class Shell:
             XSH.history = hist = DummyHistory()
             env["XONSH_HISTORY_FILE"] = None
 
+        XSH.interface.history = XSH.history
         shell_type = self.choose_shell_type(shell_type, env)
 
         self.shell_type = env["SHELL_TYPE"] = shell_type
