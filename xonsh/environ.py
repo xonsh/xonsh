@@ -44,7 +44,6 @@ from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
     EnvPath,
-    XonshError,
     abs_path_to_str,
     adjust_shlvl,
     always_false,
