@@ -262,14 +262,14 @@ def parser():
         help="Save Original environment in a file before modifying it.",
         dest="save_env_origin",
         action="store_true",
-        default=False
+        default=False,
     )
     p.add_argument(
         "--load-env-origin",
         help="load Original environment from file instead of inheriting existing env",
         dest="load_env_origin",
         action="store_true",
-        default=False
+        default=False,
     )
     return p
 
@@ -377,7 +377,13 @@ def start_services(shell_kwargs, args, pre_env=None):
     )
     events.on_timingprobe.fire(name="post_execer_init")
     events.on_timingprobe.fire(name="pre_xonsh_session_load")
-    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True), save_origin=args.save_env_origin, load_origin=args.load_env_origin)
+    XSH.load(
+        ctx=ctx,
+        execer=execer,
+        inherit_env=shell_kwargs.get("inherit_env", True),
+        save_origin=args.save_env_origin,
+        load_origin=args.load_env_origin,
+    )
     events.on_timingprobe.fire(name="post_xonsh_session_load")
 
     install_import_hooks(execer)
