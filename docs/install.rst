@@ -2,9 +2,9 @@
 Xonsh Installation General Guide
 *******************
 
-**The guide is new so in case of error please open the issue in the `tracker <https://github.com/xonsh/xonsh/issues>`_.
+The guide is new so in case of error please open the issue in the `tracker <https://github.com/xonsh/xonsh/issues>`_.
 
-Important
+Before Installing
 ========================
 
 Xonsh is a full-featured shell and can technically be used as a login shell,
@@ -35,34 +35,34 @@ the main approaches and their advantages.
       - Automation
       - Portable
     * - Independent install
-      - ✓
-      - ✓
-      - ✓
-      -
-      -
+      - ●
+      - ●
+      - ●
+      - ◯
+      - 
     * - PyPi package
       -
       -
-      - ✓
-      - ✓
+      - ●
+      - ●
       -
     * - AppImage
       -
-      - ~
-      - ✓
+      - ●
+      - ●
+      - ◯
+      - ●
+    * - Container
       -
-      - ✓
-    * - Conainer
+      - ●
+      - ●
+      - ●
       -
-      - ✓
-      - ✓
-      - ✓
-      -
-    * - Platform package
-      -
-      -
+    * - System package
       -
       -
+      - ◯
+      - 
       -
 
 Work in progress:
@@ -143,13 +143,14 @@ Example of running an interactive xonsh session in a container:
 Learn more: `Containers <containers.html>`_.
 
 
-Platform package
+System package
 ========================
 
 Various operating system distributions provide platform-specific package managers that may offer a xonsh package.
 This approach is **not recommended** for the following reasons:
 
-* On non-rolling-release operating systems, the xonsh version is often outdated and may lack important dependencies.
+* On non-rolling-release operating systems, the xonsh version is often outdated.
+* The package may be missing important dependencies.
 * System package managers install xonsh into the system Python environment, which means that any significant system update or change has a high probability of breaking the shell.
 
 **Arch Linux:**
@@ -163,7 +164,6 @@ This approach is **not recommended** for the following reasons:
 .. code-block:: console
 
     apt install xonsh  # not recommended but possible
-
 
 **Fedora:**
 
