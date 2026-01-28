@@ -181,7 +181,7 @@ isolated environment (e.g. conda, mamba, homebrew).
 
 .. code-block:: console
 
-    @ which pip 
+    @ which pip
     /usr/bin/pip  # system pip
     @ which xpip
     /home/snail/.local/xonsh-env/bin/python -m pip  # current xonsh session pip

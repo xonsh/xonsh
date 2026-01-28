@@ -44,6 +44,7 @@ from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
     EnvPath,
+    XonshError,
     abs_path_to_str,
     adjust_shlvl,
     always_false,
@@ -106,7 +107,7 @@ from xonsh.tools import (
     to_ptk_cursor_shape_display_value,
     to_repr_pretty_,
     to_shlvl,
-    to_tok_color_dict, XonshError,
+    to_tok_color_dict,
 )
 
 events.doc(
@@ -2754,12 +2755,11 @@ def default_env(env=None, preserved_env=False):
         if "XONSH_ENV_ORIGIN_SAVE_FILE" not in e:
             raise XonshError("No env file to restore")
         restore_file = e["XONSH_ENV_ORIGIN_SAVE_FILE"]
-        with open(restore_file, "r") as f:
+        with open(restore_file) as f:
             original_env = json.load(f)
             ctx.update(original_env)
     else:
         ctx.update(os_environ)
-
 
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
@@ -2788,6 +2788,7 @@ def make_args_env(args=None):
     env = {"ARG" + str(i): arg for i, arg in enumerate(args)}
     env["ARGS"] = list(args)  # make a copy so we don't interfere with original variable
     return env
+
 
 def save_origin_env(env, session_id):
     data_dir = env.get("XONSH_DATA_DIR", None)
