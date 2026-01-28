@@ -737,11 +737,13 @@ class XonshSession:
 
     @history.setter
     def history(self, history):
+        self._history = history
+        if history is None or "sessionid" not in history.__dict__:
+            return
         from xonsh.environ import save_origin_env
         self.env["XONSH_SESSIONID"] = history.sessionid
         if self._save_origin:
             save_origin_env(self.env, history.sessionid)
-        self._history = history
 
     @property
     def last(self):
