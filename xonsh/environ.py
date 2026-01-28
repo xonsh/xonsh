@@ -2753,7 +2753,8 @@ def default_env(env=None, preserved_env=False):
     if preserved_env:
         e = os_environ
         if "XONSH_ENV_ORIGIN_SAVE_FILE" not in e:
-            raise XonshError("No env file to restore")
+            print("No env file to restore")
+            sys.exit(1)
         restore_file = e["XONSH_ENV_ORIGIN_SAVE_FILE"]
         with open(restore_file) as f:
             original_env = json.load(f)
