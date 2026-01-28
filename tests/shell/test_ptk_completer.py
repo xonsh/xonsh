@@ -257,3 +257,50 @@ def test_auto_suggest_completion_with_spaces(xession):
     assert res == long_cmd
     assert len(res.display) < len(res)
     assert res.display.endswith("...")
+
+
+@pytest.mark.parametrize(
+    "current_line, completions, lprefix, displays",
+    [
+        ("./", ["'./abc'"], 3, ["abc"]),  # trim prefix path and unquoting
+        (  # raw string unquoting
+            "./ab",
+            [r"r'./ab\c'", "r'./abc'"],  # avoid trimming c_prefix at backslash
+            6,
+            [r"ab\c", "abc"],
+        ),
+        ("./r", ["./result"], 3, ["result"]),  # start with r
+        ("./t", ["./tester"], 3, ["tester"]),  # end with r
+        ("./", ["./'''"], 2, ["'''"]),  # file name contains quotes
+        ("./", ["\"./r'abc'\""], 3, ["r'abc'"]),  # file name mimicing raw string syntax
+        ('"""/pr', ['"""/proc"""'], 6, ["proc"]),  # triple quotes unquoting
+        (  # file name containing ' " \
+            "./",
+            ["'./r\\'\\\\\"'", "./abc"],
+            3,
+            ["r'\\\"", "abc"],
+        ),
+    ],
+)
+def test_completion_display(
+    current_line, completions, lprefix, displays, monkeypatch, xession
+):
+    xonsh_completer_mock = MagicMock()
+    xonsh_completer_mock.complete.return_value = completions, lprefix
+
+    ptk_completer = PromptToolkitCompleter(xonsh_completer_mock, None, None)
+    ptk_completer.reserve_space = lambda: None
+    ptk_completer.suggestion_completion = lambda _, __: None
+
+    document_mock = MagicMock()
+    document_mock.text = ""
+    document_mock.current_line = current_line
+    document_mock.cursor_position_col = len(current_line)
+
+    monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
+
+    ptk_completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
+    assert ptk_completions == [
+        PTKCompletion(completion, -lprefix, display)
+        for completion, display in zip(completions, displays, strict=True)
+    ]
