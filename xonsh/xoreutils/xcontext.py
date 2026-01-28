@@ -30,20 +30,24 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
     """Report information about the current xonsh environment."""
     stdout = _stdout or sys.stdout
     print("[Current xonsh session]", file=stdout)
+
+    current_xonsh = sys.argv[0]
+    print(f"xonsh: {current_xonsh}", file=stdout)
+
     appimage_python = XSH.env.get("_") if IN_APPIMAGE else None
     xpy = appimage_python if appimage_python else sys.executable
     xpy_ver = _get_version(xpy)
     print(f"xpython: {xpy} # {xpy_ver}", file=stdout)
+
     xpip = XSH.aliases.get("xpip")
     if xpip:
-        if isinstance(xpip, list):
+        if isinstance(xpip, list) and all(isinstance(x, str) for x in xpip):
             print(f"xpip: {' '.join(xpip)}", file=stdout)
-        elif callable(xpip):
-            print(f"xpip: {xpip}", file=stdout)
         else:
             print(f"xpip: {xpip}", file=stdout)
     else:
         print("xpip: not found", file=stdout)
+
     print("", file=stdout)
     print("[Current commands environment]", file=stdout)
     cmds = ["xonsh", "python", "pip"]
