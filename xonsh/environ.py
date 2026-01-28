@@ -3,6 +3,7 @@
 import collections.abc as cabc
 import contextlib
 import inspect
+import json
 import locale
 import os
 import platform
@@ -105,7 +106,7 @@ from xonsh.tools import (
     to_ptk_cursor_shape_display_value,
     to_repr_pretty_,
     to_shlvl,
-    to_tok_color_dict,
+    to_tok_color_dict, XonshError,
 )
 
 events.doc(
@@ -2735,7 +2736,7 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
     return loaded
 
 
-def default_env(env=None):
+def default_env(env=None, preserved_env=False):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = {
@@ -2743,7 +2744,19 @@ def default_env(env=None):
         "PROMPT_FIELDS": DEFAULT_VARS["PROMPT_FIELDS"].default(env),
         "XONSH_VERSION": XONSH_VERSION,
     }
-    ctx.update(os_environ)
+
+    if preserved_env:
+        e = os_environ
+        if "XONSH_ENV_ORIGIN_SAVE_FILE" not in e:
+            raise XonshError("No env file to restore")
+        restore_file = e["XONSH_ENV_ORIGIN_SAVE_FILE"]
+        with open(restore_file, "r") as f:
+            original_env = json.load(f)
+            ctx.update(original_env)
+    else:
+        ctx.update(os_environ)
+
+
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
     ctx.pop("LINES", None)
@@ -2771,3 +2784,13 @@ def make_args_env(args=None):
     env = {"ARG" + str(i): arg for i, arg in enumerate(args)}
     env["ARGS"] = list(args)  # make a copy so we don't interfere with original variable
     return env
+
+def save_origin_env(env, session_id):
+    data_dir = env.get("XONSH_DATA_DIR", None)
+    env_file_name = os.path.join(data_dir, f"env-{session_id}.json")
+
+    with open(env_file_name, "w") as f:
+        json.dump(dict(os_environ), f)
+
+    env["XONSH_ENV_ORIGIN_SAVE_FILE"] = env_file_name
+    env["XONSH_ENV_ORIGIN_SAVE"] = True

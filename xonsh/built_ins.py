@@ -687,7 +687,7 @@ class XonshSession:
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
-        self.history = None
+        self._history = None
         self.shell = None
         self.env = None
         self.imp = InlineImporter()
@@ -729,6 +729,19 @@ class XonshSession:
         self._initial_builtin_names = None
         self.lastcmd = None
         self._last = None
+        self._save_origin = False
+
+    @property
+    def history(self):
+        return self._history
+
+    @history.setter
+    def history(self, history):
+        from xonsh.environ import save_origin_env
+        self.env["XONSH_SESSIONID"] = history.sessionid
+        if self._save_origin:
+            save_origin_env(self.env, history.sessionid)
+        self._history = history
 
     @property
     def last(self):
@@ -777,7 +790,7 @@ class XonshSession:
         if self._py_quit is not None:
             builtins.quit = self._py_quit
 
-    def load(self, execer=None, ctx=None, inherit_env=True, **kwargs):
+    def load(self, execer=None, ctx=None, inherit_env=True, save_origin = False, load_origin = False, **kwargs):
         """Loads the session with default values.
 
         Parameters
@@ -799,8 +812,12 @@ class XonshSession:
         if ctx is not None:
             self.ctx = ctx
 
+        self._save_origin = save_origin
+
         if "env" in kwargs:
             self.env = kwargs.pop("env")
+        elif load_origin:
+            self.env = Env(default_env(preserved_env = True))
         elif inherit_env:
             self.env = Env(default_env())
         else:
