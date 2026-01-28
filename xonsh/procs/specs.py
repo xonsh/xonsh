@@ -730,6 +730,9 @@ class SubprocSpec:
                 new_cmd.append(c)
         self.cmd = new_cmd
 
+        if len(self.cmd) == 0:
+            raise xt.XonshError("xonsh: subprocess mode: command is empty")
+
     def resolve_alias(self):
         """Resolving alias and setting up command."""
         cmd0 = self.cmd[0]
@@ -857,11 +860,17 @@ def _safe_pipe_properties(fd, use_tty=False):
     # than the current terminal
     winsize = None
     if sys.stdin.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+        winsize = xli.fcntl.ioctl(
+            sys.stdin.fileno(), xli.termios.TIOCGWINSZ, b"00000000"
+        )
     elif sys.stdout.isatty():
-        winsize = xli.fcntl.ioctl(sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+        winsize = xli.fcntl.ioctl(
+            sys.stdout.fileno(), xli.termios.TIOCGWINSZ, b"00000000"
+        )
     elif sys.stderr.isatty():
-        winsize = xli.fcntl.ioctl(sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"0000")
+        winsize = xli.fcntl.ioctl(
+            sys.stderr.fileno(), xli.termios.TIOCGWINSZ, b"00000000"
+        )
     if winsize is not None:
         xli.fcntl.ioctl(fd, xli.termios.TIOCSWINSZ, winsize)
 
