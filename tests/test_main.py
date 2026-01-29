@@ -6,6 +6,7 @@ import json
 import os
 import os.path
 import sys
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryFile
@@ -659,6 +660,9 @@ def test_script_missing_file(xession, monkeypatch, capsys, tmpdir):
 
 
 def test_premain_save_origin_env(shell, xession):
+    with tempfile.TemporaryDirectory() as tmp:
+        xession.env["XONSH_DATA_DIR"] = tmp
+
     xonsh.main.premain(["--save-origin-env"])
     assert "XONSH_ORIGIN_ENV_SAVE_FILE" in xession.env
     assert "XONSH_ORIGIN_ENV_SAVE" in xession.env
@@ -680,6 +684,9 @@ def test_premain_save_origin_env(shell, xession):
 
 
 def test_premain_load_origin_env(shell, xession, monkeypatch):
+    with tempfile.TemporaryDirectory() as tmp:
+        xession.env["XONSH_DATA_DIR"] = tmp
+
     xonsh.main.premain(["--save-origin-env"])
     xession.env["ABCD"] = "DEF"
 
