@@ -666,7 +666,7 @@ def test_premain_save_origin_env(shell, xession):
     env_file_name = Path(data_dir) / f"origin-env-{xession.sessionid}.json"
 
     assert xession.env["XONSH_ORIGIN_ENV_SAVE_FILE"] == env_file_name
-    assert xession.env["XONSH_ORIGIN_ENV_SAVE"] == True
+    assert xession.env["XONSH_ORIGIN_ENV_SAVE"]
 
     assert os.environ == json.loads(env_file_name.read_text())
 
