@@ -30,21 +30,8 @@ lines to your ``~/.bashrc file``:
     unset module
     unset scl
 
-MacOS, OSX
+macOS, OSX
 ----------
-
-readline
-^^^^^^^^
-
-[ed note: This recommendation seems to be `out of date <https://pypi.org/project/gnureadline/>`_.
-It's retained in the current docs in case you have an older version of Python or macOS.  But if
-you have Mac platform experience and can clarify, please open an issue or even a PR to correct the documentation.]
-
-On macOS, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
-
-.. code-block:: console
-
-    @ pip3 install gnureadline
 
 Path Helper
 ^^^^^^^^^^^
