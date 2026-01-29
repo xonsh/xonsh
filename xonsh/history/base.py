@@ -3,6 +3,7 @@
 import functools
 import re
 import types
+import uuid
 
 from xonsh.built_ins import XSH
 from xonsh.tools import print_warning
@@ -64,7 +65,7 @@ class History:
             Current session identifier, will generate a new sessionid if not
             set.
         """
-        self.sessionid = XSH.sessionid if sessionid is None else sessionid
+        self.sessionid = uuid.uuid4() if sessionid is None else sessionid
         self.gc = None
         self.buffer = None
         self.filename = None

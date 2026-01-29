@@ -3,7 +3,6 @@
 # pylint: disable=protected-access
 
 import shlex
-import uuid
 
 import pytest
 
@@ -628,10 +627,10 @@ def test_hist_pull(src_sessionid, ptk_shell, tmpdir, xonsh_session, monkeypatch)
     # simulate commands being run in other sessions before this session starts
     hist_a = JsonHistory(sessionid=src_sessionid, gc=False)
     hist_a.append({"inp": "cmd hist_a before", "rtn": 0, "ts": [before, before]})
-    hist_b = JsonHistory(gc=False, sessionid=uuid.uuid4())
+    hist_b = JsonHistory(gc=False)
     hist_b.append({"inp": "cmd hist_b before", "rtn": 0, "ts": [before, before]})
 
-    hist_main = JsonHistory(gc=False, sessionid=uuid.uuid4())
+    hist_main = JsonHistory(gc=False)
 
     # simulate commands being run in other sessions after this session starts
     after = time.time() + 1
@@ -670,9 +669,9 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
         start, end = time.time(), time.time()
         return {"inp": inp, "rtn": 0, "ts": [start, end]}
 
-    hist_a = JsonHistory(gc=False, sessionid=uuid.uuid4())
-    hist_b = JsonHistory(gc=False, sessionid=uuid.uuid4())
-    hist_main = JsonHistory(gc=False, sessionid=uuid.uuid4())
+    hist_a = JsonHistory(gc=False)
+    hist_b = JsonHistory(gc=False)
+    hist_main = JsonHistory(gc=False)
 
     # windows time.time() has ~16ms granularity, so we need to give it some time to increment
     time.sleep(0.032)
