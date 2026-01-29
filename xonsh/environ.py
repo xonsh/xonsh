@@ -106,7 +106,7 @@ from xonsh.tools import (
     to_ptk_cursor_shape_display_value,
     to_repr_pretty_,
     to_shlvl,
-    to_tok_color_dict,
+    to_tok_color_dict, XonshError,
 )
 
 events.doc(
