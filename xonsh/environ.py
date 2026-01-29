@@ -2741,7 +2741,7 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
     return loaded
 
 
-def default_env(env=None, preserved_env=False):
+def default_env(env=None, load_origin_env=False):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = {
@@ -2750,15 +2750,14 @@ def default_env(env=None, preserved_env=False):
         "XONSH_VERSION": XONSH_VERSION,
     }
 
-    if preserved_env:
+    if load_origin_env:
         e = os_environ
-        if "XONSH_ENV_ORIGIN_SAVE_FILE" not in e:
-            print("No env file to restore")
-            sys.exit(1)
-        restore_file = e["XONSH_ENV_ORIGIN_SAVE_FILE"]
-        with open(restore_file) as f:
-            original_env = json.load(f)
-            ctx.update(original_env)
+        if "XONSH_ORIGIN_ENV_SAVE_FILE" not in os_environ:
+            raise XonshError("No env file to restore")
+
+        load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_SAVE_FILE"])
+        if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
+            ctx.update(json.loads(load_origin_env_file.read_text(encoding="utf-8")))
     else:
         ctx.update(os_environ)
 
@@ -2791,12 +2790,11 @@ def make_args_env(args=None):
     return env
 
 
-def save_origin_env(env, session_id):
+def save_origin_env_to_file(env, session_id):
     data_dir = env.get("XONSH_DATA_DIR", None)
-    env_file_name = os.path.join(data_dir, f"env-{session_id}.json")
+    env_file_name = Path(data_dir) / f"origin-env-{session_id}.json"
 
-    with open(env_file_name, "w") as f:
-        json.dump(dict(os_environ), f)
-
-    env["XONSH_ENV_ORIGIN_SAVE_FILE"] = env_file_name
-    env["XONSH_ENV_ORIGIN_SAVE"] = True
+    if os.access(env_file_name.parent, os.W_OK):
+        env_file_name.write_text(json.dumps(dict(os_environ)))
+        env["XONSH_ORIGIN_ENV_SAVE_FILE"] = env_file_name
+        env["XONSH_ORIGIN_ENV_SAVE"] = True

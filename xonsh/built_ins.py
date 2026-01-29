@@ -18,6 +18,7 @@ import re
 import signal
 import sys
 import types
+import uuid
 import warnings
 from ast import AST
 from collections.abc import Iterator
@@ -687,7 +688,7 @@ class XonshSession:
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
-        self._history = None
+        self.history = None
         self.shell = None
         self.env = None
         self.imp = InlineImporter()
@@ -729,22 +730,7 @@ class XonshSession:
         self._initial_builtin_names = None
         self.lastcmd = None
         self._last = None
-        self._save_origin = False
-
-    @property
-    def history(self):
-        return self._history
-
-    @history.setter
-    def history(self, history):
-        self._history = history
-        if history is None or "sessionid" not in history.__dict__:
-            return
-        from xonsh.environ import save_origin_env
-
-        self.env["XONSH_SESSIONID"] = history.sessionid
-        if self._save_origin:
-            save_origin_env(self.env, history.sessionid)
+        self.sessionid = uuid.uuid4()
 
     @property
     def last(self):
@@ -798,8 +784,8 @@ class XonshSession:
         execer=None,
         ctx=None,
         inherit_env=True,
-        save_origin=False,
-        load_origin=False,
+        save_origin_env=False,
+        load_origin_env=False,
         **kwargs,
     ):
         """Loads the session with default values.
@@ -816,24 +802,25 @@ class XonshSession:
             set ``$XONSH_ENV_INHERITED = False``.
         """
         from xonsh.commands_cache import CommandsCache
-        from xonsh.environ import Env, default_env
+        from xonsh.environ import Env, default_env, save_origin_env_to_file
 
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self
         if ctx is not None:
             self.ctx = ctx
 
-        self._save_origin = save_origin
-
         if "env" in kwargs:
             self.env = kwargs.pop("env")
-        elif load_origin:
-            self.env = Env(default_env(preserved_env=True))
+        elif load_origin_env:
+            self.env = Env(default_env(load_origin_env=load_origin_env))
         elif inherit_env:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
         self.interface.env = self.env
+
+        if save_origin_env:
+            save_origin_env_to_file(self.env, self.sessionid)
 
         self.exit = None
         self.stdout_uncaptured = None

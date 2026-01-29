@@ -65,7 +65,7 @@ class History:
             Current session identifier, will generate a new sessionid if not
             set.
         """
-        self.sessionid = uuid.uuid4() if sessionid is None else sessionid
+        self.sessionid = XSH.sessionid if sessionid is None else sessionid
         self.gc = None
         self.buffer = None
         self.filename = None

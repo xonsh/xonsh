@@ -6,6 +6,7 @@ import os
 import shlex
 import sys
 import time
+import uuid
 
 import pytest
 
@@ -367,10 +368,10 @@ def test_hist_pull(src_sessionid, tmpdir, ptk_shell, monkeypatch):
     # simulate commands being run in other sessions before this session starts
     hist_a = SqliteHistory(filename=db_file, gc=False, sessionid=src_sessionid)
     hist_a.append({"inp": "cmd hist_a before", "rtn": 0, "ts": [before, before]})
-    hist_b = SqliteHistory(filename=db_file, gc=False)
+    hist_b = SqliteHistory(filename=db_file, gc=False, sessionid=uuid.uuid4())
     hist_b.append({"inp": "cmd hist_b after", "rtn": 0, "ts": [before, before]})
 
-    hist_main = SqliteHistory(filename=db_file, gc=False)
+    hist_main = SqliteHistory(filename=db_file, gc=False, sessionid=uuid.uuid4())
     # simulate commands being run in other sessions after this session starts
     after = time.time() + 1
     hist_a.append({"inp": "cmd hist_a after", "rtn": 0, "ts": [after, after]})
@@ -401,9 +402,9 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
         return {"inp": inp, "rtn": 0, "ts": [start, end]}
 
     db_file = tmpdir / "xonsh-HISTORY-TEST-PULL-MIXED.sqlite"
-    hist_a = SqliteHistory(filename=db_file, gc=False)
-    hist_b = SqliteHistory(filename=db_file, gc=False)
-    hist_main = SqliteHistory(filename=db_file, gc=False)
+    hist_a = SqliteHistory(filename=db_file, gc=False, sessionid=uuid.uuid4())
+    hist_b = SqliteHistory(filename=db_file, gc=False, sessionid=uuid.uuid4())
+    hist_main = SqliteHistory(filename=db_file, gc=False, sessionid=uuid.uuid4())
 
     # windows time.time() has only ~16ms granularity, so give it a chance to increment here
     time.sleep(0.032)

@@ -258,16 +258,16 @@ def parser():
         default=[],
     )
     p.add_argument(
-        "--save-env-origin",
-        help="Save Original environment in a file before modifying it.",
-        dest="save_env_origin",
+        "--save-origin-env",
+        help="Save origin environment variables before running xonsh. Use --load-origin-env to run xonsh with saved origin environment.",
+        dest="save_origin_env",
         action="store_true",
         default=False,
     )
     p.add_argument(
-        "--load-env-origin",
-        help="load Original environment from file instead of inheriting existing env",
-        dest="load_env_origin",
+        "--load-origin-env",
+        help="Load origin environment variables that were saved before running xonsh by using --save-origin-env",
+        dest="load_origin_env",
         action="store_true",
         default=False,
     )
@@ -381,8 +381,8 @@ def start_services(shell_kwargs, args, pre_env=None):
         ctx=ctx,
         execer=execer,
         inherit_env=shell_kwargs.get("inherit_env", True),
-        save_origin=args.save_env_origin,
-        load_origin=args.load_env_origin,
+        save_origin_env=args.save_origin_env,
+        load_origin_env=args.load_origin_env,
     )
     events.on_timingprobe.fire(name="post_xonsh_session_load")
 
