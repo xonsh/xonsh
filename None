@@ -1,0 +1,74 @@
+Traceback (most recent call last):
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/pipelines.py", line 177, in __init__
+    proc = spec.run(pipeline_group=pipeline_group)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 525, in run
+    self.prep_env_subproc(kwargs)
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 590, in prep_env_subproc
+    with XSH.env.swap(self.env) as env:
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2294, in swap
+    self._set_item(k, v, thread_local=True)
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2371, in _set_item
+    val = converter(val)
+          ^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/tools.py", line 2041, in to_dynamic_cwd_tuple
+    return (float(x), unit)
+            ^^^^^^^^
+ValueError: could not convert string to float: "(inf, 'c')"
+Traceback (most recent call last):
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/pipelines.py", line 177, in __init__
+    proc = spec.run(pipeline_group=pipeline_group)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 525, in run
+    self.prep_env_subproc(kwargs)
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 590, in prep_env_subproc
+    with XSH.env.swap(self.env) as env:
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2294, in swap
+    self._set_item(k, v, thread_local=True)
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2371, in _set_item
+    val = converter(val)
+          ^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not callable
+Traceback (most recent call last):
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/pipelines.py", line 177, in __init__
+    proc = spec.run(pipeline_group=pipeline_group)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 525, in run
+    self.prep_env_subproc(kwargs)
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 590, in prep_env_subproc
+    with XSH.env.swap(self.env) as env:
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2294, in swap
+    self._set_item(k, v, thread_local=True)
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2371, in _set_item
+    val = converter(val)
+          ^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/tools.py", line 2041, in to_dynamic_cwd_tuple
+    return (float(x), unit)
+            ^^^^^^^^
+ValueError: could not convert string to float: "(inf, 'c')"
+Traceback (most recent call last):
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/pipelines.py", line 177, in __init__
+    proc = spec.run(pipeline_group=pipeline_group)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 525, in run
+    self.prep_env_subproc(kwargs)
+  File "/home/wajdi/Desktop/xonsh/xonsh/procs/specs.py", line 590, in prep_env_subproc
+    with XSH.env.swap(self.env) as env:
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2294, in swap
+    self._set_item(k, v, thread_local=True)
+  File "/home/wajdi/Desktop/xonsh/xonsh/environ.py", line 2371, in _set_item
+    val = converter(val)
+          ^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not callable

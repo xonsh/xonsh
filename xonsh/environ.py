@@ -2753,7 +2753,7 @@ def default_env(env=None, load_origin_env=False):
     if load_origin_env:
         e = os_environ
         if "XONSH_ORIGIN_ENV_SAVE_FILE" not in os_environ:
-            raise XonshError("No env file to restore")
+            raise XonshError("xonsh: No env file to restore")
 
         load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_SAVE_FILE"])
         if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
