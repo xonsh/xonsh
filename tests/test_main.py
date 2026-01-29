@@ -657,6 +657,7 @@ def test_script_missing_file(xession, monkeypatch, capsys, tmpdir):
     stdout, stderr = capsys.readouterr()
     assert "No such file." in stdout
 
+
 def test_premain_save_origin_env(shell, xession):
     xonsh.main.premain(["--save-origin-env"])
     assert "XONSH_ORIGIN_ENV_SAVE_FILE" in xession.env
@@ -670,30 +671,31 @@ def test_premain_save_origin_env(shell, xession):
 
     assert os.environ == json.loads(env_file_name.read_text())
 
+
 # commented because xonsherror is killing the session and the test will stop
 # def test_premain_load_origin_error(monkeypatch, capsys):
 #     monkeypatch.setattr(sys, "argv", ["xonsh", "--load-origin-env"])
 #     with pytest.raises(XonshError, match="xonsh: No env file to restore"):
 #         xonsh.main.main()
 
+
 def test_premain_load_origin_env(shell, xession, monkeypatch):
     xonsh.main.premain(["--save-origin-env"])
     xession.env["ABCD"] = "DEF"
 
-    out = subproc_captured_stdout([
-        "xonsh",
-        "-c",
-        "print('in' if 'ABCD' in __xonsh__.env else 'out')"])
-
-    assert  out == "in"
-
-    out = subproc_captured_stdout([
-        "xonsh",
-        "--load-origin-env",
-        "-c",
-        "print('in' if 'ABCD' in __xonsh__.env else 'out')"
-    ]
+    out = subproc_captured_stdout(
+        ["xonsh", "-c", "print('in' if 'ABCD' in __xonsh__.env else 'out')"]
     )
 
-    assert  out == "out"
+    assert out == "in"
 
+    out = subproc_captured_stdout(
+        [
+            "xonsh",
+            "--load-origin-env",
+            "-c",
+            "print('in' if 'ABCD' in __xonsh__.env else 'out')",
+        ]
+    )
+
+    assert out == "out"
