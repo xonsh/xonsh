@@ -44,6 +44,7 @@ from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
     EnvPath,
+    XonshError,
     abs_path_to_str,
     adjust_shlvl,
     always_false,
@@ -106,7 +107,7 @@ from xonsh.tools import (
     to_ptk_cursor_shape_display_value,
     to_repr_pretty_,
     to_shlvl,
-    to_tok_color_dict, XonshError,
+    to_tok_color_dict,
 )
 
 events.doc(
