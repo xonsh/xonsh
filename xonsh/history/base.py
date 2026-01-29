@@ -3,7 +3,6 @@
 import functools
 import re
 import types
-import uuid
 
 from xonsh.built_ins import XSH
 from xonsh.tools import print_warning
