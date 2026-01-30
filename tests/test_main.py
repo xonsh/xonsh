@@ -61,7 +61,6 @@ def test_premain_D(shell, xession):
     xonsh.main.premain(["-DTEST1=1616", "-DTEST2=LOL"])
     assert xession.env.get("TEST1") == "1616"
     assert xession.env.get("TEST2") == "LOL"
-    assert xession.env.get("TEST2") == "LOL"
 
     # Unknown variable.
     with pytest.raises(SystemExit):
