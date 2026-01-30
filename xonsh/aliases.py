@@ -535,6 +535,9 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
     If function param names are in alias signature fill them.
     If function params have unknown names fill using alias signature order.
     """
+    sign = inspect.signature(func)
+    func_params = list(sign.parameters.items())
+
     alias_params = {
         "args": None,
         "stdin": None,
@@ -544,22 +547,31 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
         "stack": None,
         "decorators": None,
     }
-    alias_params |= params
-    sign = inspect.signature(func)
-    func_params = sign.parameters.items()
+    alias_params.update(params)
+
+    # Build kwargs for named parameters
     kwargs = {
-        name: alias_params[name] for name, p in func_params if name in alias_params
+        name: alias_params[name] for name, _ in func_params if name in alias_params
     }
 
+    # Inject shared pipeline ctx if requested
+    if "ctx" in dict(func_params):
+        spec = kwargs.get("spec")
+        if spec is not None and hasattr(spec, "ctx"):
+            kwargs["ctx"] = spec.ctx
+        else:
+            kwargs["ctx"] = {}
+
+    # Fallback to positional args if signature mismatch
     if len(kwargs) != len(func_params):
-        # There is unknown param. Switch to positional mode.
         kwargs = dict(
             zip(
-                map(operator.itemgetter(0), func_params),
+                (name for name, _ in func_params),
                 alias_params.values(),
                 strict=False,
             )
         )
+
     return func(**kwargs)
 
 
@@ -1115,9 +1127,9 @@ def make_default_aliases():
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
-        "xpython": [XSH.env.get("_", sys.executable)]
-        if IN_APPIMAGE
-        else [sys.executable],
+        "xpython": (
+            [XSH.env.get("_", sys.executable)] if IN_APPIMAGE else [sys.executable]
+        ),
         "xreset": xonsh_reset,
         "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
