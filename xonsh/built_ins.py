@@ -730,7 +730,7 @@ class XonshSession:
         self._initial_builtin_names = None
         self.lastcmd = None
         self._last = None
-        self.sessionid = uuid.uuid4()
+        self.sessionid = str(uuid.uuid4())
 
     @property
     def last(self):

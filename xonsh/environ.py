@@ -2752,10 +2752,11 @@ def default_env(env=None, load_origin_env=False):
 
     if load_origin_env:
         e = os_environ
-        if "XONSH_ORIGIN_ENV_SAVE_FILE" not in os_environ:
-            raise XonshError("xonsh: No env file to restore")
+        if "XONSH_ORIGIN_ENV_FILE" not in os_environ:
+            print("xonsh: No env file to restore", file=sys.stderr)
+            raise SystemExit(1)
 
-        load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_SAVE_FILE"])
+        load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_FILE"])
         if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
             ctx.update(json.loads(load_origin_env_file.read_text(encoding="utf-8")))
     else:
@@ -2796,5 +2797,4 @@ def save_origin_env_to_file(env, session_id):
 
     if os.access(env_file_name.parent, os.W_OK):
         env_file_name.write_text(json.dumps(dict(os_environ)))
-        env["XONSH_ORIGIN_ENV_SAVE_FILE"] = env_file_name
-        env["XONSH_ORIGIN_ENV_SAVE"] = True
+        env["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
