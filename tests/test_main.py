@@ -63,8 +63,8 @@ def test_premain_D(shell, xession):
     assert xession.env.get("TEST2") == "LOL"
 
     # Unknown variable.
-    with pytest.raises(SystemExit):
-        xonsh.main.premain(["-DORIGIN_VAR"])
+    xonsh.main.premain(["-DORIGIN_VAR"])
+    assert xession.env.get("ORIGIN_VAR") is None
 
     # Inherit variable.
     os.environ["ORIGIN_VAR"] = "origin_val"

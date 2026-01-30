@@ -452,12 +452,11 @@ def premain(argv=None):
                 var = var[0]
                 if var in os_environ:
                     pre_env[var] = os_environ[var]
-                else:
+                elif os_environ.get('XONSH_DEBUG', '0') != '0':
                     print(
-                        f"Variable {var!r} is not defined in environment.",
+                        f"Variable {var!r} is not defined in origin environment.",
                         file=sys.stderr,
                     )
-                    sys.exit(1)
 
     start_services(shell_kwargs, args, pre_env=pre_env)
     return args
