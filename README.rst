@@ -73,12 +73,12 @@ xonsh
 
             def nudf(cmd):
                 return @.imp.pandas.DataFrame(
-                  @.imp.json.loads(
-                    $(nu -c @(cmd + ' | to json'))
-                  )
-                )
-
+                       @.imp.json.loads(
+                       $(nu -c @(cmd + ' | to json'))))
             nudf!(ls -la)
+
+            aliases['ai'] = 'ollama run llama3'
+            ai! one command to remove images in docker
 
 
       -  .. code-block:: python
