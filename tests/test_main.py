@@ -67,7 +67,7 @@ def test_premain_D(shell, xession):
         xonsh.main.premain(["-Dnotfound"])
 
     # Inherit variable.
-    os.environ['ORIGIN_VAR'] = 'origin_val'
+    os.environ["ORIGIN_VAR"] = "origin_val"
     xonsh.main.premain(["--no-env", "-DORIGIN_VAR"])
     assert xession.env.get("ORIGIN_VAR") == "origin_val"
 
