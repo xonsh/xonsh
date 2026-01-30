@@ -3,7 +3,6 @@
 import argparse
 import functools
 import inspect
-import operator
 import os
 import pathlib
 import re
