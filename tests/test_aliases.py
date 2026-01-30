@@ -107,6 +107,28 @@ def test_recursive_callable_partial_handles(xession):
     assert obs == exp
 
 
+def test_callable_alias_shared_ctx():
+    """
+    Callable aliases should share a mutable ctx dict
+    when executed within the same pipeline.
+    """
+
+    ctx = {}
+
+    def table(args, stdin=None, stdout=None, stderr=None, spec=None, ctx=None):
+        ctx["columns"] = ["a", "b", "c"]
+        return "1,2,3\n"
+
+    def column(args, stdin=None, stdout=None, stderr=None, spec=None, ctx=None):
+        return ctx["columns"].index(args[0])
+
+    # Simulate pipeline behavior by passing the same ctx
+    table([], ctx=ctx)
+    result = column(["b"], ctx=ctx)
+
+    assert result == 1
+
+
 def test_expand_alias():
     ales = Aliases()
     ales["ls"] = ["ls", "-G"]
