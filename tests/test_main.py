@@ -64,7 +64,7 @@ def test_premain_D(shell, xession):
 
     # Unknown variable.
     with pytest.raises(SystemExit):
-        xonsh.main.premain(["-Dnotfound"])
+        xonsh.main.premain(["-DORIGIN_VAR"])
 
     # Inherit variable.
     os.environ["ORIGIN_VAR"] = "origin_val"
