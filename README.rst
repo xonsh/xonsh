@@ -47,9 +47,9 @@ xonsh
 
             $PATH.append('/tmp')
 
-            p'/etc/passwd'.read_text().find('root')
+            p'/etc/passwd'.read_text().find('usr')
 
-            xontrib load dalias  # plugin
+            xontrib load dalias  # extension
             $(@json docker ps --format json)['ID']
 
       -  .. code-block:: python
@@ -74,7 +74,7 @@ xonsh
             def nudf(cmd):
                 return @.imp.pandas.DataFrame(
                   @.imp.json.loads(
-                  $(nu -c @(cmd + ' | to json'))))
+                  $(nu -c @(cmd+'| to json'))))
             nudf!(ls -la)
 
             aliases['ai'] = 'ollama run llama3'
