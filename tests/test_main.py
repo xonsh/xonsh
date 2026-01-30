@@ -690,8 +690,8 @@ def test_premain_load_origin_env(shell, xession, capsys):
         env_file_name.write_text(json.dumps({"ABCD": "DEF"}))
         os.environ["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
         os.environ["ABCD"] = "000"
-
         xonsh.main.premain(["--load-origin-env"])
+        assert os.environ["ABCD"] == "DEF"
         assert xession.env["ABCD"] == "DEF"
 
 

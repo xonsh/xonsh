@@ -2758,7 +2758,9 @@ def default_env(env=None, load_origin_env=False):
 
         load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_FILE"])
         if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
-            ctx.update(json.loads(load_origin_env_file.read_text(encoding="utf-8")))
+            origin_env = json.loads(load_origin_env_file.read_text(encoding="utf-8"))
+            ctx.update(origin_env)
+            os.environ = origin_env
     else:
         ctx.update(os_environ)
 
