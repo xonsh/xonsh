@@ -13,7 +13,7 @@ import xonsh.procs.pipelines as xpp
 from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
-from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
+from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context, load_origin_env_from_file
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
@@ -382,7 +382,6 @@ def start_services(shell_kwargs, args, pre_env=None):
         execer=execer,
         inherit_env=shell_kwargs.get("inherit_env", True),
         save_origin_env=args.save_origin_env,
-        load_origin_env=args.load_origin_env,
     )
     events.on_timingprobe.fire(name="post_xonsh_session_load")
 
@@ -454,7 +453,6 @@ def premain(argv=None):
         or (args.mode == XonshMode.interactive),
         "XONSH_MODE": xonsh_mode,
     }
-    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
     # Load -DVAR=VAL arguments.
     if args.defines is not None:
@@ -468,6 +466,13 @@ def premain(argv=None):
                     file=sys.stderr,
                 )
                 sys.exit(1)
+
+    if args.load_origin_env:
+        origin_env = load_origin_env_from_file()
+        os.environ.clear()
+        os.environ.update(origin_env)
+
+    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
     start_services(shell_kwargs, args, pre_env=pre_env)
     return args

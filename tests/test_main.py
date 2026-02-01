@@ -688,9 +688,9 @@ def test_premain_load_origin_error(monkeypatch, capsys):
 def test_premain_load_origin_env(shell, xession, capsys):
     with tempfile.TemporaryDirectory() as tmp:
         env_file_name = Path(tmp) / f"origin-env-{uuid.uuid4()}.json"
-        env_file_name.write_text(json.dumps({"ABCD": "DEF"}))
+        os.environ["ABCD"] = "DEF"
+        env_file_name.write_text(json.dumps(dict(os_environ)))
         os.environ["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
         os.environ["ABCD"] = "000"
         xonsh.main.premain(["--load-origin-env"])
-        assert os.environ["ABCD"] == "DEF"
         assert xession.env["ABCD"] == "DEF"

@@ -785,7 +785,6 @@ class XonshSession:
         ctx=None,
         inherit_env=True,
         save_origin_env=False,
-        load_origin_env=False,
         **kwargs,
     ):
         """Loads the session with default values.
@@ -811,8 +810,6 @@ class XonshSession:
 
         if "env" in kwargs:
             self.env = kwargs.pop("env")
-        elif load_origin_env:
-            self.env = Env(default_env(load_origin_env=load_origin_env))
         elif inherit_env:
             self.env = Env(default_env())
         else:

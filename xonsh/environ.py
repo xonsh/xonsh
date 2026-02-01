@@ -2749,20 +2749,7 @@ def default_env(env=None, load_origin_env=False):
         "XONSH_VERSION": XONSH_VERSION,
     }
 
-    if load_origin_env:
-        e = os_environ
-        if "XONSH_ORIGIN_ENV_FILE" not in os_environ:
-            print("xonsh: No env file to restore", file=sys.stderr)
-            raise SystemExit(1)
-
-        load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_FILE"])
-        if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
-            origin_env = json.loads(load_origin_env_file.read_text(encoding="utf-8"))
-            ctx.update(origin_env)
-            os.environ.clear()
-            os.environ.update(origin_env)
-    else:
-        ctx.update(os_environ)
+    ctx.update(os_environ)
 
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
@@ -2800,3 +2787,16 @@ def save_origin_env_to_file(env, session_id):
     if os.access(env_file_name.parent, os.W_OK):
         env_file_name.write_text(json.dumps(dict(os_environ)))
         env["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
+
+
+def load_origin_env_from_file():
+    e = os_environ
+    if "XONSH_ORIGIN_ENV_FILE" not in e:
+        print("xonsh: No env file to restore", file=sys.stderr)
+        raise SystemExit(1)
+
+    load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_FILE"])
+    if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
+        return json.loads(load_origin_env_file.read_text(encoding="utf-8"))
+
+    return None
