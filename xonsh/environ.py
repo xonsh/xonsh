@@ -2790,6 +2790,7 @@ def save_origin_env_to_file(env, session_id):
     else:
         print(f"xonsh: Write access denied for {data_dir}", file=sys.stderr)
 
+
 def load_origin_env_from_file():
     e = os_environ
     if "XONSH_ORIGIN_ENV_FILE" not in e:
