@@ -18,6 +18,7 @@ import re
 import signal
 import sys
 import types
+import uuid
 import warnings
 from ast import AST
 from collections.abc import Iterator
@@ -735,6 +736,7 @@ class XonshSession:
         self._initial_builtin_names = None
         self.lastcmd = None
         self._last = None
+        self.sessionid = str(uuid.uuid4())
 
     @property
     def last(self):
@@ -783,7 +785,14 @@ class XonshSession:
         if self._py_quit is not None:
             builtins.quit = self._py_quit
 
-    def load(self, execer=None, ctx=None, inherit_env=True, **kwargs):
+    def load(
+        self,
+        execer=None,
+        ctx=None,
+        inherit_env=True,
+        save_origin_env=False,
+        **kwargs,
+    ):
         """Loads the session with default values.
 
         Parameters
@@ -798,7 +807,7 @@ class XonshSession:
             set ``$XONSH_ENV_INHERITED = False``.
         """
         from xonsh.commands_cache import CommandsCache
-        from xonsh.environ import Env, default_env
+        from xonsh.environ import Env, default_env, save_origin_env_to_file
 
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self
@@ -812,6 +821,9 @@ class XonshSession:
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
         self.interface.env = self.env
+
+        if save_origin_env:
+            save_origin_env_to_file(self.env, self.sessionid)
 
         self.exit = None
         self.stdout_uncaptured = None

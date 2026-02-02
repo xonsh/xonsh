@@ -290,6 +290,7 @@ class Shell:
                 ts=[time.time(), None],
                 locked=True,
                 filename=env.get("XONSH_HISTORY_FILE", None),
+                sessionid=XSH.sessionid,
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:
