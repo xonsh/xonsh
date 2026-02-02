@@ -159,7 +159,7 @@ Projects that use xonsh or compatible
 Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xonsh/xontrib-jupyter>`_:
 
 - `Jupyter and JupyterLab <https://jupyter.org/>`_: Interactive notebook platform.
-- `euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
+- `Euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
 - `Jupytext <https://jupytext.readthedocs.io/>`_: Clear and meaningful diffs when doing Jupyter notebooks version control.
 
 Compiling, packaging, or accelerating xonsh:
