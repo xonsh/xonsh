@@ -2740,7 +2740,7 @@ def xonsh_script_run_control(filename, ctx, env, execer=None, login=True):
     return loaded
 
 
-def default_env(env=None, load_origin_env=False):
+def default_env(env=None):
     """Constructs a default xonsh environment."""
     # in order of increasing precedence
     ctx = {
