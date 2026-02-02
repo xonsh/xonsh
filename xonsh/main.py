@@ -13,7 +13,12 @@ import xonsh.procs.pipelines as xpp
 from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
-from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
+from xonsh.environ import (
+    get_home_xonshrc_path,
+    load_origin_env_from_file,
+    make_args_env,
+    xonshrc_context,
+)
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
@@ -257,6 +262,20 @@ def parser():
         nargs=argparse.REMAINDER,
         default=[],
     )
+    p.add_argument(
+        "--save-origin-env",
+        help="Save origin environment variables before running xonsh. Use --load-origin-env to run xonsh with saved origin environment.",
+        dest="save_origin_env",
+        action="store_true",
+        default=False,
+    )
+    p.add_argument(
+        "--load-origin-env",
+        help="Load origin environment variables that were saved before running xonsh by using --save-origin-env",
+        dest="load_origin_env",
+        action="store_true",
+        default=False,
+    )
     return p
 
 
@@ -363,7 +382,12 @@ def start_services(shell_kwargs, args, pre_env=None):
     )
     events.on_timingprobe.fire(name="post_execer_init")
     events.on_timingprobe.fire(name="pre_xonsh_session_load")
-    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
+    XSH.load(
+        ctx=ctx,
+        execer=execer,
+        inherit_env=shell_kwargs.get("inherit_env", True),
+        save_origin_env=args.save_origin_env,
+    )
     events.on_timingprobe.fire(name="post_xonsh_session_load")
 
     install_import_hooks(execer)
@@ -434,7 +458,6 @@ def premain(argv=None):
         or (args.mode == XonshMode.interactive),
         "XONSH_MODE": xonsh_mode,
     }
-    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
     # Load -DVAR=VAL arguments.
     if args.defines is not None:
@@ -448,6 +471,13 @@ def premain(argv=None):
                     file=sys.stderr,
                 )
                 sys.exit(1)
+
+    if args.load_origin_env:
+        origin_env = load_origin_env_from_file()
+        os.environ.clear()
+        os.environ.update(origin_env)
+
+    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
     start_services(shell_kwargs, args, pre_env=pre_env)
     return args
