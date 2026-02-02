@@ -15,9 +15,9 @@ from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
 from xonsh.environ import (
     get_home_xonshrc_path,
+    load_origin_env_from_file,
     make_args_env,
     os_environ,
-    load_origin_env_from_file,
     xonshrc_context,
 )
 from xonsh.events import events
