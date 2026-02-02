@@ -3,6 +3,7 @@
 import collections.abc as cabc
 import contextlib
 import inspect
+import json
 import locale
 import os
 import platform
@@ -989,6 +990,14 @@ class GeneralSetting(Xettings):
         xonsh_config_dir,
         "This is the location where xonsh user-level configuration information is stored.",
         type_str="str",
+    )
+    XONSH_ORIGIN_ENV_FILE = Var.no_default(
+        "str",
+        "The path to the file where environment variables are saved when "
+        "running ``xonsh --save-origin-env``. When xonsh ``--load-origin-env`` "
+        "is executed, this file is used as the basis for the environment. "
+        "Thus, from an existing xonsh session, you can start a new one with "
+        "the same environment variables that were used when launching the original session.",
     )
     XONSH_SYS_CONFIG_DIR = Var.with_default(
         xonsh_sys_config_dir,
@@ -2747,7 +2756,9 @@ def default_env(env=None):
         "PROMPT_FIELDS": DEFAULT_VARS["PROMPT_FIELDS"].default(env),
         "XONSH_VERSION": XONSH_VERSION,
     }
+
     ctx.update(os_environ)
+
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
     ctx.pop("LINES", None)
@@ -2775,3 +2786,28 @@ def make_args_env(args=None):
     env = {"ARG" + str(i): arg for i, arg in enumerate(args)}
     env["ARGS"] = list(args)  # make a copy so we don't interfere with original variable
     return env
+
+
+def save_origin_env_to_file(env, session_id):
+    data_dir = env.get("XONSH_DATA_DIR", None)
+    env_file_name = Path(data_dir) / f"origin-env-{session_id}.json"
+
+    if os.access(env_file_name.parent, os.W_OK):
+        env_file_name.write_text(json.dumps(dict(os_environ)))
+        env["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
+    else:
+        print(f"xonsh: Write access denied for {data_dir!r}", file=sys.stderr)
+
+
+def load_origin_env_from_file():
+    e = os_environ
+    if "XONSH_ORIGIN_ENV_FILE" not in e:
+        print("xonsh: No env file to restore", file=sys.stderr)
+        raise SystemExit(1)
+
+    load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_FILE"])
+    if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
+        return json.loads(load_origin_env_file.read_text(encoding="utf-8"))
+    else:
+        print(f"xonsh: Failed to load file {load_origin_env_file!r}", file=sys.stderr)
+        raise SystemExit(1)
