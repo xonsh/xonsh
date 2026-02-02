@@ -2788,7 +2788,7 @@ def save_origin_env_to_file(env, session_id):
         env_file_name.write_text(json.dumps(dict(os_environ)))
         env["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
     else:
-        print(f"xonsh: Write access denied for {data_dir}", file=sys.stderr)
+        print(f"xonsh: Write access denied for {data_dir!r}", file=sys.stderr)
 
 
 def load_origin_env_from_file():
@@ -2801,5 +2801,5 @@ def load_origin_env_from_file():
     if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
         return json.loads(load_origin_env_file.read_text(encoding="utf-8"))
     else:
-        print(f"xonsh: Failed to load file {load_origin_env_file}", file=sys.stderr)
+        print(f"xonsh: Failed to load file {load_origin_env_file!r}", file=sys.stderr)
         raise SystemExit(1)
