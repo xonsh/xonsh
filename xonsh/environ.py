@@ -991,6 +991,14 @@ class GeneralSetting(Xettings):
         "This is the location where xonsh user-level configuration information is stored.",
         type_str="str",
     )
+    XONSH_ORIGIN_ENV_FILE = Var.no_default(
+        "str",
+        "The path to the file where environment variables are saved when "
+        "running ``xonsh --save-origin-env``. When xonsh ``--load-origin-env`` "
+        "is executed, this file is used as the basis for the environment. "
+        "Thus, from an existing xonsh session, you can start a new one with "
+        "the same environment variables that were used when launching the original session.",
+    )
     XONSH_SYS_CONFIG_DIR = Var.with_default(
         xonsh_sys_config_dir,
         "This is the location where xonsh system-level configuration information is stored.",
