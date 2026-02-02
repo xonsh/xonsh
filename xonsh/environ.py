@@ -2999,7 +2999,7 @@ class EnvPath(cabc.MutableSequence):
                     newvalue=self.obj._l,
                 )
 
-                
+
 def save_origin_env_to_file(env, session_id):
     data_dir = env.get("XONSH_DATA_DIR", None)
     env_file_name = Path(data_dir) / f"origin-env-{session_id}.json"
