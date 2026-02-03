@@ -102,6 +102,8 @@ def _get_installed_xontribs(pkg_name="xontrib"):
     spec = importlib.util.find_spec(pkg_name)
 
     def iter_paths():
+        if spec is None or spec.submodule_search_locations is None:
+            return
         for loc in spec.submodule_search_locations:
             path = Path(loc)
             if path.exists():
