@@ -62,6 +62,6 @@
     </p>
 
 Xonsh (sounds like "consh") is a modern, full-featured and cross-platform python shell.
-The language is a superset of Python 3 with seamless integration of shell functionality and commands. 
+The language is a superset of Python 3 with seamless integration of shell functionality and commands.
 It works on all major systems including Linux, OSX, and Windows.
 Xonsh is meant for the daily use of experts and novices.
