@@ -1,5 +1,29 @@
 # Xonsh Change Log
 
+## [0.22.2](https://github.com/xonsh/xonsh/compare/0.22.1...0.22.2) (2026-02-03)
+
+
+### Features
+
+* **builtin:** Added `@.history` as a shortcut to `__xonsh__.history` ([#6056](https://github.com/xonsh/xonsh/issues/6056)) ([809f5cf](https://github.com/xonsh/xonsh/commit/809f5cf1d2257c496db015f8d53341b88e48e404))
+* **environ:** Ability to run xonsh from existing xonsh session but with origin environment ([#6076](https://github.com/xonsh/xonsh/issues/6076)) ([f748bd2](https://github.com/xonsh/xonsh/commit/f748bd2dcc673bce285918382e4240c16f73e28f))
+* **environ:** Added shortcut `xonsh -DVAR` to inherit `VAR` as alternative to `xonsh -DVAR=$VAR` ([#6080](https://github.com/xonsh/xonsh/issues/6080)) ([4c2dc8b](https://github.com/xonsh/xonsh/commit/4c2dc8b474c84bea38cc55bd9a7c885c4dd1496d))
+* **events:** Now `on_envvar_change` event is working for EnvPath variables e.g. PATH. ([#6055](https://github.com/xonsh/xonsh/issues/6055)) ([37bb23a](https://github.com/xonsh/xonsh/commit/37bb23a64bf06996c1a23b44ca1de2b63cef5a4d))
+* **prompt:** Added $XONSH_PROMPT_NEXT_CMD_SUGGESTION to set the text of the next command suggestion ([#6048](https://github.com/xonsh/xonsh/issues/6048)) ([8c8372e](https://github.com/xonsh/xonsh/commit/8c8372ec56de6f39dc3d01d6ec442ab20884915f))
+* **xcontext:** Report current xonsh session executable in `xcontext` ([#6071](https://github.com/xonsh/xonsh/issues/6071)) ([db2b2c3](https://github.com/xonsh/xonsh/commit/db2b2c3cdcd94d552293587000a79ec9dedc0a33))
+
+
+### Bug Fixes
+
+* **docs:** Update ErrorString import handling in cmdhelp.py ([#6054](https://github.com/xonsh/xonsh/issues/6054)) ([4d8d504](https://github.com/xonsh/xonsh/commit/4d8d504419ac09673301592aea6a8dcebae2d867))
+* Fixed `xcontext` error in case `xpip` has complex command ([#6063](https://github.com/xonsh/xonsh/issues/6063)) ([14333a6](https://github.com/xonsh/xonsh/commit/14333a633a9437a38f140515a28745b22745267b))
+* **mamba-installer:** Rename xmamba to xmamba.xsh ([#6059](https://github.com/xonsh/xonsh/issues/6059)) ([82b9210](https://github.com/xonsh/xonsh/commit/82b921062487b60efd08e39f291789dfcddb67b7))
+* prevent stripping r except leading ones of r-strings ([#6030](https://github.com/xonsh/xonsh/issues/6030)) ([8bf34d7](https://github.com/xonsh/xonsh/commit/8bf34d7be54e71a6740c27949cdbe3b766de8bc8))
+* **procs:** Fix ioctl windowsize buffer size to reduce issues in the future python 3.14 ([#6061](https://github.com/xonsh/xonsh/issues/6061)) ([03c2c3d](https://github.com/xonsh/xonsh/commit/03c2c3d1af8193718080b92dfb15dd8abd313d07))
+* Raise an error in case of redirect without command ([#6060](https://github.com/xonsh/xonsh/issues/6060)) ([ba79df1](https://github.com/xonsh/xonsh/commit/ba79df11a25ff7a5e555e9ab442118f3fe7da015))
+* Revert "Fix for completer issue with file name containing backslash" because of a regress ([#6052](https://github.com/xonsh/xonsh/issues/6052)) ([1bfcba6](https://github.com/xonsh/xonsh/commit/1bfcba635745eb122780ccebf87a03baf5a7130b))
+* **startup:** Fix crash on built-in readline, print compatibility message on uv pythons ([#6069](https://github.com/xonsh/xonsh/issues/6069)) ([1e29ee2](https://github.com/xonsh/xonsh/commit/1e29ee2dd6ba3feb831cdfc4c8bd880e2c62a95d))
+
 ## [0.22.1](https://github.com/xonsh/xonsh/compare/0.22.0...0.22.1) (2026-01-14)
 
 
