@@ -147,6 +147,7 @@
     </section>
 
     <section id="about-area" data-scroll-index="1">
+
         <div class="container text-center section-heading">
             <h2>What is Xonsh?</h2>
             <p>The xonsh as a python shell lets you easily mix Python and shell commands in a powerful and simplified approach to the command line.</p>
@@ -164,12 +165,16 @@
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-                        <pre class="code">
+<pre class="code">
 <span unselectable-text="@ "></span><b>cd</b> $HOME
+
+<span unselectable-text="@ "></span><b>id</b> <span style="color: lightgreen;">$(whoami)</span> > ~/id.txt
 
 <span unselectable-text="@ "></span><b>cat</b> /etc/passwd | <b>grep</b> root
 
-<span unselectable-text="@ "></span><b>ls</b> -la</pre>
+<span unselectable-text="@ "></span>$PROMPT = <span style="color: lightblue;">'@ '</span>
+</pre>
+
 
                     </div>
                 </div>
@@ -193,9 +198,13 @@
                         <pre class="code">
 <span unselectable-text="@ "></span>2 + 2
 
-<span unselectable-text="@ "></span><b>import</b> json
-<span unselectable-text="  "></span>j = json.loads(<span style="color: lightblue;">'{"Hello": "world!", "Answer": 42}'</span>)
-<span unselectable-text="  "></span><b>print</b>(j[<span style="color: lightblue;">'Answer'</span>])</pre>
+<span unselectable-text="@ "></span>var = <span style="color: lightblue;">"hello"</span>.upper()
+
+<span unselectable-text="@ "></span><b>@.imp.json.loads</b>(<span style="color: lightblue;">'{"a":1}'</span>)
+
+<span unselectable-text="@ "></span>[i <b>for</b> i <b>in</b> range(0,10)]
+</pre>
+
 
                     </div>
                 </div>
@@ -218,11 +227,16 @@
                     <div class="text-center">
 
                         <pre class="code">
-<span unselectable-text="@ "></span><b>len</b>(<span style="color: lightgreen">$(curl -L https://xon.sh)</span>)
+<span unselectable-text="@ "></span><b>len</b>(<span style="color: lightgreen;">$(curl -L https://xon.sh)</span>)
 
-<span unselectable-text="@ "></span><b>for</b> filename <b>in</b> <span style="color: yellow">`.*`</span>:
-<span unselectable-text="  "></span>    <b>print</b>(filename)
-<span unselectable-text="  "></span>    <b>du</b> -sh <span style="color: lightsalmon">@(filename)</span></pre>
+<span unselectable-text="@ "></span>$PATH.append(<span style="color: lightblue;">'/tmp'</span>)
+
+<span unselectable-text="@ "></span>p<span style="color: lightblue;">'/etc/passwd'</span>.read_text().find(<span style="color: lightblue;">'usr'</span>)
+
+<span unselectable-text="@ "></span><b>xontrib</b> load dalias
+<span unselectable-text="  "></span>$(@json podman ps --format json)[<span style="color: lightblue;">'ID'</span>]
+</pre>
+
 
                     </div>
                 </div>
@@ -245,18 +259,91 @@
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-                        <pre class="code">
-<span unselectable-text="@ "></span>var = <span style="color: lightblue;">'he'</span> + <span style="color: lightblue;">'llo'</span>
+<pre class="code">
+<span unselectable-text="@ "></span>name = <span style="color: lightblue;">'snail'</span>
+<span unselectable-text="  "></span><b>echo</b> <span style="color: lightsalmon;">@(name)</span> > /tmp/<span style="color: lightsalmon;">@(name)</span>
 
-<span unselectable-text="@ "></span><b>echo</b> <span style="color: lightsalmon">@(var)</span> > /tmp/<span style="color: lightsalmon">@(var)</span>
+<span unselectable-text="@ "></span><b>with</b> p<span style="color: lightblue;">'/tmp/dir'</span>.mkdir().cd():
+<span unselectable-text="  "></span>    <b>touch</b> <span style="color: lightsalmon;">@(input(<span style="color: lightblue;">'Create file: '</span>))</span>
 
-<span unselectable-text="@ "></span><b>echo</b> <span style="color: lightsalmon">@(i for i in range(42))</span></pre>
+<span unselectable-text="@ "></span>aliases[<span style="color: lightblue;">'e'</span>] = <span style="color: lightblue;">'echo @(2+2)'</span>
+<span unselectable-text="  "></span>aliases[<span style="color: lightblue;">'a'</span>] = <b>lambda</b> args: <b>print</b>(args)
+</pre>
+
 
                     </div>
                 </div>
 
             </div>
         </div>
+
+        <div class="container" style="margin-top: 30px">
+          <div class="row">
+            <div class="col-lg-6 col-md-7">
+              <div class="about-content">
+                <h3>Xonsh is a Meta-Shell</h3>
+                <p>
+                  Xonsh can orchestrate and unify other shells and tools, allowing you to combine
+                    external programs into a single programmable environment.
+                  <a href="tutorial.html" target="_blank">Read more →</a>
+                </p>
+              </div>
+            </div>
+
+    <div class="col-lg-6 col-md-5">
+      <div class="text-center">
+        <pre class="code">
+<span unselectable-text="@ "></span><b>xontrib</b> load sh \
+<span unselectable-text="  "></span>             fish_completer
+
+<span unselectable-text="@ "></span><b>def</b> nudf(cmd):
+<span unselectable-text="  "></span>    <b>return</b> <b>@.imp.pandas.DataFrame</b>(
+<span unselectable-text="  "></span>      <b>@.imp.json.loads</b>(
+<span unselectable-text="  "></span>          <span style="color: lightgreen;">$(nu -c @(cmd + '| to json'))</span>))
+
+<span unselectable-text="  "></span>nudf!(ls -la)
+
+<span unselectable-text="@ "></span>aliases[<span style="color: lightblue;">'ai'</span>] = <span style="color: lightblue;">'ollama run llama3'</span>
+<span unselectable-text="@ "></span>ai! command to remove images in podman
+</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<div class="container" style="margin-top: 30px">
+  <div class="row">
+    <div class="col-lg-6 col-md-7">
+      <div class="about-content">
+        <h3>Xonsh is an Ecosystem</h3>
+        <p>
+          Xonsh extends beyond a shell through xontribs — community-driven plugins that integrate
+          frameworks, developer tools, AI assistants, themes, and system features into a cohesive ecosystem.
+          <a href="tutorial.html" target="_blank">Read more →</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="col-lg-6 col-md-5">
+      <div class="text-center">
+        <pre class="code">
+<span unselectable-text="@ "></span><b>xontrib</b> load term_integration \
+<span unselectable-text="  "></span>             prompt_starship  \
+<span unselectable-text="  "></span>             powerline        \
+<span unselectable-text="  "></span>             dracula          \
+<span unselectable-text="  "></span>             chatgpt          \
+<span unselectable-text="  "></span>             django           \
+<span unselectable-text="  "></span>             jupyter          \
+<span unselectable-text="  "></span>             1password        \
+<span unselectable-text="  "></span>             github_copilot   \
+<span unselectable-text="  "></span>             history_encrypt
+</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+        
     </section>
 
     <section id="features-area" data-scroll-index="2">
