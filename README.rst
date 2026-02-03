@@ -50,7 +50,7 @@ xonsh
             p'/etc/passwd'.read_text().find('usr')
 
             xontrib load dalias  # extension
-            $(@json docker ps --format json)['ID']
+            $(@json podman ps --format json)['ID']
 
       -  .. code-block:: python
 
@@ -78,7 +78,7 @@ xonsh
             nudf!(ls -la)
 
             aliases['ai'] = 'ollama run llama3'
-            ai! how to remove images in docker
+            ai! how to remove images in podman
 
 
       -  .. code-block:: python
