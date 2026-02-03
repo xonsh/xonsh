@@ -61,9 +61,19 @@ def test_premain_login(shell, xession):
 
 
 def test_premain_D(shell, xession):
+    # Set variables.
     xonsh.main.premain(["-DTEST1=1616", "-DTEST2=LOL"])
     assert xession.env.get("TEST1") == "1616"
     assert xession.env.get("TEST2") == "LOL"
+
+    # Unknown variable.
+    xonsh.main.premain(["-DORIGIN_VAR"])
+    assert xession.env.get("ORIGIN_VAR") is None
+
+    # Inherit variable.
+    os.environ["ORIGIN_VAR"] = "origin_val"
+    xonsh.main.premain(["--no-env", "-DORIGIN_VAR"])
+    assert xession.env.get("ORIGIN_VAR") == "origin_val"
 
 
 def test_premain_custom_rc(shell, tmpdir, monkeypatch, xession):

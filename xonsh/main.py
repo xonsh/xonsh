@@ -17,6 +17,7 @@ from xonsh.environ import (
     get_home_xonshrc_path,
     load_origin_env_from_file,
     make_args_env,
+    os_environ,
     xonshrc_context,
 )
 from xonsh.events import events
@@ -222,7 +223,7 @@ def parser():
         "-D",
         dest="defines",
         help="Define an environment variable, in the form of "
-        "-DNAME=VAL. May be used many times.",
+        "-DVAR=VAL or inherit existing variable with -DVAR. May be used many times.",
         metavar="ITEM",
         action="append",
         default=None,
@@ -462,15 +463,19 @@ def premain(argv=None):
     # Load -DVAR=VAL arguments.
     if args.defines is not None:
         for x in args.defines:
-            try:
-                var, val = x.split("=", 1)
+            var = x.split("=", 1)
+            if len(var) == 2:
+                var, val = var
                 pre_env[var] = unquote(val)
-            except Exception:
-                print(
-                    f"Wrong format for -D{x} argument. Use -DVAR=VAL form.",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
+            elif len(var) == 1:
+                var = var[0]
+                if var in os_environ:
+                    pre_env[var] = os_environ[var]
+                elif os_environ.get("XONSH_DEBUG", "0") != "0":
+                    print(
+                        f"Variable {var!r} is not defined in origin environment.",
+                        file=sys.stderr,
+                    )
 
     if args.load_origin_env:
         origin_env = load_origin_env_from_file()
