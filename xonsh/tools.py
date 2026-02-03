@@ -26,7 +26,6 @@ import datetime
 import functools
 import glob
 import itertools
-import operator
 import os
 import pathlib
 import re
@@ -195,147 +194,6 @@ def findfirst(s, substrs):
             i = pos
             result = substr
     return i, result
-
-
-class EnvPath(cabc.MutableSequence):
-    """A class that implements an environment path, which is a list of
-    strings. Provides a custom method that expands all paths if the
-    relevant env variable has been set.
-    """
-
-    def __init__(self, args=None):
-        if not args:
-            self._l = []
-        else:
-            if isinstance(args, str):
-                self._l = args.split(os.pathsep)
-            elif isinstance(args, pathlib.Path):
-                self._l = [args]
-            elif isinstance(args, bytes):
-                # decode bytes to a string and then split based on
-                # the default path separator
-                self._l = decode_bytes(args).split(os.pathsep)
-            elif isinstance(args, cabc.Iterable):
-                # put everything in a list -before- performing the type check
-                # in order to be able to retrieve it later, for cases such as
-                # when a generator expression was passed as an argument
-                args = list(args)
-                if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
-                    # make TypeError's message as informative as possible
-                    # when given an invalid initialization sequence
-                    raise TypeError(
-                        "EnvPath's initialization sequence should only "
-                        "contain str, bytes and pathlib.Path entries"
-                    )
-                self._l = args
-            else:
-                raise TypeError(
-                    f"EnvPath cannot be initialized with items of type {type(args)}: {args!r}"
-                )
-
-    def __getitem__(self, item):
-        # handle slices separately
-        if isinstance(item, slice):
-            return [_expandpath(i) for i in self._l[item]]
-        else:
-            return _expandpath(self._l[item])
-
-    def __setitem__(self, index, item):
-        self._l.__setitem__(index, item)
-
-    def __len__(self):
-        return len(self._l)
-
-    def __delitem__(self, key):
-        self._l.__delitem__(key)
-
-    @staticmethod
-    def _prepare_path(p):
-        return str(expand_path(p))
-
-    def insert(self, index, value):
-        self._l.insert(index, self._prepare_path(value))
-
-    def append(self, value):
-        self._l.append(self._prepare_path(value))
-
-    def prepend(self, value):
-        self._l.insert(0, self._prepare_path(value))
-
-    def remove(self, value):
-        try:
-            self._l.remove(self._prepare_path(value))
-        except ValueError:
-            print(f"EnvPath warning: path {repr(value)} not found.", file=sys.stderr)
-
-    @property
-    def paths(self):
-        """
-        Returns the list of directories that this EnvPath contains.
-        """
-        return list(self)
-
-    def __repr__(self):
-        return repr(self._l)
-
-    def __eq__(self, other):
-        if len(self) != len(other):
-            return False
-        return all(map(operator.eq, self, other))
-
-    def _repr_pretty_(self, p, cycle):
-        """Pretty print path list"""
-        if cycle:
-            p.text("EnvPath(...)")
-        else:
-            with p.group(1, "EnvPath(\n[", "]\n)"):
-                for idx, item in enumerate(self):
-                    if idx:
-                        p.text(",")
-                        p.breakable()
-                    p.pretty(item)
-
-    def __add__(self, other):
-        if isinstance(other, EnvPath):
-            other = other._l
-        return EnvPath(self._l + other)
-
-    def __radd__(self, other):
-        if isinstance(other, EnvPath):
-            other = other._l
-        return EnvPath(other + self._l)
-
-    def add(self, data, front=False, replace=False):
-        """Add a value to this EnvPath,
-
-        path.add(data, front=bool, replace=bool) -> ensures that path contains data, with position determined by kwargs
-
-        Parameters
-        ----------
-        data : string or bytes or pathlib.Path
-            value to be added
-        front : bool
-            whether the value should be added to the front, will be
-            ignored if the data already exists in this EnvPath and
-            replace is False
-            Default : False
-        replace : bool
-            If True, the value will be removed and added to the
-            start or end(depending on the value of front)
-            Default : False
-
-        Returns
-        -------
-        None
-
-        """
-        data = self._prepare_path(data)
-        if data not in self._l:
-            self._l.insert(0 if front else len(self._l), data)
-        elif replace:
-            # https://stackoverflow.com/a/25251306/1621381
-            self._l = list(filter(lambda x: x != data, self._l))
-            self._l.insert(0 if front else len(self._l), data)
 
 
 class FlexibleFormatter(string.Formatter):
@@ -1333,40 +1191,6 @@ def ensure_string(x):
 def is_path(x):
     """This tests if something is a path."""
     return isinstance(x, pathlib.Path)
-
-
-def is_env_path(x):
-    """This tests if something is an environment path, ie a list of strings."""
-    return isinstance(x, EnvPath)
-
-
-def str_to_path(x):
-    """Converts a string to a path."""
-    if x is None or x == "":
-        return None
-    elif isinstance(x, str):
-        return pathlib.Path(x)
-    elif isinstance(x, pathlib.Path):
-        return x
-    elif isinstance(x, EnvPath) and len(x) == 1:
-        return pathlib.Path(x[0]) if x[0] else None
-    else:
-        raise TypeError(
-            f"Variable should be a pathlib.Path, str or single EnvPath type. {type(x)} given."
-        )
-
-
-def str_to_abs_path(x):
-    """Converts a string to an absolute path."""
-    return r.absolute() if (r := str_to_path(x)) is not None else r
-
-
-def str_to_env_path(x):
-    """Converts a string to an environment path, ie a list of strings,
-    splitting on the OS separator.
-    """
-    # splitting will be done implicitly in EnvPath's __init__
-    return EnvPath(x)
 
 
 def path_to_str(x):
