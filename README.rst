@@ -182,7 +182,7 @@ The xonsh shell is developed by a community of volunteers. There are a few ways 
 - Test xonsh with compiler, interpreter, optimizer and report upstream issues (e.g. `Nuitka <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_, `RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_).
 - Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_ (`src <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_).
 - `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
-- Spread the good word about xonsh in the world by sharing news and notes about xonsh.
+- Spread the good word about xonsh in the world.
 - Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
 
 We welcome new contributors!
