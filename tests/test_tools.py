@@ -10,11 +10,16 @@ import warnings
 import pytest
 
 from xonsh import __version__
+from xonsh.environ import (
+    EnvPath,
+    is_env_path,
+    str_to_env_path,
+    str_to_path,
+)
 from xonsh.parsers.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
-    EnvPath,
     all_permutations,
     always_false,
     always_true,
@@ -49,7 +54,6 @@ from xonsh.tools import (
     is_completion_mode,
     is_completions_display_value,
     is_dynamic_cwd_width,
-    is_env_path,
     is_float,
     is_int,
     is_int_as_str,
@@ -75,8 +79,6 @@ from xonsh.tools import (
     seq_to_upper_pathsep,
     set_to_pathsep,
     simple_random_choice,
-    str_to_env_path,
-    str_to_path,
     subexpr_before_unbalanced,
     subexpr_from_unbalanced,
     subproc_toks,

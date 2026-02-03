@@ -304,6 +304,28 @@ def test_events_on_envvar_called_in_right_order(xession, env):
     assert share == ["change"]
 
 
+def test_events_on_envvar_called_for_envpath(xession, env):
+    called_var_names = []
+    called_values = []
+    env["PATH"] = []
+
+    @xession.builtins.events.on_envvar_change
+    def handler(name, oldvalue, newvalue, **kwargs):
+        called_var_names[:] = called_var_names + [name]
+        called_values[:] = [(oldvalue, newvalue)]
+
+    env["PATH"] = ["/tmp1"]
+    assert called_values == [([], ["/tmp1"])]
+
+    env["PATH"].append("/tmp2")
+    assert called_values == [(["/tmp1"], ["/tmp1", "/tmp2"])]
+
+    env["PATH"].insert(0, "/tmp3")
+    assert called_values == [(["/tmp1", "/tmp2"], ["/tmp3", "/tmp1", "/tmp2"])]
+
+    assert called_var_names == ["PATH"] * 3
+
+
 def test_no_lines_columns():
     os.environ["LINES"] = "spam"
     os.environ["COLUMNS"] = "eggs"
