@@ -1,5 +1,13 @@
 # Xonsh Change Log
 
+## [0.22.3](https://github.com/xonsh/xonsh/compare/0.22.2...0.22.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* **executor:** Fixed issue with running script without ext and shebang ([#6091](https://github.com/xonsh/xonsh/issues/6091)) ([7ba7211](https://github.com/xonsh/xonsh/commit/7ba721170c0865d9fc7030d6cb33138059df1790))
+* **xontrib:** Fix xontrib list iter_paths to handle None spec and locations ([#6085](https://github.com/xonsh/xonsh/issues/6085)) ([262ee6c](https://github.com/xonsh/xonsh/commit/262ee6c9cab6df4a8b5ceb82a0c43d78d45d3d88))
+
 ## [0.22.2](https://github.com/xonsh/xonsh/compare/0.22.1...0.22.2) (2026-02-03)
 
 
