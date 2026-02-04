@@ -677,6 +677,7 @@ def test_auto_cd(xession, tmpdir):
 @pytest.mark.parametrize(
     "inp,exp",
     [
+        ["echo command", ["xonsh", "{file}", "--arg", "1"]],
         ["#!/bin/bash", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\n\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],

@@ -90,7 +90,7 @@ def parse_shebang_from_file(filepath):
             line = line.decode("utf-8", errors="replace").strip()
             if i == 0:
                 if not line.startswith("#!"):
-                    return None
+                    return ""
             shebang_parts.append(line.rstrip("\\").strip())
             if not line.endswith("\\"):
                 break
