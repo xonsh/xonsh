@@ -39,7 +39,8 @@ def test_transform(xession):
     assert transform_command("spam") == "egg"
     assert transform_command("egg") == "egg"
     assert transform_command("foo") == "foo"
-    
+
+
 def test_transform_returns_none_is_noop(xession):
     @xession.builtins.events.on_transform_command
     def forgetful(cmd, **_):
