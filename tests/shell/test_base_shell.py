@@ -39,6 +39,15 @@ def test_transform(xession):
     assert transform_command("spam") == "egg"
     assert transform_command("egg") == "egg"
     assert transform_command("foo") == "foo"
+    
+def test_transform_returns_none_is_noop(xession):
+    @xession.builtins.events.on_transform_command
+    def forgetful(cmd, **_):
+        if cmd == "ls":
+            return None  # forgot to return cmd
+
+    assert transform_command("ls") == "ls"
+    assert transform_command("echo 1") == "echo 1"
 
 
 @pytest.mark.parametrize(
