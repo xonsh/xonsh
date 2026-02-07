@@ -139,7 +139,13 @@ def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
     env = xsh.env or os_environ
-    if env.get("EXPAND_ENV_VARS", False):
+    if isinstance(s, pathlib.Path):
+        s = str(s)
+    elif isinstance(s, bytes):
+        s = decode_bytes(s)
+    expand_vars = env.get("EXPAND_ENV_VARS", False)
+    aggressive_expand = env.get("XONSH_ENV_EXPANDUSER", False)
+    if expand_vars and aggressive_expand:
         s = expandvars(s)
     if expand_user:
         # expand ~ according to Bash unquoted rules "Each variable assignment is
@@ -152,6 +158,8 @@ def expand_path(s, expand_user=True):
             s += os.pathsep.join(map(expanduser, post.split(os.pathsep)))
         else:
             s = expanduser(s)
+    if expand_vars and not aggressive_expand:
+        s = expandvars(s)
     return s
 
 
