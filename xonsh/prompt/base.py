@@ -358,8 +358,9 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                 time_format="%H:%M:%S",
                 localtime=_localtime,
                 last_return_code=lambda: XSH.env.get("LAST_RETURN_CODE", 0),
-                last_return_code_if_nonzero=lambda: XSH.env.get("LAST_RETURN_CODE", 0)
-                or None,
+                last_return_code_if_nonzero=lambda: (
+                    XSH.env.get("LAST_RETURN_CODE", 0) or None
+                ),
             )
         )
         for val in self.get_fields(gitstatus):
