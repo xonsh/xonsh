@@ -40,7 +40,7 @@ the main approaches and their advantages.
       - ●
       - ◯
       -
-    * - PyPi package
+    * - Package
       -
       -
       - ●
@@ -88,12 +88,12 @@ Install xonsh with Micromamba:
 Learn more: `Mamba installer <install_mamba.html>`_.
 
 
-PyPi package
+Package
 ========================
 
-You can install xonsh package from PyPi using an existing installation of ``pip``, ``pipx``, ``rye``, etc.
-
 **pip:**
+
+You can install xonsh package from PyPi using an existing installation of ``pip``, ``pipx``, ``rye``, etc.
 
 .. code-block:: console
 
@@ -106,6 +106,11 @@ Pip can also install the most recent xonsh source code from the
 
     pip install 'https://github.com/xonsh/xonsh/archive/main.zip#egg=xonsh[full]'
 
+**mamba:**
+
+.. code-block:: console
+
+    mamba install xonsh
 
 **conda:**
 
