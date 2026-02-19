@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.22.5](https://github.com/xonsh/xonsh/compare/0.22.4...0.22.5) (2026-02-19)
+
+
+### Bug Fixes
+
+* **completion:** Fix os.path.commonprefix deprecation warning in python3.15 ([#6102](https://github.com/xonsh/xonsh/issues/6102)) ([2b5b2bb](https://github.com/xonsh/xonsh/commit/2b5b2bb226f8d007c85e07a3c945cf78332debba))
+
 ## [0.22.4](https://github.com/xonsh/xonsh/compare/0.22.3...0.22.4) (2026-02-16)
 
 
