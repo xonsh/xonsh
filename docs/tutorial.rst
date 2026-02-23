@@ -49,8 +49,7 @@ simple:
     @ 1 + 1
     2
 
-Since this is just Python, we are able to import modules, print values,
-and use other built-in Python functionality:
+We are able to import modules, print values, and use other built-in Python functionality:
 
 .. code-block:: xonshcon
 
