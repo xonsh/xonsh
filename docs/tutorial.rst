@@ -140,9 +140,9 @@ variable in Python.  The same is true for deleting them too.
 
 .. code-block:: xonshcon
 
-    @ $GOAL = 'Become the Lord of the Files'
+    @ $GOAL = 'Master the shell'
     @ print($GOAL)
-    Become the Lord of the Files
+    Master the shell
     @ del $GOAL
 
     @ $NUM = "123"
