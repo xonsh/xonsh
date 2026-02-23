@@ -96,8 +96,7 @@ Flow control, of course, includes loops.
     3 s
     4 h
 
-We can also define and call functions and classes. I'll mostly spare you the
-details, but this *is* pretty cool:
+We can also define and call functions and classes:
 
 .. code-block:: xonshcon
 
@@ -108,7 +107,6 @@ details, but this *is* pretty cool:
     'xonsh'
 
 For easier indentation, Shift+Tab will enter 4 spaces.
-And that about wraps it up for the basics section.  It is just like Python.
 
 Xonsh Session Interface
 =======================
