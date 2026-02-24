@@ -15,6 +15,7 @@ from xonsh.pytest.tools import (
     nodes_equal,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
+    skip_if_pre_3_15,
 )
 
 
@@ -1541,104 +1542,241 @@ def test_import_x(check_stmts):
     check_stmts("import x", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_import_x(check_stmts):
+    check_stmts("lazy import x", False)
+
+
 def test_import_xy(check_stmts):
     check_stmts("import x.y", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_import_xy(check_stmts):
+    check_stmts("lazy import x.y", False)
 
 
 def test_import_xyz(check_stmts):
     check_stmts("import x.y.z", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_import_xyz(check_stmts):
+    check_stmts("lazy import x.y.z", False)
+
+
 def test_from_x_import_y(check_stmts):
     check_stmts("from x import y", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_x_import_y(check_stmts):
+    check_stmts("lazy from x import y", False)
 
 
 def test_from_dot_import_y(check_stmts):
     check_stmts("from . import y", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_from_dot_import_y(check_stmts):
+    check_stmts("lazy from . import y", False)
+
+
 def test_from_dotx_import_y(check_stmts):
     check_stmts("from .x import y", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_dotx_import_y(check_stmts):
+    check_stmts("lazy from .x import y", False)
 
 
 def test_from_dotdotx_import_y(check_stmts):
     check_stmts("from ..x import y", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_from_dotdotx_import_y(check_stmts):
+    check_stmts("lazy from ..x import y", False)
+
+
 def test_from_dotdotdotx_import_y(check_stmts):
     check_stmts("from ...x import y", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_dotdotdotx_import_y(check_stmts):
+    check_stmts("lazy from ...x import y", False)
 
 
 def test_from_dotdotdotdotx_import_y(check_stmts):
     check_stmts("from ....x import y", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_from_dotdotdotdotx_import_y(check_stmts):
+    check_stmts("lazy from ....x import y", False)
+
+
 def test_from_import_x_y(check_stmts):
     check_stmts("import x, y", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_import_x_y(check_stmts):
+    check_stmts("lazy import x, y", False)
 
 
 def test_from_import_x_y_z(check_stmts):
     check_stmts("import x, y, z", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_from_import_x_y_z(check_stmts):
+    check_stmts("lazy import x, y, z", False)
+
+
 def test_from_dot_import_x_y(check_stmts):
     check_stmts("from . import x, y", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_dot_import_x_y(check_stmts):
+    check_stmts("lazy from . import x, y", False)
 
 
 def test_from_dot_import_x_y_z(check_stmts):
     check_stmts("from . import x, y, z", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_from_dot_import_x_y_z(check_stmts):
+    check_stmts("lazy from . import x, y, z", False)
+
+
 def test_from_dot_import_group_x_y(check_stmts):
     check_stmts("from . import (x, y)", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_dot_import_group_x_y(check_stmts):
+    check_stmts("lazy from . import (x, y)", False)
 
 
 def test_import_x_as_y(check_stmts):
     check_stmts("import x as y", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_import_x_as_y(check_stmts):
+    check_stmts("lazy import x as y", False)
+
+
 def test_import_xy_as_z(check_stmts):
     check_stmts("import x.y as z", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_import_xy_as_z(check_stmts):
+    check_stmts("lazy import x.y as z", False)
 
 
 def test_import_x_y_as_z(check_stmts):
     check_stmts("import x, y as z", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_import_x_y_as_z(check_stmts):
+    check_stmts("lazy import x, y as z", False)
+
+
 def test_import_x_as_y_z(check_stmts):
     check_stmts("import x as y, z", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_import_x_as_y_z(check_stmts):
+    check_stmts("lazy import x as y, z", False)
 
 
 def test_import_x_as_y_z_as_a(check_stmts):
     check_stmts("import x as y, z as a", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_import_x_as_y_z_as_a(check_stmts):
+    check_stmts("lazy import x as y, z as a", False)
+
+
 def test_from_dot_import_x_as_y(check_stmts):
     check_stmts("from . import x as y", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_dot_import_x_as_y(check_stmts):
+    check_stmts("lazy from . import x as y", False)
 
 
 def test_from_x_import_star(check_stmts):
     check_stmts("from x import *", False)
 
 
+@skip_if_pre_3_15
+def test_bad_lazy_from_x_import_star(check_stmts):
+    with pytest.raises(SyntaxError):
+        check_stmts("lazy from x import *", False)
+
+
+@skip_if_pre_3_15
+def test_bad_lazy_from_future_import(check_stmts):
+    with pytest.raises(SyntaxError):
+        check_stmts("lazy from __future__ import annotations")
+
+
 def test_from_x_import_group_x_y_z(check_stmts):
     check_stmts("from x import (x, y, z)", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_x_import_group_x_y_z(check_stmts):
+    check_stmts("lazy from x import (x, y, z)", False)
 
 
 def test_from_x_import_group_x_y_z_comma(check_stmts):
     check_stmts("from x import (x, y, z,)", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_from_x_import_group_x_y_z_comma(check_stmts):
+    check_stmts("lazy from x import (x, y, z,)", False)
+
+
 def test_from_x_import_y_as_z(check_stmts):
     check_stmts("from x import y as z", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_x_import_y_as_z(check_stmts):
+    check_stmts("lazy from x import y as z", False)
 
 
 def test_from_x_import_y_as_z_a_as_b(check_stmts):
     check_stmts("from x import y as z, a as b", False)
 
 
+@skip_if_pre_3_15
+def test_lazy_from_x_import_y_as_z_a_as_b(check_stmts):
+    check_stmts("lazy from x import y as z, a as b", False)
+
+
 def test_from_dotx_import_y_as_z_a_as_b_c_as_d(check_stmts):
     check_stmts("from .x import y as z, a as b, c as d", False)
+
+
+@skip_if_pre_3_15
+def test_lazy_from_dotx_import_y_as_z_a_as_b_c_as_d(check_stmts):
+    check_stmts("lazy from .x import y as z, a as b, c as d", False)
 
 
 def test_continue(check_stmts):

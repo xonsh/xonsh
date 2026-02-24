@@ -10,6 +10,8 @@ from xonsh.platform import PYTHON_VERSION_INFO
 def Parser():
     if os.environ.get("XONSH_RD_PARSER"):
         from xonsh.parsers.rd_parser import Parser as p
+    elif PYTHON_VERSION_INFO >= (3, 15):
+        from xonsh.parsers.v315 import Parser as p
     elif PYTHON_VERSION_INFO >= (3, 13):
         from xonsh.parsers.v313 import Parser as p
     elif PYTHON_VERSION_INFO > (3, 10):

@@ -51,6 +51,10 @@ skip_if_pre_3_10 = pytest.mark.skipif(
     VER_FULL < (3, 10), reason="Python >= 3.10 feature"
 )
 
+skip_if_pre_3_15 = pytest.mark.skipif(
+    VER_FULL < (3, 15), reason="Python >= 3.15 feature"
+)
+
 
 def skip_if_not_has(exe: str):
     has_exe = shutil.which(exe)
