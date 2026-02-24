@@ -8,19 +8,7 @@ handle
 - match statement
 """
 
-from ast import match_case
-from ast import parse as pyparse
-
 from xonsh.parsers import ast
-from xonsh.parsers.ast import xonsh_call
-from xonsh.parsers.base import (
-    RE_STRINGPREFIX,
-    del_ctx,
-    ensure_has_elts,
-    lopen_loc,
-    store_ctx,
-)
-from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.parsers.v313 import Parser as ThreeThirteenParser
 
 
@@ -34,7 +22,9 @@ class Parser(ThreeThirteenParser):
         """
         if len(p) == 3:
             if p[1] != "lazy":
-                self._set_error(f"'{p[1]}' is an invalid prefix before 'import', expected 'lazy'")
+                self._set_error(
+                    f"'{p[1]}' is an invalid prefix before 'import', expected 'lazy'"
+                )
             node = p[2]
             lazy = 1
             if isinstance(node, ast.ImportFrom):
