@@ -37,3 +37,43 @@ class Parser(ThreeThirteenParser):
             lazy = 0
         node.is_lazy = lazy
         p[0] = node
+    def p_dictorsetmaker_comp(self, p):
+        """
+        dictorsetmaker : item comp_for
+                       | test_or_star_expr comp_for
+        """
+        p1 = p[1]
+        comps = p[2].get("comps", [])
+
+        if isinstance(p1, list) and len(p1) == 2:
+            if p1[0] is None:
+                p[0] = ast.DictComp(
+                    key=p1[1],
+                    generators=comps,
+                    lineno=self.lineno,
+                    col_offset=self.col,
+                )
+            else:
+                p[0] = ast.DictComp(
+                    key=p1[0],
+                    value=p1[1],
+                    generators=comps,
+                    lineno=self.lineno,
+                    col_offset=self.col,
+                )
+        else:
+            p[0] = ast.SetComp(
+                elt=p1, generators=comps, lineno=self.lineno, col_offset=self.col
+            )
+    def p_argument_test_or_star(self, p):
+        """argument : star_expr comp_for
+                    | test_or_star_expr"""
+        if len(p) == 3:
+            p[0] = ast.GeneratorExp(
+                elt=p[1],
+                generators=p[2].get("comps", []),
+                lineno=self.lineno,
+                col_offset=self.col,
+            )
+        else:
+            p[0] = p[1]

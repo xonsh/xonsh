@@ -874,6 +874,11 @@ def test_genexpr(check_ast):
     check_ast('(x for x in "mom")')
 
 
+@skip_if_pre_3_15
+def test_unpack_in_genexpr(check_ast):
+    check_ast('(*x for x in [[1, 2], [3, 4]])')
+
+
 def test_genexpr_if(check_ast):
     check_ast('(x for x in "mom" if True)')
 
@@ -896,6 +901,11 @@ def test_genexpr_if_genexpr_if(check_ast):
 
 def test_listcomp(check_ast):
     check_ast('[x for x in "mom"]')
+
+
+@skip_if_pre_3_15
+def test_unpack_in_listcomp(check_ast):
+    check_ast('[*x for x in [[1, 2], [3, 4]]]')
 
 
 def test_listcomp_if(check_ast):
@@ -926,6 +936,11 @@ def test_setcomp(check_ast):
     check_ast('{x for x in "mom"}')
 
 
+@skip_if_pre_3_15
+def test_unpack_in_setcomp(check_ast):
+    check_ast('{*x for x in [[1, 2], [3, 4]]}')
+
+
 def test_setcomp_if(check_ast):
     check_ast('{x for x in "mom" if True}')
 
@@ -948,6 +963,11 @@ def test_setcomp_if_setcomp_if(check_ast):
 
 def test_dictcomp(check_ast):
     check_ast('{x: x for x in "mom"}')
+
+
+@skip_if_pre_3_15
+def test_unpack_in_dictcomp(check_ast):
+    check_ast('{**d for d in [{1: 2}, {3: 4}]}')
 
 
 def test_dictcomp_unpack_parens(check_ast):
@@ -1241,6 +1261,11 @@ def test_call_alot_next(check_ast):
 
 def test_call_alot_next_next(check_ast):
     check_ast("x(x=1, *args, y=42, **kwargs)", False)
+
+
+@skip_if_pre_3_15
+def test_call_unpack_in_genexpr(check_ast):
+    check_ast("sum(*x for x in [[1, 2], [3, 4]])")
 
 
 def test_getattr(check_ast):
