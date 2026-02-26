@@ -114,7 +114,7 @@ def single_symbolic_arg(arg, old=None):
 def valid_numeric_argument(x):
     try:
         return len(x) == 3 and all(0 <= int(i) <= 7 for i in x)
-    except:
+    except Exception:
         return False
 
 
@@ -156,7 +156,7 @@ def umask(args, stdin, stdout, stderr):
                 for subarg in arg.split(","):
                     try:
                         cur = single_symbolic_arg(subarg, cur)
-                    except:
+                    except Exception:
                         print(
                             f"error: could not parse argument: {subarg!r}", file=stderr
                         )

@@ -314,6 +314,6 @@ def ulimit(args, stdin, stdout, stderr):
         for fn, args in actions:
             fn(stdout=stdout, long=long, **args)
         return 0
-    except:
+    except Exception:
         print_exception()
         return 2
