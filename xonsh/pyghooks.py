@@ -1515,7 +1515,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
     -----
     * implementation follows one authority:
       https://github.com/coreutils/coreutils/blob/master/src/ls.c#L4879
-    * except Exception:
+    * except :
 
       1. does not return 'mi'.  That's the color ls uses to show the (missing) *target* of a symlink
          (in ls -l, not ls).
