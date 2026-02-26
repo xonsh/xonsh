@@ -1,5 +1,13 @@
 # Xonsh Change Log
 
+## [0.22.5](https://github.com/xonsh/xonsh/compare/0.22.4...0.22.5) (2026-02-26)
+
+
+### Bug Fixes
+
+* **completion:** Fix os.path.commonprefix deprecation warning in python3.15 ([#6102](https://github.com/xonsh/xonsh/issues/6102)) ([2b5b2bb](https://github.com/xonsh/xonsh/commit/2b5b2bb226f8d007c85e07a3c945cf78332debba))
+* replace 12 bare except clauses with except Exception ([#6110](https://github.com/xonsh/xonsh/issues/6110)) ([54b311c](https://github.com/xonsh/xonsh/commit/54b311c454eb0e5e1473f16a6d62870ba2634cd2))
+
 ## [0.22.4](https://github.com/xonsh/xonsh/compare/0.22.3...0.22.4) (2026-02-16)
 
 
