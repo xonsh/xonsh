@@ -1,6 +1,7 @@
 """Xonsh AST tests."""
 
 import ast as pyast
+import sys
 
 import pytest
 
@@ -95,6 +96,33 @@ def test_multilline_no_transform(xonsh_execer_parse):
     if not kw and b:
         pass
 """,
+        pytest.param(
+            """def f(x, /):
+    if not x:
+        return 0
+""",
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 8), reason="position-only args require Python 3.8+"
+            ),
+        ),
+        pytest.param(
+            """def f(x, /, y):
+    if not x or y:
+        return 0
+""",
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 8), reason="position-only args require Python 3.8+"
+            ),
+        ),
+        pytest.param(
+            """async def f(x, /):
+    if not x:
+        return 0
+""",
+            marks=pytest.mark.skipif(
+                sys.version_info < (3, 8), reason="position-only args require Python 3.8+"
+            ),
+        ),
         """import os
 path = '/path/to/wakka'
 paths = []

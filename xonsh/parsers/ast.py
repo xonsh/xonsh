@@ -628,7 +628,7 @@ class CtxAwareTransformer(NodeTransformer):
         self.ctxadd(node.name)
         self.contexts.append(set())
         args = node.args
-        argchain = [args.args, args.kwonlyargs]
+        argchain = [args.posonlyargs, args.args, args.kwonlyargs]
         if args.vararg is not None:
             argchain.append((args.vararg,))
         if args.kwarg is not None:
@@ -637,6 +637,8 @@ class CtxAwareTransformer(NodeTransformer):
         self.generic_visit(node)
         self.contexts.pop()
         return node
+    
+    visit_AsyncFunctionDef = visit_FunctionDef
 
     def visit_ClassDef(self, node):
         """Handle visiting a class definition."""
