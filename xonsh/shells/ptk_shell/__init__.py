@@ -231,7 +231,7 @@ class PromptToolkitShell(BaseShell):
         )
         # Goes at the end, since _MergedKeyBindings objects do not have
         # an add() function, which is necessary for on_ptk_create events
-        self.key_bindings = merge_key_bindings(
+        self._key_bindings_merge = merge_key_bindings(
             [self.key_bindings, load_emacs_shift_selection_bindings()]
         )
 
@@ -380,7 +380,7 @@ class PromptToolkitShell(BaseShell):
             "prompt_continuation": self.continuation_tokens,
             "enable_history_search": enable_history_search,
             "reserve_space_for_menu": menu_rows,
-            "key_bindings": self.key_bindings,
+            "key_bindings": self._key_bindings_merge,
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
             "include_default_pygments_style": False,
