@@ -305,10 +305,19 @@ def find_next_break(line, mincol=0, lexer=None):
             if _is_not_lparen_and_rparen(lparens, tok):
                 lparens.pop()
             else:
-                maxcol = tok.lexpos + mincol + 1
+                # For multiline strings, tok.lexpos is relative to the current line.
+                # We need to add the offset of all previous lines.
+                tok_offset = 0
+                if tok.lineno > 1:
+                    tok_offset = _offset_from_prev_lines(line, tok.lineno)
+                maxcol = tok_offset + tok.lexpos + mincol + 1
                 break
         elif tok.type == "ERRORTOKEN" and ")" in tok.value:
-            maxcol = tok.lexpos + mincol + 1
+            # Samilar fix for ERRORTOKEN
+            tok_offset = 0
+            if tok.lineno > 1:
+                tok_offset = _offset_from_prev_lines(line, tok.lineno)
+            maxcol = tok_offset + tok.lexpos + mincol + 1
             break
         elif tok.type == "BANG":
             maxcol = mincol + len(line) + 1
@@ -316,8 +325,17 @@ def find_next_break(line, mincol=0, lexer=None):
     return maxcol
 
 
-def _offset_from_prev_lines(line, last):
-    lines = line.splitlines(keepends=True)[:last]
+def _offset_from_prev_lines(line, lineno):
+    """Calculate the character offset to the start of a given line number.
+
+    Args:
+        line: The full string
+        lineno: 1-based line number. Returns offset to the start of this line.
+
+    Returns:
+        The sum of lengths of all lines before lineno.
+    """
+    lines = line.splitlines(keepends=True)[: lineno - 1]
     return sum(map(len, lines))
 
 
@@ -342,7 +360,11 @@ def subproc_toks(
     saw_macro = False
     end_offset = 0
     for tok in lexer:
-        pos = tok.lexpos
+        # Calculate absolute position in line (tok.lexpos is line-relative for multiline)
+        if tok.lineno > 1:
+            pos = _offset_from_prev_lines(line, tok.lineno) + tok.lexpos
+        else:
+            pos = tok.lexpos
         if tok.type not in END_TOK_TYPES and pos >= maxcol:
             break
         if tok.type == "BANG":
@@ -413,10 +435,21 @@ def subproc_toks(
         return  # handle comment lines
     elif saw_macro or greedy:
         end_offset = len(toks[-1].value.rstrip()) + 1
+    # Handle multiline cases - lexpos is relative to the line, so we need
+    # to add offsets to get absolute positions in the full string.
+    # _offset_from_prev_lines(line, lineno) returns the offset to the start
+    # of that line (sum of lengths of all previous lines).
+    beg_offset = 0
+    if toks[0].lineno > 1:
+        # Convert line-relative lexpos to absolute position
+        beg_offset = _offset_from_prev_lines(line, toks[0].lineno)
     if toks[0].lineno != toks[-1].lineno:
-        # handle multiline cases
+        # Original multiline case handling
         end_offset += _offset_from_prev_lines(line, toks[-1].lineno)
-    beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
+    elif toks[-1].lineno > 1:
+        # Both tokens on the same line, but that line is not line 1
+        end_offset += _offset_from_prev_lines(line, toks[-1].lineno)
+    beg, end = toks[0].lexpos + beg_offset, (toks[-1].lexpos + end_offset)
     end = len(line[:end].rstrip())
     rtn = "![" + line[beg:end] + "]"
     if returnline:
@@ -484,8 +517,17 @@ def get_logical_line(lines, idx):
     n = 1
     nlines = len(lines)
     linecont = get_line_continuation()
+    # Go backward for explicit line continuations
     while idx > 0 and lines[idx - 1].endswith(linecont):
         idx -= 1
+    # Also go backward if we're in the middle of an unclosed triple-quoted string
+    while idx > 0:
+        # Check if the combined lines up to idx have unclosed triple quotes
+        combined = "\n".join(lines[:idx])
+        if _have_open_triple_quotes(combined):
+            idx -= 1
+        else:
+            break
     start = idx
     line = lines[idx]
     open_triple = _have_open_triple_quotes(line)
