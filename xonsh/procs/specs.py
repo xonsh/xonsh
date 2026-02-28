@@ -155,12 +155,12 @@ def _REDIR_REGEX():
 
 @xl.lazyobject
 def _MODES():
-    return {">>": "a", ">": "w", "<": "r"}
+    return {">>": "ab", ">": "wb", "<": "r"}
 
 
 @xl.lazyobject
 def _WRITE_MODES():
-    return frozenset({"w", "a"})
+    return frozenset({"wb", "ab"})
 
 
 @xl.lazyobject
@@ -957,9 +957,9 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = True
         r, w = xli.pty.openpty() if use_tty else os.pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = safe_open(w, "w")
+        last.stdout = safe_open(w, "wb")
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = safe_open(r, "r")
+        last.captured_stdout = safe_open(r, "rb")
     # set standard error
     if last.stderr is not None:
         pass
@@ -967,8 +967,8 @@ def _make_last_spec_captured(last: SubprocSpec):
         pass
     elif captured == "object":
         r, w = os.pipe()
-        last.stderr = safe_open(w, "w")
-        last.captured_stderr = safe_open(r, "r")
+        last.stderr = safe_open(w, "wb")
+        last.captured_stderr = safe_open(r, "rb")
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
@@ -978,9 +978,9 @@ def _make_last_spec_captured(last: SubprocSpec):
     else:
         r, w = xli.pty.openpty() if use_tty else os.pipe()
         _safe_pipe_properties(w, use_tty=use_tty)
-        last.stderr = safe_open(w, "w")
+        last.stderr = safe_open(w, "wb")
         _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stderr = safe_open(r, "r")
+        last.captured_stderr = safe_open(r, "rb")
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.
