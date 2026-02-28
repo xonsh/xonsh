@@ -102,6 +102,9 @@ This page provides xonsh equivalents for common patterns in Bash.
     * - ``$$``
       - ``os.getpid()``
       - Get PID of the current shell.
+    * - ``$!``
+      - ``xonsh.api.jobs.get_last_pid()``
+      - Get the PID of the last background job.
     * - ``$?``
       - ``@.lastcmd.rtn``
       - Returns the exit code, or status, of the previous command.
