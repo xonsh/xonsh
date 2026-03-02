@@ -245,8 +245,9 @@ def subproc_captured_inject(*cmds, envs=None):
     import xonsh.procs.specs
 
     o = xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
+    o = o if isinstance(o, list) else o.splitlines()
     toks = []
-    for line in o.splitlines():
+    for line in o:
         line = line.rstrip(os.linesep)
         toks.extend(XSH.execer.parser.lexer.split(line))
     return toks

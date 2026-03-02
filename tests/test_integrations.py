@@ -438,6 +438,16 @@ echo @$(which ls)
         "spam spam sausage spam\n",
         0,
     ),
+    (
+        """
+$XONSH_SUBPROC_OUTPUT_FORMAT='list_lines'        
+aliases['ls'] = 'spam spam sausage spam'
+
+echo @$(which ls)
+""",
+        "spam spam sausage spam\n",
+        0,
+    ),
     #
     # test @$() without leading/trailig WS
     #
