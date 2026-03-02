@@ -440,7 +440,7 @@ echo @$(which ls)
     ),
     (
         """
-$THREAD_SUBPROCS = False        
+$THREAD_SUBPROCS = False
 aliases['ls'] = 'spam spam sausage spam'
 
 echo @$(which ls)
@@ -450,7 +450,7 @@ echo @$(which ls)
     ),
     (
         """
-$XONSH_SUBPROC_OUTPUT_FORMAT = 'list_lines'        
+$XONSH_SUBPROC_OUTPUT_FORMAT = 'list_lines'
 aliases['ls'] = 'spam spam sausage spam'
 
 echo @$(which ls)
