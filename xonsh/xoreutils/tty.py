@@ -22,7 +22,7 @@ def tty(args, stdin, stdout, stderr):
         return 2
     try:
         fd = stdin.fileno()
-    except:
+    except Exception:
         fd = sys.stdin.fileno()
     if not os.isatty(fd):
         if not silent:
@@ -31,7 +31,7 @@ def tty(args, stdin, stdout, stderr):
     if not silent:
         try:
             print(os.ttyname(fd), file=stdout)
-        except:
+        except Exception:
             return 3
     return 0
 
