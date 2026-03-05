@@ -55,8 +55,7 @@ We are able to import modules, print values, and use other built-in Python funct
 
     @ import sys
     @ print(sys.version)
-    3.4.2 |Continuum Analytics, Inc.| (default, Oct 21 2014, 17:16:37)
-    [GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]
+    3.11.14 | packaged by conda-forge
 
 
 We can also create and use literal data types, such as ints, floats, lists,
