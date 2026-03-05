@@ -306,7 +306,7 @@ class CommandsCache(cabc.Mapping):
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it exists."""
-        cached = pathbasename(name) if os.pathsep in name else name
+        cached = pathbasename(name) if os.sep in name else name
         keys = self.get_possible_names(cached)
         return next((k for k in keys if k in self._cmds_cache), name)
 
@@ -410,6 +410,8 @@ class CommandsCache(cabc.Mapping):
         """Return the predictor whether a command list is able to be run on a
         background thread, rather than the main thread.
         """
+        if (link := self.resolve_symlink(cmd0)):
+            cmd0 = link
         name = self.cached_name(cmd0)
         predictors = self.threadable_predictors
         if name not in predictors:

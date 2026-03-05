@@ -15,9 +15,11 @@ from xonsh.commands_cache import (
     predict_false,
     predict_shell,
     predict_true,
+    default_threadable_predictors,
 )
 from xonsh.platform import ON_WINDOWS
 from xonsh.pytest.tools import skip_if_on_windows
+from pathlib import Path
 
 PATHEXT_ENV = {"PATHEXT": [".COM", ".EXE", ".BAT"]}
 
@@ -381,3 +383,21 @@ def test_caseinsdict_copy():
     actual = initial.copy()
     assert actual == initial
     assert id(actual) != id(initial)
+
+
+@skip_if_on_windows
+def test_cached_name(xession):
+    cc = xession.commands_cache
+    assert cc.cached_name('/bin/bash') == 'bash'
+
+
+@skip_if_on_windows
+def test_symlink_predict_threadable(xession, tmpdir_factory):
+    temp_dir = Path(tmpdir_factory.mktemp("test_symlink_predict_threadable"))
+    bash_path = Path(temp_dir) / "bash"
+    bash_path.write_bytes(b"ncurses/libgpm/isatty/tcgetattr/tcsetattr")  # Bytes that are related to interactive behavior from cc.default_predictor_readbin
+    symlink_path = Path(temp_dir) / "maybebash"
+    os.symlink(bash_path, symlink_path)
+    default_predictors = default_threadable_predictors()
+    cc = xession.commands_cache
+    assert cc.get_predictor_threadable(str(symlink_path)) == default_predictors["bash"]
