@@ -1,5 +1,21 @@
 # Xonsh Change Log
 
+## [0.22.5](https://github.com/xonsh/xonsh/compare/0.22.4...0.22.5) (2026-03-05)
+
+
+### Features
+
+* Added useful command decorators: `[@lines](https://github.com/lines)`, `[@json](https://github.com/json)`, `[@jsonl](https://github.com/jsonl)`, `[@yaml](https://github.com/yaml)` ([#6114](https://github.com/xonsh/xonsh/issues/6114)) ([0f7124e](https://github.com/xonsh/xonsh/commit/0f7124e75751c9b20bc116e206aa19967f538b40))
+
+
+### Bug Fixes
+
+* **completion:** Fix os.path.commonprefix deprecation warning in python3.15 ([#6102](https://github.com/xonsh/xonsh/issues/6102)) ([2b5b2bb](https://github.com/xonsh/xonsh/commit/2b5b2bb226f8d007c85e07a3c945cf78332debba))
+* Increase `@$()` stability and now it is also working in case of `$THREAD_SUBPROCS=False` ([#6112](https://github.com/xonsh/xonsh/issues/6112)) ([a3ac036](https://github.com/xonsh/xonsh/commit/a3ac036171a5f45a400c2695aa2b62d9e01b5dfe))
+* **predictor:** Fix predict_threadable to properly handle symlinks, especially on NixOS ([#6115](https://github.com/xonsh/xonsh/issues/6115)) ([bc01b04](https://github.com/xonsh/xonsh/commit/bc01b04c87a5140a7205677597c78f9a857677c2))
+* **prompt:** Keep original key_bindings in prompt-toolkit shell to easy add new key bindings during session ([#6093](https://github.com/xonsh/xonsh/issues/6093)) ([e9b0aea](https://github.com/xonsh/xonsh/commit/e9b0aeaca8820dafe59fcaced2cc33534f3768e6))
+* replace 12 bare except clauses with except Exception ([#6110](https://github.com/xonsh/xonsh/issues/6110)) ([54b311c](https://github.com/xonsh/xonsh/commit/54b311c454eb0e5e1473f16a6d62870ba2634cd2))
+
 ## [0.22.4](https://github.com/xonsh/xonsh/compare/0.22.3...0.22.4) (2026-02-16)
 
 
