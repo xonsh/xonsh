@@ -386,9 +386,10 @@ def test_caseinsdict_copy():
 
 
 @skip_if_on_windows
-def test_cached_name(xession):
-    cc = xession.commands_cache
-    assert cc.cached_name("/bin/bash") == "bash"
+def test_cached_name():
+    cache = CommandsCache({"PATH": ['/bin']})
+    cache._cmds_cache['bash'] = ('/bin/bash', None)
+    assert cache.cached_name("/path/to/bash") == "bash"
 
 
 @skip_if_on_windows
