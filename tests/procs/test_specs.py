@@ -556,6 +556,7 @@ def test_partial_args_from_classmethod(xession):
     out = run_subproc([["alias_with_partial_args"]], captured="stdout")
     assert out == "ok"
 
+
 def test_alias_return_command_alone(xession):
     @xession.aliases.register("wakka")
     @xession.aliases.return_command
@@ -569,12 +570,14 @@ def test_alias_return_command_alone(xession):
     assert spec.cmd == ["echo"]
     assert spec.alias_name == "wakka"
 
+
 @pytest.mark.parametrize("ret", [None, 1, [], False])
 def test_alias_return_command_wrong_return(xession, ret):
     @xession.aliases.register
     @xession.aliases.return_command
     def _nop():
         return ret
+
     with pytest.raises(ValueError):
         cmds_to_specs([["nop"]], captured="object")[-1]
 
