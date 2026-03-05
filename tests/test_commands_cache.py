@@ -255,7 +255,9 @@ def test_nixos_coreutils(tmp_path):
     cat = path / "cat"
 
     path.mkdir()
-    coreutils.write_bytes(b"Binary with isatty, tcgetattr, tcsetattr to have threadable=False in case of binary scan.")
+    coreutils.write_bytes(
+        b"Binary with isatty, tcgetattr, tcsetattr to have threadable=False in case of binary scan."
+    )
     myecho.symlink_to(echo2)
     echo2.symlink_to(echo3)
     echo3.symlink_to(coreutils)
@@ -266,14 +268,17 @@ def test_nixos_coreutils(tmp_path):
         current_permissions = toolpath.stat().st_mode
         toolpath.chmod(current_permissions | 0o111)
 
-
     cache = CommandsCache({"PATH": [path]})
     sys.path.append(str(path))
     cache.update_cache()
 
     assert cache.predict_threadable([str(myecho), "1"]) is True  # from coreutils fix
-    assert cache.predict_threadable([str(cat), "file"]) is False  # from default_threadable_predictors
-    assert cache.predict_threadable(["yes"]) is False  # from default_threadable_predictors
+    assert (
+        cache.predict_threadable([str(cat), "file"]) is False
+    )  # from default_threadable_predictors
+    assert (
+        cache.predict_threadable(["yes"]) is False
+    )  # from default_threadable_predictors
 
 
 def test_executables_in(xession):

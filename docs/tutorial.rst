@@ -1689,10 +1689,10 @@ In xonsh you can decorate the command to transform output into desired object:
 
 	@ $(@lines ls /)
 	['/bin', '/etc', '/home']
-	
+
 	@ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
 	main
-	
+
 	@ $(@jsonl echo '{"a":1}\n{"b":2}')
 	[{'a': 1}, {'b': 2}]
 
