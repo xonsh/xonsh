@@ -233,8 +233,8 @@
 
 <span unselectable-text="@ "></span>p<span style="color: lightblue;">'/etc/passwd'</span>.read_text().find(<span style="color: lightblue;">'usr'</span>)
 
-<span unselectable-text="@ "></span><b>xontrib</b> load dalias
-<span unselectable-text="  "></span><span style="color: lightgreen;">$(<span style="color: lightsalmon;">@json</span> podman ps --format json)</span>[<span style="color: lightblue;">'ID'</span>]
+<span unselectable-text="@ "></span>id = <span style="color: lightgreen;">$(<span style="color: lightsalmon;">@json</span> podman ps --format json)</span>[<span style="color: lightblue;">'ID'</span>]
+<span unselectable-text="  "></span>cfg = <span style="color: lightgreen;">$(<span style="color: lightsalmon;">@yaml</span> cat config.yaml)</span>
 </pre>
 
 
