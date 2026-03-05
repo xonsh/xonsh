@@ -410,7 +410,7 @@ class CommandsCache(cabc.Mapping):
         """Return the predictor whether a command list is able to be run on a
         background thread, rather than the main thread.
         """
-        if (link := self.resolve_symlink(cmd0)):
+        if link := self.resolve_symlink(cmd0):
             cmd0 = link
         name = self.cached_name(cmd0)
         predictors = self.threadable_predictors
