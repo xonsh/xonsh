@@ -73,7 +73,7 @@ xonsh
             def nudf(cmd):
                 return @.imp.pandas.DataFrame(
                   @.imp.json.loads(
-                  $(nu -c @(cmd+'| to json'))))
+                    $(nu -c @(cmd+'| to json'))))
             nudf!(ls -la)
 
             aliases['ai'] = 'ollama run llama3'
