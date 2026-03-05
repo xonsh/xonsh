@@ -1137,7 +1137,7 @@ def make_default_aliases():
             "Command decorator. Parses JSON and returns JSON object.",
         ),
         "@jsonl": SpecAttrDecoratorAlias(
-            {"output_format": lambda lines: [XSH.imp.json.loads(l) for l in lines]},
+            {"output_format": lambda lines: [XSH.imp.json.loads(lj) for lj in lines]},
             "Command decorator. Parses JSON strings and returns list of JSON objects.",
         ),
         "@yaml": SpecAttrDecoratorAlias(

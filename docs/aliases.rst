@@ -220,13 +220,56 @@ Clean the xonsh context. All user variables will be deleted.
     @ a
     Not found
 
+
+Command Decorators (Decorator Aliases)
+======================================
+
+
 ``@thread`` and ``@unthread``
-=============================
-Use ``@thread`` and ``@unthread`` to run command as threadable or unthreadable e.g to have a result of ssh command:
+-----------------------------
+Use ``@thread`` and ``@unthread`` to run command as threadable or unthreadable e.g to have a result of SSH command:
 
 .. code-block:: console
 
     @ !(@thread ssh host -T "echo 1")
+
+
+``@lines``
+-----------
+Return output as list of lines.
+
+.. code-block:: console
+
+    @ lines = $(@lines cat file)
+
+
+``@json``
+----------
+Parses JSON and returns a JSON object.
+
+.. code-block:: console
+
+    @ data = $(@json curl https://example.com/data.json)
+
+
+``@jsonl``
+-----------
+Parses JSON lines and returns a list of JSON objects.
+
+.. code-block:: console
+
+    @ items = $(@jsonl cat data.jsonl)
+
+
+``@yaml``
+----------
+Parses YAML and returns a dict.
+
+.. code-block:: console
+
+    @ config = $(@yaml cat config.yaml)
+
+
 
 Windows cmd Aliases
 =======================
