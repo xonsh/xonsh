@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.22.4](https://github.com/xonsh/xonsh/compare/0.22.3...0.22.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* **events:** treat None return from on_transform_command as no-op ([#6097](https://github.com/xonsh/xonsh/issues/6097)) ([39cbf21](https://github.com/xonsh/xonsh/commit/39cbf21458ecb25a7e44c095788613daae02af2c))
+
 ## [0.22.3](https://github.com/xonsh/xonsh/compare/0.22.2...0.22.3) (2026-02-04)
 
 

@@ -49,15 +49,13 @@ simple:
     @ 1 + 1
     2
 
-Since this is just Python, we are able to import modules, print values,
-and use other built-in Python functionality:
+We are able to import modules, print values, and use other built-in Python functionality:
 
 .. code-block:: xonshcon
 
     @ import sys
     @ print(sys.version)
-    3.4.2 |Continuum Analytics, Inc.| (default, Oct 21 2014, 17:16:37)
-    [GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]
+    3.11.14 | packaged by conda-forge
 
 
 We can also create and use literal data types, such as ints, floats, lists,
@@ -97,8 +95,7 @@ Flow control, of course, includes loops.
     3 s
     4 h
 
-We can also define and call functions and classes. I'll mostly spare you the
-details, but this *is* pretty cool:
+We can also define and call functions and classes:
 
 .. code-block:: xonshcon
 
@@ -109,7 +106,6 @@ details, but this *is* pretty cool:
     'xonsh'
 
 For easier indentation, Shift+Tab will enter 4 spaces.
-And that about wraps it up for the basics section.  It is just like Python.
 
 Xonsh Session Interface
 =======================
@@ -143,9 +139,9 @@ variable in Python.  The same is true for deleting them too.
 
 .. code-block:: xonshcon
 
-    @ $GOAL = 'Become the Lord of the Files'
+    @ $GOAL = 'Master the shell'
     @ print($GOAL)
-    Become the Lord of the Files
+    Master the shell
     @ del $GOAL
 
     @ $NUM = "123"

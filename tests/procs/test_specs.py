@@ -113,8 +113,8 @@ def test_capture_always(
         # Enable capfd for function aliases:
         monkeypatch.setattr(STDOUT_DISPATCHER, "default", sys.stdout)
         if alias_type == "func":
-            xonsh_session.aliases["tst"] = (
-                lambda: run_subproc([first_cmd], "hiddenobject") and None
+            xonsh_session.aliases["tst"] = lambda: (
+                run_subproc([first_cmd], "hiddenobject") and None
             )  # Don't return a value
         elif alias_type == "exec":
             first_cmd = " ".join(repr(arg) for arg in first_cmd)

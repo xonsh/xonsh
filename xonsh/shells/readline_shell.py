@@ -30,6 +30,7 @@ from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.lib.lazyasd import LazyObject, lazyobject
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
+from xonsh.lib.string import commonprefix
 from xonsh.platform import (
     ON_CYGWIN,
     ON_DARWIN,
@@ -413,7 +414,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         and they should be shown, while 2 means that there is no common prefix but
         we are under the query limit and they should be shown.
         """
-        if os.path.commonprefix([c[loc:] for c in completions]):
+        if commonprefix([c[loc:] for c in completions]):
             return 1
         elif len(completions) <= XSH.env.get("COMPLETION_QUERY_LIMIT"):
             return 2

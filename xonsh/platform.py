@@ -47,26 +47,24 @@ ON_CYGWIN = LazyBool(lambda: sys.platform == "cygwin", globals(), "ON_CYGWIN")
 """``True`` if executed on a Cygwin Windows platform, else ``False``. """
 ON_MSYS = LazyBool(lambda: sys.platform == "msys", globals(), "ON_MSYS")
 """``True`` if executed on a MSYS Windows platform, else ``False``. """
-ON_POSIX = LazyBool(lambda: (os.name == "posix"), globals(), "ON_POSIX")
+ON_POSIX = LazyBool(lambda: os.name == "posix", globals(), "ON_POSIX")
 """``True`` if executed on a POSIX-compliant platform, else ``False``. """
 ON_FREEBSD = LazyBool(
-    lambda: (sys.platform.startswith("freebsd")), globals(), "ON_FREEBSD"
+    lambda: sys.platform.startswith("freebsd"), globals(), "ON_FREEBSD"
 )
 """``True`` if on a FreeBSD operating system, else ``False``."""
 ON_DRAGONFLY = LazyBool(
-    lambda: (sys.platform.startswith("dragonfly")), globals(), "ON_DRAGONFLY"
+    lambda: sys.platform.startswith("dragonfly"), globals(), "ON_DRAGONFLY"
 )
 """``True`` if on a DragonFly BSD operating system, else ``False``."""
-ON_NETBSD = LazyBool(
-    lambda: (sys.platform.startswith("netbsd")), globals(), "ON_NETBSD"
-)
+ON_NETBSD = LazyBool(lambda: sys.platform.startswith("netbsd"), globals(), "ON_NETBSD")
 """``True`` if on a NetBSD operating system, else ``False``."""
 ON_OPENBSD = LazyBool(
-    lambda: (sys.platform.startswith("openbsd")), globals(), "ON_OPENBSD"
+    lambda: sys.platform.startswith("openbsd"), globals(), "ON_OPENBSD"
 )
 """``True`` if on a OpenBSD operating system, else ``False``."""
 IN_APPIMAGE = LazyBool(
-    lambda: ("APPIMAGE" in os.environ and "APPDIR" in os.environ),
+    lambda: "APPIMAGE" in os.environ and "APPDIR" in os.environ,
     globals(),
     "IN_APPIMAGE",
 )

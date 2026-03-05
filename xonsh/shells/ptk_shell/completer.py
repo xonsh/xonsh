@@ -9,6 +9,7 @@ from prompt_toolkit.completion import Completer, Completion
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
+from xonsh.lib.string import commonprefix
 from xonsh.tools import print_exception
 
 
@@ -122,10 +123,10 @@ class PromptToolkitCompleter(Completer):
         # reserve space, if needed.
         if len(completions) <= 1:
             pass
-        elif len(os.path.commonprefix(completions)) <= len(prefix):
+        elif len(commonprefix(completions)) <= len(prefix):
             self.reserve_space()
         # Find common prefix (strip quoting)
-        c_prefix = os.path.commonprefix([unquote(a) for a in completions])
+        c_prefix = commonprefix([unquote(a) for a in completions])
         # Find last split symbol, do not trim the last part
         while c_prefix:
             if c_prefix[-1] in r"/\.:@,":

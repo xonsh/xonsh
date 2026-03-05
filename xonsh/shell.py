@@ -148,9 +148,12 @@ def transform_command(src, show_diff=True):
         lst = src
         srcs = events.on_transform_command.fire(cmd=src)
         for s in srcs:
+            if s is None:
+                continue
             if s != lst:
                 src = s
                 break
+
         i += 1
         if i == limit:
             print_exception(

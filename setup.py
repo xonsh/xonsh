@@ -83,7 +83,7 @@ def dirty_version():
         _date = _date.decode("ascii")
         # remove weekday name for a shorter string
         _date = " ".join(_date.split()[1:])
-    except:
+    except Exception:
         _date = ""
         print("failed to get commit date", file=sys.stderr)
     with open("xonsh/dev.githash", "w") as f:

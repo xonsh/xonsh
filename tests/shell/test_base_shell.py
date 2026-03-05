@@ -41,6 +41,16 @@ def test_transform(xession):
     assert transform_command("foo") == "foo"
 
 
+def test_transform_returns_none_is_noop(xession):
+    @xession.builtins.events.on_transform_command
+    def forget_return(cmd, **_):
+        if cmd.strip() == "ls":
+            return "echo ls"
+
+    assert transform_command("ls") == "echo ls"
+    assert transform_command("echo 1") == "echo 1"
+
+
 @pytest.mark.parametrize(
     "cmd,exp_append_history",
     [
