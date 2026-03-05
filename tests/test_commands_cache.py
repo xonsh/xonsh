@@ -2,6 +2,7 @@ import os
 import pickle
 import stat
 import time
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -11,6 +12,7 @@ from xonsh.commands_cache import (
     CaseInsensitiveDict,
     CommandsCache,
     _Commands,
+    default_threadable_predictors,
     executables_in,
     predict_false,
     predict_shell,
@@ -381,3 +383,25 @@ def test_caseinsdict_copy():
     actual = initial.copy()
     assert actual == initial
     assert id(actual) != id(initial)
+
+
+@skip_if_on_windows
+def test_cached_name():
+    cache = CommandsCache({"PATH": ["/bin"]})
+    cache._cmds_cache["bash"] = ("/bin/bash", None)
+    assert cache.cached_name("/path/to/bash") == "bash"
+
+
+@skip_if_on_windows
+def test_symlink_predict_threadable(xession, tmpdir_factory):
+    temp_dir = Path(tmpdir_factory.mktemp("test_symlink_predict_threadable"))
+    bash_path = Path(temp_dir) / "bash"
+    bash_path.write_bytes(
+        b"ncurses/libgpm/isatty/tcgetattr/tcsetattr"
+    )  # Bytes that are related to interactive behavior from cc.default_predictor_readbin
+    symlink_path = Path(temp_dir) / "maybebash"
+    os.symlink(bash_path, symlink_path)
+    default_predictors = default_threadable_predictors()
+    cc = xession.commands_cache
+    cc._cmds_cache["bash"] = ("/bin/bash", None)
+    assert cc.get_predictor_threadable(str(symlink_path)) == default_predictors["bash"]
