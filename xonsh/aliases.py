@@ -259,8 +259,8 @@ class Aliases(cabc.MutableMapping):
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
                 return None
-            if not len(val):
-                raise ValueError("return_command alias: zero arguments.")
+            if not isinstance(val, list) or not len(val):
+                raise ValueError(f"return_command alias {key!r}: wrong return value {val!r}, expected a list.")
 
         if val is None:
             return default
