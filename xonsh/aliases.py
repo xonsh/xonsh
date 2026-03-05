@@ -1119,13 +1119,30 @@ def make_default_aliases():
         if IN_APPIMAGE
         else [sys.executable],
         "xreset": xonsh_reset,
+        # Command decorators
         "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
-            "Mark current command as threadable.",
+            "Command decorator. Mark current command as threadable.",
         ),
         "@unthread": SpecAttrDecoratorAlias(
             {"threadable": False, "force_threadable": False},
-            "Mark current command as unthreadable.",
+            "Command decorator. Mark current command as unthreadable.",
+        ),
+        "@lines": SpecAttrDecoratorAlias(
+            {"output_format": "list_lines"},
+            "Command decorator. Return output as list of lines.",
+        ),
+        "@json": SpecAttrDecoratorAlias(
+            {"output_format": lambda lines: XSH.imp.json.loads("\n".join(lines))},
+            "Command decorator. Parses JSON and returns JSON object.",
+        ),
+        "@jsonl": SpecAttrDecoratorAlias(
+            {"output_format": lambda lines: [XSH.imp.json.loads(lj) for lj in lines]},
+            "Command decorator. Parses JSON strings and returns list of JSON objects.",
+        ),
+        "@yaml": SpecAttrDecoratorAlias(
+            {"output_format": lambda lines: XSH.imp.yaml.safe_load("\n".join(lines))},
+            "Command decorator. Parses YAML and returns dict.",
         ),
     }
     if ON_WINDOWS:

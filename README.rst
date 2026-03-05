@@ -49,7 +49,6 @@ xonsh
 
             p'/etc/passwd'.read_text().find('usr')
 
-            xontrib load dalias  # extension
             $(@json podman ps --format json)['ID']
 
       -  .. code-block:: python
