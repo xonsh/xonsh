@@ -403,5 +403,5 @@ def test_symlink_predict_threadable(xession, tmpdir_factory):
     os.symlink(bash_path, symlink_path)
     default_predictors = default_threadable_predictors()
     cc = xession.commands_cache
-    cc._cmds_cache['bash'] = ('/bin/bash', None)
+    cc._cmds_cache["bash"] = ("/bin/bash", None)
     assert cc.get_predictor_threadable(str(symlink_path)) == default_predictors["bash"]
