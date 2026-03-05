@@ -243,6 +243,7 @@ def test_exes_in_cwd_are_not_matched(faux_binary, monkeypatch):
     cache = CommandsCache({"PATH": []})
     assert cache.locate_binary(faux_binary.name) is None
 
+
 @skip_if_on_windows
 def test_nixos_coreutils(tmp_path):
     """On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file."""
