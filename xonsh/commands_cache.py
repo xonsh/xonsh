@@ -411,7 +411,13 @@ class CommandsCache(cabc.Mapping):
         background thread, rather than the main thread.
         """
         if link := self.resolve_symlink(cmd0):
-            cmd0 = link
+            link_name = self.cached_name(link)
+            if not link_name == 'coreutils':
+                """
+                On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file.
+                Here if cmd0 is the link to coreutils we're going to use the predictor for cmd0 first.
+                """
+                cmd0 = link
         name = self.cached_name(cmd0)
         predictors = self.threadable_predictors
         if name not in predictors:
