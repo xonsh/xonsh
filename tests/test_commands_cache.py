@@ -1,7 +1,6 @@
 import os
 import pickle
 import stat
-import sys
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -268,7 +267,6 @@ def test_nixos_coreutils(tmp_path):
 
 
     cache = CommandsCache({"PATH": [path]})
-    sys.path.append(str(path))
     cache.update_cache()
 
     assert cache.predict_threadable([str(myecho), "1"]) is True  # from coreutils fix
