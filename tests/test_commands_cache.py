@@ -387,8 +387,8 @@ def test_caseinsdict_copy():
 
 @skip_if_on_windows
 def test_cached_name():
-    cache = CommandsCache({"PATH": ['/bin']})
-    cache._cmds_cache['bash'] = ('/bin/bash', None)
+    cache = CommandsCache({"PATH": ["/bin"]})
+    cache._cmds_cache["bash"] = ("/bin/bash", None)
     assert cache.cached_name("/path/to/bash") == "bash"
 
 
