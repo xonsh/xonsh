@@ -16,8 +16,8 @@ terminal application. See installation instructions for details, but it
 is recommended to do an 'editable' install via `pip`
 
 ```{prompt} bash
-pip install -U "pip>=25.1"
-pip install -e .[dev]
+pip install -U 'pip>=25.1'
+pip install -e '.[dev]'
 ```
 
 Next, make a trivial change (e.g. `print("hello!")` in `main.py`).
@@ -248,7 +248,7 @@ If you have cloned the git repository, you can install all of the doc-related
 dependencies by running:
 
 ```{prompt} bash
-pip install -e ".[doc]"
+pip install -e '.[doc]'
 ```
 
 ### Procedure for modifying the website
