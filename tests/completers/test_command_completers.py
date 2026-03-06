@@ -89,9 +89,7 @@ def test_argparse_completer_after_option(check_completer, tmp_path):
 def test_complete_command_substring(completion_context_parse):
     """Completers should match by substring, not just prefix (xonsh#6082)."""
     # 'grep' should match prefix 'rep' via substring
-    comps = set(
-        map(str, complete_command(completion_context_parse("rep", 3).command))
-    )
+    comps = set(map(str, complete_command(completion_context_parse("rep", 3).command)))
     assert "grep" in comps
 
 
