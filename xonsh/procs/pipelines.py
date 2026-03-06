@@ -297,7 +297,7 @@ class CommandPipeline:
         if stderr is not None and not isinstance(stderr, self.nonblocking):
             stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
         # read from process while it is running
-        check_prev_done = len(self.procs) > 1
+        check_prev_done = len(self.procs) == 1
         prev_end_time = None
         i = j = cnt = 1
 
