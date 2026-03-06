@@ -22,11 +22,11 @@ def _filter_with_func(text, prefix, func):
 
 
 def _filter_normal(text, prefix):
-    return _filter_with_func(text, prefix, str.startswith)
+    return _filter_with_func(text, prefix, str.__contains__)
 
 
 def _filter_ignorecase(text, prefix):
-    func = lambda txt, pre: txt.lower().startswith(pre.lower())
+    func = lambda txt, pre: pre.lower() in txt.lower()
     return _filter_with_func(text, prefix, func)
 
 
