@@ -684,7 +684,7 @@ class ProcProxyThread(threading.Thread):
             elif stdin == subprocess.DEVNULL:
                 p2cread = self._get_devnull()
             elif isinstance(stdin, int):
-                p2cread = stdin
+                p2cread = os.dup(stdin)
             else:
                 # Assuming file-like object
                 p2cread = stdin.fileno()
@@ -696,7 +696,7 @@ class ProcProxyThread(threading.Thread):
             elif stdout == subprocess.DEVNULL:
                 c2pwrite = self._get_devnull()
             elif isinstance(stdout, int):
-                c2pwrite = stdout
+                c2pwrite = os.dup(stdout)
             else:
                 # Assuming file-like object
                 c2pwrite = stdout.fileno()
@@ -710,7 +710,7 @@ class ProcProxyThread(threading.Thread):
             elif stderr == subprocess.DEVNULL:
                 errwrite = self._get_devnull()
             elif isinstance(stderr, int):
-                errwrite = stderr
+                errwrite = os.dup(stderr)
             else:
                 # Assuming file-like object
                 errwrite = stderr.fileno()
