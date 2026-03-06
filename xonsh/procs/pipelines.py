@@ -297,10 +297,18 @@ class CommandPipeline:
         if stderr is not None and not isinstance(stderr, self.nonblocking):
             stderr = NonBlockingFDReader(stderr.fileno(), timeout=timeout)
         # read from process while it is running
-        check_prev_done = len(self.procs) == 1
+        check_prev_done = len(self.procs) > 1
         prev_end_time = None
         i = j = cnt = 1
-        while proc.poll() is None:
+
+        # In the case of pipelines with more than one command
+        # we should give the commands a little time
+        # to start up fully. This is particularly true for
+        # GNU Parallel, which has a long startup time.
+        first_read = True
+
+        while first_read or (proc.poll() is None and self._any_proc_running()):
+            first_read = False
             if getattr(proc, "suspended", False) or self._procs_suspended() is not None:
                 self.suspended = True
                 xj.update_job_attr(proc.pid, "status", "suspended")
@@ -308,16 +316,6 @@ class CommandPipeline:
             elif getattr(proc, "in_alt_mode", False):
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
-            elif not check_prev_done:
-                # In the case of pipelines with more than one command
-                # we should give the commands a little time
-                # to start up fully. This is particularly true for
-                # GNU Parallel, which has a long startup time.
-                pass
-            elif self._prev_procs_done():
-                self._close_prev_procs()
-                proc.prevs_are_closed = True
-                break
 
             stdout_lines = safe_readlines(stdout, 1024)
             i = len(stdout_lines)
@@ -349,6 +347,10 @@ class CommandPipeline:
             else:
                 cnt = 1
             time.sleep(timeout * cnt)
+
+        self._close_prev_procs()
+        proc.prevs_are_closed = True
+
         # read from process now that it is over
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))
@@ -542,6 +544,17 @@ class CommandPipeline:
                     file=sys.stderr,
                 )
                 return proc
+
+    def _any_proc_running(self):
+        """Boolean for if all previous processes have completed. If there
+        is only a single process in the pipeline, this returns False.
+        """
+        any_running = False
+        for s, p in zip(self.specs, self.procs, strict=False):
+            if p.poll() is None:
+                any_running = True
+                continue
+        return any_running
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
