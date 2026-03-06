@@ -494,7 +494,8 @@ class CommandPipeline:
         # since we are driven by getting output, input may not be available
         # until the command has completed.
         self._set_input()
-        self._close_prev_procs()
+        if not hasattr(self.proc, 'prevs_are_closed') or not self.proc.prevs_are_closed:
+            self._close_prev_procs()
         self._close_proc()
         self._check_signal()
         self._apply_to_history()
