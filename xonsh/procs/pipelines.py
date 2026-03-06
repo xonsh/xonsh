@@ -307,7 +307,7 @@ class CommandPipeline:
         # GNU Parallel, which has a long startup time.
         first_read = True
 
-        while first_read or (proc.poll() is None and self._any_proc_running()):
+        while proc.poll() is None or first_read or self._any_proc_running():
             first_read = False
             if getattr(proc, "suspended", False) or self._procs_suspended() is not None:
                 self.suspended = True
@@ -549,7 +549,7 @@ class CommandPipeline:
         """Boolean for if all previous processes have completed. If there
         is only a single process in the pipeline, this returns False.
         """
-        for s, p in zip(self.specs, self.procs, strict=False):
+        for p in self.procs:
             if p.poll() is None:
                 return True
         return False
