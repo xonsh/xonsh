@@ -549,12 +549,10 @@ class CommandPipeline:
         """Boolean for if all previous processes have completed. If there
         is only a single process in the pipeline, this returns False.
         """
-        any_running = False
         for s, p in zip(self.specs, self.procs, strict=False):
             if p.poll() is None:
-                any_running = True
-                continue
-        return any_running
+                return True
+        return False
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
