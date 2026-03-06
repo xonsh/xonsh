@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.22.6](https://github.com/xonsh/xonsh/compare/0.22.5...0.22.6) (2026-03-05)
+
+
+### Bug Fixes
+
+* Additional fix of coreutils support for NixOS ([#6117](https://github.com/xonsh/xonsh/issues/6117)) ([a26cd59](https://github.com/xonsh/xonsh/commit/a26cd5900a7c1f86e7520871369a51a5414204c9))
+
 ## [0.22.5](https://github.com/xonsh/xonsh/compare/0.22.4...0.22.5) (2026-03-05)
 
 
