@@ -121,10 +121,10 @@ pip install -e '.[dev]'
 
 ### Running the Tests - Basic
 
-Run all the tests using pytest:
+Run all the tests using pytest. Use ``python -m pytest`` to prevent using xonsh code from ``site-packages`` if xonsh was installed in the same environment:
 
 ```{prompt} bash
-pytest -q
+python -m pytest -q
 ```
 
 Use "-q" to keep pytest from outputting a bunch of info for every test.
@@ -134,20 +134,20 @@ Use "-q" to keep pytest from outputting a bunch of info for every test.
 To perform all unit tests:
 
 ```{prompt} bash
-pytest
+python -m pytest
 ```
 
 If you want to run specific tests you can specify the test names to
 execute. For example to run test_aliases:
 
 ```{prompt} bash
-pytest test_aliases.py
+python -m pytest test_aliases.py
 ```
 
 Note that you can pass multiple test names in the above examples:
 
 ```{prompt} bash
-pytest test_aliases.py test_environ.py
+python -m pytest test_aliases.py test_environ.py
 ```
 
 ### Writing the Tests - Advanced
@@ -167,7 +167,7 @@ The conftest.py in tests directory defines fixtures for mocking various
 parts of xonsh for more test isolation. For a list of the various fixtures:
 
 ```{prompt} bash
-pytest --fixtures
+python -m pytest --fixtures
 ```
 
 when writing tests it's best to use pytest features i.e. parametrization:
