@@ -22,7 +22,8 @@ def _filter_with_func(text, prefix, func):
 
 
 def _filter_normal(text, prefix):
-    return _filter_with_func(text, prefix, str.__contains__)
+    func = lambda txt, pre: pre in txt
+    return _filter_with_func(text, prefix, func)
 
 
 def _filter_ignorecase(text, prefix):
