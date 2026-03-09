@@ -16,6 +16,10 @@ from xonsh.completers.tools import (
     get_filter_function,
 )
 from xonsh.parsers.completion_context import CompletionContext, PythonContext
+from xonsh.procs.pipelines import (
+    CommandPipeline,
+    blocking_property,
+)
 
 
 @xl.lazyobject
@@ -297,14 +301,21 @@ def attr_complete(prefix, ctx, filter_func):
     else:
         opts = [o for o in dir(val) if filter_func(o, attr)]
     prelen = len(prefix)
+    might_block = isinstance(val, CommandPipeline)
+
     for opt in opts:
-        # check whether these options actually work (e.g., disallow 7.imag)
-        _expr = f"{expr}.{opt}"
-        _val_, _ctx_ = _safe_eval(_expr, _ctx)
-        if _val_ is None and _ctx_ is None:
-            continue
-        a = getattr(val, opt)
-        if XSH.env["COMPLETIONS_BRACKETS"]:
+        skip_eval = False
+        if might_block:
+            desc = inspect.getattr_static(val, opt)
+            skip_eval = isinstance(desc, blocking_property)
+
+        if not skip_eval and XSH.env["COMPLETIONS_BRACKETS"]:
+            # check whether these options actually work (e.g., disallow 7.imag)
+            _expr = f"{expr}.{opt}"
+            _val_, _ctx_ = _safe_eval(_expr, _ctx)
+            if _val_ is None and _ctx_ is None:
+                continue
+            a = getattr(val, opt)
             if callable(a):
                 # Determine if this callable has useful attributes (class/module/namespace)
                 has_useful_attrs = (

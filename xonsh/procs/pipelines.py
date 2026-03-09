@@ -1,5 +1,6 @@
 """Command pipeline tools."""
 
+import inspect
 import io
 import os
 import re
@@ -8,6 +9,7 @@ import subprocess
 import sys
 import threading
 import time
+from contextlib import suppress
 
 import xonsh.lib.lazyasd as xl
 import xonsh.platform as xp
@@ -91,6 +93,10 @@ def update_process_group(pipeline_group, background):
     return xj.give_terminal_to(pipeline_group)
 
 
+class blocking_property(property):
+    __blocking_property__ = True
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -156,7 +162,6 @@ class CommandPipeline:
         self._raw_output = self._raw_error = b""
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
-        self.suspended = None
         self.output_format = self.spec.output_format
 
         background = self.spec.background
@@ -196,11 +201,24 @@ class CommandPipeline:
         debug = XSH.env.get("XONSH_DEBUG", False)
         attrs = self.attrnames + (self.attrnames_ext if debug else ())
         s = self.__class__.__name__ + "(\n  "
-        s += ",\n  ".join(
-            a + "=" + repr(getattr(self, a))
-            for a in attrs
-            if debug or getattr(self, a) is not None
-        )
+        is_running = self._is_proc_running()
+        parts = []
+
+        for a in attrs:
+            val = "<unavailable>"
+
+            with suppress(Exception):
+                if is_running:
+                    val = inspect.getattr_static(self, a)
+                    if not isinstance(val, blocking_property):
+                        val = getattr(self, a)
+                else:
+                    val = getattr(self, a)
+
+            if debug or val is not None:
+                parts.append(f"{a}={repr(val)}")
+
+        s += ",\n  ".join(parts)
         s += "\n)"
         return s
 
@@ -237,6 +255,28 @@ class CommandPipeline:
             yield from iter(self.lines)
         else:
             yield from self.tee_stdout()
+
+    def _is_proc_suspended(self, proc=None):
+        if not proc:
+            proc = self.proc
+
+        if not proc:
+            return None
+
+        return getattr(proc, "suspended", False) or self._procs_suspended() is not None
+
+    def _is_proc_running(self, proc=None):
+        if not proc:
+            proc = self.proc
+
+        if not proc:
+            return None
+
+        running = False
+        with suppress(Exception):
+            running = proc.poll() is None
+
+        return running
 
     def iterraw(self):
         """Iterates through the last stdout, and returns the lines
@@ -301,8 +341,7 @@ class CommandPipeline:
         prev_end_time = None
         i = j = cnt = 1
         while proc.poll() is None:
-            if getattr(proc, "suspended", False) or self._procs_suspended() is not None:
-                self.suspended = True
+            if self._is_proc_suspended(proc):
                 xj.update_job_attr(proc.pid, "status", "suspended")
                 return
             elif getattr(proc, "in_alt_mode", False):
@@ -691,6 +730,10 @@ class CommandPipeline:
             return fmt(lines)
 
     @property
+    def suspended(self):
+        return bool(self._is_proc_suspended())
+
+    @property
     def output(self):
         """Non-blocking, lazy access to output"""
         if self.ended:
@@ -700,25 +743,25 @@ class CommandPipeline:
         else:
             return self.get_formatted_lines(self.lines)
 
-    @property
+    @blocking_property
     def out(self):
         """Output value as a str."""
         self.end()
         return self.output
 
-    @property
+    @blocking_property
     def err(self):
         """Error messages as a string."""
         self.end()
         return self.errors
 
-    @property
+    @blocking_property
     def raw_out(self):
         """Output as raw bytes."""
         self.end()
         return self._raw_output
 
-    @property
+    @blocking_property
     def raw_err(self):
         """Errors as raw bytes."""
         self.end()
@@ -729,7 +772,7 @@ class CommandPipeline:
         """Process identifier."""
         return self.proc.pid if self.proc else None
 
-    @property
+    @blocking_property
     def returncode(self):
         """Process return code, waits until command is completed."""
         self.end()
@@ -742,7 +785,7 @@ class CommandPipeline:
         """Arguments to the process."""
         return self.spec.args
 
-    @property
+    @blocking_property
     def rtn(self):
         """Alias to return code."""
         return self.returncode
