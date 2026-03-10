@@ -1,4 +1,5 @@
 """Test XonshLexer for pygments"""
+
 import shutil
 
 import pytest
@@ -128,7 +129,7 @@ _cases = {
 }
 
 # We need to use real path to prevent fail on NixOS.
-ls_path = shutil.which('ls')
+ls_path = shutil.which("ls")
 
 _cases_no_win = {
     "ls": {
