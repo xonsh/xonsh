@@ -30,7 +30,8 @@ def test_tracer_help(capsys, xsh_with_aliases):
 def test_trace_in_script():
     CURRENT_DIR = Path(__file__).parent
     cmd = [sys.executable, "-m", "xonsh", str(CURRENT_DIR / "tracer" / "example.xsh")]
-    env = {"XONSH_SHOW_TRACEBACK": "True"}
+    env = os.environ  # We need to use real env or xonsh.platform.PATH_DEFAULT to have NixOS coreutils support.
+    env["XONSH_SHOW_TRACEBACK"] = '1'
     if sys.platform == "win32":
         # required for an empty environment on Windows. see python/cpython#120836
         for ev in W_ENV.split():

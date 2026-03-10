@@ -543,7 +543,7 @@ def PATH_DEFAULT():
             On NixOS the coreutils bin path is versioned in /nix/store,
             so we need to locate something like: `/nix/store/<hash>-<coreutils>-<version>/bin`.
             """
-            if Path("/nix").exists():
+            if Path("/nix").exists() and "PATH" in os.environ:
                 path_list = os.environ["PATH"].split(os.pathsep)
                 pd += tuple(
                     path
