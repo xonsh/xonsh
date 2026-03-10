@@ -13,9 +13,9 @@ import platform
 import signal
 import subprocess
 import sys
+from pathlib import Path
 
 from xonsh.lib.lazyasd import LazyBool, lazybool, lazyobject
-from pathlib import Path
 
 # do not import any xonsh-modules here to avoid circular dependencies
 
@@ -543,11 +543,11 @@ def PATH_DEFAULT():
             On NixOS the coreutils bin path is versioned in /nix/store,
             so we need to locate something like: `/nix/store/<hash>-<coreutils>-<version>/bin`.
             """
-            if Path('/nix').exists():
+            if Path("/nix").exists():
                 path_list = os.environ["PATH"].split(os.pathsep)
                 for path in path_list:
-                    if path.startswith('/nix') and path.endswith('/bin'):
-                        pd += (path, )
+                    if path.startswith("/nix") and path.endswith("/bin"):
+                        pd += (path,)
 
     elif ON_DARWIN:
         pd = ("/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin")
