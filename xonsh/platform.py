@@ -528,7 +528,7 @@ def PATH_DEFAULT():
             )
         else:
             pd = (
-                os.path.expanduser("~/bin"),
+
                 "/usr/local/sbin",
                 "/usr/local/bin",
                 "/usr/sbin",
@@ -545,9 +545,7 @@ def PATH_DEFAULT():
             """
             if Path('/nix').exists():
                 path_list = os.environ["PATH"].split(os.pathsep)
-                for path in path_list:
-                    if path.startswith('/nix') and path.endswith('/bin'):
-                        pd += (path, )
+                pd += tuple(path for path in path_list if path.startswith('/nix') and path.endswith('/bin'))
 
     elif ON_DARWIN:
         pd = ("/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin")
