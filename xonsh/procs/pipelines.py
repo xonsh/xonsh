@@ -205,15 +205,14 @@ class CommandPipeline:
         parts = []
 
         for a in attrs:
-            val = "<unavailable>"
+            unavailable = "<unavailable>"
 
-            with suppress(Exception):
-                if is_running:
-                    val = inspect.getattr_static(self, a)
-                    if not isinstance(val, blocking_property):
-                        val = getattr(self, a)
-                else:
-                    val = getattr(self, a)
+            if is_running:
+                val = inspect.getattr_static(self, a, unavailable)
+                if not isinstance(val, blocking_property):
+                    val = getattr(self, a, unavailable)
+            else:
+                val = getattr(self, a, unavailable)
 
             if debug or val is not None:
                 parts.append(f"{a}={repr(val)}")
@@ -273,8 +272,10 @@ class CommandPipeline:
             return None
 
         running = False
-        with suppress(Exception):
+        try:
             running = proc.poll() is None
+        except OSError:
+            running = False
 
         return running
 
