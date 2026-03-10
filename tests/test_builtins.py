@@ -49,11 +49,16 @@ def home_env(xession):
 
 
 @skip_if_on_windows
-def test_repath_backslash(home_env):
-    exp = os.listdir(HOME_PATH)
+def test_repath_backslash(home_env, tmp_path):
+    path = tmp_path / "test_repath_backslash"
+    path.mkdir(exist_ok=True, parents=True)
+    (path / ".git").touch()
+    (path / "dir").touch()
+    (path / "file").touch()
+    exp = os.listdir(path)
     exp = {p for p in exp if re.match(r"\w\w.*", p)}
-    exp = {os.path.join(HOME_PATH, p) for p in exp}
-    obs = set(pathsearch(regexsearch, r"~/\w\w.*"))
+    exp = {os.path.join(path, p) for p in exp}
+    obs = set(pathsearch(regexsearch, rf"{path}{os.sep}\w\w.*"))
     assert exp == obs
 
 

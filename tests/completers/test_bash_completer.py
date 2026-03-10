@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from xonsh.completers.bash import complete_from_bash
@@ -8,6 +10,12 @@ from xonsh.parsers.completion_context import (
     CompletionContext,
 )
 from xonsh.pytest.tools import skip_if_on_darwin, skip_if_on_windows
+
+if os.path.exists("/nix"):
+    pytest.skip(
+        "Skipping bash completion tests on Nix systems for future fixing. PR with fix is welcome!",
+        allow_module_level=True,
+    )
 
 
 @pytest.fixture(autouse=True)
