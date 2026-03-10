@@ -1,4 +1,5 @@
 """Test XonshLexer for pygments"""
+import shutil
 
 import pytest
 from pygments.token import (
@@ -125,6 +126,10 @@ _cases = {
         ],
     },
 }
+
+# We need to use real path to prevent fail on NixOS.
+ls_path = shutil.which('ls')
+
 _cases_no_win = {
     "ls": {
         "ls -al": [
@@ -132,8 +137,8 @@ _cases_no_win = {
         ],
     },
     "ls-bin": {
-        "/bin/ls -al": [
-            (Name.Builtin, "/bin/ls"),
+        f"{ls_path} -al": [
+            (Name.Builtin, ls_path),
         ],
     },
     "print": {
