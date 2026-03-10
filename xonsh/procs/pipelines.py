@@ -9,7 +9,6 @@ import subprocess
 import sys
 import threading
 import time
-from contextlib import suppress
 
 import xonsh.lib.lazyasd as xl
 import xonsh.platform as xp
