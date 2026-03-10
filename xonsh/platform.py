@@ -13,8 +13,8 @@ import platform
 import signal
 import subprocess
 import sys
-
 from pathlib import Path
+
 from xonsh.lib.lazyasd import LazyBool, lazybool, lazyobject
 
 # do not import any xonsh-modules here to avoid circular dependencies
