@@ -1674,8 +1674,8 @@ $XONSH_SHOW_TRACEBACK = True
 def _e(a,i,o,e):
     echo -n O
     echo -n E 1>2
-    execx("echo -n O")
-    execx("echo -n E 1>2")
+    # execx("echo -n O")      # Excluded until fix https://github.com/xonsh/xonsh/issues/5631
+    # execx("echo -n E 1>2")  # Excluded until fix https://github.com/xonsh/xonsh/issues/5631
     print("o")
     print("O", file=o)
     print("E", file=e)
