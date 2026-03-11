@@ -55,8 +55,7 @@ We are able to import modules, print values, and use other built-in Python funct
 
     @ import sys
     @ print(sys.version)
-    3.4.2 |Continuum Analytics, Inc.| (default, Oct 21 2014, 17:16:37)
-    [GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]
+    3.11.14 | packaged by conda-forge
 
 
 We can also create and use literal data types, such as ints, floats, lists,
@@ -118,8 +117,8 @@ You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
 
-    @ type(@)
-    xonsh.built_ins.XonshSessionInterface
+    @ help(@)
+    Help on XonshSessionInterface in module xonsh.built_ins object: ...
     @ @.imp.json.loads('{"conch":"snail"}')
     {"conch":"snail"}
     @ @.env.get('HOME')
@@ -1682,50 +1681,47 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
-Decorator Aliases
------------------
-
-Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
-convert subprocess command output into Python object:
+Command Decorators (Decorator Aliases)
+--------------------------------------
+In xonsh you can decorate the command to transform output into desired object:
 
 .. code-block:: xonshcon
 
-    import json, pathlib, yaml
+	@ $(@lines ls /)
+	['/bin', '/etc', '/home']
+
+	@ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
+	main
+
+	@ $(@jsonl echo '{"a":1}\n{"b":2}')
+	[{'a': 1}, {'b': 2}]
+
+	@ $(@yaml echo 'a: 1')
+	{'a': 1}
+
+See the full list of command decorators in Aliases article or build the new one.
+
+Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
+convert subprocess command output into Python object with your own logic:
+
+.. code-block:: xonshcon
+
     from xonsh.procs.specs import SpecAttrDecoratorAlias
 
-    aliases['@lines'] = SpecAttrDecoratorAlias({"output_format": 'list_lines'},
-                                               "Set `list_lines` output format.")
-    aliases['@json'] = SpecAttrDecoratorAlias({"output_format": lambda lines: json.loads('\n'.join(lines))},
-                                               "Set `json` output format.")
-    aliases['@path'] = SpecAttrDecoratorAlias({"output_format": lambda lines: pathlib.Path(':'.join(lines))},
-                                               "Set `path` output format.")
-    aliases['@yaml'] = SpecAttrDecoratorAlias({"output_format": lambda lines: yaml.safe_load('\n'.join(lines))},
-                                               "Set `yaml` output format.")
-    aliases['@noerr'] = SpecAttrDecoratorAlias({"raise_subproc_error": False},
-                                               "Set `raise_subproc_error` to False.")
+    aliases['@path'] = SpecAttrDecoratorAlias(
+                        {"output_format": lambda lines: @.imp.pathlib.Path(':'.join(lines))},
+                        "Set `path` output format.")
+    aliases['@noerr'] = SpecAttrDecoratorAlias(
+                          {"raise_subproc_error": False},
+                          "Set `raise_subproc_error` to False.")
 
 
 Now you can run:
 
 .. code-block:: xonshcon
 
-    $(@lines ls /)
-    # ['/bin', '/etc', '/home']
-
-    $(echo '{}' | @json head -n 1)['answer']
-    # 42
-
-    j = $(@json echo '{"answer":42}')
-    j['answer']
-    # 42
-
-    $(@path which xonsh)
-    # Path('/path/to/xonsh')
-
-    aliases['ydig'] = '@yaml dig +yaml'
-    y = $(ydig google.com)
-    y[0]['type']
-    # 'MESSAGE'
+    @ $(@path which xonsh)
+    Path('/path/to/xonsh')
 
 
 -------------

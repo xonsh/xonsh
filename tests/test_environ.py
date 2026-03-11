@@ -31,6 +31,12 @@ from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
 
 
+@pytest.fixture(autouse=True)
+def set_env(monkeypatch):
+    # To avoid tests intersection (#5236)
+    monkeypatch.setenv("UPDATE_OS_ENVIRON", "False")
+
+
 def test_env_normal():
     env = Env(VAR="wakka")
     assert "wakka" == env["VAR"]
