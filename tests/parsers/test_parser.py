@@ -876,7 +876,7 @@ def test_genexpr(check_ast):
 
 @skip_if_pre_3_15
 def test_unpack_in_genexpr(check_ast):
-    check_ast('(*x for x in [[1, 2], [3, 4]])')
+    check_ast("(*x for x in [[1, 2], [3, 4]])")
 
 
 def test_genexpr_if(check_ast):
@@ -905,7 +905,7 @@ def test_listcomp(check_ast):
 
 @skip_if_pre_3_15
 def test_unpack_in_listcomp(check_ast):
-    check_ast('[*x for x in [[1, 2], [3, 4]]]')
+    check_ast("[*x for x in [[1, 2], [3, 4]]]")
 
 
 def test_listcomp_if(check_ast):
@@ -938,7 +938,7 @@ def test_setcomp(check_ast):
 
 @skip_if_pre_3_15
 def test_unpack_in_setcomp(check_ast):
-    check_ast('{*x for x in [[1, 2], [3, 4]]}')
+    check_ast("{*x for x in [[1, 2], [3, 4]]}")
 
 
 def test_setcomp_if(check_ast):
@@ -967,7 +967,7 @@ def test_dictcomp(check_ast):
 
 @skip_if_pre_3_15
 def test_unpack_in_dictcomp(check_ast):
-    check_ast('{**d for d in [{1: 2}, {3: 4}]}')
+    check_ast("{**d for d in [{1: 2}, {3: 4}]}")
 
 
 def test_dictcomp_unpack_parens(check_ast):
