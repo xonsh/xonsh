@@ -48,11 +48,11 @@ def test_trace_in_script():
         example.xsh:4:for part in parts:
         example.xsh:6:echo Some @(variable)"""
     ).replace("/", os.sep)
-    output = 'Some output!\n'
+    output = "Some output!\n"
 
     proc = subprocess.run(cmd, capture_output=True, encoding="utf8", env=env)
     # Remove path to example script from stdout.
     stdout = re.sub(r".*example\.xsh:", "example.xsh:", proc.stdout)
     assert proc.returncode == 0
     assert proc.stderr == ""
-    assert stdout in [expected+'\n'+output, output+expected+'\n']
+    assert stdout in [expected + "\n" + output, output + expected + "\n"]
