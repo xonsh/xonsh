@@ -4,23 +4,27 @@ import tempfile
 from xonsh.api.os import indir, rmtree
 
 import pytest
-
+from pathlib import Path
 from xonsh.pytest.tools import ON_WINDOWS
 
+def resolve_path(p):
+    """Path can be a symlink (e.g. on macOS) so we need to resolve it first."""
+    return str(Path(p).resolve())
 
 def test_indir():
     if ON_WINDOWS:
         pytest.skip("On Windows")
     with tempfile.TemporaryDirectory() as tmpdir:
-        assert $(pwd).strip() != tmpdir
+        tmpdir = resolve_path(tmpdir)
+        assert resolve_path($(pwd).strip()) != tmpdir
         with indir(tmpdir):
-            assert $(pwd).strip() == tmpdir
-        assert $(pwd).strip() != tmpdir
+            assert resolve_path($(pwd).strip()) == tmpdir
+        assert resolve_path($(pwd).strip()) != tmpdir
         try:
             with indir(tmpdir):
                 raise Exception
         except Exception:
-            assert $(pwd).strip() != tmpdir
+            assert resolve_path($(pwd).strip()) != tmpdir
 
 
 def test_rmtree():
