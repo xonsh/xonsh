@@ -51,6 +51,7 @@ def test_trace_in_script():
     output = 'Some output!\n'
 
     proc = subprocess.run(cmd, capture_output=True, encoding="utf8", env=env)
+    # Remove path to example script from stdout.
     stdout = re.sub(r".*example\.xsh:", "example.xsh:", proc.stdout)
     assert proc.returncode == 0
     assert proc.stderr == ""
