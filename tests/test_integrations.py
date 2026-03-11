@@ -1108,7 +1108,7 @@ def test_loading_correctly(monkeypatch, interactive):
     out, err, ret = run_xonsh(
         "import xonsh; echo -n AAA @(xonsh.__file__) BBB",
         interactive=interactive,
-        single_command=True
+        single_command=True,
     )
     assert not err
     assert ret == 0
