@@ -267,7 +267,7 @@ class Shell:
                 raise XonshError(f"{backend} is not recognized as a shell type")
         return cls(**kwargs)
 
-    def __init__(self, execer, ctx=None, shell_type=None, **kwargs):
+    def __init__(self, execer, ctx=None, shell_type=None, history_backend=None, **kwargs):
         """
         Parameters
         ----------
@@ -281,6 +281,8 @@ class Shell:
         shell_type : str, optional
             The shell type to start, such as 'readline', 'prompt_toolkit1',
             or 'random'.
+        history_backend : str, optional
+            The name of the history backend to use.
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
@@ -294,6 +296,7 @@ class Shell:
                 locked=True,
                 filename=env.get("XONSH_HISTORY_FILE", None),
                 sessionid=XSH.sessionid,
+                backend=history_backend
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:

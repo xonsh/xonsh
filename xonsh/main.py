@@ -688,6 +688,7 @@ def setup(
     aliases=(),
     xontribs=(),
     threadable_predictors=(),
+    history_backend=None
 ):
     """Starts up a new xonsh shell. Calling this in function in another
     packages ``__init__.py`` will allow xonsh to be fully used in the
@@ -723,7 +724,7 @@ def setup(
     if not hasattr(builtins, "__xonsh__"):
         execer = Execer(filename="<stdin>")
         XSH.load(ctx=ctx, execer=execer)
-        XSH.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
+        XSH.shell = Shell(execer, ctx=ctx, shell_type=shell_type, history_backend=history_backend)
     XSH.env.update(env)
     install_import_hooks(XSH.execer)
     XSH.aliases.update(aliases)
