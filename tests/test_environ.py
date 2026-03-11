@@ -741,7 +741,8 @@ def test_env_deprecated():
     env._vars["AUTO_SUGGEST"] = DeprecatedSetting.AUTO_SUGGEST
     assert env["AUTO_SUGGEST"] is True
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
-    env["AUTO_SUGGEST"] = False
+    with pytest.warns(DeprecationWarning):
+        env["AUTO_SUGGEST"] = False
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
     env["XONSH_PROMPT_AUTO_SUGGEST"] = True
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
