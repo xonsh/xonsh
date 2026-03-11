@@ -65,7 +65,7 @@ def run_xonsh(
     timeout=20,
     env=None,
     blocking=True,
-    xonsh_cmd="xonsh",
+    xonsh_cmd="python -m xonsh",
 ):
     # Env
     popen_env = dict(os.environ)
@@ -1108,8 +1108,7 @@ def test_loading_correctly(monkeypatch, interactive):
     out, err, ret = run_xonsh(
         "import xonsh; echo -n AAA @(xonsh.__file__) BBB",
         interactive=interactive,
-        single_command=True,
-        xonsh_cmd="python -m xonsh",  # Tests can be run from the venv (e.g. on NixOS) so we need to use `python -m`.
+        single_command=True
     )
     assert not err
     assert ret == 0
