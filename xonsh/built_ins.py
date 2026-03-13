@@ -649,6 +649,10 @@ class XonshSessionInterface:
 
     Attributes
     ----------
+    aliases : xonsh.aliases.Aliases
+        Represents a location to hold and look up aliases
+        e.g. `@.aliases['e'] = 'echo hello'`
+        
     env : xonsh.environ.Env
         A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
 
@@ -666,6 +670,7 @@ class XonshSessionInterface:
         e.g. `@.lastcmd.rtn` returns exit code.
     """
 
+    aliases = None  # type: ignore
     env = None  # type: ignore
     history = None  # type: ignore
     imp: InlineImporter = InlineImporter()
@@ -849,6 +854,7 @@ class XonshSession:
         )
         self.link_builtins()
         self.builtins_loaded = True
+        self.interface.aliases = self.aliases
 
         def flush_on_exit(s=None, f=None):
             if self.history is not None:
