@@ -303,7 +303,10 @@ class Completer:
 
             def sortkey(s):
                 """Sort values by prefix position and then alphabetically."""
-                return (s.lower().find(prefix.lower()), s.lower())
+                pos = s.lower().find(prefix.lower())
+                if pos == -1:
+                    pos = float("inf")
+                return (pos, s.lower())
         else:
             # Fallback sort.
             sortkey = lambda s: s.lstrip(''''"''').lower()
