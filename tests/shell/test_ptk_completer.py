@@ -308,12 +308,12 @@ def test_completion_display(
 
 def test_completion_underline_match_in_middle(xession, monkeypatch):
     """Test that matching substring in the middle is underlined.
-    
+
     This tests the fix for issue #6141 where completions with matches
     in the middle (not at the start) should show the matching part underlined.
     """
     from prompt_toolkit.formatted_text import FormattedText
-    
+
     xonsh_completer_mock = MagicMock()
     # Test case: typing "book" matches "ebook" - "book" should be underlined
     # Use lprefix=0 since the completions have different prefixes
@@ -331,10 +331,10 @@ def test_completion_underline_match_in_middle(xession, monkeypatch):
     monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
 
     ptk_completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
-    
+
     # Check that we got completions
     assert len(ptk_completions) == 3
-    
+
     # For "ebook", the display should be FormattedText with underline on "book"
     ebook_completion = ptk_completions[0]
     assert isinstance(ebook_completion.display, FormattedText)
@@ -343,7 +343,7 @@ def test_completion_underline_match_in_middle(xession, monkeypatch):
     assert len(formatted) == 2
     assert formatted[0] == ("", "e")
     assert formatted[1] == ("underline", "book")
-    
+
     # For "bookkeeper", the display should have underline on "book" at start
     bookkeeper_completion = ptk_completions[1]
     # Match at start, so no underline needed - should be plain text (no styling)
@@ -352,7 +352,7 @@ def test_completion_underline_match_in_middle(xession, monkeypatch):
     # Should be a single segment with no style
     assert len(formatted) == 1
     assert formatted[0] == ("", "bookkeeper")
-    
+
     # For "notebook", the display should have underline on "book" at end
     notebook_completion = ptk_completions[2]
     assert isinstance(notebook_completion.display, FormattedText)

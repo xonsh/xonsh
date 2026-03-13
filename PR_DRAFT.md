@@ -20,11 +20,11 @@ When user types `book`:
 - `notebook` → displayed as `note`<u>`book`</u> (underline on "book")
 
 ## Changes
-- **xonsh/shells/ptk_shell/completer.py**: 
+- **xonsh/shells/ptk_shell/completer.py**:
   - Added import for `FormattedText` from `prompt_toolkit.formatted_text`
   - Added `_create_styled_display()` helper function
   - Modified `get_completions()` to use styled display for completions
-  
+
 - **tests/shell/test_ptk_completer.py**:
   - Added `test_completion_underline_match_in_middle()` test case
 
