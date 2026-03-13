@@ -6,11 +6,81 @@ import os
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.formatted_text import FormattedText
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
 from xonsh.lib.string import commonprefix
 from xonsh.tools import print_exception
+
+
+def _create_styled_display(text: str, prefix: str, pre: int = 0) -> FormattedText | str:
+    """Create a styled display text for completion.
+    
+    When the prefix matches in the middle of the completion text (not at the start),
+    the matching substring is underlined to show the user where the match occurs.
+    
+    Parameters
+    ----------
+    text : str
+        The completion text to display.
+    prefix : str
+        The prefix that was typed by the user.
+    pre : int
+        Number of characters to strip from the beginning of the display.
+    
+    Returns
+    -------
+    FormattedText or str
+        FormattedText with underline style on the matching substring if it's in the middle,
+        or plain string if no special styling is needed.
+    """
+    if not prefix:
+        return text[pre:] if pre > 0 else text
+    
+    # Strip the common prefix for display
+    display_text = text[pre:] if pre > 0 else text
+    prefix_lower = prefix.lower()
+    text_lower = text.lower()
+    
+    # Find where the prefix matches in the full text
+    match_pos = text_lower.find(prefix_lower)
+    
+    if match_pos <= 0:
+        # Match at start or no match - no underline needed
+        return display_text
+    
+    # Match is in the middle - we need to underline the matching part
+    # Calculate positions relative to display_text (after stripping pre chars)
+    match_start = max(0, match_pos - pre)
+    match_end = match_start + len(prefix)
+    
+    if match_start >= len(display_text) or match_end <= 0:
+        # Match is outside the display range
+        return display_text
+    
+    # Clamp to display bounds
+    match_start = max(0, match_start)
+    match_end = min(len(display_text), match_end)
+    
+    if match_start >= match_end:
+        return display_text
+    
+    # Build FormattedText: [(style, text), ...]
+    result = []
+    
+    # Text before match (if any)
+    if match_start > 0:
+        result.append(("", display_text[:match_start]))
+    
+    # Matching text with underline
+    result.append(("underline", display_text[match_start:match_end]))
+    
+    # Text after match (if any)
+    if match_end < len(display_text):
+        result.append(("", display_text[match_end:]))
+    
+    return FormattedText(result)
 
 
 def unquote(completion):
@@ -146,10 +216,15 @@ class PromptToolkitCompleter(Completer):
                     if comp.description
                     else None
                 )
+                # Create styled display with underline for matches in the middle
+                if comp.display:
+                    display = comp.display
+                else:
+                    display = _create_styled_display(unquote(comp), prefix, pre)
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display or unquote(comp)[pre:],
+                    display=display,
                     display_meta=desc,
                     style=comp.style or "",
                 )
@@ -158,7 +233,7 @@ class PromptToolkitCompleter(Completer):
             else:
                 # pre is calculated after unquote,
                 # so prefix cutting should also be performed afterwards
-                disp = unquote(comp)[pre:]
+                disp = _create_styled_display(unquote(comp), prefix, pre)
                 yield Completion(comp, -plen, display=disp)
 
     def suggestion_completion(self, document, line):

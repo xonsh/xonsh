@@ -304,3 +304,59 @@ def test_completion_display(
         PTKCompletion(completion, -lprefix, display)
         for completion, display in zip(completions, displays, strict=True)
     ]
+
+
+def test_completion_underline_match_in_middle(xession, monkeypatch):
+    """Test that matching substring in the middle is underlined.
+    
+    This tests the fix for issue #6141 where completions with matches
+    in the middle (not at the start) should show the matching part underlined.
+    """
+    from prompt_toolkit.formatted_text import FormattedText
+    
+    xonsh_completer_mock = MagicMock()
+    # Test case: typing "book" matches "ebook" - "book" should be underlined
+    # Use lprefix=0 since the completions have different prefixes
+    xonsh_completer_mock.complete.return_value = ["ebook", "bookkeeper", "notebook"], 0
+
+    ptk_completer = PromptToolkitCompleter(xonsh_completer_mock, None, None)
+    ptk_completer.reserve_space = lambda: None
+    ptk_completer.suggestion_completion = lambda _, __: None
+
+    document_mock = MagicMock()
+    document_mock.text = ""
+    document_mock.current_line = "book"
+    document_mock.cursor_position_col = 4
+
+    monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
+
+    ptk_completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
+    
+    # Check that we got completions
+    assert len(ptk_completions) == 3
+    
+    # For "ebook", the display should be FormattedText with underline on "book"
+    ebook_completion = ptk_completions[0]
+    assert isinstance(ebook_completion.display, FormattedText)
+    # FormattedText should have: [('', 'e'), ('underline', 'book')]
+    formatted = list(ebook_completion.display)
+    assert len(formatted) == 2
+    assert formatted[0] == ("", "e")
+    assert formatted[1] == ("underline", "book")
+    
+    # For "bookkeeper", the display should have underline on "book" at start
+    bookkeeper_completion = ptk_completions[1]
+    # Match at start, so no underline needed - should be plain text (no styling)
+    # Note: prompt_toolkit converts string display to FormattedText, so we check for no styling
+    formatted = list(bookkeeper_completion.display)
+    # Should be a single segment with no style
+    assert len(formatted) == 1
+    assert formatted[0] == ("", "bookkeeper")
+    
+    # For "notebook", the display should have underline on "book" at end
+    notebook_completion = ptk_completions[2]
+    assert isinstance(notebook_completion.display, FormattedText)
+    formatted = list(notebook_completion.display)
+    assert len(formatted) == 2
+    assert formatted[0] == ("", "note")
+    assert formatted[1] == ("underline", "book")
