@@ -76,7 +76,7 @@ def _un_shebang(x):
     elif x.endswith("python") or x.endswith("python.exe"):
         x = "python"
     if x == "xonsh":
-        return ["python", "-m", "xonsh.main"]
+        return ["python", "-m", "xonsh"]
     return [x]
 
 
@@ -98,10 +98,11 @@ def parse_shebang_from_file(filepath):
 
 
 def get_script_subproc_command(fname, args):
-    """Given the name of a script outside the path, returns a list representing
-    an appropriate subprocess command to execute the script or None if
-    the argument is not readable or not a script. Raises PermissionError
-    if the script is not executable.
+    """Given the name of a script outside the path, returns
+    - a list representing an appropriate subprocess command to execute the script or None if
+    the argument is not readable or not a script.
+    - a bool representing whether an interpeter has been found
+    Raises PermissionError if the script is not executable.
     """
     # make sure file is executable
     if not os.access(fname, os.X_OK):
@@ -117,16 +118,19 @@ def get_script_subproc_command(fname, args):
         # execute permissions but not read/write permissions. This enables
         # things with the SUID set to be run. Needs to come before _is_binary()
         # is called, because that function tries to read the file.
-        return None
+        return None, False
     elif _is_binary(fname):
         # if the file is a binary, we should call it directly
-        return None
+        return None, False
     if xp.ON_WINDOWS:
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-        if ext.upper() in XSH.env.get("PATHEXT"):
-            return [fname] + args
+        if ext.upper() in XSH.env.get("PATHEXT") and ext.upper() not in [
+            ".PY",
+            ".XSH",
+        ]:  # still need interpeters for these
+            return [fname] + args, False
     # find interpreter
     shebang = parse_shebang_from_file(fname)
     m = RE_SHEBANG.match(shebang)
@@ -144,7 +148,7 @@ def get_script_subproc_command(fname, args):
         for i in interp:
             o.extend(_un_shebang(i))
         interp = o
-    return interp + [fname] + args
+    return interp + [fname] + args, True
 
 
 @xl.lazyobject
@@ -402,10 +406,13 @@ class SubprocSpec:
         stack : list of FrameInfo namedtuples or None
             The stack of the call-site of alias, if the alias requires it.
             None otherwise.
+        interp : bool
+            Whether a command has an interperter
         """
         self._stdin = self._stdout = self._stderr = None
         # args
         self.cmd = list(cmd)
+        self.interp = False
         self.cls = cls
         self.stdin = stdin
         self.stdout = stdout
@@ -538,7 +545,9 @@ class SubprocSpec:
             raise xt.XonshError("xonsh: subprocess mode: command is empty")
         bufsize = 1
         try:
-            if xp.ON_WINDOWS and self.binary_loc is not None:
+            if xp.ON_WINDOWS and self.binary_loc is not None and self.interp is None:
+                # files with an interpeter should not be run directly as it errors with
+                # [WinError 193] %1 is not a valid Win32 application
                 # launch process using full paths (https://bugs.python.org/issue8557)
                 cmd = [self.binary_loc] + self.cmd[1:]
             else:
@@ -811,7 +820,9 @@ class SubprocSpec:
         if self.binary_loc is None:
             return
         try:
-            scriptcmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
+            scriptcmd, self.interp = get_script_subproc_command(
+                self.binary_loc, self.cmd[1:]
+            )
             if scriptcmd is not None:
                 self.cmd = scriptcmd
         except PermissionError as ex:
