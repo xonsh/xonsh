@@ -9,7 +9,7 @@ The following table lists built in features and capabilities that various tools 
         <tr>
           <th></th>
           <th class="head">Traditional<br> bash, zsh</th>
-          <th class="head">Next-generation<br> fish, nu</th>
+          <th class="head">Next-generation<br> fish, nu, elvish</th>
           <th class="head">Python‑based<br> IPython, plumbum</th>
           <th class="head">Xonsh<br> shell</th>
         </tr>
