@@ -537,12 +537,13 @@ def test_on_command_not_found_fallback_on_bad_replacement(xession):
     assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
 
 
-def test_redirect_to_substitution(xession):
+def test_redirect_to_substitution(tmpdir):
+    file = str(tmpdir / "test_redirect_to_substitution.txt")
     s = SubprocSpec.build(
         # `echo hello > @('file')`
-        ["echo", "hello", (">", ["file"])]
+        ["echo", "hello", (">", [file])]
     )
-    assert s.stdout.name == "file"
+    assert s.stdout.name == file
 
 
 def test_partial_args_from_classmethod(xession):
@@ -709,7 +710,8 @@ def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
     assert [c if c != file_str else "{file}" for c in cmd] == exp
 
 
-def test_redirect_without_left_part():
+def test_redirect_without_left_part(tmpdir):
+    file = str(tmpdir / "test_redirect_without_left_part.txt")
     with pytest.raises(XonshError) as expected:
-        SubprocSpec.build([(">", "1.txt")])
+        SubprocSpec.build([(">", file)])
     assert "subprocess mode: command is empty" in str(expected.value)
