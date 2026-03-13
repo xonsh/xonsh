@@ -652,7 +652,7 @@ class XonshSessionInterface:
     aliases : xonsh.aliases.Aliases
         Represents a location to hold and look up aliases
         e.g. `@.aliases['e'] = 'echo hello'`
-        
+
     env : xonsh.environ.Env
         A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
 
