@@ -31,6 +31,12 @@ from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
 
 
+@pytest.fixture(autouse=True)
+def set_env(monkeypatch):
+    # To avoid tests intersection (#5236)
+    monkeypatch.setenv("UPDATE_OS_ENVIRON", "False")
+
+
 def test_env_normal():
     env = Env(VAR="wakka")
     assert "wakka" == env["VAR"]
@@ -735,7 +741,8 @@ def test_env_deprecated():
     env._vars["AUTO_SUGGEST"] = DeprecatedSetting.AUTO_SUGGEST
     assert env["AUTO_SUGGEST"] is True
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
-    env["AUTO_SUGGEST"] = False
+    with pytest.warns(DeprecationWarning):
+        env["AUTO_SUGGEST"] = False
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
     env["XONSH_PROMPT_AUTO_SUGGEST"] = True
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]

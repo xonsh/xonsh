@@ -2047,7 +2047,9 @@ from xonsh.style_tools import Token
     ],
 )
 def test_is_tok_color_dict(val, exp):
-    assert is_tok_color_dict(val) == exp
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        assert is_tok_color_dict(val) == exp
 
 
 def test_print_exception_msg(xession, capsys):

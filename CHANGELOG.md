@@ -1,5 +1,14 @@
 # Xonsh Change Log
 
+## [0.22.7](https://github.com/xonsh/xonsh/compare/0.22.6...0.22.7) (2026-03-10)
+
+
+### Bug Fixes
+
+* **alias_return_command:** Better error message in case of wrong return ([#6119](https://github.com/xonsh/xonsh/issues/6119)) ([de077f1](https://github.com/xonsh/xonsh/commit/de077f1ff1896a4e201712752ad42436bc7054a8))
+* Fix tests that fail on NixOS ([#6132](https://github.com/xonsh/xonsh/issues/6132)) ([dda0276](https://github.com/xonsh/xonsh/commit/dda0276e99b76c59a74f55ba09f2e0c46edae0ef))
+* **test_environ:** Fix test_environ failing in case of UPDATE_OS_ENVIRON=True globally ([#6120](https://github.com/xonsh/xonsh/issues/6120)) ([99afeb4](https://github.com/xonsh/xonsh/commit/99afeb4248e33f62358878bbeba0b2c35698f83e))
+
 ## [0.22.6](https://github.com/xonsh/xonsh/compare/0.22.5...0.22.6) (2026-03-05)
 
 

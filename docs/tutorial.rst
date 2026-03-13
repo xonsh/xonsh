@@ -117,8 +117,8 @@ You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
 
-    @ type(@)
-    xonsh.built_ins.XonshSessionInterface
+    @ help(@)
+    Help on XonshSessionInterface in module xonsh.built_ins object: ...
     @ @.imp.json.loads('{"conch":"snail"}')
     {"conch":"snail"}
     @ @.env.get('HOME')

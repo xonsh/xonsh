@@ -571,6 +571,17 @@ def test_alias_return_command_alone(xession):
     assert spec.alias_name == "wakka"
 
 
+@pytest.mark.parametrize("ret", [None, 1, [], False])
+def test_alias_return_command_wrong_return(xession, ret):
+    @xession.aliases.register
+    @xession.aliases.return_command
+    def _nop():
+        return ret
+
+    with pytest.raises(ValueError):
+        cmds_to_specs([["nop"]], captured="object")[-1]
+
+
 def test_alias_return_command_alone_args(xession):
     @xession.aliases.register("wakka")
     @xession.aliases.return_command

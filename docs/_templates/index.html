@@ -200,7 +200,7 @@
 
 <span unselectable-text="@ "></span>var = <span style="color: lightblue;">"hello"</span>.upper()
 
-<span unselectable-text="@ "></span><b>@</b>.imp.json.loads(<span style="color: lightblue;">'{"a":1}'</span>)
+<span unselectable-text="@ "></span><b>import</b> json; json.loads(<span style="color: lightblue;">'{"a":1}'</span>)
 
 <span unselectable-text="@ "></span>[i <b>for</b> i <b>in</b> range(0,10)]
 </pre>
@@ -235,6 +235,8 @@
 
 <span unselectable-text="@ "></span>id = <span style="color: lightgreen;">$(<span style="color: lightsalmon;">@json</span> podman ps --format json)</span>[<span style="color: lightblue;">'ID'</span>]
 <span unselectable-text="  "></span>cfg = <span style="color: lightgreen;">$(<span style="color: lightsalmon;">@yaml</span> cat config.yaml)</span>
+
+<span unselectable-text="@ "></span><b>@</b>.imp.pathlib.Path(<span style="color: lightblue;">'~/bin'</span>).exists()
 </pre>
 
 

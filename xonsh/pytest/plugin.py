@@ -27,7 +27,7 @@ from .tools import DummyHistory, DummyShell, copy_env, sp
 
 
 def pytest_configure(config):
-    setup()
+    setup(history_backend="dummy")
 
 
 def pytest_collection_modifyitems(items):
