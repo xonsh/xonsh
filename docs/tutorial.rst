@@ -307,7 +307,8 @@ will be shown during tab-completion.
 
 .. code-block:: xonsh
 
-    @.env.register('MY_VAR', type='int', default=0, doc='This is a demo variable')
+    @.env.register('MY_VAR1', type='int', default=1, doc='Demo variable 1.')
+	@.env.register('MY_VAR2', type='int', default=2, doc='Demo variable 2.')
 
 Now, when you type ``$MY_<Tab>``, you will see the description.
 
