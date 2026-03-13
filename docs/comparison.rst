@@ -4,75 +4,75 @@ The following table lists built in features and capabilities that various tools 
 
 .. raw:: html
 
-    <table border="1" cellspacing="0" cellpadding="4">
+    <table class="docutils align-default">
       <thead>
         <tr>
           <th></th>
-          <th>Traditional<br> bash, zsh</th>
-          <th>Next-generation<br> fish, nu</th>
-          <th>Python‑based<br> IPython, plumbum</th>
-          <th>Xonsh<br> shell</th>
+          <th class="head">Traditional<br> bash, zsh</th>
+          <th class="head">Next-generation<br> fish, nu</th>
+          <th class="head">Python‑based<br> IPython, plumbum</th>
+          <th class="head">Xonsh<br> shell</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>Meant as a shell</td>
+          <th class="stub">Meant as a shell</th>
           <td align="center">●</td>
           <td align="center">●</td>
           <td align="center"></td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>First-class objects</td>
+          <th class="stub">First-class objects</th>
           <td align="center"></td>
           <td align="center">◯</td>
           <td align="center">●</td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>Native cross-platform</td>
+          <th class="stub">Native cross-platform</th>
           <td align="center"></td>
           <td align="center">◯</td>
           <td align="center">●</td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>Large standard library</td>
+          <th class="stub">Large standard library</th>
           <td align="center"></td>
           <td align="center">◯</td>
           <td align="center">◯</td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>General-purpose language</td>
+          <th class="stub">General-purpose language</th>
           <td align="center"></td>
           <td align="center"></td>
           <td align="center">◯</td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>Built-in testability</td>
+          <th class="stub">Built-in testability</th>
           <td align="center"></td>
           <td align="center"></td>
           <td align="center">◯</td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>Maintains clarity at scale</td>
+          <th class="stub">Maintains clarity at scale</th>
           <td align="center"></td>
           <td align="center"></td>
           <td align="center"></td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>Package and deps manager</td>
+          <th class="stub">Package and deps manager</th>
           <td align="center"></td>
           <td align="center"></td>
           <td align="center"></td>
           <td align="center">●</td>
         </tr>
         <tr>
-          <td>AI-friendly</td>
+          <th class="stub">AI-friendly</th>
           <td align="center"></td>
           <td align="center"></td>
           <td align="center"></td>
