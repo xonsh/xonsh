@@ -36,12 +36,12 @@ def complete_command(command: CommandContext):
             yield RichCompletion(s, append_space=True, **kwargs)  # type: ignore
     if xp.ON_WINDOWS:
         for i in executables_in("."):
-            if i.startswith(cmd):
+            if get_filter_function()(i, cmd):
                 yield RichCompletion(i, append_space=True)
     base = os.path.basename(cmd)
     if os.path.isdir(base):
         for i in executables_in(base):
-            if i.startswith(cmd):
+            if get_filter_function()(i, cmd):
                 yield RichCompletion(os.path.join(base, i))
 
 

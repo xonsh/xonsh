@@ -170,6 +170,26 @@ def test_env_completer_sort(completer, completers_mock):
     assert set(comps[0]) == {"$WOW0", "$WOW1", "$MID_WOW", "$SUPER_WOW"}
 
 
+def test_sortkey_nonmatch_sorts_last(completer, completers_mock):
+    """Non-matching completions should sort after prefix and substring matches."""
+
+    @contextual_command_completer
+    def comp(context: CommandContext):
+        return {"decoder", "foobar", "JSONDecoder", "zzz"}
+
+    completers_mock["a"] = comp
+
+    comps = completer.complete(
+        "dec", "dec", 0, 3, {}, multiline_text="dec", cursor_index=3
+    )
+    result = comps[0]
+    # "decoder" (pos 0) should come before "JSONDecoder" (pos 4)
+    # Both should come before "foobar" and "zzz" (no match)
+    assert result.index("decoder") < result.index("JSONDecoder")
+    assert result.index("JSONDecoder") < result.index("foobar")
+    assert result.index("JSONDecoder") < result.index("zzz")
+
+
 def test_python_only_context(completer, completers_mock):
     assert completer.complete_line("echo @(") != ()
     assert completer.complete("", "echo @(", 0, 0, {}, "echo @(", 7) != ()
