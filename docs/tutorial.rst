@@ -226,8 +226,6 @@ value in the environment. Here are a couple of examples in action:
     'snail'
     @ ${'HO' + 'ME'}
     '/home/snail'
-    @ ${...}  # the same as @.env
-    xonsh.environ.Env({'HOME':'/home/snail', ...})
 
 Not bad, xonsh, not bad.
 
