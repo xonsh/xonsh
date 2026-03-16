@@ -242,7 +242,7 @@ simple:
 Futhermore, a number of predefined environment variables listed `here <envvars.html>`_ have a static type.
 For example,
 * ``XONSH_HISTORY_SIZE``: is an int, and
-* ``CASE_SENSITIVE_COMPLETIONS``: is a boolean.
+* ``XONSH_PROMPT_COMPLETION_CASE_SENSITIVE``: is a boolean.
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).
