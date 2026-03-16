@@ -191,4 +191,5 @@ Credits
 *******
 
 - Thanks to `Zulip <https://zulip.com/>`_ for supporting the `xonsh community <https://xonsh.zulipchat.com/>`_!
+- Thanks to `HELLOTUX <https://www.hellotux.com/>`_ for distributing the `xonsh t-shirts, backpacks and more <https://www.hellotux.com/xonsh>`_!
 - Thanks to ADS.FUND for supporting `xonsh token <https://ads.fund/token/0xadf7478450b69a349ed9634b18584d2d3da81464>`_!
