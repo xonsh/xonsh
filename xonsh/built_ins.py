@@ -198,7 +198,7 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
+    csc = XSH.env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
     glob_sorted = XSH.env.get("GLOB_SORTED")
     dotglob = XSH.env.get("DOTGLOB")
     return globpath(

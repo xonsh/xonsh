@@ -134,7 +134,7 @@ def _dots(prefix):
 def _add_cdpaths(paths, prefix):
     """Completes current prefix using CDPATH"""
     env = XSH.env
-    csc = env.get("CASE_SENSITIVE_COMPLETIONS")
+    csc = env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
     glob_sorted = env.get("GLOB_SORTED")
     for cdp in env.get("CDPATH"):
         test_glob = os.path.join(cdp, prefix) + "*"
@@ -301,7 +301,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     tilde = "~"
     paths = set()
     env = XSH.env
-    csc = env.get("CASE_SENSITIVE_COMPLETIONS")
+    csc = env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
     glob_sorted = env.get("GLOB_SORTED")
     prefix = glob.escape(prefix)
     for s in xt.iglobpath(prefix + "*", ignore_case=(not csc), sort_result=glob_sorted):
