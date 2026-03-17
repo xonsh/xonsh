@@ -1,5 +1,21 @@
 # Xonsh Change Log
 
+## [0.22.8](https://github.com/xonsh/xonsh/compare/0.22.7...0.22.8) (2026-03-17)
+
+
+### Features
+
+* **ptk:** make `tempfile_suffix` ".xsh" for `open_in_editor` ([#6145](https://github.com/xonsh/xonsh/issues/6145)) ([c713d0a](https://github.com/xonsh/xonsh/commit/c713d0a16b180cb3fca56c4af3a929580db44df6))
+
+
+### Bug Fixes
+
+* Clean tests output ([#6142](https://github.com/xonsh/xonsh/issues/6142)) ([f50c9c4](https://github.com/xonsh/xonsh/commit/f50c9c47a53cc9c7ba8cc605da58b12b80e5f60e))
+* Fix test_indir stability ([#6138](https://github.com/xonsh/xonsh/issues/6138)) ([cb91146](https://github.com/xonsh/xonsh/commit/cb91146d6fea2ecc5731bd6e5631807988004c98))
+* Fix unstable tests (test_trace_in_script, test_callable_alias_no_bad_file_descriptor) ([#6136](https://github.com/xonsh/xonsh/issues/6136)) ([d109112](https://github.com/xonsh/xonsh/commit/d109112f01ff6ced08ff2512e06475df8680212d))
+* Use `python -m xonsh` to run integration tests ([#6140](https://github.com/xonsh/xonsh/issues/6140)) ([1490d0e](https://github.com/xonsh/xonsh/commit/1490d0e0a00bef78dc2867fa66f44f0696266cff))
+* Using dummy history by default in tests ([#6139](https://github.com/xonsh/xonsh/issues/6139)) ([a7516a6](https://github.com/xonsh/xonsh/commit/a7516a69dffb56dda7b2aee6b1073401394b2dd2))
+
 ## [0.22.7](https://github.com/xonsh/xonsh/compare/0.22.6...0.22.7) (2026-03-10)
 
 
