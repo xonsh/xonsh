@@ -10,7 +10,7 @@ commands, manipulating the environment, and dealing with the file system
 easy.  The xonsh command prompt gives users interactive access to the xonsh
 language.
 
-While all Python code is also xonsh, not all Bash code can be used in xonsh.
+While all Python code is also xonsh, not all POSIX shell code can be used in xonsh.
 That would defeat the purpose, and Python is better anyway! Still, xonsh is
 compatible with shell commands in the ways that matter, such as for running commands,
 reading the environment, and utilizing tab completion.
@@ -65,7 +65,7 @@ Python is there:
 .. code-block:: xonshcon
 
     @ d = {'xonsh': True}
-    @ d.get('bash', False)
+    @ d.get('spam', False)
     False
 
 The xonsh shell also supports multi-line input for more advanced flow control.
@@ -212,7 +212,7 @@ variable you want to look up.  But what if you want to construct the name
 programmatically, or read it from another variable?  Enter the ``${}``
 operator.
 
-.. warning:: In Bash, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
+.. warning:: In POSIX shells, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
              In xonsh, they have separate meanings.
 
 We can place any valid Python expression inside of the curly braces in
@@ -412,7 +412,7 @@ must be used to force xonsh to not interpret them.
     ${
 
 .. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\\) in Bash.
+             backslash (\\) in POSIX shells.
 
 
 Captured Subprocess with ``$()`` and ``!()``
@@ -421,8 +421,7 @@ The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* some information about that command.
 
 The ``$()`` syntax captures and returns the standard output stream of the
-command as a Python string. This is similar to how ``$()`` performs in Bash.
-For example,
+command as a Python string. For example,
 
 .. code-block:: xonshcon
 
@@ -838,7 +837,7 @@ Input/Output Redirection
 xonsh also allows you to redirect ``stdin``, ``stdout``, and/or ``stderr``.
 This allows you to control where the output of a command is sent, and where
 it receives its input from.  xonsh has its own syntax for these operations,
-but, for compatibility purposes, xonsh also support Bash-like syntax.
+but, for compatibility purposes, xonsh also support POSIX-like syntax.
 
 The basic operations are "write to" (``>``), "append to" (``>>``), and "read
 from" (``<``).  The details of these are perhaps best explained through
@@ -859,7 +858,7 @@ exist:
     @ COMMAND > output.txt
     @ COMMAND out> output.txt
     @ COMMAND o> output.txt
-    @ COMMAND 1> output.txt # included for Bash compatibility
+    @ COMMAND 1> output.txt # included for POSIX compatibility
 
 These can be made to append to ``output.txt`` instead of overwriting its contents
 by replacing ``>`` with ``>>`` (note that ``>>`` will still create the file if it
@@ -876,7 +875,7 @@ exist:
 
     @ COMMAND err> errors.txt
     @ COMMAND e> errors.txt
-    @ COMMAND 2> errors.txt # included for Bash compatibility
+    @ COMMAND 2> errors.txt # included for POSIX compatibility
 
 As above, replacing ``>`` with ``>>`` will cause the error output to be
 appended to ``errors.txt``, rather than replacing its contents.
@@ -892,7 +891,7 @@ that task:
 
     @ COMMAND all> combined.txt
     @ COMMAND a> combined.txt
-    @ COMMAND &> combined.txt # included for Bash compatibility
+    @ COMMAND &> combined.txt # included for POSIX compatibility
 
 It is also possible to explicitly merge stderr into stdout so that error
 messages are reported to the same location as regular output.  You can do this
@@ -904,7 +903,7 @@ with the following syntax:
     @ COMMAND err>o
     @ COMMAND e>out
     @ COMMAND e>o
-    @ COMMAND 2>&1  # included for Bash compatibility
+    @ COMMAND 2>&1  # included for POSIX compatibility
 
 This merge can be combined with other redirections, including pipes (see the
 section on `Pipes`_ above):
@@ -924,7 +923,7 @@ Similarly, you can also send stdout to stderr with the following syntax:
     @ COMMAND out>e
     @ COMMAND o>err
     @ COMMAND o>e
-    @ COMMAND 1>&2  # included for Bash compatibility
+    @ COMMAND 1>&2  # included for POSIX compatibility
 
 Redirecting ``stdin``
 ---------------------
@@ -1138,8 +1137,8 @@ globbing.  For more information, please see the documentation for the ``re``
 module in the Python standard library.
 
 .. warning:: In Xonsh, the meaning of backticks is very different from their
-             meaning in Bash.
-             In Bash, backticks mean to run a captured subprocess
+             meaning in POSIX shells.
+             In POSIX shells, backticks mean to run a captured subprocess
 	     (``$()`` in Xonsh).
 
 
@@ -1250,8 +1249,8 @@ Path object allows do some tricks with paths. Globbing certain path, checking an
 .. code-block:: xonshcon
 
     @ mypath = p'/etc'
-    @ sorted(mypath.glob('**/*bashrc*'))
-    [Path('/etc/bash.bashrc'), Path('/etc/skel/.bashrc')]
+    @ sorted(mypath.glob('**/*xonshrc*'))
+    [Path('/etc/xonsh/xonshrc'), Path('/etc/xonsh/rc.d/xonshrc.xsh')]
     @ [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
     [True, True, False, Path('/'), 'root']
 
@@ -1337,7 +1336,7 @@ Of course, for subprocess commands, you still want to use the ``man`` command.
 
 Compile, Evaluate, & Execute
 ================================
-Like Python and Bash, xonsh provides built-in hooks to compile, evaluate,
+Xonsh provides built-in hooks to compile, evaluate,
 and execute strings of xonsh code.  To prevent this functionality from having
 serious name collisions with the Python built-in ``compile()``, ``eval()``,
 and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
@@ -1349,7 +1348,7 @@ Aliases
 =======
 Another important xonsh built-in is the ``aliases`` mapping.  This is
 like a dictionary that affects how subprocess commands are run.  If you are
-familiar with the Bash ``alias`` built-in, this is similar.  Alias command
+familiar with the POSIX shells ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
@@ -1743,8 +1742,8 @@ Tab completion is present as well. By default, in Python-mode you are able to
 complete based on the variable names in the current builtins, globals, and
 locals, as well as xonsh languages keywords & operator, files & directories,
 and environment variable names. In subprocess-mode, you additionally complete
-on the names of executable files on your ``$PATH``, alias keys, and full Bash
-completion for the commands themselves.
+on the names of executable files on your ``$PATH``, alias keys, and various 
+additional completers.
 
 xonsh also provides a means of modifying the behavior of the tab completer.  More
 detail is available on the `Tab Completion page <tutorial_completers.html>`_.
@@ -2072,19 +2071,16 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
 Additionally, if the script should exit if a command fails, set the
 environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
-file. Errors in Python mode will already raise exceptions and so this
-is roughly equivalent to Bash's ``set -e``.
+file. Errors in Python mode will already raise exceptions.
 
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivalent to
-Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
+Python's ``python -m trace``.
 
 Importing Xonsh (``*.xsh``)
 ==============================
 You can import xonsh source files with the ``*.xsh`` file extension using
-the normal Python syntax.  Say you had a file called ``mine.xsh``, you could,
-therefore, perform a Bash-like source into your current shell with the
-following:
+the normal Python syntax:
 
 .. code-block:: xonshcon
 
