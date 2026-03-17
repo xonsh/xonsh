@@ -170,12 +170,12 @@ def test_env_completer_sort(completer, completers_mock):
     assert set(comps[0]) == {"$WOW0", "$WOW1", "$MID_WOW", "$SUPER_WOW"}
 
 
-def test_sortkey_nonmatch_sorts_last(completer, completers_mock):
-    """Non-matching completions should sort after prefix and substring matches."""
+def test_sortkey_tiers(completer, completers_mock):
+    """Completions should be ranked by match quality tier."""
 
     @contextual_command_completer
     def comp(context: CommandContext):
-        return {"decoder", "foobar", "JSONDecoder", "zzz"}
+        return {"decoder", "Decoder", "JSONDecoder", "jsondecoder", "foobar"}
 
     completers_mock["a"] = comp
 
@@ -183,11 +183,14 @@ def test_sortkey_nonmatch_sorts_last(completer, completers_mock):
         "dec", "dec", 0, 3, {}, multiline_text="dec", cursor_index=3
     )
     result = comps[0]
-    # "decoder" (pos 0) should come before "JSONDecoder" (pos 4)
-    # Both should come before "foobar" and "zzz" (no match)
-    assert result.index("decoder") < result.index("JSONDecoder")
+    # Tier 0 (case-sensitive prefix) before tier 1 (case-insensitive prefix)
+    assert result.index("decoder") < result.index("Decoder")
+    # Tier 1 (case-insensitive prefix) before tier 2 (case-sensitive substring)
+    assert result.index("Decoder") < result.index("jsondecoder")
+    # Tier 2 (case-sensitive substring) before tier 3 (case-insensitive substring)
+    assert result.index("jsondecoder") < result.index("JSONDecoder")
+    # All matches before non-matches
     assert result.index("JSONDecoder") < result.index("foobar")
-    assert result.index("JSONDecoder") < result.index("zzz")
 
 
 def test_python_only_context(completer, completers_mock):
