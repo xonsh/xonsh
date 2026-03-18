@@ -4,11 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 from prompt_toolkit.completion import Completion as PTKCompletion
 from prompt_toolkit.document import Document
+from prompt_toolkit.formatted_text import FormattedText
 
 from xonsh.aliases import Aliases
 from xonsh.completer import Completer
 from xonsh.completers.tools import RichCompletion
-from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
+from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter, _highlight_match
 
 
 @pytest.mark.parametrize(
@@ -304,3 +305,85 @@ def test_completion_display(
         PTKCompletion(completion, -lprefix, display)
         for completion, display in zip(completions, displays, strict=True)
     ]
+
+
+class TestHighlightMatch:
+    """Tests for _highlight_match — underline styling on substring matches."""
+
+    def test_empty_prefix(self):
+        assert _highlight_match("foobar", "foobar", "", 0) == "foobar"
+
+    def test_no_match(self):
+        assert _highlight_match("foobar", "foobar", "xyz", 0) == "foobar"
+
+    def test_prefix_match_no_underline(self):
+        """Prefix matches should not be underlined — they are visually obvious."""
+        assert _highlight_match("foobar", "foobar", "foo", 0) == "foobar"
+
+    def test_substring_match_underline(self):
+        """Substring matches in the middle should be underlined."""
+        result = _highlight_match("foobar", "foobar", "oba", 0)
+        assert result == FormattedText([("", "fo"), ("underline", "oba"), ("", "r")])
+
+    def test_substring_match_at_end(self):
+        result = _highlight_match("foobar", "foobar", "bar", 0)
+        assert result == FormattedText([("", "foo"), ("underline", "bar")])
+
+    def test_case_insensitive(self):
+        result = _highlight_match("FooBar", "FooBar", "oba", 0)
+        assert result == FormattedText([("", "Fo"), ("underline", "oBa"), ("", "r")])
+
+    def test_with_pre_offset_hides_prefix_match(self):
+        """When pre strips the common prefix, a match at position 0 in the
+        full text falls before the displayed text — no underline."""
+        assert _highlight_match("bar", "foobar", "foo", 3) == "bar"
+
+    def test_with_pre_offset_substring_visible(self):
+        """When pre strips a common prefix and the match lands at position 0
+        in the displayed text, it's treated as a prefix match — no underline."""
+        result = _highlight_match("bar_baz", "foo/bar_baz", "bar", 4)
+        # match_start=4 in full text, pre=4, disp_start=0 → prefix match in
+        # display → no underline (disp_start <= 0)
+        assert result == "bar_baz"
+
+    def test_with_pre_offset_true_substring(self):
+        """Substring match after the common prefix strip point."""
+        result = _highlight_match("baz_bar_qux", "foo/baz_bar_qux", "bar", 4)
+        # match_start=8 in full text, pre=4, disp_start=4
+        assert result == FormattedText(
+            [("", "baz_"), ("underline", "bar"), ("", "_qux")]
+        )
+
+
+def test_completion_substring_highlight(monkeypatch, xession):
+    """Integration test: substring completions get underline styling."""
+    xonsh_completer_mock = MagicMock()
+    xonsh_completer_mock.complete.return_value = (
+        ["prefix_match", "has_bar_suffix"],
+        3,
+    )
+
+    ptk_completer = PromptToolkitCompleter(xonsh_completer_mock, None, None)
+    ptk_completer.reserve_space = lambda: None
+    ptk_completer.suggestion_completion = lambda _, __: None
+
+    document_mock = MagicMock()
+    document_mock.text = "bar"
+    document_mock.current_line = "bar"
+    document_mock.cursor_position_col = 3
+
+    monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
+
+    completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
+
+    # "prefix_match" does not contain "bar" → no underline, plain display
+    # "has_bar_suffix" contains "bar" at position 4 → underline
+    assert len(completions) == 2
+
+    # prefix_match: "bar" not found in "prefix_match" → plain display
+    assert completions[0].display == FormattedText([("", "prefix_match")])
+
+    # has_bar_suffix: "bar" found at position 4, pre=0, disp_start=4
+    assert completions[1].display == FormattedText(
+        [("", "has_"), ("underline", "bar"), ("", "_suffix")]
+    )

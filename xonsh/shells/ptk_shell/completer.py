@@ -6,6 +6,7 @@ import os
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.formatted_text import FormattedText
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
@@ -47,6 +48,58 @@ def unquote(completion):
             if XSH.env.get("XONSH_DEBUG"):
                 print_exception(f"Unable to unquote completion {s}")
             return s
+
+
+def _highlight_match(display_text, full_text, prefix, pre):
+    """Create FormattedText with underline on the matched substring.
+
+    Parameters
+    ----------
+    display_text : str
+        The text shown in the completion menu (already trimmed by ``pre``).
+    full_text : str
+        The full unquoted completion text (before ``pre`` trimming).
+    prefix : str
+        The user-typed text to highlight.
+    pre : int
+        Number of characters stripped from the front of ``full_text``.
+
+    Returns
+    -------
+    str or FormattedText
+        Plain string if no highlight needed, FormattedText with underline
+        on the matched portion otherwise.
+    """
+    if not prefix:
+        return display_text
+
+    match_start = full_text.lower().find(prefix.lower())
+    if match_start < 0:
+        return display_text
+
+    # Adjust for the stripped common prefix
+    disp_start = match_start - pre
+    disp_end = disp_start + len(prefix)
+
+    # Only underline non-prefix matches (substring matches in the middle).
+    # When disp_start <= 0 the match is at the beginning of the displayed
+    # text (or partially hidden by the common-prefix strip), so no visual
+    # highlight is needed — the user can already see the match.
+    if disp_start <= 0:
+        return display_text
+
+    # Clamp end to display text bounds
+    disp_end = min(len(display_text), disp_end)
+
+    if disp_start >= disp_end:
+        return display_text
+
+    parts = [("", display_text[:disp_start])]
+    parts.append(("underline", display_text[disp_start:disp_end]))
+    if disp_end < len(display_text):
+        parts.append(("", display_text[disp_end:]))
+
+    return FormattedText(parts)
 
 
 class PromptToolkitCompleter(Completer):
@@ -146,10 +199,16 @@ class PromptToolkitCompleter(Completer):
                     if comp.description
                     else None
                 )
+                if comp.display:
+                    display = comp.display
+                else:
+                    full_text = unquote(comp)
+                    disp = full_text[pre:]
+                    display = _highlight_match(disp, full_text, prefix, pre)
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display or unquote(comp)[pre:],
+                    display=display,
                     display_meta=desc,
                     style=comp.style or "",
                 )
@@ -158,8 +217,13 @@ class PromptToolkitCompleter(Completer):
             else:
                 # pre is calculated after unquote,
                 # so prefix cutting should also be performed afterwards
-                disp = unquote(comp)[pre:]
-                yield Completion(comp, -plen, display=disp)
+                full_text = unquote(comp)
+                disp = full_text[pre:]
+                yield Completion(
+                    comp,
+                    -plen,
+                    display=_highlight_match(disp, full_text, prefix, pre),
+                )
 
     def suggestion_completion(self, document, line):
         """Provides a completion based on the current auto-suggestion."""
