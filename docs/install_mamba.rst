@@ -33,7 +33,7 @@ Install xonsh from the ``main`` Git branch with a stable Python version
 
 .. code-block:: bash
 
-   TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='git+https://github.com/xonsh/xonsh#egg=xonsh[full]' \
+   TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full] @ git+https://github.com/xonsh/xonsh@main' \
     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 
@@ -41,7 +41,7 @@ Preinstall and preload `xontribs <https://github.com/topics/xontrib>`_:
 
 .. code-block:: bash
 
-   TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='git+https://github.com/xonsh/xonsh#egg=xonsh[full]' \
+   TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full] @ git+https://github.com/xonsh/xonsh@main' \
     PIP_INSTALL="uv xontrib-sh xontrib-jump-to-dir xontrib-dalias xontrib-pipeliner xontrib-whole-word-jumping" \
     XONSHRC="\$XONSH_HISTORY_BACKEND = 'sqlite'; xontrib load -s sh jump_to_dir pipeliner whole_word_jumping dalias; \$PROMPT = \$PROMPT.replace('{prompt_end}', '\n{prompt_end}')" \
     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
