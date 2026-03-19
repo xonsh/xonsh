@@ -198,12 +198,11 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = XSH.env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
     glob_sorted = XSH.env.get("GLOB_SORTED")
     dotglob = XSH.env.get("DOTGLOB")
     return globpath(
         s,
-        ignore_case=(not csc),
+        ignore_case=True,
         return_empty=True,
         sort_result=glob_sorted,
         include_dotfiles=dotglob,
