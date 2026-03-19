@@ -1742,7 +1742,7 @@ Tab completion is present as well. By default, in Python-mode you are able to
 complete based on the variable names in the current builtins, globals, and
 locals, as well as xonsh languages keywords & operator, files & directories,
 and environment variable names. In subprocess-mode, you additionally complete
-on the names of executable files on your ``$PATH``, alias keys, and various 
+on the names of executable files on your ``$PATH``, alias keys, and various
 additional completers.
 
 xonsh also provides a means of modifying the behavior of the tab completer.  More
