@@ -117,6 +117,4 @@ def test_filter_function_substring(xession):
     assert _filter_ignorecase(
         RichCompletion("val", display="Foo, Bar-Deploy"), "deploy"
     )
-    assert not _filter_ignorecase(
-        RichCompletion("val", display="foo, bar-baz"), "xyz"
-    )
+    assert not _filter_ignorecase(RichCompletion("val", display="foo, bar-baz"), "xyz")
