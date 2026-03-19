@@ -1941,11 +1941,6 @@ This is to reduce the noise in generated completions.""",
         ),
         type_str="env_path",
     )
-    XONSH_PROMPT_COMPLETION_CASE_SENSITIVE = Var.with_default(
-        False,
-        "Sets whether completions should be case sensitive or case insensitive.",
-        sync="CASE_SENSITIVE_COMPLETIONS",
-    )
     COMPLETIONS_BRACKETS = Var.with_default(
         True,
         "Flag to enable/disable inclusion of square brackets and parentheses "
@@ -2093,11 +2088,6 @@ class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
 
     AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs(
         {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
-    )
-    CASE_SENSITIVE_COMPLETIONS = (
-        AutoCompletionSetting.XONSH_PROMPT_COMPLETION_CASE_SENSITIVE.set_attrs(
-            {"sync": "XONSH_PROMPT_COMPLETION_CASE_SENSITIVE", "deprecated": True}
-        )
     )
 
 

@@ -60,7 +60,7 @@ RL_VARIABLE_VALUE: "tp.Callable[..., tp.Any]|None" = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
 
-_RL_PREV_COMPLETION_CASE_SENSITIVE = "to-be-set"
+_RL_COMPLETION_CASE_SET = False
 
 
 def setup_readline():
@@ -195,16 +195,11 @@ def teardown_readline():
 
 def _rebind_case_sensitive_completions():
     # handle case sensitive, see Github issue #1342 for details
-    global _RL_PREV_COMPLETION_CASE_SENSITIVE
-    env = XSH.env
-    case_sensitive = env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
-    if case_sensitive is _RL_PREV_COMPLETION_CASE_SENSITIVE:
+    global _RL_COMPLETION_CASE_SET
+    if _RL_COMPLETION_CASE_SET:
         return
-    if case_sensitive:
-        readline.parse_and_bind("set completion-ignore-case off")
-    else:
-        readline.parse_and_bind("set completion-ignore-case on")
-    _RL_PREV_COMPLETION_CASE_SENSITIVE = case_sensitive
+    readline.parse_and_bind("set completion-ignore-case on")
+    _RL_COMPLETION_CASE_SET = True
 
 
 def fix_readline_state_after_ctrl_c():

@@ -91,36 +91,29 @@ def test_complete_command_substring(completion_context_parse):
 
 
 def test_filter_function_substring(xession):
-    """Filter functions should use substring matching."""
+    """Filter functions should use substring matching (always case-insensitive)."""
     from xonsh.completers.tools import (
         RichCompletion,
         _filter_ignorecase,
-        _filter_normal,
     )
 
-    # substring match (middle of string)
-    assert _filter_normal("dev-xonsh-deploy", "deploy")
-    # prefix match should still work
-    assert _filter_normal("asdfgh", "asdf")
-    # no match
-    assert not _filter_normal("asdfgh", "xyz")
-    # case-sensitive: uppercase text should NOT match lowercase prefix
-    assert not _filter_normal("ASDFGH", "asd")
-
-    # case-insensitive substring
+    # case-insensitive substring match (middle of string)
     assert _filter_ignorecase("Dev-Xonsh-Deploy", "deploy")
     assert _filter_ignorecase("ASDFGH", "asd")
+    # prefix match should still work
+    assert _filter_ignorecase("asdfgh", "asdf")
+    # no match
     assert not _filter_ignorecase("asdfgh", "xyz")
 
     # empty prefix matches everything (same as startswith behavior)
-    assert _filter_normal("anything", "")
+    assert _filter_ignorecase("anything", "")
     # prefix longer than text
-    assert not _filter_normal("ls", "longprefix")
+    assert not _filter_ignorecase("ls", "longprefix")
 
     # RichCompletion with display text
-    rc = RichCompletion("val", display="foo, bar-deploy")
-    assert _filter_normal(rc, "deploy")
-    assert not _filter_normal(rc, "xyz")
     assert _filter_ignorecase(
         RichCompletion("val", display="Foo, Bar-Deploy"), "deploy"
+    )
+    assert not _filter_ignorecase(
+        RichCompletion("val", display="foo, bar-baz"), "xyz"
     )
