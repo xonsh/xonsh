@@ -141,7 +141,7 @@ micromamba install -y python=$PYTHON_VER
 echo
 echo Install $XONSH_VER
 echo
-"$TARGET_DIR/bin/python" -m pip install $XONSH_VER
+"$TARGET_DIR/bin/python" -m pip install "$XONSH_VER"
 
 if [ -n "$PIP_INSTALL" ]; then
     echo
