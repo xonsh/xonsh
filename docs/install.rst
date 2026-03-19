@@ -23,47 +23,62 @@ Xonsh is a Python-based shell that requires Python to be packaged, preinstalled 
 Since there are many ways to install Python, there are also many ways to run xonsh. The table describes
 the main approaches and their advantages.
 
-.. list-table::
-    :widths: 3 1 1 1 1 1
-    :header-rows: 1
-    :stub-columns: 1
+.. raw:: html
 
-    * -
-      - Use as core shell
-      - Isolated env
-      - Fresh version
-      - Automation
-      - Portable
-    * - Independent install
-      - ●
-      - ●
-      - ●
-      - ◯
-      -
-    * - Package
-      -
-      -
-      - ●
-      - ●
-      -
-    * - AppImage
-      -
-      - ●
-      - ●
-      - ◯
-      - ●
-    * - Container
-      -
-      - ●
-      - ●
-      - ●
-      -
-    * - System package
-      -
-      -
-      - ◯
-      -
-      -
+    <table class="docutils align-default">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="head"><p>Use as core shell</p></th>
+          <th class="head"><p>Isolated env</p></th>
+          <th class="head"><p>Fresh version</p></th>
+          <th class="head"><p>Automation</p></th>
+          <th class="head"><p>Portable</p></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th class="stub"><p>Independent install</p></th>
+          <td align="center">●</td>
+          <td align="center">●</td>
+          <td align="center">●</td>
+          <td align="center">◯</td>
+          <td align="center"></td>
+        </tr>
+        <tr>
+          <th class="stub"><p>Package</p></th>
+          <td align="center"></td>
+          <td align="center"></td>
+          <td align="center">●</td>
+          <td align="center">●</td>
+          <td align="center"></td>
+        </tr>
+        <tr>
+          <th class="stub"><p>AppImage</p></th>
+          <td align="center"></td>
+          <td align="center">●</td>
+          <td align="center">●</td>
+          <td align="center">◯</td>
+          <td align="center">●</td>
+        </tr>
+        <tr>
+          <th class="stub"><p>Container</p></th>
+          <td align="center"></td>
+          <td align="center">●</td>
+          <td align="center">●</td>
+          <td align="center">●</td>
+          <td align="center"></td>
+        </tr>
+        <tr>
+          <th class="stub"><p>System package</p></th>
+          <td align="center"></td>
+          <td align="center"></td>
+          <td align="center">◯</td>
+          <td align="center"></td>
+          <td align="center"></td>
+        </tr>
+      </tbody>
+    </table>
 
 Work in progress:
 `binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_,
