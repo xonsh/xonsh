@@ -137,9 +137,7 @@ def _add_cdpaths(paths, prefix):
     glob_sorted = env.get("GLOB_SORTED")
     for cdp in env.get("CDPATH"):
         test_glob = os.path.join(cdp, prefix) + "*"
-        for s in xt.iglobpath(
-            test_glob, ignore_case=True, sort_result=glob_sorted
-        ):
+        for s in xt.iglobpath(test_glob, ignore_case=True, sort_result=glob_sorted):
             if os.path.isdir(s):
                 paths.add(os.path.relpath(s, cdp))
 
