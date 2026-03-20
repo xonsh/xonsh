@@ -2113,8 +2113,8 @@ def DEFAULT_VARS():
 
 
 class Env(cabc.MutableMapping):
-    """A xonsh environment, whose variables have limited typing
-    (unlike BASH). Most variables are, by default, strings (like BASH).
+    """A xonsh environment, whose variables have limited typing.
+    Most variables are, by default, strings.
     However, the following rules also apply based on variable-name:
 
     * PATH: any variable whose name ends in PATH is a list of strings.
