@@ -80,3 +80,47 @@ def test_argparse_completer_after_option(check_completer, tmp_path):
     prefix = str(tmp_path)[:-1]
     # has one or more completions including the above tmp_path
     assert check_completer("xonsh --no-rc", prefix)
+
+
+@skip_if_on_windows
+def test_complete_command_substring(completion_context_parse):
+    """Completers should match by substring, not just prefix (xonsh#6082)."""
+    # 'grep' should match prefix 'rep' via substring
+    comps = set(map(str, complete_command(completion_context_parse("rep", 3).command)))
+    assert "grep" in comps
+
+
+def test_filter_function_substring(xession):
+    """Filter functions should use substring matching."""
+    from xonsh.completers.tools import (
+        RichCompletion,
+        _filter_ignorecase,
+        _filter_normal,
+    )
+
+    # substring match (middle of string)
+    assert _filter_normal("dev-xonsh-deploy", "deploy")
+    # prefix match should still work
+    assert _filter_normal("asdfgh", "asdf")
+    # no match
+    assert not _filter_normal("asdfgh", "xyz")
+    # case-sensitive: uppercase text should NOT match lowercase prefix
+    assert not _filter_normal("ASDFGH", "asd")
+
+    # case-insensitive substring
+    assert _filter_ignorecase("Dev-Xonsh-Deploy", "deploy")
+    assert _filter_ignorecase("ASDFGH", "asd")
+    assert not _filter_ignorecase("asdfgh", "xyz")
+
+    # empty prefix matches everything (same as startswith behavior)
+    assert _filter_normal("anything", "")
+    # prefix longer than text
+    assert not _filter_normal("ls", "longprefix")
+
+    # RichCompletion with display text
+    rc = RichCompletion("val", display="foo, bar-deploy")
+    assert _filter_normal(rc, "deploy")
+    assert not _filter_normal(rc, "xyz")
+    assert _filter_ignorecase(
+        RichCompletion("val", display="Foo, Bar-Deploy"), "deploy"
+    )

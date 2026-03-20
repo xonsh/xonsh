@@ -301,9 +301,31 @@ class Completer:
             if prefix.startswith("$"):
                 prefix = prefix[1:]
 
+            lower_prefix = prefix.lower()
+
             def sortkey(s):
-                """Sort values by prefix position and then alphabetically."""
-                return (s.lower().find(prefix.lower()), s.lower())
+                """Sort completions by match quality tier, then alphabetically.
+
+                Tiers:
+                  0 - case-sensitive prefix match
+                  1 - case-insensitive prefix match
+                  2 - case-sensitive substring match
+                  3 - case-insensitive substring match
+                  4 - no match (sorted last)
+                """
+                text = str(s)
+                ltext = text.lower()
+                if text.startswith(prefix):
+                    tier = 0
+                elif ltext.startswith(lower_prefix):
+                    tier = 1
+                elif prefix in text:
+                    tier = 2
+                elif lower_prefix in ltext:
+                    tier = 3
+                else:
+                    tier = 4
+                return (tier, ltext)
         else:
             # Fallback sort.
             sortkey = lambda s: s.lstrip(''''"''').lower()

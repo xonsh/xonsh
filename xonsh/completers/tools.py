@@ -22,20 +22,21 @@ def _filter_with_func(text, prefix, func):
 
 
 def _filter_normal(text, prefix):
-    return _filter_with_func(text, prefix, str.startswith)
+    func = lambda txt, pre: pre in txt
+    return _filter_with_func(text, prefix, func)
 
 
 def _filter_ignorecase(text, prefix):
-    func = lambda txt, pre: txt.lower().startswith(pre.lower())
+    func = lambda txt, pre: pre.lower() in txt.lower()
     return _filter_with_func(text, prefix, func)
 
 
 def get_filter_function():
     """
-    Return an appropriate filtering function for completions, given the valid
-    of $CASE_SENSITIVE_COMPLETIONS
+    Return an appropriate filtering function for completions, given the value
+    of $XONSH_PROMPT_COMPLETION_CASE_SENSITIVE
     """
-    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
+    csc = XSH.env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
     if csc:
         return _filter_normal
     else:
