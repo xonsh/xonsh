@@ -1,5 +1,12 @@
 # Xonsh Change Log
 
+## [0.22.9](https://github.com/xonsh/xonsh/compare/0.22.8...0.22.9) (2026-03-20)
+
+
+### Bug Fixes
+
+* **install:** update mamba git+extras install docs and script ([#6151](https://github.com/xonsh/xonsh/issues/6151)) ([c7d393f](https://github.com/xonsh/xonsh/commit/c7d393fa7fd68b9157c5298c289d8a02912be280))
+
 ## [0.22.8](https://github.com/xonsh/xonsh/compare/0.22.7...0.22.8) (2026-03-17)
 
 
