@@ -44,7 +44,7 @@ def should_use_cache(execer, mode):
     """
     if mode == "exec":
         return (execer.scriptcache or execer.cacheall) and (
-                XS.env["XONSH_CACHE_SCRIPTS"] or XS.env["XONSH_CACHE_EVERYTHING"]
+            XS.env["XONSH_CACHE_SCRIPTS"] or XS.env["XONSH_CACHE_EVERYTHING"]
         )
     else:
         return execer.cacheall or XS.env["XONSH_CACHE_EVERYTHING"]

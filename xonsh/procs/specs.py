@@ -787,11 +787,11 @@ class SubprocSpec:
     def resolve_auto_cd(self):
         """Implements AUTO_CD functionality."""
         if not (
-                self.alias is None
-                and self.binary_loc is None
-                and len(self.cmd) == 1
-                and XS.env.get("AUTO_CD")
-                and os.path.isdir(self.cmd[0])
+            self.alias is None
+            and self.binary_loc is None
+            and len(self.cmd) == 1
+            and XS.env.get("AUTO_CD")
+            and os.path.isdir(self.cmd[0])
         ):
             return
         self.cmd.insert(0, "cd")
