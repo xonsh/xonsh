@@ -1715,12 +1715,12 @@ def _a():
 @aliases.register
 def _b():
     echo 3 && echo 4
-    
-    
+
+
 for i in range(100):
     $(a | b)
 
-# Empirically, in case of a leak, the output 
+# Empirically, in case of a leak, the output
 # drops out at ~600-1000 function calls.
 for i in range(10):
     for j in range(100):
@@ -1745,6 +1745,6 @@ def test_callable_alias_fd_leaking(test_code):
     assert ret == 0
     assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
     assert "Exception" not in out  # No I/O errors or "Bad file descriptor" errors.
-    assert out.count('3\\n4\\n') == 1100  # No fd leaking.
-    assert '1' not in out  # No stdout leaking from alias `a`.
-    assert '2' not in out  # No stdout leaking from alias `a`.
+    assert out.count("3\\n4\\n") == 1100  # No fd leaking.
+    assert "1" not in out  # No stdout leaking from alias `a`.
+    assert "2" not in out  # No stdout leaking from alias `a`.

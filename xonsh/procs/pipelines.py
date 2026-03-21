@@ -529,7 +529,10 @@ class CommandPipeline:
             # until the command has completed.
             self._set_input()
         finally:
-            if not hasattr(self.proc, 'prevs_are_closed') or not self.proc.prevs_are_closed:
+            if (
+                not hasattr(self.proc, "prevs_are_closed")
+                or not self.proc.prevs_are_closed
+            ):
                 self._close_prev_procs()
             self._close_proc()
         self._check_signal()

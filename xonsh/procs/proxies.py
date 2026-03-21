@@ -412,7 +412,9 @@ class ProcProxyThread(threading.Thread):
     @property
     def pipe_channels(self):
         """All PipeChannel objects managed by this proc."""
-        return [p for p in (self._stdin_pipe, self._stdout_pipe, self._stderr_pipe) if p]
+        return [
+            p for p in (self._stdin_pipe, self._stdout_pipe, self._stderr_pipe) if p
+        ]
 
     def run(self):
         """Set up input/output streams and execute the child function in a new
@@ -714,7 +716,10 @@ class ProcProxyThread(threading.Thread):
                 pass
             elif stdout == subprocess.PIPE:
                 self._stdout_pipe = PipeChannel.from_pipe()
-                c2pread, c2pwrite = self._stdout_pipe.read_fd, self._stdout_pipe.write_fd
+                c2pread, c2pwrite = (
+                    self._stdout_pipe.read_fd,
+                    self._stdout_pipe.write_fd,
+                )
             elif stdout == subprocess.DEVNULL:
                 c2pwrite = self._get_devnull()
             elif isinstance(stdout, int):
@@ -727,7 +732,10 @@ class ProcProxyThread(threading.Thread):
                 pass
             elif stderr == subprocess.PIPE:
                 self._stderr_pipe = PipeChannel.from_pipe()
-                errread, errwrite = self._stderr_pipe.read_fd, self._stderr_pipe.write_fd
+                errread, errwrite = (
+                    self._stderr_pipe.read_fd,
+                    self._stderr_pipe.write_fd,
+                )
             elif stderr == subprocess.STDOUT:
                 errwrite = c2pwrite
             elif stderr == subprocess.DEVNULL:
