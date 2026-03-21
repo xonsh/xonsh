@@ -97,9 +97,9 @@ def is_superuser():
 
 @lazyobject
 def xsh():
-    from xonsh.built_ins import XSH
+    from xonsh.built_ins import XS
 
-    return XSH
+    return XS
 
 
 class XonshError(Exception):

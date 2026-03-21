@@ -10,13 +10,13 @@ def test_envionment():
 
 
 def test_xonsh_party():
-  from xonsh.built_ins import XSH
-  orig = XSH.env.get('XONSH_INTERACTIVE')
-  XSH.env['XONSH_INTERACTIVE'] = False
+  from xonsh.built_ins import XS
+  orig = XS.env.get('XONSH_INTERACTIVE')
+  XS.env['XONSH_INTERACTIVE'] = False
   try:
       x = 'xonsh'
       y = 'party'
       out = $(echo @(x + '-' + y)).strip()
       assert out == 'xonsh-party', 'Out really was <' + out + '>, sorry.'
   finally:
-      XSH.env['XONSH_INTERACTIVE'] = orig
+      XS.env['XONSH_INTERACTIVE'] = orig

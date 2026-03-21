@@ -13,7 +13,7 @@ import xonsh.lib.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.procs.readers import ConsoleParallelReader, NonBlockingFDReader, safe_fdclose
 
 
@@ -83,7 +83,7 @@ def safe_readable(handle):
 def update_process_group(pipeline_group, background):
     if not xp.ON_POSIX:
         return False
-    env = XSH.env
+    env = XS.env
     if not env.get("XONSH_INTERACTIVE"):
         return False
     if background:
@@ -193,7 +193,7 @@ class CommandPipeline:
         self.proc = self.procs[-1]
 
     def __repr__(self):
-        debug = XSH.env.get("XONSH_DEBUG", False)
+        debug = XS.env.get("XONSH_DEBUG", False)
         attrs = self.attrnames + (self.attrnames_ext if debug else ())
         s = self.__class__.__name__ + "(\n  "
         s += ",\n  ".join(
@@ -247,7 +247,7 @@ class CommandPipeline:
         proc = self.proc
         if proc is None:
             return
-        timeout = XSH.env.get("XONSH_PROC_FREQUENCY")
+        timeout = XS.env.get("XONSH_PROC_FREQUENCY")
         # get the correct stdout
         stdout = proc.stdout
         if (
@@ -376,7 +376,7 @@ class CommandPipeline:
         yields each line. This may optionally accept lines (in bytes) to iterate
         over, in which case it does not call iterraw().
         """
-        env = XSH.env
+        env = XS.env
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
         lines = self.lines
@@ -416,7 +416,7 @@ class CommandPipeline:
         """Streams lines to sys.stderr and the errors attribute."""
         if not lines:
             return
-        env = XSH.env
+        env = XS.env
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
         b = b"".join(lines)
@@ -439,7 +439,7 @@ class CommandPipeline:
         self._raw_error = b
         # do some munging of the line before we save it to the attr
         b = b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-        env = XSH.env
+        env = XS.env
         s = b.decode(
             encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
         )
@@ -455,7 +455,7 @@ class CommandPipeline:
         if not b:
             return ""
         if isinstance(b, bytes | bytearray):
-            env = XSH.env
+            env = XS.env
             s = b.decode(
                 encoding=env.get("XONSH_ENCODING"),
                 errors=env.get("XONSH_ENCODING_ERRORS"),
@@ -507,12 +507,12 @@ class CommandPipeline:
             return
         if xj.give_terminal_to(pgid):  # if gave term succeed
             self.term_pgid = pgid
-            if XSH.shell is not None:
+            if XS.shell is not None:
                 # restoring sanity could probably be called whenever we return
                 # control to the shell. But it only seems to matter after a
                 # ^Z event. This *has* to be called after we give the terminal
                 # back to the shell.
-                XSH.shell.shell.restore_tty_sanity()
+                XS.shell.shell.restore_tty_sanity()
 
     def resume(self, job, tee_output=True):
         self.ended = False
@@ -623,7 +623,7 @@ class CommandPipeline:
 
     def _apply_to_history(self):
         """Applies the results to the current history object."""
-        hist = XSH.history
+        hist = XS.history
         if hist is not None:
             hist.last_cmd_rtn = 1 if self.proc is None else self.proc.returncode
 
@@ -641,7 +641,7 @@ class CommandPipeline:
         if raise_subproc_error is False:
             return
 
-        if raise_subproc_error or XSH.env.get("RAISE_SUBPROC_ERROR", True):
+        if raise_subproc_error or XS.env.get("RAISE_SUBPROC_ERROR", True):
             try:
                 raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
             finally:
@@ -791,7 +791,7 @@ class CommandPipeline:
         """Prefix to print in front of stderr, as bytes."""
         p = self._stderr_prefix
         if p is None:
-            env = XSH.env
+            env = XS.env
             t = env.get("XONSH_STDERR_PREFIX")
             s = xt.format_std_prepost(t, env=env)
             p = s.encode(
@@ -806,7 +806,7 @@ class CommandPipeline:
         """Postfix to print after stderr, as bytes."""
         p = self._stderr_postfix
         if p is None:
-            env = XSH.env
+            env = XS.env
             t = env.get("XONSH_STDERR_POSTFIX")
             s = xt.format_std_prepost(t, env=env)
             p = s.encode(
@@ -863,7 +863,7 @@ class PrevProcCloser(threading.Thread):
             return
         proc = pipeline.proc
         prev_end_time = None
-        timeout = XSH.env.get("XONSH_PROC_FREQUENCY")
+        timeout = XS.env.get("XONSH_PROC_FREQUENCY")
         sleeptime = min(timeout * 1000, 0.1)
         while proc.poll() is None:
             if not check_prev_done:

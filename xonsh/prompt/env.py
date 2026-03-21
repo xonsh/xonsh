@@ -4,7 +4,7 @@ import functools
 import re
 from pathlib import Path
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 
 
 def find_env_name() -> str | None:
@@ -15,12 +15,12 @@ def find_env_name() -> str | None:
 
     Otherwise - if it is set - from ``$CONDA_DEFAULT_ENV``.
     """
-    virtual_env = XSH.env.get("VIRTUAL_ENV")
+    virtual_env = XS.env.get("VIRTUAL_ENV")
     if virtual_env:
         name = _determine_env_name(virtual_env)
         if name:
             return name
-    conda_default_env = XSH.env.get("CONDA_DEFAULT_ENV")
+    conda_default_env = XS.env.get("CONDA_DEFAULT_ENV")
     if conda_default_env:
         return conda_default_env
 
@@ -32,9 +32,9 @@ def env_name() -> str:
     Names from other sources are surrounded with ``{env_prefix}`` and
     ``{env_postfix}`` fields.
     """
-    if XSH.env.get("VIRTUAL_ENV_DISABLE_PROMPT"):
+    if XS.env.get("VIRTUAL_ENV_DISABLE_PROMPT"):
         return ""
-    virtual_env_prompt = XSH.env.get("VIRTUAL_ENV_PROMPT")
+    virtual_env_prompt = XS.env.get("VIRTUAL_ENV_PROMPT")
     if virtual_env_prompt:
         return virtual_env_prompt
     found_envname = find_env_name()
@@ -58,7 +58,7 @@ def _determine_env_name(virtual_env: str) -> str:
 
 
 def _surround_env_name(name: str) -> str:
-    pf = XSH.shell.prompt_formatter
+    pf = XS.shell.prompt_formatter
     pre = pf._get_field_value("env_prefix")
     post = pf._get_field_value("env_postfix")
     return f"{pre}{name}{post}"
@@ -71,7 +71,7 @@ def vte_new_tab_cwd() -> None:
     on startup. Note that this does not return a string, it simply prints
     and flushes the escape sequence to stdout directly.
     """
-    env = XSH.env
+    env = XS.env
     t = "\033]7;file://{}{}\007"
     s = t.format(env.get("HOSTNAME"), env.get("PWD"))
     print(s, end="", flush=True)

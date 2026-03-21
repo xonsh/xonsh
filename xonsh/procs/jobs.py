@@ -11,7 +11,7 @@ import threading
 import time
 import typing as tp
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lib.lazyasd import LazyObject
@@ -30,7 +30,7 @@ _last_exit_time: float | None = None
 # the main thread, it is set to _tasks_main.
 #
 # _jobs_thread_local.jobs is a dictionary used to keep track of the jobs.
-# On the main thread, it is set to XSH.all_jobs.
+# On the main thread, it is set to XS.all_jobs.
 _jobs_thread_local = threading.local()
 
 # Task queue for the main thread
@@ -131,7 +131,7 @@ def use_main_jobs():
     old_jobs = get_jobs()
     try:
         _jobs_thread_local.tasks = _tasks_main
-        _jobs_thread_local.jobs = XSH.all_jobs
+        _jobs_thread_local.jobs = XS.all_jobs
         yield
     finally:
         _jobs_thread_local.tasks = old_tasks
@@ -154,7 +154,7 @@ def get_jobs() -> dict[int, dict]:
         return _jobs_thread_local.jobs
     except AttributeError:
         if on_main_thread():
-            _jobs_thread_local.jobs = XSH.all_jobs
+            _jobs_thread_local.jobs = XS.all_jobs
         else:
             _jobs_thread_local.jobs = {}
         return _jobs_thread_local.jobs
@@ -453,7 +453,7 @@ def add_job(info):
     if (
         not info["pipeline"].spec.captured == "object"
         and info["bg"]
-        and XSH.env.get("XONSH_INTERACTIVE")
+        and XS.env.get("XONSH_INTERACTIVE")
     ):
         print_one_job(num)
 
@@ -475,12 +475,12 @@ def clean_jobs():
     warning if any exist, and return False. Otherwise, return True.
     """
     jobs_clean = True
-    if XSH.env["XONSH_INTERACTIVE"]:
+    if XS.env["XONSH_INTERACTIVE"]:
         _clear_dead_jobs()
 
         if get_jobs():
             global _last_exit_time
-            hist = XSH.history
+            hist = XS.history
             if hist is not None and len(hist.tss) > 0:
                 last_cmd_start = hist.tss[-1][0]
             else:
@@ -498,7 +498,7 @@ def clean_jobs():
                 else:
                     msg = "there is an unfinished job"
 
-                if XSH.env["SHELL_TYPE"] != "prompt_toolkit":
+                if XS.env["SHELL_TYPE"] != "prompt_toolkit":
                     # The Ctrl+D binding for prompt_toolkit already inserts a
                     # newline
                     print()
@@ -575,7 +575,7 @@ def resume_job(args, wording: tp.Literal["fg", "bg"]):
     job = get_task(tid)
     job["bg"] = False
     job["status"] = "running"
-    if XSH.env.get("XONSH_INTERACTIVE"):
+    if XS.env.get("XONSH_INTERACTIVE"):
         print_one_job(tid)
     pipeline = job["pipeline"]
     pipeline.resume(
@@ -652,7 +652,7 @@ def disown_fn(
         except KeyError:
             return "", f"'{tid}' is not a valid job ID"
 
-        auto_cont = XSH.env.get("AUTO_CONTINUE", False)
+        auto_cont = XS.env.get("AUTO_CONTINUE", False)
         if auto_cont or force_auto_continue:
             _continue(current_task)
         elif current_task["status"] == "stopped":

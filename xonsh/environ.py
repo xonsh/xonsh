@@ -28,7 +28,7 @@ from xonsh.ansi_colors import (
     ansi_reverse_style,
     ansi_style_by_name,
 )
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
@@ -243,8 +243,8 @@ def to_debug(x):
     execer's debug level.
     """
     val = to_bool_or_int(x)
-    if XSH.execer is not None:
-        XSH.execer.debug_level = val
+    if XS.execer is not None:
+        XS.execer.debug_level = val
     return val
 
 
@@ -475,7 +475,7 @@ class LsColors(cabc.MutableMapping):
     @property
     def style_name(self):
         """Current XONSH_COLOR_STYLE value"""
-        env = getattr(XSH, "env", {}) or {}
+        env = getattr(XS, "env", {}) or {}
         env_style_name = env.get("XONSH_COLOR_STYLE", "default")
         if self._style_name is None or self._style_name != env_style_name:
             self._style_name = env_style_name
@@ -527,8 +527,8 @@ class LsColors(cabc.MutableMapping):
         if filename is not None:
             cmd.append(filename)
         # get env
-        if XSH.env:
-            denv = XSH.env.detype()
+        if XS.env:
+            denv = XS.env.detype()
         else:
             denv = None
         # run dircolors
@@ -574,7 +574,7 @@ def ensure_ls_colors_in_env(spec=None, **kwargs):
     environment. This fires exactly once upon the first time the
     ls command is called.
     """
-    env = XSH.env
+    env = XS.env
     if "LS_COLORS" not in env._d:
         # this adds it to the env too
         default_lscolors(env)
@@ -766,7 +766,7 @@ def default_lscolors(env):
 def default_prompt_fields(env):
     """``xonsh.prompt.PROMPT_FIELDS``"""
     # todo: generate document for all default fields
-    return prompt.PromptFields(XSH)
+    return prompt.PromptFields(XS)
 
 
 VarKeyType = tp.Union[str, tp.Pattern]  # noqa: UP007
@@ -2688,7 +2688,7 @@ def locate_binary(name):
     with scanning all files in ``$PATH``. First of all take a look into ``xonsh.specs.executables``
     for more fast implementation the locate operation.
     """
-    return XSH.commands_cache.locate_binary(name)
+    return XS.commands_cache.locate_binary(name)
 
 
 def scan_dir_for_source_files(path: str):

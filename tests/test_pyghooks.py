@@ -10,7 +10,7 @@ import pytest
 from xonsh.environ import LsColors
 from xonsh.platform import ON_WINDOWS
 from xonsh.pyghooks import (
-    XSH,
+    XS,
     Color,
     Token,
     XonshLexer,
@@ -398,7 +398,7 @@ def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     # that env being set.
     monkeypatch.setattr(xession, "env", None)
 
-    assert XSH.env is None
+    assert XS.env is None
     lexer = XonshLexer()
-    assert XSH.env is not None
+    assert XS.env is not None
     list(lexer.get_tokens_unprocessed("  some text"))

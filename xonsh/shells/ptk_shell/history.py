@@ -2,7 +2,7 @@
 
 import prompt_toolkit.history
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 
 
 class PromptToolkitHistory(prompt_toolkit.history.History):
@@ -22,7 +22,7 @@ class PromptToolkitHistory(prompt_toolkit.history.History):
         """Loads synchronous history strings"""
         if not self.load_prev:
             return
-        hist = XSH.history
+        hist = XS.history
         if hist is None:
             return
         prev_line = None

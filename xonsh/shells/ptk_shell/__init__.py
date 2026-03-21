@@ -24,7 +24,7 @@ from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.styles import Style, merge_styles
 from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
 from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS
@@ -188,7 +188,7 @@ class PromptToolkitShell(BaseShell):
     }
 
     def __init__(self, **kwargs):
-        if not XSH.env.get("XONSH_DEBUG", False):
+        if not XS.env.get("XONSH_DEBUG", False):
             __import__("warnings").filterwarnings(
                 "ignore",
                 "There is no current event loop",
@@ -205,9 +205,9 @@ class PromptToolkitShell(BaseShell):
         self.push = self._push
 
         ptk_args.setdefault("history", self.history)
-        if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
+        if not XS.env.get("XONSH_COPY_ON_DELETE", False):
             disable_copy_on_deletion()
-        if HAVE_SYS_CLIPBOARD and (XSH.env.get("XONSH_USE_SYSTEM_CLIPBOARD", True)):
+        if HAVE_SYS_CLIPBOARD and (XS.env.get("XONSH_USE_SYSTEM_CLIPBOARD", True)):
             default_clipboard = PyperclipClipboard()
         else:
             default_clipboard = InMemoryClipboard()
@@ -237,10 +237,10 @@ class PromptToolkitShell(BaseShell):
 
         def handler_before_render(app):
             if not app.current_buffer.text and (
-                suggestion := XSH.env.get("XONSH_PROMPT_NEXT_CMD_SUGGESTION")
+                suggestion := XS.env.get("XONSH_PROMPT_NEXT_CMD_SUGGESTION")
             ):
                 app.current_buffer.suggestion = Suggestion(suggestion)
-                XSH.env["XONSH_PROMPT_NEXT_CMD_SUGGESTION"] = ""
+                XS.env["XONSH_PROMPT_NEXT_CMD_SUGGESTION"] = ""
 
         self.prompter.app.before_render.add_handler(handler_before_render)
 
@@ -248,7 +248,7 @@ class PromptToolkitShell(BaseShell):
         """These are non-essential attributes for the PTK shell to start.
         Lazy loading these later would save some startup time.
         """
-        if not XSH.env.get("COLOR_INPUT"):
+        if not XS.env.get("COLOR_INPUT"):
             return
 
         if HAS_PYGMENTS:
@@ -262,7 +262,7 @@ class PromptToolkitShell(BaseShell):
         events.on_timingprobe.fire(name="on_post_prompt_style")
 
     def get_prompt_style(self):
-        env = XSH.env
+        env = XS.env
 
         style_overrides_env = env.get("PTK_STYLE_OVERRIDES", {}).copy()
         if (
@@ -310,7 +310,7 @@ class PromptToolkitShell(BaseShell):
         history.
         """
         events.on_pre_prompt_format.fire()
-        env = XSH.env
+        env = XS.env
 
         if next_command := env.get("XONSH_PROMPT_NEXT_CMD", ""):
             env["XONSH_PROMPT_NEXT_CMD"] = ""
@@ -429,7 +429,7 @@ class PromptToolkitShell(BaseShell):
         if intro:
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
-        while XSH.exit is None:
+        while XS.exit is None:
             try:
                 line = self.singleline(auto_suggest=auto_suggest)
                 if not line:
@@ -441,26 +441,26 @@ class PromptToolkitShell(BaseShell):
             except (KeyboardInterrupt, SystemExit) as e:
                 self.reset_buffer()
                 if isinstance(e, KeyboardInterrupt):
-                    if XSH.env.get("XONSH_HISTORY_SIGINT_FLUSH", True):
+                    if XS.env.get("XONSH_HISTORY_SIGINT_FLUSH", True):
                         """
                         Development tools like PyCharm send SIGINT before SIGKILL.
                         This is the last chance to save history in this case.
                         """
-                        if XSH.env.get("XONSH_DEBUG", False):
+                        if XS.env.get("XONSH_DEBUG", False):
                             print("Flushing history after SIGINT.", file=sys.stderr)
-                        XSH.history.flush()
+                        XS.history.flush()
                 if isinstance(e, SystemExit):
                     get_app().reset()  # Reset TTY mouse and keys handlers.
                     self.restore_tty_sanity()  # Reset TTY SIGINT handlers.
                     raise
             except EOFError:
-                if XSH.env.get("IGNOREEOF"):
+                if XS.env.get("IGNOREEOF"):
                     print('Use "exit" to leave the shell.', file=sys.stderr)
                 else:
                     break
 
     def _get_prompt_tokens(self, env_name: str, prompt_name: str, **kwargs):
-        env = XSH.env  # type:ignore
+        env = XS.env  # type:ignore
         p = env.get(env_name)
 
         if not p and "default" in kwargs:
@@ -502,7 +502,7 @@ class PromptToolkitShell(BaseShell):
     @property
     def bottom_toolbar_tokens(self):
         """Returns self._bottom_toolbar_tokens if it would yield a result"""
-        if XSH.env.get("BOTTOM_TOOLBAR"):
+        if XS.env.get("BOTTOM_TOOLBAR"):
             return self._bottom_toolbar_tokens
 
     def continuation_tokens(self, width, line_number, is_soft_wrap=False):
@@ -510,14 +510,14 @@ class PromptToolkitShell(BaseShell):
         if is_soft_wrap:
             return ""
         width -= 1
-        dots = XSH.env.get("MULTILINE_PROMPT")
+        dots = XS.env.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
         if not dots:
             return ""
-        prefix = XSH.env.get(
+        prefix = XS.env.get(
             "MULTILINE_PROMPT_PRE", ""
         )  # e.g.: '\x01\x1b]133;P;k=c\x07\x02'
-        suffix = XSH.env.get(
+        suffix = XS.env.get(
             "MULTILINE_PROMPT_POS", ""
         )  # e.g.: '\x01\x1b]133;B\x07\x02'
         is_affix = any(x for x in [prefix, suffix])
@@ -563,7 +563,7 @@ class PromptToolkitShell(BaseShell):
         """
         tokens = partial_color_tokenize(string)
         if force_string and HAS_PYGMENTS:
-            env = XSH.env
+            env = XS.env
             style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             self.styler.override(style_overrides_env)
@@ -585,7 +585,7 @@ class PromptToolkitShell(BaseShell):
             # assume this is a list of (Token, str) tuples and just print
             tokens = string
         tokens = PygmentsTokens(tokens)
-        env = XSH.env
+        env = XS.env
         style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
         if HAS_PYGMENTS:
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
@@ -618,7 +618,7 @@ class PromptToolkitShell(BaseShell):
         """Returns the current color map."""
         if not HAS_PYGMENTS:
             return DEFAULT_STYLE_DICT
-        env = XSH.env
+        env = XS.env
         self.styler.style_name = env.get("XONSH_COLOR_STYLE")
         return self.styler.styles
 
@@ -648,7 +648,7 @@ class PromptToolkitShell(BaseShell):
         #   sys.stdout.write('\033[9999999C\n')
         if not ON_POSIX:
             return
-        stty, _ = XSH.commands_cache.lazyget("stty", (None, None))
+        stty, _ = XS.commands_cache.lazyget("stty", (None, None))
         if stty is None:
             return
         os.system(stty + " sane")

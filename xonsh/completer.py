@@ -4,7 +4,7 @@ import collections.abc as cabc
 import sys
 import typing as tp
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.completers.tools import (
     Completion,
     RichCompletion,
@@ -181,7 +181,7 @@ class Completer:
     ) -> tp.Iterator[tuple[Completion, int]]:
         filter_func = get_filter_function()
 
-        for name, func in XSH.completers.items():
+        for name, func in XS.completers.items():
             try:
                 if is_contextual_completer(func):
                     if completion_context is None:
@@ -265,7 +265,7 @@ class Completer:
                 break
 
     def complete_from_context(self, completion_context, old_completer_args=None):
-        trace = XSH.env.get("XONSH_TRACE_COMPLETIONS")
+        trace = XS.env.get("XONSH_TRACE_COMPLETIONS")
         if trace:
             print("\nTRACE COMPLETIONS: Getting completions with context:")
             sys.displayhook(completion_context)
@@ -274,7 +274,7 @@ class Completer:
         # using dict to keep order py3.6+
         completions = {}
 
-        query_limit = XSH.env.get("COMPLETION_QUERY_LIMIT")
+        query_limit = XS.env.get("COMPLETION_QUERY_LIMIT")
 
         for comp in self.generate_completions(
             completion_context,

@@ -64,11 +64,11 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    from xonsh.built_ins import XSH
+    from xonsh.built_ins import XS
 
-    if HAS_PYGMENTS and XSH.shell is not None:
-        styles = XSH.shell.shell.styler.styles
-    elif XSH.shell is not None:
+    if HAS_PYGMENTS and XS.shell is not None:
+        styles = XS.shell.shell.styler.styles
+    elif XS.shell is not None:
         styles = DEFAULT_STYLE_DICT
     else:
         styles = None

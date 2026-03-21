@@ -20,7 +20,7 @@ import xonsh.completers._aliases as xca
 import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 import xonsh.xoreutils.xcontext as xxt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
@@ -207,7 +207,7 @@ class Aliases(cabc.MutableMapping):
         if callable(value):
             return [value] + list(acc_args)
         else:
-            expand_path = XSH.expand_path
+            expand_path = XS.expand_path
             token, *rest = map(expand_path, value)
             if token in seen_tokens or token not in self._raw:
                 # ^ Making sure things like `egrep=egrep --color=auto` works,
@@ -307,7 +307,7 @@ class Aliases(cabc.MutableMapping):
                 self._raw[key] = ExecAlias(val, filename=f)
             elif isexpression(val):
                 # expansion substitution
-                lexer = XSH.execer.parser.lexer
+                lexer = XS.execer.parser.lexer
                 self._raw[key] = list(map(strip_simple_quotes, lexer.split(val)))
             else:
                 # need to exec alias
@@ -372,22 +372,22 @@ class ExecAlias:
     def __call__(
         self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
-        execer = XSH.execer
+        execer = XS.execer
         frame = stack[0][0]  # execute as though we are at the call site
 
         alias_args = {"args": args}
         for i, a in enumerate(args):
             alias_args[f"arg{i}"] = a
 
-        with XSH.env.swap(alias_args):
+        with XS.env.swap(alias_args):
             execer.exec(
                 self.src,
                 glbs=frame.f_globals,
                 locs=frame.f_locals,
                 filename=self.filename,
             )
-        if XSH.history is not None:
-            return XSH.history.last_cmd_rtn
+        if XS.history is not None:
+            return XS.history.last_cmd_rtn
 
     def __repr__(self):
         return f"ExecAlias({self.src!r}, filename={self.filename!r})"
@@ -582,14 +582,14 @@ def xonsh_exit(args, stdin=None):
             code = 1
     else:
         code = 0
-    XSH.exit = code
+    XS.exit = code
     print()  # gimme a newline
     return None, None
 
 
 def xonsh_reset(args, stdin=None):
     """Clears __xonsh__.ctx"""
-    XSH.ctx.clear()
+    XS.ctx.clear()
 
 
 def source_foreign_fn(
@@ -660,7 +660,7 @@ def source_foreign_fn(
         Will not actually source the file.
     """
     extra_args = tuple(extra_args.split())
-    env = XSH.env
+    env = XS.env
     suppress_skip_message = (
         env.get("FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE")
         if not suppress_skip_message
@@ -723,7 +723,7 @@ def source_foreign_fn(
         if k not in fsenv:
             env.pop(k, None)
     # Update aliases
-    baliases = XSH.aliases
+    baliases = XS.aliases
     for k, v in fsaliases.items():
         if k in baliases and v == baliases[k]:
             continue  # no change from original
@@ -775,7 +775,7 @@ def source_alias_fn(
     ignore_ext : -e, --ignore-ext
         don't check the file extension
     """
-    env = XSH.env
+    env = XS.env
     encoding = env.get("XONSH_ENCODING")
     errors = env.get("XONSH_ENCODING_ERRORS")
     for i, fname in enumerate(files):
@@ -806,14 +806,14 @@ def source_alias_fn(
             src = fp.read()
         if not src.endswith("\n"):
             src += "\n"
-        ctx = XSH.ctx
+        ctx = XS.ctx
         updates = {"__file__": fpath, "__name__": os.path.abspath(fpath)}
         with (
             env.swap(XONSH_MODE="source", **make_args_env(files[i + 1 :])),
             swap_values(ctx, updates),
         ):
             try:
-                XSH.builtins.execx(src, "exec", ctx, filename=fpath)
+                XS.builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
                 print_color(
                     "{RED}You may be attempting to source non-xonsh file! "
@@ -886,7 +886,7 @@ def source_cmd_fn(
     prevcmd = "call "
     prevcmd += " ".join([argvquote(arg, force=True) for arg in args])
     prevcmd = escape_windows_cmd_string(prevcmd)
-    with XSH.env.swap(PROMPT="$P$G"):
+    with XS.env.swap(PROMPT="$P$G"):
         return source_foreign_fn(
             shell="cmd",
             files_or_code=args,
@@ -964,7 +964,7 @@ def xexec_fn(
 
     denv = {}
     if not clean:
-        denv = XSH.env.detype()
+        denv = XS.env.detype()
 
         # decrement $SHLVL to mirror bash's behaviour
         if "SHLVL" in denv:
@@ -1027,7 +1027,7 @@ def showcmd(args, stdin=None):
     if len(args) == 0 or (len(args) == 1 and args[0] in {"-h", "--help"}):
         print(showcmd.__doc__.rstrip().replace("\n    ", "\n"))
     elif args[0] in {"-e", "--expand-alias"}:
-        sys.displayhook(XSH.aliases.eval_alias(args[1:]))
+        sys.displayhook(XS.aliases.eval_alias(args[1:]))
     else:
         sys.displayhook(args)
 
@@ -1051,7 +1051,7 @@ def detect_xpip_alias():
         elif IN_APPIMAGE:
             # In AppImage `sys.executable` is equal to path to xonsh.AppImage file and the real python executable is in $_
             return [
-                XSH.env.get("_", "APPIMAGE_PYTHON_EXECUTABLE_NOT_FOUND"),
+                XS.env.get("_", "APPIMAGE_PYTHON_EXECUTABLE_NOT_FOUND"),
                 "-m",
                 "pip",
             ]
@@ -1117,7 +1117,7 @@ def make_default_aliases():
         "xontrib": xontribs_main,
         "completer": xca.completer_alias,
         "xpip": detect_xpip_alias(),
-        "xpython": [XSH.env.get("_", sys.executable)]
+        "xpython": [XS.env.get("_", sys.executable)]
         if IN_APPIMAGE
         else [sys.executable],
         "xreset": xonsh_reset,
@@ -1135,15 +1135,15 @@ def make_default_aliases():
             "Command decorator. Return output as list of lines.",
         ),
         "@json": SpecAttrDecoratorAlias(
-            {"output_format": lambda lines: XSH.imp.json.loads("\n".join(lines))},
+            {"output_format": lambda lines: XS.imp.json.loads("\n".join(lines))},
             "Command decorator. Parses JSON and returns JSON object.",
         ),
         "@jsonl": SpecAttrDecoratorAlias(
-            {"output_format": lambda lines: [XSH.imp.json.loads(lj) for lj in lines]},
+            {"output_format": lambda lines: [XS.imp.json.loads(lj) for lj in lines]},
             "Command decorator. Parses JSON strings and returns list of JSON objects.",
         ),
         "@yaml": SpecAttrDecoratorAlias(
-            {"output_format": lambda lines: XSH.imp.yaml.safe_load("\n".join(lines))},
+            {"output_format": lambda lines: XS.imp.yaml.safe_load("\n".join(lines))},
             "Command decorator. Parses YAML and returns dict.",
         ),
     }
@@ -1177,8 +1177,8 @@ def make_default_aliases():
             # Add aliases specific to the Anaconda python distribution.
             default_aliases["activate"] = ["source-cmd", "activate.bat"]
             default_aliases["deactivate"] = ["source-cmd", "deactivate.bat"]
-        if shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
-            # XSH.commands_cache is not available during setup
+        if shutil.which("sudo", path=XS.env.get_detyped("PATH")):
+            # XS.commands_cache is not available during setup
             import xonsh.platforms.winutils as winutils
 
             def sudo(args):

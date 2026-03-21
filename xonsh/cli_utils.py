@@ -14,7 +14,7 @@ import typing as tp
 from collections import defaultdict
 from typing import Annotated
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.completers.tools import RichCompletion
 
 
@@ -287,7 +287,7 @@ def get_argparse_formatter_class():
     if (
         hasattr(sys, "stderr")
         and sys.stderr.isatty()
-        and XSH.env.get("XONSH_INTERACTIVE")
+        and XS.env.get("XONSH_INTERACTIVE")
         and HAS_PYGMENTS
     ):
         return RstHelpFormatter
@@ -421,7 +421,7 @@ class ArgparseCompleter:
 
         self.parser, self.remaining_args = self.get_parser(parser, args[1:])
 
-        self.long_opts_only = XSH.env.get("ALIAS_COMPLETIONS_OPTIONS_LONGEST", False)
+        self.long_opts_only = XS.env.get("ALIAS_COMPLETIONS_OPTIONS_LONGEST", False)
         self.command = command
         kwargs["command"] = command
         # will be sent to completer function
@@ -470,7 +470,7 @@ class ArgparseCompleter:
         if hasattr(act, "completer") and callable(act.completer):  # type: ignore
             # call the completer function
             kwargs.update(self.kwargs)
-            yield from act.completer(xsh=XSH, action=act, completer=self, **kwargs)  # type: ignore
+            yield from act.completer(xsh=XS, action=act, completer=self, **kwargs)  # type: ignore
 
         if (
             hasattr(act, "choices")
@@ -516,7 +516,7 @@ class ArgparseCompleter:
             return
 
         # complete remaining options only if requested or enabled
-        show_opts = XSH.env.get("ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT", False)
+        show_opts = XS.env.get("ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT", False)
         if not show_opts:
             if not (
                 self.command.prefix

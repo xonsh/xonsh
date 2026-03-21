@@ -19,7 +19,7 @@ import time
 import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.cli_utils import run_with_partial_args
 from xonsh.procs.readers import safe_fdclose
 
@@ -399,7 +399,7 @@ class ProcProxyThread(threading.Thread):
         # start up the proc
         super().__init__()
         # This is so the thread will use the same swapped values as the origin one.
-        self.original_swapped_values = XSH.env.get_swapped_values()
+        self.original_swapped_values = XS.env.get_swapped_values()
         self.start()
 
     def __del__(self):
@@ -413,13 +413,13 @@ class ProcProxyThread(threading.Thread):
         if self.f is None:
             return
         # Set the thread-local swapped values.
-        XSH.env.set_swapped_values(self.original_swapped_values)
+        XS.env.set_swapped_values(self.original_swapped_values)
         spec = self._wait_and_getattr("spec")
         last_in_pipeline = spec.last_in_pipeline
         if last_in_pipeline:
             capout = spec.captured_stdout  # NOQA
             caperr = spec.captured_stderr  # NOQA
-        env = XSH.env
+        env = XS.env
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
         if xp.ON_WINDOWS:
@@ -456,7 +456,7 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = sys.stderr
         # run the function itself
         try:
-            alias_stack = XSH.env.get("__ALIAS_STACK", "")
+            alias_stack = XS.env.get("__ALIAS_STACK", "")
             if self.env and self.env.get("__ALIAS_NAME"):
                 alias_stack += ":" + self.env["__ALIAS_NAME"]
 
@@ -465,7 +465,7 @@ class ProcProxyThread(threading.Thread):
                 STDERR_DISPATCHER.register(sp_stderr),
                 xt.redirect_stdout(STDOUT_DISPATCHER),
                 xt.redirect_stderr(STDERR_DISPATCHER),
-                XSH.env.swap(self.env, __ALIAS_STACK=alias_stack),
+                XS.env.swap(self.env, __ALIAS_STACK=alias_stack),
             ):
                 r = run_with_partial_args(
                     self.f,
@@ -763,7 +763,7 @@ class ProcProxy:
         """
         if self.f is None:
             return 0
-        env = XSH.env
+        env = XS.env
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
         spec = self._wait_and_getattr("spec")
@@ -780,7 +780,7 @@ class ProcProxy:
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
-            with XSH.env.swap(self.env):
+            with XS.env.swap(self.env):
                 r = run_with_partial_args(
                     self.f,
                     {

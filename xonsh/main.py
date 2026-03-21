@@ -11,7 +11,7 @@ import traceback
 
 import xonsh.procs.pipelines as xpp
 from xonsh import __version__
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
 from xonsh.environ import (
     get_home_xonshrc_path,
@@ -287,7 +287,7 @@ def _pprint_displayhook(value):
     if isinstance(value, xpp.HiddenCommandPipeline):
         builtins._ = value
         return
-    env = XSH.env
+    env = XS.env
     printed_val = None
     if env.get("PRETTY_PRINT_RESULTS"):
         printed_val = pretty(value)
@@ -346,7 +346,7 @@ def _load_rc_files(shell_kwargs: dict, args, env, execer, ctx):
     # load rc files
     login = shell_kwargs.get("login", True)
     rc, rcd = _get_rc_files(shell_kwargs, args, env)
-    XSH.rc_files = xonshrc_context(
+    XS.rc_files = xonshrc_context(
         rcfiles=rc, rcdirs=rcd, execer=execer, ctx=ctx, env=env, login=login
     )
     events.on_post_rc.fire()
@@ -383,7 +383,7 @@ def start_services(shell_kwargs, args, pre_env=None):
     )
     events.on_timingprobe.fire(name="post_execer_init")
     events.on_timingprobe.fire(name="pre_xonsh_session_load")
-    XSH.load(
+    XS.load(
         ctx=ctx,
         execer=execer,
         inherit_env=shell_kwargs.get("inherit_env", True),
@@ -393,7 +393,7 @@ def start_services(shell_kwargs, args, pre_env=None):
 
     install_import_hooks(execer)
 
-    env = XSH.env
+    env = XS.env
     for k, v in pre_env.items():
         env[k] = v
 
@@ -401,7 +401,7 @@ def start_services(shell_kwargs, args, pre_env=None):
     if not shell_kwargs.get("norc"):
         _autoload_xontribs(env)
     # create shell
-    XSH.shell = Shell(execer=execer, **shell_kwargs)
+    XS.shell = Shell(execer=execer, **shell_kwargs)
     ctx["__name__"] = "__main__"
     return env
 
@@ -424,7 +424,7 @@ def premain(argv=None):
         "login": False,
         "scriptcache": args.scriptcache,
         "cacheall": args.cacheall,
-        "ctx": XSH.ctx,
+        "ctx": XS.ctx,
     }
     if args.login or sys.argv[0].startswith("-"):
         args.login = True
@@ -561,9 +561,9 @@ def main_xonsh(args):
 
     events.on_post_init.fire()
 
-    env = XSH.env
-    shell = XSH.shell
-    history = XSH.history
+    env = XS.env
+    shell = XS.shell
+    history = XS.history
     exit_code = 0
 
     if shell and not env["XONSH_INTERACTIVE"]:
@@ -652,13 +652,13 @@ def main_xonsh(args):
                         exit_code = int(code)
                     except ValueError:
                         pass
-                XSH.exit = exit_code
+                XS.exit = exit_code
             else:
                 exit_code = 1
                 print_exception(None, exc_info)
 
-        if isinstance(XSH.exit, int):
-            exit_code = XSH.exit
+        if isinstance(XS.exit, int):
+            exit_code = XS.exit
         events.on_exit.fire(exit_code=exit_code)
         postmain(args)
     return exit_code
@@ -666,8 +666,8 @@ def main_xonsh(args):
 
 def postmain(args=None):
     """Teardown for main xonsh entry point, accepts parsed arguments."""
-    XSH.unload()
-    XSH.shell = None
+    XS.unload()
+    XS.shell = None
 
 
 @contextlib.contextmanager
@@ -677,7 +677,7 @@ def main_context(argv=None):
     up the shell.
     """
     args = premain(argv)
-    yield XSH.shell
+    yield XS.shell
     postmain(args)
 
 
@@ -723,15 +723,15 @@ def setup(
     # setup xonsh ctx and execer
     if not hasattr(builtins, "__xonsh__"):
         execer = Execer(filename="<stdin>")
-        XSH.load(ctx=ctx, execer=execer)
-        XSH.shell = Shell(
+        XS.load(ctx=ctx, execer=execer)
+        XS.shell = Shell(
             execer, ctx=ctx, shell_type=shell_type, history_backend=history_backend
         )
-    XSH.env.update(env)
-    install_import_hooks(XSH.execer)
-    XSH.aliases.update(aliases)
+    XS.env.update(env)
+    install_import_hooks(XS.execer)
+    XS.aliases.update(aliases)
     if xontribs:
         xontribs_load(xontribs)
 
     if threadable_predictors:
-        XSH.commands_cache.threadable_predictors.update(threadable_predictors)
+        XS.commands_cache.threadable_predictors.update(threadable_predictors)

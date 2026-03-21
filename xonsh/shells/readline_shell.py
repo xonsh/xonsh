@@ -26,7 +26,7 @@ from xonsh.ansi_colors import (
     ansi_color_style_names,
     ansi_partial_color_format,
 )
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.events import events
 from xonsh.lib.lazyasd import LazyObject, lazyobject
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
@@ -122,7 +122,7 @@ def setup_readline():
         except Exception:
             pass
         RL_CAN_RESIZE = hasattr(lib, "rl_reset_screen_size")
-    env = XSH.env
+    env = XS.env
     # reads in history
     readline.set_history_length(-1)
     ReadlineHistoryAdder()
@@ -196,7 +196,7 @@ def teardown_readline():
 def _rebind_case_sensitive_completions():
     # handle case sensitive, see Github issue #1342 for details
     global _RL_PREV_CASE_SENSITIVE_COMPLETIONS
-    env = XSH.env
+    env = XS.env
     case_sensitive = env.get("CASE_SENSITIVE_COMPLETIONS")
     if case_sensitive is _RL_PREV_CASE_SENSITIVE_COMPLETIONS:
         return
@@ -247,7 +247,7 @@ def rl_completion_query_items(val=None):
     if RL_COMPLETION_QUERY_ITEMS is None:
         return
     if val is None:
-        val = XSH.env.get("COMPLETION_QUERY_LIMIT")
+        val = XS.env.get("COMPLETION_QUERY_LIMIT")
     RL_COMPLETION_QUERY_ITEMS.value = val
 
 
@@ -266,7 +266,7 @@ def rl_variable_value(variable):
 
         RL_VARIABLE_VALUE = RL_LIB.rl_variable_value
         RL_VARIABLE_VALUE.restype = ctypes.c_char_p
-    env = XSH.env
+    env = XS.env
     enc, errors = env.get("XONSH_ENCODING"), env.get("XONSH_ENCODING_ERRORS")
     if isinstance(variable, str):
         variable = variable.encode(encoding=enc, errors=errors)
@@ -416,7 +416,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """
         if commonprefix([c[loc:] for c in completions]):
             return 1
-        elif len(completions) <= XSH.env.get("COMPLETION_QUERY_LIMIT"):
+        elif len(completions) <= XS.env.get("COMPLETION_QUERY_LIMIT"):
             return 2
         msg = f"\nDisplay all {len(completions)} possibilities? "
         msg += "({GREEN}y{RESET} or {RED}n{RESET})"
@@ -523,11 +523,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 self._current_indent = ""
             elif ends_with_colon_token(line):
                 ind = line[: len(line) - len(line.lstrip())]
-                ind += XSH.env.get("INDENT")
+                ind += XS.env.get("INDENT")
                 readline.set_pre_input_hook(_insert_text_func(ind, readline))
                 self._current_indent = ind
             elif line.split(maxsplit=1)[0] in DEDENT_TOKENS:
-                env = XSH.env
+                env = XS.env
                 ind = self._current_indent[: -len(env.get("INDENT"))]
                 readline.set_pre_input_hook(_insert_text_func(ind, readline))
                 self._current_indent = ind
@@ -581,7 +581,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     try:
                         line = self.singleline()
                     except EOFError:
-                        if XSH.env.get("IGNOREEOF"):
+                        if XS.env.get("IGNOREEOF"):
                             self.stdout.write('Use "exit" to leave the shell.\n')
                             line = ""
                         else:
@@ -619,7 +619,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     pass
 
     def cmdloop(self, intro=None):
-        while XSH.exit is None:
+        while XS.exit is None:
             try:
                 self._cmdloop(intro=intro)
             except (KeyboardInterrupt, SystemExit) as e:
@@ -646,7 +646,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     print_exception()
                     self.mlprompt = "<multiline prompt error> "
             return self.mlprompt
-        env = XSH.env  # pylint: disable=no-member
+        env = XS.env  # pylint: disable=no-member
         p = env.get("PROMPT")
         # clear prompt level cache
         env["PROMPT_FIELDS"].reset()
@@ -665,7 +665,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         codes.
         """
         hide = hide if self._force_hide is None else self._force_hide
-        style = XSH.env.get("XONSH_COLOR_STYLE")
+        style = XS.env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, hide=hide, style=style)
 
     def print_color(self, string, hide=False, **kwargs):
@@ -673,7 +673,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             s = self.format_color(string, hide=hide)
         else:
             # assume this is a list of (Token, str) tuples and format it
-            env = XSH.env
+            env = XS.env
             style_overrides_env = env.get("XONSH_STYLE_OVERRIDES", {})
             self.styler.style_name = env.get("XONSH_COLOR_STYLE")
             self.styler.override(style_overrides_env)
@@ -688,7 +688,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
     def color_style(self):
         """Returns the current color map."""
-        style = XSH.env.get("XONSH_COLOR_STYLE")
+        style = XS.env.get("XONSH_COLOR_STYLE")
         return ansi_color_style(style=style)
 
     def restore_tty_sanity(self):
@@ -698,7 +698,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         """
         if not ON_POSIX:
             return
-        stty, _ = XSH.commands_cache.lazyget("stty", (None, None))
+        stty, _ = XS.commands_cache.lazyget("stty", (None, None))
         if stty is None:
             return
         # If available, we should just call the stty utility. This call should
@@ -728,7 +728,7 @@ class ReadlineHistoryAdder(threading.Thread):
             import readline
         except ImportError:
             return
-        hist = XSH.history
+        hist = XS.history
         if hist is None:
             return
         i = 1

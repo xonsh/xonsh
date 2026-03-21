@@ -4,7 +4,7 @@ import itertools
 import os
 from pathlib import Path
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.lib.itertools import unique_everseen
 from xonsh.platform import ON_WINDOWS
 
@@ -18,7 +18,7 @@ def get_possible_names(name, env=None):
     Conserves order of any extensions found and gives precedence
     to the bare name.
     """
-    env = env if env is not None else XSH.env
+    env = env if env is not None else XS.env
     env_pathext = env.get("PATHEXT", [])
     if not env_pathext:
         return [name]
@@ -34,7 +34,7 @@ def clear_paths(paths):
 
 def get_paths(env=None):
     """Return tuple with deduplicated and existent paths from ``$PATH``."""
-    env = env if env is not None else XSH.env
+    env = env if env is not None else XS.env
     return tuple(reversed(tuple(clear_paths(env.get("PATH") or []))))
 
 
@@ -65,7 +65,7 @@ def is_executable_in_windows(filepath, check_file_exist=True, env=None):
     try:
         if check_file_exist and not is_file(filepath):
             return False
-        env = env if env is not None else XSH.env
+        env = env if env is not None else XS.env
         return any(s.lower() == filepath.suffix.lower() for s in env.get("PATHEXT", []))
     except FileNotFoundError:
         # On Windows, there's no guarantee for the directory to really
@@ -143,7 +143,7 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
     The task for reading and returning case sensitive filename we give to completer in interactive mode
     with ``commands_cache``.
     """
-    env = env if env is not None else XSH.env
+    env = env if env is not None else XS.env
     env_path = env.get("PATH", [])
     paths = tuple(clear_paths(env_path))
     possible_names = get_possible_names(name, env) if use_pathext else [name]

@@ -10,7 +10,7 @@ import threading
 import time
 
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.history.base import History
 
 XH_SQLITE_CACHE = threading.local()
@@ -19,7 +19,7 @@ XH_SQLITE_CREATED_SQL_TBL = "CREATED_SQL_TABLE"
 
 
 def _xh_sqlite_get_file_name():
-    envs = XSH.env
+    envs = XS.env
     file_name = envs.get("XONSH_HISTORY_SQLITE_FILE")
     if not file_name:
         data_dir = envs.get("XONSH_DATA_DIR")
@@ -286,7 +286,7 @@ class SqliteHistoryGC(threading.Thread):
         if self.size is not None:
             hsize, units = xt.to_history_tuple(self.size)
         else:
-            envs = XSH.env
+            envs = XS.env
             hsize, units = envs.get("XONSH_HISTORY_SIZE")
         if units != "commands":
             print(
@@ -318,7 +318,7 @@ class SqliteHistory(History):
         self.save_cwd = (
             save_cwd
             if save_cwd is not None
-            else XSH.env.get("XONSH_HISTORY_SAVE_CWD", True)
+            else XS.env.get("XONSH_HISTORY_SAVE_CWD", True)
         )
 
         if not os.path.exists(self.filename):
@@ -336,7 +336,7 @@ class SqliteHistory(History):
     def append(self, cmd):
         if (not self.remember_history) or self.is_ignored(cmd):
             return
-        envs = XSH.env
+        envs = XS.env
         inp = cmd["inp"].rstrip()
         self.inps.append(inp)
         self.outs.append(cmd.get("out"))
@@ -393,13 +393,13 @@ class SqliteHistory(History):
             sessionid=self.sessionid, filename=self.filename
         )
         data["all items"] = xh_sqlite_get_count(filename=self.filename)
-        envs = XSH.env
+        envs = XS.env
         data["gc options"] = envs.get("XONSH_HISTORY_SIZE")
         return data
 
     def pull(self, show_commands=False, src_sessionid=None):
-        if not hasattr(XSH.shell.shell, "prompter"):
-            print(f"Shell type {XSH.shell.shell} is not supported.")
+        if not hasattr(XS.shell.shell, "prompter"):
+            print(f"Shell type {XS.shell.shell} is not supported.")
             return 0
 
         cnt = 0
@@ -410,7 +410,7 @@ class SqliteHistory(History):
             if show_commands:
                 print(cmd)
             if cmd != prev:
-                XSH.shell.shell.prompter.history.append_string(cmd)
+                XS.shell.shell.prompter.history.append_string(cmd)
                 cnt += 1
             prev = cmd
 

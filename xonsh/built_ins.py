@@ -198,9 +198,9 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
-    glob_sorted = XSH.env.get("GLOB_SORTED")
-    dotglob = XSH.env.get("DOTGLOB")
+    csc = XS.env.get("CASE_SENSITIVE_COMPLETIONS")
+    glob_sorted = XS.env.get("GLOB_SORTED")
+    dotglob = XS.env.get("DOTGLOB")
     return globpath(
         s,
         ignore_case=(not csc),
@@ -249,7 +249,7 @@ def subproc_captured_inject(*cmds, envs=None):
     toks = []
     for line in o:
         line = line.rstrip(os.linesep)
-        toks.extend(XSH.execer.parser.lexer.split(line))
+        toks.extend(XS.execer.parser.lexer.split(line))
     return toks
 
 
@@ -325,16 +325,16 @@ def list_of_list_of_strs_outer_product(x):
     for los in itertools.product(*lolos):
         s = "".join(los)
         if "*" in s:
-            rtn.extend(XSH.glob(s))
+            rtn.extend(XS.glob(s))
         else:
-            rtn.append(XSH.expand_path(s))
+            rtn.append(XS.expand_path(s))
     return rtn
 
 
 def eval_fstring_field(field):
     """Evaluates the argument in Xonsh context."""
-    res = XSH.execer.eval(
-        field[0].strip(), glbs=globals(), locs=XSH.ctx, filename=field[1]
+    res = XS.execer.eval(
+        field[0].strip(), glbs=globals(), locs=XS.ctx, filename=field[1]
     )
     return res
 
@@ -400,7 +400,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
     if kind is str or kind is None:
         return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
-    execer = XSH.execer
+    execer = XS.execer
     filename = macroname + "(" + name + ")"
     if kind is AST:
         ctx = set(dir(builtins)) | set(glbs.keys())
@@ -513,7 +513,7 @@ def _eval_regular_args(raw_args, glbs, locs):
         return [], {}
     arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
     kwarglist = raw_args[len(arglist) :]
-    execer = XSH.execer
+    execer = XS.execer
     if not arglist:
         args = arglist
         kwargstr = "dict({})".format(", ".join(kwarglist))
@@ -576,9 +576,9 @@ def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
     scope. Likely useful in testing.
     """
-    XSH.load(execer=execer)
+    XS.load(execer=execer)
     yield
-    XSH.unload()
+    XS.unload()
 
 
 class InlineImporter:

@@ -17,7 +17,7 @@ import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.procs.executables import locate_executable
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
@@ -125,7 +125,7 @@ def get_script_subproc_command(fname, args):
         # Windows can execute various filetypes directly
         # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-        if ext.upper() in XSH.env.get("PATHEXT"):
+        if ext.upper() in XS.env.get("PATHEXT"):
             return [fname] + args
     # find interpreter
     shebang = parse_shebang_from_file(fname)
@@ -424,7 +424,7 @@ class SubprocSpec:
         self.args = _flatten_cmd_redirects(cmd)
         self.alias = None
         self.alias_name = None
-        self.alias_stack = XSH.env.get("__ALIAS_STACK", "").split(":")
+        self.alias_stack = XS.env.get("__ALIAS_STACK", "").split(":")
         self.binary_loc = None
         self.is_proxy = False
         self.background = False
@@ -436,7 +436,7 @@ class SubprocSpec:
         self.captured_stderr = None
         self.stack = None
         self.decorators = []  # List of DecoratorAlias objects that applied to spec.
-        self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
+        self.output_format = XS.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
     def __str__(self):
@@ -551,8 +551,8 @@ class SubprocSpec:
             cmd0 = self.cmd[0]
             if len(self.cmd) == 1 and cmd0.endswith("?"):
                 cmdq = cmd0.rstrip("?")
-                if cmdq in XSH.aliases:
-                    alias = XSH.aliases[cmdq]
+                if cmdq in XS.aliases:
+                    alias = XS.aliases[cmdq]
                     descr = (
                         repr(alias) + (":\n" + doc)
                         if (doc := getattr(alias, "__doc__", ""))
@@ -563,12 +563,12 @@ class SubprocSpec:
                     with contextlib.suppress(OSError):
                         return self.cls(["man", cmdq], bufsize=bufsize, **kwargs)
             e = f"xonsh: subprocess mode: command not found: {repr(cmd0)}"
-            env = XSH.env
+            env = XS.env
             sug = xt.suggest_commands(cmd0, env)
             if len(sug.strip()) > 0:
                 e += "\n" + sug
-            if XSH.env.get("XONSH_INTERACTIVE"):
-                events = XSH.builtins.events
+            if XS.env.get("XONSH_INTERACTIVE"):
+                events = XS.builtins.events
                 replacements = events.on_command_not_found.fire(cmd=self.cmd)
                 for replacement in replacements:
                     if replacement is None:
@@ -587,7 +587,7 @@ class SubprocSpec:
 
     def prep_env_subproc(self, kwargs):
         """Prepares the environment to use in the subprocess."""
-        with XSH.env.swap(self.env) as env:
+        with XS.env.swap(self.env) as env:
             denv = env.detype()
         if xp.ON_WINDOWS:
             # Over write prompt variable as xonsh's $PROMPT does
@@ -599,7 +599,7 @@ class SubprocSpec:
         """Prepares the 'preexec_fn' keyword argument"""
         if not xp.ON_POSIX:
             return
-        if not XSH.env.get("XONSH_INTERACTIVE"):
+        if not XS.env.get("XONSH_INTERACTIVE"):
             return
         if pipeline_group is None or xp.ON_WSL1:
             # If there is no pipeline group
@@ -636,7 +636,7 @@ class SubprocSpec:
             return os.path.basename(self.binary_loc)
 
     def _pre_run_event_fire(self, name):
-        events = XSH.builtins.events
+        events = XS.builtins.events
         event_name = "on_pre_spec_run_" + name
         if events.exists(event_name):
             event = getattr(events, event_name)
@@ -646,7 +646,7 @@ class SubprocSpec:
             event.fire(spec=self)
 
     def _post_run_event_fire(self, name, proc):
-        events = XSH.builtins.events
+        events = XS.builtins.events
         event_name = "on_post_spec_run_" + name
         if events.exists(event_name):
             event = getattr(events, event_name)
@@ -692,7 +692,7 @@ class SubprocSpec:
             return
         for i in range(ln):
             c = self.cmd[i]
-            if c in XSH.aliases and isinstance(mod := XSH.aliases[c], DecoratorAlias):
+            if c in XS.aliases and isinstance(mod := XS.aliases[c], DecoratorAlias):
                 self.add_decorator(mod)
             else:
                 break
@@ -746,13 +746,13 @@ class SubprocSpec:
             self.alias = cmd0
         else:
             decorators = []
-            if isinstance(XSH.aliases, dict):
+            if isinstance(XS.aliases, dict):
                 # Windows tests
-                alias = XSH.aliases.get(cmd0, None)
+                alias = XS.aliases.get(cmd0, None)
                 if alias is not None:
                     alias = alias + self.cmd[1:]
             else:
-                alias = XSH.aliases.get(
+                alias = XS.aliases.get(
                     self.cmd,
                     None,
                     decorators=decorators,
@@ -787,15 +787,15 @@ class SubprocSpec:
     def resolve_auto_cd(self):
         """Implements AUTO_CD functionality."""
         if not (
-            self.alias is None
-            and self.binary_loc is None
-            and len(self.cmd) == 1
-            and XSH.env.get("AUTO_CD")
-            and os.path.isdir(self.cmd[0])
+                self.alias is None
+                and self.binary_loc is None
+                and len(self.cmd) == 1
+                and XS.env.get("AUTO_CD")
+                and os.path.isdir(self.cmd[0])
         ):
             return
         self.cmd.insert(0, "cd")
-        self.alias = XSH.aliases.get("cd", None)[0]
+        self.alias = XS.aliases.get("cd", None)[0]
 
     def resolve_executable_commands(self):
         """Resolve command executables, if applicable."""
@@ -889,7 +889,7 @@ def _last_spec_update_threading(last: SubprocSpec):
     if callable(last.alias):
         return
 
-    captured, env, cmds_cache = last.captured, XSH.env, XSH.commands_cache
+    captured, env, cmds_cache = last.captured, XS.env, XS.commands_cache
     threadable = (
         captured
         and env.get("THREAD_SUBPROCS")
@@ -945,9 +945,9 @@ def _make_last_spec_captured(last: SubprocSpec):
         r, w = os.pipe()
         last.stdout = safe_open(w, "wb")
         last.captured_stdout = safe_open(r, "rb")
-    elif XSH.stdout_uncaptured is not None:
+    elif XS.stdout_uncaptured is not None:
         last.universal_newlines = True
-        last.stdout = XSH.stdout_uncaptured
+        last.stdout = XS.stdout_uncaptured
         last.captured_stdout = last.stdout
     elif xp.ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
@@ -969,8 +969,8 @@ def _make_last_spec_captured(last: SubprocSpec):
         r, w = os.pipe()
         last.stderr = safe_open(w, "w")
         last.captured_stderr = safe_open(r, "r")
-    elif XSH.stderr_uncaptured is not None:
-        last.stderr = XSH.stderr_uncaptured
+    elif XS.stderr_uncaptured is not None:
+        last.stderr = XS.stderr_uncaptured
         last.captured_stderr = last.stderr
     elif xp.ON_WINDOWS and not callable_alias:
         last.universal_newlines = True
@@ -992,7 +992,7 @@ def _make_last_spec_captured(last: SubprocSpec):
 
 
 def _update_proc_alias_threadable(proc):
-    threadable = XSH.env.get("THREAD_SUBPROCS") and getattr(
+    threadable = XS.env.get("THREAD_SUBPROCS") and getattr(
         proc.alias, "__xonsh_threadable__", True
     )
     if proc.force_threadable is not None:
@@ -1007,7 +1007,7 @@ def _update_proc_alias_captured(proc):
 
 def _trace_specs(trace_mode, specs, cmds, captured):
     """Show information about specs."""
-    tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
+    tracer = XS.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
     if callable(tracer):
         tracer(cmds, captured=captured)
     else:
@@ -1080,7 +1080,7 @@ def cmds_to_specs(cmds, captured=False, envs=None):
             raise xt.XonshError(f"unrecognized redirect {redirect!r}")
 
     # Apply boundary conditions
-    if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
+    if not XS.env.get("XONSH_CAPTURE_ALWAYS"):
         # Make sure sub-specs are always captured in case:
         # `![some_alias | grep x]`, `$(some_alias)`, `some_alias > file`.
         last = spec
@@ -1106,16 +1106,16 @@ def _set_specs_capture_always(specs_to_capture):
 
 
 def _shell_set_title(cmds):
-    if XSH.env.get("XONSH_INTERACTIVE") and XSH.shell is not None:
+    if XS.env.get("XONSH_INTERACTIVE") and XS.shell is not None:
         # context manager updates the command information that gets
         # accessed by CurrentJobField when setting the terminal's title
-        with XSH.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
+        with XS.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
             # remove current_job from prompt level cache
-            XSH.env["PROMPT_FIELDS"].reset_key("current_job")
+            XS.env["PROMPT_FIELDS"].reset_key("current_job")
             # The terminal's title needs to be set before starting the
             # subprocess to avoid accidentally answering interactive questions
             # from commands such as `rm -i` (see #1436)
-            XSH.shell.settitle()
+            XS.shell.settitle()
 
 
 def run_subproc(cmds, captured=False, envs=None):
@@ -1134,7 +1134,7 @@ def run_subproc(cmds, captured=False, envs=None):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs)
 
-    if trace_mode := XSH.env.get("XONSH_TRACE_SUBPROC", False):
+    if trace_mode := XS.env.get("XONSH_TRACE_SUBPROC", False):
         _trace_specs(trace_mode, specs, cmds, captured)
 
     cmds = [
@@ -1169,7 +1169,7 @@ def _run_command_pipeline(specs, cmds):
 
 def _run_specs(specs, cmds):
     cp = _run_command_pipeline(specs, cmds)
-    XSH.last = XSH.lastcmd = XSH.handler.lastcmd = cp
+    XS.last = XS.lastcmd = XS.handler.lastcmd = cp
     proc, captured, background = (
         cp.proc,
         specs[-1].captured,
