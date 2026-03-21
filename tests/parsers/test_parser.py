@@ -3574,7 +3574,7 @@ match (...[...][...]):
 def test_at_returns_xonsh(parser):
     expr = parser.parse("@")
     assert isinstance(expr.body, ast.Attribute)
-    assert expr.body.attr == "interface"
+    assert expr.body.attr == "handler"
 
 
 @pytest.mark.parametrize("exp", ["env", "imp"])
@@ -3583,7 +3583,7 @@ def test_atdot_returns_xonsh_attr(parser, exp):
     assert isinstance(expr.body, ast.Attribute)
     assert expr.body.attr == exp
     assert isinstance(expr.body.value, ast.Attribute)
-    assert expr.body.value.attr == "interface"
+    assert expr.body.value.attr == "handler"
 
 
 def test_decorator_atat_attr(parser):
@@ -3597,7 +3597,7 @@ def test_decorator_atat_attr(parser):
     assert isinstance(dec, ast.Attribute)
     assert dec.attr == "contextmanager"
     assert isinstance(dec.value, ast.Attribute)
-    assert dec.value.attr == "interface"
+    assert dec.value.attr == "handler"
 
 
 def test_decorator_atat_call(parser):
@@ -3612,6 +3612,6 @@ def test_decorator_atat_call(parser):
     assert isinstance(dec.func, ast.Attribute)
     assert dec.func.attr == "contextmanager"
     assert isinstance(dec.func.value, ast.Attribute)
-    assert dec.func.value.attr == "interface"
+    assert dec.func.value.attr == "handler"
     assert dec.args == []
     assert dec.keywords == []

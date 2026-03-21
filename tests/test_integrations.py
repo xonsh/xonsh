@@ -142,7 +142,7 @@ ALL_PLATFORMS = [
     # conch in action
     (
         """
-print(isinstance(@, type(__xonsh__.interface)))
+print(isinstance(@, type(__xonsh__.handler)))
 """,
         "True\n",
         0,
