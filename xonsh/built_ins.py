@@ -976,6 +976,6 @@ class DynamicAccessProxy:
 Logic:
   * XS and __xonsh__ - private XonshSession.
   * XSH and @ - public XonshSessionHandler.
-Here we have XSH for backwards compatibility with xontribs. XSH will be removed in the future. 
+Here we have XSH for backwards compatibility with xontribs. XSH will be removed in the future.
 """
 XS = XSH = XonshSession()
