@@ -1702,3 +1702,50 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
     assert ret == 0
     assert "Error" not in out
     assert "Exception" not in out
+
+
+test_code = [
+    """
+$XONSH_SHOW_TRACEBACK = True
+
+@aliases.register
+def _a():
+    echo 1 && echo 2
+
+@aliases.register
+def _b():
+    echo 3 && echo 4
+
+
+for i in range(100):
+    $(a | b)
+
+# Empirically, in case of a leak, the output
+# drops out at ~600-1000 function calls.
+for i in range(10):
+    for j in range(100):
+        $(a | b)
+
+"""
+]
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("test_code", test_code)
+def test_callable_alias_fd_leaking(test_code):
+    """Testing callable alias on leaks and errors in pipe.
+    1. No fd leaking: no output interrupting during 1000+ pipe calls.
+    2. No I/O errors or "Bad file descriptor" errors.
+    3. No stdout leaking from alias `a`.
+    See also references in #6159.
+    """
+
+    out, err, ret = run_xonsh(
+        test_code, interactive=False, single_command=True, timeout=60
+    )
+    assert ret == 0
+    assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
+    assert "Exception" not in out  # No I/O errors or "Bad file descriptor" errors.
+    assert out.count("3\\n4\\n") == 1100  # No fd leaking.
+    assert "1" not in out  # No stdout leaking from alias `a`.
+    assert "2" not in out  # No stdout leaking from alias `a`.

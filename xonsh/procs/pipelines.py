@@ -274,15 +274,30 @@ class CommandPipeline:
             if task is None or task["status"] != "stopped":
                 proc.wait()
                 self._endtime()
+                # Close captured pipe write ends to signal EOF to readers.
+                # For non-threadable procs (plain Popen), the write end stays
+                # open in the parent after the child exits. PopenThread handles
+                # this itself, but plain Popen does not.
+                if not spec.threadable:
+                    for ch in spec.pipe_channels:
+                        ch.close_writer()
                 if self.captured == "object":
                     self.end(tee_output=False)
                 elif self.captured == "hiddenobject" and stdout:
-                    b = stdout.read()
+                    # Use iterqueue for NonBlockingFDReader to ensure
+                    # all data is drained (read() breaks on timeout).
+                    if hasattr(stdout, "iterqueue"):
+                        b = b"".join(stdout.iterqueue())
+                    else:
+                        b = stdout.read()
                     lines = b.splitlines(keepends=True)
                     yield from lines
                     self.end(tee_output=False)
                 elif self.captured == "stdout" and stdout is not None:
-                    b = stdout.read()
+                    if hasattr(stdout, "iterqueue"):
+                        b = b"".join(stdout.iterqueue())
+                    else:
+                        b = stdout.read()
                     s = self._decode_uninew(b, universal_newlines=True)
                     self.lines = s.splitlines(keepends=True)
             return
@@ -300,7 +315,15 @@ class CommandPipeline:
         check_prev_done = len(self.procs) == 1
         prev_end_time = None
         i = j = cnt = 1
-        while proc.poll() is None:
+
+        # In the case of pipelines with more than one command
+        # we should give the commands a little time
+        # to start up fully. This is particularly true for
+        # GNU Parallel, which has a long startup time.
+        first_read = True
+
+        while proc.poll() is None or first_read or self._any_proc_running():
+            first_read = False
             if getattr(proc, "suspended", False) or self._procs_suspended() is not None:
                 self.suspended = True
                 xj.update_job_attr(proc.pid, "status", "suspended")
@@ -308,16 +331,6 @@ class CommandPipeline:
             elif getattr(proc, "in_alt_mode", False):
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
-            elif not check_prev_done:
-                # In the case of pipelines with more than one command
-                # we should give the commands a little time
-                # to start up fully. This is particularly true for
-                # GNU Parallel, which has a long startup time.
-                pass
-            elif self._prev_procs_done():
-                self._close_prev_procs()
-                proc.prevs_are_closed = True
-                break
 
             stdout_lines = safe_readlines(stdout, 1024)
             i = len(stdout_lines)
@@ -349,6 +362,10 @@ class CommandPipeline:
             else:
                 cnt = 1
             time.sleep(timeout * cnt)
+
+        self._close_prev_procs()
+        proc.prevs_are_closed = True
+
         # read from process now that it is over
         yield from safe_readlines(stdout)
         self.stream_stderr(safe_readlines(stderr))
@@ -384,7 +401,17 @@ class CommandPipeline:
         stream = self.captured not in STDOUT_CAPTURE_KINDS
         if stream and not self.spec.stdout:
             stream = False
-        stdout_has_buffer = hasattr(sys.stdout, "buffer")
+        # Use STDOUT_DISPATCHER.handle directly to get the per-thread stdout.
+        # sys.stdout is set globally by redirect_stdout(STDOUT_DISPATCHER) in
+        # ProcProxyThread.run(), but another thread may restore sys.stdout
+        # before this thread finishes, causing output to leak to the terminal.
+        from xonsh.procs.proxies import STDOUT_DISPATCHER
+
+        if STDOUT_DISPATCHER.available:
+            out_target = STDOUT_DISPATCHER.handle
+        else:
+            out_target = sys.stdout
+        stdout_has_buffer = hasattr(out_target, "buffer")
         nl = b"\n"
         cr = b"\r"
         crnl = b"\r\n"
@@ -392,10 +419,10 @@ class CommandPipeline:
             # write to stdout line ASAP, if needed
             if stream:
                 if stdout_has_buffer:
-                    sys.stdout.buffer.write(line)
+                    out_target.buffer.write(line)
                 else:
-                    sys.stdout.write(line.decode(encoding=enc, errors=err))
-                sys.stdout.flush()
+                    out_target.write(line.decode(encoding=enc, errors=err))
+                out_target.flush()
             # save the raw bytes
             raw_out_lines.append(line)
             # do some munging of the line before we return it
@@ -424,17 +451,25 @@ class CommandPipeline:
             b = self.stderr_prefix + b
         if self.stderr_postfix:
             b += self.stderr_postfix
-        stderr_has_buffer = hasattr(sys.stderr, "buffer")
+        # Use STDERR_DISPATCHER.handle for per-thread stderr (same race fix
+        # as tee_stdout — see comment there).
+        from xonsh.procs.proxies import STDERR_DISPATCHER
+
+        if STDERR_DISPATCHER.available:
+            err_target = STDERR_DISPATCHER.handle
+        else:
+            err_target = sys.stderr
+        stderr_has_buffer = hasattr(err_target, "buffer")
         show_stderr = self.captured != "object" or env.get(
             "XONSH_SUBPROC_CAPTURED_PRINT_STDERR", True
         )
         if show_stderr:
             # write bytes to std stream
             if stderr_has_buffer:
-                sys.stderr.buffer.write(b)
+                err_target.buffer.write(b)
             else:
-                sys.stderr.write(b.decode(encoding=enc, errors=err))
-            sys.stderr.flush()
+                err_target.write(b.decode(encoding=enc, errors=err))
+            err_target.flush()
         # save the raw bytes
         self._raw_error = b
         # do some munging of the line before we save it to the attr
@@ -485,15 +520,21 @@ class CommandPipeline:
         """Waits for the command to complete and then runs any closing and
         cleanup procedures that need to be run.
         """
-        if tee_output:
-            for _ in self.tee_stdout():
-                pass
-        self._endtime()
-        # since we are driven by getting output, input may not be available
-        # until the command has completed.
-        self._set_input()
-        self._close_prev_procs()
-        self._close_proc()
+        try:
+            if tee_output:
+                for _ in self.tee_stdout():
+                    pass
+            self._endtime()
+            # since we are driven by getting output, input may not be available
+            # until the command has completed.
+            self._set_input()
+        finally:
+            if (
+                not hasattr(self.proc, "prevs_are_closed")
+                or not self.proc.prevs_are_closed
+            ):
+                self._close_prev_procs()
+            self._close_proc()
         self._check_signal()
         self._apply_to_history()
         self.ended = True
@@ -543,6 +584,15 @@ class CommandPipeline:
                 )
                 return proc
 
+    def _any_proc_running(self):
+        """Boolean for if all previous processes have completed. If there
+        is only a single process in the pipeline, this returns False.
+        """
+        for p in self.procs:
+            if p.poll() is None:
+                return True
+        return False
+
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
         is only a single process in the pipeline, this returns False.
@@ -552,27 +602,52 @@ class CommandPipeline:
             if p.poll() is None:
                 any_running = True
                 continue
+            # Ensure thread is fully done - poll() returns non-None
+            # before run() finishes closing pipe channels.
+            if hasattr(p, "join"):
+                p.join(timeout=0.5)
             self._safe_close(s.stdin)
             self._safe_close(s.stdout)
             self._safe_close(s.stderr)
+            for ch in s.pipe_channels:
+                ch.close()
             if p is None:
                 continue
             self._safe_close(p.stdin)
             self._safe_close(p.stdout)
             self._safe_close(p.stderr)
+            for ch in getattr(p, "pipe_channels", ()):
+                ch.close()
         return False if any_running else (len(self) > 1)
 
     def _close_prev_procs(self):
         """Closes all but the last proc's stdout."""
         for s, p in zip(self.specs[:-1], self.procs[:-1], strict=False):
             self._safe_close(s.stdin)
-            self._safe_close(s.stdout)
             self._safe_close(s.stderr)
+            # Close read ends of connection pipes to unblock any blocked writes,
+            # then wait for the proc thread to finish to prevent fd-reuse races.
+            for ch in s.pipe_channels:
+                ch.close_reader()
+            if p is not None:
+                try:
+                    # Use join for threads (ProcProxyThread.wait ignores timeout)
+                    if hasattr(p, "join"):
+                        p.join(timeout=3)
+                    else:
+                        p.wait(timeout=3)
+                except Exception:
+                    pass
+            self._safe_close(s.stdout)
+            for ch in s.pipe_channels:
+                ch.close()
             if p is None:
                 continue
             self._safe_close(p.stdin)
             self._safe_close(p.stdout)
             self._safe_close(p.stderr)
+            for ch in getattr(p, "pipe_channels", ()):
+                ch.close()
 
     def _close_proc(self):
         """Closes last proc's stdout."""
@@ -583,11 +658,15 @@ class CommandPipeline:
         self._safe_close(s.stderr)
         self._safe_close(s.captured_stdout)
         self._safe_close(s.captured_stderr)
+        for ch in s.pipe_channels:
+            ch.close()
         if p is None:
             return
         self._safe_close(p.stdin)
         self._safe_close(p.stdout)
         self._safe_close(p.stderr)
+        for ch in getattr(p, "pipe_channels", ()):
+            ch.close()
 
     def _set_input(self):
         """Sets the input variable."""
