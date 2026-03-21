@@ -518,6 +518,10 @@ class ProcProxyThread(threading.Thread):
         if not last_in_pipeline and not xp.ON_WINDOWS:
             # mac requires us *not to* close the handles here while
             # windows requires us *to* close the handles here
+            # Close wrappers before closing raw fds to avoid
+            # "Bad file descriptor" on finalization in Python 3.14+.
+            safe_fdclose(sp_stdout)
+            safe_fdclose(sp_stderr)
             # Close write ends via PipeChannel to signal EOF to downstream
             for ch in spec.pipe_channels:
                 ch.close_writer()
