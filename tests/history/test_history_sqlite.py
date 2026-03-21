@@ -377,7 +377,7 @@ def test_hist_pull(src_sessionid, tmpdir, ptk_shell, monkeypatch):
     hist_b.append({"inp": "cmd hist_b after", "rtn": 0, "ts": [after + 1, after + 1]})
 
     # pull only works with PTK shell
-    monkeypatch.setattr("xonsh.built_ins.XSH.shell.shell", ptk_shell[2])
+    monkeypatch.setattr("xonsh.built_ins.XS.shell.shell", ptk_shell[2])
     hist_main.pull(src_sessionid=src_sessionid)
     hist_strings = ptk_shell[2].prompter.history.get_strings()
 
