@@ -359,7 +359,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                 localtime=_localtime,
                 last_return_code=lambda: XS.env.get("LAST_RETURN_CODE", 0),
                 last_return_code_if_nonzero=lambda: (
-                        XS.env.get("LAST_RETURN_CODE", 0) or None
+                    XS.env.get("LAST_RETURN_CODE", 0) or None
                 ),
             )
         )

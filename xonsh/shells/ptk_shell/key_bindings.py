@@ -150,9 +150,7 @@ def end_of_line():
 @Condition
 def should_confirm_completion():
     """Check if completion needs confirmation"""
-    return (
-            XS.env.get("COMPLETIONS_CONFIRM") and get_app().current_buffer.complete_state
-    )
+    return XS.env.get("COMPLETIONS_CONFIRM") and get_app().current_buffer.complete_state
 
 
 # Copied from prompt-toolkit's key_binding/bindings/basic.py
