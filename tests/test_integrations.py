@@ -1737,6 +1737,7 @@ def test_callable_alias_fd_leaking(test_code):
     1. No fd leaking: no output interrupting during 1000+ pipe calls.
     2. No I/O errors or "Bad file descriptor" errors.
     3. No stdout leaking from alias `a`.
+    See also references in #6159.
     """
 
     out, err, ret = run_xonsh(
