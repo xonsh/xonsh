@@ -645,7 +645,7 @@ class Cmd:
 
 
 class XonshSessionHandler:
-    """Xonsh Session Interface
+    """Xonsh Session Handler is a public interface to a Xonsh session.
 
     Attributes
     ----------
