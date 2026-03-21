@@ -21,6 +21,7 @@ import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import run_with_partial_args
+from xonsh.procs.pipes import PipeChannel
 from xonsh.procs.readers import safe_fdclose
 
 
@@ -345,6 +346,9 @@ class ProcProxyThread(threading.Thread):
         self.pid = None
         self.returncode = None
         self._closed_handle_cache = {}
+        self._stdin_pipe = None
+        self._stdout_pipe = None
+        self._stderr_pipe = None
 
         handles = self._get_handles(stdin, stdout, stderr)
         (
@@ -373,7 +377,7 @@ class ProcProxyThread(threading.Thread):
                 self.errread = xli.msvcrt.open_osfhandle(self.errread.Detach(), 0)
 
         if self.p2cwrite != -1:
-            self.stdin = open(self.p2cwrite, "wb", -1)
+            self.stdin = open(self.p2cwrite, "wb", -1, closefd=False)
             if universal_newlines:
                 self.stdin = io.TextIOWrapper(
                     self.stdin, write_through=True, line_buffering=False
@@ -382,12 +386,12 @@ class ProcProxyThread(threading.Thread):
             self.stdin = open(stdin, "wb", -1)
 
         if self.c2pread != -1:
-            self.stdout = open(self.c2pread, "rb", -1)
+            self.stdout = open(self.c2pread, "rb", -1, closefd=False)
             if universal_newlines:
                 self.stdout = io.TextIOWrapper(self.stdout)
 
         if self.errread != -1:
-            self.stderr = open(self.errread, "rb", -1)
+            self.stderr = open(self.errread, "rb", -1, closefd=False)
             if universal_newlines:
                 self.stderr = io.TextIOWrapper(self.stderr)
 
@@ -404,6 +408,11 @@ class ProcProxyThread(threading.Thread):
 
     def __del__(self):
         self._restore_sigint()
+
+    @property
+    def pipe_channels(self):
+        """All PipeChannel objects managed by this proc."""
+        return [p for p in (self._stdin_pipe, self._stdout_pipe, self._stderr_pipe) if p]
 
     def run(self):
         """Set up input/output streams and execute the child function in a new
@@ -434,14 +443,14 @@ class ProcProxyThread(threading.Thread):
             sp_stdin = None
         elif self.p2cread != -1:
             sp_stdin = io.TextIOWrapper(
-                open(self.p2cread, "rb", -1), encoding=enc, errors=err
+                open(self.p2cread, "rb", -1, closefd=False), encoding=enc, errors=err
             )
         else:
             sp_stdin = sys.stdin
         # stdout
         if self.c2pwrite != -1:
             sp_stdout = io.TextIOWrapper(
-                open(self.c2pwrite, "wb", -1), encoding=enc, errors=err
+                open(self.c2pwrite, "wb", -1, closefd=False), encoding=enc, errors=err
             )
         else:
             sp_stdout = sys.stdout
@@ -450,7 +459,7 @@ class ProcProxyThread(threading.Thread):
             sp_stderr = sp_stdout
         elif self.errwrite != -1:
             sp_stderr = io.TextIOWrapper(
-                open(self.errwrite, "wb", -1), encoding=enc, errors=err
+                open(self.errwrite, "wb", -1, closefd=False), encoding=enc, errors=err
             )
         else:
             sp_stderr = sys.stderr
@@ -507,6 +516,13 @@ class ProcProxyThread(threading.Thread):
         if not last_in_pipeline and not xp.ON_WINDOWS:
             # mac requires us *not to* close the handles here while
             # windows requires us *to* close the handles here
+            # Close write ends via PipeChannel to signal EOF to downstream
+            for ch in spec.pipe_channels:
+                ch.close_writer()
+            if self._stdout_pipe:
+                self._stdout_pipe.close_writer()
+            if self._stderr_pipe:
+                self._stderr_pipe.close_writer()
             return
         # clean up
         # scopz: not sure why this is needed, but stdin cannot go here
@@ -517,6 +533,13 @@ class ProcProxyThread(threading.Thread):
             handles = [sp_stdout, sp_stderr]
         for handle in handles:
             safe_fdclose(handle, cache=self._closed_handle_cache)
+        # Close write ends via PipeChannel to signal EOF to readers
+        for ch in spec.pipe_channels:
+            ch.close_writer()
+        if self._stdout_pipe:
+            self._stdout_pipe.close_writer()
+        if self._stderr_pipe:
+            self._stderr_pipe.close_writer()
 
     def _wait_and_getattr(self, name):
         """make sure the instance has a certain attr, and return it."""
@@ -550,17 +573,14 @@ class ProcProxyThread(threading.Thread):
         if self._interrupted:
             return
         self._interrupted = True
-        # close file handles here to stop an processes piped to us.
-        handles = (
-            self.p2cread,
-            self.p2cwrite,
-            self.c2pread,
-            self.c2pwrite,
-            self.errread,
-            self.errwrite,
-        )
-        for handle in handles:
-            safe_fdclose(handle)
+        # close all pipe channels owned by this proc
+        for pipe in self.pipe_channels:
+            pipe.close()
+        # close spec pipe channels if available
+        spec = getattr(self, "spec", None)
+        if spec is not None:
+            for ch in spec.pipe_channels:
+                ch.close()
         if self.poll() is not None:
             self._restore_sigint(frame=frame)
         if xt.on_main_thread() and not xp.ON_WINDOWS:
@@ -680,7 +700,8 @@ class ProcProxyThread(threading.Thread):
             if stdin is None:
                 pass
             elif stdin == subprocess.PIPE:
-                p2cread, p2cwrite = os.pipe()
+                self._stdin_pipe = PipeChannel.from_pipe()
+                p2cread, p2cwrite = self._stdin_pipe.read_fd, self._stdin_pipe.write_fd
             elif stdin == subprocess.DEVNULL:
                 p2cread = self._get_devnull()
             elif isinstance(stdin, int):
@@ -692,7 +713,8 @@ class ProcProxyThread(threading.Thread):
             if stdout is None:
                 pass
             elif stdout == subprocess.PIPE:
-                c2pread, c2pwrite = os.pipe()
+                self._stdout_pipe = PipeChannel.from_pipe()
+                c2pread, c2pwrite = self._stdout_pipe.read_fd, self._stdout_pipe.write_fd
             elif stdout == subprocess.DEVNULL:
                 c2pwrite = self._get_devnull()
             elif isinstance(stdout, int):
@@ -704,7 +726,8 @@ class ProcProxyThread(threading.Thread):
             if stderr is None:
                 pass
             elif stderr == subprocess.PIPE:
-                errread, errwrite = os.pipe()
+                self._stderr_pipe = PipeChannel.from_pipe()
+                errread, errwrite = self._stderr_pipe.read_fd, self._stderr_pipe.write_fd
             elif stderr == subprocess.STDOUT:
                 errwrite = c2pwrite
             elif stderr == subprocess.DEVNULL:

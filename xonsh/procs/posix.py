@@ -209,6 +209,10 @@ class PopenThread(threading.Thread):
         # with orig_* needed to be closed before cap*
         safe_fdclose(self.orig_stdout)
         safe_fdclose(self.orig_stderr)
+        # Close pipe channel write ends (the wrappers above have closefd=False,
+        # so we must close the actual fds via PipeChannel to send EOF).
+        for ch in spec.pipe_channels:
+            ch.close_writer()
         if xp.ON_WINDOWS:
             safe_fdclose(capout)
             safe_fdclose(caperr)
