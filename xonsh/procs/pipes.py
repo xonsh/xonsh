@@ -7,7 +7,6 @@ class PipeChannel:
     """Single-owner pipe fd manager.
     Owner creates the pipe and is responsible for closing both ends.
     Consumers get non-owning wrappers via open_writer() / open_reader().
-    One fd -- one os.close(). Creator closes. Consumers only borrow.
     """
 
     def __init__(self, read_fd, write_fd):
