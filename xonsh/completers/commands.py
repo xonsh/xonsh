@@ -4,7 +4,7 @@ import re
 import typing as tp
 
 import xonsh.platform as xp
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.commands_cache import executables_in
 from xonsh.completer import Completer
 from xonsh.completers.tools import (
@@ -27,8 +27,8 @@ def complete_command(command: CommandContext):
     """
 
     cmd = command.prefix
-    show_desc = (XSH.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
-    for s, (path, is_alias) in XSH.commands_cache.iter_commands():
+    show_desc = (XS.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
+    for s, (path, is_alias) in XS.commands_cache.iter_commands():
         if get_filter_function()(s, cmd):
             kwargs = {}
             if show_desc:
@@ -72,7 +72,7 @@ def complete_skipper(command_context: CommandContext):
         # completing the command after a SKIP_TOKEN
         return complete_command(skipped_command_context)
 
-    completer: Completer = XSH.shell.shell.completer  # type: ignore
+    completer: Completer = XS.shell.shell.completer  # type: ignore
     return completer.complete_from_context(CompletionContext(skipped_command_context))
 
 
@@ -143,7 +143,7 @@ class CommandCompleter:
         if self._matcher is None:
             self._matcher = ModuleReMatcher(
                 "xompletions",
-                *XSH.env.get("XONSH_COMPLETER_DIRS", []),
+                *XS.env.get("XONSH_COMPLETER_DIRS", []),
             )
             self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
         return self._matcher
@@ -152,7 +152,7 @@ class CommandCompleter:
     @functools.lru_cache(10)
     def clean_cmd_name(cmd: str):
         cmd_name = os.path.basename(cmd).lower()
-        exts = XSH.env.get("PATHEXT", [])
+        exts = XS.env.get("PATHEXT", [])
         for ex in exts:
             if cmd_name.endswith(ex.lower()):
                 # windows handling

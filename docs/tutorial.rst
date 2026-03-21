@@ -107,10 +107,10 @@ We can also define and call functions and classes:
 
 For easier indentation, Shift+Tab will enter 4 spaces.
 
-Xonsh Session Interface
-=======================
+Xonsh Session Handler
+=====================
 
-Each session has a special global object ``@`` that provides instant functionality.
+Each session has a special global object ``@`` (``XSH`` in pure Python mode) that provides instant functionality.
 It gives you access to different parts of the current session.
 For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
 You will learn more about this in the following sections.
@@ -118,7 +118,7 @@ You will learn more about this in the following sections.
 .. code-block:: xonshcon
 
     @ help(@)
-    Help on XonshSessionInterface in module xonsh.built_ins object: ...
+    Help on XonshSessionHandler in module xonsh.built_ins object: ...
     @ @.imp.json.loads('{"conch":"snail"}')
     {"conch":"snail"}
     @ @.env.get('HOME')

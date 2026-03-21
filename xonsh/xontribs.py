@@ -10,7 +10,7 @@ import typing as tp
 from enum import IntEnum
 from pathlib import Path
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.tools import print_color, print_exception
@@ -64,7 +64,7 @@ class Xontrib(tp.NamedTuple):
 
     @property
     def is_auto_loaded(self):
-        loaded = getattr(XSH.builtins, "autoloaded_xontribs", None) or {}
+        loaded = getattr(XS.builtins, "autoloaded_xontribs", None) or {}
         return self.module in set(loaded.values())
 
 
@@ -140,7 +140,7 @@ def find_xontrib(name, full_module=False):
     if full_module:
         return importlib.util.find_spec(name)
 
-    autoloaded = getattr(XSH.builtins, "autoloaded_xontribs", None) or {}
+    autoloaded = getattr(XS.builtins, "autoloaded_xontribs", None) or {}
     if name in autoloaded:
         return importlib.util.find_spec(autoloaded[name])
 
@@ -173,7 +173,7 @@ def xontrib_context(name, full_module=False):
     if entrypoint is None:
         ctx.update(dict(_get__all__()))
     else:
-        result = entrypoint(xsh=XSH)
+        result = entrypoint(xsh=XS)
         if result is not None:
             ctx.update(result)
     return ctx
@@ -236,7 +236,7 @@ def xontribs_load(
     suppress_warnings : -s, --suppress-warnings
         no warnings about missing xontribs and return code 0
     """
-    ctx = {} if XSH.ctx is None else XSH.ctx
+    ctx = {} if XS.ctx is None else XS.ctx
     res = ExitCode.OK
     stdout = None
     stderr = None
@@ -288,7 +288,7 @@ def xontribs_unload(
                 module = sys.modules[spec.name]
                 unloader = getattr(module, "_unload_xontrib_", None)
                 if unloader is not None:
-                    unloader(XSH)
+                    unloader(XS)
                 del sys.modules[spec.name]
         except Exception as ex:
             print_exception(f"Failed to unload xontrib {name} ({ex})")
@@ -384,13 +384,13 @@ def auto_load_xontribs_from_entrypoints(
 ):
     """Load xontrib modules exposed via setuptools's entrypoints"""
 
-    if not hasattr(XSH.builtins, "autoloaded_xontribs"):
-        XSH.builtins.autoloaded_xontribs = {}
+    if not hasattr(XS.builtins, "autoloaded_xontribs"):
+        XS.builtins.autoloaded_xontribs = {}
 
     def get_loadable():
         for entry in _get_xontrib_entrypoints():
             if entry.name not in blocked:
-                XSH.builtins.autoloaded_xontribs[entry.name] = entry.value
+                XS.builtins.autoloaded_xontribs[entry.name] = entry.value
                 yield entry.value
 
     modules = list(get_loadable())

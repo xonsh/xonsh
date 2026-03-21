@@ -5,7 +5,7 @@ import sys
 import time
 
 import xonsh.procs.pipelines as xpp
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.xoreutils.util import arg_handler, run_alias
 
 
@@ -40,7 +40,7 @@ def _cat_line(
 
 
 def _cat_single_file(opts, fname, stdin, out, err, line_count=1):
-    env = XSH.env
+    env = XS.env
     enc = env.get("XONSH_ENCODING")
     enc_errors = env.get("XONSH_ENCODING_ERRORS")
     read_size = 0

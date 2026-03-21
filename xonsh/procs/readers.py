@@ -9,7 +9,7 @@ import threading
 import time
 
 import xonsh.lib.lazyimps as xli
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 
 
 class QueueReader:
@@ -379,7 +379,7 @@ class ConsoleParallelReader(QueueReader):
         timeout : float, optional
             The queue reading timeout.
         """
-        timeout = timeout or XSH.env.get("XONSH_PROC_FREQUENCY")
+        timeout = timeout or XS.env.get("XONSH_PROC_FREQUENCY")
         super().__init__(fd, timeout=timeout)
         self._buffer = buffer  # this cannot be public
         if buffer is None:

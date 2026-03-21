@@ -12,7 +12,7 @@ from pathlib import Path
 from pprint import pprint
 from urllib import parse
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.webconfig import tags as t
 from xonsh.webconfig.file_writes import insert_into_xonshrc
 from xonsh.webconfig.routes import Routes
@@ -84,7 +84,7 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
         route_cls = Routes.registry.get(url.path)
         if route_cls and hasattr(route_cls, method):
             params = parse.parse_qs(url.query)
-            return route_cls(url=url, params=params, xsh=XSH)
+            return route_cls(url=url, params=params, xsh=XS)
 
     def do_GET(self) -> None:
         route = self._get_route("get")

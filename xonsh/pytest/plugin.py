@@ -15,7 +15,7 @@ import pytest
 
 from xonsh import commands_cache
 from xonsh.aliases import Aliases
-from xonsh.built_ins import XSH, XonshSession
+from xonsh.built_ins import XS, XonshSession
 from xonsh.completer import Completer
 from xonsh.events import events
 from xonsh.execer import Execer
@@ -113,7 +113,7 @@ def xonsh_execer_exec(xonsh_execer):
 @pytest.fixture
 def xonsh_execer_parse(xonsh_execer):
     def factory(input):
-        tree = XSH.execer.parse(input, ctx=None)
+        tree = XS.execer.parse(input, ctx=None)
         return tree
 
     return factory
@@ -212,13 +212,13 @@ def env(tmp_path, session_env):
 def xonsh_session(xonsh_events, session_execer, os_env, monkeypatch):
     """a fixture to use where XonshSession is fully loaded without any mocks"""
 
-    XSH.load(
+    XS.load(
         ctx={},
         execer=session_execer,
         env=os_env,
     )
-    yield XSH
-    XSH.unload()
+    yield XS
+    XS.unload()
     get_tasks().clear()  # must do this to enable resetting all_jobs
 
 

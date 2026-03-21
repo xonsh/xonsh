@@ -9,7 +9,7 @@ import typing as tp
 from functools import wraps
 
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
 
@@ -35,7 +35,7 @@ def get_filter_function():
     Return an appropriate filtering function for completions, given the valid
     of $CASE_SENSITIVE_COMPLETIONS
     """
-    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
+    csc = XS.env.get("CASE_SENSITIVE_COMPLETIONS")
     if csc:
         return _filter_normal
     else:
@@ -240,7 +240,7 @@ def sub_proc_get_output(*args, **env_vars: str) -> "tuple[bytes, bool]":
     env = {}
 
     # env.detype is mutable, so update the newly created variable
-    env.update(XSH.env.detype())
+    env.update(XS.env.detype())
 
     env.update(env_vars)  # prefer passed env variables
 

@@ -21,7 +21,7 @@ from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.platform import ON_WINDOWS
 from xonsh.shell import transform_command
 from xonsh.tools import (
@@ -49,7 +49,7 @@ def carriage_return(b, cli, *, autoindent=True):
     at_end_of_line = _is_blank(doc.current_line_after_cursor)
     current_line_blank = _is_blank(doc.current_line)
 
-    env = XSH.env
+    env = XS.env
     indent = env.get("INDENT") if autoindent else ""
 
     partial_string_info = check_for_partial_string(doc.text)
@@ -95,7 +95,7 @@ def can_compile(src):
     src = transform_command(src, show_diff=False)
     src = src.lstrip()
     try:
-        XSH.execer.compile(src, mode="single", glbs=None, locs=XSH.ctx)
+        XS.execer.compile(src, mode="single", glbs=None, locs=XS.ctx)
         rtn = True
     except SyntaxError:
         rtn = False
@@ -119,7 +119,7 @@ def tab_insert_indent():
 @Condition
 def tab_menu_complete():
     """Checks whether completion mode is `menu-complete`"""
-    return XSH.env.get("COMPLETION_MODE") == "menu-complete"
+    return XS.env.get("COMPLETION_MODE") == "menu-complete"
 
 
 @Condition
@@ -150,9 +150,7 @@ def end_of_line():
 @Condition
 def should_confirm_completion():
     """Check if completion needs confirmation"""
-    return (
-        XSH.env.get("COMPLETIONS_CONFIRM") and get_app().current_buffer.complete_state
-    )
+    return XS.env.get("COMPLETIONS_CONFIRM") and get_app().current_buffer.complete_state
 
 
 # Copied from prompt-toolkit's key_binding/bindings/basic.py
@@ -161,7 +159,7 @@ def ctrl_d_condition():
     """Ctrl-D binding is only active when the default buffer is selected and
     empty.
     """
-    if XSH.env.get("IGNOREEOF"):
+    if XS.env.get("IGNOREEOF"):
         return False
     else:
         app = get_app()
@@ -173,7 +171,7 @@ def ctrl_d_condition():
 @Condition
 def autopair_condition():
     """Check if XONSH_AUTOPAIR is set"""
-    return XSH.env.get("XONSH_AUTOPAIR", False)
+    return XS.env.get("XONSH_AUTOPAIR", False)
 
 
 @Condition
@@ -227,7 +225,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
-    if XSH.env["XONSH_CTRL_BKSP_DELETION"]:
+    if XS.env["XONSH_CTRL_BKSP_DELETION"]:
         # Not all terminal emulators emit the same keys for backspace, therefore
         # ptk always maps backspace ("\x7f") to ^H ("\x08"), and all the backspace bindings are registered for ^H.
         # This means we can't re-map backspace and instead we register a new "real-ctrl-bksp" key.
@@ -259,7 +257,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         If there are only whitespaces before current cursor position insert
         indent instead of autocompleting.
         """
-        env = XSH.env
+        env = XS.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     @handle(Keys.Tab, filter=~tab_insert_indent & tab_menu_complete)
@@ -284,7 +282,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         if b.complete_state:
             b.complete_previous()
         else:
-            env = XSH.env
+            env = XS.env
             event.cli.current_buffer.insert_text(env.get("INDENT"))
 
     def generate_parens_handlers(left, right):

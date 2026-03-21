@@ -6,7 +6,7 @@ import os
 import sys
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import PYTHON_VERSION_INFO_BYTES
 from xonsh.tools import is_writable_file, print_warning
@@ -44,10 +44,10 @@ def should_use_cache(execer, mode):
     """
     if mode == "exec":
         return (execer.scriptcache or execer.cacheall) and (
-            XSH.env["XONSH_CACHE_SCRIPTS"] or XSH.env["XONSH_CACHE_EVERYTHING"]
+            XS.env["XONSH_CACHE_SCRIPTS"] or XS.env["XONSH_CACHE_EVERYTHING"]
         )
     else:
-        return execer.cacheall or XSH.env["XONSH_CACHE_EVERYTHING"]
+        return execer.cacheall or XS.env["XONSH_CACHE_EVERYTHING"]
 
 
 def run_compiled_code(code, glb, loc, mode):
@@ -81,7 +81,7 @@ def get_cache_filename(fname, code=True):
     The ``code`` switch should be true if we should use the code store rather
     than the script store.
     """
-    datadir = XSH.env["XONSH_DATA_DIR"]
+    datadir = XS.env["XONSH_DATA_DIR"]
     cachedir = os.path.join(
         datadir, "xonsh_code_cache" if code else "xonsh_script_cache"
     )
@@ -96,7 +96,7 @@ def update_cache(ccode, cache_file_name):
     """
     if cache_file_name is not None:
         if not is_writable_file(cache_file_name):
-            if XSH.env.get("XONSH_DEBUG", "False"):
+            if XS.env.get("XONSH_DEBUG", "False"):
                 print_warning(
                     f"update_cache: Cache file is not writable: {cache_file_name}\n"
                     f"Set $XONSH_CACHE_SCRIPTS=0, $XONSH_CACHE_EVERYTHING=0 to disable cache."

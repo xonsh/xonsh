@@ -111,7 +111,7 @@ from ast import (  # noqa # pylint: disable=unused-import
 )
 from typing import Optional
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.platform import PYTHON_VERSION_INFO
 from xonsh.tools import find_next_break, get_logical_line, subproc_toks
 
@@ -349,8 +349,8 @@ def isexpression(node, ctx=None, *args, **kwargs):
     # parse string to AST
     if isinstance(node, str):
         node = node if node.endswith("\n") else node + "\n"
-        ctx = XSH.ctx if ctx is None else ctx
-        node = XSH.execer.parse(node, ctx, *args, **kwargs)
+        ctx = XS.ctx if ctx is None else ctx
+        node = XS.execer.parse(node, ctx, *args, **kwargs)
     # determine if expression-like enough
     if isinstance(node, Expr | Expression):
         isexpr = True

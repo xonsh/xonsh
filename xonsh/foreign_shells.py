@@ -10,7 +10,7 @@ import sys
 import tempfile
 import warnings
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_CYGWIN, ON_MSYS, ON_WINDOWS
 from xonsh.tools import ensure_string, to_bool
@@ -235,8 +235,8 @@ def foreign_shell_data(
         tmpfile.write(command.encode("utf8"))
         tmpfile.close()
         cmd.append(tmpfile.name)
-    if currenv is None and XSH.env:
-        currenv = XSH.env.detype()
+    if currenv is None and XS.env:
+        currenv = XS.env.detype()
     elif currenv is not None:
         currenv = dict(currenv)
     try:
@@ -427,7 +427,7 @@ class ForeignShellBaseAlias:
         if len(self.files) > 0:
             input = "".join([f'{self.sourcer} "{f}"\n' for f in self.files]) + input
         cmd = [self.shell] + list(self.extra_args) + ["-ic", input]
-        env = XSH.env
+        env = XS.env
         denv = env.detype()
         if streaming:
             subprocess.check_call(cmd, env=denv)
@@ -648,15 +648,15 @@ def load_foreign_aliases(shells):
         A dictionary of the merged aliases.
     """
     aliases = {}
-    xonsh_aliases = XSH.aliases
+    xonsh_aliases = XS.aliases
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
-        if not XSH.env.get("FOREIGN_ALIASES_OVERRIDE"):
+        if not XS.env.get("FOREIGN_ALIASES_OVERRIDE"):
             shaliases = {} if shaliases is None else shaliases
             for alias in set(shaliases) & set(xonsh_aliases):
                 del shaliases[alias]
-                if XSH.env.get("XONSH_DEBUG") >= 1:
+                if XS.env.get("XONSH_DEBUG") >= 1:
                     print(
                         f"aliases: ignoring alias {alias!r} of shell {shell['shell']!r} "
                         "which tries to override xonsh alias.",

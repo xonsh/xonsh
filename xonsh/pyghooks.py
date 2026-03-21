@@ -28,7 +28,7 @@ from pygments.token import (
     _TokenType,
 )
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.color_tools import (
     BASE_XONSH_COLORS,
     RE_BACKGROUND,
@@ -238,7 +238,7 @@ def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
     """Returns (color) token corresponding to Xonsh color tuple, side effect: defines token is defined in styles"""
     if not styles:
         try:
-            styles = XSH.shell.shell.styler.styles  # type:ignore
+            styles = XS.shell.shell.styler.styles  # type:ignore
         except AttributeError:
             pass
 
@@ -263,8 +263,8 @@ def partial_color_tokenize(template):
     of tuples mapping the token to the string which has that color.
     These sub-strings maybe templates themselves.
     """
-    if XSH.shell is not None:
-        styles = XSH.shell.shell.styler.styles
+    if XS.shell is not None:
+        styles = XS.shell.shell.styler.styles
     else:
         styles = None
     color = Color.DEFAULT
@@ -389,7 +389,7 @@ class XonshStyle(Style):
                     file=sys.stderr,
                 )
                 value = "default"
-                XSH.env["XONSH_COLOR_STYLE"] = value
+                XS.env["XONSH_COLOR_STYLE"] = value
         cmap = STYLES[value]
         if value == "default":
             self._smap = XONSH_BASE_STYLE.copy()
@@ -412,11 +412,11 @@ class XonshStyle(Style):
         )
         self._style_name = value
 
-        for file_type, xonsh_color in XSH.env.get("LS_COLORS", {}).items():
+        for file_type, xonsh_color in XS.env.get("LS_COLORS", {}).items():
             color_token = color_token_by_name(xonsh_color, self.styles)
             file_color_tokens[file_type] = color_token
 
-        if ON_WINDOWS and "prompt_toolkit" in XSH.shell.shell_type:
+        if ON_WINDOWS and "prompt_toolkit" in XS.shell.shell_type:
             self.enhance_colors_for_cmd_exe()
 
     @style_name.deleter
@@ -435,7 +435,7 @@ class XonshStyle(Style):
         When using the default style all blue and dark red colors
         are changed to CYAN and intense red.
         """
-        env = XSH.env
+        env = XS.env
         # Ensure we are not using the new Windows Terminal, ConEmu or Visual Stuio Code
         if "WT_SESSION" in env or "CONEMUANSI" in env or "VSCODE_PID" in env:
             return
@@ -1524,7 +1524,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
          This is arguably a bug.
     """
 
-    lsc = XSH.env["LS_COLORS"]  # type:ignore
+    lsc = XS.env["LS_COLORS"]  # type:ignore
     color_key = "fi"
 
     # if symlink, get info on (final) target
@@ -1598,11 +1598,11 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 
 def _command_is_valid(cmd):
-    return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
+    return (cmd in XS.aliases or locate_executable(cmd)) and not iskeyword(cmd)
 
 
 def _command_is_autocd(cmd):
-    if not XSH.env.get("AUTO_CD", False):
+    if not XS.env.get("AUTO_CD", False):
         return False
     try:
         cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
@@ -1646,11 +1646,11 @@ class XonshLexer(Python3Lexer):
     def __init__(self, *args, **kwargs):
         # If the lexer is loaded as a pygment plugin, we have to mock
         # __xonsh__.env
-        if getattr(XSH, "env", None) is None:
-            XSH.env = {}
+        if getattr(XS, "env", None) is None:
+            XS.env = {}
             if ON_WINDOWS:
                 pathext = os_environ.get("PATHEXT", [".EXE", ".BAT", ".CMD"])
-                XSH.env["PATHEXT"] = pathext.split(os.pathsep)
+                XS.env["PATHEXT"] = pathext.split(os.pathsep)
         super().__init__(*args, **kwargs)
 
     tokens = {

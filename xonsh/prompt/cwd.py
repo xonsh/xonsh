@@ -5,7 +5,7 @@ import shutil
 
 import xonsh.platform as xp
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 
 
 def _replace_home(x: str):
@@ -14,14 +14,14 @@ def _replace_home(x: str):
         x = x.replace(home, "~", 1)
 
     if xp.ON_WINDOWS:
-        if XSH.env.get("FORCE_POSIX_PATHS") and os.altsep:
+        if XS.env.get("FORCE_POSIX_PATHS") and os.altsep:
             x = x.replace(os.sep, os.altsep)
 
     return x
 
 
 def _replace_home_cwd():
-    pwd = XSH.env["PWD"].replace("{", "{{").replace("}", "}}")
+    pwd = XS.env["PWD"].replace("{", "{{").replace("}", "}}")
     return _replace_home(pwd)
 
 
@@ -43,8 +43,8 @@ def _dynamically_collapsed_pwd():
     environment variable DYNAMIC_CWD_WIDTH.
     """
     original_path = _replace_home_cwd()
-    target_width, units = XSH.env["DYNAMIC_CWD_WIDTH"]
-    elision_char = XSH.env["DYNAMIC_CWD_ELISION_CHAR"]
+    target_width, units = XS.env["DYNAMIC_CWD_WIDTH"]
+    elision_char = XS.env["DYNAMIC_CWD_ELISION_CHAR"]
     if target_width == float("inf"):
         return original_path
     if units == "%":

@@ -1,6 +1,6 @@
 import collections
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.cli_utils import Annotated, Arg, NumpyDoc
 from xonsh.completers.tools import RichCompletion, is_exclusive_completer, justify
 
@@ -13,7 +13,7 @@ def add_one_completer(name, func, loc="end"):
         # because then they won't be used when this completer is successful.
         # On the other hand, if the new completer is non-exclusive,
         # we want it to be before all other exclusive completers so that is will always work.
-        items = list(XSH.completers.items())
+        items = list(XS.completers.items())
         first_exclusive = next(
             (i for i, (_, v) in enumerate(items) if is_exclusive_completer(v)),
             len(items),
@@ -24,13 +24,13 @@ def add_one_completer(name, func, loc="end"):
         for k, v in items[first_exclusive:]:
             new[k] = v
     elif loc == "end":
-        for k, v in XSH.completers.items():
+        for k, v in XS.completers.items():
             new[k] = v
         new[name] = func
     else:
         direction, rel = loc[0], loc[1:]
         found = False
-        for k, v in XSH.completers.items():
+        for k, v in XS.completers.items():
             if rel == k and direction == "<":
                 new[name] = func
                 found = True
@@ -40,15 +40,15 @@ def add_one_completer(name, func, loc="end"):
                 found = True
         if not found:
             new[name] = func
-    XSH.completers.clear()
-    XSH.completers.update(new)
+    XS.completers.clear()
+    XS.completers.update(new)
 
 
 def list_completers():
     """List the active completers"""
     o = "Registered Completer Functions: (NX = Non Exclusive)\n\n"
     non_exclusive = " [NX]"
-    _comp = XSH.completers
+    _comp = XS.completers
     ml = max((len(i) for i in _comp), default=0)
     exclusive_len = ml + len(non_exclusive) + 1
     _strs = []
@@ -84,10 +84,10 @@ def remove_completer(
         completers in order)
     """
     err = None
-    if name not in XSH.completers:
+    if name not in XS.completers:
         err = f"The name {name} is not a registered completer function."
     if err is None:
-        del XSH.completers[name]
+        del XS.completers[name]
         return
     else:
         return None, err + "\n", 1

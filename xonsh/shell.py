@@ -6,7 +6,7 @@ import time
 import warnings
 
 import xonsh.history.main as xhm
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.events import events
 from xonsh.history.dummy import DummyHistory
 from xonsh.platform import (
@@ -161,7 +161,7 @@ def transform_command(src, show_diff=True):
                 "the recursion limit number of iterations to "
                 "converge."
             )
-    debug_level = XSH.env.get("XONSH_DEBUG")
+    debug_level = XS.env.get("XONSH_DEBUG")
     if show_diff and debug_level >= 1 and src != raw:
         sys.stderr.writelines(
             difflib.unified_diff(
@@ -252,7 +252,7 @@ class Shell:
             So in this case we need to force using prompt_toolkit.
             """
             is_stdin_to_interactive = (
-                XSH.env.get("XONSH_INTERACTIVE", False) and not sys.stdin.isatty()
+                XS.env.get("XONSH_INTERACTIVE", False) and not sys.stdin.isatty()
             )
 
             if backend == "none":
@@ -288,24 +288,24 @@ class Shell:
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
-        env = XSH.env
+        env = XS.env
 
         # build history backend before creating shell
         if env.get("XONSH_INTERACTIVE"):
-            XSH.history = hist = xhm.construct_history(
+            XS.history = hist = xhm.construct_history(
                 env=env.detype(),
                 ts=[time.time(), None],
                 locked=True,
                 filename=env.get("XONSH_HISTORY_FILE", None),
-                sessionid=XSH.sessionid,
+                sessionid=XS.sessionid,
                 backend=history_backend,
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:
-            XSH.history = hist = DummyHistory()
+            XS.history = hist = DummyHistory()
             env["XONSH_HISTORY_FILE"] = None
 
-        XSH.interface.history = XSH.history
+        XS.handler.history = XS.history
         shell_type = self.choose_shell_type(shell_type, env)
 
         self.shell_type = env["SHELL_TYPE"] = shell_type

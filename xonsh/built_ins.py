@@ -198,9 +198,9 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
-    glob_sorted = XSH.env.get("GLOB_SORTED")
-    dotglob = XSH.env.get("DOTGLOB")
+    csc = XS.env.get("CASE_SENSITIVE_COMPLETIONS")
+    glob_sorted = XS.env.get("GLOB_SORTED")
+    dotglob = XS.env.get("DOTGLOB")
     return globpath(
         s,
         ignore_case=(not csc),
@@ -249,7 +249,7 @@ def subproc_captured_inject(*cmds, envs=None):
     toks = []
     for line in o:
         line = line.rstrip(os.linesep)
-        toks.extend(XSH.execer.parser.lexer.split(line))
+        toks.extend(XS.execer.parser.lexer.split(line))
     return toks
 
 
@@ -325,16 +325,16 @@ def list_of_list_of_strs_outer_product(x):
     for los in itertools.product(*lolos):
         s = "".join(los)
         if "*" in s:
-            rtn.extend(XSH.glob(s))
+            rtn.extend(XS.glob(s))
         else:
-            rtn.append(XSH.expand_path(s))
+            rtn.append(XS.expand_path(s))
     return rtn
 
 
 def eval_fstring_field(field):
     """Evaluates the argument in Xonsh context."""
-    res = XSH.execer.eval(
-        field[0].strip(), glbs=globals(), locs=XSH.ctx, filename=field[1]
+    res = XS.execer.eval(
+        field[0].strip(), glbs=globals(), locs=XS.ctx, filename=field[1]
     )
     return res
 
@@ -400,7 +400,7 @@ def convert_macro_arg(raw_arg, kind, glbs, locs, *, name="<arg>", macroname="<ma
     if kind is str or kind is None:
         return raw_arg  # short circuit since there is nothing else to do
     # select from kind and convert
-    execer = XSH.execer
+    execer = XS.execer
     filename = macroname + "(" + name + ")"
     if kind is AST:
         ctx = set(dir(builtins)) | set(glbs.keys())
@@ -513,7 +513,7 @@ def _eval_regular_args(raw_args, glbs, locs):
         return [], {}
     arglist = list(itertools.takewhile(_starts_as_arg, raw_args))
     kwarglist = raw_args[len(arglist) :]
-    execer = XSH.execer
+    execer = XS.execer
     if not arglist:
         args = arglist
         kwargstr = "dict({})".format(", ".join(kwarglist))
@@ -576,9 +576,9 @@ def xonsh_builtins(execer=None):
     """A context manager for using the xonsh builtins only in a limited
     scope. Likely useful in testing.
     """
-    XSH.load(execer=execer)
+    XS.load(execer=execer)
     yield
-    XSH.unload()
+    XS.unload()
 
 
 class InlineImporter:
@@ -644,8 +644,8 @@ class Cmd:
         return self
 
 
-class XonshSessionInterface:
-    """Xonsh Session Interface
+class XonshSessionHandler:
+    """Xonsh Session Handler is a public interface to a Xonsh session.
 
     Attributes
     ----------
@@ -679,7 +679,7 @@ class XonshSession:
     or ``xonsh.built_ins.XSH`` attributes or functions, you do so at your
     own risk, as the internal contents and behavior of this object may
     change with any release. For repeatable use cases, find a way
-    to improve ``XonshSessionInterface`` or ``xonsh.api``.
+    to improve ``XonshSessionHandler`` or ``xonsh.api``.
     """
 
     def __init__(self):
@@ -690,7 +690,7 @@ class XonshSession:
             Session attribute. In case of integer value it signals xonsh to exit
             with returning this value as exit code.
         """
-        self.interface = XonshSessionInterface()
+        self.handler = XonshSessionHandler()
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
@@ -811,6 +811,7 @@ class XonshSession:
 
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self
+            builtins.XSH = self.handler
         if ctx is not None:
             self.ctx = ctx
 
@@ -820,7 +821,7 @@ class XonshSession:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
-        self.interface.env = self.env
+        self.handler.env = self.env
 
         if save_origin_env:
             save_origin_env_to_file(self.env, self.sessionid)
@@ -971,5 +972,10 @@ class DynamicAccessProxy:
         return str(self.obj)
 
 
-# singleton
-XSH = XonshSession()
+"""
+Logic:
+  * XS and __xonsh__ - private XonshSession.
+  * XSH and @ - public XonshSessionHandler.
+Here we have XSH for backwards compatibility with xontribs. XSH will be removed in the future.
+"""
+XS = XSH = XonshSession()

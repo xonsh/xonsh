@@ -2,12 +2,12 @@
 subprocess calls"""
 
 from xonsh.api.os import indir
-from xonsh.built_ins import XSH, subproc_captured_hiddenobject, subproc_captured_stdout
+from xonsh.built_ins import XS, subproc_captured_hiddenobject, subproc_captured_stdout
 
 
 def run(cmd, cwd=None, check=False):
     """Drop in replacement for ``subprocess.run`` like functionality"""
-    env = XSH.env
+    env = XS.env
     if cwd is None:
         with env.swap(RAISE_SUBPROC_ERROR=check):
             p = subproc_captured_hiddenobject(cmd)
@@ -25,7 +25,7 @@ def check_call(cmd, cwd=None):
 
 def check_output(cmd, cwd=None):
     """Drop in replacement for ``subprocess.check_output`` like functionality"""
-    env = XSH.env
+    env = XS.env
 
     if cwd is None:
         with env.swap(RAISE_SUBPROC_ERROR=True):

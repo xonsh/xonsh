@@ -12,7 +12,7 @@ import types
 from importlib.abc import Loader, MetaPathFinder, SourceLoader
 from importlib.machinery import ModuleSpec
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lib.lazyasd import lazyobject
@@ -326,10 +326,10 @@ def install_import_hooks(execer=ARG_NOT_PRESENT):
             "No execer was passed to install_import_hooks. "
             "This will become an error in future."
         )
-        execer = XSH.execer
+        execer = XS.execer
         if execer is None:
             execer = Execer()
-            XSH.load(execer=execer)
+            XS.load(execer=execer)
 
     found_imp = found_event = False
     for hook in sys.meta_path:

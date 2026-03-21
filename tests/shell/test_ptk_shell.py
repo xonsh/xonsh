@@ -139,7 +139,7 @@ def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypa
     append_history_calls = []
 
     monkeypatch.setattr(
-        "xonsh.built_ins.XSH.history.append", append_history_calls.append
+        "xonsh.built_ins.XS.history.append", append_history_calls.append
     )
     shell.default(cmd)
     if exp_append_history:
@@ -162,7 +162,7 @@ def test_ptk_combine_history(monkeypatch):
         for line in lines:
             yield {"inp": line}
 
-    monkeypatch.setattr("xonsh.built_ins.XSH.history.all_items", all_items)
+    monkeypatch.setattr("xonsh.built_ins.XS.history.all_items", all_items)
 
     shell_hist = PromptToolkitHistory()
     hist_strs = list(shell_hist.load_history_strings())

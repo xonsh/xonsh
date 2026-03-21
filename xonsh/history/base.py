@@ -5,7 +5,7 @@ import re
 import types
 import uuid
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.tools import print_warning
 
 
@@ -194,7 +194,7 @@ class History:
     @functools.cached_property
     def ignore_regex(self):
         compiled_regex = None
-        regex = XSH.env.get("XONSH_HISTORY_IGNORE_REGEX")
+        regex = XS.env.get("XONSH_HISTORY_IGNORE_REGEX")
         if regex:
             try:
                 compiled_regex = re.compile(regex)

@@ -4,7 +4,7 @@ import re
 import sys
 import warnings
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.color_tools import (
     BASE_XONSH_COLORS,
     RE_XONSH_COLOR,
@@ -48,7 +48,7 @@ def _ensure_color_map(style="default", cmap=None):
         except Exception:
             msg = "Could not find color style {0!r}, using default."
             print(msg.format(style), file=sys.stderr)
-            XSH.env["XONSH_COLOR_STYLE"] = "default"
+            XS.env["XONSH_COLOR_STYLE"] = "default"
             cmap = ANSI_STYLES["default"]
     return cmap
 
@@ -162,7 +162,7 @@ def ansi_partial_color_format(template, style="default", cmap=None, hide=False):
 
 def _ansi_partial_color_format_main(template, style="default", cmap=None, hide=False):
     cmap = _ensure_color_map(style=style, cmap=cmap)
-    overrides = XSH.env["XONSH_STYLE_OVERRIDES"]
+    overrides = XS.env["XONSH_STYLE_OVERRIDES"]
     if overrides:
         cmap.update(_style_dict_to_ansi(overrides))
     esc = ("\001" if hide else "") + "\033["

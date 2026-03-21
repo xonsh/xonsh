@@ -13,7 +13,7 @@ import xonsh.lib.lazyasd as xl
 import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.procs.jobs import proc_untraced_waitpid
 from xonsh.procs.readers import (
     BufferedFDParallelReader,
@@ -56,7 +56,7 @@ class PopenThread(threading.Thread):
         self.daemon = True
 
         self.lock = threading.RLock()
-        env = XSH.env
+        env = XS.env
         # stdin setup
         self.orig_stdin = stdin
         if stdin is None:
@@ -127,7 +127,7 @@ class PopenThread(threading.Thread):
         self.suspended = False
         self.prevs_are_closed = False
         # This is so the thread will use the same swapped values as the origin one.
-        self.original_swapped_values = XSH.env.get_swapped_values()
+        self.original_swapped_values = XS.env.get_swapped_values()
         self.start()
 
     def run(self):
@@ -136,7 +136,7 @@ class PopenThread(threading.Thread):
         captured_stderr to stderr.
         """
         # Set the thread-local swapped values.
-        XSH.env.set_swapped_values(self.original_swapped_values)
+        XS.env.set_swapped_values(self.original_swapped_values)
         proc = self.proc
         spec = self._wait_and_getattr("spec")
         # get stdin and apply parallel reader if needed.
@@ -172,7 +172,7 @@ class PopenThread(threading.Thread):
             info = proc_untraced_waitpid(proc, hang=False)
             if getattr(proc, "suspended", False):
                 self.suspended = True
-                if XSH.env.get("XONSH_DEBUG", False):
+                if XS.env.get("XONSH_DEBUG", False):
                     procname = f"{getattr(proc, 'args', '')} {proc.pid}".strip()
                     print(
                         f"Process {procname} suspended with signal {info['signal_name']}.",

@@ -9,7 +9,7 @@ import typing as tp
 
 import xonsh.platform as xp
 import xonsh.tools as xt
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 
 if tp.TYPE_CHECKING:
     from xonsh.built_ins import XonshSession
@@ -35,7 +35,7 @@ class ParsedTokens(tp.NamedTuple):
 
     def process(self) -> str:
         """Wrapper that gets formatter-function from environment and returns final prompt."""
-        processor = XSH.env.get(  # type: ignore
+        processor = XS.env.get(  # type: ignore
             "PROMPT_TOKENS_FORMATTER", prompt_tokens_formatter_default
         )
         return processor(self)
@@ -79,13 +79,13 @@ class PromptFormatter:
         """Formats a xonsh prompt template string."""
 
         if fields is None:
-            self.fields = XSH.env["PROMPT_FIELDS"]  # type: ignore
+            self.fields = XS.env["PROMPT_FIELDS"]  # type: ignore
         else:
             self.fields = fields
 
         # some quick tests
         if isinstance(fields, dict):
-            pflds: PromptFields[PromptField] = PromptFields(XSH, init=False)
+            pflds: PromptFields[PromptField] = PromptFields(XS, init=False)
             pflds.update(fields)
             self.fields = pflds
 
@@ -119,7 +119,7 @@ class PromptFormatter:
         if field is None:
             return
         elif field.startswith("$"):
-            val = XSH.env[field[1:]]
+            val = XS.env[field[1:]]
             return _format_value(val, spec, conv)
         elif field in self.fields:
             val = self._get_field_value(field, spec=spec, conv=conv, **kwargs)
@@ -191,7 +191,7 @@ def multiline_prompt(curr=""):
     # tail is the trailing whitespace
     tail = line if headlen == 0 else line.rsplit(head[-1], 1)[1]
     # now to construct the actual string
-    dots = XSH.env.get("MULTILINE_PROMPT")
+    dots = XS.env.get("MULTILINE_PROMPT")
     dots = dots() if callable(dots) else dots
     if dots is None or len(dots) == 0:
         return ""
@@ -237,7 +237,7 @@ def is_template_string(template, PROMPT_FIELDS=None):
         return False
     included_names.discard(None)
     if PROMPT_FIELDS is None:
-        fmtter = XSH.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
+        fmtter = XS.env.get("PROMPT_FIELDS", PROMPT_FIELDS)
     else:
         fmtter = PROMPT_FIELDS
     known_names = set(fmtter.keys())
@@ -357,9 +357,9 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
                 vte_new_tab_cwd=vte_new_tab_cwd,
                 time_format="%H:%M:%S",
                 localtime=_localtime,
-                last_return_code=lambda: XSH.env.get("LAST_RETURN_CODE", 0),
+                last_return_code=lambda: XS.env.get("LAST_RETURN_CODE", 0),
                 last_return_code_if_nonzero=lambda: (
-                    XSH.env.get("LAST_RETURN_CODE", 0) or None
+                    XS.env.get("LAST_RETURN_CODE", 0) or None
                 ),
             )
         )

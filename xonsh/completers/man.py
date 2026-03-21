@@ -6,14 +6,14 @@ import subprocess
 import textwrap
 from pathlib import Path
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.completers.tools import RichCompletion, contextual_command_completer
 from xonsh.parsers.completion_context import CommandContext
 
 
 @functools.cache
 def get_man_completions_path() -> Path:
-    env = XSH.env or {}
+    env = XS.env or {}
     datadir = Path(env["XONSH_DATA_DIR"]) / "generated_completions" / "man"
     if datadir.exists() and (not datadir.is_dir()):
         shutil.move(datadir, datadir.with_suffix(".bkp"))
@@ -24,7 +24,7 @@ def get_man_completions_path() -> Path:
 
 def _get_man_page(cmd: str):
     """without control characters"""
-    env = XSH.env.detype()
+    env = XS.env.detype()
     manpage = subprocess.Popen(
         ["man", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env
     )

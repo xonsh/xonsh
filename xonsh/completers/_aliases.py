@@ -1,5 +1,5 @@
 import xonsh.cli_utils as xcli
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.completers.completer import (
     add_one_completer,
     list_completers,
@@ -72,7 +72,7 @@ def _register_completer(
     """
     err = None
     func_name = func
-    xsh = XSH
+    xsh = XS
     if name in xsh.completers:
         err = f"The name {name} is already a registered completer function."
     else:
@@ -155,10 +155,10 @@ def complete_aliases(command: CommandContext):
         return
     cmd = command.args[0].value
 
-    if cmd not in XSH.aliases:
+    if cmd not in XS.aliases:
         # only complete aliases
         return
-    alias = XSH.aliases.get(cmd)[0]  # type: ignore
+    alias = XS.aliases.get(cmd)[0]  # type: ignore
 
     completer = getattr(alias, "xonsh_complete", None)
     if not completer:

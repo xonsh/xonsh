@@ -12,7 +12,7 @@ import abc
 import collections.abc
 import inspect
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.tools import print_exception
 
 
@@ -23,8 +23,8 @@ def has_kwargs(func):
 
 
 def debug_level():
-    if XSH.env:
-        return XSH.env.get("XONSH_DEBUG")
+    if XS.env:
+        return XS.env.get("XONSH_DEBUG")
     # FIXME: Under pytest, return 1(?)
     else:
         return 0  # Optimize for speed, not guaranteed correctness

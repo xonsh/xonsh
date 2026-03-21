@@ -15,7 +15,7 @@ from importlib.machinery import all_suffixes
 from time import time
 from zipimport import zipimporter
 
-from xonsh.built_ins import XSH
+from xonsh.built_ins import XS
 from xonsh.completers.tools import (
     RichCompletion,
     contextual_completer,
@@ -86,7 +86,7 @@ def get_root_modules():
     Returns a list containing the names of all the modules available in the
     folders of the pythonpath.
     """
-    rootmodules_cache = XSH.modules_cache
+    rootmodules_cache = XS.modules_cache
     rootmodules = list(sys.builtin_module_names)
     start_time = time()
     for path in sys.path:
