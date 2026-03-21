@@ -305,7 +305,7 @@ class Shell:
             XSH.history = hist = DummyHistory()
             env["XONSH_HISTORY_FILE"] = None
 
-        XSH.interface.history = XSH.history
+        XSH.handler.history = XSH.history
         shell_type = self.choose_shell_type(shell_type, env)
 
         self.shell_type = env["SHELL_TYPE"] = shell_type

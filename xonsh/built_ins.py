@@ -644,7 +644,7 @@ class Cmd:
         return self
 
 
-class XonshSessionInterface:
+class XonshSessionHandler:
     """Xonsh Session Interface
 
     Attributes
@@ -679,7 +679,7 @@ class XonshSession:
     or ``xonsh.built_ins.XSH`` attributes or functions, you do so at your
     own risk, as the internal contents and behavior of this object may
     change with any release. For repeatable use cases, find a way
-    to improve ``XonshSessionInterface`` or ``xonsh.api``.
+    to improve ``XonshSessionHandler`` or ``xonsh.api``.
     """
 
     def __init__(self):
@@ -690,7 +690,7 @@ class XonshSession:
             Session attribute. In case of integer value it signals xonsh to exit
             with returning this value as exit code.
         """
-        self.interface = XonshSessionInterface()
+        self.handler = XonshSessionHandler()
         self.execer = None
         self.ctx = {}
         self.builtins_loaded = False
@@ -811,6 +811,7 @@ class XonshSession:
 
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self
+            builtins.XSH = self.handler
         if ctx is not None:
             self.ctx = ctx
 
@@ -820,7 +821,7 @@ class XonshSession:
             self.env = Env(default_env())
         else:
             self.env = Env({"XONSH_ENV_INHERITED": False})
-        self.interface.env = self.env
+        self.handler.env = self.env
 
         if save_origin_env:
             save_origin_env_to_file(self.env, self.sessionid)
