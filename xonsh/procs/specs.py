@@ -855,7 +855,11 @@ def _safe_pipe_properties(fd, use_tty=False):
     # protocols, like git and ssh, which expect unix line endings.
     # see https://mail.python.org/pipermail/python-list/2013-June/650460.html
     # for more details and the following solution.
-    props = xli.termios.tcgetattr(fd)
+    try:
+        props = xli.termios.tcgetattr(fd)
+    except xli.termios.error:
+        # fd is not a TTY (e.g. PTY exhaustion caused fallback to os.pipe)
+        return
     props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
     xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
     # newly created PTYs have a stardard size (24x80), set size to the same size

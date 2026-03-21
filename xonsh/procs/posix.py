@@ -243,7 +243,12 @@ class PopenThread(threading.Thread):
         for i, chunk in enumerate(iter(reader.read_queue, b"")):  # noqa
             self._alt_mode_switch(chunk, writer, stdbuf)
         if i >= 0:
-            writer.flush()
+            try:
+                writer.flush()
+            except (OSError, ValueError):
+                # Avoid race with the main thread closing PipeChannel fds
+                # before this background thread finishes flushing.
+                pass
             stdbuf.flush()
         return i + 1
 

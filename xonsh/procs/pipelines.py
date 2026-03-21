@@ -520,16 +520,18 @@ class CommandPipeline:
         """Waits for the command to complete and then runs any closing and
         cleanup procedures that need to be run.
         """
-        if tee_output:
-            for _ in self.tee_stdout():
-                pass
-        self._endtime()
-        # since we are driven by getting output, input may not be available
-        # until the command has completed.
-        self._set_input()
-        if not hasattr(self.proc, 'prevs_are_closed') or not self.proc.prevs_are_closed:
-            self._close_prev_procs()
-        self._close_proc()
+        try:
+            if tee_output:
+                for _ in self.tee_stdout():
+                    pass
+            self._endtime()
+            # since we are driven by getting output, input may not be available
+            # until the command has completed.
+            self._set_input()
+        finally:
+            if not hasattr(self.proc, 'prevs_are_closed') or not self.proc.prevs_are_closed:
+                self._close_prev_procs()
+            self._close_proc()
         self._check_signal()
         self._apply_to_history()
         self.ended = True
