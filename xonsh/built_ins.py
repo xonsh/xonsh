@@ -972,10 +972,24 @@ class DynamicAccessProxy:
         return str(self.obj)
 
 
-"""
-Logic:
-  * XS and __xonsh__ - private XonshSession.
-  * XSH and @ - public XonshSessionHandler.
-Here we have XSH for backwards compatibility with xontribs. XSH will be removed in the future.
-"""
-XS = XSH = XonshSession()
+XS = XonshSession()
+
+def __getattr__(name):
+    """
+    Logic:
+      * XS and __xonsh__ - private XonshSession.
+      * XSH and @ - public XonshSessionHandler.
+    Here we have XSH for backwards compatibility with xontribs. XSH will be removed in the future.
+    """
+    if name == "XSH":
+        warnings.warn(
+            "Starting with xonsh 0.23.0, the XSH object is available as a builtin "
+            "and represents the XonshSessionHandler. There is no need to import it "
+            "if you are using the publicly available properties e.g. `XSH.env`. "
+            "If you need the private XonshSession object, it is available "
+            "under the name XS and you need to rename XSH to XS and use `from xonsh.built_ins import XS`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return XS
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
