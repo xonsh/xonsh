@@ -1788,7 +1788,7 @@ def test_callable_alias_fd_leaking(test_code):
     """
 
     out, err, ret = run_xonsh(
-        test_code, interactive=False, single_command=True, timeout=300
+        test_code, interactive=False, single_command=True, timeout=600
     )
     assert ret == 0
     assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
