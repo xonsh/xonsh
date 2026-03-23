@@ -956,7 +956,9 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = True
         last.stdout = XSH.stdout_uncaptured
         last.captured_stdout = last.stdout
-    elif xp.ON_WINDOWS and not callable_alias:
+    elif (
+        xp.ON_WINDOWS and not callable_alias and not XSH.env.get("XONSH_CAPTURE_ALWAYS")
+    ):
         last.universal_newlines = True
         last.stdout = None  # must truly stream on windows
         last.captured_stdout = ConsoleParallelReader(1)
@@ -981,7 +983,9 @@ def _make_last_spec_captured(last: SubprocSpec):
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
-    elif xp.ON_WINDOWS and not callable_alias:
+    elif (
+        xp.ON_WINDOWS and not callable_alias and not XSH.env.get("XONSH_CAPTURE_ALWAYS")
+    ):
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
     else:

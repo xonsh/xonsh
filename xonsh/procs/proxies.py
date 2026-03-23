@@ -16,7 +16,6 @@ import sys
 import threading
 import time
 
-import xonsh.lib.lazyimps as xli
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
@@ -45,28 +44,6 @@ def safe_flush(handle):
     except OSError:
         status = False
     return status
-
-
-class Handle(int):
-    closed = False
-
-    def Close(self, CloseHandle=None):
-        CloseHandle = CloseHandle or xli._winapi.CloseHandle
-        if not self.closed:
-            self.closed = True
-            CloseHandle(self)
-
-    def Detach(self):
-        if not self.closed:
-            self.closed = True
-            return int(self)
-        raise ValueError("already closed")
-
-    def __repr__(self):
-        return f"Handle({int(self)})"
-
-    __del__ = Close
-    __str__ = __repr__
 
 
 class FileThreadDispatcher:
@@ -368,14 +345,6 @@ class ProcProxyThread(threading.Thread):
         self.env = env
         self._interrupted = False
 
-        if xp.ON_WINDOWS:
-            if self.p2cwrite != -1:
-                self.p2cwrite = xli.msvcrt.open_osfhandle(self.p2cwrite.Detach(), 0)
-            if self.c2pread != -1:
-                self.c2pread = xli.msvcrt.open_osfhandle(self.c2pread.Detach(), 0)
-            if self.errread != -1:
-                self.errread = xli.msvcrt.open_osfhandle(self.errread.Detach(), 0)
-
         if self.p2cwrite != -1:
             self.stdin = open(self.p2cwrite, "wb", -1, closefd=False)
             if universal_newlines:
@@ -433,13 +402,6 @@ class ProcProxyThread(threading.Thread):
         env = XSH.env
         enc = env.get("XONSH_ENCODING")
         err = env.get("XONSH_ENCODING_ERRORS")
-        if xp.ON_WINDOWS:
-            if self.p2cread != -1:
-                self.p2cread = xli.msvcrt.open_osfhandle(self.p2cread.Detach(), 0)
-            if self.c2pwrite != -1:
-                self.c2pwrite = xli.msvcrt.open_osfhandle(self.c2pwrite.Detach(), 0)
-            if self.errwrite != -1:
-                self.errwrite = xli.msvcrt.open_osfhandle(self.errwrite.Detach(), 0)
         # get stdin
         if self.stdin is None:
             sp_stdin = None
@@ -515,9 +477,7 @@ class ProcProxyThread(threading.Thread):
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        if not last_in_pipeline and not xp.ON_WINDOWS:
-            # mac requires us *not to* close the handles here while
-            # windows requires us *to* close the handles here
+        if not last_in_pipeline:
             # Close wrappers before closing raw fds to avoid
             # "Bad file descriptor" on finalization in Python 3.14+.
             safe_fdclose(sp_stdout)
@@ -531,13 +491,7 @@ class ProcProxyThread(threading.Thread):
                 self._stderr_pipe.close_writer()
             return
         # clean up
-        # scopz: not sure why this is needed, but stdin cannot go here
-        # and stdout & stderr must.
-        if xp.ON_WINDOWS:
-            handles = [self.stdout, self.stderr]
-        else:
-            handles = [sp_stdout, sp_stderr]
-        for handle in handles:
+        for handle in (sp_stdout, sp_stderr):
             safe_fdclose(handle, cache=self._closed_handle_cache)
         # Close write ends via PipeChannel to signal EOF to readers
         for ch in spec.pipe_channels:
@@ -611,146 +565,62 @@ class ProcProxyThread(threading.Thread):
             self._devnull = os.open(os.devnull, os.O_RDWR)
         return self._devnull
 
-    if xp.ON_WINDOWS:
+    def _get_handles(self, stdin, stdout, stderr):
+        """Construct and return tuple with IO objects:
+        p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
+        """
+        p2cread, p2cwrite = -1, -1
+        c2pread, c2pwrite = -1, -1
+        errread, errwrite = -1, -1
 
-        def _make_inheritable(self, handle):
-            """Return a duplicate of handle, which is inheritable"""
-            h = xli._winapi.DuplicateHandle(
-                xli._winapi.GetCurrentProcess(),
-                handle,
-                xli._winapi.GetCurrentProcess(),
-                0,
-                1,
-                xli._winapi.DUPLICATE_SAME_ACCESS,
+        if stdin is None:
+            pass
+        elif stdin == subprocess.PIPE:
+            self._stdin_pipe = PipeChannel.from_pipe()
+            p2cread, p2cwrite = self._stdin_pipe.read_fd, self._stdin_pipe.write_fd
+        elif stdin == subprocess.DEVNULL:
+            p2cread = self._get_devnull()
+        elif isinstance(stdin, int):
+            p2cread = stdin
+        else:
+            # Assuming file-like object
+            p2cread = stdin.fileno()
+
+        if stdout is None:
+            pass
+        elif stdout == subprocess.PIPE:
+            self._stdout_pipe = PipeChannel.from_pipe()
+            c2pread, c2pwrite = (
+                self._stdout_pipe.read_fd,
+                self._stdout_pipe.write_fd,
             )
-            return Handle(h)
+        elif stdout == subprocess.DEVNULL:
+            c2pwrite = self._get_devnull()
+        elif isinstance(stdout, int):
+            c2pwrite = stdout
+        else:
+            # Assuming file-like object
+            c2pwrite = stdout.fileno()
 
-        def _get_handles(self, stdin, stdout, stderr):
-            """Construct and return tuple with IO objects:
-            p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
-            """
-            if stdin is None and stdout is None and stderr is None:
-                return (-1, -1, -1, -1, -1, -1)
+        if stderr is None:
+            pass
+        elif stderr == subprocess.PIPE:
+            self._stderr_pipe = PipeChannel.from_pipe()
+            errread, errwrite = (
+                self._stderr_pipe.read_fd,
+                self._stderr_pipe.write_fd,
+            )
+        elif stderr == subprocess.STDOUT:
+            errwrite = c2pwrite
+        elif stderr == subprocess.DEVNULL:
+            errwrite = self._get_devnull()
+        elif isinstance(stderr, int):
+            errwrite = stderr
+        else:
+            # Assuming file-like object
+            errwrite = stderr.fileno()
 
-            p2cread, p2cwrite = -1, -1
-            c2pread, c2pwrite = -1, -1
-            errread, errwrite = -1, -1
-
-            if stdin is None:
-                p2cread = xli._winapi.GetStdHandle(xli._winapi.STD_INPUT_HANDLE)
-                if p2cread is None:
-                    p2cread, _ = xli._winapi.CreatePipe(None, 0)
-                    p2cread = Handle(p2cread)
-                    xli._winapi.CloseHandle(_)
-            elif stdin == subprocess.PIPE:
-                p2cread, p2cwrite = Handle(p2cread), Handle(p2cwrite)
-            elif stdin == subprocess.DEVNULL:
-                p2cread = xli.msvcrt.get_osfhandle(self._get_devnull())
-            elif isinstance(stdin, int):
-                p2cread = xli.msvcrt.get_osfhandle(stdin)
-            else:
-                # Assuming file-like object
-                p2cread = xli.msvcrt.get_osfhandle(stdin.fileno())
-            p2cread = self._make_inheritable(p2cread)
-
-            if stdout is None:
-                c2pwrite = xli._winapi.GetStdHandle(xli._winapi.STD_OUTPUT_HANDLE)
-                if c2pwrite is None:
-                    _, c2pwrite = xli._winapi.CreatePipe(None, 0)
-                    c2pwrite = Handle(c2pwrite)
-                    xli._winapi.CloseHandle(_)
-            elif stdout == subprocess.PIPE:
-                c2pread, c2pwrite = xli._winapi.CreatePipe(None, 0)
-                c2pread, c2pwrite = Handle(c2pread), Handle(c2pwrite)
-            elif stdout == subprocess.DEVNULL:
-                c2pwrite = xli.msvcrt.get_osfhandle(self._get_devnull())
-            elif isinstance(stdout, int):
-                c2pwrite = xli.msvcrt.get_osfhandle(stdout)
-            else:
-                # Assuming file-like object
-                c2pwrite = xli.msvcrt.get_osfhandle(stdout.fileno())
-            c2pwrite = self._make_inheritable(c2pwrite)
-
-            if stderr is None:
-                errwrite = xli._winapi.GetStdHandle(xli._winapi.STD_ERROR_HANDLE)
-                if errwrite is None:
-                    _, errwrite = xli._winapi.CreatePipe(None, 0)
-                    errwrite = Handle(errwrite)
-                    xli._winapi.CloseHandle(_)
-            elif stderr == subprocess.PIPE:
-                errread, errwrite = xli._winapi.CreatePipe(None, 0)
-                errread, errwrite = Handle(errread), Handle(errwrite)
-            elif stderr == subprocess.STDOUT:
-                errwrite = c2pwrite
-            elif stderr == subprocess.DEVNULL:
-                errwrite = xli.msvcrt.get_osfhandle(self._get_devnull())
-            elif isinstance(stderr, int):
-                errwrite = xli.msvcrt.get_osfhandle(stderr)
-            else:
-                # Assuming file-like object
-                errwrite = xli.msvcrt.get_osfhandle(stderr.fileno())
-            errwrite = self._make_inheritable(errwrite)
-
-            return (p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite)
-
-    else:
-        # POSIX versions
-        def _get_handles(self, stdin, stdout, stderr):
-            """Construct and return tuple with IO objects:
-            p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite
-            """
-            p2cread, p2cwrite = -1, -1
-            c2pread, c2pwrite = -1, -1
-            errread, errwrite = -1, -1
-
-            if stdin is None:
-                pass
-            elif stdin == subprocess.PIPE:
-                self._stdin_pipe = PipeChannel.from_pipe()
-                p2cread, p2cwrite = self._stdin_pipe.read_fd, self._stdin_pipe.write_fd
-            elif stdin == subprocess.DEVNULL:
-                p2cread = self._get_devnull()
-            elif isinstance(stdin, int):
-                p2cread = stdin
-            else:
-                # Assuming file-like object
-                p2cread = stdin.fileno()
-
-            if stdout is None:
-                pass
-            elif stdout == subprocess.PIPE:
-                self._stdout_pipe = PipeChannel.from_pipe()
-                c2pread, c2pwrite = (
-                    self._stdout_pipe.read_fd,
-                    self._stdout_pipe.write_fd,
-                )
-            elif stdout == subprocess.DEVNULL:
-                c2pwrite = self._get_devnull()
-            elif isinstance(stdout, int):
-                c2pwrite = stdout
-            else:
-                # Assuming file-like object
-                c2pwrite = stdout.fileno()
-
-            if stderr is None:
-                pass
-            elif stderr == subprocess.PIPE:
-                self._stderr_pipe = PipeChannel.from_pipe()
-                errread, errwrite = (
-                    self._stderr_pipe.read_fd,
-                    self._stderr_pipe.write_fd,
-                )
-            elif stderr == subprocess.STDOUT:
-                errwrite = c2pwrite
-            elif stderr == subprocess.DEVNULL:
-                errwrite = self._get_devnull()
-            elif isinstance(stderr, int):
-                errwrite = stderr
-            else:
-                # Assuming file-like object
-                errwrite = stderr.fileno()
-
-            return (p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite)
+        return (p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite)
 
 
 #

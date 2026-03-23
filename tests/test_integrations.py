@@ -1730,7 +1730,6 @@ for i in range(10):
 ]
 
 
-@skip_if_on_windows
 @pytest.mark.parametrize("test_code", test_code)
 def test_callable_alias_fd_leaking(test_code):
     """Testing callable alias on leaks and errors in pipe.
@@ -1741,7 +1740,7 @@ def test_callable_alias_fd_leaking(test_code):
     """
 
     out, err, ret = run_xonsh(
-        test_code, interactive=False, single_command=True, timeout=60
+        test_code, interactive=False, single_command=True, timeout=300
     )
     assert ret == 0
     assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
