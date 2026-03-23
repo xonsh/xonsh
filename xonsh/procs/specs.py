@@ -1092,6 +1092,15 @@ def cmds_to_specs(cmds, captured=False, envs=None):
         )
         _set_specs_capture_always(specs_to_capture)
 
+    # Validate: unthreadable callable aliases cannot be used in pipelines
+    if len(specs) > 1:
+        for spec in specs:
+            if callable(spec.alias) and not spec.threadable:
+                raise xt.XonshError(
+                    f"Alias {spec.alias_name!r} is explicitly marked as unthreadable and is not supported in pipelines.\n"
+                    f"(https://github.com/xonsh/xonsh/issues/5317)"
+                )
+
     _update_last_spec(specs[-1])
     return specs
 
