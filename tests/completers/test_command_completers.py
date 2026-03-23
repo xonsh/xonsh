@@ -1,3 +1,4 @@
+import os
 from unittest.mock import Mock
 
 import pytest
@@ -17,8 +18,14 @@ def xs_orig_commands_cache(xession):
     pass
 
 
-def test_complete_command(completion_context_parse):
+def test_complete_command(completion_context_parse, tmp_path):
     if ON_WINDOWS:
+        tmpdir = tmp_path / 'test_complete_command'
+        tmpdir.mkdir()
+        testfile = (tmpdir / 'dir.exe')
+        testfile.write_text('some file')
+        testfile.chmod(0o777)
+        os.chdir(str(tmpdir))
         command = "dir.exe"
     else:
         command = "grep"
