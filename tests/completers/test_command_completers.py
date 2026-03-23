@@ -1,6 +1,6 @@
+import os
 from unittest.mock import Mock
 
-import os
 import pytest
 
 from xonsh.completer import Completer
@@ -20,10 +20,10 @@ def xs_orig_commands_cache(xession):
 
 def test_complete_command(completion_context_parse, tmp_path, xession):
     command = "somefile.exe" if ON_WINDOWS else "somefile"
-    tmpdir = tmp_path / 'test_complete_command'
+    tmpdir = tmp_path / "test_complete_command"
     tmpdir.mkdir()
-    testfile = (tmpdir / command)
-    testfile.write_text('some file')
+    testfile = tmpdir / command
+    testfile.write_text("some file")
     testfile.chmod(0o777)
 
     xession.env['PATH'].append(str(tmpdir))
