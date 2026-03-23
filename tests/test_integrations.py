@@ -1707,17 +1707,64 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
 test_code = [
     """
 $XONSH_SHOW_TRACEBACK = True
+import sys
 
 @aliases.register
-def _a():
+def _a(args, stdin, stdout, stderr):    
+    name = 'a'
+
+    print(f"{name}: print out alias.stdout", file=stdout)
+    print(f"{name}: print err alias.stderr", file=stderr)
+    
+    print(f"{name}: print out sys.stdout", file=sys.stdout)
+    print(f"{name}: print err sys.stderr", file=sys.stderr)
+    
+    echo @(f"{name}: echo stdout")
+    echo @(f"{name}: echo stderr") o>e
+    
+    ![echo @(f"{name}: ![] echo stdout")]
+    $[echo @(f"{name}: $[] echo stdout")]
+    
+    $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
+    $(echo @(f"{name}: $() echo stderr") o>e)
+    
+    !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
+    !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
+    
+    execx(f'echo "{name}: execx echo stdout"')
+    execx(f'echo "{name}: execx echo stderr" o>e')
+
     echo 1 && echo 2
 
+
 @aliases.register
-def _b():
+def _b(args, stdin, stdout, stderr):    
+    name = 'b'
+
+    print(f"{name}: print out alias.stdout", file=stdout)
+    print(f"{name}: print err alias.stderr", file=stderr)
+    
+    print(f"{name}: print out sys.stdout", file=sys.stdout)
+    print(f"{name}: print err sys.stderr", file=sys.stderr)
+    
+    echo @(f"{name}: echo stdout")
+    echo @(f"{name}: echo stderr") o>e
+    
+    ![echo @(f"{name}: ![] echo stdout")]
+    $[echo @(f"{name}: $[] echo stdout")]
+    
+    $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
+    $(echo @(f"{name}: $() echo stderr") o>e)
+    
+    !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
+    !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
+    
+    execx(f'echo "{name}: execx echo stdout"')
+    execx(f'echo "{name}: execx echo stderr" o>e')
+
     echo 3 && echo 4
 
-
-for i in range(100):
+for i in range(111):
     $(a | b)
 
 # Empirically, in case of a leak, the output
@@ -1736,7 +1783,7 @@ def test_callable_alias_fd_leaking(test_code):
     1. No fd leaking: no output interrupting during 1000+ pipe calls.
     2. No I/O errors or "Bad file descriptor" errors.
     3. No stdout leaking from alias `a`.
-    See also references in #6159.
+    See also #6159.
     """
 
     out, err, ret = run_xonsh(
@@ -1745,6 +1792,7 @@ def test_callable_alias_fd_leaking(test_code):
     assert ret == 0
     assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
     assert "Exception" not in out  # No I/O errors or "Bad file descriptor" errors.
-    assert out.count("3\\n4\\n") == 1100  # No fd leaking.
+    assert "LEAKING" not in out  # No captured stdout/stderr leaking.
+    assert out.count("3\\n4\\n") == 1111  # No fd leaking.
     assert "1" not in out  # No stdout leaking from alias `a`.
     assert "2" not in out  # No stdout leaking from alias `a`.
