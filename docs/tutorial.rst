@@ -1568,9 +1568,9 @@ built-in mapping.  Here is an example using a function value:
 
 .. code-block:: xonshcon
 
-    @ def _banana(args, stdin=None):
+    @ @aliases.register('banana')
+    . def _banana(args, stdin=None):
     .     return ('My spoon is tooo big!', None)
-    @ aliases['banana'] = _banana
     @ banana
     'My spoon is tooo big!'
 
@@ -1669,12 +1669,11 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 
     from xonsh.tools import unthreadable, uncapturable
 
+    @aliases.register
     @uncapturable
     @unthreadable
     def _binvi(args, stdin=None):
         vi -b @(args)  # Edit binary files
-
-    aliases['bvi'] = _binvi
 
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
