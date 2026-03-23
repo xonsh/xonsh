@@ -15,6 +15,7 @@ def imp_env(xession):
     imphooks.install_import_hooks(xession.execer)
     yield
 
+
 def check_out(out):
     if ON_WINDOWS:
         # Windows `echo` (`cmd /c echo`) keeps quotes in case of using space.
@@ -25,6 +26,7 @@ def check_out(out):
 
 def test_import():
     import sample
+
     check_out(sample.x)
 
 
@@ -36,20 +38,23 @@ def test_import_empty():
 
 def test_absolute_import():
     from xpack import sample
+
     check_out(sample.x)
 
 
 def test_relative_import():
     from xpack import relimp
+
     check_out(relimp.sample.x)
 
-    first, second = relimp.y.split('\n')
-    check_out(first+'\n')
+    first, second = relimp.y.split("\n")
+    check_out(first + "\n")
     assert "dark chest of wonders" == second
 
 
 def test_sub_import():
     from xpack.sub import sample
+
     check_out(sample.x)
 
 
