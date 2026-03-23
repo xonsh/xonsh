@@ -10,7 +10,6 @@ from xonsh.parser import Parser
 from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
-    ON_WINDOWS,
     VER_MAJOR_MINOR,
     nodes_equal,
     skip_if_pre_3_8,
@@ -2646,14 +2645,7 @@ def test_echo_slash_question(check_xonsh_ast):
 @pytest.mark.parametrize(
     "case",
     [
-        pytest.param(
-            "[]",
-            marks=pytest.mark.xfail(
-                ON_WINDOWS,
-                reason="non-zero exit code being raised by brackets",
-                strict=True,
-            ),  # TODO: fix this on a windows machine
-        ),
+        "[]",
         "[[]]",
         "[a]",
         "[a][b]",
