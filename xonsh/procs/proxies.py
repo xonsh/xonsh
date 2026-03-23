@@ -46,7 +46,6 @@ def safe_flush(handle):
     return status
 
 
-
 class FileThreadDispatcher:
     """Dispatches to different file handles depending on the
     current thread. Useful if you want file operation to go to different
