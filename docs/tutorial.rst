@@ -1292,18 +1292,10 @@ regex globbing:
 
 .. code-block:: xonshcon
 
-    @ __xonsh__.regexsearch??
-    Type:         function
-    String form:  <function regexsearch at 0x7efc8b367d90>
-    File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
-    Definition:   (s)
-    Source:
-    def regexsearch(s):
-        s = expand_path(s)
-        return reglob(s)
-
-
-    <function xonsh.built_ins.regexsearch>
+    @ @.imp.json.loads????
+    def loads(s, *, cls=None, object_hook=None, parse_float=None,
+        parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
+    <...>
 
 Note that both help and superhelp return the object that they are inspecting.
 This allows you to chain together help inside of other operations and
@@ -1474,11 +1466,6 @@ may have one of the following signatures:
         # aliases to support piping.
         print('I go to stdout and will be printed or piped')
 
-        # Note: that you have access to the xonsh
-        # built-ins if you 'import builtins'.  For example, if you need the
-        # environment, you could do the following:
-        import builtins
-        env = builtins.__xonsh__.env
 
     def mycmd1(args):
         """This form takes a single argument, args. This is a list of strings
