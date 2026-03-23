@@ -4,9 +4,9 @@ import os
 from importlib import import_module
 
 import pytest
-from xonsh.pytest.tools import ON_WINDOWS
 
 from xonsh import imphooks
+from xonsh.pytest.tools import ON_WINDOWS
 
 
 @pytest.fixture(autouse=True)
