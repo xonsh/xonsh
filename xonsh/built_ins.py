@@ -974,6 +974,7 @@ class DynamicAccessProxy:
 
 XS = XonshSession()
 
+
 def __getattr__(name):
     """
     Logic:
