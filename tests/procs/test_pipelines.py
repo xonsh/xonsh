@@ -141,6 +141,8 @@ def test_background_pgid(xonsh_session, monkeypatch):
     assert pipeline.term_pgid is not None
 
 
+# Windows: The test is skipped on Windows because cmd /c echo can't output arbitrary unicode escape sequences (\u009b, \u019b) — it replaces them with ?. This is a cmd.exe encoding limitation.
+@skip_if_on_windows
 @pytest.mark.parametrize(
     "cmdline, stdout, stderr, raw_stdout",
     (
