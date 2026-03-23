@@ -1647,11 +1647,11 @@ function with the ``xonsh.tools.unthreadable`` decorator.
 
     from xonsh.tools import unthreadable
 
+    @aliases.register
     @unthreadable
     def _mycmd(args, stdin=None):
         return 'In your face!'
 
-    aliases['mycmd'] = _mycmd
 
 Uncapturable Aliases
 -----------------------
