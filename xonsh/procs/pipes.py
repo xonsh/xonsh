@@ -1,6 +1,7 @@
 """Pipe channel for single-owner fd management."""
 
 import os
+import threading
 
 
 class PipeChannel:
@@ -12,6 +13,7 @@ class PipeChannel:
     def __init__(self, read_fd, write_fd):
         self._read_fd = read_fd
         self._write_fd = write_fd
+        self._lock = threading.Lock()
 
     @classmethod
     def from_pipe(cls):
@@ -50,22 +52,26 @@ class PipeChannel:
         return open(self._read_fd, mode, buffering=buffering, closefd=False)
 
     def close_writer(self):
-        """Close the write end fd. Idempotent and safe."""
-        if self._write_fd is not None:
+        """Close the write end fd. Thread-safe and idempotent."""
+        with self._lock:
+            fd = self._write_fd
+            self._write_fd = None
+        if fd is not None:
             try:
-                os.close(self._write_fd)
+                os.close(fd)
             except OSError:
                 pass
-            self._write_fd = None
 
     def close_reader(self):
-        """Close the read end fd. Idempotent and safe."""
-        if self._read_fd is not None:
+        """Close the read end fd. Thread-safe and idempotent."""
+        with self._lock:
+            fd = self._read_fd
+            self._read_fd = None
+        if fd is not None:
             try:
-                os.close(self._read_fd)
+                os.close(fd)
             except OSError:
                 pass
-            self._read_fd = None
 
     def close(self):
         """Close both ends."""

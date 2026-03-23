@@ -568,6 +568,9 @@ class CommandPipeline:
             self.endtime = time.time()
 
     def _safe_close(self, handle):
+        # Skip integer fds — they are owned by PipeChannel and closed there.
+        if isinstance(handle, int):
+            return
         safe_fdclose(handle, cache=self._closed_handle_cache)
 
     def _procs_suspended(self):

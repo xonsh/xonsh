@@ -383,7 +383,7 @@ class ProcProxyThread(threading.Thread):
                     self.stdin, write_through=True, line_buffering=False
                 )
         elif isinstance(stdin, int) and stdin != 0:
-            self.stdin = open(stdin, "wb", -1)
+            self.stdin = open(stdin, "wb", -1, closefd=False)
 
         if self.c2pread != -1:
             self.stdout = open(self.c2pread, "rb", -1, closefd=False)
