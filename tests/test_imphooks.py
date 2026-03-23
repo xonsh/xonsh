@@ -5,6 +5,7 @@ from importlib import import_module
 
 import pytest
 
+from build.lib.xonsh.pytest.tools import ON_WINDOWS
 from xonsh import imphooks
 
 
@@ -18,7 +19,11 @@ def imp_env(xession):
 def test_import():
     import sample
 
-    assert "hello mom jawaka\n" == sample.x
+    if ON_WINDOWS:
+        # Windows `echo` keeps quotes in case of using space.
+        assert '"hello mom" jawaka\n' == sample.x
+    else:
+        assert "hello mom jawaka\n" == sample.x
 
 
 def test_import_empty():
