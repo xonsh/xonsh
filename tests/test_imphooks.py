@@ -4,8 +4,8 @@ import os
 from importlib import import_module
 
 import pytest
-
 from build.lib.xonsh.pytest.tools import ON_WINDOWS
+
 from xonsh import imphooks
 
 
