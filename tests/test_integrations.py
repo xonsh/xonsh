@@ -1778,6 +1778,7 @@ for i in range(10):
 
 
 @pytest.mark.parametrize("test_code", test_code)
+@pytest.mark.timeout(300)
 def test_callable_alias_fd_leaking(test_code):
     """Testing callable alias on leaks and errors in pipe.
     1. No fd leaking: no output interrupting during 1000+ pipe calls.
