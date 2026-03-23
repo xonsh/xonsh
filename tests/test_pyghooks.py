@@ -304,7 +304,9 @@ def test_colorize_file(key, file_path, colorizable_files, xs_LS_COLORS):
     assert color_token == file_color_tokens[key], "Color token is as expected"
 
 
-@pytest.mark.skipif(ON_WINDOWS, reason="symlinks require elevated privileges on Windows")
+@pytest.mark.skipif(
+    ON_WINDOWS, reason="symlinks require elevated privileges on Windows"
+)
 @pytest.mark.parametrize(
     "key,file_path",
     [(key, file_path) for key, file_path in _cf.items() if file_path],
