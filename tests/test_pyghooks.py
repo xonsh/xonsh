@@ -178,13 +178,13 @@ if ON_WINDOWS:
     _cf = {
         "fi": "regular",
         "di": "simple_dir",
-        "ln": "sym_link",
+        "ln": None,  # symlinks require elevated privileges on Windows
         "pi": None,
         "so": None,
         "do": None,
         # bug ci failures: 'bd': '/dev/sda',
         # bug ci failures:'cd': '/dev/tty',
-        "or": "orphan",
+        "or": None,  # symlinks require elevated privileges on Windows
         "mi": None,  # never used
         "su": None,
         "sg": None,
@@ -281,7 +281,10 @@ def colorizable_files():
                 else:
                     pass  # cauterize those elseless ifs!
 
-                os.symlink(file_path, file_path + "_symlink")
+                try:
+                    os.symlink(file_path, file_path + "_symlink")
+                except OSError:
+                    pass  # symlinks may require elevated privileges on Windows
 
         yield tempdir
 
@@ -301,6 +304,7 @@ def test_colorize_file(key, file_path, colorizable_files, xs_LS_COLORS):
     assert color_token == file_color_tokens[key], "Color token is as expected"
 
 
+@pytest.mark.skipif(ON_WINDOWS, reason="symlinks require elevated privileges on Windows")
 @pytest.mark.parametrize(
     "key,file_path",
     [(key, file_path) for key, file_path in _cf.items() if file_path],
