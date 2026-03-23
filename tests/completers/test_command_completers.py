@@ -1,4 +1,3 @@
-import os
 from unittest.mock import Mock
 
 import pytest
@@ -26,7 +25,7 @@ def test_complete_command(completion_context_parse, tmp_path, xession):
     testfile.write_text("some file")
     testfile.chmod(0o777)
 
-    xession.env['PATH'].append(str(tmpdir))
+    xession.env["PATH"].append(str(tmpdir))
     comps = complete_command(
         completion_context_parse(command[:-1], len(command) - 1).command
     )
