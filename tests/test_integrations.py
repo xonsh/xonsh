@@ -1710,27 +1710,27 @@ $XONSH_SHOW_TRACEBACK = True
 import sys
 
 @aliases.register
-def _a(args, stdin, stdout, stderr):    
+def _a(args, stdin, stdout, stderr):
     name = 'a'
 
     print(f"{name}: print out alias.stdout", file=stdout)
     print(f"{name}: print err alias.stderr", file=stderr)
-    
+
     print(f"{name}: print out sys.stdout", file=sys.stdout)
     print(f"{name}: print err sys.stderr", file=sys.stderr)
-    
+
     echo @(f"{name}: echo stdout")
     echo @(f"{name}: echo stderr") o>e
-    
+
     ![echo @(f"{name}: ![] echo stdout")]
     $[echo @(f"{name}: $[] echo stdout")]
-    
+
     $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
     $(echo @(f"{name}: $() echo stderr") o>e)
-    
+
     !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
     !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
-    
+
     execx(f'echo "{name}: execx echo stdout"')
     execx(f'echo "{name}: execx echo stderr" o>e')
 
@@ -1738,27 +1738,27 @@ def _a(args, stdin, stdout, stderr):
 
 
 @aliases.register
-def _b(args, stdin, stdout, stderr):    
+def _b(args, stdin, stdout, stderr):
     name = 'b'
 
     print(f"{name}: print out alias.stdout", file=stdout)
     print(f"{name}: print err alias.stderr", file=stderr)
-    
+
     print(f"{name}: print out sys.stdout", file=sys.stdout)
     print(f"{name}: print err sys.stderr", file=sys.stderr)
-    
+
     echo @(f"{name}: echo stdout")
     echo @(f"{name}: echo stderr") o>e
-    
+
     ![echo @(f"{name}: ![] echo stdout")]
     $[echo @(f"{name}: $[] echo stdout")]
-    
+
     $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
     $(echo @(f"{name}: $() echo stderr") o>e)
-    
+
     !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
     !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
-    
+
     execx(f'echo "{name}: execx echo stdout"')
     execx(f'echo "{name}: execx echo stderr" o>e')
 
