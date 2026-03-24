@@ -1226,7 +1226,7 @@ Removing an alias is as easy as deleting the key from the alias dictionary:
 
     @ del aliases['banana']
 
-Alias to modify command
+Alias to Modify Command
 -----------------------
 
 The best way to modify command on the fly is to use alias that returns modified command.
@@ -1267,7 +1267,7 @@ Callable Aliases
 Basic Callable Alias
 --------------------
 
-A callable alias is a function with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
+A callable alias is a function (or callable object) with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
 
 Using directly with Python evaluation via ``@()``:
 
@@ -1463,7 +1463,7 @@ A callable alias function can accept a list of arguments for any purpose:
         return 0
 
 
-Callable alias and capturing
+Callable Alias and Capturing
 ----------------------------
 
 Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess
@@ -1583,7 +1583,10 @@ In xonsh you can decorate the command to transform output into desired object:
 .. code-block:: xonshcon
 
     @ $(@lines ls /)
-    ['/bin', '/etc', '/home']
+    ['bin', 'etc', 'home']
+
+    @ showcmd echo prefix/$(@lines ls /)
+    ['echo', 'prefix/bin', 'prefix/etc', 'prefix/home']
 
     @ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
     main
@@ -2005,85 +2008,38 @@ functions. If you don't know what these do, you probably don't need them.
 
 Help & Superhelp with ``?`` & ``??``
 =====================================================
-From IPython, xonsh allows you to inspect objects with question marks.
+Xonsh allows you to inspect objects with question marks.
 A single question mark (``?``) is used to display the normal level of help.
 Double question marks (``??``) are used to display a higher level of help,
 called superhelp. Superhelp usually includes source code if the object was
 written in pure Python.
 
-Let's start by looking at the help for the int type:
-
 .. code-block:: xonshcon
 
     @ int?
-    Type:            type
-    String form:     <class 'int'>
-    Init definition: (self, *args, **kwargs)
-    Docstring:
-    int(x=0) -> integer
-    int(x, base=10) -> integer
-
     Convert a number or string to an integer, or return 0 if no arguments
     are given.  If x is a number, return x.__int__().  For floating point
     numbers, this truncates towards zero.
 
-    If x is not a number or if base is given, then x must be a string,
-    bytes, or bytearray instance representing an integer literal in the
-    given base.  The literal can be preceded by '+' or '-' and be surrounded
-    by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
-    Base 0 means to interpret the base from the string as an integer literal.
-    @ int('0b100', base=0)
-    4
-    <class 'int'>
+    @ @.imp.json.loads??
+    def loads(s, *, cls=None, object_hook=None, parse_float=None,
+        parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
 
-Now, let's look at the superhelp for the xonsh built-in that enables
-regex globbing:
+    @ @.imp.json?.loads?
+    <json help>
+    <json.loads help>
+
+It works for subprocess commands as well:
 
 .. code-block:: xonshcon
 
-    @ __xonsh__.regexsearch??
-    Type:         function
-    String form:  <function regexsearch at 0x7efc8b367d90>
-    File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
-    Definition:   (s)
-    Source:
-    def regexsearch(s):
-        s = expand_path(s)
-        return reglob(s)
-
-
-    <function xonsh.built_ins.regexsearch>
-
-Note that both help and superhelp return the object that they are inspecting.
-This allows you to chain together help inside of other operations and
-ask for help several times in an object hierarchy.  For instance, let's get
-help for both the dict type and its key() method simultaneously:
-
-.. code-block:: xonshcon
-
-    @ dict?.keys??
-    Type:            type
-    String form:     <class 'dict'>
-    Init definition: (self, *args, **kwargs)
-    Docstring:
-    dict() -> new empty dictionary
-    dict(mapping) -> new dictionary initialized from a mapping object's
-        (key, value) pairs
-    dict(iterable) -> new dictionary initialized as if via:
-        d = {}
-        for k, v in iterable:
-            d[k] = v
-    dict(**kwargs) -> new dictionary initialized with the name=value pairs
-        in the keyword argument list.  For example:  dict(one=1, two=2)
-    Type:        method_descriptor
-    String form: <method 'keys' of 'dict' objects>
-    Docstring:   D.keys() -> a set-like object providing a view on D's keys
-    <method 'keys' of 'dict' objects>
-
-Of course, for subprocess commands, you still want to use the ``man`` command.
-
-
-
+    @ whoami?
+    whoami - print effective user name
+    @ ls?
+    ['ls', '-G']
+    @ xonfig?
+    <xonsh.xonfig.XonfigAlias>
+    Manage xonsh configuration.
 
 That's All, Folks
 ======================
