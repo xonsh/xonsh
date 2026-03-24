@@ -1617,27 +1617,59 @@ A callable alias function can accept a list of arguments for any purpose:
 Callable alias and capturing
 ----------------------------
 
-Callable aliases tend to be capturable. Only the explicitly denoted uncaptured subprocess
-operator ``$[]`` is uncapturable, and the subprocess's stdout passes directly
-through xonsh to the screen.
+Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess 
+operator ``$[]`` are uncapturable, and the subprocess's stdout passes directly through Xonsh to the screen.
 
 .. code-block:: xonshcon
 
     @ @aliases.register
-      def _hunter():
-          print('catch me')
-          echo if  # The same as `![echo if]`
-          $[echo you]
-          ![echo can]
-    @ hunter
-    catch me
-    if
-    you
-    can
+      def _printer(args, stdin, stdout, stderr):
+          """Ultimate printer."""
 
-    @ $(hunter)
-    you
-    'catch me\nif\ncan\n'
+          print("print out")
+          print("print err", file=@.imp.sys.stderr)
+                
+          print("print out alias stdout", file=stdout)
+          print("print err alias stderr", file=stderr)
+
+          echo @("echo out")
+          echo @("echo err") o>e
+
+          $(echo @("$() echo out")) 
+          $(echo @("$() echo err") o>e)
+
+          !(echo @("!() echo out"))
+          !(echo @("!() echo err") o>e)
+            
+          ![echo @("![] echo out")]
+          ![echo @("![] echo err") o>e]
+
+          $[echo @("$[] echo out")]
+          $[echo @("$[] echo err") o>e]
+                
+          execx('echo "execx echo out"')
+          execx('echo "execx echo err" o>e')
+
+    @ $(printer)
+    print err
+    print err alias stderr
+    echo err
+    $() echo err
+    ![] echo err
+    $[] echo out
+    $[] echo err
+    execx echo err
+    'print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n'
+
+    @ !(printer)
+    $() echo err
+    $[] echo out
+    $[] echo err
+    CommandPipeline(
+      returncode=0,
+      output='print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n',
+      errors='print err\necho err\nprint err alias stderr\n![] echo err\nexecx echo err\n'
+    )
 
 Anonymous Aliases
 -----------------
