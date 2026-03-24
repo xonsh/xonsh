@@ -1630,10 +1630,13 @@ with Python and subprocess.
              must happen outside if xonsh, i.e. in the process that starts xonsh.
 
 
-Up, Down, Tab
-==============
-The up and down keys search history matching from the start of the line,
-much like they do in the IPython shell.
+
+Prompt
+======
+
+Up, Down, Tab Completion
+------------------------
+The up and down keys search history matching from the start of the line.
 
 Tab completion is present as well. By default, in Python-mode you are able to
 complete based on the variable names in the current builtins, globals, and
@@ -1648,7 +1651,8 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 .. _customprompt:
 
 Customizing the Prompt
-======================
+----------------------
+
 Customizing the prompt by modifying ``$PROMPT``, ``$RIGHT_PROMPT`` or ``$BOTTOM_TOOLBAR``
 is probably the most common reason for altering an environment variable.
 
@@ -1673,42 +1677,42 @@ By default, the following variables are available for use:
 
   -- remove these extra variables and set the attribute on the field itself
 
-  * ``user``: The username of the current user
-  * ``hostname``: The name of the host computer
-  * ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
-    set a maximum width for this variable and ``$DYNAMIC_CWD_ELISION_CHAR`` to
-    set the character used in shortened path.
-  * ``short_cwd``: A shortened form of the current working directory; e.g.,
-    ``/path/to/xonsh`` becomes ``/p/t/xonsh``
-  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/`` in
-    ``/path/to/xonsh``.
-  * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
-    ``/path/to/xonsh``.
-  * ``env_name``: The name of active virtual environment, if any. The rendering
-    of this variable is affected by the ``$VIRTUAL_ENV_PROMPT`` and
-    ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variables; see below.
-  * ``env_prefix``: The prefix characters if there is an active virtual environment,
-    defaults to ``"("``.
-  * ``env_postfix``: The postfix characters if there is an active virtual environment,
-    defaults to ``") "``.
-  * ``curr_branch``: The name of the current git branch, if any.
-  * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
-    otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
-    determined.
-  * ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
-    instead.
-  * ``prompt_end``: ``#`` if the user has root/admin permissions ``@`` otherwise
-  * ``current_job``: The name of the command currently running in the
-    foreground, if any.
-  * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
-    current working directory on some linux terminals. This is not usually needed.
-  * ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
-    may refer :py:mod:`xonsh.prompt.gitstatus` for customization options.
-  * ``localtime``: The current, local time as given by ``time.localtime()``.
-    This is formatted with the time format string found in ``time_format``.
-  * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
-  * ``last_return_code``: The return code of the last issued command.
-  * ``last_return_code_if_nonzero``: The return code of the last issued command if it is non-zero, otherwise ``None``. This is useful for only printing the code in case of errors.
+* ``user``: The username of the current user
+* ``hostname``: The name of the host computer
+* ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
+  set a maximum width for this variable and ``$DYNAMIC_CWD_ELISION_CHAR`` to
+  set the character used in shortened path.
+* ``short_cwd``: A shortened form of the current working directory; e.g.,
+  ``/path/to/xonsh`` becomes ``/p/t/xonsh``
+* ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/`` in
+  ``/path/to/xonsh``.
+* ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
+  ``/path/to/xonsh``.
+* ``env_name``: The name of active virtual environment, if any. The rendering
+  of this variable is affected by the ``$VIRTUAL_ENV_PROMPT`` and
+  ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variables; see below.
+* ``env_prefix``: The prefix characters if there is an active virtual environment,
+  defaults to ``"("``.
+* ``env_postfix``: The postfix characters if there is an active virtual environment,
+  defaults to ``") "``.
+* ``curr_branch``: The name of the current git branch, if any.
+* ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
+  otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
+  determined.
+* ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
+  instead.
+* ``prompt_end``: ``#`` if the user has root/admin permissions ``@`` otherwise
+* ``current_job``: The name of the command currently running in the
+  foreground, if any.
+* ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
+  current working directory on some linux terminals. This is not usually needed.
+* ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
+  may refer :py:mod:`xonsh.prompt.gitstatus` for customization options.
+* ``localtime``: The current, local time as given by ``time.localtime()``.
+  This is formatted with the time format string found in ``time_format``.
+* ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
+* ``last_return_code``: The return code of the last issued command.
+* ``last_return_code_if_nonzero``: The return code of the last issued command if it is non-zero, otherwise ``None``. This is useful for only printing the code in case of errors.
 
 .. note:: See the section below on ``PROMPT_FIELDS`` for more information on changing.
 
@@ -1738,6 +1742,9 @@ For example:
     @ del $VIRTUAL_ENV_DISABLE_PROMPT
     (env) @
 
+
+Color
+-----
 
 You can also color your prompt (or print colored messages using ``print_color`` function) easily by inserting
 keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown below:
@@ -1804,6 +1811,9 @@ keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown bel
 * Or any other combination of modifiers, such as
   ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
   can use!
+
+Additional Prompt Variables
+---------------------------
 
 You can make use of additional variables beyond these by adding them to the
 ``PROMPT_FIELDS`` environment variable. The values in this dictionary should
