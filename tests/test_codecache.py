@@ -351,9 +351,7 @@ def test_run_script_with_cache_exception(cache_env, tmp_path):
     with open(src_file, "w") as f:
         f.write("1/0\n")
 
-    exc_type, exc_val, exc_tb = run_script_with_cache(
-        src_file, cache_env.execer, {}
-    )
+    exc_type, exc_val, exc_tb = run_script_with_cache(src_file, cache_env.execer, {})
     assert exc_type is ZeroDivisionError
 
 
