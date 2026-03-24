@@ -985,7 +985,7 @@ This will give control of the terminal back to xonsh, and will keep the program
 paused in the background.
 
 .. note:: Suspending processes via Control-Z is not yet supported when
-	  running on Windows.
+      running on Windows.
 
 To unpause the program and bring it back to the foreground, you can use the
 ``fg`` command.  To unpause the program have it continue in the background
@@ -1138,7 +1138,7 @@ module in the Python standard library.
 .. warning:: In Xonsh, the meaning of backticks is very different from their
              meaning in POSIX shells.
              In POSIX shells, backticks mean to run a captured subprocess
-	     (``$()`` in Xonsh).
+         (``$()`` in Xonsh).
 
 
 Normal Globbing
@@ -1369,7 +1369,7 @@ The values are:
     .   'g':   'git status -sb',
     .   'gp':  ['git', 'pull'],
     .   'gco': 'git checkout',
-	. }
+    . }
 
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
@@ -1422,9 +1422,9 @@ A callable alias is a function with a specific signature that can be used as a s
 
 Using directly with Python evaluation via ``@()``:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
-	@ def mybox():
+    @ def mybox():
     .    print('apple')
     .    echo 'banana'
 
@@ -1435,7 +1435,7 @@ Register callable as an alias:
 
 .. code-block:: python
 
-	@ @aliases.register('mybox')
+    @ @aliases.register('mybox')
     . def _mybox():
     .    print('apple')
     .    echo 'banana'
@@ -1486,7 +1486,7 @@ A callable alias function can accept a list of arguments for any purpose:
 
 .. code-block:: python
 
-	@aliases.register
+    @aliases.register
     def _mycmd0():
         """This form takes no arguments but may return output or a return code.
         """
@@ -1518,7 +1518,7 @@ A callable alias function can accept a list of arguments for any purpose:
         print('I go to stdout and will be printed or piped')
 
 
-	@aliases.register
+    @aliases.register
     def _mycmd1(args):
         """This form takes a single argument, args. This is a list of strings
         representing the arguments to this command. Feel free to parse them
@@ -1528,7 +1528,7 @@ A callable alias function can accept a list of arguments for any purpose:
         print(f"args: {args!r}")
         return 0
 
-	@aliases.register
+    @aliases.register
     def _mycmd2(args, stdin=None):
         """This form takes two arguments. The args list like above, as a well
         as standard input. stdin will be a file like object that the command
@@ -1540,7 +1540,7 @@ A callable alias function can accept a list of arguments for any purpose:
         for line in stdin.readlines():
             print(line.strip().upper() + '!')
 
-	@aliases.register
+    @aliases.register
     def _mycmd3(args, stdin=None, stdout=None):
         """This form has three parameters.  The first two are the same as above.
         The last argument represents the standard output.  This is a file-like
@@ -1552,7 +1552,7 @@ A callable alias function can accept a list of arguments for any purpose:
         print("Mom!")
         return
 
-	@aliases.register
+    @aliases.register
     def _mycmd4(args, stdin=None, stdout=None, stderr=None):
         """The next form of subprocess callables takes all of the
         arguments shown above as well as the standard error stream.
@@ -1567,7 +1567,7 @@ A callable alias function can accept a list of arguments for any purpose:
 
         return 0
 
-	@aliases.register
+    @aliases.register
     def _mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
         """This form of subprocess callables takes all of the
         arguments shown above as well as a subprocess specification
@@ -1584,7 +1584,7 @@ A callable alias function can accept a list of arguments for any purpose:
             print("Hello terminal!")
         return 0
 
-	@aliases.register
+    @aliases.register
     def _mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
         """Lastly, the final form of subprocess callables takes a stack argument
         in addition to the arguments shown above. The stack is a list of
@@ -1691,17 +1691,17 @@ In xonsh you can decorate the command to transform output into desired object:
 
 .. code-block:: xonshcon
 
-	@ $(@lines ls /)
-	['/bin', '/etc', '/home']
+    @ $(@lines ls /)
+    ['/bin', '/etc', '/home']
 
-	@ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
-	main
+    @ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
+    main
 
-	@ $(@jsonl echo '{"a":1}\n{"b":2}')
-	[{'a': 1}, {'b': 2}]
+    @ $(@jsonl echo '{"a":1}\n{"b":2}')
+    [{'a': 1}, {'b': 2}]
 
-	@ $(@yaml echo 'a: 1')
-	{'a': 1}
+    @ $(@yaml echo 'a: 1')
+    {'a': 1}
 
 See the full list of command decorators in Aliases article or build the new one.
 
