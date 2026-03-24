@@ -100,7 +100,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
 
     def get_filename(self, fullname):
         """Returns the filename for a module's fullname."""
-        return self._filenames[fullname]
+        return self._filenames.get(fullname)
 
     def get_data(self, path):
         """Gets the bytes for a path."""
@@ -110,8 +110,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
         """Gets the code object for a xonsh file."""
         filename = self.get_filename(fullname)
         if filename is None:
-            msg = f"xonsh file {fullname!r} could not be found"
-            raise ImportError(msg)
+            raise ImportError(f"xonsh file {fullname!r} could not be found")
         execer = self._execer
         use_cache = should_use_cache(execer, "exec")
         if use_cache:
