@@ -2317,6 +2317,17 @@ def test_ls_nest_ls(check_xonsh_ast):
 def test_ls_nest_ls_dashl(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls $(ls) -l)", False)
 
+@pytest.mark.parametrize(
+    "case",
+    [
+        "![echo a/b$(echo 1)/c]",
+        "![echo $(echo 1)suffix]",
+        "![echo prefix$(echo 1)]",
+        "![echo prefix$(echo 1)suffix]",
+    ],
+)
+def test_dollar_paren_adjacent_text(case, check_xonsh_ast):
+    check_xonsh_ast({}, case, False)
 
 def test_ls_envvar_strval(check_xonsh_ast):
     check_xonsh_ast({"WAKKA": "."}, "$(ls $WAKKA)", False)

@@ -3402,7 +3402,10 @@ class BaseParser:
         self.p_subproc_atom_uncaptured(p)
 
     def p_subproc_atom_captured_stdout(self, p):
-        """subproc_atom : dollar_lparen_tok subproc RPAREN"""
+        """
+        subproc_atom : dollar_lparen_tok subproc RPAREN
+        subproc_arg_part : dollar_lparen_tok subproc RPAREN
+        """
         p1 = p[1]
         p0 = xonsh_call(
             "__xonsh__.subproc_captured_stdout",
@@ -3414,12 +3417,18 @@ class BaseParser:
         p[0] = p0
 
     def p_subproc_atom_captured_stdout_bang_empty(self, p):
-        """subproc_atom : dollar_lparen_tok subproc bang_tok RPAREN"""
+        """
+        subproc_atom : dollar_lparen_tok subproc bang_tok RPAREN
+        subproc_arg_part : dollar_lparen_tok subproc bang_tok RPAREN
+        """
         self._append_subproc_bang_empty(p)
         self.p_subproc_atom_captured_stdout(p)
 
     def p_subproc_atom_captured_stdout_bang(self, p):
-        """subproc_atom : dollar_lparen_tok subproc bang_tok nocloser rparen_tok"""
+        """
+        subproc_atom : dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        subproc_arg_part : dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        """
         self._append_subproc_bang(p)
         self.p_subproc_atom_captured_stdout(p)
 
