@@ -41,71 +41,49 @@ etc) to run xonsh automatically when it starts up. This is recommended.
 Basics
 =======================
 The xonsh language is based on Python, and the xonsh shell uses Python to
-interpret any input it receives. This makes simple things, like arithmetic,
-simple:
+interpret any input it receives. This makes simple things simple and
+we are able to install and import modules, operate with values and objects, 
+and use other built-in Python functionality:
 
 .. code-block:: xonshcon
 
     @ 1 + 1
-    2
 
-We are able to import modules, print values, and use other built-in Python functionality:
+    @ xpip install requests
+    @ import requests
+    @ requests.get("https://api.github.com").status_code
 
-.. code-block:: xonshcon
-
-    @ import sys
-    @ print(sys.version)
-    Python 3.11.14 | packaged by conda-forge
-
-
-We can also create and use literal data types, such as ints, floats, lists,
-sets, and dictionaries. Everything that you are used to if you already know
-Python is there:
-
-.. code-block:: xonshcon
-
-    @ d = {'xonsh': True}
-    @ d.get('spam', False)
-    False
-
-The xonsh shell also supports multi-line input for more advanced flow control.
-The multi-line mode is automatically entered whenever the first line of input
-is not syntactically valid on its own.  Multi-line mode is then exited when
-enter (or return) is pressed when the cursor is in the first column.
-
-.. code-block:: xonshcon
-
-    @ if True:
-          print(1)
-      else:
-          print(2)
+    @ print(1 if True else 2)
  
-    1
-
-Flow control, of course, includes loops.
-
-.. code-block:: xonshcon
-
     @ for i, x in enumerate('xonsh'):
+          # For easier indentation, Shift+Tab will enter 4 spaces.
           print(i, x)
- 
-    0 x
-    1 o
-    2 n
-    3 s
-    4 h
-
-We can also define and call functions and classes:
-
-.. code-block:: xonshcon
 
     @ def f():
           return "xonsh"
- 
-    @ f()
-    'xonsh'
+      f()
 
-For easier indentation, Shift+Tab will enter 4 spaces.
+On the other hand, you can execute commands:
+
+.. code-block:: xonshcon
+
+    @ echo hello
+    @ cd $HOME
+    @ id $(whoami) > ~/id.txt
+    @ cat /etc/passwd | grep root
+
+Finally, you can use everything together:
+
+.. code-block:: xonshcon
+
+    @ name = 'snail'
+      echo @(name) > /tmp/@(name)
+
+    @ $PATH.append('/tmp')
+
+    @ @.imp.json.loads($(echo '{"a":1}'))
+
+But let's go through everything step by step.
 
 Xonsh Session Interface
 =======================
