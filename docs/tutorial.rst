@@ -51,7 +51,7 @@ and use other built-in Python functionality:
 
     @ xpip install requests
     @ import requests
-    @ requests.get("https://api.github.com").status_code
+    @ requests.get("https://xon.sh").status_code
 
     @ print(1 if True else 2)
  
@@ -190,9 +190,6 @@ variable you want to look up.  But what if you want to construct the name
 programmatically, or read it from another variable?  Enter the ``${}``
 operator.
 
-.. warning:: In POSIX shells, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
-             In xonsh, they have separate meanings.
-
 We can place any valid Python expression inside of the curly braces in
 ``${<expr>}``. This result of this expression will then be used to look up a
 value in the environment. Here are a couple of examples in action:
@@ -218,9 +215,7 @@ simple:
 * ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
 
 Futhermore, a number of predefined environment variables listed `here <envvars.html>`_ have a static type.
-For example,
-* ``XONSH_HISTORY_SIZE``: is an int, and
-* ``CASE_SENSITIVE_COMPLETIONS``: is a boolean.
+For example ``XONSH_HISTORY_SIZE`` is an int.
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).
@@ -287,41 +282,6 @@ will be shown during tab-completion.
 
 Now, when you type ``$MY_<Tab>``, you will see the description.
 
-Running Commands
-==============================
-As a shell, xonsh is meant to make running commands easy and fun.
-Running subprocess commands should work like in any other shell.
-
-.. code-block:: xonshcon
-
-    @ echo "Yoo hoo"
-    Yoo hoo
-    @ cd xonsh
-    @ ls
-    build  docs     README.rst  setup.py  xonsh           __pycache__
-    dist   license  scripts     tests     xonsh.egg-info
-    @ dir scripts
-    xonsh  xonsh.bat
-    @ git status
-    On branch main
-    Your branch is up-to-date with 'origin/main'.
-    Changes not staged for commit:
-      (use "git add <file>..." to update what will be committed)
-      (use "git checkout -- <file>..." to discard changes in working directory)
-
-        modified:   docs/tutorial.rst
-
-    no changes added to commit (use "git add" and/or "git commit -a")
-    @ exit
-
-This should feel very natural.
-
-.. note::
-
-    Access the last run subprocess command using ``@.lastcmd``;
-    e.g. to get the return code, run ``@.lastcmd.rtn``.
-
-
 Python-mode vs Subprocess-mode
 ================================
 It is sometimes helpful to make the distinction between lines that operate
@@ -373,8 +333,39 @@ impossible.
           use the formal xonsh subprocess syntax that we will see in the following
           sections. For example: ``![ls -l]``.
 
-Quoting
-=======
+
+Subprocess
+==========
+
+Running Commands
+----------------
+As a shell, xonsh is meant to make running commands easy and fun.
+Running subprocess commands should work like in any other shell.
+
+.. code-block:: xonshcon
+
+    @ echo "Yoo hoo"
+    Yoo hoo
+    @ cd xonsh
+    @ ls
+    build  docs     README.rst  setup.py  xonsh           __pycache__
+    dist   license  scripts     tests     xonsh.egg-info
+    @ dir scripts
+    xonsh  xonsh.bat
+    @ git status
+    On branch main
+    @ exit
+
+This should feel very natural.
+
+.. note::
+
+    Access the last run subprocess command using ``@.lastcmd``;
+    e.g. to get the return code, run ``@.lastcmd.rtn``.
+
+
+Strings and Quoting in Subprocess Mode
+--------------------------------------
 
 Single or double quotes can be used to remove the special meaning
 of certain characters or words to xonsh. If a subprocess command
@@ -392,8 +383,77 @@ must be used to force xonsh to not interpret them.
              backslash (\\) in POSIX shells.
 
 
-Subprocess
-==========
+The contents of the string are passed directly to the subprocess command as a
+single argument.  So whenever you are in doubt, or if there is a xonsh syntax
+error because of a filename, just wrap the offending portion in a string.
+
+A common use case for this is files with spaces in their names:
+
+.. code-block:: xonshcon
+
+    @ touch "sp ace"
+    @ ls -l
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+
+By default, the name of an environment variable inside a string will be
+replaced by the contents of that variable (in subprocess mode only).  For
+example:
+
+.. code-block:: xonshcon
+
+    @ print("my home is $HOME")
+    my home is $HOME
+    @ echo "my home is $HOME"
+    my home is /home/snail
+
+You can avoid this expansion within a particular command by forcing the strings
+to be evaluated in Python mode using the ``@()`` syntax:
+
+.. code-block:: xonshcon
+
+    @ echo "my home is $HOME"
+    my home is /home/snail
+    @ echo @("my home is $HOME")
+    my home is $HOME
+
+
+.. note::
+
+    You can also disable environment variable expansion completely by setting
+    ``$EXPAND_ENV_VARS`` to ``False``.
+
+
+For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
+there are extended list of literals:
+
+- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
+- ``r""`` - raw string: unmodified.
+- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
+- ``fr""`` - raw formatted string: brace substitutions.
+- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
+- ``pr""`` - raw Path string: envvar substitutions, returns Path.
+- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
+
+To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
+and make a table that shows how literal changes the string in Python- and subprocess-mode:
+
+.. table::
+
+    ========================  ==========================  =======================  =====================
+         String literal            As python object       print(<String literal>)  echo <String literal>
+    ========================  ==========================  =======================  =====================
+    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
+    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
+    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
+    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
+    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
+    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
+    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
+    ========================  ==========================  =======================  =====================
+
+
 
 Captured Subprocess with ``$()`` and ``!()``
 --------------------------------------------
@@ -912,8 +972,20 @@ regular output of this command will be redirected to ``output.txt``, and the
 error output will be appended to ``errors.txt``.
 
 
+Job Control
+===========
+
+You can get a listing of all currently running jobs with the ``jobs`` command.
+
+Each job has a unique identifier (starting with 1 and counting upward).  By
+default, the ``fg`` and ``bg`` commands operate on the job that was started
+most recently.  You can bring older jobs to the foreground or background by
+specifying the appropriate ID; for example, ``fg 1`` brings the job with ID 1
+to the foreground. Additionally, specify "+" for the most recent job and "-"
+for the second most recent job.
+
 Background Jobs
-===============
+---------------
 
 Typically, when you start a program running in xonsh, xonsh itself will pause
 and wait for that program to terminate.  Sometimes, though, you may want to
@@ -937,8 +1009,8 @@ command to continue running after the shell has exited, use the ``disown``
 command which accepts either no arguments (to disown the most recent job)
 or an arbitrary number of job identifiers.
 
-Job Control
-===========
+Foreground Jobs
+---------------
 
 If you start a program in the foreground (with no ampersand), you can suspend
 that program's execution and return to the xonsh prompt by pressing Control-Z.
@@ -953,91 +1025,6 @@ To unpause the program and bring it back to the foreground, you can use the
 (giving you continued access to the xonsh prompt), you can use the ``bg``
 command.
 
-You can get a listing of all currently running jobs with the ``jobs`` command.
-
-Each job has a unique identifier (starting with 1 and counting upward).  By
-default, the ``fg`` and ``bg`` commands operate on the job that was started
-most recently.  You can bring older jobs to the foreground or background by
-specifying the appropriate ID; for example, ``fg 1`` brings the job with ID 1
-to the foreground. Additionally, specify "+" for the most recent job and "-"
-for the second most recent job.
-
-String Literals in Subprocess-mode
-====================================
-Strings can be used to escape special characters in subprocess-mode. The
-contents of the string are passed directly to the subprocess command as a
-single argument.  So whenever you are in doubt, or if there is a xonsh syntax
-error because of a filename, just wrap the offending portion in a string.
-
-A common use case for this is files with spaces in their names. This
-detestable practice refuses to die. "No problem!" says xonsh, "I have
-strings."  Let's see it go!
-
-.. code-block:: xonshcon
-
-    @ touch "sp ace"
-    @ ls -l
-    total 0
-    -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
-    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-
-By default, the name of an environment variable inside a string will be
-replaced by the contents of that variable (in subprocess mode only).  For
-example:
-
-.. code-block:: xonshcon
-
-    @ print("my home is $HOME")
-    my home is $HOME
-    @ echo "my home is $HOME"
-    my home is /home/snail
-
-You can avoid this expansion within a particular command by forcing the strings
-to be evaluated in Python mode using the ``@()`` syntax:
-
-.. code-block:: xonshcon
-
-    @ echo "my home is $HOME"
-    my home is /home/snail
-    @ echo @("my home is $HOME")
-    my home is $HOME
-
-
-.. note::
-
-    You can also disable environment variable expansion completely by setting
-    ``$EXPAND_ENV_VARS`` to ``False``.
-
-Advanced String Literals
-------------------------
-
-For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
-there are extended list of literals:
-
-- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
-- ``r""`` - raw string: unmodified.
-- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
-- ``fr""`` - raw formatted string: brace substitutions.
-- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
-- ``pr""`` - raw Path string: envvar substitutions, returns Path.
-- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
-
-To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
-and make a table that shows how literal changes the string in Python- and subprocess-mode:
-
-.. table::
-
-    ========================  ==========================  =======================  =====================
-         String literal            As python object       print(<String literal>)  echo <String literal>
-    ========================  ==========================  =======================  =====================
-    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
-    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
-    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
-    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
-    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
-    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
-    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
-    ========================  ==========================  =======================  =====================
 
 Filename Globbing
 =================
@@ -1104,11 +1091,6 @@ So the following expressions are equivalent: ```test``` and ``r`test```.
 Other than the regex matching, this functions in the same way as normal
 globbing.  For more information, please see the documentation for the ``re``
 module in the Python standard library.
-
-.. warning:: In Xonsh, the meaning of backticks is very different from their
-             meaning in POSIX shells.
-             In POSIX shells, backticks mean to run a captured subprocess
-         (``$()`` in Xonsh).
 
 
 Formatted Glob Literals
@@ -1200,95 +1182,6 @@ Path object allows do some tricks with paths. Globbing certain path, checking an
     [Path('/etc/xonsh/xonshrc'), Path('/etc/xonsh/rc.d/xonshrc.xsh')]
     @ [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
     [True, True, False, Path('/'), 'root']
-
-Help & Superhelp with ``?`` & ``??``
-=====================================================
-From IPython, xonsh allows you to inspect objects with question marks.
-A single question mark (``?``) is used to display the normal level of help.
-Double question marks (``??``) are used to display a higher level of help,
-called superhelp. Superhelp usually includes source code if the object was
-written in pure Python.
-
-Let's start by looking at the help for the int type:
-
-.. code-block:: xonshcon
-
-    @ int?
-    Type:            type
-    String form:     <class 'int'>
-    Init definition: (self, *args, **kwargs)
-    Docstring:
-    int(x=0) -> integer
-    int(x, base=10) -> integer
-
-    Convert a number or string to an integer, or return 0 if no arguments
-    are given.  If x is a number, return x.__int__().  For floating point
-    numbers, this truncates towards zero.
-
-    If x is not a number or if base is given, then x must be a string,
-    bytes, or bytearray instance representing an integer literal in the
-    given base.  The literal can be preceded by '+' or '-' and be surrounded
-    by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
-    Base 0 means to interpret the base from the string as an integer literal.
-    @ int('0b100', base=0)
-    4
-    <class 'int'>
-
-Now, let's look at the superhelp for the xonsh built-in that enables
-regex globbing:
-
-.. code-block:: xonshcon
-
-    @ __xonsh__.regexsearch??
-    Type:         function
-    String form:  <function regexsearch at 0x7efc8b367d90>
-    File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
-    Definition:   (s)
-    Source:
-    def regexsearch(s):
-        s = expand_path(s)
-        return reglob(s)
-
-
-    <function xonsh.built_ins.regexsearch>
-
-Note that both help and superhelp return the object that they are inspecting.
-This allows you to chain together help inside of other operations and
-ask for help several times in an object hierarchy.  For instance, let's get
-help for both the dict type and its key() method simultaneously:
-
-.. code-block:: xonshcon
-
-    @ dict?.keys??
-    Type:            type
-    String form:     <class 'dict'>
-    Init definition: (self, *args, **kwargs)
-    Docstring:
-    dict() -> new empty dictionary
-    dict(mapping) -> new dictionary initialized from a mapping object's
-        (key, value) pairs
-    dict(iterable) -> new dictionary initialized as if via:
-        d = {}
-        for k, v in iterable:
-            d[k] = v
-    dict(**kwargs) -> new dictionary initialized with the name=value pairs
-        in the keyword argument list.  For example:  dict(one=1, two=2)
-    Type:        method_descriptor
-    String form: <method 'keys' of 'dict' objects>
-    Docstring:   D.keys() -> a set-like object providing a view on D's keys
-    <method 'keys' of 'dict' objects>
-
-Of course, for subprocess commands, you still want to use the ``man`` command.
-
-
-Compile, Evaluate, & Execute
-================================
-Xonsh provides built-in hooks to compile, evaluate,
-and execute strings of xonsh code.  To prevent this functionality from having
-serious name collisions with the Python built-in ``compile()``, ``eval()``,
-and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
-xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()``
-functions. If you don't know what these do, you probably don't need them.
 
 
 Aliases
@@ -2089,6 +1982,97 @@ the normal Python syntax:
 .. code-block:: xonshcon
 
     from mine import *
+
+Compile, Evaluate, & Execute
+================================
+Xonsh provides built-in hooks to compile, evaluate,
+and execute strings of xonsh code.  To prevent this functionality from having
+serious name collisions with the Python built-in ``compile()``, ``eval()``,
+and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
+xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()``
+functions. If you don't know what these do, you probably don't need them.
+
+
+Help & Superhelp with ``?`` & ``??``
+=====================================================
+From IPython, xonsh allows you to inspect objects with question marks.
+A single question mark (``?``) is used to display the normal level of help.
+Double question marks (``??``) are used to display a higher level of help,
+called superhelp. Superhelp usually includes source code if the object was
+written in pure Python.
+
+Let's start by looking at the help for the int type:
+
+.. code-block:: xonshcon
+
+    @ int?
+    Type:            type
+    String form:     <class 'int'>
+    Init definition: (self, *args, **kwargs)
+    Docstring:
+    int(x=0) -> integer
+    int(x, base=10) -> integer
+
+    Convert a number or string to an integer, or return 0 if no arguments
+    are given.  If x is a number, return x.__int__().  For floating point
+    numbers, this truncates towards zero.
+
+    If x is not a number or if base is given, then x must be a string,
+    bytes, or bytearray instance representing an integer literal in the
+    given base.  The literal can be preceded by '+' or '-' and be surrounded
+    by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
+    Base 0 means to interpret the base from the string as an integer literal.
+    @ int('0b100', base=0)
+    4
+    <class 'int'>
+
+Now, let's look at the superhelp for the xonsh built-in that enables
+regex globbing:
+
+.. code-block:: xonshcon
+
+    @ __xonsh__.regexsearch??
+    Type:         function
+    String form:  <function regexsearch at 0x7efc8b367d90>
+    File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
+    Definition:   (s)
+    Source:
+    def regexsearch(s):
+        s = expand_path(s)
+        return reglob(s)
+
+
+    <function xonsh.built_ins.regexsearch>
+
+Note that both help and superhelp return the object that they are inspecting.
+This allows you to chain together help inside of other operations and
+ask for help several times in an object hierarchy.  For instance, let's get
+help for both the dict type and its key() method simultaneously:
+
+.. code-block:: xonshcon
+
+    @ dict?.keys??
+    Type:            type
+    String form:     <class 'dict'>
+    Init definition: (self, *args, **kwargs)
+    Docstring:
+    dict() -> new empty dictionary
+    dict(mapping) -> new dictionary initialized from a mapping object's
+        (key, value) pairs
+    dict(iterable) -> new dictionary initialized as if via:
+        d = {}
+        for k, v in iterable:
+            d[k] = v
+    dict(**kwargs) -> new dictionary initialized with the name=value pairs
+        in the keyword argument list.  For example:  dict(one=1, two=2)
+    Type:        method_descriptor
+    String form: <method 'keys' of 'dict' objects>
+    Docstring:   D.keys() -> a set-like object providing a view on D's keys
+    <method 'keys' of 'dict' objects>
+
+Of course, for subprocess commands, you still want to use the ``man`` command.
+
+
 
 
 That's All, Folks
