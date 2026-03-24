@@ -284,8 +284,7 @@ Here is the example of callable environment variable:
     @ class Stamp:
     .    """Return current date as string representation."""
     .    def __repr__(self):
-    .       from datetime import datetime
-    .       return str(datetime.now().isoformat())
+    .       return @.imp.datetime.datetime.now().isoformat()
     .
     .
     @ $DT = Stamp()
