@@ -1358,10 +1358,11 @@ Register an Alias
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
 The values are:
-  * A list of strings where the first element is the command and the remaining elements are its arguments.
-  * A simple string that is automatically converted into a list using xonsh’s ``Lexer.split()`` method.
-  * A string representing a xonsh command that will be converted into an ``ExecAlias`` (details next).
-  * A callable that will be used as a callable alias (details next).
+
+- A list of strings where the first element is the command and the remaining elements are its arguments.
+- A simple string that is automatically converted into a list using xonsh’s ``Lexer.split()`` method.
+- A string representing a xonsh command that will be converted into an ``ExecAlias`` (details next).
+- A callable that will be used as a callable alias (details next).
 
 .. code-block:: xonshcon
 
