@@ -1418,6 +1418,10 @@ Or implement logic to run the right command:
 
 Callable Aliases
 ================
+
+What is a callable alias
+------------------------
+
 A callable alias is a function with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
 
 Using directly with Python evaluation via ``@()``:
@@ -1425,8 +1429,8 @@ Using directly with Python evaluation via ``@()``:
 .. code-block:: xonshcon
 
     @ def mybox():
-    .    print('apple')
-    .    echo 'banana'
+         print('apple')
+         echo 'banana'
 
     @ @(mybox) | grep ba
     banana
@@ -1436,15 +1440,15 @@ Register callable as an alias:
 .. code-block:: python
 
     @ @aliases.register('mybox')
-    . def _mybox():
-    .    print('apple')
-    .    echo 'banana'
+      def _mybox():
+         print('apple')
+         echo 'banana'
 
     @ mybox | grep ba
     banana
 
     @ aliases['hello'] = lambda: print(f'Hello world')
-    @ hello
+      hello
     Hello world
 
 ExecAlias
