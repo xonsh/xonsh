@@ -2017,10 +2017,10 @@ written in pure Python.
     Convert a number or string to an integer, or return 0 if no arguments
     are given.  If x is a number, return x.__int__().  For floating point
     numbers, this truncates towards zero.
-    
+
     @ @.imp.json.loads??
     def loads(s, *, cls=None, object_hook=None, parse_float=None,
-        parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):    
+        parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
 
     @ @.imp.json?.loads?
     <json help>
