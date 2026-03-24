@@ -1226,7 +1226,7 @@ Removing an alias is as easy as deleting the key from the alias dictionary:
 
     @ del aliases['banana']
 
-Alias to modify command
+Alias to Modify Command
 -----------------------
 
 The best way to modify command on the fly is to use alias that returns modified command.
@@ -1267,7 +1267,7 @@ Callable Aliases
 Basic Callable Alias
 --------------------
 
-A callable alias is a function with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
+A callable alias is a function (or callable object) with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
 
 Using directly with Python evaluation via ``@()``:
 
@@ -1463,7 +1463,7 @@ A callable alias function can accept a list of arguments for any purpose:
         return 0
 
 
-Callable alias and capturing
+Callable Alias and Capturing
 ----------------------------
 
 Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess
