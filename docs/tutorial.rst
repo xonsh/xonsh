@@ -42,7 +42,7 @@ Basics
 =======================
 The xonsh language is based on Python, and the xonsh shell uses Python to
 interpret any input it receives. This makes simple things simple and
-we are able to install and import modules, operate with values and objects, 
+we are able to install and import modules, operate with values and objects,
 and use other built-in Python functionality:
 
 .. code-block:: xonshcon
@@ -54,7 +54,7 @@ and use other built-in Python functionality:
     @ requests.get("https://xon.sh").status_code
 
     @ print(1 if True else 2)
- 
+
     @ for i, x in enumerate('xonsh'):
           # For easier indentation, Shift+Tab will enter 4 spaces.
           print(i, x)
@@ -169,7 +169,7 @@ It can be used to temporarily set an environment variable:
 
     @ with @.env.swap(SOMEVAR='foo'):
           echo $SOMEVAR
- 
+
     foo
     @ echo $SOMEVAR
     $SOMEVAR
@@ -258,8 +258,8 @@ Here is the example of callable environment variable:
          """Return current date as string representation."""
          def __repr__(self):
             return @.imp.datetime.datetime.now().isoformat()
- 
- 
+
+
     @ $DT = Stamp()
     @ $DT
     2024-11-11T11:11:22
@@ -1045,8 +1045,8 @@ details.  As an example, start with a lovely bunch of xonshs:
     @ ls *o*
     conch  konk  xonsh
 
-In subprocess mode, normal globbing happens without any special syntax. 
-However, there is backtick syntax that is available inside Python mode as well as subprocess mode. 
+In subprocess mode, normal globbing happens without any special syntax.
+However, there is backtick syntax that is available inside Python mode as well as subprocess mode.
 This can be done using ``g````:
 
 .. code-block:: xonshcon
@@ -1162,15 +1162,15 @@ handled implicitly in subprocess mode.
     /foo/bar
     @ pwd
     /home/snail
-    
+
     @ with p'/tmp'.cd():
           pwd
     /tmp
-    
+
     @ with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=True).cd():
           pwd
     /tmp/newdir
-    
+
     @ p'/tmp/new.txt'.touch().chmod(0o700).write_text('hello')
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
@@ -1239,7 +1239,7 @@ One of the most interesting application is expanding an alias:
       def _xsudo(args):
           """Sudo with expanding aliases."""
           return ['sudo', '--', *aliases.eval_alias(args)]
- 
+
     @ aliases['install'] = "apt install cowsay"
     @ xsudo install
     # Password:
@@ -1257,7 +1257,7 @@ Or implement logic to run the right command:
               return ['vim'] + args
           else:
               return ['vi'] + args
- 
+
     @ vi file
 
 
@@ -1466,7 +1466,7 @@ A callable alias function can accept a list of arguments for any purpose:
 Callable alias and capturing
 ----------------------------
 
-Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess 
+Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess
 operator ``$[]`` are uncapturable, and the subprocess's stdout passes directly through Xonsh to the screen.
 
 .. code-block:: xonshcon
@@ -1477,25 +1477,25 @@ operator ``$[]`` are uncapturable, and the subprocess's stdout passes directly t
 
           print("print out")
           print("print err", file=@.imp.sys.stderr)
-                
+
           print("print out alias stdout", file=stdout)
           print("print err alias stderr", file=stderr)
 
           echo @("echo out")
           echo @("echo err") o>e
 
-          $(echo @("$() echo out")) 
+          $(echo @("$() echo out"))
           $(echo @("$() echo err") o>e)
 
           !(echo @("!() echo out"))
           !(echo @("!() echo err") o>e)
-            
+
           ![echo @("![] echo out")]
           ![echo @("![] echo err") o>e]
 
           $[echo @("$[] echo out")]
           $[echo @("$[] echo err") o>e]
-                
+
           execx('echo "execx echo out"')
           execx('echo "execx echo err" o>e')
 

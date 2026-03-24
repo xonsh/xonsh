@@ -17,12 +17,15 @@ def xs_orig_commands_cache(xession):
     pass
 
 
-def test_complete_command(completion_context_parse):
-    if ON_WINDOWS:
-        command = "dir.exe"
-    else:
-        command = "grep"
+def test_complete_command(completion_context_parse, tmp_path, xession):
+    command = "somefile.exe" if ON_WINDOWS else "somefile"
+    tmpdir = tmp_path / "test_complete_command"
+    tmpdir.mkdir()
+    testfile = tmpdir / command
+    testfile.write_text("some file")
+    testfile.chmod(0o777)
 
+    xession.env["PATH"].append(str(tmpdir))
     comps = complete_command(
         completion_context_parse(command[:-1], len(command) - 1).command
     )
