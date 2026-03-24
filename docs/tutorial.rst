@@ -414,8 +414,11 @@ must be used to force xonsh to not interpret them.
              backslash (\\) in POSIX shells.
 
 
+Subprocess
+==========
+
 Captured Subprocess with ``$()`` and ``!()``
-============================================
+--------------------------------------------
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* some information about that command.
 
@@ -570,7 +573,7 @@ or inject Python values with the ``@()`` operator:
     '/home/snail'
 
 Threading
-=========
+---------
 
 If you want to work more closely with captured commands, you need to know about threading.
 Xonsh has a threading prediction mechanism that allows it to understand which commands can capture everything.
@@ -588,7 +591,7 @@ If you need to capture the output from an interactive tool that has a capturable
 
 
 Uncaptured Subprocess with ``$[]`` and ``![]``
-===============================================
+----------------------------------------------
 Uncaptured subprocesses are denoted with the ``$[]`` and ``![]`` operators. They are
 the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
@@ -619,7 +622,7 @@ terminal, and the resulting object is not displayed.  For example
 
 
 Python Evaluation with ``@()``
-===============================
+------------------------------
 
 The ``@(<expr>)`` operator form works in subprocess mode, and will evaluate
 arbitrary Python code. The result is appended to the subprocess command list.
@@ -689,7 +692,7 @@ given values:
 
 
 Command Substitution with ``@$()``
-==================================
+----------------------------------
 
 A common use of the ``@()`` and ``$()`` operators is allowing the output of a
 command to replace the command itself (command substitution):
@@ -719,7 +722,7 @@ Consider the following example:
 
 
 Nesting Subprocesses
-=====================================
+--------------------
 Though I am begging you not to abuse this, it is possible to nest the
 subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
 ``@()``, ``@$()``).  An instance of ``ls -l`` that is on the wrong side of the
@@ -1349,6 +1352,9 @@ Another important xonsh built-in is the ``aliases`` mapping.  This is
 like a dictionary that affects how subprocess commands are run.  If you are
 familiar with the POSIX shells ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
+
+Register an Alias
+-----------------
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
 The values are:
