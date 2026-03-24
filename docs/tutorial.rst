@@ -76,10 +76,10 @@ enter (or return) is pressed when the cursor is in the first column.
 .. code-block:: xonshcon
 
     @ if True:
-    .     print(1)
-    . else:
-    .     print(2)
-    .
+          print(1)
+      else:
+          print(2)
+ 
     1
 
 Flow control, of course, includes loops.
@@ -87,8 +87,8 @@ Flow control, of course, includes loops.
 .. code-block:: xonshcon
 
     @ for i, x in enumerate('xonsh'):
-    .     print(i, x)
-    .
+          print(i, x)
+ 
     0 x
     1 o
     2 n
@@ -100,8 +100,8 @@ We can also define and call functions and classes:
 .. code-block:: xonshcon
 
     @ def f():
-    .     return "xonsh"
-    .
+          return "xonsh"
+ 
     @ f()
     'xonsh'
 
@@ -190,8 +190,8 @@ It can be used to temporarily set an environment variable:
 .. code-block:: xonshcon
 
     @ with @.env.swap(SOMEVAR='foo'):
-    .     echo $SOMEVAR
-    .
+          echo $SOMEVAR
+ 
     foo
     @ echo $SOMEVAR
     $SOMEVAR
@@ -282,11 +282,11 @@ Here is the example of callable environment variable:
 .. code-block:: xonshcon
 
     @ class Stamp:
-    .    """Return current date as string representation."""
-    .    def __repr__(self):
-    .       return @.imp.datetime.datetime.now().isoformat()
-    .
-    .
+         """Return current date as string representation."""
+         def __repr__(self):
+            return @.imp.datetime.datetime.now().isoformat()
+ 
+ 
     @ $DT = Stamp()
     @ $DT
     2024-11-11T11:11:22
@@ -1196,7 +1196,7 @@ The following example shows the form of these functions:
 .. code-block:: xonshcon
 
     @ def foo(s):
-    .     return [i for i in os.listdir('.') if i.startswith(s)]
+          return [i for i in os.listdir('.') if i.startswith(s)]
     @ @foo`aa`
     ['aa', 'aaa', 'aab', 'aabb']
 
@@ -1234,12 +1234,12 @@ handled implicitly in subprocess mode.
     @ pwd
     /home/snail
     @ with p'/tmp'.cd():
-    .     pwd
-    .
+          pwd
+ 
     /tmp
     @ with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=True).cd():
-    .     pwd
-    .
+          pwd
+ 
     /tmp/newdir
     @ p'/tmp/new.txt'.touch().chmod(0o700).write_text('hello')
 
@@ -1366,10 +1366,10 @@ The values are:
     @ aliases['ll'] = ['ls', '-la']
 
     @ aliases |= {
-    .   'g':   'git status -sb',
-    .   'gp':  ['git', 'pull'],
-    .   'gco': 'git checkout',
-    . }
+        'g':   'git status -sb',
+        'gp':  ['git', 'pull'],
+        'gco': 'git checkout',
+      }
 
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
@@ -1390,11 +1390,11 @@ One of the most interesting application is expanding an alias:
 .. code-block:: xonshcon
 
     @ @aliases.register
-    . @aliases.return_command
-    . def _xsudo(args):
-    .     """Sudo with expanding aliases."""
-    .     return ['sudo', '--', *aliases.eval_alias(args)]
-    .
+      @aliases.return_command
+      def _xsudo(args):
+          """Sudo with expanding aliases."""
+          return ['sudo', '--', *aliases.eval_alias(args)]
+ 
     @ aliases['install'] = "apt install cowsay"
     @ xsudo install
     # Password:
@@ -1405,14 +1405,14 @@ Or implement logic to run the right command:
 .. code-block:: xonshcon
 
     @ @aliases.register
-    . @aliases.return_command
-    . def _vi(args):
-    .     """Universal vi editor."""
-    .     if $(which vim 2>/dev/null):
-    .         return ['vim'] + args
-    .     else:
-    .         return ['vi'] + args
-    .
+      @aliases.return_command
+      def _vi(args):
+          """Universal vi editor."""
+          if $(which vim 2>/dev/null):
+              return ['vim'] + args
+          else:
+              return ['vi'] + args
+ 
     @ vi file
 
 
@@ -1461,22 +1461,26 @@ or by the index in ``$arg<n>`` environment variables.
 
 .. code-block:: xonshcon
 
-    @ aliases['answer'] = 'echo @(21+21)'
-    @ aliases['piu'] = 'pip install -U @($args)'
-    @ aliases['cdls'] = 'cd $arg0 && ls'
+    @ aliases |= {
+        'answer': 'echo @(21+21)',
+        'piu':    'pip install -U @($args)',
+        'cdls':   'cd $arg0 && ls',
+      }
 
 You need to add ``@($args)`` manually if you need arguments:
 
 .. code-block:: xonshcon
 
-    @ aliases['careful'] = 'echo @("all args will be ignored")'
-    @ aliases['better'] = 'echo @("the arguments are: ") @($args)'
+    @ aliases |= {
+        'careful': 'echo @("all args will be ignored")',
+        'better':  'echo @("the arguments are: ") @($args)',
+      }
 
 These three definitions are equal:
 
     @ @aliases.register
-    . def _answer():
-    .     echo @(21+21)
+      def _answer():
+          echo @(21+21)
 
     @ aliases['answer'] = lambda: $[echo @(21+21)]
 
@@ -1618,11 +1622,11 @@ through xonsh to the screen.
 .. code-block:: xonshcon
 
     @ @aliases.register
-    . def _hunter():
-    .     print('catch me')
-    .     echo if  # The same as `![echo if]`
-    .     $[echo you]
-    .     ![echo can]
+      def _hunter():
+          print('catch me')
+          echo if  # The same as `![echo if]`
+          $[echo you]
+          ![echo can]
     @ hunter
     catch me
     if
