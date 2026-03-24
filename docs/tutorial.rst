@@ -55,7 +55,7 @@ We are able to import modules, print values, and use other built-in Python funct
 
     @ import sys
     @ print(sys.version)
-    3.11.14 | packaged by conda-forge
+    Python 3.11.14 | packaged by conda-forge
 
 
 We can also create and use literal data types, such as ints, floats, lists,
@@ -1351,28 +1351,35 @@ familiar with the POSIX shells ``alias`` built-in, this is similar.  Alias comma
 matching only occurs for the first element of a subprocess command.
 
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
-The values are lists of strings, where the first element is the command, and
-the rest are the arguments.
+The values are:
+  * A list of strings where the first element is the command and the remaining elements are its arguments.
+  * A simple string that is automatically converted into a list using xonsh’s ``Lexer.split()`` method.
+  * A string representing a xonsh command that will be converted into an ``ExecAlias`` (details next).
+  * A callable that will be used as a callable alias (details next).
 
 .. code-block:: xonshcon
 
     @ aliases['ls']
     ['ls', '--color=auto', '-v']
 
-You can also set the value to a string. If the string is a xonsh expression,
-it will be converted to a list automatically with xonsh's ``Lexer.split()`` method.
-For example, the following creates several aliases for the ``git`` version
-control software. Both styles (list of strings and single string) are shown:
+    @ aliases['e'] = 'echo echo'
+    @ aliases['ll'] = ['ls', '-la']
 
-.. code-block:: xonshcon
-
-    @ aliases['g'] = 'git status -sb'
-    @ aliases['gco'] = 'git checkout'
-    @ aliases['gp'] = ['git', 'pull']
+    @ aliases |= {
+    .   'g':   'git status -sb',
+    .   'gp':  ['git', 'pull'],
+    .   'gco': 'git checkout',
+	. }
 
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
 being executed.
+
+Removing an alias is as easy as deleting the key from the alias dictionary:
+
+.. code-block:: xonshcon
+
+    @ del aliases['banana']
 
 Alias to modify command
 -----------------------
@@ -1409,11 +1416,42 @@ Or implement logic to run the right command:
     @ vi file
 
 
+Callable Aliases
+================
+A callable alias is a function with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
+
+Using directly with Python evaluation via ``@()``:
+
+.. code-block:: python
+
+	@ def mybox():
+    .    print('apple')
+    .    echo 'banana'
+
+    @ @(mybox) | grep ba
+    banana
+
+Register callable as an alias:
+
+.. code-block:: python
+
+	@ @aliases.register('mybox')
+    . def _mybox():
+    .    print('apple')
+    .    echo 'banana'
+
+    @ mybox | grep ba
+    banana
+
+    @ aliases['hello'] = lambda: print(f'Hello world')
+    @ hello
+    Hello world
+
 ExecAlias
 ---------
 
 If the string is representing a block of xonsh code, the alias will be registered
-as an ``ExecAlias``, which is a callable alias. This block of code will then be
+as an ``ExecAlias``, which is a callable alias under the hood. This block of code will then be
 executed whenever the alias is run. The arguments are available in the list ``$args``
 or by the index in ``$arg<n>`` environment variables.
 
@@ -1423,27 +1461,33 @@ or by the index in ``$arg<n>`` environment variables.
     @ aliases['piu'] = 'pip install -U @($args)'
     @ aliases['cdls'] = 'cd $arg0 && ls'
 
-.. warning:: You need to add ``@($args)`` manually if you need arguments.
+You need to add ``@($args)`` manually if you need arguments:
 
 .. code-block:: xonshcon
 
     @ aliases['careful'] = 'echo @("all args will be ignored")'
     @ aliases['better'] = 'echo @("the arguments are: ") @($args)'
 
-.. note::
+These three definitions are equal:
 
-   To add multiple aliases there is merge operator: ``aliases |= {'e': 'echo', 'g': 'git'}``.
+    @ @aliases.register
+    . def _answer():
+    .     echo @(21+21)
+
+    @ aliases['answer'] = lambda: $[echo @(21+21)]
+
+    @ aliases['answer'] = 'echo @(21+21)'
 
 
-Callable Aliases
-----------------
-Lastly, if an alias value is a function (or other callable), then this
-function is called *instead* of going to a subprocess command. Such functions
-may have one of the following signatures:
+Callable Aliases Signature
+--------------------------
+
+A callable alias function can accept a list of arguments for any purpose:
 
 .. code-block:: python
 
-    def mycmd0():
+	@aliases.register
+    def _mycmd0():
         """This form takes no arguments but may return output or a return code.
         """
         # The return value of the function can either be None,
@@ -1473,22 +1517,19 @@ may have one of the following signatures:
         # aliases to support piping.
         print('I go to stdout and will be printed or piped')
 
-        # Note: that you have access to the xonsh
-        # built-ins if you 'import builtins'.  For example, if you need the
-        # environment, you could do the following:
-        import builtins
-        env = builtins.__xonsh__.env
 
-    def mycmd1(args):
+	@aliases.register
+    def _mycmd1(args):
         """This form takes a single argument, args. This is a list of strings
         representing the arguments to this command. Feel free to parse them
         however you wish!
         """
         # perform some action.
-        print(f"arg count: {len(args)}")
+        print(f"args: {args!r}")
         return 0
 
-    def mycmd2(args, stdin=None):
+	@aliases.register
+    def _mycmd2(args, stdin=None):
         """This form takes two arguments. The args list like above, as a well
         as standard input. stdin will be a file like object that the command
         can read from, if the user piped input to this command. If no input
@@ -1499,7 +1540,8 @@ may have one of the following signatures:
         for line in stdin.readlines():
             print(line.strip().upper() + '!')
 
-    def mycmd3(args, stdin=None, stdout=None):
+	@aliases.register
+    def _mycmd3(args, stdin=None, stdout=None):
         """This form has three parameters.  The first two are the same as above.
         The last argument represents the standard output.  This is a file-like
         object that the command may write too.
@@ -1510,7 +1552,8 @@ may have one of the following signatures:
         print("Mom!")
         return
 
-    def mycmd4(args, stdin=None, stdout=None, stderr=None):
+	@aliases.register
+    def _mycmd4(args, stdin=None, stdout=None, stderr=None):
         """The next form of subprocess callables takes all of the
         arguments shown above as well as the standard error stream.
         As with stdout, this is a write-only file-like object.
@@ -1524,7 +1567,8 @@ may have one of the following signatures:
 
         return 0
 
-    def mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
+	@aliases.register
+    def _mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
         """This form of subprocess callables takes all of the
         arguments shown above as well as a subprocess specification
         SubprocSpec object. This holds many attributes that dictate how
@@ -1540,7 +1584,8 @@ may have one of the following signatures:
             print("Hello terminal!")
         return 0
 
-    def mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+	@aliases.register
+    def _mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
         """Lastly, the final form of subprocess callables takes a stack argument
         in addition to the arguments shown above. The stack is a list of
         FrameInfo namedtuple objects, as described in the standard library
@@ -1559,43 +1604,6 @@ may have one of the following signatures:
         return 0
 
 
-Adding, Modifying, and Removing Aliases
----------------------------------------
-
-We can dynamically alter the aliases present simply by modifying the
-built-in mapping.  Here is an example using a function value:
-
-.. code-block:: xonshcon
-
-    @ @aliases.register('banana')
-    . def _banana(args, stdin=None):
-    .     return ('My spoon is tooo big!', None)
-    @ banana
-    'My spoon is tooo big!'
-
-
-To redefine an alias, simply assign a new function, here using a python lambda
-with keyword arguments:
-
-.. code-block:: xonshcon
-
-    @ aliases['banana'] = lambda: "Banana for scale.\n"
-    @ banana
-    Banana for scale.
-
-
-Removing an alias is as easy as deleting the key from the alias dictionary:
-
-.. code-block:: xonshcon
-
-    @ del aliases['banana']
-
-.. note::
-
-   Alias functions should generally be defined with a leading underscore.
-   Otherwise, they may shadow the alias itself, as Python variables take
-   precedence over aliases when xonsh executes commands.
-
 Callable alias and capturing
 ----------------------------
 
@@ -1605,7 +1613,7 @@ through xonsh to the screen.
 
 .. code-block:: xonshcon
 
-    @ @aliases.register('hunter')
+    @ @aliases.register
     . def _hunter():
     .     print('catch me')
     .     echo if  # The same as `![echo if]`
