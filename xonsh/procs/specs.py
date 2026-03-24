@@ -1097,7 +1097,7 @@ def cmds_to_specs(cmds, captured=False, envs=None):
         for spec in specs:
             if callable(spec.alias) and not spec.threadable:
                 raise xt.XonshError(
-                    f"Alias {spec.alias_name!r} is explicitly marked as unthreadable and is not supported in pipelines.\n"
+                    f"Callable alias {spec.alias_name!r} is explicitly marked as unthreadable and is not supported in pipelines.\n"
                     f"If it's really threadable try `@thread {spec.alias_name}`."
                 )
 
