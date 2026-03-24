@@ -1583,7 +1583,10 @@ In xonsh you can decorate the command to transform output into desired object:
 .. code-block:: xonshcon
 
     @ $(@lines ls /)
-    ['/bin', '/etc', '/home']
+    ['bin', 'etc', 'home']
+
+    @ showcmd echo prefix/$(@lines ls /)
+    ['echo', 'prefix/bin', 'prefix/etc', 'prefix/home']
 
     @ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
     main
