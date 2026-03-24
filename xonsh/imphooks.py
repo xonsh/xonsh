@@ -13,6 +13,13 @@ from importlib.abc import Loader, MetaPathFinder, SourceLoader
 from importlib.machinery import ModuleSpec
 
 from xonsh.built_ins import XSH
+from xonsh.codecache import (
+    compile_code,
+    get_cache_filename,
+    script_cache_check,
+    should_use_cache,
+    update_cache,
+)
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lib.lazyasd import lazyobject
@@ -105,12 +112,19 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
         if filename is None:
             msg = f"xonsh file {fullname!r} could not be found"
             raise ImportError(msg)
-        src = self.get_source(fullname)
         execer = self._execer
-        execer.filename = filename
+        use_cache = should_use_cache(execer, "exec")
+        if use_cache:
+            cachefname = get_cache_filename(filename, code=False)
+            run_cached, ccode = script_cache_check(filename, cachefname)
+            if run_cached:
+                return ccode
+        src = self.get_source(fullname)
         ctx = {}  # dummy for modules
-        code = execer.compile(src, glbs=ctx, locs=ctx)
-        return code
+        ccode = compile_code(filename, src, execer, ctx, ctx, "exec")
+        if use_cache:
+            update_cache(ccode, cachefname)
+        return ccode
 
     def get_source(self, fullname):
         if fullname is None:
