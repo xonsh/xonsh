@@ -1474,14 +1474,18 @@ or by the index in ``$arg<n>`` environment variables.
         'cdls':   'cd $arg0 && ls',
       }
 
-You need to add ``@($args)`` manually if you need arguments:
+You need to add ``@($args)`` manually if you need arguments in ExecAlias:
 
 .. code-block:: xonshcon
 
     @ aliases |= {
-        'careful': 'echo @("all args will be ignored")',
-        'better':  'echo @("the arguments are: ") @($args)',
+        'noargs': 'echo @("all args will be ignored")',
+        'args':  'echo @("the arguments are:") @($args)',
       }
+    @ noargs 1 2 3
+    all args will be ignored
+    @ args 1 2 3
+    the arguments are: 1 2 3
 
 These three definitions are equal:
 
