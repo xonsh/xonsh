@@ -362,6 +362,8 @@ def setup(app: Sphinx):
     app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")
 
+# To avoid having red highlighting in python/xonshcon blocks.
+suppress_warnings = ["misc.highlighting_failure"]
 
 if __name__ == "__main__":
     # use this to debug the process from IDEs
