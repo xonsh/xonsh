@@ -848,10 +848,7 @@ examples.
 .. note:: The target of the redirection should be separated by a space,
           otherwise xonsh will raise a SyntaxError.
 
-Redirecting ``stdout``
-----------------------
-
-All of the following examples will execute ``COMMAND`` and write its regular
+Redirecting ``stdout``. All of the following examples will execute ``COMMAND`` and write its regular
 output (stdout) to a file called ``output.txt``, creating it if it does not
 exist:
 
@@ -866,10 +863,7 @@ These can be made to append to ``output.txt`` instead of overwriting its content
 by replacing ``>`` with ``>>`` (note that ``>>`` will still create the file if it
 does not exist).
 
-Redirecting ``stderr``
-----------------------
-
-All of the following examples will execute ``COMMAND`` and write its error
+Redirecting ``stderr``. All of the following examples will execute ``COMMAND`` and write its error
 output (stderr) to a file called ``errors.txt``, creating it if it does not
 exist:
 
@@ -882,10 +876,7 @@ exist:
 As above, replacing ``>`` with ``>>`` will cause the error output to be
 appended to ``errors.txt``, rather than replacing its contents.
 
-Combining Streams
-----------------------
-
-It is possible to send all of ``COMMAND``'s output (both regular output and
+Combining streams is possible to send all of ``COMMAND``'s output (both regular output and
 error output) to the same location.  All of the following examples accomplish
 that task:
 
@@ -927,10 +918,7 @@ Similarly, you can also send stdout to stderr with the following syntax:
     @ COMMAND o>e
     @ COMMAND 1>&2  # included for POSIX compatibility
 
-Redirecting ``stdin``
----------------------
-
-It is also possible to have a command read its input from a file, rather
+Redirecting ``stdin`` is also possible to have a command read its input from a file, rather
 than from ``stdin``.  The following examples demonstrate two ways to accomplish this:
 
 .. code-block:: xonshcon
@@ -938,11 +926,7 @@ than from ``stdin``.  The following examples demonstrate two ways to accomplish 
     @ COMMAND < input.txt
     @ < input.txt COMMAND
 
-Combining I/O Redirects
-------------------------
-
-It is worth noting that all of these redirections can be combined.  Below is
-one example of a complicated redirect.
+Combining I/O redirects is also possible.  Below is one example of a complicated redirect.
 
 .. code-block:: xonshcon
 
@@ -1219,7 +1203,7 @@ return type from a list of strings to a list of :class:`pathlib.Path` objects:
 
 
 Path Literals
--------------
+=============
 
 Path objects can be instantiated directly using *p-string* syntax. Path objects
 can be converted back to plain strings with `str()`, and this conversion is
@@ -1236,14 +1220,15 @@ handled implicitly in subprocess mode.
     /foo/bar
     @ pwd
     /home/snail
+    
     @ with p'/tmp'.cd():
           pwd
- 
     /tmp
+    
     @ with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=True).cd():
           pwd
- 
     /tmp/newdir
+    
     @ p'/tmp/new.txt'.touch().chmod(0o700).write_text('hello')
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
