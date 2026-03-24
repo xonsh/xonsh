@@ -209,7 +209,7 @@ is the module itself. See importlib for more details.
 events.doc(
     "on_import_post_exec_module",
     """
-on_import_post_create_module(module: Module) -> None
+on_import_post_exec_module(module: Module) -> None
 
 Fires after a module is executed by its loader but before the loader returns it.
 The only parameter is the module itself. See importlib for more details.
