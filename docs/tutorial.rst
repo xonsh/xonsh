@@ -1478,6 +1478,8 @@ You need to add ``@($args)`` manually if you need arguments:
 
 These three definitions are equal:
 
+.. code-block:: xonshcon
+
     @ @aliases.register
       def _answer():
           echo @(21+21)
