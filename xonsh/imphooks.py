@@ -114,7 +114,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
         if filename is None:
             raise ImportError(f"xonsh file {fullname!r} could not be found")
         execer = self._execer
-        use_cache = should_use_cache(execer, "exec")
+        use_cache = XSH.env is not None and should_use_cache(execer, "exec")
         if use_cache:
             cachefname = get_cache_filename(filename, code=False)
             run_cached, ccode = script_cache_check(filename, cachefname)
