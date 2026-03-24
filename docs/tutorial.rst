@@ -1568,9 +1568,9 @@ A callable alias function can accept a list of arguments for any purpose:
         object that the command may write too.
         """
         # you can either use stdout
-        stdout.write("Hello, ")
+        stdout.write("Hello ")
         # or print()!
-        print("Mom!")
+        print("world!")
         return
 
     @aliases.register
