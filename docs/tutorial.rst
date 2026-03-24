@@ -1419,8 +1419,8 @@ Or implement logic to run the right command:
 Callable Aliases
 ================
 
-What is a callable alias
-------------------------
+Basic Callable Alias
+--------------------
 
 A callable alias is a function with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
 
