@@ -1031,7 +1031,7 @@ to be evaluated in Python mode using the ``@()`` syntax:
     ``$EXPAND_ENV_VARS`` to ``False``.
 
 Advanced String Literals
-========================
+------------------------
 
 For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
 there are extended list of literals:
@@ -1061,8 +1061,11 @@ and make a table that shows how literal changes the string in Python- and subpro
     ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
     ========================  ==========================  =======================  =====================
 
-Filename Globbing with ``*``
-===============================
+Filename Globbing
+=================
+
+Normal Globbing
+---------------
 Filename globbing with the ``*`` character is also allowed in subprocess-mode.
 This simply uses Python's glob module under-the-covers.  See there for more
 details.  As an example, start with a lovely bunch of xonshs:
@@ -1077,15 +1080,21 @@ details.  As an example, start with a lovely bunch of xonshs:
     @ ls *o*
     conch  konk  xonsh
 
-This is not available in Python-mode because multiplication is pretty
-important.
+In subprocess mode, normal globbing happens without any special syntax. 
+However, there is backtick syntax that is available inside Python mode as well as subprocess mode. 
+This can be done using ``g````:
 
+.. code-block:: xonshcon
 
-Advanced Path Search with Backticks
-===================================
-
-xonsh offers additional ways to find path names beyond regular globbing, both
-in Python mode and in subprocess mode.
+    @ touch a aa aaa aba abba aab aabb abcba
+    @ ls a*b*
+    aab  aabb  aba  abba  abcba
+    @ ls g`a*b*`
+    aab  aabb  aba  abba  abcba
+    @ print(g`a*b*`)
+    ['aab', 'aabb', 'abba', 'abcba', 'aba']
+    @ len(g`a*b*`)
+    5
 
 Regular Expression Globbing
 ---------------------------
@@ -1122,29 +1131,6 @@ module in the Python standard library.
              meaning in POSIX shells.
              In POSIX shells, backticks mean to run a captured subprocess
          (``$()`` in Xonsh).
-
-
-Normal Globbing
----------------
-
-In subprocess mode, normal globbing happens without any special syntax.
-However, the backtick syntax has an additional feature: it is available inside
-of Python mode as well as subprocess mode.
-
-Similarly to regex globbing, normal globbing can be performed (either in Python
-mode or subprocess mode) by using the ``g````:
-
-.. code-block:: xonshcon
-
-    @ touch a aa aaa aba abba aab aabb abcba
-    @ ls a*b*
-    aab  aabb  aba  abba  abcba
-    @ ls g`a*b*`
-    aab  aabb  aba  abba  abcba
-    @ print(g`a*b*`)
-    ['aab', 'aabb', 'abba', 'abcba', 'aba']
-    @ len(g`a*b*`)
-    5
 
 
 Formatted Glob Literals
