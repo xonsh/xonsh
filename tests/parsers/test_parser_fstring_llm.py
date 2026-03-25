@@ -287,15 +287,11 @@ class TestPEP701SubprocFStrings:
 
     def test_subproc_at_fstring_method(self, check_xonsh_ast):
         """echo @(f'{"word".upper()}') — method call with reused quotes."""
-        check_xonsh_ast(
-            {}, '$[echo @(f"{"word".upper()}")]\n', run=False, mode="exec"
-        )
+        check_xonsh_ast({}, '$[echo @(f"{"word".upper()}")]\n', run=False, mode="exec")
 
     def test_subproc_at_fstring_nested(self, check_xonsh_ast):
         """echo @(f'{f"{1+1}"}') — nested f-string."""
-        check_xonsh_ast(
-            {}, '$[echo @(f"{f\"{1+1}\"}")]\n', run=False, mode="exec"
-        )
+        check_xonsh_ast({}, '$[echo @(f"{f"{1+1}"}")]\n', run=False, mode="exec")
 
     def test_subproc_at_fstring_format_spec(self, check_xonsh_ast):
         """echo @(f'{42:.2f}') — format spec."""
@@ -311,21 +307,15 @@ class TestPEP701SubprocFStrings:
 
     def test_subproc_at_fstring_dollar_with_text(self, check_xonsh_ast):
         """echo @(f'home={$HOME}') — env var with text."""
-        check_xonsh_ast(
-            {}, "$[echo @(f'home={$HOME}')]\n", run=False, mode="exec"
-        )
+        check_xonsh_ast({}, "$[echo @(f'home={$HOME}')]\n", run=False, mode="exec")
 
     def test_subproc_at_fstring_dollar_paren(self, check_xonsh_ast):
         """echo @(f'{$(echo hi)}') — command substitution inside f-string."""
-        check_xonsh_ast(
-            {}, "$[echo @(f'{$(echo hi)}')]\n", run=False, mode="exec"
-        )
+        check_xonsh_ast({}, "$[echo @(f'{$(echo hi)}')]\n", run=False, mode="exec")
 
     def test_subproc_at_fstring_concat(self, check_xonsh_ast):
         """echo @('a' + f'{"b"}') — string concat with f-string."""
-        check_xonsh_ast(
-            {}, '$[echo @("a" + f"{"b"}")]\n', run=False, mode="exec"
-        )
+        check_xonsh_ast({}, '$[echo @("a" + f"{"b"}")]\n', run=False, mode="exec")
 
     def test_subproc_fstring_multiple_dollar_paren(self, check_xonsh_ast):
         """echo f'{$(echo 1)} {$(echo 2)}' — f-string with two command subs."""
