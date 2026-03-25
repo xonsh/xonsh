@@ -347,7 +347,7 @@ def test_events_on_envvar_change_called_once(xession, env):
     env["PATH"] = ["tmp1"]
     env["PATH"].insert(0, "tmp2")
     env["PATH"].append("tmp3")
-    assert xession.on_envvar_change_count == 3  # replace, insert, update
+    assert xession.on_envvar_change_count == 3  # replace, insert, append
     assert os.environ["PATH"] == os.pathsep.join(["tmp2", "tmp1", "tmp3"])
 
 
