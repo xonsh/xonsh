@@ -471,6 +471,8 @@ def test_on_command_not_found_replacement(xession):
 
     def replacement_handler(cmd, **kwargs):
         if cmd[0] == "xonshcommandnotfound":
+            if ON_WINDOWS:
+                return ["cmd", "/c", "echo", "replaced"]
             return ["echo", "replaced"]
         return None
 
