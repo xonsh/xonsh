@@ -6,7 +6,6 @@ import pytest
 
 from xonsh.parsers.lexer import Lexer
 
-
 _skip_pre_312 = pytest.mark.skipif(
     sys.version_info < (3, 12), reason="PEP 701 requires Python 3.12+"
 )
@@ -33,7 +32,6 @@ def toks(inp: str):
 
 @_skip_pre_312
 class TestFStringBasicLexer:
-
     def test_empty(self):
         assert toks('f""') == [
             ("FSTRING_START", 'f"', 0),
@@ -71,9 +69,15 @@ class TestFStringBasicLexer:
         result = toks('f"{a}+{b}"')
         types = [t[0] for t in result]
         assert types == [
-            "FSTRING_START", "LBRACE", "NAME", "RBRACE",
+            "FSTRING_START",
+            "LBRACE",
+            "NAME",
+            "RBRACE",
             "FSTRING_MIDDLE",
-            "LBRACE", "NAME", "RBRACE", "FSTRING_END",
+            "LBRACE",
+            "NAME",
+            "RBRACE",
+            "FSTRING_END",
         ]
 
     def test_expr_only(self):
@@ -99,14 +103,15 @@ class TestFStringBasicLexer:
 
 @_skip_pre_312
 class TestFStringQuoteReuseLexer:
-
     def test_double_inside_double(self):
         result = toks('f"{"hello"}"')
         types = [t[0] for t in result]
         assert types == [
-            "FSTRING_START", "LBRACE",
+            "FSTRING_START",
+            "LBRACE",
             "STRING",
-            "RBRACE", "FSTRING_END",
+            "RBRACE",
+            "FSTRING_END",
         ]
         assert result[2] == ("STRING", '"hello"', 3)
 
@@ -114,9 +119,11 @@ class TestFStringQuoteReuseLexer:
         result = toks("f'{'hello'}'")
         types = [t[0] for t in result]
         assert types == [
-            "FSTRING_START", "LBRACE",
+            "FSTRING_START",
+            "LBRACE",
             "STRING",
-            "RBRACE", "FSTRING_END",
+            "RBRACE",
+            "FSTRING_END",
         ]
 
     def test_method_call_reuse(self):
@@ -132,14 +139,19 @@ class TestFStringQuoteReuseLexer:
 
 @_skip_pre_312
 class TestFStringNestedLexer:
-
     def test_one_level(self):
         result = toks('f"{f"{1}"}"')
         types = [t[0] for t in result]
         assert types == [
-            "FSTRING_START", "LBRACE",
-            "FSTRING_START", "LBRACE", "NUMBER", "RBRACE", "FSTRING_END",
-            "RBRACE", "FSTRING_END",
+            "FSTRING_START",
+            "LBRACE",
+            "FSTRING_START",
+            "LBRACE",
+            "NUMBER",
+            "RBRACE",
+            "FSTRING_END",
+            "RBRACE",
+            "FSTRING_END",
         ]
 
     def test_two_levels(self):
@@ -161,13 +173,16 @@ class TestFStringNestedLexer:
 
 @_skip_pre_312
 class TestFStringFormatSpecLexer:
-
     def test_simple_spec(self):
         result = toks('f"{x:.2f}"')
         types = [t[0] for t in result]
         assert types == [
             "FSTRING_START",
-            "LBRACE", "NAME", "COLON", "FSTRING_MIDDLE", "RBRACE",
+            "LBRACE",
+            "NAME",
+            "COLON",
+            "FSTRING_MIDDLE",
+            "RBRACE",
             "FSTRING_END",
         ]
         # The format spec text is FSTRING_MIDDLE
@@ -190,7 +205,6 @@ class TestFStringFormatSpecLexer:
 
 @_skip_pre_312
 class TestFStringConversionLexer:
-
     def test_bang_r(self):
         result = toks('f"{x!r}"')
         types = [t[0] for t in result]
@@ -213,13 +227,15 @@ class TestFStringConversionLexer:
 
 @_skip_pre_312
 class TestFStringSelfDocLexer:
-
     def test_simple_selfdoc(self):
         result = toks('f"{x=}"')
         types = [t[0] for t in result]
         assert types == [
             "FSTRING_START",
-            "LBRACE", "NAME", "EQUALS", "RBRACE",
+            "LBRACE",
+            "NAME",
+            "EQUALS",
+            "RBRACE",
             "FSTRING_END",
         ]
 
@@ -236,7 +252,6 @@ class TestFStringSelfDocLexer:
 
 @_skip_pre_312
 class TestFStringEscapedBracesLexer:
-
     def test_double_open_brace(self):
         result = toks('f"{{x}}"')
         types = [t[0] for t in result]
@@ -266,7 +281,6 @@ class TestFStringEscapedBracesLexer:
 
 @_skip_pre_312
 class TestFStringTripleQuotedLexer:
-
     def test_triple_double(self):
         result = toks('f"""hello"""')
         assert result == [
@@ -287,9 +301,13 @@ class TestFStringTripleQuotedLexer:
         result = toks('f"""a {x} b"""')
         types = [t[0] for t in result]
         assert types == [
-            "FSTRING_START", "FSTRING_MIDDLE",
-            "LBRACE", "NAME", "RBRACE",
-            "FSTRING_MIDDLE", "FSTRING_END",
+            "FSTRING_START",
+            "FSTRING_MIDDLE",
+            "LBRACE",
+            "NAME",
+            "RBRACE",
+            "FSTRING_MIDDLE",
+            "FSTRING_END",
         ]
 
     def test_triple_multiline(self):
@@ -304,7 +322,6 @@ class TestFStringTripleQuotedLexer:
 
 @_skip_pre_312
 class TestFStringPrefixLexer:
-
     def test_F_upper(self):
         result = toks('F"{x}"')
         assert result[0] == ("FSTRING_START", 'F"', 0)
@@ -335,7 +352,6 @@ class TestFStringPrefixLexer:
 
 @_skip_pre_312
 class TestFStringExprLexer:
-
     def test_binary_op(self):
         result = toks('f"{a + b}"')
         types = [t[0] for t in result]
@@ -383,13 +399,14 @@ class TestFStringExprLexer:
 
 @_skip_pre_312
 class TestFStringXonshLexer:
-
     def test_dollar_name(self):
         result = toks('f"{$HOME}"')
         types = [t[0] for t in result]
         assert types == [
             "FSTRING_START",
-            "LBRACE", "DOLLAR_NAME", "RBRACE",
+            "LBRACE",
+            "DOLLAR_NAME",
+            "RBRACE",
             "FSTRING_END",
         ]
         assert result[2] == ("DOLLAR_NAME", "$HOME", 3)
@@ -435,7 +452,7 @@ class TestFStringXonshLexer:
         assert "DOLLAR_NAME" in types
 
     def test_dollar_name_mixed_with_expr(self):
-        result = toks('f"{$HOME + \"/bin\"}"')
+        result = toks('f"{$HOME + "/bin"}"')
         types = [t[0] for t in result]
         assert "DOLLAR_NAME" in types
         assert "PLUS" in types
@@ -447,7 +464,6 @@ class TestFStringXonshLexer:
 
 @_skip_pre_312
 class TestFStringPathLexer:
-
     def test_pf_prefix(self):
         result = toks('pf"{x}"')
         assert result[0] == ("FSTRING_START", 'pf"', 0)
@@ -482,7 +498,6 @@ class TestFStringPathLexer:
 
 @_skip_pre_312
 class TestFStringConcatLexer:
-
     def test_str_then_fstring(self):
         result = toks('"hello " f"{x}"')
         types = [t[0] for t in result]
