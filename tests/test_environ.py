@@ -344,11 +344,11 @@ def test_events_on_envvar_change_called_once(xession, env):
     def handler(name, oldvalue, newvalue, **kwargs):
         xession.counter += 1
 
-    env["PATH"] = ["/tmp1"]
-    env["PATH"].insert(0, "/tmp2")
-    env["PATH"].append("/tmp3")
+    env["PATH"] = ["tmp1"]
+    env["PATH"].insert(0, "tmp2")
+    env["PATH"].append("tmp3")
     assert xession.counter == 3
-    assert os.environ["PATH"] == os.pathsep.join(["/tmp2", "/tmp1", "/tmp3"])
+    assert os.environ["PATH"] == os.pathsep.join(["tmp2", "tmp1", "tmp3"])
 
 
 def test_no_lines_columns():
