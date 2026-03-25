@@ -10,7 +10,6 @@ from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
     VER_MAJOR_MINOR,
-    nodes_equal,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
 )

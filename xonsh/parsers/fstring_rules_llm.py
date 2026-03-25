@@ -24,7 +24,7 @@ class FStringRules:
         s1 = p.slice[1]
         fstart = s1.value
         prefix = fstart.rstrip("'\"").lower()
-        quote = fstart[len(fstart.rstrip("'\"")):]
+        quote = fstart[len(fstart.rstrip("'\"")) :]
         is_raw = "r" in prefix
         values = p[2]
         # Process escape sequences in FSTRING_MIDDLE Constant values
@@ -32,18 +32,22 @@ class FStringRules:
             for node in values:
                 if isinstance(node, ast.Constant) and isinstance(node.value, str):
                     try:
-                        node.value = pyparse(
-                            quote + node.value + quote
-                        ).body[0].value.value
+                        node.value = (
+                            pyparse(quote + node.value + quote).body[0].value.value
+                        )
                     except SyntaxError:
                         pass
         s = ast.JoinedStr(
-            values=values, lineno=s1.lineno, col_offset=s1.lexpos,
+            values=values,
+            lineno=s1.lineno,
+            col_offset=s1.lexpos,
         )
         if "p" in prefix:
             p[0] = xonsh_call(
-                "__xonsh__.path_literal", [s],
-                lineno=s1.lineno, col=s1.lexpos,
+                "__xonsh__.path_literal",
+                [s],
+                lineno=s1.lineno,
+                col=s1.lexpos,
             )
         else:
             p[0] = s
@@ -56,7 +60,9 @@ class FStringRules:
         """fstring_content : fstring_content FSTRING_MIDDLE"""
         s = p.slice[2]
         node = ast.Constant(
-            value=p[2], lineno=s.lineno, col_offset=s.lexpos,
+            value=p[2],
+            lineno=s.lineno,
+            col_offset=s.lexpos,
         )
         p[0] = p[1] + [node]
 
@@ -84,7 +90,8 @@ class FStringRules:
         expr_text = ast_unparse(p[3]) + "="
         text_node = ast.Constant(
             value=expr_text,
-            lineno=s2.lineno, col_offset=s2.lexpos,
+            lineno=s2.lineno,
+            col_offset=s2.lexpos,
         )
         # Default to repr conversion only when no format spec is given
         if conversion == -1 and format_spec is None:
@@ -116,7 +123,9 @@ class FStringRules:
         # they are interpreted literally by the format() function.
         s1 = p.slice[1]
         p[0] = ast.JoinedStr(
-            values=p[2], lineno=s1.lineno, col_offset=s1.lexpos,
+            values=p[2],
+            lineno=s1.lineno,
+            col_offset=s1.lexpos,
         )
 
     def p_fstring_format_content_empty(self, p):
@@ -127,7 +136,9 @@ class FStringRules:
         """fstring_format_content : fstring_format_content FSTRING_MIDDLE"""
         s = p.slice[2]
         node = ast.Constant(
-            value=p[2], lineno=s.lineno, col_offset=s.lexpos,
+            value=p[2],
+            lineno=s.lineno,
+            col_offset=s.lexpos,
         )
         p[0] = p[1] + [node]
 
@@ -135,7 +146,10 @@ class FStringRules:
         """fstring_format_content : fstring_format_content LBRACE testlist_comp RBRACE"""
         s2 = p.slice[2]
         fv = ast.FormattedValue(
-            value=p[3], conversion=-1, format_spec=None,
-            lineno=s2.lineno, col_offset=s2.lexpos,
+            value=p[3],
+            conversion=-1,
+            format_spec=None,
+            lineno=s2.lineno,
+            col_offset=s2.lexpos,
         )
         p[0] = p[1] + [fv]

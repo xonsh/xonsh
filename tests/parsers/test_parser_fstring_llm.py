@@ -189,9 +189,7 @@ class TestPEP701XonshFStrings:
 
     def test_dollar_var_nested_fstring(self, check_xonsh_ast, xsh, monkeypatch):
         monkeypatch.setitem(xsh.env, "NAME", "world")
-        obs = check_xonsh_ast(
-            {}, 'f"{"hello " + f"{$NAME}"}"', return_obs=True
-        )
+        obs = check_xonsh_ast({}, 'f"{"hello " + f"{$NAME}"}"', return_obs=True)
         code = compile(obs, "<test>", "eval")
         assert eval(code) == "hello world"
 
@@ -205,9 +203,7 @@ class TestPEP701XonshFStrings:
 
     def test_dollar_var_format_spec(self, check_xonsh_ast, xsh, monkeypatch):
         monkeypatch.setitem(xsh.env, "PI", "3.14159")
-        obs = check_xonsh_ast(
-            {}, 'f"{float($PI):.2f}"', return_obs=True
-        )
+        obs = check_xonsh_ast({}, 'f"{float($PI):.2f}"', return_obs=True)
         code = compile(obs, "<test>", "eval")
         assert eval(code) == "3.14"
 
@@ -260,8 +256,6 @@ class TestPEP701XonshFStrings:
 
     def test_escaped_braces_with_dollar(self, check_xonsh_ast, xsh, monkeypatch):
         monkeypatch.setitem(xsh.env, "HOME", "/home")
-        obs = check_xonsh_ast(
-            {}, 'f"{{literal}} {$HOME}"', return_obs=True
-        )
+        obs = check_xonsh_ast({}, 'f"{{literal}} {$HOME}"', return_obs=True)
         code = compile(obs, "<test>", "eval")
         assert eval(code) == "{literal} /home"
