@@ -1112,10 +1112,10 @@ def test_loading_correctly(monkeypatch, interactive):
     )
     assert not err
     assert ret == 0
-    our_xonsh = (
-        xonsh.__file__
-    )  # make sure xonsh didn't fail and fallback to the system shell
-    assert f"AAA {our_xonsh} BBB" in out  # ignore tty warnings/prompt text
+    # make sure xonsh didn't fail and fallback to the system shell
+    # The exact path may differ (e.g. virtualenv vs source tree), so just
+    # check that xonsh's __init__.py was loaded from *some* xonsh package.
+    assert re.search(r"AAA .+xonsh/__init__\.py BBB", out)
 
 
 @skip_if_no_xonsh
