@@ -222,6 +222,8 @@ class Execer:
     def _parse_ctx_free(self, input, mode="exec", filename=None, logical_input=False):
         if filename is None:
             filename = self.filename
+        if mode != "eval" and not input.endswith("\n"):
+            input += "\n"
 
         def _try_parse(input, greedy):
             last_error_line = last_error_col = -1
