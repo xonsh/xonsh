@@ -6,7 +6,6 @@ import pytest
 
 from xonsh.parsers.lexer import Lexer
 
-
 _skip_pre_312 = pytest.mark.skipif(
     sys.version_info < (3, 12), reason="PEP 701 requires Python 3.12+"
 )
@@ -151,7 +150,6 @@ class TestFStringNestedLexer:
 
     def test_nested_with_text(self):
         result = toks('f"a{f"b{f"c"}"}"')
-        types = [t[0] for t in result]
         middles = [t for t in result if t[0] == "FSTRING_MIDDLE"]
         assert [m[1] for m in middles] == ["a", "b", "c"]
 
@@ -180,7 +178,6 @@ class TestFStringFormatSpecLexer:
         assert "FSTRING_MIDDLE" in types
 
     def test_fill_align_spec(self):
-        result = toks('f"{x:0>10d}"')
         spec_middles = [t for t in toks('f"{x:0>10d}"') if t[0] == "FSTRING_MIDDLE"]
         assert spec_middles[0][1] == "0>10d"
 
