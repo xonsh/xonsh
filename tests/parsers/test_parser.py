@@ -2651,6 +2651,19 @@ def test_comment_only(check_xonsh_ast):
     check_xonsh_ast({}, "# hello")
 
 
+@pytest.mark.parametrize(
+    "inp",
+    [
+        "echo a#b;c",
+        "echo a#b",
+        "echo x#y;z;w",
+    ],
+)
+def test_parse_hash_in_arg_no_hang(inp, xsh):
+    """Regression test for #5976: parser must not hang on '#' inside arguments."""
+    xsh.execer.compile(inp, mode="single", glbs={}, locs={})
+
+
 def test_echo_slash_question(check_xonsh_ast):
     check_xonsh_ast({}, "![echo /?]", False)
 

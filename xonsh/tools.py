@@ -297,7 +297,7 @@ def find_next_break(line, mincol=0, lexer=None):
         return None
     maxcol = None
     lparens = []
-    lexer.input(line)
+    lexer.input(line, is_subproc=True)
     for tok in lexer:
         if tok.type in LPARENS:
             lparens.append(tok.type)
