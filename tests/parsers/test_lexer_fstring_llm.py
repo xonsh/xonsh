@@ -7,7 +7,7 @@ import pytest
 from xonsh.parsers.lexer import Lexer
 
 
-pytestmark = pytest.mark.skipif(
+_skip_pre_312 = pytest.mark.skipif(
     sys.version_info < (3, 12), reason="PEP 701 requires Python 3.12+"
 )
 
@@ -31,6 +31,7 @@ def toks(inp: str):
 # ---- basic f-string structure ----
 
 
+@_skip_pre_312
 class TestFStringBasicLexer:
 
     def test_empty(self):
@@ -96,6 +97,7 @@ class TestFStringBasicLexer:
 # ---- PEP 701: reuse same quotes ----
 
 
+@_skip_pre_312
 class TestFStringQuoteReuseLexer:
 
     def test_double_inside_double(self):
@@ -128,6 +130,7 @@ class TestFStringQuoteReuseLexer:
 # ---- nested f-strings ----
 
 
+@_skip_pre_312
 class TestFStringNestedLexer:
 
     def test_one_level(self):
@@ -156,6 +159,7 @@ class TestFStringNestedLexer:
 # ---- format specs ----
 
 
+@_skip_pre_312
 class TestFStringFormatSpecLexer:
 
     def test_simple_spec(self):
@@ -184,6 +188,7 @@ class TestFStringFormatSpecLexer:
 # ---- conversions ----
 
 
+@_skip_pre_312
 class TestFStringConversionLexer:
 
     def test_bang_r(self):
@@ -206,6 +211,7 @@ class TestFStringConversionLexer:
 # ---- self-documenting f"{x=}" ----
 
 
+@_skip_pre_312
 class TestFStringSelfDocLexer:
 
     def test_simple_selfdoc(self):
@@ -228,6 +234,7 @@ class TestFStringSelfDocLexer:
 # ---- escaped braces ----
 
 
+@_skip_pre_312
 class TestFStringEscapedBracesLexer:
 
     def test_double_open_brace(self):
@@ -257,6 +264,7 @@ class TestFStringEscapedBracesLexer:
 # ---- triple-quoted f-strings ----
 
 
+@_skip_pre_312
 class TestFStringTripleQuotedLexer:
 
     def test_triple_double(self):
@@ -294,6 +302,7 @@ class TestFStringTripleQuotedLexer:
 # ---- prefix variations ----
 
 
+@_skip_pre_312
 class TestFStringPrefixLexer:
 
     def test_F_upper(self):
@@ -324,6 +333,7 @@ class TestFStringPrefixLexer:
 # ---- expression complexity ----
 
 
+@_skip_pre_312
 class TestFStringExprLexer:
 
     def test_binary_op(self):
@@ -371,6 +381,7 @@ class TestFStringExprLexer:
 # ---- xonsh syntax inside f-strings ----
 
 
+@_skip_pre_312
 class TestFStringXonshLexer:
 
     def test_dollar_name(self):
@@ -434,6 +445,7 @@ class TestFStringXonshLexer:
 # ---- xonsh pf"..." path f-strings ----
 
 
+@_skip_pre_312
 class TestFStringPathLexer:
 
     def test_pf_prefix(self):
@@ -468,6 +480,7 @@ class TestFStringPathLexer:
 # ---- string concat with f-strings ----
 
 
+@_skip_pre_312
 class TestFStringConcatLexer:
 
     def test_str_then_fstring(self):

@@ -4,9 +4,10 @@ import pytest
 
 from xonsh.pytest.tools import VER_MAJOR_MINOR
 
-pytestmark = pytest.mark.skipif(VER_MAJOR_MINOR < (3, 12), reason="PEP 701")
+_skip_pre_312 = pytest.mark.skipif(VER_MAJOR_MINOR < (3, 12), reason="PEP 701")
 
 
+@_skip_pre_312
 class TestPEP701FStrings:
     """PEP 701 f-string tokenization: nested quotes, nested f-strings, etc."""
 
@@ -140,6 +141,7 @@ class TestPEP701FStrings:
         check_ast('fR"{42}\\n"', run=False)
 
 
+@_skip_pre_312
 class TestPEP701XonshFStrings:
     """PEP 701 f-strings combined with xonsh-specific syntax."""
 
