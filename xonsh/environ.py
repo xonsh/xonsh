@@ -2857,7 +2857,7 @@ class EnvPath(cabc.MutableSequence):
                 # put everything in a list -before- performing the type check
                 # in order to be able to retrieve it later, for cases such as
                 # when a generator expression was passed as an argument
-                args = [i for i in list(args) if i.strip()]
+                args = [i for i in list(args) if str(i).strip()]
                 if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence

@@ -889,7 +889,7 @@ def test_env_path_removes_empty():
 
     class MyIterablePaths(Iterable):
         def __iter__(self):
-            data = ["a", "b", "", "c", "\n"]
+            data = ["a", "b", "", pathlib.Path("c"), "\n"]
             return iter(data)
 
     assert EnvPath(MyIterablePaths()) == ["a", "b", "c"]
