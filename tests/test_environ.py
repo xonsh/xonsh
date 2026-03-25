@@ -338,16 +338,16 @@ def test_events_on_envvar_change_called_once(xession, env):
     2. Updating OS environment."""
     env["PATH"] = []
     env["UPDATE_OS_ENVIRON"] = True
-    xession.counter = 0
+    xession.on_envvar_change_count = 0
 
     @xession.builtins.events.on_envvar_change
     def handler(name, oldvalue, newvalue, **kwargs):
-        xession.counter += 1
+        xession.on_envvar_change_count += 1
 
     env["PATH"] = ["tmp1"]
     env["PATH"].insert(0, "tmp2")
     env["PATH"].append("tmp3")
-    assert xession.counter == 3
+    assert xession.on_envvar_change_count == 3
     assert os.environ["PATH"] == os.pathsep.join(["tmp2", "tmp1", "tmp3"])
 
 
