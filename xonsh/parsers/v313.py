@@ -18,11 +18,10 @@ from xonsh.parsers.base import (
     lopen_loc,
     store_ctx,
 )
-from xonsh.parsers.fstring_rules_llm import FStringRules
 from xonsh.parsers.v310 import Parser as ThreeTenParser
 
 
-class Parser(FStringRules, ThreeTenParser):
+class Parser(ThreeTenParser):
     def p_eval_input(self, p):
         """eval_input : testlist newlines_opt"""
         p1 = p[1]
