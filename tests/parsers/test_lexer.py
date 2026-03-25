@@ -343,26 +343,32 @@ def test_double_raw_string_literal():
 
 def test_single_f_string_literal():
     if sys.version_info >= (3, 12):
-        assert check_tokens("f'{yo}'", [
-            ("FSTRING_START", "f'", 0),
-            ("LBRACE", "{", 2),
-            ("NAME", "yo", 3),
-            ("RBRACE", "}", 5),
-            ("FSTRING_END", "'", 6),
-        ])
+        assert check_tokens(
+            "f'{yo}'",
+            [
+                ("FSTRING_START", "f'", 0),
+                ("LBRACE", "{", 2),
+                ("NAME", "yo", 3),
+                ("RBRACE", "}", 5),
+                ("FSTRING_END", "'", 6),
+            ],
+        )
     else:
         assert check_token("f'{yo}'", ["STRING", "f'{yo}'", 0])
 
 
 def test_double_f_string_literal():
     if sys.version_info >= (3, 12):
-        assert check_tokens('f"{yo}"', [
-            ("FSTRING_START", 'f"', 0),
-            ("LBRACE", "{", 2),
-            ("NAME", "yo", 3),
-            ("RBRACE", "}", 5),
-            ("FSTRING_END", '"', 6),
-        ])
+        assert check_tokens(
+            'f"{yo}"',
+            [
+                ("FSTRING_START", 'f"', 0),
+                ("LBRACE", "{", 2),
+                ("NAME", "yo", 3),
+                ("RBRACE", "}", 5),
+                ("FSTRING_END", '"', 6),
+            ],
+        )
     else:
         assert check_token('f"{yo}"', ["STRING", 'f"{yo}"', 0])
 
@@ -391,11 +397,14 @@ def test_path_string_literal():
 def test_path_fstring_literal():
     if sys.version_info >= (3, 12):
         # PEP 701: f-strings produce granular tokens
-        assert check_tokens("pf'/foo'", [
-            ("FSTRING_START", "pf'", 0),
-            ("FSTRING_MIDDLE", "/foo", 3),
-            ("FSTRING_END", "'", 7),
-        ])
+        assert check_tokens(
+            "pf'/foo'",
+            [
+                ("FSTRING_START", "pf'", 0),
+                ("FSTRING_MIDDLE", "/foo", 3),
+                ("FSTRING_END", "'", 7),
+            ],
+        )
     else:
         assert check_token("pf'/foo'", ["STRING", "pf'/foo'", 0])
         assert check_token('pf"/foo"', ["STRING", 'pf"/foo"', 0])
