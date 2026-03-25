@@ -880,19 +880,16 @@ def test_is_env_path(inp, exp):
 
 
 def test_env_path_removes_empty():
-    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"])) == ["a", "b", "c"]
-    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"]).encode("utf-8")) == [
-        "a",
-        "b",
-        "c",
-    ]
+    exp = ["a", "b", "c"]
+    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"])) == exp
+    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"]).encode("utf-8")) == exp
 
     class MyIterablePaths(Iterable):
         def __iter__(self):
             data = ["a", "b", "", pathlib.Path("c"), "\n"]
             return iter(data)
 
-    assert EnvPath(MyIterablePaths()) == ["a", "b", "c"]
+    assert EnvPath(MyIterablePaths()) == exp
 
 
 @pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None)])
