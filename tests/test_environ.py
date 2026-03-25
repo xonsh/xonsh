@@ -332,6 +332,26 @@ def test_events_on_envvar_called_for_envpath(xession, env):
     assert called_var_names == ["PATH"] * 3
 
 
+def test_events_on_envvar_change_called_once(xession, env):
+    """Check:
+    1. Count of change events.
+    2. Updating OS environment."""
+    env["PATH"] = []
+    env["UPDATE_OS_ENVIRON"] = True
+    xession.counter = 0
+
+    @xession.builtins.events.on_envvar_change
+    def handler(name, oldvalue, newvalue, **kwargs):
+        xession.counter += 1
+
+    env["PATH"] = ["/tmp1"]
+    env["PATH"].insert(0, "/tmp2")
+    env["PATH"].append("/tmp3")
+    os.environ["PATH"]
+    assert xession.counter == 3
+    assert os.environ["PATH"] == os.pathsep.join(["/tmp2", "/tmp1", "/tmp3"])
+
+
 def test_no_lines_columns():
     os.environ["LINES"] = "spam"
     os.environ["COLUMNS"] = "eggs"
