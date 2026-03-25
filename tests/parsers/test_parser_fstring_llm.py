@@ -259,3 +259,79 @@ class TestPEP701XonshFStrings:
         obs = check_xonsh_ast({}, 'f"{{literal}} {$HOME}"', return_obs=True)
         code = compile(obs, "<test>", "eval")
         assert eval(code) == "{literal} /home"
+
+
+@_skip_pre_312
+class TestPEP701SubprocFStrings:
+    """PEP 701 f-strings inside subprocess @() injections."""
+
+    def test_subproc_at_string(self, check_xonsh_ast):
+        """echo @('hello') — baseline, regular string."""
+        check_xonsh_ast({}, '$[echo @("hello")]\n', run=False, mode="exec")
+
+    def test_subproc_at_fstring_empty(self, check_xonsh_ast):
+        """echo @(f'') — empty f-string."""
+        check_xonsh_ast({}, "$[echo @(f'')]\n", run=False, mode="exec")
+
+    def test_subproc_at_fstring_text(self, check_xonsh_ast):
+        """echo @(f'hello') — f-string without expressions."""
+        check_xonsh_ast({}, "$[echo @(f'hello')]\n", run=False, mode="exec")
+
+    def test_subproc_at_fstring_expr(self, check_xonsh_ast):
+        """echo @(f'{42}') — f-string with expression."""
+        check_xonsh_ast({}, "$[echo @(f'{42}')]\n", run=False, mode="exec")
+
+    def test_subproc_at_fstring_pep701_quotes(self, check_xonsh_ast):
+        """echo @(f'{"word"}') — PEP 701 same-quote reuse."""
+        check_xonsh_ast({}, '$[echo @(f"{"word"}")]\n', run=False, mode="exec")
+
+    def test_subproc_at_fstring_method(self, check_xonsh_ast):
+        """echo @(f'{"word".upper()}') — method call with reused quotes."""
+        check_xonsh_ast(
+            {}, '$[echo @(f"{"word".upper()}")]\n', run=False, mode="exec"
+        )
+
+    def test_subproc_at_fstring_nested(self, check_xonsh_ast):
+        """echo @(f'{f"{1+1}"}') — nested f-string."""
+        check_xonsh_ast(
+            {}, '$[echo @(f"{f\"{1+1}\"}")]\n', run=False, mode="exec"
+        )
+
+    def test_subproc_at_fstring_format_spec(self, check_xonsh_ast):
+        """echo @(f'{42:.2f}') — format spec."""
+        check_xonsh_ast({}, "$[echo @(f'{42:.2f}')]\n", run=False, mode="exec")
+
+    def test_subproc_at_fstring_escaped_braces(self, check_xonsh_ast):
+        """echo @(f'{{x}}') — escaped braces."""
+        check_xonsh_ast({}, "$[echo @(f'{{x}}')]\n", run=False, mode="exec")
+
+    def test_subproc_at_fstring_dollar_var(self, check_xonsh_ast):
+        """echo @(f'{$HOME}') — xonsh env var."""
+        check_xonsh_ast({}, "$[echo @(f'{$HOME}')]\n", run=False, mode="exec")
+
+    def test_subproc_at_fstring_dollar_with_text(self, check_xonsh_ast):
+        """echo @(f'home={$HOME}') — env var with text."""
+        check_xonsh_ast(
+            {}, "$[echo @(f'home={$HOME}')]\n", run=False, mode="exec"
+        )
+
+    def test_subproc_at_fstring_dollar_paren(self, check_xonsh_ast):
+        """echo @(f'{$(echo hi)}') — command substitution inside f-string."""
+        check_xonsh_ast(
+            {}, "$[echo @(f'{$(echo hi)}')]\n", run=False, mode="exec"
+        )
+
+    def test_subproc_at_fstring_concat(self, check_xonsh_ast):
+        """echo @('a' + f'{"b"}') — string concat with f-string."""
+        check_xonsh_ast(
+            {}, '$[echo @("a" + f"{"b"}")]\n', run=False, mode="exec"
+        )
+
+    def test_subproc_fstring_multiple_dollar_paren(self, check_xonsh_ast):
+        """echo f'{$(echo 1)} {$(echo 2)}' — f-string with two command subs."""
+        check_xonsh_ast(
+            {},
+            """$[echo f"{$(echo 1).strip()} {$(echo 2).strip()}"]\n""",
+            run=False,
+            mode="exec",
+        )
