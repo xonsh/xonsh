@@ -2846,18 +2846,18 @@ class EnvPath(cabc.MutableSequence):
             self._l = []
         else:
             if isinstance(args, str):
-                self._l = args.split(os.pathsep)
+                self._l = [i for i in args.split(os.pathsep) if i.strip()]
             elif isinstance(args, pathlib.Path):
                 self._l = [args]
             elif isinstance(args, bytes):
                 # decode bytes to a string and then split based on
                 # the default path separator
-                self._l = decode_bytes(args).split(os.pathsep)
+                self._l = [i for i in decode_bytes(args).split(os.pathsep) if i.strip()]
             elif isinstance(args, cabc.Iterable):
                 # put everything in a list -before- performing the type check
                 # in order to be able to retrieve it later, for cases such as
                 # when a generator expression was passed as an argument
-                args = list(args)
+                args = [i for i in list(args) if str(i).strip()]
                 if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence
@@ -2998,6 +2998,8 @@ class EnvPath(cabc.MutableSequence):
                     oldvalue=self.before,
                     newvalue=self.obj._l,
                 )
+                if XSH.env.get("UPDATE_OS_ENVIRON", False):
+                    XSH.env[self.obj.target_env_var] = self.obj._l
 
 
 def save_origin_env_to_file(env, session_id):
