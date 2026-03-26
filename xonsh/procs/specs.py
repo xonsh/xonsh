@@ -916,7 +916,9 @@ def _last_spec_update_threading(last: SubprocSpec):
 def _last_spec_update_captured(last: SubprocSpec):
     captured = (
         (captured := last.captured)
-        and not (captured in ["object", "hiddenobject"] and not last.threadable)
+        # Explicit captures ("object") must always work
+        # even when THREAD_SUBPROCS is disabled (e.g. during rc-file loading).
+        and not (captured == "hiddenobject" and not last.threadable)
         # a ProcProxy run using ![] should not be captured
         and not (
             callable(last.alias)

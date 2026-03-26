@@ -142,13 +142,8 @@ def test_capture_always(
     # Explicitly captured commands are always captured
     hidden = run_subproc(cmds, "object")  # !()
     hidden.end()
-    if thread_subprocs:
-        assert exp not in capfd.readouterr().out
-        assert hidden.out == exp
-    else:
-        # for some reason THREAD_SUBPROCS=False fails to capture in `!()` but still succeeds in `$()`
-        assert exp in capfd.readouterr().out
-        assert not hidden.out
+    assert exp not in capfd.readouterr().out
+    assert hidden.out == exp
 
     output = run_subproc(cmds, "stdout")  # $()
     assert exp not in capfd.readouterr().out

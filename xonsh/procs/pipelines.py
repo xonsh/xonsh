@@ -91,6 +91,18 @@ def update_process_group(pipeline_group, background):
     return xj.give_terminal_to(pipeline_group)
 
 
+def _read_all(stdout):
+    """Read all remaining bytes from *stdout*."""
+    if hasattr(stdout, "iterqueue"):
+        return b"".join(stdout.iterqueue())
+    return stdout.read()
+
+
+def _drain_stdout(stdout):
+    """Read all remaining bytes and yield them as lines."""
+    return _read_all(stdout).splitlines(keepends=True)
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -281,23 +293,13 @@ class CommandPipeline:
                 if not spec.threadable:
                     for ch in spec.pipe_channels:
                         ch.close_writer()
-                if self.captured == "object":
+                if self.captured in ("object", "hiddenobject") and stdout:
+                    yield from _drain_stdout(stdout)
                     self.end(tee_output=False)
-                elif self.captured == "hiddenobject" and stdout:
-                    # Use iterqueue for NonBlockingFDReader to ensure
-                    # all data is drained (read() breaks on timeout).
-                    if hasattr(stdout, "iterqueue"):
-                        b = b"".join(stdout.iterqueue())
-                    else:
-                        b = stdout.read()
-                    lines = b.splitlines(keepends=True)
-                    yield from lines
+                elif self.captured == "object":
                     self.end(tee_output=False)
                 elif self.captured == "stdout" and stdout is not None:
-                    if hasattr(stdout, "iterqueue"):
-                        b = b"".join(stdout.iterqueue())
-                    else:
-                        b = stdout.read()
+                    b = _read_all(stdout)
                     s = self._decode_uninew(b, universal_newlines=True)
                     self.lines = s.splitlines(keepends=True)
             return

@@ -247,3 +247,20 @@ def test_callable_alias_subcmd_redirect_e2o(xonsh_session):
     assert "O" in out
     assert "E" in out
     assert pipeline.err is None
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_object_capture_without_threading(capfd, xonsh_session):
+    """!() must capture output even when THREAD_SUBPROCS is disabled.
+
+    Regression test: during rc-file loading THREAD_SUBPROCS is set to None,
+    which made threadable=False. The old code disabled capture for both
+    "object" and "hiddenobject" when not threadable, so !() leaked output
+    to the terminal instead of capturing it.
+    """
+    xonsh_session.env["THREAD_SUBPROCS"] = None
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(echo captured)")
+    assert pipeline.out == "captured"
+    assert "captured" not in capfd.readouterr().out
