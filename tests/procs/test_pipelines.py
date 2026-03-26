@@ -251,6 +251,25 @@ def test_callable_alias_subcmd_redirect_e2o(xonsh_session):
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_o2e_uncaptured(xonsh_session):
+    """$[alias o>e] should not crash on int stdout fd.
+
+    Regression test: o>e sets spec.stdout to the int flag 2. For uncaptured
+    commands _make_last_spec_captured is never called, so the raw int
+    reached iterraw() which called .readable() / .fileno() on it.
+    """
+
+    def _alias(args, stdin, stdout, stderr):
+        print("O", end="", file=stdout)
+        print("E", end="", file=stderr)
+
+    xonsh_session.aliases["tsto2euncap"] = _alias
+    # Should not raise AttributeError
+    xonsh_session.execer.eval("$[tsto2euncap o>e]")
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_object_capture_without_threading(capfd, xonsh_session):
     """!() must capture output even when THREAD_SUBPROCS is disabled.
 

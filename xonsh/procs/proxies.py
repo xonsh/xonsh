@@ -358,6 +358,10 @@ class ProcProxyThread(threading.Thread):
             self.stdout = open(self.c2pread, "rb", -1, closefd=False)
             if universal_newlines:
                 self.stdout = io.TextIOWrapper(self.stdout)
+        elif isinstance(self.stdout, int):
+            # Raw fd (e.g. 2 from o>e redirect) — already used by c2pwrite
+            # for the write end, but there is no readable pipe to expose.
+            self.stdout = None
 
         if self.errread != -1:
             self.stderr = open(self.errread, "rb", -1, closefd=False)
