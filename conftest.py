@@ -1,7 +1,6 @@
 import os
 import sys
 
-
 # Ensure the source tree is on sys.path so that xonsh is imported from here,
 # not from site-packages. This is needed for bare `pytest` and IDE runners.
 _root = os.path.dirname(os.path.abspath(__file__))
