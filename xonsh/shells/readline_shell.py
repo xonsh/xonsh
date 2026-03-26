@@ -72,7 +72,8 @@ def _ensure_newline():
     trailing newline) and we need to move to a fresh line so that the
     prompt does not overwrite it.
     """
-    import termios, tty  # noqa: E401
+    import termios  # noqa: E401
+    import tty
 
     fd = sys.stdin.fileno()
     if not os.isatty(fd):
