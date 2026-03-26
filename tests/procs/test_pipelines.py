@@ -177,6 +177,7 @@ def test_sigint_no_recursion(xonsh_session):
     # Use a delayed self-signal instead of real Ctrl+C
     def _interrupt():
         import time
+
         time.sleep(0.3)
         os.kill(os.getpid(), signal.SIGINT)
 
