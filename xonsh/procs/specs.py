@@ -724,16 +724,18 @@ class SubprocSpec:
     def resolve_redirects(self):
         """Manages redirects."""
         new_cmd = []
+        redirects = []
         for c in self.cmd:
             if isinstance(c, tuple):
-                streams = _redirect_streams(*c)
-                self.stdin, self.stdout, self.stderr = streams
+                redirects.append(c)
             else:
                 new_cmd.append(c)
-        self.cmd = new_cmd
-
-        if len(self.cmd) == 0:
+        if not new_cmd:
             raise xt.XonshError("xonsh: subprocess mode: command is empty")
+        self.cmd = new_cmd
+        for r in redirects:
+            streams = _redirect_streams(*r)
+            self.stdin, self.stdout, self.stderr = streams
 
     def resolve_alias(self):
         """Resolving alias and setting up command."""

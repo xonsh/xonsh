@@ -17,6 +17,7 @@ from xonsh.procs.specs import (
     cmds_to_specs,
     get_script_subproc_command,
     run_subproc,
+    safe_close,
 )
 from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
 from xonsh.tools import XonshError
@@ -286,7 +287,9 @@ def test_subproc_output_format(cmds, exp_stream_lines, exp_list_lines, xonsh_ses
         (False, True),
     ],
 )
-def test_run_subproc_background(captured, exp_is_none):
+def test_run_subproc_background(captured, exp_is_none, xonsh_session):
+    # Suppress job notification print from add_job()
+    xonsh_session.env["XONSH_INTERACTIVE"] = False
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
@@ -390,6 +393,12 @@ def test_callable_alias_cls(thread_subprocs, xession):
     spec = cmds_to_specs(cmds, captured="stdout")[0]
     proc = spec.run()
     assert proc.f == obj
+    if hasattr(proc, "join"):
+        proc.join()
+    safe_close(spec.stdout)
+    safe_close(spec.stderr)
+    safe_close(spec.captured_stdout)
+    safe_close(spec.captured_stderr)
 
 
 def test_specs_resolve_args_list():
@@ -541,6 +550,7 @@ def test_redirect_to_substitution(tmpdir):
         ["echo", "hello", (">", [file])]
     )
     assert s.stdout.name == file
+    s.stdout.close()
 
 
 def test_partial_args_from_classmethod(xession):
