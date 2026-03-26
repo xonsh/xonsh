@@ -17,8 +17,7 @@ if _actual != _expected:
         "source tree:\n"
         f" * Source tree: {_expected!r}\n"
         f" * Site-packages: {_actual!r}\n"
-        f"Use `cd {_root!r} && python -m pytest` to ensure that xonsh is imported from the source tree rather than "
-        "site-packages."
+        f"Use `cd {_root!r} && python -m pytest` to ensure that xonsh is tested from the source tree rather than site-packages."
     )
 
 # Load the xonsh pytest plugin (provides xession fixture, etc.).
