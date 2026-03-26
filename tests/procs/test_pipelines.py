@@ -159,3 +159,62 @@ def test_remove_hide_escape(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
     assert pipeline.err == (stderr or None)
     assert pipeline.raw_out == raw_stdout.replace("\n", os.linesep).encode()
     assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_redirect_e2o(xonsh_session):
+    """Callable alias with e>o should merge stderr into stdout.
+
+    Regression test: previously captured_stderr was set to the same pipe reader
+    as captured_stdout, causing two NonBlockingFDReaders to race on one fd.
+    """
+
+    def _alias():
+        print("OUT")
+        print("ERR", file=__import__("sys").stderr)
+
+    xonsh_session.aliases["tste2o"] = _alias
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(tste2o e>o)")
+    assert "ERR" in pipeline.out
+    assert "OUT" in pipeline.out
+    assert pipeline.err is None
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_redirect_o2e(xonsh_session):
+    """Callable alias with o>e should merge stdout into stderr."""
+
+    def _alias():
+        print("OUT")
+        print("ERR", file=__import__("sys").stderr)
+
+    xonsh_session.aliases["tsto2e"] = _alias
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(tsto2e o>e)")
+    assert pipeline.out == ""
+    assert "OUT" in pipeline.err
+    assert "ERR" in pipeline.err
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_subcmd_redirect_e2o(xonsh_session):
+    """Callable alias with e>o: writing to both stdout and stderr params.
+
+    All output should end up in stdout when e>o is used.
+    """
+
+    def _alias(args, stdin, stdout, stderr):
+        print("O", end="", file=stdout)
+        print("E", end="", file=stderr)
+
+    xonsh_session.aliases["tstsube2o"] = _alias
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(tstsube2o e>o)")
+    out = pipeline.out
+    assert "O" in out
+    assert "E" in out
+    assert pipeline.err is None

@@ -1002,7 +1002,7 @@ def _make_last_spec_captured(last: SubprocSpec):
     # redirect stderr to stdout, if we should
     if callable_alias and last.stderr == subprocess.STDOUT:
         last._stderr = last.stdout
-        last.captured_stderr = last.captured_stdout
+        last.captured_stderr = None
 
 
 def _update_proc_alias_threadable(proc):
