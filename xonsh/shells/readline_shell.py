@@ -63,6 +63,45 @@ _RL_STATE_ISEARCH = 0x0000080
 _RL_PREV_CASE_SENSITIVE_COMPLETIONS = "to-be-set"
 
 
+def _ensure_newline():
+    """Print a newline if the cursor is not at column 1.
+
+    Uses the DSR (Device Status Report) escape sequence to query the
+    terminal for the current cursor position.  If the cursor is past
+    column 1, a previous command left a partial line (output without a
+    trailing newline) and we need to move to a fresh line so that the
+    prompt does not overwrite it.
+    """
+    import termios, tty  # noqa: E401
+
+    fd = sys.stdin.fileno()
+    if not os.isatty(fd):
+        return
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setcbreak(fd)
+        # Ask the terminal: "where is the cursor?"
+        sys.stdout.write("\033[6n")
+        sys.stdout.flush()
+        # Read response: ESC [ row ; col R
+        resp = ""
+        while True:
+            ch = sys.stdin.read(1)
+            resp += ch
+            if ch == "R":
+                break
+        # Parse ";col" from the response  e.g. "\033[42;1R"
+        semi = resp.index(";")
+        col = int(resp[semi + 1 : -1])  # between ";" and "R"
+        if col > 1:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+    except (ValueError, IndexError, OSError, termios.error):
+        pass
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+
 def setup_readline():
     """Sets up the readline module and completion suppression, if available."""
     global \
@@ -396,6 +435,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 store_in_history = True
             pos = readline.get_current_history_length() - 1
         events.on_pre_prompt_format.fire()
+        if ON_POSIX:
+            _ensure_newline()
         prompt = self.prompt
         events.on_pre_prompt.fire()
         rtn = input(prompt)
