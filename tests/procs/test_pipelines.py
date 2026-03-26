@@ -3,6 +3,8 @@ Tests for command pipelines.
 """
 
 import os
+import signal
+import threading
 
 import pytest
 
@@ -159,6 +161,32 @@ def test_remove_hide_escape(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
     assert pipeline.err == (stderr or None)
     assert pipeline.raw_out == raw_stdout.replace("\n", os.linesep).encode()
     assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_sigint_no_recursion(xonsh_session):
+    """Ctrl+C during captured subprocess should not cause RecursionError.
+
+    Regression test: PopenThread._signal_int called pthread_kill(SIGINT) on
+    itself without a re-entrancy guard, causing infinite recursion when the
+    child process was still alive.
+    """
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    # Use a delayed self-signal instead of real Ctrl+C
+    def _interrupt():
+        import time
+        time.sleep(0.3)
+        os.kill(os.getpid(), signal.SIGINT)
+
+    t = threading.Thread(target=_interrupt, daemon=True)
+    t.start()
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(sleep 10)")
+    # If we get here without RecursionError, the fix works.
+    # The pipeline should end with KeyboardInterrupt caught internally.
+    t.join(timeout=5)
 
 
 @skip_if_on_windows

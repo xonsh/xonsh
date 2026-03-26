@@ -126,6 +126,7 @@ class PopenThread(threading.Thread):
             self.stderr = io.BytesIO()
         self.suspended = False
         self.prevs_are_closed = False
+        self._interrupted = False
         # This is so the thread will use the same swapped values as the origin one.
         self.original_swapped_values = XSH.env.get_swapped_values()
         self.start()
@@ -332,6 +333,11 @@ class PopenThread(threading.Thread):
 
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
+        # Check if we have already been interrupted. This should prevent
+        # the possibility of infinite recursion via pthread_kill.
+        if self._interrupted:
+            return
+        self._interrupted = True
         self.send_signal(signal.CTRL_C_EVENT if xp.ON_WINDOWS else signum)
         if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
