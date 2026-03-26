@@ -183,7 +183,7 @@ def test_sigint_no_recursion(xonsh_session):
     t = threading.Thread(target=_interrupt, daemon=True)
     t.start()
 
-    pipeline: CommandPipeline = xonsh_session.execer.eval("!(sleep 10)")
+    xonsh_session.execer.eval("!(sleep 10)")
     # If we get here without RecursionError, the fix works.
     # The pipeline should end with KeyboardInterrupt caught internally.
     t.join(timeout=5)
