@@ -108,7 +108,6 @@ def test_quote_paths_raw_string_trailing_backslash():
     """When a directory completion is inside a raw string, the trailing
     separator must not be \\ (which would make r\"path\\\" invalid).
     Use / instead."""
-    paths = {"somedir"}
     with tempfile.TemporaryDirectory() as td:
         # Create a real directory so os.path.isdir returns True
         import os
