@@ -321,11 +321,14 @@ def xontrib_data():
     """Collects and returns the data about installed xontribs."""
     data = {}
     for xo_name, xontrib in get_xontribs().items():
+        desc = xontrib.get_description()
+        short_desc = desc.split("\n")[0][:60] if desc else ""
         data[xo_name] = {
             "name": xo_name,
             "loaded": xontrib.is_loaded,
             "auto": xontrib.is_auto_loaded,
             "module": xontrib.module,
+            "description": short_desc,
         }
 
     return dict(sorted(data.items()))
@@ -361,6 +364,8 @@ def xontribs_list(to_json=False, _stdout=None):
                     s += "  {CYAN}manual{RESET}"
             else:
                 s += "{RED}not-loaded{RESET}"
+            if d.get("description"):
+                s += "  " + d["description"]
             s += "\n"
         print_color(s[:-1], file=_stdout)
 
