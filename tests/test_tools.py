@@ -6,15 +6,21 @@ import pathlib
 import re
 import subprocess
 import warnings
+from collections.abc import Iterable
 
 import pytest
 
 from xonsh import __version__
+from xonsh.environ import (
+    EnvPath,
+    is_env_path,
+    str_to_env_path,
+    str_to_path,
+)
 from xonsh.parsers.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
-    EnvPath,
     all_permutations,
     always_false,
     always_true,
@@ -49,7 +55,6 @@ from xonsh.tools import (
     is_completion_mode,
     is_completions_display_value,
     is_dynamic_cwd_width,
-    is_env_path,
     is_float,
     is_int,
     is_int_as_str,
@@ -75,8 +80,6 @@ from xonsh.tools import (
     seq_to_upper_pathsep,
     set_to_pathsep,
     simple_random_choice,
-    str_to_env_path,
-    str_to_path,
     subexpr_before_unbalanced,
     subexpr_from_unbalanced,
     subproc_toks,
@@ -874,6 +877,19 @@ def test_is_path(inp, exp):
 def test_is_env_path(inp, exp):
     obs = is_env_path(inp)
     assert exp == obs
+
+
+def test_env_path_removes_empty():
+    exp = ["a", "b", "c"]
+    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"])) == exp
+    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"]).encode("utf-8")) == exp
+
+    class MyIterablePaths(Iterable):
+        def __iter__(self):
+            data = ["a", "b", "", pathlib.Path("c"), "\n"]
+            return iter(data)
+
+    assert EnvPath(MyIterablePaths()) == exp
 
 
 @pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None)])
@@ -2045,7 +2061,9 @@ from xonsh.style_tools import Token
     ],
 )
 def test_is_tok_color_dict(val, exp):
-    assert is_tok_color_dict(val) == exp
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        assert is_tok_color_dict(val) == exp
 
 
 def test_print_exception_msg(xession, capsys):

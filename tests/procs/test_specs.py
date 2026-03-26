@@ -113,8 +113,8 @@ def test_capture_always(
         # Enable capfd for function aliases:
         monkeypatch.setattr(STDOUT_DISPATCHER, "default", sys.stdout)
         if alias_type == "func":
-            xonsh_session.aliases["tst"] = (
-                lambda: run_subproc([first_cmd], "hiddenobject") and None
+            xonsh_session.aliases["tst"] = lambda: (
+                run_subproc([first_cmd], "hiddenobject") and None
             )  # Don't return a value
         elif alias_type == "exec":
             first_cmd = " ".join(repr(arg) for arg in first_cmd)
@@ -471,6 +471,8 @@ def test_on_command_not_found_replacement(xession):
 
     def replacement_handler(cmd, **kwargs):
         if cmd[0] == "xonshcommandnotfound":
+            if ON_WINDOWS:
+                return ["cmd", "/c", "echo", "replaced"]
             return ["echo", "replaced"]
         return None
 
@@ -537,12 +539,13 @@ def test_on_command_not_found_fallback_on_bad_replacement(xession):
     assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
 
 
-def test_redirect_to_substitution(xession):
+def test_redirect_to_substitution(tmpdir):
+    file = str(tmpdir / "test_redirect_to_substitution.txt")
     s = SubprocSpec.build(
         # `echo hello > @('file')`
-        ["echo", "hello", (">", ["file"])]
+        ["echo", "hello", (">", [file])]
     )
-    assert s.stdout.name == "file"
+    assert s.stdout.name == file
 
 
 def test_partial_args_from_classmethod(xession):
@@ -569,6 +572,17 @@ def test_alias_return_command_alone(xession):
     spec = cmds_to_specs(cmds, captured="object")[-1]
     assert spec.cmd == ["echo"]
     assert spec.alias_name == "wakka"
+
+
+@pytest.mark.parametrize("ret", [None, 1, [], False])
+def test_alias_return_command_wrong_return(xession, ret):
+    @xession.aliases.register
+    @xession.aliases.return_command
+    def _nop():
+        return ret
+
+    with pytest.raises(ValueError):
+        cmds_to_specs([["nop"]], captured="object")[-1]
 
 
 def test_alias_return_command_alone_args(xession):
@@ -677,6 +691,7 @@ def test_auto_cd(xession, tmpdir):
 @pytest.mark.parametrize(
     "inp,exp",
     [
+        ["echo command", ["xonsh", "{file}", "--arg", "1"]],
         ["#!/bin/bash", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\n\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
@@ -695,3 +710,10 @@ def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
     file.chmod(0o755)
     cmd = get_script_subproc_command(file_str, ["--arg", "1"])
     assert [c if c != file_str else "{file}" for c in cmd] == exp
+
+
+def test_redirect_without_left_part(tmpdir):
+    file = str(tmpdir / "test_redirect_without_left_part.txt")
+    with pytest.raises(XonshError) as expected:
+        SubprocSpec.build([(">", file)])
+    assert "subprocess mode: command is empty" in str(expected.value)

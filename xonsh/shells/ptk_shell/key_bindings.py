@@ -274,6 +274,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     @handle(Keys.ControlX, Keys.ControlE, filter=~has_selection)
     def open_editor(event):
         """Open current buffer in editor"""
+        event.current_buffer.tempfile_suffix = ".xsh"
         event.current_buffer.open_in_editor(event.cli)
 
     @handle(Keys.BackTab, filter=insert_mode)

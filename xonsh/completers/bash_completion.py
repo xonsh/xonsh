@@ -15,6 +15,8 @@ import subprocess
 import sys
 import typing as tp
 
+from xonsh.lib.string import commonprefix
+
 __version__ = "0.2.8"
 
 
@@ -404,8 +406,7 @@ def bash_completions(
     # From GNU Bash document: The results of the expansion are prefix-matched
     # against the word being completed
 
-    # Ensure input to `commonprefix` is a list (now required by Python 3.6)
-    commprefix = os.path.commonprefix(list(out))
+    commprefix = commonprefix(out)
 
     if prefix.startswith("~") and commprefix and prefix not in commprefix:
         home_ = os.path.expanduser("~")

@@ -155,7 +155,7 @@ information, pass the ``list`` action to the ``xontrib`` command:
 
 .. code-block:: xonshcon
 
-    >>> xontrib list
+    @ xontrib list
     mpl     not-loaded
     myext   not-loaded
 
@@ -165,7 +165,7 @@ string:
 
 .. code-block:: xonshcon
 
-    >>> xontrib list --json mpl
+    @ xontrib list --json mpl
     {"mpl": {"loaded": false, "installed": true}}
 
 Authoring Xontribs

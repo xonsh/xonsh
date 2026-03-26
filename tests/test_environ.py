@@ -31,6 +31,12 @@ from xonsh.pytest.tools import skip_if_on_unix
 from xonsh.tools import DefaultNotGiven, always_true
 
 
+@pytest.fixture(autouse=True)
+def set_env(monkeypatch):
+    # To avoid tests intersection (#5236)
+    monkeypatch.setenv("UPDATE_OS_ENVIRON", "False")
+
+
 def test_env_normal():
     env = Env(VAR="wakka")
     assert "wakka" == env["VAR"]
@@ -302,6 +308,47 @@ def test_events_on_envvar_called_in_right_order(xession, env):
     env["TEST"] = 2
 
     assert share == ["change"]
+
+
+def test_events_on_envvar_called_for_envpath(xession, env):
+    called_var_names = []
+    called_values = []
+    env["PATH"] = []
+
+    @xession.builtins.events.on_envvar_change
+    def handler(name, oldvalue, newvalue, **kwargs):
+        called_var_names[:] = called_var_names + [name]
+        called_values[:] = [(oldvalue, newvalue)]
+
+    env["PATH"] = ["/tmp1"]
+    assert called_values == [([], ["/tmp1"])]
+
+    env["PATH"].append("/tmp2")
+    assert called_values == [(["/tmp1"], ["/tmp1", "/tmp2"])]
+
+    env["PATH"].insert(0, "/tmp3")
+    assert called_values == [(["/tmp1", "/tmp2"], ["/tmp3", "/tmp1", "/tmp2"])]
+
+    assert called_var_names == ["PATH"] * 3
+
+
+def test_events_on_envvar_change_called_once(xession, env):
+    """Check:
+    1. Count of change events.
+    2. Updating OS environment."""
+    env["PATH"] = []
+    env["UPDATE_OS_ENVIRON"] = True
+    xession.on_envvar_change_count = 0
+
+    @xession.builtins.events.on_envvar_change
+    def handler(name, oldvalue, newvalue, **kwargs):
+        xession.on_envvar_change_count += 1
+
+    env["PATH"] = ["tmp1"]
+    env["PATH"].insert(0, "tmp2")
+    env["PATH"].append("tmp3")
+    assert xession.on_envvar_change_count == 3  # replace, insert, append
+    assert os.environ["PATH"] == os.pathsep.join(["tmp2", "tmp1", "tmp3"])
 
 
 def test_no_lines_columns():
@@ -713,7 +760,8 @@ def test_env_deprecated():
     env._vars["AUTO_SUGGEST"] = DeprecatedSetting.AUTO_SUGGEST
     assert env["AUTO_SUGGEST"] is True
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
-    env["AUTO_SUGGEST"] = False
+    with pytest.warns(DeprecationWarning):
+        env["AUTO_SUGGEST"] = False
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]
     env["XONSH_PROMPT_AUTO_SUGGEST"] = True
     assert env["AUTO_SUGGEST"] == env["XONSH_PROMPT_AUTO_SUGGEST"]

@@ -1,5 +1,192 @@
 # Xonsh Change Log
 
+## [0.22.8](https://github.com/xonsh/xonsh/compare/0.22.7...0.22.8) (2026-03-17)
+
+
+### Features
+
+* **ptk:** make `tempfile_suffix` ".xsh" for `open_in_editor` ([#6145](https://github.com/xonsh/xonsh/issues/6145)) ([c713d0a](https://github.com/xonsh/xonsh/commit/c713d0a16b180cb3fca56c4af3a929580db44df6))
+
+
+### Bug Fixes
+
+* Clean tests output ([#6142](https://github.com/xonsh/xonsh/issues/6142)) ([f50c9c4](https://github.com/xonsh/xonsh/commit/f50c9c47a53cc9c7ba8cc605da58b12b80e5f60e))
+* Fix test_indir stability ([#6138](https://github.com/xonsh/xonsh/issues/6138)) ([cb91146](https://github.com/xonsh/xonsh/commit/cb91146d6fea2ecc5731bd6e5631807988004c98))
+* Fix unstable tests (test_trace_in_script, test_callable_alias_no_bad_file_descriptor) ([#6136](https://github.com/xonsh/xonsh/issues/6136)) ([d109112](https://github.com/xonsh/xonsh/commit/d109112f01ff6ced08ff2512e06475df8680212d))
+* Use `python -m xonsh` to run integration tests ([#6140](https://github.com/xonsh/xonsh/issues/6140)) ([1490d0e](https://github.com/xonsh/xonsh/commit/1490d0e0a00bef78dc2867fa66f44f0696266cff))
+* Using dummy history by default in tests ([#6139](https://github.com/xonsh/xonsh/issues/6139)) ([a7516a6](https://github.com/xonsh/xonsh/commit/a7516a69dffb56dda7b2aee6b1073401394b2dd2))
+
+## [0.22.7](https://github.com/xonsh/xonsh/compare/0.22.6...0.22.7) (2026-03-10)
+
+
+### Bug Fixes
+
+* **alias_return_command:** Better error message in case of wrong return ([#6119](https://github.com/xonsh/xonsh/issues/6119)) ([de077f1](https://github.com/xonsh/xonsh/commit/de077f1ff1896a4e201712752ad42436bc7054a8))
+* Fix tests that fail on NixOS ([#6132](https://github.com/xonsh/xonsh/issues/6132)) ([dda0276](https://github.com/xonsh/xonsh/commit/dda0276e99b76c59a74f55ba09f2e0c46edae0ef))
+* **test_environ:** Fix test_environ failing in case of UPDATE_OS_ENVIRON=True globally ([#6120](https://github.com/xonsh/xonsh/issues/6120)) ([99afeb4](https://github.com/xonsh/xonsh/commit/99afeb4248e33f62358878bbeba0b2c35698f83e))
+
+## [0.22.6](https://github.com/xonsh/xonsh/compare/0.22.5...0.22.6) (2026-03-05)
+
+
+### Bug Fixes
+
+* Additional fix of coreutils support for NixOS ([#6117](https://github.com/xonsh/xonsh/issues/6117)) ([a26cd59](https://github.com/xonsh/xonsh/commit/a26cd5900a7c1f86e7520871369a51a5414204c9))
+
+## [0.22.5](https://github.com/xonsh/xonsh/compare/0.22.4...0.22.5) (2026-03-05)
+
+
+### Features
+
+* Added useful command decorators: `[@lines](https://github.com/lines)`, `[@json](https://github.com/json)`, `[@jsonl](https://github.com/jsonl)`, `[@yaml](https://github.com/yaml)` ([#6114](https://github.com/xonsh/xonsh/issues/6114)) ([0f7124e](https://github.com/xonsh/xonsh/commit/0f7124e75751c9b20bc116e206aa19967f538b40))
+
+
+### Bug Fixes
+
+* **completion:** Fix os.path.commonprefix deprecation warning in python3.15 ([#6102](https://github.com/xonsh/xonsh/issues/6102)) ([2b5b2bb](https://github.com/xonsh/xonsh/commit/2b5b2bb226f8d007c85e07a3c945cf78332debba))
+* Increase `@$()` stability and now it is also working in case of `$THREAD_SUBPROCS=False` ([#6112](https://github.com/xonsh/xonsh/issues/6112)) ([a3ac036](https://github.com/xonsh/xonsh/commit/a3ac036171a5f45a400c2695aa2b62d9e01b5dfe))
+* **predictor:** Fix predict_threadable to properly handle symlinks, especially on NixOS ([#6115](https://github.com/xonsh/xonsh/issues/6115)) ([bc01b04](https://github.com/xonsh/xonsh/commit/bc01b04c87a5140a7205677597c78f9a857677c2))
+* **prompt:** Keep original key_bindings in prompt-toolkit shell to easy add new key bindings during session ([#6093](https://github.com/xonsh/xonsh/issues/6093)) ([e9b0aea](https://github.com/xonsh/xonsh/commit/e9b0aeaca8820dafe59fcaced2cc33534f3768e6))
+* replace 12 bare except clauses with except Exception ([#6110](https://github.com/xonsh/xonsh/issues/6110)) ([54b311c](https://github.com/xonsh/xonsh/commit/54b311c454eb0e5e1473f16a6d62870ba2634cd2))
+
+## [0.22.4](https://github.com/xonsh/xonsh/compare/0.22.3...0.22.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* **events:** treat None return from on_transform_command as no-op ([#6097](https://github.com/xonsh/xonsh/issues/6097)) ([39cbf21](https://github.com/xonsh/xonsh/commit/39cbf21458ecb25a7e44c095788613daae02af2c))
+
+## [0.22.3](https://github.com/xonsh/xonsh/compare/0.22.2...0.22.3) (2026-02-04)
+
+
+### Bug Fixes
+
+* **executor:** Fixed issue with running script without ext and shebang ([#6091](https://github.com/xonsh/xonsh/issues/6091)) ([7ba7211](https://github.com/xonsh/xonsh/commit/7ba721170c0865d9fc7030d6cb33138059df1790))
+* **xontrib:** Fix xontrib list iter_paths to handle None spec and locations ([#6085](https://github.com/xonsh/xonsh/issues/6085)) ([262ee6c](https://github.com/xonsh/xonsh/commit/262ee6c9cab6df4a8b5ceb82a0c43d78d45d3d88))
+
+## [0.22.2](https://github.com/xonsh/xonsh/compare/0.22.1...0.22.2) (2026-02-03)
+
+
+### Features
+
+* **builtin:** Added `@.history` as a shortcut to `__xonsh__.history` ([#6056](https://github.com/xonsh/xonsh/issues/6056)) ([809f5cf](https://github.com/xonsh/xonsh/commit/809f5cf1d2257c496db015f8d53341b88e48e404))
+* **environ:** Ability to run xonsh from existing xonsh session but with origin environment ([#6076](https://github.com/xonsh/xonsh/issues/6076)) ([f748bd2](https://github.com/xonsh/xonsh/commit/f748bd2dcc673bce285918382e4240c16f73e28f))
+* **environ:** Added shortcut `xonsh -DVAR` to inherit `VAR` as alternative to `xonsh -DVAR=$VAR` ([#6080](https://github.com/xonsh/xonsh/issues/6080)) ([4c2dc8b](https://github.com/xonsh/xonsh/commit/4c2dc8b474c84bea38cc55bd9a7c885c4dd1496d))
+* **events:** Now `on_envvar_change` event is working for EnvPath variables e.g. PATH. ([#6055](https://github.com/xonsh/xonsh/issues/6055)) ([37bb23a](https://github.com/xonsh/xonsh/commit/37bb23a64bf06996c1a23b44ca1de2b63cef5a4d))
+* **prompt:** Added $XONSH_PROMPT_NEXT_CMD_SUGGESTION to set the text of the next command suggestion ([#6048](https://github.com/xonsh/xonsh/issues/6048)) ([8c8372e](https://github.com/xonsh/xonsh/commit/8c8372ec56de6f39dc3d01d6ec442ab20884915f))
+* **xcontext:** Report current xonsh session executable in `xcontext` ([#6071](https://github.com/xonsh/xonsh/issues/6071)) ([db2b2c3](https://github.com/xonsh/xonsh/commit/db2b2c3cdcd94d552293587000a79ec9dedc0a33))
+
+
+### Bug Fixes
+
+* **docs:** Update ErrorString import handling in cmdhelp.py ([#6054](https://github.com/xonsh/xonsh/issues/6054)) ([4d8d504](https://github.com/xonsh/xonsh/commit/4d8d504419ac09673301592aea6a8dcebae2d867))
+* Fixed `xcontext` error in case `xpip` has complex command ([#6063](https://github.com/xonsh/xonsh/issues/6063)) ([14333a6](https://github.com/xonsh/xonsh/commit/14333a633a9437a38f140515a28745b22745267b))
+* **mamba-installer:** Rename xmamba to xmamba.xsh ([#6059](https://github.com/xonsh/xonsh/issues/6059)) ([82b9210](https://github.com/xonsh/xonsh/commit/82b921062487b60efd08e39f291789dfcddb67b7))
+* prevent stripping r except leading ones of r-strings ([#6030](https://github.com/xonsh/xonsh/issues/6030)) ([8bf34d7](https://github.com/xonsh/xonsh/commit/8bf34d7be54e71a6740c27949cdbe3b766de8bc8))
+* **procs:** Fix ioctl windowsize buffer size to reduce issues in the future python 3.14 ([#6061](https://github.com/xonsh/xonsh/issues/6061)) ([03c2c3d](https://github.com/xonsh/xonsh/commit/03c2c3d1af8193718080b92dfb15dd8abd313d07))
+* Raise an error in case of redirect without command ([#6060](https://github.com/xonsh/xonsh/issues/6060)) ([ba79df1](https://github.com/xonsh/xonsh/commit/ba79df11a25ff7a5e555e9ab442118f3fe7da015))
+* Revert "Fix for completer issue with file name containing backslash" because of a regress ([#6052](https://github.com/xonsh/xonsh/issues/6052)) ([1bfcba6](https://github.com/xonsh/xonsh/commit/1bfcba635745eb122780ccebf87a03baf5a7130b))
+* **startup:** Fix crash on built-in readline, print compatibility message on uv pythons ([#6069](https://github.com/xonsh/xonsh/issues/6069)) ([1e29ee2](https://github.com/xonsh/xonsh/commit/1e29ee2dd6ba3feb831cdfc4c8bd880e2c62a95d))
+
+## [0.22.1](https://github.com/xonsh/xonsh/compare/0.22.0...0.22.1) (2026-01-14)
+
+
+### Features
+
+* Added expanding aliases to `showcmd` command using `-e` argument ([#6041](https://github.com/xonsh/xonsh/issues/6041)) ([5b706d4](https://github.com/xonsh/xonsh/commit/5b706d493e6deb4cd2b6935a56495547b558d083))
+* **prompt:** Added XONSH_PROMPT_NEXT_CMD to set the text of the next command that will be inserted in the next prompt ([#6037](https://github.com/xonsh/xonsh/issues/6037)) ([8a04bad](https://github.com/xonsh/xonsh/commit/8a04bad17ad38848e75c7b7f320111e9399c6c28))
+
+
+### Bug Fixes
+
+* **appimage:** Fixed `xpy` value in `xcontext` in xonsh AppImage ([#6033](https://github.com/xonsh/xonsh/issues/6033)) ([5f27c06](https://github.com/xonsh/xonsh/commit/5f27c06aa3f9423701586252bdbbfce7d34ba6e7))
+* **source-foreign:** Quote pathnames when sourcing a foreign function ([#6014](https://github.com/xonsh/xonsh/issues/6014)) ([818b19a](https://github.com/xonsh/xonsh/commit/818b19a5fac0c1b1407e2f497f37f895c8187534))
+* **xoreutils:** Added KeyboardInterrupt handling in xoreutils yes command ([#6012](https://github.com/xonsh/xonsh/issues/6012)) ([cb71a8d](https://github.com/xonsh/xonsh/commit/cb71a8d06b12fd71d4b1c87f4f9f516802f6e5f1))
+
+
+### Documentation
+
+* add showcmd mention ([54e2898](https://github.com/xonsh/xonsh/commit/54e2898e0847b3c3fbd7f7b28acb525841771e08))
+* Add xonsh install script ([#6046](https://github.com/xonsh/xonsh/issues/6046)) ([d044dc4](https://github.com/xonsh/xonsh/commit/d044dc41cb1711de704855f3ba4b0bb4954660e4))
+* platform guide micro fix ([93dd54e](https://github.com/xonsh/xonsh/commit/93dd54eb06522c83f23a01679b379c4ad4f8d0e4))
+* Refactor xonsh installation process description ([#6029](https://github.com/xonsh/xonsh/issues/6029)) ([3770165](https://github.com/xonsh/xonsh/commit/3770165220f121cb3fa822c5671c51633bfa9033))
+
+## [0.22.0](https://github.com/xonsh/xonsh/compare/0.21.2...0.22.0) (2025-12-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove aliases `ipynb`, `scp-resume` from builtin aliases and rename `xonsh-reset` to `xreset` ([#5992](https://github.com/xonsh/xonsh/issues/5992))
+
+### Features
+
+* added `xpython` and `xсontext` builtin aliases ([#5989](https://github.com/xonsh/xonsh/issues/5989)) ([4382735](https://github.com/xonsh/xonsh/commit/43827358d205855c6c1c68bed138d656f3657bc3))
+* **events:** added `events.handlers()` to get info about registered event handlers and also `events.__repr__` to just `print(events)`. ([#5994](https://github.com/xonsh/xonsh/issues/5994)) ([166a1a6](https://github.com/xonsh/xonsh/commit/166a1a6a826669a24ae5df7a69193fa7bd1604c5))
+
+
+### Bug Fixes
+
+* allow spaces in auto-suggest completions ([#5993](https://github.com/xonsh/xonsh/issues/5993)) ([4332701](https://github.com/xonsh/xonsh/commit/4332701179c06d7a7ce2853043271eb1aa2e3214))
+* docs publish ([#5985](https://github.com/xonsh/xonsh/issues/5985)) ([e666ea9](https://github.com/xonsh/xonsh/commit/e666ea9674d8715bf6e7e6b38f8d2cbfbeb9e284))
+* **history:** Using absolute path to history file to prevent downstream issues ([#6002](https://github.com/xonsh/xonsh/issues/6002)) ([f1501b2](https://github.com/xonsh/xonsh/commit/f1501b257ce8ec40c10006c763321577bf5550fe))
+
+
+### Documentation
+
+* add description and examples for `@.env.register` ([#5990](https://github.com/xonsh/xonsh/issues/5990)) ([9ce5d5d](https://github.com/xonsh/xonsh/commit/9ce5d5d3d58b00b642856f4dc48dbac9b25f63c1))
+* Update tutorial to replace prompt ([#6007](https://github.com/xonsh/xonsh/issues/6007)) ([3260b77](https://github.com/xonsh/xonsh/commit/3260b77ab4d4d8fa2dc5fb61e7509a0a7eaaa9bc))
+* Update xonsh logo in the docs ([#6004](https://github.com/xonsh/xonsh/issues/6004)) ([dbeb276](https://github.com/xonsh/xonsh/commit/dbeb27688bdbbd5efd6ffcc246ce4181df4f66bc))
+
+
+### Code Refactoring
+
+* Remove aliases `ipynb`, `scp-resume` from builtin aliases and rename `xonsh-reset` to `xreset` ([#5992](https://github.com/xonsh/xonsh/issues/5992)) ([df3ff49](https://github.com/xonsh/xonsh/commit/df3ff497e9e73dbc3a1e86c6f14ad7e5e57bccaa))
+
+## [0.21.2](https://github.com/xonsh/xonsh/compare/0.21.1...0.21.2) (2025-12-10)
+
+
+### Bug Fixes
+
+* appimage upload to release ([#5982](https://github.com/xonsh/xonsh/issues/5982)) ([7965b1f](https://github.com/xonsh/xonsh/commit/7965b1ffef2d934484a121a39bf7f789b3c22e0b))
+
+## [0.21.1](https://github.com/xonsh/xonsh/compare/0.21.0...0.21.1) (2025-12-10)
+
+
+### Bug Fixes
+
+* conditional checks for docs deployment ([#5980](https://github.com/xonsh/xonsh/issues/5980)) ([addaffe](https://github.com/xonsh/xonsh/commit/addaffe986e006b9615091d6c7863e618edad5a0))
+
+## [0.21.0](https://github.com/xonsh/xonsh/compare/0.20.0...0.21.0) (2025-12-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* `$AUTO_SUGGEST` is now deprecated in favour of `$XONSH_PROMPT_AUTO_SUGGEST`
+
+### Features
+
+* Added `@` as a global object that provides easy access to `@.env`, `@. lastcmd ` and `@.imp`(inline-imports) ([#5956](https://github.com/xonsh/xonsh/issues/5956)) ([64e3a3c](https://github.com/xonsh/xonsh/commit/64e3a3c467e1b2a42083e5c2dae0dbd9e0910087))
+* added support for multiline shebang (guix fixed) ([#5957](https://github.com/xonsh/xonsh/issues/5957)) ([e9e0055](https://github.com/xonsh/xonsh/commit/e9e0055c6cd5fd867c4268fa311d098e81d2beeb))
+* added support for using a p-string as a context manager to temporarily change the working directory (e.g., with p'~/test'.mkdir().cd(): $[pwd]) ([d9a14c1](https://github.com/xonsh/xonsh/commit/d9a14c1f8c38d3e66c15a9ff39678b3f14893313))
+* allow on_command_not_found handlers to return replacement commands ([#5952](https://github.com/xonsh/xonsh/issues/5952)) ([#5962](https://github.com/xonsh/xonsh/issues/5962)) ([14d9686](https://github.com/xonsh/xonsh/commit/14d9686b3f82d72749700a07b6da9f95c6959308))
+
+
+### Bug Fixes
+
+* allow numerical tokens in environment variable references ([#5891](https://github.com/xonsh/xonsh/issues/5891)) ([9ae6911](https://github.com/xonsh/xonsh/commit/9ae69117c65c305ef2511fe6a66e6965f01d174c))
+* expand `~`(User's home path) in `xonsh.tools.chdir` function ([#5969](https://github.com/xonsh/xonsh/issues/5969)) ([192248a](https://github.com/xonsh/xonsh/commit/192248a0571a8a1dfa57e4bb7ac5fd784cad6a9f))
+* Update tutorial example for piping into an alias ([#5955](https://github.com/xonsh/xonsh/issues/5955)) ([07d4334](https://github.com/xonsh/xonsh/commit/07d43341b981c251049855f04edaa025a4f1b1b7))
+
+
+### Documentation
+
+* Add verification file for ads.fund project ([#5946](https://github.com/xonsh/xonsh/issues/5946)) ([2482f06](https://github.com/xonsh/xonsh/commit/2482f06ef042d8a47f175e1eab45d6af4c9dcd0d))
+* Update tutorial to reduce `${...}` accent ([#5975](https://github.com/xonsh/xonsh/issues/5975)) ([e229ea5](https://github.com/xonsh/xonsh/commit/e229ea555cd53902b3cc72033b6a25111fde6a55))
+
+
+### Code Refactoring
+
+* `$AUTO_SUGGEST` is now deprecated in favour of `$XONSH_PROMPT_AUTO_SUGGEST` ([1e5bda4](https://github.com/xonsh/xonsh/commit/1e5bda4402f4f3257b1aa68b01cb22a8c6c4b485))
+
 ## [0.20.0](https://github.com/xonsh/xonsh/compare/0.19.9...0.20.0) (2025-11-24)
 
 

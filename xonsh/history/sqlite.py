@@ -43,6 +43,9 @@ def _xh_sqlite_create_history_table(cursor):
     """
     if not getattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False):
         cursor.execute(
+            "PRAGMA journal_mode=WAL;"
+        )  # https://github.com/xonsh/xonsh/issues/6096
+        cursor.execute(
             f"""
             CREATE TABLE IF NOT EXISTS {XH_SQLITE_TABLE_NAME}
                  (inp TEXT,

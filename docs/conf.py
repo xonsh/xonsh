@@ -174,7 +174,7 @@ if not on_rtd:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/ascii_conch_part_transparent_tight.png"
+html_logo = "_static/xonsh_terminal_icon_256.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -186,7 +186,7 @@ html_favicon = "_static/magic_conch.ico"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_extra_path = ["_static/robots.txt"]
+html_extra_path = ["_static/robots.txt", "install"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -362,6 +362,8 @@ def setup(app: Sphinx):
     app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")
 
+# To avoid having red highlighting in python/xonshcon blocks.
+suppress_warnings = ["misc.highlighting_failure"]
 
 if __name__ == "__main__":
     # use this to debug the process from IDEs

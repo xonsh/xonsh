@@ -10,7 +10,6 @@ from xonsh.parser import Parser
 from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
-    ON_WINDOWS,
     VER_MAJOR_MINOR,
     nodes_equal,
     skip_if_pre_3_8,
@@ -2319,6 +2318,19 @@ def test_ls_nest_ls_dashl(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls $(ls) -l)", False)
 
 
+@pytest.mark.parametrize(
+    "case",
+    [
+        "![echo a/b$(echo 1)/c]",
+        "![echo $(echo 1)suffix]",
+        "![echo prefix$(echo 1)]",
+        "![echo prefix$(echo 1)suffix]",
+    ],
+)
+def test_dollar_paren_adjacent_text(case, check_xonsh_ast):
+    check_xonsh_ast({}, case, False)
+
+
 def test_ls_envvar_strval(check_xonsh_ast):
     check_xonsh_ast({"WAKKA": "."}, "$(ls $WAKKA)", False)
 
@@ -2639,6 +2651,19 @@ def test_comment_only(check_xonsh_ast):
     check_xonsh_ast({}, "# hello")
 
 
+@pytest.mark.parametrize(
+    "inp",
+    [
+        "echo a#b;c",
+        "echo a#b",
+        "echo x#y;z;w",
+    ],
+)
+def test_parse_hash_in_arg_no_hang(inp, xsh):
+    """Regression test for #5976: parser must not hang on '#' inside arguments."""
+    xsh.execer.compile(inp, mode="single", glbs={}, locs={})
+
+
 def test_echo_slash_question(check_xonsh_ast):
     check_xonsh_ast({}, "![echo /?]", False)
 
@@ -2646,14 +2671,7 @@ def test_echo_slash_question(check_xonsh_ast):
 @pytest.mark.parametrize(
     "case",
     [
-        pytest.param(
-            "[]",
-            marks=pytest.mark.xfail(
-                ON_WINDOWS,
-                reason="non-zero exit code being raised by brackets",
-                strict=True,
-            ),  # TODO: fix this on a windows machine
-        ),
+        "[]",
         "[[]]",
         "[a]",
         "[a][b]",

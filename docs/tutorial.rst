@@ -10,10 +10,10 @@ commands, manipulating the environment, and dealing with the file system
 easy.  The xonsh command prompt gives users interactive access to the xonsh
 language.
 
-While all Python code is also xonsh, not all Bash code can be used in xonsh.
+While all Python code is also xonsh, not all POSIX shell code can be used in xonsh.
 That would defeat the purpose, and Python is better anyway! Still, xonsh is
-Bash-wards compatible in the ways that matter, such as for running commands,
-reading in the Bash environment, and utilizing Bash tab completion.
+compatible with shell commands in the ways that matter, such as for running commands,
+reading the environment, and utilizing tab completion.
 
 The purpose of this tutorial is to teach you xonsh. There are many excellent
 guides out there for learning Python, and this will not join their ranks.
@@ -24,14 +24,14 @@ Let's dive in!
 
 Starting xonsh
 ========================
-Assuming you have successfully installed xonsh (see http://xon.sh),
+Assuming you have successfully installed xonsh,
 you can start up the xonsh interpreter via the ``xonsh`` command. Suppose
 you are in a lesser terminal:
 
 .. code-block:: console
 
     $ xonsh
-    snail@home ~ @
+    snail@home ~ @ █
 
 Now we are in a xonsh shell. Our username happens to be ``snail``, our
 hostname happens to be ``home``, and we are in our home directory (``~``).
@@ -41,97 +41,65 @@ etc) to run xonsh automatically when it starts up. This is recommended.
 Basics
 =======================
 The xonsh language is based on Python, and the xonsh shell uses Python to
-interpret any input it receives. This makes simple things, like arithmetic,
-simple:
-
-.. code-block:: xonshcon
-
-    >>> 1 + 1
-    2
-
-.. note:: From here on we'll be using ``>>>`` to prefix (or prompt) any
-          xonsh input. This follows the Python convention and helps trick
-          syntax highlighting, though ``$`` is more traditional for shells.
-
-Since this is just Python, we are able to import modules, print values,
+interpret any input it receives. This makes simple things simple and
+we are able to install and import modules, operate with values and objects,
 and use other built-in Python functionality:
 
 .. code-block:: xonshcon
 
-    >>> import sys
-    >>> print(sys.version)
-    3.4.2 |Continuum Analytics, Inc.| (default, Oct 21 2014, 17:16:37)
-    [GCC 4.4.7 20120313 (Red Hat 4.4.7-1)]
+    @ 1 + 1
 
+    @ xpip install requests
+    @ import requests
+    @ requests.get("https://xon.sh").status_code
 
-We can also create and use literal data types, such as ints, floats, lists,
-sets, and dictionaries. Everything that you are used to if you already know
-Python is there:
+    @ print(1 if True else 2)
 
-.. code-block:: xonshcon
+    @ for i, x in enumerate('xonsh'):
+          # For easier indentation, Shift+Tab will enter 4 spaces.
+          print(i, x)
 
-    >>> d = {'xonsh': True}
-    >>> d.get('bash', False)
-    False
+    @ def f():
+          return "xonsh"
+      f()
 
-The xonsh shell also supports multi-line input for more advanced flow control.
-The multi-line mode is automatically entered whenever the first line of input
-is not syntactically valid on its own.  Multi-line mode is then exited when
-enter (or return) is pressed when the cursor is in the first column.
+On the other hand, you can execute commands:
 
 .. code-block:: xonshcon
 
-    >>> if True:
-    ...     print(1)
-    ... else:
-    ...     print(2)
-    ...
-    1
+    @ echo hello
+    @ cd $HOME
+    @ id $(whoami) > ~/id.txt
+    @ cat /etc/passwd | grep root
 
-Flow control, of course, includes loops.
+Finally, you can use everything together:
 
 .. code-block:: xonshcon
 
-    >>> for i, x in enumerate('xonsh'):
-    ...     print(i, x)
-    ...
-    0 x
-    1 o
-    2 n
-    3 s
-    4 h
+    @ name = 'snail'
+      echo @(name) > /tmp/@(name)
 
-We can also define and call functions and classes. I'll mostly spare you the
-details, but this *is* pretty cool:
+    @ $PATH.append('/tmp')
 
-.. code-block:: xonshcon
+    @ @.imp.json.loads($(echo '{"a":1}'))
 
-    >>> def f():
-    ...     return "xonsh"
-    ...
-    >>> f()
-    'xonsh'
-
-For easier indentation, Shift+Tab will enter 4 spaces.
-And that about wraps it up for the basics section.  It is just like Python.
+But let's go through everything step by step.
 
 Xonsh Session Interface
 =======================
 
-**New in version 0.21.0
-
-Each session has a special global object `@` that provides instant functionality.
+Each session has a special global object ``@`` that provides instant functionality.
 It gives you access to different parts of the current session.
 For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
 You will learn more about this in the following sections.
 
 .. code-block:: xonshcon
 
-    >>> @
-    <xonsh.built_ins.XonshSessionInterface>
-    >>> @.imp.json.loads('{"conch":"snail"}')
+    @ help(@)
+    Help on XonshSessionInterface in module xonsh.built_ins object: ...
+    @ @.imp.json.loads('{"conch":"snail"}')
     {"conch":"snail"}
-    >>> @.env.get('HOME')
+    @ @.env.get('HOME')
     '/home/snail'
 
 Environment Variables
@@ -141,7 +109,7 @@ Environment variables are written as ``$`` followed by a name.  For example,
 
 .. code-block:: xonshcon
 
-    >>> $HOME
+    @ $HOME
     '/home/snail'
 
 You can set (and export) environment variables like you would set any other
@@ -149,20 +117,20 @@ variable in Python.  The same is true for deleting them too.
 
 .. code-block:: xonshcon
 
-    >>> $GOAL = 'Become the Lord of the Files'
-    >>> print($GOAL)
-    Become the Lord of the Files
-    >>> del $GOAL
+    @ $GOAL = 'Master the shell'
+    @ print($GOAL)
+    Master the shell
+    @ del $GOAL
 
-    >>> $NUM = "123"
-    >>> $EXT = $NUM + "456"
-    >>> $EXT
+    @ $NUM = "123"
+    @ $EXT = $NUM + "456"
+    @ $EXT
     '123456'
-    >>> $FNUM = f"{$NUM}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
-    >>> $FNUM = "{FILLME}456".format(FILLME=$NUM)
-    >>> $FNUM
+    @ $FNUM = f"{$NUM}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
+    @ $FNUM = "{FILLME}456".format(FILLME=$NUM)
+    @ $FNUM
     '123456'
-    >>> "%s456" % $NUM
+    @ "%s456" % $NUM
     '123456'
 
 Very nice.
@@ -177,8 +145,6 @@ The Environment Itself ``@.env``
 --------------------------------
 
 All environment variables live in the built-in ``@.env`` mapping.
-
-(``@.env`` is a replacement for the somewhat ungainly ``${...}`` but code making use of ``${...}`` will still work.)
 You can access this mapping directly, but in most situations, you shouldn’t need to.
 
 If you want for example to check if an environment variable is present in your current
@@ -186,7 +152,7 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
 
 .. code-block:: xonshcon
 
-   >>> 'HOME' in @.env
+   @ 'HOME' in @.env
    True
 
 To get information about a specific environment variable you can use the
@@ -194,20 +160,27 @@ To get information about a specific environment variable you can use the
 
 .. code-block:: xonshcon
 
-   >>> @.env.help('XONSH_DEBUG')
+   @ @.env.help('XONSH_DEBUG')
 
 One helpful method is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
 
 .. code-block:: xonshcon
 
-    >>> with @.env.swap(SOMEVAR='foo'):
-    ...     echo $SOMEVAR
-    ...
+    @ with @.env.swap(SOMEVAR='foo'):
+          echo $SOMEVAR
+
     foo
-    >>> echo $SOMEVAR
+    @ echo $SOMEVAR
     $SOMEVAR
-    >>>
+    @
+
+You can also change the value using preset on the command line:
+
+.. code-block:: xonshcon
+
+    @ $HELLO='snail' xonsh -c 'echo Hello $HELLO'
+    Hello snail
 
 Environment Lookup with ``${<expr>}``
 -------------------------------------
@@ -217,19 +190,16 @@ variable you want to look up.  But what if you want to construct the name
 programmatically, or read it from another variable?  Enter the ``${}``
 operator.
 
-.. warning:: In Bash, ``$NAME`` and ``${NAME}`` are syntactically equivalent.
-             In xonsh, they have separate meanings.
-
 We can place any valid Python expression inside of the curly braces in
 ``${<expr>}``. This result of this expression will then be used to look up a
 value in the environment. Here are a couple of examples in action:
 
 .. code-block:: xonshcon
 
-    >>> x = 'USER'
-    >>> ${x}
+    @ x = 'USER'
+    @ ${x}
     'snail'
-    >>> ${'HO' + 'ME'}
+    @ ${'HO' + 'ME'}
     '/home/snail'
 
 Not bad, xonsh, not bad.
@@ -245,9 +215,7 @@ simple:
 * ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
 
 Futhermore, a number of predefined environment variables listed `here <envvars.html>`_ have a static type.
-For example,
-* ``XONSH_HISTORY_SIZE``: is an int, and
-* ``CASE_SENSITIVE_COMPLETIONS``: is a boolean.
+For example ``XONSH_HISTORY_SIZE`` is an int.
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).
@@ -261,11 +229,11 @@ PATH examples:
 
 .. code-block:: xonshcon
 
-    >>> $PATH
+    @ $PATH
     ['/home/snail/.local/bin', '/home/snail/sandbox/bin',
     '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin',
     '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
-    >>> $LD_LIBRARY_PATH
+    @ $LD_LIBRARY_PATH
     ['/home/snail/.local/lib', '']
 
 Also note that *any* Python object can go into the environment. It is sometimes
@@ -286,56 +254,33 @@ Here is the example of callable environment variable:
 
 .. code-block:: xonshcon
 
-    >>> class Stamp:
-    ...    """Return current date as string representation."""
-    ...    def __repr__(self):
-    ...       from datetime import datetime
-    ...       return str(datetime.now().isoformat())
-    ...
-    ...
-    >>> $DT = Stamp()
-    >>> $DT
+    @ class Stamp:
+         """Return current date as string representation."""
+         def __repr__(self):
+            return @.imp.datetime.datetime.now().isoformat()
+
+
+    @ $DT = Stamp()
+    @ $DT
     2024-11-11T11:11:22
-    >>> echo $DT
+    @ echo $DT
     2024-11-11T11:11:33
-    >>> env | grep DT
+    @ env | grep DT
     DT=2024-11-11T11:11:44
 
+Registering Environment Variables
+---------------------------------
 
-Running Commands
-==============================
-As a shell, xonsh is meant to make running commands easy and fun.
-Running subprocess commands should work like in any other shell.
+You can manually register environment variables to define their type and documentation.
+This is particularly useful for extensions or complex configurations. The documentation provided
+will be shown during tab-completion.
 
-.. code-block:: xonshcon
+.. code-block:: xonsh
 
-    >>> echo "Yoo hoo"
-    Yoo hoo
-    >>> cd xonsh
-    >>> ls
-    build  docs     README.rst  setup.py  xonsh           __pycache__
-    dist   license  scripts     tests     xonsh.egg-info
-    >>> dir scripts
-    xonsh  xonsh.bat
-    >>> git status
-    On branch main
-    Your branch is up-to-date with 'origin/main'.
-    Changes not staged for commit:
-      (use "git add <file>..." to update what will be committed)
-      (use "git checkout -- <file>..." to discard changes in working directory)
+    @.env.register('MY_VAR1', type='int', default=1, doc='Demo variable 1.')
+    @.env.register('MY_VAR2', type='int', default=2, doc='Demo variable 2.')
 
-        modified:   docs/tutorial.rst
-
-    no changes added to commit (use "git add" and/or "git commit -a")
-    >>> exit
-
-This should feel very natural.
-
-.. note::
-
-    Access the last run subprocess command using ``@.lastcmd``;
-    e.g. to get the return code, run ``@.lastcmd.rtn``.
-
+Now, when you type ``$MY_<Tab>``, you will see the description.
 
 Python-mode vs Subprocess-mode
 ================================
@@ -363,18 +308,18 @@ the directories again.
 
 .. code-block:: xonshcon
 
-    >>> # this will be in subproc-mode, because ls doesn't exist
-    >>> ls -l
+    @ # this will be in subproc-mode, because ls doesn't exist
+    @ ls -l
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    >>> # set ls and l variables to force python-mode
-    >>> ls = 44
-    >>> l = 2
-    >>> ls -l
+    @ # set ls and l variables to force python-mode
+    @ ls = 44
+    @ l = 2
+    @ ls -l
     42
-    >>> # deleting ls will return us to subproc-mode
-    >>> del ls
-    >>> ls -l
+    @ # deleting ls will return us to subproc-mode
+    @ del ls
+    @ ls -l
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
@@ -388,8 +333,39 @@ impossible.
           use the formal xonsh subprocess syntax that we will see in the following
           sections. For example: ``![ls -l]``.
 
-Quoting
-=======
+
+Subprocess
+==========
+
+Running Commands
+----------------
+As a shell, xonsh is meant to make running commands easy and fun.
+Running subprocess commands should work like in any other shell.
+
+.. code-block:: xonshcon
+
+    @ echo "Yoo hoo"
+    Yoo hoo
+    @ cd xonsh
+    @ ls
+    build  docs     README.rst  setup.py  xonsh           __pycache__
+    dist   license  scripts     tests     xonsh.egg-info
+    @ dir scripts
+    xonsh  xonsh.bat
+    @ git status
+    On branch main
+    @ exit
+
+This should feel very natural.
+
+.. note::
+
+    Access the last run subprocess command using ``@.lastcmd``;
+    e.g. to get the return code, run ``@.lastcmd.rtn``.
+
+
+Strings and Quoting in Subprocess Mode
+--------------------------------------
 
 Single or double quotes can be used to remove the special meaning
 of certain characters or words to xonsh. If a subprocess command
@@ -398,30 +374,98 @@ must be used to force xonsh to not interpret them.
 
 .. code-block:: xonshcon
 
-    >>> echo ${
-    ...
-    SyntaxError: <xonsh-code>:1:5: ('code: {',)
-    echo ${
-         ^
-    >>> echo '${'
+    @ echo ${
+    SyntaxError
+    @ echo '${'
     ${
 
 .. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\\) in bash.
+             backslash (\\) in POSIX shells.
+
+
+The contents of the string are passed directly to the subprocess command as a
+single argument.  So whenever you are in doubt, or if there is a xonsh syntax
+error because of a filename, just wrap the offending portion in a string.
+
+A common use case for this is files with spaces in their names:
+
+.. code-block:: xonshcon
+
+    @ touch "sp ace"
+    @ ls -l
+    total 0
+    -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+
+By default, the name of an environment variable inside a string will be
+replaced by the contents of that variable (in subprocess mode only).  For
+example:
+
+.. code-block:: xonshcon
+
+    @ print("my home is $HOME")
+    my home is $HOME
+    @ echo "my home is $HOME"
+    my home is /home/snail
+
+You can avoid this expansion within a particular command by forcing the strings
+to be evaluated in Python mode using the ``@()`` syntax:
+
+.. code-block:: xonshcon
+
+    @ echo "my home is $HOME"
+    my home is /home/snail
+    @ echo @("my home is $HOME")
+    my home is $HOME
+
+
+.. note::
+
+    You can also disable environment variable expansion completely by setting
+    ``$EXPAND_ENV_VARS`` to ``False``.
+
+
+For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
+there are extended list of literals:
+
+- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
+- ``r""`` - raw string: unmodified.
+- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
+- ``fr""`` - raw formatted string: brace substitutions.
+- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
+- ``pr""`` - raw Path string: envvar substitutions, returns Path.
+- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
+
+To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
+and make a table that shows how literal changes the string in Python- and subprocess-mode:
+
+.. table::
+
+    ========================  ==========================  =======================  =====================
+         String literal            As python object       print(<String literal>)  echo <String literal>
+    ========================  ==========================  =======================  =====================
+    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
+    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
+    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
+    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
+    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
+    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
+    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
+    ========================  ==========================  =======================  =====================
+
 
 
 Captured Subprocess with ``$()`` and ``!()``
-============================================
+--------------------------------------------
 The ``$(<expr>)`` operator in xonsh executes a subprocess command and
 *captures* some information about that command.
 
 The ``$()`` syntax captures and returns the standard output stream of the
-command as a Python string. This is similar to how ``$()`` performs in Bash.
-For example,
+command as a Python string. For example,
 
 .. code-block:: xonshcon
 
-    >>> $(ls -l)
+    @ $(ls -l)
     'total 0\n-rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh\n'
 
 
@@ -440,7 +484,7 @@ input and output were redirected.  For example:
 
 .. code-block:: xonshcon
 
-    >>> !(ls nonexistent_directory)
+    @ !(ls nonexistent_directory)
     CommandPipeline(
         pid=26968,
         returncode=2,
@@ -459,11 +503,11 @@ read the captured output later:
 
 .. code-block:: xonshcon
 
-    >>> p = !(echo snail)
-    >>> p.output
+    @ p = !(echo snail)
+    @ p.output
     ''
-    >>> p.end()
-    >>> p.output
+    @ p.end()
+    @ p.output
     'snail'
 
 You can force ``xonsh`` to block and wait for the command to complete by asking for the return code,
@@ -471,13 +515,13 @@ printing the object or reading the ``out`` attribute:
 
 .. code-block:: xonshcon
 
-    >>> p = !(echo snail)
-    >>> p.out
+    @ p = !(echo snail)
+    @ p.out
     'snail'
-    >>> p = !(echo party)
-    >>> p.rtn
+    @ p = !(echo party)
+    @ p.rtn
     0
-    >>> p.output
+    @ p.output
     'party'
 
 This object will be "truthy" if its return code was 0, and it is equal (via
@@ -544,14 +588,14 @@ want.
 
 .. code-block:: xonshcon
 
-    >>> x = $(ls -l)
-    >>> print(x.upper())
+    @ x = $(ls -l)
+    @ print(x.upper())
     TOTAL 0
     -RW-RW-R-- 1 SNAIL SNAIL 0 MAR  8 15:46 XONSH
-    >>> y = !(ls -l)
-    >>> print(y.returncode)
+    @ y = !(ls -l)
+    @ print(y.returncode)
     0
-    >>> print(y.rtn)  # alias to returncode
+    @ print(y.rtn)  # alias to returncode
     0
 
 
@@ -563,11 +607,11 @@ or inject Python values with the ``@()`` operator:
 
 .. code-block:: xonshcon
 
-    >>> $(echo $HOME)
+    @ $(echo $HOME)
     '/home/snail'
 
 Threading
-=========
+---------
 
 If you want to work more closely with captured commands, you need to know about threading.
 Xonsh has a threading prediction mechanism that allows it to understand which commands can capture everything.
@@ -585,7 +629,7 @@ If you need to capture the output from an interactive tool that has a capturable
 
 
 Uncaptured Subprocess with ``$[]`` and ``![]``
-===============================================
+----------------------------------------------
 Uncaptured subprocesses are denoted with the ``$[]`` and ``![]`` operators. They are
 the same as ``$()`` captured subprocesses in almost every way. The only
 difference is that the subprocess's stdout passes directly through xonsh and
@@ -596,10 +640,10 @@ printed, and that the return value is not a string.
 
 .. code-block:: xonshcon
 
-    >>> x = $[ls -l]
+    @ x = $[ls -l]
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    >>> x is None
+    @ x is None
     True
 
 The ``![]`` operator is similar to the ``!()`` in that it returns an object
@@ -609,14 +653,14 @@ terminal, and the resulting object is not displayed.  For example
 
 .. code-block:: xonshcon
 
-    >>> x = ![ls -l] and ![echo "hi"]
+    @ x = ![ls -l] and ![echo "hi"]
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
     hi
 
 
 Python Evaluation with ``@()``
-===============================
+------------------------------
 
 The ``@(<expr>)`` operator form works in subprocess mode, and will evaluate
 arbitrary Python code. The result is appended to the subprocess command list.
@@ -629,19 +673,19 @@ result is automatically converted to a string. For example,
 
 .. code-block:: xonshcon
 
-    >>> x = 'xonsh'
-    >>> y = 'party'
-    >>> echo @(x + ' ' + y)
+    @ x = 'xonsh'
+    @ y = 'party'
+    @ echo @(x + ' ' + y)
     xonsh party
-    >>> echo @(2+2)
+    @ echo @(2+2)
     4
-    >>> echo @([42, 'yo'])
+    @ echo @([42, 'yo'])
     42 yo
     echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + " world\n")
     hello world
-    >>> @(['echo', 'hello', 'world'])
+    @ @(['echo', 'hello', 'world'])
     hello world
-    >>> @('echo hello world')  # note that strings are not split automatically
+    @ @('echo hello world')  # note that strings are not split automatically
     xonsh: subprocess mode: command not found: echo hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
@@ -649,10 +693,10 @@ be used to generate any of the tokens in the subprocess command list.
 
 .. code-block:: xonshcon
 
-    >>> out = $(echo @(x + ' ' + y))
-    >>> out
+    @ out = $(echo @(x + ' ' + y))
+    @ out
     'xonsh party'
-    >>> @("ech" + "o") "hey"
+    @ @("ech" + "o") "hey"
     hey
 
 Thus, ``@()`` allows us to create complex commands in Python-mode and then
@@ -668,8 +712,8 @@ arguments, not just as a stand-alone argument. For example:
 
   .. code-block:: xonshcon
 
-    >>> x = 'hello'
-    >>> echo /path/to/@(x)
+    @ x = 'hello'
+    @ echo /path/to/@(x)
     /path/to/hello
 
 When used inside of a subprocess argument and ``<expr>`` evaluates to a
@@ -678,15 +722,15 @@ given values:
 
   .. code-block:: sh
 
-    >>> echo /path/to/@(['hello', 'world'])
+    @ echo /path/to/@(['hello', 'world'])
     /path/to/hello /path/to/world
 
-    >>> echo @(['a', 'b']):@('x', 'y')
+    @ echo @(['a', 'b']):@('x', 'y')
     a:x a:y b:x b:y
 
 
 Command Substitution with ``@$()``
-==================================
+----------------------------------
 
 A common use of the ``@()`` and ``$()`` operators is allowing the output of a
 command to replace the command itself (command substitution):
@@ -697,26 +741,26 @@ Consider the following example:
 
 .. code-block:: xonshcon
 
-    >>> # this returns a string representing stdout
-    >>> $(which ls)
+    @ # this returns a string representing stdout
+    @ $(which ls)
     'ls --color=auto'
 
-    >>> # this attempts to run the command, but as one argument
-    >>> # (looks for 'ls --color=auto' with spaces)
-    >>> @($(which ls))
+    @ # this attempts to run the command, but as one argument
+    @ # (looks for 'ls --color=auto' with spaces)
+    @ @($(which ls))
     xonsh: subprocess mode: command not found: ls --color=auto
 
-    >>> # this actually executes the intended command
-    >>> @([i.strip() for i in $(which ls).split()])
+    @ # this actually executes the intended command
+    @ @([i.strip() for i in $(which ls).split()])
     some_file  some_other_file
 
-    >>> # this does the same thing, but is much more concise
-    >>> @$(which ls)
+    @ # this does the same thing, but is much more concise
+    @ @$(which ls)
     some_file  some_other_file
 
 
 Nesting Subprocesses
-=====================================
+--------------------
 Though I am begging you not to abuse this, it is possible to nest the
 subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
 ``@()``, ``@$()``).  An instance of ``ls -l`` that is on the wrong side of the
@@ -724,7 +768,7 @@ border of the absurd is shown below:
 
 .. code-block:: console
 
-    >>> $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
+    @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
@@ -741,8 +785,8 @@ to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
 .. code-block:: console
 
-    >>> $XONSH_TRACE_SUBPROC = True
-    >>> $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
+    @ $XONSH_TRACE_SUBPROC = True
+    @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     TRACE SUBPROC: (['echo', 'ls'],)
     TRACE SUBPROC: (['which', 'ls'],)
     TRACE SUBPROC: (['printf', 'l'],)
@@ -759,7 +803,7 @@ together commands as you would in other shells.
 
 .. code-block:: xonshcon
 
-    >>> env | uniq | sort | grep PATH
+    @ env | uniq | sort | grep PATH
     DATAPATH=/usr/share/MCNPX/v260/Data/
     DEFAULTS_PATH=/usr/share/gconf/awesome-gnome.default.path
     LD_LIBRARY_PATH=/home/snail/.local/lib:
@@ -773,8 +817,8 @@ Python operator.
 If you are unsure of what pipes are, there are many great references out there.
 You should be able to find information on StackOverflow or Google.
 
-Logical Subprocess And
-=======================
+Logical Subprocess And/Or
+=========================
 
 Subprocess-mode also allows you to use the ``and`` operator to chain together
 subprocess commands. The truth value of a command is evaluated as whether
@@ -784,8 +828,8 @@ For example, suppose we want to lists files that may or may not exist:
 
 .. code-block:: xonshcon
 
-    >>> touch exists
-    >>> ls exists and ls doesnt
+    @ touch exists
+    @ ls exists and ls doesnt
     exists
     /bin/ls: cannot access doesnt: No such file or directory
 
@@ -794,14 +838,11 @@ you would have only seen the error:
 
 .. code-block:: xonshcon
 
-    >>> ls doesnt and ls exists
+    @ ls doesnt and ls exists
     /bin/ls: cannot access doesnt: No such file or directory
 
 Also, don't worry. Xonsh directly translates the ``&&`` operator into ``and``
 for you. It is less Pythonic, of course, but it is your shell!
-
-Logical Subprocess Or
-=======================
 
 Much like with ``and``, you can use the ``or`` operator to chain together
 subprocess commands. The difference, to be certain, is that
@@ -811,7 +852,7 @@ from above:
 
 .. code-block:: xonshcon
 
-    >>> ls exists or ls doesnt
+    @ ls exists or ls doesnt
     exists
 
 This doesn't even try to list a non-existent file!
@@ -820,12 +861,11 @@ you will see the error and then the file that does exist:
 
 .. code-block:: xonshcon
 
-    >>> ls doesnt or ls exists
+    @ ls doesnt or ls exists
     /bin/ls: cannot access doesnt: No such file or directory
     exists
 
-Never fear! Xonsh also directly translates the ``||`` operator into ``or``,
-too. Your muscle memory is safe now, here with us.
+Xonsh also directly translates the ``||`` operator into ``or``, too.
 
 Input/Output Redirection
 ====================================
@@ -833,7 +873,7 @@ Input/Output Redirection
 xonsh also allows you to redirect ``stdin``, ``stdout``, and/or ``stderr``.
 This allows you to control where the output of a command is sent, and where
 it receives its input from.  xonsh has its own syntax for these operations,
-but, for compatibility purposes, xonsh also support Bash-like syntax.
+but, for compatibility purposes, xonsh also support POSIX-like syntax.
 
 The basic operations are "write to" (``>``), "append to" (``>>``), and "read
 from" (``<``).  The details of these are perhaps best explained through
@@ -842,52 +882,43 @@ examples.
 .. note:: The target of the redirection should be separated by a space,
           otherwise xonsh will raise a SyntaxError.
 
-Redirecting ``stdout``
-----------------------
-
-All of the following examples will execute ``COMMAND`` and write its regular
+Redirecting ``stdout``. All of the following examples will execute ``COMMAND`` and write its regular
 output (stdout) to a file called ``output.txt``, creating it if it does not
 exist:
 
 .. code-block:: xonshcon
 
-    >>> COMMAND > output.txt
-    >>> COMMAND out> output.txt
-    >>> COMMAND o> output.txt
-    >>> COMMAND 1> output.txt # included for Bash compatibility
+    @ COMMAND > output.txt
+    @ COMMAND out> output.txt
+    @ COMMAND o> output.txt
+    @ COMMAND 1> output.txt # included for POSIX compatibility
 
 These can be made to append to ``output.txt`` instead of overwriting its contents
 by replacing ``>`` with ``>>`` (note that ``>>`` will still create the file if it
 does not exist).
 
-Redirecting ``stderr``
-----------------------
-
-All of the following examples will execute ``COMMAND`` and write its error
+Redirecting ``stderr``. All of the following examples will execute ``COMMAND`` and write its error
 output (stderr) to a file called ``errors.txt``, creating it if it does not
 exist:
 
 .. code-block:: xonshcon
 
-    >>> COMMAND err> errors.txt
-    >>> COMMAND e> errors.txt
-    >>> COMMAND 2> errors.txt # included for Bash compatibility
+    @ COMMAND err> errors.txt
+    @ COMMAND e> errors.txt
+    @ COMMAND 2> errors.txt # included for POSIX compatibility
 
 As above, replacing ``>`` with ``>>`` will cause the error output to be
 appended to ``errors.txt``, rather than replacing its contents.
 
-Combining Streams
-----------------------
-
-It is possible to send all of ``COMMAND``'s output (both regular output and
+Combining streams is possible to send all of ``COMMAND``'s output (both regular output and
 error output) to the same location.  All of the following examples accomplish
 that task:
 
 .. code-block:: xonshcon
 
-    >>> COMMAND all> combined.txt
-    >>> COMMAND a> combined.txt
-    >>> COMMAND &> combined.txt # included for Bash compatibility
+    @ COMMAND all> combined.txt
+    @ COMMAND a> combined.txt
+    @ COMMAND &> combined.txt # included for POSIX compatibility
 
 It is also possible to explicitly merge stderr into stdout so that error
 messages are reported to the same location as regular output.  You can do this
@@ -895,19 +926,19 @@ with the following syntax:
 
 .. code-block:: xonshcon
 
-    >>> COMMAND err>out
-    >>> COMMAND err>o
-    >>> COMMAND e>out
-    >>> COMMAND e>o
-    >>> COMMAND 2>&1  # included for Bash compatibility
+    @ COMMAND err>out
+    @ COMMAND err>o
+    @ COMMAND e>out
+    @ COMMAND e>o
+    @ COMMAND 2>&1  # included for POSIX compatibility
 
 This merge can be combined with other redirections, including pipes (see the
 section on `Pipes`_ above):
 
 .. code-block:: xonshcon
 
-    >>> COMMAND err>out | COMMAND2
-    >>> COMMAND e>o > combined.txt
+    @ COMMAND err>out | COMMAND2
+    @ COMMAND e>o > combined.txt
 
 It is worth noting that this last example is equivalent to: ``COMMAND a> combined.txt``
 
@@ -915,32 +946,25 @@ Similarly, you can also send stdout to stderr with the following syntax:
 
 .. code-block:: xonshcon
 
-    >>> COMMAND out>err
-    >>> COMMAND out>e
-    >>> COMMAND o>err
-    >>> COMMAND o>e
-    >>> COMMAND 1>&2  # included for Bash compatibility
+    @ COMMAND out>err
+    @ COMMAND out>e
+    @ COMMAND o>err
+    @ COMMAND o>e
+    @ COMMAND 1>&2  # included for POSIX compatibility
 
-Redirecting ``stdin``
----------------------
-
-It is also possible to have a command read its input from a file, rather
+Redirecting ``stdin`` is also possible to have a command read its input from a file, rather
 than from ``stdin``.  The following examples demonstrate two ways to accomplish this:
 
 .. code-block:: xonshcon
 
-    >>> COMMAND < input.txt
-    >>> < input.txt COMMAND
+    @ COMMAND < input.txt
+    @ < input.txt COMMAND
 
-Combining I/O Redirects
-------------------------
-
-It is worth noting that all of these redirections can be combined.  Below is
-one example of a complicated redirect.
+Combining I/O redirects is also possible.  Below is one example of a complicated redirect.
 
 .. code-block:: xonshcon
 
-    >>> COMMAND1 e>o < input.txt | COMMAND2 > output.txt e>> errors.txt
+    @ COMMAND1 e>o < input.txt | COMMAND2 > output.txt e>> errors.txt
 
 This line will run ``COMMAND1`` with the contents of ``input.txt`` fed in on
 stdin, and will pipe all output (stdout and stderr) to ``COMMAND2``; the
@@ -948,8 +972,20 @@ regular output of this command will be redirected to ``output.txt``, and the
 error output will be appended to ``errors.txt``.
 
 
+Job Control
+===========
+
+You can get a listing of all currently running jobs with the ``jobs`` command.
+
+Each job has a unique identifier (starting with 1 and counting upward).  By
+default, the ``fg`` and ``bg`` commands operate on the job that was started
+most recently.  You can bring older jobs to the foreground or background by
+specifying the appropriate ID; for example, ``fg 1`` brings the job with ID 1
+to the foreground. Additionally, specify "+" for the most recent job and "-"
+for the second most recent job.
+
 Background Jobs
-===============
+---------------
 
 Typically, when you start a program running in xonsh, xonsh itself will pause
 and wait for that program to terminate.  Sometimes, though, you may want to
@@ -963,8 +999,8 @@ The following shows an example with ``emacs``.
 
 .. code-block:: xonshcon
 
-    >>> emacs &
-    >>>
+    @ emacs &
+    @
 
 Note that the prompt is returned to you after emacs is started.
 
@@ -973,8 +1009,8 @@ command to continue running after the shell has exited, use the ``disown``
 command which accepts either no arguments (to disown the most recent job)
 or an arbitrary number of job identifiers.
 
-Job Control
-===========
+Foreground Jobs
+---------------
 
 If you start a program in the foreground (with no ampersand), you can suspend
 that program's execution and return to the xonsh prompt by pressing Control-Z.
@@ -982,124 +1018,48 @@ This will give control of the terminal back to xonsh, and will keep the program
 paused in the background.
 
 .. note:: Suspending processes via Control-Z is not yet supported when
-	  running on Windows.
+      running on Windows.
 
 To unpause the program and bring it back to the foreground, you can use the
 ``fg`` command.  To unpause the program have it continue in the background
 (giving you continued access to the xonsh prompt), you can use the ``bg``
 command.
 
-You can get a listing of all currently running jobs with the ``jobs`` command.
 
-Each job has a unique identifier (starting with 1 and counting upward).  By
-default, the ``fg`` and ``bg`` commands operate on the job that was started
-most recently.  You can bring older jobs to the foreground or background by
-specifying the appropriate ID; for example, ``fg 1`` brings the job with ID 1
-to the foreground. Additionally, specify "+" for the most recent job and "-"
-for the second most recent job.
+Filename Globbing
+=================
 
-String Literals in Subprocess-mode
-====================================
-Strings can be used to escape special characters in subprocess-mode. The
-contents of the string are passed directly to the subprocess command as a
-single argument.  So whenever you are in doubt, or if there is a xonsh syntax
-error because of a filename, just wrap the offending portion in a string.
-
-A common use case for this is files with spaces in their names. This
-detestable practice refuses to die. "No problem!" says xonsh, "I have
-strings."  Let's see it go!
-
-.. code-block:: xonshcon
-
-    >>> touch "sp ace"
-    >>> ls -l
-    total 0
-    -rw-rw-r-- 1 snail snail 0 Mar  8 17:50 sp ace
-    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-
-By default, the name of an environment variable inside a string will be
-replaced by the contents of that variable (in subprocess mode only).  For
-example:
-
-.. code-block:: xonshcon
-
-    >>> print("my home is $HOME")
-    my home is $HOME
-    >>> echo "my home is $HOME"
-    my home is /home/snail
-
-You can avoid this expansion within a particular command by forcing the strings
-to be evaluated in Python mode using the ``@()`` syntax:
-
-.. code-block:: xonshcon
-
-    >>> echo "my home is $HOME"
-    my home is /home/snail
-    >>> echo @("my home is $HOME")
-    my home is $HOME
-
-
-.. note::
-
-    You can also disable environment variable expansion completely by setting
-    ``$EXPAND_ENV_VARS`` to ``False``.
-
-Advanced String Literals
-========================
-
-For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
-there are extended list of literals:
-
-- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
-- ``r""`` - raw string: unmodified.
-- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
-- ``fr""`` - raw formatted string: brace substitutions.
-- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
-- ``pr""`` - raw Path string: envvar substitutions, returns Path.
-- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
-
-To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
-and make a table that shows how literal changes the string in Python- and subprocess-mode:
-
-.. table::
-
-    ========================  ==========================  =======================  =====================
-         String literal            As python object       print(<String literal>)  echo <String literal>
-    ========================  ==========================  =======================  =====================
-    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
-    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
-    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
-    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
-    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
-    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
-    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
-    ========================  ==========================  =======================  =====================
-
-Filename Globbing with ``*``
-===============================
+Normal Globbing
+---------------
 Filename globbing with the ``*`` character is also allowed in subprocess-mode.
 This simply uses Python's glob module under-the-covers.  See there for more
 details.  As an example, start with a lovely bunch of xonshs:
 
 .. code-block:: xonshcon
 
-    >>> touch xonsh conch konk quanxh
-    >>> ls
+    @ touch xonsh conch konk quanxh
+    @ ls
     conch  konk  quanxh  xonsh
-    >>> ls *h
+    @ ls *h
     conch  quanxh  xonsh
-    >>> ls *o*
+    @ ls *o*
     conch  konk  xonsh
 
-This is not available in Python-mode because multiplication is pretty
-important.
+In subprocess mode, normal globbing happens without any special syntax.
+However, there is backtick syntax that is available inside Python mode as well as subprocess mode.
+This can be done using ``g````:
 
+.. code-block:: xonshcon
 
-Advanced Path Search with Backticks
-===================================
-
-xonsh offers additional ways to find path names beyond regular globbing, both
-in Python mode and in subprocess mode.
+    @ touch a aa aaa aba abba aab aabb abcba
+    @ ls a*b*
+    aab  aabb  aba  abba  abcba
+    @ ls g`a*b*`
+    aab  aabb  aba  abba  abcba
+    @ print(g`a*b*`)
+    ['aab', 'aabb', 'abba', 'abcba', 'aba']
+    @ len(g`a*b*`)
+    5
 
 Regular Expression Globbing
 ---------------------------
@@ -1117,12 +1077,12 @@ Let's see a demonstration with some simple filenames:
 
 .. code-block:: xonshcon
 
-    >>> touch a aa aaa aba abba aab aabb abcba
-    >>> ls `a(a+|b+)a`
+    @ touch a aa aaa aba abba aab aabb abcba
+    @ ls `a(a+|b+)a`
     aaa  aba  abba
-    >>> print(`a(a+|b+)a`)
+    @ print(`a(a+|b+)a`)
     ['aaa', 'aba', 'abba']
-    >>> len(`a(a+|b+)a`)
+    @ len(`a(a+|b+)a`)
     3
 
 This same kind of search is performed if the backticks are prefaced with ``r``.
@@ -1131,34 +1091,6 @@ So the following expressions are equivalent: ```test``` and ``r`test```.
 Other than the regex matching, this functions in the same way as normal
 globbing.  For more information, please see the documentation for the ``re``
 module in the Python standard library.
-
-.. warning:: In Xonsh, the meaning of backticks is very different from their
-             meaning in Bash.
-             In Bash, backticks mean to run a captured subprocess
-	     (``$()`` in Xonsh).
-
-
-Normal Globbing
----------------
-
-In subprocess mode, normal globbing happens without any special syntax.
-However, the backtick syntax has an additional feature: it is available inside
-of Python mode as well as subprocess mode.
-
-Similarly to regex globbing, normal globbing can be performed (either in Python
-mode or subprocess mode) by using the ``g````:
-
-.. code-block:: xonshcon
-
-    >>> touch a aa aaa aba abba aab aabb abcba
-    >>> ls a*b*
-    aab  aabb  aba  abba  abcba
-    >>> ls g`a*b*`
-    aab  aabb  aba  abba  abcba
-    >>> print(g`a*b*`)
-    ['aab', 'aabb', 'abba', 'abcba', 'aba']
-    >>> len(g`a*b*`)
-    5
 
 
 Formatted Glob Literals
@@ -1170,11 +1102,11 @@ substitute variables and other expressions into the glob pattern:
 
 .. code-block:: xonshcon
 
-    >>> touch a aa aaa aba abba aab aabb abcba
-    >>> mypattern = 'ab'
-    >>> print(f`{mypattern[0]}+`)
+    @ touch a aa aaa aba abba aab aabb abcba
+    @ mypattern = 'ab'
+    @ print(f`{mypattern[0]}+`)
     ['a', 'aa', 'aaa']
-    >>> print(gf`{mypattern}*`)
+    @ print(gf`{mypattern}*`)
     ['aba', 'abba', 'abcba']
 
 
@@ -1192,9 +1124,9 @@ The following example shows the form of these functions:
 
 .. code-block:: xonshcon
 
-    >>> def foo(s):
-    ...     return [i for i in os.listdir('.') if i.startswith(s)]
-    >>> @foo`aa`
+    @ def foo(s):
+          return [i for i in os.listdir('.') if i.startswith(s)]
+    @ @foo`aa`
     ['aa', 'aaa', 'aab', 'aabb']
 
 
@@ -1206,14 +1138,14 @@ return type from a list of strings to a list of :class:`pathlib.Path` objects:
 
 .. code-block:: xonshcon
 
-    >>> p`.*`
+    @ p`.*`
     [Path('foo'), Path('bar')]
-    >>> [x for x in pg`**` if x.is_symlink()]
+    @ [x for x in pg`**` if x.is_symlink()]
     [Path('a_link')]
 
 
 Path Literals
--------------
+=============
 
 Path objects can be instantiated directly using *p-string* syntax. Path objects
 can be converted back to plain strings with `str()`, and this conversion is
@@ -1221,146 +1153,80 @@ handled implicitly in subprocess mode.
 
 .. code-block:: xonshcon
 
-    >>> mypath = p'/foo/bar'
-    >>> mypath
+    @ mypath = p'/foo/bar'
+    @ mypath
     Path('/foo/bar')
-    >>> mypath.stem
+    @ mypath.stem
     'bar'
-    >>> echo @(mypath)
+    @ echo @(mypath)
     /foo/bar
+    @ pwd
+    /home/snail
+
+    @ with p'/tmp'.cd():
+          pwd
+    /tmp
+
+    @ with p'/tmp/newdir'.mkdir(mode=0o777, parents=True, exist_ok=True).cd():
+          pwd
+    /tmp/newdir
+
+    @ p'/tmp/new.txt'.touch().chmod(0o700).write_text('hello')
 
 Path object allows do some tricks with paths. Globbing certain path, checking and getting info:
 
 .. code-block:: xonshcon
 
-    >>> mypath = p'/etc'
-    >>> sorted(mypath.glob('**/*bashrc*'))
-    [Path('/etc/bash.bashrc'), Path('/etc/skel/.bashrc')]
-    >>> [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
+    @ mypath = p'/etc'
+    @ sorted(mypath.glob('**/*xonshrc*'))
+    [Path('/etc/xonsh/xonshrc'), Path('/etc/xonsh/rc.d/xonshrc.xsh')]
+    @ [mypath.exists(), mypath.is_dir(), mypath.is_file(), mypath.parent, mypath.owner()]
     [True, True, False, Path('/'), 'root']
-
-Help & Superhelp with ``?`` & ``??``
-=====================================================
-From IPython, xonsh allows you to inspect objects with question marks.
-A single question mark (``?``) is used to display the normal level of help.
-Double question marks (``??``) are used to display a higher level of help,
-called superhelp. Superhelp usually includes source code if the object was
-written in pure Python.
-
-Let's start by looking at the help for the int type:
-
-.. code-block:: xonshcon
-
-    >>> int?
-    Type:            type
-    String form:     <class 'int'>
-    Init definition: (self, *args, **kwargs)
-    Docstring:
-    int(x=0) -> integer
-    int(x, base=10) -> integer
-
-    Convert a number or string to an integer, or return 0 if no arguments
-    are given.  If x is a number, return x.__int__().  For floating point
-    numbers, this truncates towards zero.
-
-    If x is not a number or if base is given, then x must be a string,
-    bytes, or bytearray instance representing an integer literal in the
-    given base.  The literal can be preceded by '+' or '-' and be surrounded
-    by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
-    Base 0 means to interpret the base from the string as an integer literal.
-    >>> int('0b100', base=0)
-    4
-    <class 'int'>
-
-Now, let's look at the superhelp for the xonsh built-in that enables
-regex globbing:
-
-.. code-block:: xonshcon
-
-    >>> __xonsh__.regexsearch??
-    Type:         function
-    String form:  <function regexsearch at 0x7efc8b367d90>
-    File:         /usr/local/lib/python3.5/dist-packages/xonsh/built_ins.py
-    Definition:   (s)
-    Source:
-    def regexsearch(s):
-        s = expand_path(s)
-        return reglob(s)
-
-
-    <function xonsh.built_ins.regexsearch>
-
-Note that both help and superhelp return the object that they are inspecting.
-This allows you to chain together help inside of other operations and
-ask for help several times in an object hierarchy.  For instance, let's get
-help for both the dict type and its key() method simultaneously:
-
-.. code-block:: xonshcon
-
-    >>> dict?.keys??
-    Type:            type
-    String form:     <class 'dict'>
-    Init definition: (self, *args, **kwargs)
-    Docstring:
-    dict() -> new empty dictionary
-    dict(mapping) -> new dictionary initialized from a mapping object's
-        (key, value) pairs
-    dict(iterable) -> new dictionary initialized as if via:
-        d = {}
-        for k, v in iterable:
-            d[k] = v
-    dict(**kwargs) -> new dictionary initialized with the name=value pairs
-        in the keyword argument list.  For example:  dict(one=1, two=2)
-    Type:        method_descriptor
-    String form: <method 'keys' of 'dict' objects>
-    Docstring:   D.keys() -> a set-like object providing a view on D's keys
-    <method 'keys' of 'dict' objects>
-
-Of course, for subprocess commands, you still want to use the ``man`` command.
-
-
-Compile, Evaluate, & Execute
-================================
-Like Python and Bash, xonsh provides built-in hooks to compile, evaluate,
-and execute strings of xonsh code.  To prevent this functionality from having
-serious name collisions with the Python built-in ``compile()``, ``eval()``,
-and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
-xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()``
-functions. If you don't know what these do, you probably don't need them.
 
 
 Aliases
 =======
 Another important xonsh built-in is the ``aliases`` mapping.  This is
 like a dictionary that affects how subprocess commands are run.  If you are
-familiar with the Bash ``alias`` built-in, this is similar.  Alias command
+familiar with the POSIX shells ``alias`` built-in, this is similar.  Alias command
 matching only occurs for the first element of a subprocess command.
 
+Register an Alias
+-----------------
+
 The keys of ``aliases`` are strings that act as commands in subprocess-mode.
-The values are lists of strings, where the first element is the command, and
-the rest are the arguments.
+The values are:
+
+- A list of strings where the first element is the command and the remaining elements are its arguments.
+- A simple string that is automatically converted into a list using xonsh’s ``Lexer.split()`` method.
+- A string representing a xonsh command that will be converted into an ``ExecAlias`` (details next).
+- A callable that will be used as a callable alias (details next).
 
 .. code-block:: xonshcon
 
-    >>> aliases['ls']
+    @ aliases['ls']
     ['ls', '--color=auto', '-v']
 
-You can also set the value to a string. If the string is a xonsh expression,
-it will be converted to a list automatically with xonsh's ``Lexer.split()`` method.
-For example, the following creates several aliases for the ``git`` version
-control software. Both styles (list of strings and single string) are shown:
+    @ aliases['e'] = 'echo echo'
+    @ aliases['ll'] = ['ls', '-la']
 
-.. code-block:: xonshcon
-
-    >>> aliases['g'] = 'git status -sb'
-    >>> aliases['gco'] = 'git checkout'
-    >>> aliases['gp'] = ['git', 'pull']
+    @ aliases |= {
+        'g':   'git status -sb',
+        'gp':  ['git', 'pull'],
+        'gco': 'git checkout',
+      }
 
 If you were to run ``gco feature-fabulous`` with the above aliases in effect,
 the command would reduce to ``['git', 'checkout', 'feature-fabulous']`` before
 being executed.
 
-Alias to modify command
+Removing an alias is as easy as deleting the key from the alias dictionary:
+
+.. code-block:: xonshcon
+
+    @ del aliases['banana']
+
+Alias to Modify Command
 -----------------------
 
 The best way to modify command on the fly is to use alias that returns modified command.
@@ -1368,14 +1234,14 @@ One of the most interesting application is expanding an alias:
 
 .. code-block:: xonshcon
 
-    >>> @aliases.register
-    ... @aliases.return_command
-    ... def _xsudo(args):
-    ...     """Sudo with expanding aliases."""
-    ...     return ['sudo', '--', *aliases.eval_alias(args)]
-    ...
-    >>> aliases['install'] = "apt install cowsay"
-    >>> xsudo install
+    @ @aliases.register
+      @aliases.return_command
+      def _xsudo(args):
+          """Sudo with expanding aliases."""
+          return ['sudo', '--', *aliases.eval_alias(args)]
+
+    @ aliases['install'] = "apt install cowsay"
+    @ xsudo install
     # Password:
     # Install cowsay
 
@@ -1383,53 +1249,104 @@ Or implement logic to run the right command:
 
 .. code-block:: xonshcon
 
-    >>> @aliases.register
-    ... @aliases.return_command
-    ... def _vi(args):
-    ...     """Universal vi editor."""
-    ...     if $(which vim 2>/dev/null):
-    ...         return ['vim'] + args
-    ...     else:
-    ...         return ['vi'] + args
-    ...
-    >>> vi file
+    @ @aliases.register
+      @aliases.return_command
+      def _vi(args):
+          """Universal vi editor."""
+          if $(which vim 2>/dev/null):
+              return ['vim'] + args
+          else:
+              return ['vi'] + args
 
+    @ vi file
+
+
+Callable Aliases
+================
+
+Basic Callable Alias
+--------------------
+
+A callable alias is a function (or callable object) with a specific signature that can be used as a subprocess, either directly or when registered as an alias.
+
+Using directly with Python evaluation via ``@()``:
+
+.. code-block:: xonshcon
+
+    @ def mybox():
+         print('apple')
+         echo 'banana'
+
+    @ @(mybox) | grep ba
+    banana
+
+Register callable as an alias:
+
+.. code-block:: python
+
+    @ @aliases.register('mybox')
+      def _mybox():
+         print('apple')
+         echo 'banana'
+
+    @ mybox | grep ba
+    banana
+
+    @ aliases['hello'] = lambda: print(f'Hello world')
+      hello
+    Hello world
 
 ExecAlias
 ---------
 
 If the string is representing a block of xonsh code, the alias will be registered
-as an ``ExecAlias``, which is a callable alias. This block of code will then be
+as an ``ExecAlias``, which is a callable alias under the hood. This block of code will then be
 executed whenever the alias is run. The arguments are available in the list ``$args``
 or by the index in ``$arg<n>`` environment variables.
 
 .. code-block:: xonshcon
 
-    >>> aliases['answer'] = 'echo @(21+21)'
-    >>> aliases['piu'] = 'pip install -U @($args)'
-    >>> aliases['cdls'] = 'cd $arg0 && ls'
+    @ aliases |= {
+        'answer': 'echo @(21+21)',
+        'piu':    'pip install -U @($args)',
+        'cdls':   'cd $arg0 && ls',
+      }
 
-.. warning:: You need to add ``@($args)`` manually if you need arguments.
+You need to add ``@($args)`` manually if you need arguments in ExecAlias:
 
 .. code-block:: xonshcon
 
-    >>> aliases['careful'] = 'echo @("all args will be ignored")'
-    >>> aliases['better'] = 'echo @("the arguments are: ") @($args)'
+    @ aliases |= {
+        'noargs': 'echo @("all args will be ignored")',
+        'args':  'echo @("the arguments are:") @($args)',
+      }
+    @ noargs 1 2 3
+    all args will be ignored
+    @ args 1 2 3
+    the arguments are: 1 2 3
 
-.. note::
+These three definitions are equal:
 
-   To add multiple aliases there is merge operator: ``aliases |= {'e': 'echo', 'g': 'git'}``.
+.. code-block:: xonshcon
+
+    @ @aliases.register
+      def _answer():
+          echo @(21+21)
+
+    @ aliases['answer'] = lambda: $[echo @(21+21)]
+
+    @ aliases['answer'] = 'echo @(21+21)'
 
 
-Callable Aliases
-----------------
-Lastly, if an alias value is a function (or other callable), then this
-function is called *instead* of going to a subprocess command. Such functions
-may have one of the following signatures:
+Callable Aliases Signature
+--------------------------
+
+A callable alias function can accept a list of arguments for any purpose:
 
 .. code-block:: python
 
-    def mycmd0():
+    @aliases.register
+    def _mycmd0():
         """This form takes no arguments but may return output or a return code.
         """
         # The return value of the function can either be None,
@@ -1459,22 +1376,19 @@ may have one of the following signatures:
         # aliases to support piping.
         print('I go to stdout and will be printed or piped')
 
-        # Note: that you have access to the xonsh
-        # built-ins if you 'import builtins'.  For example, if you need the
-        # environment, you could do the following:
-        import builtins
-        env = builtins.__xonsh__.env
 
-    def mycmd1(args):
+    @aliases.register
+    def _mycmd1(args):
         """This form takes a single argument, args. This is a list of strings
         representing the arguments to this command. Feel free to parse them
         however you wish!
         """
         # perform some action.
-        print(f"arg count: {len(args)}")
+        print(f"args: {args!r}")
         return 0
 
-    def mycmd2(args, stdin=None):
+    @aliases.register
+    def _mycmd2(args, stdin=None):
         """This form takes two arguments. The args list like above, as a well
         as standard input. stdin will be a file like object that the command
         can read from, if the user piped input to this command. If no input
@@ -1485,18 +1399,20 @@ may have one of the following signatures:
         for line in stdin.readlines():
             print(line.strip().upper() + '!')
 
-    def mycmd3(args, stdin=None, stdout=None):
+    @aliases.register
+    def _mycmd3(args, stdin=None, stdout=None):
         """This form has three parameters.  The first two are the same as above.
         The last argument represents the standard output.  This is a file-like
         object that the command may write too.
         """
         # you can either use stdout
-        stdout.write("Hello, ")
+        stdout.write("Hello ")
         # or print()!
-        print("Mom!")
+        print("world!")
         return
 
-    def mycmd4(args, stdin=None, stdout=None, stderr=None):
+    @aliases.register
+    def _mycmd4(args, stdin=None, stdout=None, stderr=None):
         """The next form of subprocess callables takes all of the
         arguments shown above as well as the standard error stream.
         As with stdout, this is a write-only file-like object.
@@ -1510,7 +1426,8 @@ may have one of the following signatures:
 
         return 0
 
-    def mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
+    @aliases.register
+    def _mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
         """This form of subprocess callables takes all of the
         arguments shown above as well as a subprocess specification
         SubprocSpec object. This holds many attributes that dictate how
@@ -1526,7 +1443,8 @@ may have one of the following signatures:
             print("Hello terminal!")
         return 0
 
-    def mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    @aliases.register
+    def _mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
         """Lastly, the final form of subprocess callables takes a stack argument
         in addition to the arguments shown above. The stack is a list of
         FrameInfo namedtuple objects, as described in the standard library
@@ -1545,67 +1463,62 @@ may have one of the following signatures:
         return 0
 
 
-Adding, Modifying, and Removing Aliases
----------------------------------------
-
-We can dynamically alter the aliases present simply by modifying the
-built-in mapping.  Here is an example using a function value:
-
-.. code-block:: xonshcon
-
-    >>> def _banana(args, stdin=None):
-    ...     return ('My spoon is tooo big!', None)
-    >>> aliases['banana'] = _banana
-    >>> banana
-    'My spoon is tooo big!'
-
-
-To redefine an alias, simply assign a new function, here using a python lambda
-with keyword arguments:
-
-.. code-block:: xonshcon
-
-    >>> aliases['banana'] = lambda: "Banana for scale.\n"
-    >>> banana
-    Banana for scale.
-
-
-Removing an alias is as easy as deleting the key from the alias dictionary:
-
-.. code-block:: xonshcon
-
-    >>> del aliases['banana']
-
-.. note::
-
-   Alias functions should generally be defined with a leading underscore.
-   Otherwise, they may shadow the alias itself, as Python variables take
-   precedence over aliases when xonsh executes commands.
-
-Callable alias and capturing
+Callable Alias and Capturing
 ----------------------------
 
-Callable aliases tend to be capturable. Only the explicitly denoted uncaptured subprocess
-operator ``$[]`` is uncapturable, and the subprocess's stdout passes directly
-through xonsh to the screen.
+Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess
+operator ``$[]`` are uncapturable, and the subprocess's stdout passes directly through Xonsh to the screen.
 
 .. code-block:: xonshcon
 
-    >>> @aliases.register('hunter')
-    ... def _hunter():
-    ...     print('catch me')
-    ...     echo if  # The same as `![echo if]`
-    ...     $[echo you]
-    ...     ![echo can]
-    >>> hunter
-    catch me
-    if
-    you
-    can
+    @ @aliases.register
+      def _printer(args, stdin, stdout, stderr):
+          """Ultimate printer."""
 
-    >>> $(hunter)
-    you
-    'catch me\nif\ncan\n'
+          print("print out")
+          print("print err", file=@.imp.sys.stderr)
+
+          print("print out alias stdout", file=stdout)
+          print("print err alias stderr", file=stderr)
+
+          echo @("echo out")
+          echo @("echo err") o>e
+
+          $(echo @("$() echo out"))
+          $(echo @("$() echo err") o>e)
+
+          !(echo @("!() echo out"))
+          !(echo @("!() echo err") o>e)
+
+          ![echo @("![] echo out")]
+          ![echo @("![] echo err") o>e]
+
+          $[echo @("$[] echo out")]
+          $[echo @("$[] echo err") o>e]
+
+          execx('echo "execx echo out"')
+          execx('echo "execx echo err" o>e')
+
+    @ $(printer)
+    print err
+    print err alias stderr
+    echo err
+    $() echo err
+    ![] echo err
+    $[] echo out
+    $[] echo err
+    execx echo err
+    'print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n'
+
+    @ !(printer)
+    $() echo err
+    $[] echo out
+    $[] echo err
+    CommandPipeline(
+      returncode=0,
+      output='print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n',
+      errors='print err\necho err\nprint err alias stderr\n![] echo err\nexecx echo err\n'
+    )
 
 Anonymous Aliases
 -----------------
@@ -1614,9 +1527,9 @@ as aliases, by wrapping them in ``@()``.  For example:
 
 .. code-block:: xonshcon
 
-    >>> @(_banana)
+    @ @(_banana)
     'My spoon is tooo big!'
-    >>> echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + ' ' + args[0] + '\n') world
+    @ echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + ' ' + args[0] + '\n') world
     hello world
 
 
@@ -1632,11 +1545,11 @@ function with the ``xonsh.tools.unthreadable`` decorator.
 
     from xonsh.tools import unthreadable
 
+    @aliases.register
     @unthreadable
     def _mycmd(args, stdin=None):
         return 'In your face!'
 
-    aliases['mycmd'] = _mycmd
 
 Uncapturable Aliases
 -----------------------
@@ -1654,60 +1567,59 @@ best used in conjunction with the ``unthreadable`` decorator.  For example:
 
     from xonsh.tools import unthreadable, uncapturable
 
+    @aliases.register
     @uncapturable
     @unthreadable
     def _binvi(args, stdin=None):
         vi -b @(args)  # Edit binary files
 
-    aliases['bvi'] = _binvi
-
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
-Decorator Aliases
------------------
-
-Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
-convert subprocess command output into Python object:
+Command Decorators (Decorator Aliases)
+--------------------------------------
+In xonsh you can decorate the command to transform output into desired object:
 
 .. code-block:: xonshcon
 
-    import json, pathlib, yaml
+    @ $(@lines ls /)
+    ['bin', 'etc', 'home']
+
+    @ showcmd echo prefix/$(@lines ls /)
+    ['echo', 'prefix/bin', 'prefix/etc', 'prefix/home']
+
+    @ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
+    main
+
+    @ $(@jsonl echo '{"a":1}\n{"b":2}')
+    [{'a': 1}, {'b': 2}]
+
+    @ $(@yaml echo 'a: 1')
+    {'a': 1}
+
+See the full list of command decorators in Aliases article or build the new one.
+
+Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
+convert subprocess command output into Python object with your own logic:
+
+.. code-block:: xonshcon
+
     from xonsh.procs.specs import SpecAttrDecoratorAlias
 
-    aliases['@lines'] = SpecAttrDecoratorAlias({"output_format": 'list_lines'},
-                                               "Set `list_lines` output format.")
-    aliases['@json'] = SpecAttrDecoratorAlias({"output_format": lambda lines: json.loads('\n'.join(lines))},
-                                               "Set `json` output format.")
-    aliases['@path'] = SpecAttrDecoratorAlias({"output_format": lambda lines: pathlib.Path(':'.join(lines))},
-                                               "Set `path` output format.")
-    aliases['@yaml'] = SpecAttrDecoratorAlias({"output_format": lambda lines: yaml.safe_load('\n'.join(lines))},
-                                               "Set `yaml` output format.")
-    aliases['@noerr'] = SpecAttrDecoratorAlias({"raise_subproc_error": False},
-                                               "Set `raise_subproc_error` to False.")
+    aliases['@path'] = SpecAttrDecoratorAlias(
+                        {"output_format": lambda lines: @.imp.pathlib.Path(':'.join(lines))},
+                        "Set `path` output format.")
+    aliases['@noerr'] = SpecAttrDecoratorAlias(
+                          {"raise_subproc_error": False},
+                          "Set `raise_subproc_error` to False.")
 
 
 Now you can run:
 
 .. code-block:: xonshcon
 
-    $(@lines ls /)
-    # ['/bin', '/etc', '/home']
-
-    $(echo '{}' | @json head -n 1)['answer']
-    # 42
-
-    j = $(@json echo '{"answer":42}')
-    j['answer']
-    # 42
-
-    $(@path which xonsh)
-    # Path('/path/to/xonsh')
-
-    aliases['ydig'] = '@yaml dig +yaml'
-    y = $(ydig google.com)
-    y[0]['type']
-    # 'MESSAGE'
+    @ $(@path which xonsh)
+    Path('/path/to/xonsh')
 
 
 -------------
@@ -1721,17 +1633,20 @@ with Python and subprocess.
              must happen outside if xonsh, i.e. in the process that starts xonsh.
 
 
-Up, Down, Tab
-==============
-The up and down keys search history matching from the start of the line,
-much like they do in the IPython shell.
+
+Prompt
+======
+
+Up, Down, Tab Completion
+------------------------
+The up and down keys search history matching from the start of the line.
 
 Tab completion is present as well. By default, in Python-mode you are able to
 complete based on the variable names in the current builtins, globals, and
 locals, as well as xonsh languages keywords & operator, files & directories,
 and environment variable names. In subprocess-mode, you additionally complete
-on the names of executable files on your ``$PATH``, alias keys, and full Bash
-completion for the commands themselves.
+on the names of executable files on your ``$PATH``, alias keys, and various
+additional completers.
 
 xonsh also provides a means of modifying the behavior of the tab completer.  More
 detail is available on the `Tab Completion page <tutorial_completers.html>`_.
@@ -1739,7 +1654,8 @@ detail is available on the `Tab Completion page <tutorial_completers.html>`_.
 .. _customprompt:
 
 Customizing the Prompt
-======================
+----------------------
+
 Customizing the prompt by modifying ``$PROMPT``, ``$RIGHT_PROMPT`` or ``$BOTTOM_TOOLBAR``
 is probably the most common reason for altering an environment variable.
 
@@ -1753,7 +1669,7 @@ which will be replaced automatically:
 
 .. code-block:: xonshcon
 
-    >>> $PROMPT = '{user}@{hostname}:{cwd} @ '
+    @ $PROMPT = '{user}@{hostname}:{cwd} @ '
     snail@home:~ @ # it works!
     snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
     snail@home:~ @> # so does that!
@@ -1764,42 +1680,42 @@ By default, the following variables are available for use:
 
   -- remove these extra variables and set the attribute on the field itself
 
-  * ``user``: The username of the current user
-  * ``hostname``: The name of the host computer
-  * ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
-    set a maximum width for this variable and ``$DYNAMIC_CWD_ELISION_CHAR`` to
-    set the character used in shortened path.
-  * ``short_cwd``: A shortened form of the current working directory; e.g.,
-    ``/path/to/xonsh`` becomes ``/p/t/xonsh``
-  * ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/`` in
-    ``/path/to/xonsh``.
-  * ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
-    ``/path/to/xonsh``.
-  * ``env_name``: The name of active virtual environment, if any. The rendering
-    of this variable is affected by the ``$VIRTUAL_ENV_PROMPT`` and
-    ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variables; see below.
-  * ``env_prefix``: The prefix characters if there is an active virtual environment,
-    defaults to ``"("``.
-  * ``env_postfix``: The postfix characters if there is an active virtual environment,
-    defaults to ``") "``.
-  * ``curr_branch``: The name of the current git branch, if any.
-  * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
-    otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
-    determined.
-  * ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
-    instead.
-  * ``prompt_end``: ``#`` if the user has root/admin permissions ``@`` otherwise
-  * ``current_job``: The name of the command currently running in the
-    foreground, if any.
-  * ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
-    current working directory on some linux terminals. This is not usually needed.
-  * ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
-    may refer :py:mod:`xonsh.prompt.gitstatus` for customization options.
-  * ``localtime``: The current, local time as given by ``time.localtime()``.
-    This is formatted with the time format string found in ``time_format``.
-  * ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
-  * ``last_return_code``: The return code of the last issued command.
-  * ``last_return_code_if_nonzero``: The return code of the last issued command if it is non-zero, otherwise ``None``. This is useful for only printing the code in case of errors.
+* ``user``: The username of the current user
+* ``hostname``: The name of the host computer
+* ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
+  set a maximum width for this variable and ``$DYNAMIC_CWD_ELISION_CHAR`` to
+  set the character used in shortened path.
+* ``short_cwd``: A shortened form of the current working directory; e.g.,
+  ``/path/to/xonsh`` becomes ``/p/t/xonsh``
+* ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/`` in
+  ``/path/to/xonsh``.
+* ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
+  ``/path/to/xonsh``.
+* ``env_name``: The name of active virtual environment, if any. The rendering
+  of this variable is affected by the ``$VIRTUAL_ENV_PROMPT`` and
+  ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variables; see below.
+* ``env_prefix``: The prefix characters if there is an active virtual environment,
+  defaults to ``"("``.
+* ``env_postfix``: The postfix characters if there is an active virtual environment,
+  defaults to ``") "``.
+* ``curr_branch``: The name of the current git branch, if any.
+* ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
+  otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
+  determined.
+* ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
+  instead.
+* ``prompt_end``: ``#`` if the user has root/admin permissions ``@`` otherwise
+* ``current_job``: The name of the command currently running in the
+  foreground, if any.
+* ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
+  current working directory on some linux terminals. This is not usually needed.
+* ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
+  may refer :py:mod:`xonsh.prompt.gitstatus` for customization options.
+* ``localtime``: The current, local time as given by ``time.localtime()``.
+  This is formatted with the time format string found in ``time_format``.
+* ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
+* ``last_return_code``: The return code of the last issued command.
+* ``last_return_code_if_nonzero``: The return code of the last issued command if it is non-zero, otherwise ``None``. This is useful for only printing the code in case of errors.
 
 .. note:: See the section below on ``PROMPT_FIELDS`` for more information on changing.
 
@@ -1821,14 +1737,17 @@ For example:
 
 .. code-block:: xonshcon
 
-    >>> $PROMPT = '{env_name}>>> '
-    >>> source env/bin/activate.xsh
-    (env) >>> $VIRTUAL_ENV_PROMPT = '~~ACTIVE~~ '
-    ~~ACTIVE~~ >>> $VIRTUAL_ENV_DISABLE_PROMPT = 1
-    >>> del $VIRTUAL_ENV_PROMPT
-    >>> del $VIRTUAL_ENV_DISABLE_PROMPT
-    (env) >>>
+    @ $PROMPT = '{env_name}@ '
+    @ source env/bin/activate.xsh
+    (env) @ $VIRTUAL_ENV_PROMPT = '~~ACTIVE~~ '
+    ~~ACTIVE~~ @ $VIRTUAL_ENV_DISABLE_PROMPT = 1
+    @ del $VIRTUAL_ENV_PROMPT
+    @ del $VIRTUAL_ENV_DISABLE_PROMPT
+    (env) @
 
+
+Colors
+------
 
 You can also color your prompt (or print colored messages using ``print_color`` function) easily by inserting
 keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown below:
@@ -1895,6 +1814,9 @@ keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown bel
 * Or any other combination of modifiers, such as
   ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
   can use!
+
+Additional Prompt Variables
+---------------------------
 
 You can make use of additional variables beyond these by adding them to the
 ``PROMPT_FIELDS`` environment variable. The values in this dictionary should
@@ -2059,24 +1981,65 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
 
 Additionally, if the script should exit if a command fails, set the
 environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
-file. Errors in Python mode will already raise exceptions and so this
-is roughly equivalent to Bash's ``set -e``.
+file. Errors in Python mode will already raise exceptions.
 
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivalent to
-Bash's ``set -x`` or Python's ``python -m trace``, but you know, better.
+Python's ``python -m trace``.
 
 Importing Xonsh (``*.xsh``)
 ==============================
 You can import xonsh source files with the ``*.xsh`` file extension using
-the normal Python syntax.  Say you had a file called ``mine.xsh``, you could,
-therefore, perform a Bash-like source into your current shell with the
-following:
+the normal Python syntax:
 
 .. code-block:: xonshcon
 
     from mine import *
 
+Compile, Evaluate, & Execute
+================================
+Xonsh provides built-in hooks to compile, evaluate,
+and execute strings of xonsh code.  To prevent this functionality from having
+serious name collisions with the Python built-in ``compile()``, ``eval()``,
+and ``exec()`` functions, the xonsh equivalents all append an 'x'.  So for
+xonsh code you want to use the ``compilex()``, ``evalx()``, and ``execx()``
+functions. If you don't know what these do, you probably don't need them.
+
+
+Help & Superhelp with ``?`` & ``??``
+=====================================================
+Xonsh allows you to inspect objects with question marks.
+A single question mark (``?``) is used to display the normal level of help.
+Double question marks (``??``) are used to display a higher level of help,
+called superhelp. Superhelp usually includes source code if the object was
+written in pure Python.
+
+.. code-block:: xonshcon
+
+    @ int?
+    Convert a number or string to an integer, or return 0 if no arguments
+    are given.  If x is a number, return x.__int__().  For floating point
+    numbers, this truncates towards zero.
+
+    @ @.imp.json.loads??
+    def loads(s, *, cls=None, object_hook=None, parse_float=None,
+        parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
+
+    @ @.imp.json?.loads?
+    <json help>
+    <json.loads help>
+
+It works for subprocess commands as well:
+
+.. code-block:: xonshcon
+
+    @ whoami?
+    whoami - print effective user name
+    @ ls?
+    ['ls', '-G']
+    @ xonfig?
+    <xonsh.xonfig.XonfigAlias>
+    Manage xonsh configuration.
 
 That's All, Folks
 ======================
@@ -2085,7 +2048,7 @@ On Windows, you can also type ``Ctrl-Z``.
 
 .. code-block:: xonshcon
 
-    >>> exit
+    @ exit
 
 To exit from the xonsh script just call the ``exit(code)`` function.
 

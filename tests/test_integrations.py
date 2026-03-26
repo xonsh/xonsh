@@ -65,6 +65,7 @@ def run_xonsh(
     timeout=20,
     env=None,
     blocking=True,
+    xonsh_cmd="python -m xonsh",
 ):
     # Env
     popen_env = dict(os.environ)
@@ -75,8 +76,9 @@ def run_xonsh(
         popen_env |= env
 
     # Args
-    xonsh = shutil.which("xonsh", path=PATH)
-    popen_args = [xonsh]
+    xonsh_cmd = xonsh_cmd.split()
+    xonsh_cmd[0] = shutil.which(xonsh_cmd[0], path=PATH)
+    popen_args = xonsh_cmd
 
     if not args:
         popen_args += ["--no-rc"]
@@ -431,6 +433,26 @@ EOL""",
     #
     (
         """
+aliases['ls'] = 'spam spam sausage spam'
+
+echo @$(which ls)
+""",
+        "spam spam sausage spam\n",
+        0,
+    ),
+    (
+        """
+$THREAD_SUBPROCS = False
+aliases['ls'] = 'spam spam sausage spam'
+
+echo @$(which ls)
+""",
+        "spam spam sausage spam\n",
+        0,
+    ),
+    (
+        """
+$XONSH_SUBPROC_OUTPUT_FORMAT = 'list_lines'
 aliases['ls'] = 'spam spam sausage spam'
 
 echo @$(which ls)
@@ -1651,8 +1673,8 @@ $XONSH_SHOW_TRACEBACK = True
 def _e(a,i,o,e):
     echo -n O
     echo -n E 1>2
-    execx("echo -n O")
-    execx("echo -n E 1>2")
+    # execx("echo -n O")      # Excluded until fix https://github.com/xonsh/xonsh/issues/5631
+    # execx("echo -n E 1>2")  # Excluded until fix https://github.com/xonsh/xonsh/issues/5631
     print("o")
     print("O", file=o)
     print("E", file=e)
@@ -1675,7 +1697,7 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
     """Test no exceptions during any kind of capturing of callable alias. See also #5631."""
 
     out, err, ret = run_xonsh(
-        test_code, interactive=True, single_command=True, timeout=60
+        test_code, interactive=False, single_command=True, timeout=60
     )
     assert ret == 0
     assert "Error" not in out

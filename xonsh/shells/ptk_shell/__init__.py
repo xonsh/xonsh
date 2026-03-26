@@ -8,7 +8,7 @@ from types import MethodType
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, Suggestion
 from prompt_toolkit.clipboard import InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
@@ -55,7 +55,17 @@ events.doc(
     """
 on_ptk_create(prompter: PromptSession, history: PromptToolkitHistory, completer: PromptToolkitCompleter, bindings: KeyBindings) ->
 
-Fired after prompt toolkit has been initialized
+Fired after prompt toolkit has been initialized. Use this event in xonsh RC file.
+
+.. code-block:: python
+
+    # ~/.xonshrc
+    @events.on_ptk_create
+    def _custom_keybindings(bindings, **kw):
+        @bindings.add(@.imp.prompt_toolkit.keys.Keys.ControlW)
+        def say_hi(event):
+            event.current_buffer.insert_text('hi')
+
 """,
 )
 
@@ -221,9 +231,18 @@ class PromptToolkitShell(BaseShell):
         )
         # Goes at the end, since _MergedKeyBindings objects do not have
         # an add() function, which is necessary for on_ptk_create events
-        self.key_bindings = merge_key_bindings(
+        self._key_bindings_merge = merge_key_bindings(
             [self.key_bindings, load_emacs_shift_selection_bindings()]
         )
+
+        def handler_before_render(app):
+            if not app.current_buffer.text and (
+                suggestion := XSH.env.get("XONSH_PROMPT_NEXT_CMD_SUGGESTION")
+            ):
+                app.current_buffer.suggestion = Suggestion(suggestion)
+                XSH.env["XONSH_PROMPT_NEXT_CMD_SUGGESTION"] = ""
+
+        self.prompter.app.before_render.add_handler(handler_before_render)
 
     def get_lazy_ptk_kwargs(self):
         """These are non-essential attributes for the PTK shell to start.
@@ -292,6 +311,10 @@ class PromptToolkitShell(BaseShell):
         """
         events.on_pre_prompt_format.fire()
         env = XSH.env
+
+        if next_command := env.get("XONSH_PROMPT_NEXT_CMD", ""):
+            env["XONSH_PROMPT_NEXT_CMD"] = ""
+
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("XONSH_PROMPT_AUTO_SUGGEST") else None
         refresh_interval = env.get("PROMPT_REFRESH_INTERVAL")
@@ -345,6 +368,7 @@ class PromptToolkitShell(BaseShell):
             menu_rows += 1
 
         prompt_args = {
+            "default": next_command,
             "mouse_support": mouse_support,
             "auto_suggest": auto_suggest,
             "message": get_prompt_tokens,
@@ -356,7 +380,7 @@ class PromptToolkitShell(BaseShell):
             "prompt_continuation": self.continuation_tokens,
             "enable_history_search": enable_history_search,
             "reserve_space_for_menu": menu_rows,
-            "key_bindings": self.key_bindings,
+            "key_bindings": self._key_bindings_merge,
             "complete_style": complete_style,
             "complete_while_typing": complete_while_typing,
             "include_default_pygments_style": False,
