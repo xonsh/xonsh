@@ -2998,6 +2998,8 @@ class EnvPath(cabc.MutableSequence):
                     oldvalue=self.before,
                     newvalue=self.obj._l,
                 )
+                if XSH.env.get("UPDATE_OS_ENVIRON", False):
+                    XSH.env[self.obj.target_env_var] = self.obj._l
 
 
 def save_origin_env_to_file(env, session_id):
