@@ -115,7 +115,10 @@ def test_quote_paths_raw_string_trailing_backslash():
 
         real_dir = os.path.join(td, "somedir")
         os.makedirs(real_dir)
-        with patch("xonsh.completers.path.XSH.expand_path", side_effect=lambda s: os.path.join(td, s)):
+        with patch(
+            "xonsh.completers.path.XSH.expand_path",
+            side_effect=lambda s: os.path.join(td, s),
+        ):
             out, _ = xcp._quote_paths({"somedir"}, 'r"', '"', append_end=True)
     result = out.pop()
     # Must end with /" not \" — raw strings can't end with backslash
@@ -152,9 +155,9 @@ def test_complete_path_raw_string_with_backslash(
             # No completion should produce an invalid raw string ending with \"
             if c.endswith(quote):
                 before_quote = c[:-1]
-                assert not before_quote.endswith(
-                    "\\"
-                ), f"Invalid raw string completion: {c}"
+                assert not before_quote.endswith("\\"), (
+                    f"Invalid raw string completion: {c}"
+                )
 
 
 @pytest.mark.parametrize("num_args", (0, 1, 2, 3))
