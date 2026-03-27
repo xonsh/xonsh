@@ -1606,7 +1606,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 _cmd_valid_cache: dict[str, bool] = {}
 _pending_cmds: set[str] = set()
 _debounce_timer: threading.Timer | None = None
-_ptk_app = None  # Captured on the main thread for bg invalidation
+_ptk_app: object | None = None  # Captured on the main thread for bg invalidation
 _validation_gen: int = 0  # Generation token — incremented on each new input
 
 
