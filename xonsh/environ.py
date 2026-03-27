@@ -39,6 +39,7 @@ from xonsh.platform import (
     ON_CYGWIN,
     ON_LINUX,
     ON_WINDOWS,
+    ON_WSL,
     PATH_DEFAULT,
     os_environ,
 )
@@ -919,6 +920,26 @@ class Xettings:
         return ""
 
 
+def _commands_cache_read_dir_once_default():
+    """Compute the default for $XONSH_COMMANDS_CACHE_READ_DIR_ONCE.
+
+    - Windows: ``[%WINDIR%]`` (typically ``C:\\Windows``).
+    - WSL: auto-detect ``/mnt/*/Windows`` directories (may include multiple
+      drives, e.g. ``/mnt/c/Windows``, ``/mnt/d/Windows``).
+    - Linux/Mac: empty list.
+    """
+    if ON_WINDOWS:
+        windir = os.environ.get("WINDIR", "")
+        return [windir] if windir else []
+    if ON_WSL:
+        import glob
+
+        # WSL mounts Windows drives under /mnt/<letter>/
+        # Windows can be installed on any drive, not just C:
+        return sorted(glob.glob("/mnt/*/Windows"))
+    return []
+
+
 class GeneralSetting(Xettings):
     """General"""
 
@@ -1341,15 +1362,17 @@ class CacheSetting(Xettings):
     )
 
     XONSH_COMMANDS_CACHE_READ_DIR_ONCE = Var.with_default(
-        [os.environ.get("WINDIR", "")] if ON_WINDOWS else [],
+        _commands_cache_read_dir_once_default(),
         "List of directory prefixes whose contents are cached on first access and "
         "never re-read within the session.  Any ``$PATH`` entry that starts with "
         "one of these prefixes (or is a subdirectory) will have its file listing "
         "cached as a frozenset after the first ``locate_executable`` call, so "
         "subsequent lookups are O(1) hash checks instead of per-file stat() calls.  "
-        "On Windows this defaults to ``['C:\\\\Windows']`` which covers System32, "
-        "SysWOW64 and other stable system directories.  On Linux it is empty by "
-        "default but can be extended (e.g. ``['/usr']``).",
+        "On Windows this defaults to ``['C:\\\\Windows']`` (via ``%WINDIR%``).  "
+        "On WSL it auto-detects ``/mnt/*/Windows`` directories "
+        "(9P-mounted Windows dirs are very slow to stat).  "
+        "On Linux/Mac it is empty by default but can be extended "
+        "(e.g. ``['/usr']``).",
         type_str="env_path",
     )
 
