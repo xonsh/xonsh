@@ -693,10 +693,11 @@ class JsonHistory(History):
 
         deleted = 0
         # First, delete any matching commands in the in-memory buffer.
-        for i, cmd in enumerate(self.buffer):
-            if pattern.match(cmd["inp"]):
-                del self.buffer[i]
-                deleted += 1
+        orig_len = len(self.buffer)
+        self.buffer[:] = [
+            cmd for cmd in self.buffer if not pattern.match(cmd["inp"])
+        ]
+        deleted += orig_len - len(self.buffer)
 
         # Then, delete any matching commands on disk.
         while self.gc and self.gc.is_alive():
@@ -710,12 +711,9 @@ class JsonHistory(History):
             try:
                 file_content = json_file.load()
                 commands = file_content["cmds"]
-                for i, c in enumerate(commands):
-                    if pattern.match(c["inp"]):
-                        del commands[i]
-                        deleted += 1
-
-                file_content["cmds"] = commands
+                new_commands = [c for c in commands if not pattern.match(c["inp"])]
+                deleted += len(commands) - len(new_commands)
+                file_content["cmds"] = new_commands
                 with open(f, "w") as fp:
                     xlj.ljdump(file_content, fp)
             except (JSONDecodeError, ValueError):
