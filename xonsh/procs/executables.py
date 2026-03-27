@@ -120,9 +120,7 @@ def _get_stable_prefixes() -> tuple[str, ...]:
     current = tuple(raw)
     if current != _stable_prefixes_source:
         _stable_prefixes_source = current
-        _stable_prefixes = tuple(
-            os.path.realpath(p).lower() for p in raw if p
-        )
+        _stable_prefixes = tuple(os.path.realpath(p).lower() for p in raw if p)
     return _stable_prefixes
 
 
@@ -270,6 +268,5 @@ def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=
             continue
 
     _cache_debug(
-        f"xonsh-commands-cache: not found `{name}` "
-        f"({time.perf_counter() - t0:.4f} sec)"
+        f"xonsh-commands-cache: not found `{name}` ({time.perf_counter() - t0:.4f} sec)"
     )
