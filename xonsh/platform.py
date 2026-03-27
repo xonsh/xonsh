@@ -577,10 +577,17 @@ def LIBC():
         import ctypes.util
 
         libc = ctypes.CDLL(ctypes.util.find_library("c"))
-    elif ON_CYGWIN:
-        libc = ctypes.CDLL("cygwin1.dll")
-    elif ON_MSYS:
-        libc = ctypes.CDLL("msys-2.0.dll")
+    elif ON_CYGWIN or ON_MSYS:
+        # In MSYS2, sys.platform may report "cygwin" even though the
+        # runtime library is msys-2.0.dll (not cygwin1.dll).  Try both.
+        for _dll in ("msys-2.0.dll", "cygwin1.dll"):
+            try:
+                libc = ctypes.CDLL(_dll)
+                break
+            except OSError:
+                continue
+        else:
+            libc = None
     elif ON_FREEBSD:
         try:
             libc = ctypes.CDLL("libc.so.7")
