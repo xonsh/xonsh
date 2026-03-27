@@ -322,7 +322,12 @@ def xontrib_data():
     data = {}
     for xo_name, xontrib in get_xontribs().items():
         desc = xontrib.get_description()
-        short_desc = desc.split("\n")[0][:60] if desc else ""
+        try:
+            max_desc = os.get_terminal_size().columns - 40
+        except (OSError, ValueError):
+            max_desc = 60
+        max_desc = max(max_desc, 20)
+        short_desc = desc.split("\n")[0][:max_desc] if desc else ""
         data[xo_name] = {
             "name": xo_name,
             "loaded": xontrib.is_loaded,
