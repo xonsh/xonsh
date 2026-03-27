@@ -178,8 +178,8 @@ class Completer:
     @staticmethod
     def generate_completions(
         completion_context, old_completer_args, trace: bool
-    ) -> tp.Iterator[tuple[Completion, int, str]]:
-        """Yield (completion, lprefix, completer_name) tuples."""
+    ) -> tp.Iterator[tuple[tuple[Completion, int], str]]:
+        """Yield ((completion, lprefix), completer_name) tuples."""
         filter_func = get_filter_function()
 
         for name, func in XSH.completers.items():
