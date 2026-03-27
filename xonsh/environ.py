@@ -1340,6 +1340,26 @@ class CacheSetting(Xettings):
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
     )
 
+    XONSH_COMMANDS_CACHE_READ_DIR_ONCE = Var.with_default(
+        [os.environ.get("WINDIR", "")] if ON_WINDOWS else [],
+        "List of directory prefixes whose contents are cached on first access and "
+        "never re-read within the session.  Any ``$PATH`` entry that starts with "
+        "one of these prefixes (or is a subdirectory) will have its file listing "
+        "cached as a frozenset after the first ``locate_executable`` call, so "
+        "subsequent lookups are O(1) hash checks instead of per-file stat() calls.  "
+        "On Windows this defaults to ``['C:\\\\Windows']`` which covers System32, "
+        "SysWOW64 and other stable system directories.  On Linux it is empty by "
+        "default but can be extended (e.g. ``['/usr']``).",
+        type_str="env_path",
+    )
+
+    XONSH_COMMANDS_CACHE_DEBUG = Var.with_default(
+        False,
+        "If True, print debug messages showing where each command was resolved "
+        "from (cached directory listing XONSH_COMMANDS_CACHE_READ_DIR_ONCE vs. disk stat) "
+        "and how long it took.",
+    )
+
 
 class ChangeDirSetting(Xettings):
     """``cd`` Behavior"""
