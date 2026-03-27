@@ -18,6 +18,6 @@ def sysctlbyname(name, return_str=True):
     # Re-run, but provide the buffer
     LIBC.sysctlbyname(name, buf, byref(size), None, 0)
     if return_str:
-        return buf.value
+        return buf.value.decode()
     else:
         return buf.raw
