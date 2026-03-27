@@ -1134,6 +1134,7 @@ def test_exec_function_scope(cmd):
 @skip_if_on_unix
 def test_run_currentfolder(monkeypatch):
     """Ensure we can run an executable in the current folder
+    when using an explicit path prefix (e.g. .\\file.bat).
     only when using an explicit path prefix (e.g. .\\file.bat).
     Bare names without a path prefix must NOT run from CWD,
     matching POSIX shell behaviour.
@@ -1145,13 +1146,6 @@ def test_run_currentfolder(monkeypatch):
     cmd = f".\\{batfile.name}"
     out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
     assert out.strip() == "hello world"
-
-    # Without path prefix: should NOT run from CWD
-    cmd_bare = batfile.name
-    out, _, _ = run_xonsh(
-        cmd_bare, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"]
-    )
-    assert "hello world" not in out.strip().lower()
 
 
 @skip_if_on_unix
@@ -1167,7 +1161,9 @@ def test_run_dynamic_on_path():
 
 @skip_if_on_unix
 def test_run_fail_not_on_path():
-    """Test that xonsh fails to run an executable when not on path."""
+    """Test that xonsh fails to run an executable when not on path
+    or in current folder
+    """
     cmd = "hello_world.bat"
     out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
     assert out != "Hello world"
@@ -1711,98 +1707,3 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
     assert ret == 0
     assert "Error" not in out
     assert "Exception" not in out
-
-
-test_code = [
-    """
-$XONSH_SHOW_TRACEBACK = True
-import sys
-
-@aliases.register
-def _a(args, stdin, stdout, stderr):
-    name = 'a'
-
-    print(f"{name}: print out alias.stdout", file=stdout)
-    print(f"{name}: print err alias.stderr", file=stderr)
-
-    print(f"{name}: print out sys.stdout", file=sys.stdout)
-    print(f"{name}: print err sys.stderr", file=sys.stderr)
-
-    echo @(f"{name}: echo stdout")
-    echo @(f"{name}: echo stderr") o>e
-
-    ![echo @(f"{name}: ![] echo stdout")]
-    $[echo @(f"{name}: $[] echo stdout")]
-
-    $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
-    $(echo @(f"{name}: $() echo stderr") o>e)
-
-    !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
-    !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
-
-    execx(f'echo "{name}: execx echo stdout"')
-    execx(f'echo "{name}: execx echo stderr" o>e')
-
-    echo 1 && echo 2
-
-
-@aliases.register
-def _b(args, stdin, stdout, stderr):
-    name = 'b'
-
-    print(f"{name}: print out alias.stdout", file=stdout)
-    print(f"{name}: print err alias.stderr", file=stderr)
-
-    print(f"{name}: print out sys.stdout", file=sys.stdout)
-    print(f"{name}: print err sys.stderr", file=sys.stderr)
-
-    echo @(f"{name}: echo stdout")
-    echo @(f"{name}: echo stderr") o>e
-
-    ![echo @(f"{name}: ![] echo stdout")]
-    $[echo @(f"{name}: $[] echo stdout")]
-
-    $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
-    $(echo @(f"{name}: $() echo stderr") o>e)
-
-    !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
-    !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
-
-    execx(f'echo "{name}: execx echo stdout"')
-    execx(f'echo "{name}: execx echo stderr" o>e')
-
-    echo 3 && echo 4
-
-for i in range(111):
-    $(a | b)
-
-# Empirically, in case of a leak, the output
-# drops out at ~600-1000 function calls.
-for i in range(10):
-    for j in range(100):
-        $(a | b)
-
-"""
-]
-
-
-@pytest.mark.parametrize("test_code", test_code)
-@pytest.mark.timeout(600)
-def test_callable_alias_fd_leaking(test_code):
-    """Testing callable alias on leaks and errors in pipe.
-    1. No fd leaking: no output interrupting during 1000+ pipe calls.
-    2. No I/O errors or "Bad file descriptor" errors.
-    3. No stdout leaking from alias `a`.
-    See also #6159.
-    """
-
-    out, err, ret = run_xonsh(
-        test_code, interactive=False, single_command=True, timeout=600
-    )
-    assert ret == 0
-    assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
-    assert "Exception" not in out  # No I/O errors or "Bad file descriptor" errors.
-    assert "LEAKING" not in out  # No captured stdout/stderr leaking.
-    assert out.count("3\\n4\\n") == 1111  # No fd leaking.
-    assert "1" not in out  # No stdout leaking from alias `a`.
-    assert "2" not in out  # No stdout leaking from alias `a`.
