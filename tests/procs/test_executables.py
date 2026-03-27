@@ -7,6 +7,7 @@ from xonsh.procs.executables import (
     get_possible_names,
     locate_executable,
     locate_file,
+    locate_relative_path,
 )
 from xonsh.tools import chdir
 
@@ -88,12 +89,10 @@ def test_locate_relative_path_returns_found_name(tmpdir, xession):
     (f := bindir / "myapp.EXE").write_text("binary", encoding="utf8")
     os.chmod(f, 0o777)
 
-    sep = os.path.sep
     pathext = [".EXE"]
     with xession.env.swap(PATH=[], PATHEXT=pathext), chdir(str(bindir)):
-        result = locate_executable(f".{sep}myapp")
+        result = locate_relative_path(f"./myapp", use_pathext=True)
         assert result is not None
-        # The returned path must point to the actual file with extension
         assert os.path.basename(result).lower() == "myapp.exe"
 
 
