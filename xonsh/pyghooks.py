@@ -1597,14 +1597,13 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 # pygments hooks.
 #
-# Command validation runs asynchronously in a background thread (fish-like
-# model).  The lexer returns optimistic defaults instantly — no filesystem
-# I/O on the main thread — and triggers a debounced background check via
-# locate_executable().  When the check finishes, prompt_toolkit re-renders
-# with the correct colours.
+# Command validation uses a fish-like async model.  Alias and keyword checks
+# are instant (O(1) dict/set lookups, no I/O).  The expensive part —
+# locate_executable() — runs in a debounced background thread.  Until the
+# bg thread reports back, unknown commands appear as invalid (Error token).
+# Once validated, prompt_toolkit re-renders with the correct colours.
 
 _cmd_valid_cache: dict[str, bool] = {}
-_cmd_autocd_cache: dict[str, bool] = {}
 _pending_cmds: set[str] = set()
 _debounce_timer: threading.Timer | None = None
 _ptk_app = None  # Captured on the main thread for bg invalidation
@@ -1615,28 +1614,38 @@ _validation_gen: int = 0  # Generation token — incremented on each new input
 def _clear_cmd_caches(**kwargs):
     global _validation_gen
     _cmd_valid_cache.clear()
-    _cmd_autocd_cache.clear()
     _pending_cmds.clear()
     _validation_gen += 1  # Invalidate any in-flight bg thread
 
 
 def _command_is_valid(cmd):
-    """Cached result or optimistic *True* while a background check runs."""
+    """Check command validity with instant alias/keyword checks.
+
+    Only ``locate_executable`` is deferred to a background thread.
+    Unknown commands default to *False* (shown as Error) until validated.
+    """
+    if iskeyword(cmd):
+        return False
     if cmd in _cmd_valid_cache:
         return _cmd_valid_cache[cmd]
+    if cmd in XSH.aliases:
+        _cmd_valid_cache[cmd] = True
+        return True
+    # Need locate_executable — defer to background thread
     _pending_cmds.add(cmd)
     _schedule_bg_validation()
-    return True  # No red flash — corrected after bg check
+    return False  # Pessimistic — corrected after bg check
 
 
 def _command_is_autocd(cmd):
+    """Synchronous — single os.path.isdir() call, acceptable cost."""
     if not XSH.env.get("AUTO_CD", False):
         return False
-    if cmd in _cmd_autocd_cache:
-        return _cmd_autocd_cache[cmd]
-    _pending_cmds.add(cmd)
-    _schedule_bg_validation()
-    return False  # Assume not autocd until validated
+    try:
+        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
+    except OSError:
+        return False
+    return os.path.isdir(cmd_abspath)
 
 
 def _schedule_bg_validation():
@@ -1675,20 +1684,11 @@ def _run_bg_validation(gen):
         if gen != _validation_gen:
             return  # Stale — newer validation supersedes us
         if cmd not in _cmd_valid_cache:
-            result = (
-                cmd in XSH.aliases or bool(locate_executable(cmd))
-            ) and not iskeyword(cmd)
-            _cmd_valid_cache[cmd] = result
+            found = bool(locate_executable(cmd))
+            _cmd_valid_cache[cmd] = found
             changed = True
         if gen != _validation_gen:
             return  # Check again after the expensive locate_executable
-        if cmd not in _cmd_autocd_cache and XSH.env.get("AUTO_CD", False):
-            try:
-                abspath = os.path.abspath(os.path.expanduser(cmd))
-                _cmd_autocd_cache[cmd] = os.path.isdir(abspath)
-            except OSError:
-                _cmd_autocd_cache[cmd] = False
-            changed = True
     if gen == _validation_gen and changed and _ptk_app is not None:
         try:
             _ptk_app.invalidate()
