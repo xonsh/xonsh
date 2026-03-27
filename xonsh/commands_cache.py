@@ -453,7 +453,7 @@ class CommandsCache(cabc.Mapping):
         )
         first_args = []  # contains in reverse order args passed to the aliased command
         while cmd0 in self.aliases:
-            alias_name = self.aliases
+            alias_name = self.aliases[cmd0]
             if isinstance(alias_name, str | bytes) or not isinstance(
                 alias_name, cabc.Sequence
             ):
