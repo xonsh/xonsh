@@ -93,6 +93,72 @@ def test_path_from_partial_string(prefix):
     assert out == expected
 
 
+@pytest.mark.parametrize("quote", ('"', "'"))
+def test_path_from_partial_string_raw_trailing_backslash(quote):
+    """Raw strings can't end with \\, but _path_from_partial_string should
+    still extract the path by falling back to direct extraction."""
+    # Partial (unclosed) raw string ending with backslash
+    inp = f"r{quote}C:\\App\\x\\"
+    out = xcp._path_from_partial_string(inp)
+    assert out is not None
+    assert out[1] == "C:\\App\\x\\"  # extracted path value
+
+
+def test_quote_paths_raw_string_trailing_backslash():
+    """When a directory completion is inside a raw string, the trailing
+    separator must not be \\ (which would make r\"path\\\" invalid).
+    Use / instead."""
+    with tempfile.TemporaryDirectory() as td:
+        # Create a real directory so os.path.isdir returns True
+        import os
+
+        real_dir = os.path.join(td, "somedir")
+        os.makedirs(real_dir)
+        with patch(
+            "xonsh.completers.path.XSH.expand_path",
+            side_effect=lambda s: os.path.join(td, s),
+        ):
+            out, _ = xcp._quote_paths({"somedir"}, 'r"', '"', append_end=True)
+    result = out.pop()
+    # Must end with /" not \" — raw strings can't end with backslash
+    assert result.endswith('/"'), f"Expected trailing '/\"' but got: {result}"
+    assert not result.endswith('\\"'), f"Got invalid raw string ending: {result}"
+
+
+@pytest.mark.parametrize("quote", ('"', "'"))
+def test_complete_path_raw_string_with_backslash(
+    quote, xession, completion_context_parse
+):
+    """End-to-end: completing r\"<partial_path_with_backslash>\" should
+    return valid completions, not break."""
+    xession.env = {
+        "CASE_SENSITIVE_COMPLETIONS": True,
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 1,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        import os
+
+        os.makedirs(os.path.join(td, "sub"))
+        # Use forward slashes up to the last component, then trailing backslash
+        td_fwd = td.replace("\\", "/")
+        prefix = f"r{quote}{td_fwd}/"
+        line = f"ls {prefix}"
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        completions = out[0] if out else set()
+        assert len(completions) > 0, "Expected at least one completion"
+        for c in completions:
+            # No completion should produce an invalid raw string ending with \"
+            if c.endswith(quote):
+                before_quote = c[:-1]
+                assert not before_quote.endswith("\\"), (
+                    f"Invalid raw string completion: {c}"
+                )
+
+
 @pytest.mark.parametrize("num_args", (0, 1, 2, 3))
 def test_path_in_python_code(num_args, completion_context_parse):
     with tempfile.NamedTemporaryFile(prefix="long_name") as tmp:
