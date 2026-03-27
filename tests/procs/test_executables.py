@@ -66,6 +66,13 @@ def test_locate_executable(tmpdir, xession):
             assert locate_executable(str(bindir0 / "cwd_bin_file"))
             assert locate_executable(f"..{sep}bindir0{sep}cwd_bin_file")
 
+            # PATHEXT resolution must return the path WITH the matched extension
+            # so that CreateProcess can find the file (it only auto-appends .exe)
+            result = locate_executable(f".{sep}cwd_bin_file")
+            assert result.endswith("cwd_bin_file.exe"), (
+                f"PATHEXT resolution should include extension: {result}"
+            )
+
         # From PATH
         assert locate_executable("file1.EXE")
         assert locate_executable("nofile") is None
