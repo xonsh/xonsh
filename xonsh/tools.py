@@ -40,18 +40,28 @@ import typing as tp
 import warnings
 from contextlib import contextmanager
 
-try:
-    from prompt_toolkit.cursor_shapes import (
-        CursorShape,
-        CursorShapeConfig,
-        DynamicCursorShapeConfig,
-        ModalCursorShapeConfig,
-        SimpleCursorShapeConfig,
-    )
+HAVE_CURSOR_SHAPE: bool | None = None  # resolved lazily on first use
 
-    HAVE_CURSOR_SHAPE = True
-except ImportError:
-    HAVE_CURSOR_SHAPE = False
+
+def _ensure_cursor_shapes():
+    """Lazily import prompt_toolkit cursor shapes on first use."""
+    global HAVE_CURSOR_SHAPE, CursorShape, CursorShapeConfig
+    global DynamicCursorShapeConfig, ModalCursorShapeConfig, SimpleCursorShapeConfig
+    if HAVE_CURSOR_SHAPE is not None:
+        return
+    try:
+        from prompt_toolkit.cursor_shapes import (
+            CursorShape,
+            CursorShapeConfig,
+            DynamicCursorShapeConfig,
+            ModalCursorShapeConfig,
+            SimpleCursorShapeConfig,
+        )
+
+        HAVE_CURSOR_SHAPE = True
+    except ImportError:
+        HAVE_CURSOR_SHAPE = False
+
 
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
@@ -1597,6 +1607,7 @@ def ptk_cursor_shape_vi_modal():
 
 
 def to_ptk_cursor_shape(x):
+    _ensure_cursor_shapes()
     if not HAVE_CURSOR_SHAPE:
         return None
     if isinstance(x, CursorShape | CursorShapeConfig):
@@ -1615,6 +1626,7 @@ def to_ptk_cursor_shape(x):
 
 
 def to_ptk_cursor_shape_display_value(x):
+    _ensure_cursor_shapes()
     if not x:
         return ""
     if isinstance(x, SimpleCursorShapeConfig):
