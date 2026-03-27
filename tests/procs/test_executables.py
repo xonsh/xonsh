@@ -91,7 +91,7 @@ def test_locate_relative_path_returns_found_name(tmpdir, xession):
 
     pathext = [".EXE"]
     with xession.env.swap(PATH=[], PATHEXT=pathext), chdir(str(bindir)):
-        result = locate_relative_path(f"./myapp", use_pathext=True)
+        result = locate_relative_path("./myapp", use_pathext=True)
         assert result is not None
         assert os.path.basename(result).lower() == "myapp.exe"
 
