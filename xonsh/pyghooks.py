@@ -1621,8 +1621,10 @@ def _clear_cmd_caches(**kwargs):
 def _command_is_valid(cmd):
     """Check command validity with instant alias/keyword checks.
 
-    Only ``locate_executable`` is deferred to a background thread.
-    Unknown commands default to *False* (shown as Error) until validated.
+    Only ``locate_executable`` is deferred to a background thread when a
+    prompt_toolkit app is running (interactive mode).  Without an app
+    (tests, scripts, non-interactive) the lookup is synchronous because
+    there is no way to trigger a re-render later.
     """
     if iskeyword(cmd):
         return False
@@ -1631,10 +1633,22 @@ def _command_is_valid(cmd):
     if cmd in XSH.aliases:
         _cmd_valid_cache[cmd] = True
         return True
-    # Need locate_executable — defer to background thread
-    _pending_cmds.add(cmd)
-    _schedule_bg_validation()
-    return False  # Pessimistic — corrected after bg check
+    # Need locate_executable — check if we can defer to bg thread
+    try:
+        from prompt_toolkit.application import get_app_or_none
+
+        has_app = get_app_or_none() is not None
+    except Exception:
+        has_app = False
+    if has_app:
+        # Interactive with ptk — defer to bg, pessimistic default
+        _pending_cmds.add(cmd)
+        _schedule_bg_validation()
+        return False
+    # No ptk app — synchronous fallback (tests, scripts, non-interactive)
+    result = bool(locate_executable(cmd))
+    _cmd_valid_cache[cmd] = result
+    return result
 
 
 def _command_is_autocd(cmd):
