@@ -82,6 +82,21 @@ def test_locate_executable(tmpdir, xession):
             assert locate_executable("file2") is None
 
 
+def test_locate_relative_path_returns_found_name(tmpdir, xession):
+    """When PATHEXT finds a file with extension, the returned path must include that extension."""
+    bindir = tmpdir.mkdir("reldir")
+    (f := bindir / "myapp.EXE").write_text("binary", encoding="utf8")
+    os.chmod(f, 0o777)
+
+    sep = os.path.sep
+    pathext = [".EXE"]
+    with xession.env.swap(PATH=[], PATHEXT=pathext), chdir(str(bindir)):
+        result = locate_executable(f".{sep}myapp")
+        assert result is not None
+        # The returned path must point to the actual file with extension
+        assert os.path.basename(result).lower() == "myapp.exe"
+
+
 def test_locate_file(tmpdir, xession):
     bindir1 = tmpdir.mkdir("bindir1")
     bindir2 = tmpdir.mkdir("bindir2")
