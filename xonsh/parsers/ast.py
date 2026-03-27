@@ -210,7 +210,7 @@ def leftmostname(node):
         rtn = leftmostname(node.target)
     elif isinstance(node, JoinedStr) or is_const_str(node) or is_const_bytes(node):
         # handles case of "./my executable"
-        rtn = leftmostname(node.s)
+        rtn = None
     elif isinstance(node, Tuple) and len(node.elts) > 0:
         # handles case of echo ,1,2,3
         rtn = leftmostname(node.elts[0])
