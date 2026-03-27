@@ -25,6 +25,7 @@ from xonsh.procs.pipelines import (
     HiddenCommandPipeline,
     resume_process,
 )
+from xonsh.procs.pipes import PipeChannel
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
@@ -436,6 +437,7 @@ class SubprocSpec:
         self.captured_stderr = None
         self.stack = None
         self.decorators = []  # List of DecoratorAlias objects that applied to spec.
+        self.pipe_channels = []  # PipeChannel objects owned by this spec
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
@@ -855,7 +857,11 @@ def _safe_pipe_properties(fd, use_tty=False):
     # protocols, like git and ssh, which expect unix line endings.
     # see https://mail.python.org/pipermail/python-list/2013-June/650460.html
     # for more details and the following solution.
-    props = xli.termios.tcgetattr(fd)
+    try:
+        props = xli.termios.tcgetattr(fd)
+    except xli.termios.error:
+        # fd is not a TTY (e.g. PTY exhaustion caused fallback to os.pipe)
+        return
     props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
     xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
     # newly created PTYs have a stardard size (24x80), set size to the same size
@@ -912,7 +918,9 @@ def _last_spec_update_threading(last: SubprocSpec):
 def _last_spec_update_captured(last: SubprocSpec):
     captured = (
         (captured := last.captured)
-        and not (captured in ["object", "hiddenobject"] and not last.threadable)
+        # Explicit captures ("object") must always work
+        # even when THREAD_SUBPROCS is disabled (e.g. during rc-file loading).
+        and not (captured == "hiddenobject" and not last.threadable)
         # a ProcProxy run using ![] should not be captured
         and not (
             callable(last.alias)
@@ -944,45 +952,53 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = True
     elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
-        r, w = os.pipe()
-        last.stdout = safe_open(w, "wb")
-        last.captured_stdout = safe_open(r, "rb")
+        pipe = PipeChannel.from_pipe()
+        last.stdout = pipe.open_writer("wb")
+        last.captured_stdout = pipe.open_reader("rb")
+        last.pipe_channels.append(pipe)
     elif XSH.stdout_uncaptured is not None:
         last.universal_newlines = True
         last.stdout = XSH.stdout_uncaptured
         last.captured_stdout = last.stdout
-    elif xp.ON_WINDOWS and not callable_alias:
+    elif (
+        xp.ON_WINDOWS and not callable_alias and not XSH.env.get("XONSH_CAPTURE_ALWAYS")
+    ):
         last.universal_newlines = True
         last.stdout = None  # must truly stream on windows
         last.captured_stdout = ConsoleParallelReader(1)
     else:
         last.universal_newlines = True
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
-        _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = safe_open(w, "w")
-        _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = safe_open(r, "r")
+        pipe = PipeChannel.from_pty() if use_tty else PipeChannel.from_pipe()
+        _safe_pipe_properties(pipe.write_fd, use_tty=use_tty)
+        last.stdout = pipe.open_writer("w")
+        _safe_pipe_properties(pipe.read_fd, use_tty=use_tty)
+        last.captured_stdout = pipe.open_reader("r")
+        last.pipe_channels.append(pipe)
     # set standard error
     if last.stderr is not None:
         pass
     elif captured == "stdout":
         pass
     elif captured == "object":
-        r, w = os.pipe()
-        last.stderr = safe_open(w, "w")
-        last.captured_stderr = safe_open(r, "r")
+        pipe = PipeChannel.from_pipe()
+        last.stderr = pipe.open_writer("w")
+        last.captured_stderr = pipe.open_reader("r")
+        last.pipe_channels.append(pipe)
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
-    elif xp.ON_WINDOWS and not callable_alias:
+    elif (
+        xp.ON_WINDOWS and not callable_alias and not XSH.env.get("XONSH_CAPTURE_ALWAYS")
+    ):
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
     else:
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
-        _safe_pipe_properties(w, use_tty=use_tty)
-        last.stderr = safe_open(w, "w")
-        _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stderr = safe_open(r, "r")
+        pipe = PipeChannel.from_pty() if use_tty else PipeChannel.from_pipe()
+        _safe_pipe_properties(pipe.write_fd, use_tty=use_tty)
+        last.stderr = pipe.open_writer("w")
+        _safe_pipe_properties(pipe.read_fd, use_tty=use_tty)
+        last.captured_stderr = pipe.open_reader("r")
+        last.pipe_channels.append(pipe)
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.
@@ -990,7 +1006,7 @@ def _make_last_spec_captured(last: SubprocSpec):
     # redirect stderr to stdout, if we should
     if callable_alias and last.stderr == subprocess.STDOUT:
         last._stderr = last.stdout
-        last.captured_stderr = last.captured_stdout
+        last.captured_stderr = None
 
 
 def _update_proc_alias_threadable(proc):
@@ -1073,9 +1089,10 @@ def cmds_to_specs(cmds, captured=False, envs=None):
         if redirect == "|":
             # these should remain integer file descriptors, and not Python
             # file objects since they connect processes.
-            r, w = os.pipe()
-            specs[i].stdout = w
-            specs[i + 1].stdin = r
+            pipe = PipeChannel.from_pipe()
+            specs[i].stdout = pipe.write_fd
+            specs[i + 1].stdin = pipe.read_fd
+            specs[i].pipe_channels.append(pipe)
         elif redirect == "&" and i == len(redirects) - 1:
             specs[i].background = True
         else:

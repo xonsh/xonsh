@@ -3,6 +3,8 @@ Tests for command pipelines.
 """
 
 import os
+import signal
+import threading
 
 import pytest
 
@@ -159,3 +161,125 @@ def test_remove_hide_escape(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
     assert pipeline.err == (stderr or None)
     assert pipeline.raw_out == raw_stdout.replace("\n", os.linesep).encode()
     assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_sigint_no_recursion(xonsh_session):
+    """Ctrl+C during captured subprocess should not cause RecursionError.
+
+    Regression test: PopenThread._signal_int called pthread_kill(SIGINT) on
+    itself without a re-entrancy guard, causing infinite recursion when the
+    child process was still alive.
+    """
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    # Use a delayed self-signal instead of real Ctrl+C
+    def _interrupt():
+        import time
+
+        time.sleep(0.3)
+        os.kill(os.getpid(), signal.SIGINT)
+
+    t = threading.Thread(target=_interrupt, daemon=True)
+    t.start()
+
+    xonsh_session.execer.eval("!(sleep 10)")
+    # If we get here without RecursionError, the fix works.
+    # The pipeline should end with KeyboardInterrupt caught internally.
+    t.join(timeout=5)
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_redirect_e2o(xonsh_session):
+    """Callable alias with e>o should merge stderr into stdout.
+
+    Regression test: previously captured_stderr was set to the same pipe reader
+    as captured_stdout, causing two NonBlockingFDReaders to race on one fd.
+    """
+
+    def _alias():
+        print("OUT")
+        print("ERR", file=__import__("sys").stderr)
+
+    xonsh_session.aliases["tste2o"] = _alias
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(tste2o e>o)")
+    assert "ERR" in pipeline.out
+    assert "OUT" in pipeline.out
+    assert pipeline.err is None
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_redirect_o2e(xonsh_session):
+    """Callable alias with o>e should merge stdout into stderr."""
+
+    def _alias():
+        print("OUT")
+        print("ERR", file=__import__("sys").stderr)
+
+    xonsh_session.aliases["tsto2e"] = _alias
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(tsto2e o>e)")
+    assert pipeline.out == ""
+    assert "OUT" in pipeline.err
+    assert "ERR" in pipeline.err
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_subcmd_redirect_e2o(xonsh_session):
+    """Callable alias with e>o: writing to both stdout and stderr params.
+
+    All output should end up in stdout when e>o is used.
+    """
+
+    def _alias(args, stdin, stdout, stderr):
+        print("O", end="", file=stdout)
+        print("E", end="", file=stderr)
+
+    xonsh_session.aliases["tstsube2o"] = _alias
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(tstsube2o e>o)")
+    out = pipeline.out
+    assert "O" in out
+    assert "E" in out
+    assert pipeline.err is None
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_callable_alias_o2e_uncaptured(xonsh_session):
+    """$[alias o>e] should not crash on int stdout fd.
+
+    Regression test: o>e sets spec.stdout to the int flag 2. For uncaptured
+    commands _make_last_spec_captured is never called, so the raw int
+    reached iterraw() which called .readable() / .fileno() on it.
+    """
+
+    def _alias(args, stdin, stdout, stderr):
+        print("O", end="", file=stdout)
+        print("E", end="", file=stderr)
+
+    xonsh_session.aliases["tsto2euncap"] = _alias
+    # Should not raise AttributeError
+    xonsh_session.execer.eval("$[tsto2euncap o>e]")
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_object_capture_without_threading(capfd, xonsh_session):
+    """!() must capture output even when THREAD_SUBPROCS is disabled.
+
+    Regression test: during rc-file loading THREAD_SUBPROCS is set to None,
+    which made threadable=False. The old code disabled capture for both
+    "object" and "hiddenobject" when not threadable, so !() leaked output
+    to the terminal instead of capturing it.
+    """
+    xonsh_session.env["THREAD_SUBPROCS"] = None
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(echo captured)")
+    assert pipeline.out == "captured"
+    assert "captured" not in capfd.readouterr().out
