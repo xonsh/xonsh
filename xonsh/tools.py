@@ -40,7 +40,7 @@ import typing as tp
 import warnings
 from contextlib import contextmanager
 
-HAVE_CURSOR_SHAPE = None  # resolved lazily on first use
+HAVE_CURSOR_SHAPE: bool | None = None  # resolved lazily on first use
 
 
 def _ensure_cursor_shapes():
