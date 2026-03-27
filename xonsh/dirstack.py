@@ -419,8 +419,8 @@ def popd_fn(
         BACKWARD = "-"
         FORWARD = "+"
     else:
-        BACKWARD = "-"
-        FORWARD = "+"
+        BACKWARD = "+"
+        FORWARD = "-"
 
     new_pwd: str | None = None
     if nth is None:
@@ -511,8 +511,8 @@ def dirs_fn(
         BACKWARD = "-"
         FORWARD = "+"
     else:
-        BACKWARD = "-"
-        FORWARD = "+"
+        BACKWARD = "+"
+        FORWARD = "-"
 
     if clear:
         DIRSTACK = []
