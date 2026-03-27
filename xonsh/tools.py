@@ -51,18 +51,13 @@ def _ensure_cursor_shapes():
         return
     try:
         from prompt_toolkit.cursor_shapes import (
-            CursorShape as _CS,
-            CursorShapeConfig as _CSC,
-            DynamicCursorShapeConfig as _DCSC,
-            ModalCursorShapeConfig as _MCSC,
-            SimpleCursorShapeConfig as _SCSC,
+            CursorShape,
+            CursorShapeConfig,
+            DynamicCursorShapeConfig,
+            ModalCursorShapeConfig,
+            SimpleCursorShapeConfig,
         )
 
-        CursorShape = _CS
-        CursorShapeConfig = _CSC
-        DynamicCursorShapeConfig = _DCSC
-        ModalCursorShapeConfig = _MCSC
-        SimpleCursorShapeConfig = _SCSC
         HAVE_CURSOR_SHAPE = True
     except ImportError:
         HAVE_CURSOR_SHAPE = False
