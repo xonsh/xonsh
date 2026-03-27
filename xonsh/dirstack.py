@@ -545,7 +545,7 @@ def dirs_fn(
 
         if num < 0:
             e = "Invalid argument to dirs: {0}\n"
-            return None, e.format(len(o)), 1
+            return None, e.format(nth), 1
 
         if num >= len(o):
             e = "Too few elements in dirstack ({0} elements)\n"
