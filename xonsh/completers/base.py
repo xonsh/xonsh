@@ -9,7 +9,6 @@ from xonsh.completers.python import complete_python
 from xonsh.completers.tools import apply_lprefix, contextual_completer
 from xonsh.parsers.completion_context import CompletionContext
 
-
 # Mapping from completion str value to sub-source name, used by XONSH_TRACE_COMPLETIONS.
 _trace_sources: dict[str, str] = {}
 
