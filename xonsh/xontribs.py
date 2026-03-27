@@ -368,7 +368,7 @@ def xontribs_list(to_json=False, _stdout=None):
                 elif d["loaded"]:
                     s += "  {CYAN}manual{RESET}"
             else:
-                s += "{RED}not-loaded{RESET}"
+                s += "{RED}not-loaded{RESET}" + " " * 8
             if d.get("description"):
                 s += "  " + d["description"]
             s += "\n"
