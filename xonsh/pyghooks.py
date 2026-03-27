@@ -4,6 +4,7 @@ import os
 import re
 import stat
 import sys
+import threading
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
@@ -1595,20 +1596,104 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 
 # pygments hooks.
+#
+# Command validation runs asynchronously in a background thread (fish-like
+# model).  The lexer returns optimistic defaults instantly — no filesystem
+# I/O on the main thread — and triggers a debounced background check via
+# locate_executable().  When the check finishes, prompt_toolkit re-renders
+# with the correct colours.
+
+_cmd_valid_cache: dict[str, bool] = {}
+_cmd_autocd_cache: dict[str, bool] = {}
+_pending_cmds: set[str] = set()
+_debounce_timer: threading.Timer | None = None
+_ptk_app = None  # Captured on the main thread for bg invalidation
+_validation_gen: int = 0  # Generation token — incremented on each new input
+
+
+@events.on_pre_prompt
+def _clear_cmd_caches(**kwargs):
+    global _validation_gen
+    _cmd_valid_cache.clear()
+    _cmd_autocd_cache.clear()
+    _pending_cmds.clear()
+    _validation_gen += 1  # Invalidate any in-flight bg thread
 
 
 def _command_is_valid(cmd):
-    return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
+    """Cached result or optimistic *True* while a background check runs."""
+    if cmd in _cmd_valid_cache:
+        return _cmd_valid_cache[cmd]
+    _pending_cmds.add(cmd)
+    _schedule_bg_validation()
+    return True  # No red flash — corrected after bg check
 
 
 def _command_is_autocd(cmd):
     if not XSH.env.get("AUTO_CD", False):
         return False
+    if cmd in _cmd_autocd_cache:
+        return _cmd_autocd_cache[cmd]
+    _pending_cmds.add(cmd)
+    _schedule_bg_validation()
+    return False  # Assume not autocd until validated
+
+
+def _schedule_bg_validation():
+    """Restart the 50 ms debounce timer on every cache miss."""
+    global _debounce_timer, _ptk_app, _validation_gen
+    if _debounce_timer is not None:
+        _debounce_timer.cancel()
+    _validation_gen += 1  # Abandon any in-flight bg thread
+    gen = _validation_gen
+    # Capture the running app reference on the main thread so the bg
+    # thread can call invalidate() later.
     try:
-        cmd_abspath = os.path.abspath(os.path.expanduser(cmd))
-    except OSError:
-        return False
-    return os.path.isdir(cmd_abspath)
+        from prompt_toolkit.application import get_app_or_none
+
+        _ptk_app = get_app_or_none()
+    except Exception:
+        pass
+    _debounce_timer = threading.Timer(0.05, _run_bg_validation, args=[gen])
+    _debounce_timer.daemon = True
+    _debounce_timer.start()
+
+
+def _run_bg_validation(gen):
+    """Background thread: validate pending commands via locate_executable.
+
+    *gen* is the generation token captured at scheduling time.  If
+    ``_validation_gen`` has moved on (new keystrokes arrived), this thread
+    is stale — it stops early and discards its results.
+    """
+    cmds = set(_pending_cmds)
+    _pending_cmds.clear()
+    if not cmds:
+        return
+    changed = False
+    for cmd in cmds:
+        if gen != _validation_gen:
+            return  # Stale — newer validation supersedes us
+        if cmd not in _cmd_valid_cache:
+            result = (
+                cmd in XSH.aliases or bool(locate_executable(cmd))
+            ) and not iskeyword(cmd)
+            _cmd_valid_cache[cmd] = result
+            changed = True
+        if gen != _validation_gen:
+            return  # Check again after the expensive locate_executable
+        if cmd not in _cmd_autocd_cache and XSH.env.get("AUTO_CD", False):
+            try:
+                abspath = os.path.abspath(os.path.expanduser(cmd))
+                _cmd_autocd_cache[cmd] = os.path.isdir(abspath)
+            except OSError:
+                _cmd_autocd_cache[cmd] = False
+            changed = True
+    if gen == _validation_gen and changed and _ptk_app is not None:
+        try:
+            _ptk_app.invalidate()
+        except Exception:
+            pass
 
 
 def subproc_cmd_callback(_, match):
