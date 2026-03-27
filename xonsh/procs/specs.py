@@ -108,7 +108,7 @@ def get_script_subproc_command(fname, args):
         if not xp.ON_CYGWIN:
             raise PermissionError
         # explicitly look at all PATH entries for cmd
-        w_path = os.getenv("PATH").split(":")
+        w_path = os.getenv("PATH", "").split(os.pathsep)
         w_fpath = list(map(lambda p: p + os.sep + fname, w_path))
         if not any(list(map(lambda c: os.access(c, os.X_OK), w_fpath))):
             raise PermissionError
