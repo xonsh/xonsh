@@ -62,6 +62,7 @@ def _ensure_cursor_shapes():
     except ImportError:
         HAVE_CURSOR_SHAPE = False
 
+
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
