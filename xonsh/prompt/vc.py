@@ -45,10 +45,25 @@ def _get_git_branch(q):
     q.put(None)
 
 
+def _is_in_git_repo():
+    """Fast filesystem check for .git — avoids spawning git subprocess."""
+    env = XSH.env
+    cwd = env.get("PWD", os.getcwd()) if env else os.getcwd()
+    while True:
+        if os.path.exists(os.path.join(cwd, ".git")):
+            return True
+        parent = os.path.dirname(cwd)
+        if parent == cwd:
+            return False
+        cwd = parent
+
+
 def get_git_branch():
     """Attempts to find the current git branch. If this could not
     be determined (timeout, not in a git repo, etc.) then this returns None.
     """
+    if not _is_in_git_repo():
+        return None
     branch = None
     timeout = XSH.env.get("VC_BRANCH_TIMEOUT")
     q = queue.Queue()
