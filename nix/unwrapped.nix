@@ -19,6 +19,7 @@
   pytest-subprocess,
   pytestCheckHook,
   requests,
+  virtualenv,
 
   man,
   util-linux,
@@ -59,6 +60,9 @@ buildPythonPackage {
     pytest-subprocess
     pytestCheckHook
     requests
+
+    # required by test_xonsh_activator
+    virtualenv
   ]
   ++ lib.optionals (!stdenv.isDarwin) [
     # required by test_man_completion
@@ -69,7 +73,6 @@ buildPythonPackage {
   disabledTests = [
     # fails on sandbox
     "test_colorize_file"
-    "test_xonsh_activator"
 
     # flaky tests in test_integrations.py
     "test_script"
