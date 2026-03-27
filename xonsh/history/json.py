@@ -694,9 +694,7 @@ class JsonHistory(History):
         deleted = 0
         # First, delete any matching commands in the in-memory buffer.
         orig_len = len(self.buffer)
-        self.buffer[:] = [
-            cmd for cmd in self.buffer if not pattern.match(cmd["inp"])
-        ]
+        self.buffer[:] = [cmd for cmd in self.buffer if not pattern.match(cmd["inp"])]
         deleted += orig_len - len(self.buffer)
 
         # Then, delete any matching commands on disk.
