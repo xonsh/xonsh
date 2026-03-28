@@ -32,8 +32,8 @@ Everyday User
     tutorial_ptk
     tutorial_macros
 
-Xontributor
------------
+Creator
+-------
 
 .. toctree::
     :titlesonly:
@@ -46,3 +46,13 @@ Xontributor
     tutorial_events
     tutorial_completers
     tutorial_history_backend
+
+Xontributor
+-----------
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 2
+
+    devguide
+    api/index
