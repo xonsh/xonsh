@@ -178,7 +178,8 @@ class Completer:
     @staticmethod
     def generate_completions(
         completion_context, old_completer_args, trace: bool
-    ) -> tp.Iterator[tuple[Completion, int]]:
+    ) -> tp.Iterator[tuple[tuple[Completion, int], str]]:
+        """Yield ((completion, lprefix), completer_name) tuples."""
         filter_func = get_filter_function()
 
         for name, func in XSH.completers.items():
@@ -248,7 +249,7 @@ class Completer:
                     custom_lprefix,
                 )
                 items.append(comp)
-                yield comp
+                yield comp, name
 
             if not items:  # empty completion
                 continue
@@ -281,8 +282,8 @@ class Completer:
             old_completer_args,
             trace,
         ):
-            completion, lprefix = comp
-            completions[completion] = None
+            (completion, lprefix), completer_name = comp
+            completions[completion] = completer_name
             if query_limit and len(completions) >= query_limit:
                 if trace:
                     print(
@@ -309,4 +310,15 @@ class Completer:
             sortkey = lambda s: s.lstrip(''''"''').lower()
 
         # the last completer's lprefix is returned. other lprefix values are inside the RichCompletions.
-        return tuple(sorted(completions, key=sortkey)), lprefix
+        sorted_completions = tuple(sorted(completions, key=sortkey))
+
+        if trace and completions:
+            from xonsh.completers.base import _trace_sources
+
+            print("TRACE COMPLETIONS: Final results (value <- source):")
+            for c in sorted_completions:
+                key = str(c).rstrip()
+                source = _trace_sources.get(key, completions[c])
+                print(f"  {c!r} <- {source}")
+
+        return sorted_completions, lprefix
