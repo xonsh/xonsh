@@ -549,9 +549,12 @@ class CommandPipeline:
             ):
                 self._close_prev_procs()
             self._close_proc()
+            # Mark as ended even if an exception occurred (e.g. KeyboardInterrupt).
+            # Without this, subsequent access to the pipeline would try to
+            # re-read from already-closed pipes → ValueError.
+            self.ended = True
         self._check_signal()
         self._apply_to_history()
-        self.ended = True
         self._raise_subproc_error()
 
     def _save_term_state(self):

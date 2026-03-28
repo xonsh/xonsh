@@ -192,6 +192,43 @@ def test_sigint_no_recursion(xonsh_session):
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_pipeline_access_after_interrupt(xonsh_session):
+    """Accessing a pipeline after Ctrl+C should not crash with ValueError.
+
+    Regression test: KeyboardInterrupt during end() closed the pipes in
+    the finally block, but self.ended was set AFTER finally. Subsequent
+    access tried to re-read from closed pipes → ValueError.
+    """
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    # Get the pipeline without triggering end()
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(sleep 10)")
+
+    # Schedule SIGINT while end() is blocking in iterraw
+    def _interrupt():
+        import time
+
+        time.sleep(0.3)
+        os.kill(os.getpid(), signal.SIGINT)
+
+    t = threading.Thread(target=_interrupt, daemon=True)
+    t.start()
+
+    # This blocks in end() → iterraw() until SIGINT kills sleep
+    try:
+        pipeline.end()
+    except KeyboardInterrupt:
+        pass
+    t.join(timeout=5)
+
+    # After interrupt, pipeline should be ended and accessible without crash
+    assert pipeline.ended
+    _ = pipeline.returncode  # must not raise ValueError
+    _ = pipeline.out  # must not raise ValueError
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_callable_alias_redirect_e2o(xonsh_session):
     """Callable alias with e>o should merge stderr into stdout.
 
