@@ -1,7 +1,6 @@
 """The xontext command."""
 
 import shutil
-import subprocess
 import sys
 
 from xonsh.built_ins import XSH
@@ -9,7 +8,7 @@ from xonsh.cli_utils import ArgParserAlias
 from xonsh.platform import IN_APPIMAGE
 
 
-def _get_version(binary, arg_ver='--version'):
+def _get_version(binary, arg_ver="--version"):
     """Helper to get version string from a python/xonsh/pip binary."""
     version = ""
     try:
@@ -20,7 +19,7 @@ def _get_version(binary, arg_ver='--version'):
     except Exception:
         if XSH.env.get("DEBUG", False):
             raise
-    return (version.split('from')[0] if 'from' in version else version).strip()
+    return (version.split("from")[0] if "from" in version else version).strip()
 
 
 def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
