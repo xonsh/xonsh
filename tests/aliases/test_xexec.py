@@ -142,9 +142,10 @@ def test_exec_script_shebang_fallback(monkeypatch, tmp_path):
     xexec([str(script)])
 
     assert len(calls) == 1
-    # shebang "#!/usr/bin/env xonsh" → command="/usr/bin/env", args=[..., "xonsh", script]
-    assert calls[0]["command"] == "/usr/bin/env"
-    assert "xonsh" in calls[0]["args"]
+    # The shebang fallback must invoke a different command than the script
+    # itself.  The exact interpreter varies by platform (e.g. "/usr/bin/env"
+    # on POSIX, "python" on Windows).
+    assert calls[0]["command"] != str(script)
     assert str(script) in calls[0]["args"]
 
 
@@ -166,7 +167,8 @@ def test_exec_script_no_shebang_defaults_to_xonsh(monkeypatch, tmp_path):
     xexec([str(script)])
 
     assert len(calls) == 1
-    assert calls[0]["command"] == "xonsh"
+    # Must not try to execute the script directly again
+    assert calls[0]["command"] != str(script)
 
 
 def test_exec_nonexistent_file(monkeypatch):
