@@ -96,7 +96,7 @@ such as Miniconda or Micromamba, should be used.
 macOS / Linux / WSL
 -------------------
 
-Install xonsh with Micromamba:
+Install independent Xonsh with Micromamba:
 
 .. code-block:: console
 
