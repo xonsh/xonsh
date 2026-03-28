@@ -10,8 +10,6 @@ the xonsh shell
 
 .. include:: guides.rst
 
-.. include:: setup.rst
-
 .. include:: contributing.rst
 
 .. include:: python-versions-support-policy.rst
