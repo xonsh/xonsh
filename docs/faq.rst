@@ -1,7 +1,7 @@
 
 Frequently Asked Questions
 ==========================
-*(from Anthony Scopatz)*
+*(by Anthony Scopatz)*
 
 Ok, so, maybe no one actually asked them.
 
