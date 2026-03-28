@@ -21,26 +21,19 @@ def _filter_with_func(text, prefix, func):
     return func(text, prefix)
 
 
-def _filter_normal(text, prefix):
-    func = lambda txt, pre: pre in txt
-    return _filter_with_func(text, prefix, func)
-
-
 def _filter_ignorecase(text, prefix):
     func = lambda txt, pre: pre.lower() in txt.lower()
     return _filter_with_func(text, prefix, func)
 
 
 def get_filter_function():
+    """Return a case-insensitive filtering function for completions.
+
+    Completions are always filtered case-insensitively; the sort order
+    (see ``Completer.complete_from_context``) already ranks exact-case
+    matches above case-insensitive ones.
     """
-    Return an appropriate filtering function for completions, given the value
-    of $XONSH_PROMPT_COMPLETION_CASE_SENSITIVE
-    """
-    csc = XSH.env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
-    if csc:
-        return _filter_normal
-    else:
-        return _filter_ignorecase
+    return _filter_ignorecase
 
 
 def justify(s, max_length, left_pad=0):

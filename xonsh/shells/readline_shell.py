@@ -234,17 +234,16 @@ def teardown_readline():
 
 
 def _rebind_case_sensitive_completions():
-    # handle case sensitive, see Github issue #1342 for details
+    # Tell readline to ignore case when presenting completions.
+    # Without this, readline may reject candidates before xonsh's
+    # own completer sees them.  Xonsh handles case preference via
+    # sort-order tiers in Completer.complete_from_context.
+    # See Github issue #1342 for background.
     global _RL_PREV_COMPLETION_CASE_SENSITIVE
-    env = XSH.env
-    case_sensitive = env.get("XONSH_PROMPT_COMPLETION_CASE_SENSITIVE")
-    if case_sensitive is _RL_PREV_COMPLETION_CASE_SENSITIVE:
+    if _RL_PREV_COMPLETION_CASE_SENSITIVE is False:
         return
-    if case_sensitive:
-        readline.parse_and_bind("set completion-ignore-case off")
-    else:
-        readline.parse_and_bind("set completion-ignore-case on")
-    _RL_PREV_COMPLETION_CASE_SENSITIVE = case_sensitive
+    readline.parse_and_bind("set completion-ignore-case on")
+    _RL_PREV_COMPLETION_CASE_SENSITIVE = False
 
 
 def fix_readline_state_after_ctrl_c():
