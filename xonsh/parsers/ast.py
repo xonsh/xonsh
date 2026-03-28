@@ -210,7 +210,7 @@ def leftmostname(node):
         rtn = leftmostname(node.target)
     elif isinstance(node, JoinedStr) or is_const_str(node) or is_const_bytes(node):
         # handles case of "./my executable"
-        rtn = leftmostname(node.s)
+        rtn = None
     elif isinstance(node, Tuple) and len(node.elts) > 0:
         # handles case of echo ,1,2,3
         rtn = leftmostname(node.elts[0])
@@ -256,14 +256,17 @@ def max_col(node):
 
 
 def node_len(node):
-    """The length of a node as a string"""
+    """The length of a node as a string
+    (This may need to be added to for more nodes as more cases are found.)
+    """
     val = 0
     for n in walk(node):
         if isinstance(n, Name):
             val += len(n.id)
+        elif isinstance(n, Constant) and n.value is not None:  # Case #5253
+            val += len(repr(n.value))
         elif isinstance(n, Attribute):
             val += 1 + (len(n.attr) if isinstance(n.attr, str) else 0)
-        # this may need to be added to for more nodes as more cases are found
     return val
 
 

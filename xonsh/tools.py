@@ -365,6 +365,7 @@ def subproc_toks(
             elif pos < maxcol and tok.type not in ("NEWLINE", "DEDENT", "WS"):
                 if not greedy:
                     toks.clear()
+                    lparens.clear()
                 if tok.type in BEG_TOK_SKIPS:
                     continue
             else:

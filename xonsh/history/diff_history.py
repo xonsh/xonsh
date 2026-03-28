@@ -255,7 +255,7 @@ class HistoryDiffer:
                     elif i is None:
                         s += self._cmd_in_one_diff(binp, j, self.b, bid, COLORS.GREEN)
                     else:
-                        self._cmd_replace_diff(i, ainp, aid, j, binp, bid)
+                        s += self._cmd_replace_diff(i, ainp, aid, j, binp, bid)
             elif tag == DELETE_S:
                 for i, inp in enumerate(ainps[i1:i2], i1):
                     s += self._cmd_in_one_diff(inp, i, self.a, aid, COLORS.RED)
