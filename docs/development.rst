@@ -10,4 +10,3 @@ Development Spiral
     devguide
     changelog
     faq
-    todo
