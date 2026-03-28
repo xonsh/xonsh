@@ -93,3 +93,90 @@ def test_c_switch(monkeypatch):
     command = "sleep"
     xexec(["-c", command, "1"])
     assert called["env"] == {}
+
+
+def test_alias_stack_cleared(monkeypatch, xession):
+    """exec must not pass __ALIAS_STACK to the new process.
+
+    Regression test for #5216 / #5709: when a xonsh script does
+    ``exec ./other_script.xsh`` and that script also uses ``exec``,
+    the inherited __ALIAS_STACK caused a false "Recursive calls to exec"
+    error.
+    """
+    called = {}
+
+    def mocked_execvpe(command, args, env):
+        called.update({"command": command, "args": args, "env": env})
+
+    monkeypatch.setattr(os, "execvpe", mocked_execvpe)
+
+    # Simulate being inside an exec alias call
+    xession.env["__ALIAS_STACK"] = ":exec"
+    xession.env["__ALIAS_NAME"] = "exec"
+
+    xexec(["bash"])
+
+    assert "__ALIAS_STACK" not in called["env"]
+    assert "__ALIAS_NAME" not in called["env"]
+
+
+def test_exec_script_shebang_fallback(monkeypatch, tmp_path):
+    """exec on a script file should parse the shebang and use the interpreter.
+
+    os.execvpe raises ENOEXEC (errno 8) for non-binary files.  xexec
+    should fall back to get_script_subproc_command which parses the shebang.
+    """
+    calls = []
+
+    def mocked_execvpe(command, args, env):
+        if command.endswith(".xsh"):
+            raise OSError(8, "Exec format error")
+        calls.append({"command": command, "args": args})
+
+    monkeypatch.setattr(os, "execvpe", mocked_execvpe)
+
+    script = tmp_path / "test.xsh"
+    script.write_text("#!/usr/bin/env xonsh\necho hello\n")
+    script.chmod(0o755)
+
+    xexec([str(script)])
+
+    assert len(calls) == 1
+    # shebang "#!/usr/bin/env xonsh" → command="/usr/bin/env", args=[..., "xonsh", script]
+    assert calls[0]["command"] == "/usr/bin/env"
+    assert "xonsh" in calls[0]["args"]
+    assert str(script) in calls[0]["args"]
+
+
+def test_exec_script_no_shebang_defaults_to_xonsh(monkeypatch, tmp_path):
+    """exec on a script without shebang should default to xonsh."""
+    calls = []
+
+    def mocked_execvpe(command, args, env):
+        if command.endswith(".xsh"):
+            raise OSError(8, "Exec format error")
+        calls.append({"command": command, "args": args})
+
+    monkeypatch.setattr(os, "execvpe", mocked_execvpe)
+
+    script = tmp_path / "test.xsh"
+    script.write_text("echo hello\n")
+    script.chmod(0o755)
+
+    xexec([str(script)])
+
+    assert len(calls) == 1
+    assert calls[0]["command"] == "xonsh"
+
+
+def test_exec_nonexistent_file(monkeypatch):
+    """exec on a non-existent file should return an error."""
+
+    def mocked_execvpe(command, args, env):
+        raise OSError(2, "No such file or directory")
+
+    monkeypatch.setattr(os, "execvpe", mocked_execvpe)
+
+    result = xexec(["/tmp/nonexistent_file"])
+    assert result[2] == 1
+    assert "file not found" in result[1]

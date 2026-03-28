@@ -971,12 +971,33 @@ def xexec_fn(
             old_shlvl = to_shlvl(denv["SHLVL"])
             denv["SHLVL"] = str(adjust_shlvl(old_shlvl, -1))
 
+    # Clear the alias stack so the new process doesn't falsely detect
+    # recursion.  exec replaces the process — there is no actual recursion.
+    denv.pop("__ALIAS_STACK", None)
+    denv.pop("__ALIAS_NAME", None)
+
     try:
         os.execvpe(cmd, command, denv)
-    except FileNotFoundError as e:
+    except OSError as e:
+        if e.errno == 8:  # Exec format error — not a binary, try shebang
+            from xonsh.procs.specs import get_script_subproc_command
+
+            try:
+                scriptcmd = get_script_subproc_command(cmd, command[1:])
+            except PermissionError:
+                scriptcmd = None
+            if scriptcmd:
+                os.execvpe(scriptcmd[0], scriptcmd, denv)
+            # fall through to the error return below
+        if e.errno == 2:  # FileNotFoundError
+            return (
+                None,
+                f"xonsh: exec: file not found: {e.args[1]}: {command[0]}\n",
+                1,
+            )
         return (
             None,
-            f"xonsh: exec: file not found: {e.args[1]}: {command[0]}\n",
+            f"xonsh: exec: {e.args[1]}: {command[0]}\n",
             1,
         )
 
