@@ -159,7 +159,7 @@ def _dump_xonfig_foreign_shell(path, value):
     envcmd = value.get("envcmd", None)
     if envcmd is not None:
         cmd.extend(["--envcmd", envcmd])
-    aliascmd = value.get("aliasmd", None)
+    aliascmd = value.get("aliascmd", None)
     if aliascmd is not None:
         cmd.extend(["--aliascmd", aliascmd])
     extra_args = value.get("extra_args", None)
