@@ -2431,7 +2431,6 @@ class Env(cabc.MutableMapping):
         else:
             self._d[key] = val
         self._detyped = None
-        self._detyped_all = None
         if self.get("UPDATE_OS_ENVIRON"):
             if self._orig_env is None:
                 self.replace_env()
