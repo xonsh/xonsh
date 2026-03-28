@@ -52,7 +52,7 @@ Xontributor
 
 .. toctree::
     :titlesonly:
-    :maxdepth: 2
+    :maxdepth: 1
 
     devguide
     api/index
