@@ -80,7 +80,7 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
             Adds a validator function to a handler to limit when it is considered.
             """
             if debug_level():
-                if not has_kwargs(handler):
+                if not has_kwargs(vfunc):
                     raise ValueError(
                         "Event validators need a **kwargs for future proofing"
                     )

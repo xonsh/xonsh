@@ -401,6 +401,62 @@ def test_cached_name():
     assert cache.cached_name("/path/to/bash") == "bash"
 
 
+def test_predictor_alias_forwards_args(xession):
+    """A simple alias like tst -> ['echo', 'hello'] should forward alias args to predictor."""
+    cc = xession.commands_cache
+    received = {}
+
+    def spy_predictor(args, cache):
+        received["args"] = list(args)
+        received["cache"] = cache
+        return True
+
+    cc.threadable_predictors["echo"] = spy_predictor
+    xession.aliases["tst"] = ["echo", "hello"]
+
+    result = cc.predict_threadable(["tst", "world"])
+
+    assert result is True
+    assert received["args"] == ["hello", "world"]
+    assert received["cache"] is cc
+
+
+def test_predictor_alias_chained_preserves_arg_order(xession):
+    """Multi-hop alias: tst -> ['tst2', '-a'], tst2 -> ['echo', '-b'] should give ['-b', '-a']."""
+    cc = xession.commands_cache
+    received = {}
+
+    def spy_predictor(args, cache):
+        received["args"] = list(args)
+        return True
+
+    cc.threadable_predictors["echo"] = spy_predictor
+    xession.aliases["tst"] = ["tst2", "-a"]
+    xession.aliases["tst2"] = ["echo", "-b"]
+
+    cc.predict_threadable(["tst", "-c"])
+
+    assert received["args"] == ["-b", "-a", "-c"]
+
+
+def test_predictor_alias_callable_returns_predict_true(xession):
+    """Callable (non-Sequence) aliases should return predict_true."""
+    cc = xession.commands_cache
+    xession.aliases["tst"] = lambda args: None
+
+    predictor = cc.get_predictor_threadable("tst")
+    assert predictor is predict_true
+
+
+def test_predictor_alias_self_referencing(xession):
+    """Self-referencing alias like ls -> ['ls', '--color'] should return predict_true."""
+    cc = xession.commands_cache
+    xession.aliases["ls"] = ["ls", "--color"]
+
+    predictor = cc.get_predictor_threadable("ls")
+    assert predictor is predict_true
+
+
 @skip_if_on_windows
 def test_symlink_predict_threadable(xession, tmpdir_factory):
     temp_dir = Path(tmpdir_factory.mktemp("test_symlink_predict_threadable"))
