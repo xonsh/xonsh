@@ -283,3 +283,26 @@ def test_object_capture_without_threading(capfd, xonsh_session):
     pipeline: CommandPipeline = xonsh_session.execer.eval("!(echo captured)")
     assert pipeline.out == "captured"
     assert "captured" not in capfd.readouterr().out
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_pipeline_early_exit_no_hang(xonsh_session):
+    """Pipeline where downstream exits before upstream must not deadlock.
+
+    Regression test: when the last process (head) exited, the read end of
+    the inter-process pipe was kept open in the parent. Upstream (seq)
+    blocked on write() with a full buffer, and iterraw() waited for it
+    via _any_proc_running() — deadlock.
+    """
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    # $() — captured stdout
+    out = xonsh_session.execer.eval("$(seq 1000000 | head -n 3)")
+    assert out.strip() == "1\n2\n3"
+
+    # !() — captured object
+    pipeline: CommandPipeline = xonsh_session.execer.eval(
+        "!(seq 1000000 | head -n 3)"
+    )
+    assert pipeline.out.strip() == "1\n2\n3"
