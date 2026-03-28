@@ -96,6 +96,30 @@ def test_env_detype_all():
     assert "DEFAULT" in det_all
 
 
+def test_detype_and_detype_all_do_not_share_cache():
+    """detype() and detype_all() must return independent results regardless of call order.
+
+    See https://github.com/xonsh/xonsh/issues/5781
+    """
+    env = Env(EXPLICIT="hello")
+    env._vars["ONLY_DEFAULT"] = Var.with_default("world")
+
+    # Call detype() first, then detype_all()
+    det = env.detype()
+    det_all = env.detype_all()
+    assert "EXPLICIT" in det
+    assert "ONLY_DEFAULT" not in det
+    assert "EXPLICIT" in det_all
+    assert "ONLY_DEFAULT" in det_all
+
+    # Call in reverse order after invalidation
+    env._detyped = None
+    det_all2 = env.detype_all()
+    det2 = env.detype()
+    assert "ONLY_DEFAULT" not in det2
+    assert "ONLY_DEFAULT" in det_all2
+
+
 def test_histcontrol_none():
     env = Env(HISTCONTROL=None)
     assert isinstance(env["HISTCONTROL"], set)
