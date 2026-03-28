@@ -65,10 +65,6 @@ Creator
 Xontributor
 -----------
 
-We highly encourage contributions to xonsh! If you would like to contribute, 
-it is as easy as forking the repository on GitHub, making your changes 
-(independently or with the help of AI/LLM tools), and issuing a pull request.
-
 .. toctree::
     :titlesonly:
     :maxdepth: 1
