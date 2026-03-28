@@ -126,6 +126,29 @@ def test_whitespace_subproc(test_input, xonsh_execer_parse):
 
 
 @pytest.mark.parametrize(
+    "test_input",
+    [
+        "cd /tmp/123 && ls\n",
+        "echo /tmp/123 && echo done\n",
+        "cd /tmp/123 || ls\n",
+    ],
+)
+def test_subproc_with_numeric_path_and_boolop(test_input, xonsh_execer_parse):
+    """Paths with numeric components like /tmp/123 must not be parsed as Python division.
+
+    See https://github.com/xonsh/xonsh/issues/5253
+    """
+    tree = xonsh_execer_parse(test_input)
+    assert tree is not None
+    # The AST should NOT contain BinOp(Div) — that would mean /tmp/123 was parsed as division
+    for node in pyast.walk(tree):
+        if isinstance(node, pyast.BinOp) and isinstance(node.op, pyast.Div):
+            pytest.fail(
+                f"Path with numeric component was incorrectly parsed as Python division: {test_input!r}"
+            )
+
+
+@pytest.mark.parametrize(
     "inp,exp",
     [
         ("1+1", True),

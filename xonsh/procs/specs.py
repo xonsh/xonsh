@@ -109,7 +109,7 @@ def get_script_subproc_command(fname, args):
         if not xp.ON_CYGWIN:
             raise PermissionError
         # explicitly look at all PATH entries for cmd
-        w_path = os.getenv("PATH").split(":")
+        w_path = os.getenv("PATH", "").split(os.pathsep)
         w_fpath = list(map(lambda p: p + os.sep + fname, w_path))
         if not any(list(map(lambda c: os.access(c, os.X_OK), w_fpath))):
             raise PermissionError
@@ -1110,6 +1110,15 @@ def cmds_to_specs(cmds, captured=False, envs=None):
             else specs[:-1]
         )
         _set_specs_capture_always(specs_to_capture)
+
+    # Validate: unthreadable callable aliases cannot be used in pipelines
+    if len(specs) > 1:
+        for spec in specs:
+            if callable(spec.alias) and not spec.threadable:
+                raise xt.XonshError(
+                    f"Callable alias {spec.alias_name!r} is explicitly marked as unthreadable and is not supported in pipelines.\n"
+                    f"If it's really threadable try `@thread {spec.alias_name}`."
+                )
 
     _update_last_spec(specs[-1])
     return specs

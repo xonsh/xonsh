@@ -117,5 +117,5 @@ class Functor(Block):
         """Dispatches to func."""
         if self.func is None:
             msg = "{} block with 'None' func not callable"
-            raise AttributeError(msg.formst(self.__class__.__name__))
+            raise AttributeError(msg.format(self.__class__.__name__))
         return self.func(*args, **kwargs)

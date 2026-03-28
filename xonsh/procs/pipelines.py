@@ -168,6 +168,7 @@ class CommandPipeline:
         self._raw_output = self._raw_error = b""
         self._stderr_prefix = self._stderr_postfix = None
         self.term_pgid = None
+        self._term_state = None  # saved terminal attrs for restoration
         self.suspended = None
         self.output_format = self.spec.output_format
 
@@ -201,6 +202,7 @@ class CommandPipeline:
                 pipeline_group = proc.pid
                 if update_process_group(pipeline_group, background):
                     self.term_pgid = pipeline_group
+                    self._save_term_state()
             self.procs.append(proc)
         self.proc = self.procs[-1]
 
@@ -552,6 +554,15 @@ class CommandPipeline:
         self.ended = True
         self._raise_subproc_error()
 
+    def _save_term_state(self):
+        """Save terminal attributes so we can restore them exactly later."""
+        try:
+            import termios
+
+            self._term_state = termios.tcgetattr(sys.stdin.fileno())
+        except (termios.error, OSError, ValueError):
+            self._term_state = None
+
     def _return_terminal(self):
         if xp.ON_WINDOWS or not xp.ON_POSIX:
             return
@@ -560,11 +571,20 @@ class CommandPipeline:
             return
         if xj.give_terminal_to(pgid):  # if gave term succeed
             self.term_pgid = pgid
-            if XSH.shell is not None:
-                # restoring sanity could probably be called whenever we return
-                # control to the shell. But it only seems to matter after a
-                # ^Z event. This *has* to be called after we give the terminal
-                # back to the shell.
+            if self._term_state is not None:
+                # Restore exact terminal state saved before the subprocess ran.
+                # The old approach (stty sane) reset to canonical mode which
+                # broke prompt-toolkit's raw mode after keybinding handlers.
+                try:
+                    import termios
+
+                    termios.tcsetattr(
+                        sys.stdin.fileno(), termios.TCSANOW, self._term_state
+                    )
+                except (termios.error, OSError, ValueError):
+                    pass
+            elif XSH.shell is not None:
+                # Fallback when no saved state is available.
                 XSH.shell.shell.restore_tty_sanity()
 
     def resume(self, job, tee_output=True):

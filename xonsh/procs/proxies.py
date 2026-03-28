@@ -204,16 +204,16 @@ class FileThreadDispatcher:
         return self.handle.seekable()
 
     def truncate(self, size=None):
-        """Truncates the file for for the current thread."""
-        return self.handle.truncate()
+        """Truncates the file for the current thread."""
+        return self.handle.truncate(size)
 
-    def writable(self, size=None):
+    def writable(self):
         """Returns if file descriptor for the current thread is writable."""
-        return self.handle.writable(size)
+        return self.handle.writable()
 
-    def writelines(self):
+    def writelines(self, lines):
         """Writes lines for the file descriptor for the current thread."""
-        return self.handle.writelines()
+        return self.handle.writelines(lines)
 
 
 # These should NOT be lazy since they *need* to get the true stdout from the

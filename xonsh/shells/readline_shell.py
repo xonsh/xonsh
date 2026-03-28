@@ -432,9 +432,10 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         if not store_in_history:  # store current position to remove it later
             try:
                 import readline
+
+                pos = readline.get_current_history_length() - 1
             except ImportError:
                 store_in_history = True
-            pos = readline.get_current_history_length() - 1
         events.on_pre_prompt_format.fire()
         if ON_POSIX:
             _ensure_newline()
