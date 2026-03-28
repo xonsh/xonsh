@@ -2176,12 +2176,16 @@ class Env(cabc.MutableMapping):
         self._detyped = ctx
         return ctx
 
-    def detype_all(self):  # __getitem__
-        """Returns a dict of all available detyped env variables."""
-        if self._detyped is not None:
-            return self._detyped
-        ctx = {}
+    def detype_all(self):
+        """Returns a dict of all available detyped env variables.
+
+        Builds on top of detype() by adding default values for keys
+        that weren't explicitly set.
+        """
+        ctx = dict(self.detype())
         for key in self.rawkeys():
+            if key in ctx:
+                continue
             if not isinstance(key, str):
                 key = str(key)
             val = self.__getitem__(key)
@@ -2191,7 +2195,6 @@ class Env(cabc.MutableMapping):
             if not isinstance(val, str):
                 continue
             ctx[key] = val
-        self._detyped = ctx
         return ctx
 
     def replace_env(self):
@@ -2428,6 +2431,7 @@ class Env(cabc.MutableMapping):
         else:
             self._d[key] = val
         self._detyped = None
+        self._detyped_all = None
         if self.get("UPDATE_OS_ENVIRON"):
             if self._orig_env is None:
                 self.replace_env()
