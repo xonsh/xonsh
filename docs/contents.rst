@@ -25,6 +25,7 @@ Starter
     bash_to_xsh
     platform-issues
     Extensions (xontribs) <https://github.com/topics/xontrib>
+    Ask question <https://github.com/xonsh/xonsh/discussions>
 
 Everyday User
 -------------
@@ -42,6 +43,7 @@ Everyday User
     keyboard_shortcuts
     tutorial_ptk
     tutorial_macros
+    Open technical issue <https://github.com/xonsh/xonsh>
 
 Creator
 -------
@@ -58,9 +60,14 @@ Creator
     tutorial_events
     tutorial_completers
     tutorial_history_backend
+    Xonsh Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>
 
 Xontributor
 -----------
+
+We highly encourage contributions to xonsh! If you would like to contribute, 
+it is as easy as forking the repository on GitHub, making your changes 
+(independently or with the help of AI/LLM tools), and issuing a pull request.
 
 .. toctree::
     :titlesonly:
@@ -68,13 +75,8 @@ Xontributor
 
     devguide
     api/index
-    Xonsh on Github <https://github.com/xonsh/xonsh>`_
-
-.. include:: contributing.rst
-
-.. include:: python-versions-support-policy.rst
-
-.. include:: contact.rst
+    Xonsh on Github <https://github.com/xonsh/xonsh>
+    Xonsh Zulip Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>
 
 
 Helpful Links
@@ -83,7 +85,11 @@ Helpful Links
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+* `Follow us on Mastodon <https://mastodon.online/@xonsh>`_
+* `Want a t-shirt? <https://www.hellotux.com/xonsh>`_
 
+
+.. include:: python-versions-support-policy.rst
 
 Chronicle
 =========
