@@ -1,5 +1,5 @@
 #########################
-the xonsh shell
+The Xonsh Shell
 #########################
 
 .. include:: intro.rst
