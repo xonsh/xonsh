@@ -232,7 +232,12 @@ class Execer:
             if logical_input:
                 beg_spaces = starting_whitespace(input)
                 input = input[len(beg_spaces) :]
+            max_retries = len(input.splitlines()) * 2 + 10
             while not parsed:
+                if max_retries <= 0:
+                    # Prevent hanging e.g. #5839
+                    raise original_error from None
+                max_retries -= 1
                 try:
                     tree = self.parser.parse(
                         input,
