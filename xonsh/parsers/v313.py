@@ -9,10 +9,8 @@ handle
 """
 
 from ast import match_case
-from ast import parse as pyparse
 
 from xonsh.parsers import ast
-from xonsh.parsers.ast import xonsh_call
 from xonsh.parsers.base import (
     RE_STRINGPREFIX,
     del_ctx,
@@ -20,7 +18,6 @@ from xonsh.parsers.base import (
     lopen_loc,
     store_ctx,
 )
-from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.parsers.v310 import Parser as ThreeTenParser
 
 
@@ -89,54 +86,18 @@ class Parser(ThreeTenParser):
         """string_literal : string_tok"""
         p1 = p[1]
         prefix = RE_STRINGPREFIX.match(p1.value).group().lower()
-        if "p" in prefix and "f" in prefix:
-            new_pref = prefix.replace("p", "")
-            value_without_p = new_pref + p1.value[len(prefix) :]
-            try:
-                s = pyparse(value_without_p).body[0].value
-            except SyntaxError:
-                s = None
-            if s is None:
-                try:
-                    s = FStringAdaptor(
-                        value_without_p, new_pref, filename=self.lexer.fname
-                    ).run()
-                except SyntaxError as e:
-                    self._set_error(
-                        str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
-                    )
-            s = ast.increment_lineno(s, p1.lineno - 1)
-            p[0] = xonsh_call(
-                "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
-            )
-        elif "p" in prefix:
+        if "p" in prefix:
             value_without_p = prefix.replace("p", "") + p1.value[len(prefix) :]
             s = ast.const_str(
                 s=ast.literal_eval(value_without_p),
                 lineno=p1.lineno,
                 col_offset=p1.lexpos,
             )
+            from xonsh.parsers.ast import xonsh_call
+
             p[0] = xonsh_call(
                 "__xonsh__.path_literal", [s], lineno=p1.lineno, col=p1.lexpos
             )
-        elif "f" in prefix:
-            try:
-                s = pyparse(p1.value).body[0].value
-            except SyntaxError:
-                s = None
-            if s is None:
-                try:
-                    s = FStringAdaptor(
-                        p1.value, prefix, filename=self.lexer.fname
-                    ).run()
-                except SyntaxError as e:
-                    self._set_error(
-                        str(e), self.currloc(lineno=p1.lineno, column=p1.lexpos)
-                    )
-            s = ast.increment_lineno(s, p1.lineno - 1)
-            if "r" in prefix:
-                s.is_raw = True
-            p[0] = s
         else:
             s = ast.literal_eval(p1.value)
             is_bytes = "b" in prefix
