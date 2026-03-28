@@ -302,9 +302,7 @@ def test_pipeline_early_exit_no_hang(xonsh_session):
     assert out.strip() == "1\n2\n3"
 
     # !() — captured object
-    pipeline: CommandPipeline = xonsh_session.execer.eval(
-        "!(seq 1000000 | head -n 3)"
-    )
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(seq 1000000 | head -n 3)")
     assert pipeline.out.strip() == "1\n2\n3"
 
 
