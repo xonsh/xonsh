@@ -12,8 +12,8 @@ The Xonsh Shell
 Guides
 ======
 
-Starter
--------
+Beginner
+--------
 
 .. toctree::
     :titlesonly:
