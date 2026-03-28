@@ -39,9 +39,9 @@ the main approaches and their advantages.
       <tbody>
         <tr>
           <th class="stub"><p>Independent install</p></th>
-          <td align="center">●</td>
-          <td align="center">●</td>
-          <td align="center">●</td>
+          <td align="center">🟢</td>
+          <td align="center">🟢</td>
+          <td align="center">🟢</td>
           <td align="center">◯</td>
           <td align="center"></td>
         </tr>
@@ -49,24 +49,24 @@ the main approaches and their advantages.
           <th class="stub"><p>Package</p></th>
           <td align="center"></td>
           <td align="center"></td>
-          <td align="center">●</td>
-          <td align="center">●</td>
+          <td align="center">🟢</td>
+          <td align="center">🟢</td>
           <td align="center"></td>
         </tr>
         <tr>
           <th class="stub"><p>AppImage</p></th>
           <td align="center"></td>
-          <td align="center">●</td>
-          <td align="center">●</td>
+          <td align="center">🟢</td>
+          <td align="center">🟢</td>
           <td align="center">◯</td>
-          <td align="center">●</td>
+          <td align="center">🟢</td>
         </tr>
         <tr>
           <th class="stub"><p>Container</p></th>
           <td align="center"></td>
-          <td align="center">●</td>
-          <td align="center">●</td>
-          <td align="center">●</td>
+          <td align="center">🟢</td>
+          <td align="center">🟢</td>
+          <td align="center">🟢</td>
           <td align="center"></td>
         </tr>
         <tr>
@@ -93,7 +93,10 @@ such as ``venv``, ``pipx``, or ``rye`` do not fully address this requirement.
 Package managers that can install fully isolated Python environments as a core feature,
 such as Miniconda or Micromamba, should be used.
 
-Install xonsh with Micromamba:
+macOS / Linux / WSL
+-------------------
+
+Install independent Xonsh with Micromamba:
 
 .. code-block:: console
 
@@ -102,6 +105,16 @@ Install xonsh with Micromamba:
 
 Learn more: `Mamba installer <install_mamba.html>`_.
 
+
+Windows
+-------
+
+Install independent Xonsh on Windows (no admin rights):
+
+.. code-block:: console
+
+    curl -L -o install_xonsh.cmd https://xon.sh/install/windows_install_xonsh.cmd
+    install_xonsh.cmd
 
 Package
 ========================
