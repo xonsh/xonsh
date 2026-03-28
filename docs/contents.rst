@@ -8,7 +8,67 @@ the xonsh shell
 
 .. include:: installation.rst
 
-.. include:: guides.rst
+
+Guides
+======
+
+Starter
+-------
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 2
+
+    tutorial
+    tutorial_subproc_strings
+    subproc_types
+    bash_to_xsh
+    platform-issues
+    Extensions (xontribs) <https://github.com/topics/xontrib>
+
+Everyday User
+-------------
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 2
+
+    xonshrc
+    envvars
+    aliases
+    events
+    tutorial_hist
+    customization
+    keyboard_shortcuts
+    tutorial_ptk
+    tutorial_macros
+
+Creator
+-------
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 2
+
+    editors
+    python_virtual_environments
+    tutorial_xonsh_projects
+    tutorial_xontrib
+    Xontrib template <https://github.com/xonsh/xontrib-cookiecutter>
+    tutorial_events
+    tutorial_completers
+    tutorial_history_backend
+
+Xontributor
+-----------
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    devguide
+    api/index
+    Xonsh on Github <https://github.com/xonsh/xonsh>`_
 
 .. include:: contributing.rst
 
@@ -20,10 +80,6 @@ the xonsh shell
 Helpful Links
 =============
 
-* `GitHub Repository <https://github.com/xonsh/xonsh>`_: `releases <https://github.com/xonsh/xonsh/releases>`_, `changelog <https://github.com/xonsh/xonsh/blob/main/CHANGELOG.rst>`_
-* GitHub topics: `xonsh <https://github.com/topics/xonsh>`_ and `xontrib <https://github.com/topics/xontrib>`_
-* `DockerHub images <https://hub.docker.com/u/xonsh>`_
-* `Cookiecutter template to creating xontribs <https://github.com/xonsh/xontrib-cookiecutter>`_
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
