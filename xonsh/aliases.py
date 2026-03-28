@@ -973,6 +973,7 @@ def xexec_fn(
 
     # Clear the alias stack so the new process doesn't falsely detect
     # recursion.  exec replaces the process — there is no actual recursion.
+    # (https://github.com/xonsh/xonsh/pull/6198)
     denv.pop("__ALIAS_STACK", None)
     denv.pop("__ALIAS_NAME", None)
 
