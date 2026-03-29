@@ -90,8 +90,6 @@ def test_locate_relative_xsh(tmpdir, xession):
     """./myscript should find ./myscript.xsh with empty PATHEXT."""
     (tmpdir / "myscript.xsh").write_text("echo hi", encoding="utf8")
     with xession.env.swap(PATH=[], PATHEXT=[]), chdir(str(tmpdir)):
-        result = locate_relative_path(
-            f".{os.sep}myscript", use_pathext=True
-        )
+        result = locate_relative_path(f".{os.sep}myscript", use_pathext=True)
         assert result is not None
         assert result.endswith("myscript.xsh")
