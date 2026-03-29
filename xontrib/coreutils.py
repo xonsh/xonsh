@@ -1,4 +1,4 @@
-"""Additional core utilities that are implemented in xonsh.
+"""Core utils (cat, echo, pwd, ...) implemented in Python.
 
 The current list includes:
 
