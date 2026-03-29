@@ -2440,6 +2440,9 @@ def expand_case_matching(s):
         t.append(drive_part)
         s = s[len(drive_part) :]
 
+    if ON_WINDOWS:
+        s = s.replace("\\", "/")
+
     for c in s:
         if c in openers:
             nesting += 1
