@@ -1,3 +1,4 @@
+import os
 import tempfile
 from unittest.mock import patch
 
@@ -111,13 +112,11 @@ def test_quote_paths_uppercase_raw_prefix():
     assert result.startswith("R'"), f"Expected R' prefix but got: {result}"
 
 
+@pytest.mark.skipif(os.sep != "\\", reason="Backslash separator is Windows-only")
 def test_quote_paths_raw_string_trailing_backslash():
     """When a directory completion is inside a raw string, the trailing
     backslash is doubled so the string stays valid (r"path\\")."""
     with tempfile.TemporaryDirectory() as td:
-        # Create a real directory so os.path.isdir returns True
-        import os
-
         real_dir = os.path.join(td, "somedir")
         os.makedirs(real_dir)
         with patch(
@@ -167,6 +166,7 @@ def test_complete_path_raw_string_with_backslash(
                 )
 
 
+@pytest.mark.skipif(os.sep != "\\", reason="Backslash separator is Windows-only")
 def test_empty_dir_no_spurious_completion(xession):
     """Completing inside an empty directory should return nothing, not a
     spurious root-path completion caused by subsequence matching."""
