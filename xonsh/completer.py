@@ -290,6 +290,19 @@ class Completer:
                     )
                 break
 
+        # Deduplicate completions that differ only by a trailing space.
+        # For example, ``_cd`` (from Python name completions) and ``_cd ``
+        # (from command completions with append_space=True) should appear
+        # only once.  We keep the spaced variant because it carries the
+        # richer completion metadata.
+        spaced = {str(c) for c in completions if str(c).endswith(" ")}
+        if spaced:
+            completions = {
+                c: None
+                for c in completions
+                if str(c).endswith(" ") or (str(c) + " ") not in spaced
+            }
+
         if completion_context:
             if completion_context.python is not None:
                 prefix = completion_context.python.prefix
