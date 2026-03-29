@@ -426,7 +426,7 @@ class PartialEvalAlias0(PartialEvalAliasBase):
     ):
         args = list(self.acc_args) + args
         if args:
-            msg = "callable alias {f!r} takes no arguments, but {args!f} provided. "
+            msg = "callable alias {f!r} takes no arguments, but {args!r} provided. "
             msg += "Of these {acc_args!r} were partially applied."
             raise XonshError(msg.format(f=self.f, args=args, acc_args=self.acc_args))
         return self.f()

@@ -451,9 +451,9 @@ class CommandsCache(cabc.Mapping):
         alias_recursion_limit = (
             10  # this limit is se to handle infinite loops in aliases definition
         )
-        first_args = []  # contains in reverse order args passed to the aliased command
+        first_args = []  # accumulated args from the alias chain, in correct order
         while cmd0 in self.aliases:
-            alias_name = self.aliases
+            alias_name = self.aliases[cmd0]
             if isinstance(alias_name, str | bytes) or not isinstance(
                 alias_name, cabc.Sequence
             ):
@@ -468,7 +468,7 @@ class CommandsCache(cabc.Mapping):
             if alias_recursion_limit == 0:
                 return predict_true
         predictor_cmd0 = self.get_predictor_threadable(cmd0)
-        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1, self)
+        return lambda cmd1, cache: predictor_cmd0(first_args + cmd1, cache)
 
     def default_predictor_readbin(self, name, cmd0, timeout, failure):
         """Make a default predictor by
