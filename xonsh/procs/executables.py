@@ -9,22 +9,38 @@ from xonsh.lib.itertools import unique_everseen
 from xonsh.platform import ON_WINDOWS
 
 
+# Extensions that xonsh always recognises as executable on Windows,
+# regardless of the PATHEXT environment variable.
+XONSH_KNOWN_EXTENSIONS = frozenset({".XSH", ".PY"})
+
+
 def get_possible_names(name, env=None):
     """Expand name to all possible variants based on `PATHEXT`.
 
     PATHEXT is a Windows convention containing extensions to be
     considered when searching for an executable file.
 
+    On Windows, `.xsh` and `.py` are always included in the search
+    even if they are not listed in PATHEXT.
+
     Conserves order of any extensions found and gives precedence
     to the bare name.
     """
     env = env if env is not None else XSH.env
     env_pathext = env.get("PATHEXT", [])
-    if not env_pathext:
+    if ON_WINDOWS:
+        # Merge xonsh-native extensions with PATHEXT (deduplicated).
+        merged = list(env_pathext)
+        for ext in XONSH_KNOWN_EXTENSIONS:
+            if ext not in {e.upper() for e in merged}:
+                merged.append(ext)
+        extensions = merged
+    else:
+        extensions = list(env_pathext)
+    if not extensions:
         return [name]
     upper = name.upper() == name
-    extensions = [""] + env_pathext
-    return [name + (ext.upper() if upper else ext.lower()) for ext in extensions]
+    return [name] + [name + (ext.upper() if upper else ext.lower()) for ext in extensions]
 
 
 def clear_paths(paths):
@@ -66,6 +82,9 @@ def is_executable_in_windows(filepath, check_file_exist=True, env=None):
         if check_file_exist and not is_file(filepath):
             return False
         env = env if env is not None else XSH.env
+        suffix = filepath.suffix.upper()
+        if suffix in XONSH_KNOWN_EXTENSIONS:
+            return True
         return any(s.lower() == filepath.suffix.lower() for s in env.get("PATHEXT", []))
     except FileNotFoundError:
         # On Windows, there's no guarantee for the directory to really
