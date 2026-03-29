@@ -18,7 +18,11 @@ import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.procs.executables import locate_executable
+from xonsh.procs.executables import (
+    get_possible_names,
+    is_file,
+    locate_executable,
+)
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
@@ -28,6 +32,18 @@ from xonsh.procs.pipelines import (
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
+
+
+def _has_path_component(name):
+    """Check if a command name contains any path component (directory separator).
+
+    Commands with path separators (like ``./script``, ``subdir/script``,
+    or absolute paths) are explicit path references and may be resolved
+    relative to CWD.  Bare names (like ``ls`` or ``script.xsh``) must be
+    found in ``$PATH`` only — matching Linux/POSIX behaviour where CWD is
+    never searched implicitly.
+    """
+    return os.sep in name or (os.sep != "/" and "/" in name)
 
 
 @xl.lazyobject
@@ -76,7 +92,7 @@ def _un_shebang(x):
     elif x.endswith("python") or x.endswith("python.exe"):
         x = "python"
     if x == "xonsh":
-        return ["python", "-m", "xonsh.main"]
+        return ["python", "-m", "xonsh"]
     return [x]
 
 
@@ -543,6 +559,15 @@ class SubprocSpec:
                 cmd = [self.binary_loc] + self.cmd[1:]
             else:
                 cmd = self.cmd
+            # On Windows, CreateProcess searches the current directory for
+            # executables before PATH.  Block that for bare command names
+            # (no directory separator) so the behaviour matches POSIX shells
+            # where CWD is never searched implicitly.
+            if xp.ON_WINDOWS and self.binary_loc is None:
+                cmd0 = cmd[0]
+                if cmd0 and not _has_path_component(cmd0):
+                    if any(is_file(n) for n in get_possible_names(cmd0)):
+                        raise FileNotFoundError(cmd0)
             p = self.cls(cmd, bufsize=bufsize, **kwargs)
         except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
@@ -810,12 +835,29 @@ class SubprocSpec:
         else:
             self.cmd = alias
             self.resolve_redirects()
-        if self.binary_loc is None:
+        # Determine the file to inspect for script detection.
+        # binary_loc may be None on Windows for files whose extension is not
+        # in PATHEXT (e.g. .xsh), even though the file exists and is a script.
+        # Only allow CWD-relative lookup when the command has an explicit path
+        # component (e.g. ./script.xsh, subdir/script, or an absolute path).
+        # Bare names like "script.xsh" must come from $PATH, not CWD — this
+        # matches POSIX shell behaviour and avoids accidental execution of
+        # files that happen to sit in the current directory.
+        fname = self.binary_loc
+        if fname is None:
+            cmd0 = self.cmd[0] if self.cmd else None
+            if cmd0 and _has_path_component(cmd0) and os.path.isfile(cmd0):
+                fname = os.path.abspath(cmd0)
+        if fname is None:
             return
         try:
-            scriptcmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
+            scriptcmd = get_script_subproc_command(fname, self.cmd[1:])
             if scriptcmd is not None:
                 self.cmd = scriptcmd
+                # Update binary_loc to the interpreter, not the script.
+                # Otherwise _run_binary() (PR #4077) would launch the script
+                # directly via CreateProcess, causing WinError 193 on Windows.
+                self.binary_loc = locate_executable(scriptcmd[0])
         except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise xt.XonshError(e.format(self.cmd[0])) from ex
