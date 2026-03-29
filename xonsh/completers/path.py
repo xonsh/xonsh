@@ -137,7 +137,9 @@ def _add_cdpaths(paths, prefix):
     glob_sorted = env.get("GLOB_SORTED")
     for cdp in env.get("CDPATH"):
         test_glob = os.path.join(cdp, prefix) + "*"
-        for s in xt.iglobpath(test_glob, ignore_case=True, sort_result=glob_sorted):
+        for s in xt.iglobpath(
+            test_glob, ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
+        ):
             if os.path.isdir(s):
                 paths.add(os.path.relpath(s, cdp))
 
@@ -300,7 +302,9 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     env = XSH.env
     glob_sorted = env.get("GLOB_SORTED")
     prefix = glob.escape(prefix)
-    for s in xt.iglobpath(prefix + "*", ignore_case=True, sort_result=glob_sorted):
+    for s in xt.iglobpath(
+        prefix + "*", ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
+    ):
         paths.add(s)
     if len(paths) == 0 and env.get("SUBSEQUENCE_PATH_COMPLETION"):
         # this block implements 'subsequence' matching, similar to fish and zsh.
@@ -327,7 +331,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
         threshold = env.get("SUGGEST_THRESHOLD")
         for s in xt.iglobpath(
             os.path.dirname(prefix) + "*",
-            ignore_case=True,
+            ignore_case=(not xp.ON_WINDOWS),
             sort_result=glob_sorted,
         ):
             if xt.levenshtein(prefix, s, threshold) < threshold:
