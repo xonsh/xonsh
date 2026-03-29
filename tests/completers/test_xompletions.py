@@ -29,7 +29,7 @@ def test_xonfig(args, prefix, exp, xsh_with_aliases, monkeypatch, check_complete
         (
             "xontrib",
             "l",
-            {"list", "load"},
+            {"list", "load", "reload", "unload"},
             None,
         ),
         (
