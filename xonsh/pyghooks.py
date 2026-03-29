@@ -1597,7 +1597,7 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 # pygments hooks.
 #
-# Command validation uses a fish-like async model.  Alias and keyword checks
+# Command validation uses async model.  Alias and keyword checks
 # are instant (O(1) dict/set lookups, no I/O).  The expensive part —
 # locate_executable() — runs in a debounced background thread.  Until the
 # bg thread reports back, unknown commands appear as invalid (Error token).
