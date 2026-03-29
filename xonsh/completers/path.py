@@ -74,7 +74,13 @@ def _path_from_partial_string(inp, pos=None):
     try:
         val = ast.literal_eval(_string)
     except (SyntaxError, ValueError):
-        return None
+        # Raw strings can't end with an odd number of backslashes
+        # (e.g. r"C:\App\" is a SyntaxError). Extract the path directly.
+        raw_prefix = xt.RE_STRING_START.match(string)
+        if raw_prefix and "r" in raw_prefix.group().lower():
+            val = string[raw_prefix.end() + len(end) :]
+        else:
+            return None
     if isinstance(val, bytes):
         env = XSH.env
         val = val.decode(
@@ -192,6 +198,10 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         if start != "" and "r" not in start and backslash in s:
             start = f"r{start}"
         s = s + _tail
+        # Raw strings can't end with \ before closing quote (e.g. r"path\" is
+        # a SyntaxError). Use / as the trailing directory separator instead.
+        if "r" in start.lower() and end != "" and s.endswith(backslash):
+            s = s[:-1] + "/"
         if end != "":
             if "r" not in start.lower():
                 s = s.replace(backslash, double_backslash)

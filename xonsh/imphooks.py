@@ -13,6 +13,13 @@ from importlib.abc import Loader, MetaPathFinder, SourceLoader
 from importlib.machinery import ModuleSpec
 
 from xonsh.built_ins import XSH
+from xonsh.codecache import (
+    compile_code,
+    get_cache_filename,
+    script_cache_check,
+    should_use_cache,
+    update_cache,
+)
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.lib.lazyasd import lazyobject
@@ -73,7 +80,9 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
                 continue
             if not os.path.isdir(p) or not os.access(p, os.R_OK):
                 continue
-            if fname not in {x.name for x in os.scandir(p)}:
+            with os.scandir(p) as entries:
+                found = any(x.name == fname for x in entries)
+            if not found:
                 continue
             spec = ModuleSpec(fullname, self)
             self._filenames[fullname] = os.path.abspath(os.path.join(p, fname))
@@ -93,7 +102,7 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
 
     def get_filename(self, fullname):
         """Returns the filename for a module's fullname."""
-        return self._filenames[fullname]
+        return self._filenames.get(fullname)
 
     def get_data(self, path):
         """Gets the bytes for a path."""
@@ -103,14 +112,20 @@ class XonshImportHook(MetaPathFinder, SourceLoader):  # type: ignore
         """Gets the code object for a xonsh file."""
         filename = self.get_filename(fullname)
         if filename is None:
-            msg = f"xonsh file {fullname!r} could not be found"
-            raise ImportError(msg)
-        src = self.get_source(fullname)
+            raise ImportError(f"xonsh file {fullname!r} could not be found")
         execer = self._execer
-        execer.filename = filename
+        use_cache = XSH.env is not None and should_use_cache(execer, "exec")
+        if use_cache:
+            cachefname = get_cache_filename(filename, code=False)
+            run_cached, ccode = script_cache_check(filename, cachefname)
+            if run_cached:
+                return ccode
+        src = self.get_source(fullname)
         ctx = {}  # dummy for modules
-        code = execer.compile(src, glbs=ctx, locs=ctx)
-        return code
+        ccode = compile_code(filename, src, execer, ctx, ctx, "exec")
+        if use_cache:
+            update_cache(ccode, cachefname)
+        return ccode
 
     def get_source(self, fullname):
         if fullname is None:
@@ -194,7 +209,7 @@ is the module itself. See importlib for more details.
 events.doc(
     "on_import_post_exec_module",
     """
-on_import_post_create_module(module: Module) -> None
+on_import_post_exec_module(module: Module) -> None
 
 Fires after a module is executed by its loader but before the loader returns it.
 The only parameter is the module itself. See importlib for more details.

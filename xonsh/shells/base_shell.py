@@ -166,10 +166,10 @@ class _TeeStd(io.TextIOBase):
 
     def _replace_std(self):
         std = self.std
-        if std is None:
+        if std is None or self._name is None:
             return
         setattr(sys, self._name, std)
-        self.std = self._name = None
+        self._name = None  # prevent double-restore, but keep self.std alive
 
     def __del__(self):
         self._replace_std()
@@ -180,7 +180,8 @@ class _TeeStd(io.TextIOBase):
 
     def write(self, s):
         """Writes data to the original std stream and the in-memory object."""
-        self.mem.write(s)
+        if not self.mem.closed:
+            self.mem.write(s)
         if self.std is None:
             return
         std_s = s
