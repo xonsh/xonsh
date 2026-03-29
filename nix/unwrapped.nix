@@ -11,7 +11,6 @@
   addBinToPathHook,
   writableTmpDirAsHomeHook,
   gitMinimal,
-  glibcLocales,
   pip,
   pyte,
   pytest-mock,
@@ -52,7 +51,6 @@ buildPythonPackage {
     addBinToPathHook
     writableTmpDirAsHomeHook
     gitMinimal
-    glibcLocales
     pip
     pyte
     pytest-mock
