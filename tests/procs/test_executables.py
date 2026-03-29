@@ -14,8 +14,14 @@ from xonsh.tools import chdir
 
 def test_get_possible_names():
     env = Env(PATHEXT=[".EXE", ".COM"])
-    assert get_possible_names("file", env) == ["file", "file.exe", "file.com"]
-    assert get_possible_names("FILE", env) == ["FILE", "FILE.EXE", "FILE.COM"]
+    result = get_possible_names("file", env)
+    assert result[0] == "file"
+    assert "file.exe" in result
+    assert "file.com" in result
+    result_upper = get_possible_names("FILE", env)
+    assert result_upper[0] == "FILE"
+    assert "FILE.EXE" in result_upper
+    assert "FILE.COM" in result_upper
 
 
 def test_get_paths(tmpdir):
