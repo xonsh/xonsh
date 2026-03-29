@@ -199,9 +199,9 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
             start = f"r{start}"
         s = s + _tail
         # Raw strings can't end with \ before closing quote (e.g. r"path\" is
-        # a SyntaxError). Use / as the trailing directory separator instead.
+        # a SyntaxError). Double the trailing backslash so it's valid (r"path\\").
         if "r" in start.lower() and end != "" and s.endswith(backslash):
-            s = s[:-1] + "/"
+            s = s + backslash
         if end != "":
             if "r" not in start.lower():
                 s = s.replace(backslash, double_backslash)
@@ -316,7 +316,14 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     prefix = glob.escape(prefix)
     for s in xt.iglobpath(prefix + "*", ignore_case=(not csc), sort_result=glob_sorted):
         paths.add(s)
-    if len(paths) == 0 and env.get("SUBSEQUENCE_PATH_COMPLETION"):
+    # When the prefix ends with a path separator we are listing directory
+    # contents, not matching a partial name.  If the glob above found nothing
+    # the directory is simply empty — skip subsequence and fuzzy matching
+    # which would incorrectly match unrelated paths.
+    _prefix_is_dir_listing = prefix.endswith(os.sep) or (
+        os.altsep and prefix.endswith(os.altsep)
+    )
+    if len(paths) == 0 and env.get("SUBSEQUENCE_PATH_COMPLETION") and not _prefix_is_dir_listing:
         # this block implements 'subsequence' matching, similar to fish and zsh.
         # matches are based on subsequences, not substrings.
         # e.g., ~/u/ro completes to ~/lou/carcolh
@@ -337,7 +344,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
             for i in p:
                 matches_so_far = _expand_one(matches_so_far, i, csc)
             paths |= {_joinpath(i) for i in matches_so_far}
-    if len(paths) == 0 and env.get("FUZZY_PATH_COMPLETION"):
+    if len(paths) == 0 and env.get("FUZZY_PATH_COMPLETION") and not _prefix_is_dir_listing:
         threshold = env.get("SUGGEST_THRESHOLD")
         for s in xt.iglobpath(
             os.path.dirname(prefix) + "*",

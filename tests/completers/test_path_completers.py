@@ -113,8 +113,7 @@ def test_quote_paths_uppercase_raw_prefix():
 
 def test_quote_paths_raw_string_trailing_backslash():
     """When a directory completion is inside a raw string, the trailing
-    separator must not be \\ (which would make r\"path\\\" invalid).
-    Use / instead."""
+    backslash is doubled so the string stays valid (r"path\\")."""
     with tempfile.TemporaryDirectory() as td:
         # Create a real directory so os.path.isdir returns True
         import os
@@ -127,9 +126,8 @@ def test_quote_paths_raw_string_trailing_backslash():
         ):
             out, _ = xcp._quote_paths({"somedir"}, 'r"', '"', append_end=True)
     result = out.pop()
-    # Must end with /" not \" — raw strings can't end with backslash
-    assert result.endswith('/"'), f"Expected trailing '/\"' but got: {result}"
-    assert not result.endswith('\\"'), f"Got invalid raw string ending: {result}"
+    # Must end with \\" — doubled backslash keeps raw string valid
+    assert result.endswith('\\\\"'), f"Expected trailing '\\\\.\"' but got: {result}"
 
 
 @pytest.mark.parametrize("quote", ('"', "'"))
@@ -158,12 +156,41 @@ def test_complete_path_raw_string_with_backslash(
         completions = out[0] if out else set()
         assert len(completions) > 0, "Expected at least one completion"
         for c in completions:
-            # No completion should produce an invalid raw string ending with \"
+            # A raw string ending with an odd number of backslashes before
+            # the closing quote is invalid (the last \ escapes the quote).
+            # Doubled backslash (\\) before the quote is fine.
             if c.endswith(quote):
                 before_quote = c[:-1]
-                assert not before_quote.endswith("\\"), (
-                    f"Invalid raw string completion: {c}"
+                trailing = len(before_quote) - len(before_quote.rstrip("\\"))
+                assert trailing % 2 == 0, (
+                    f"Invalid raw string completion (odd trailing backslashes): {c}"
                 )
+
+
+def test_empty_dir_no_spurious_completion(xession):
+    """Completing inside an empty directory should return nothing, not a
+    spurious root-path completion caused by subsequence matching."""
+    xession.env = {
+        "CASE_SENSITIVE_COMPLETIONS": True,
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": True,
+        "FUZZY_PATH_COMPLETION": True,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        import os
+
+        os.makedirs(os.path.join(td, "aaa", "1"))  # empty dir
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            # Simulate second Tab on r'aaa\1\\' (closed raw string, empty dir)
+            pfx = "r'" + os.sep.join(["aaa", "1"]) + os.sep * 2 + "'"
+            out, _ = xcp._complete_path_raw(pfx, pfx, 0, len(pfx), ctx={})
+            assert len(out) == 0, f"Expected no completions for empty dir, got: {out}"
+        finally:
+            os.chdir(old_cwd)
 
 
 @pytest.mark.parametrize("num_args", (0, 1, 2, 3))
