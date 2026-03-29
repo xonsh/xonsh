@@ -1,5 +1,36 @@
 # Xonsh Change Log
 
+## [0.22.9](https://github.com/xonsh/xonsh/compare/0.22.8...0.22.9) (2026-03-29)
+
+
+### Features
+
+* Added support for subprocess substitution in the middle of a string e.g. `echo prefix_$(whoami)_suffix` or `echo path/$([@lines](https://github.com/lines) echo '1\n2').suffix` ([#6166](https://github.com/xonsh/xonsh/issues/6166)) ([a229266](https://github.com/xonsh/xonsh/commit/a229266172dbf8afe9b9bfb266a0ccc1f8cf5fc0))
+* **Windows:** Added installation script and instructions to the xonsh installation guide ([#6196](https://github.com/xonsh/xonsh/issues/6196)) ([8449aae](https://github.com/xonsh/xonsh/commit/8449aaedb715badc635ead96afb4a83d66d5b8ca))
+* **Xontrib:** Show xontrib description in `xontrib list` output ([#6181](https://github.com/xonsh/xonsh/issues/6181)) ([04c03e7](https://github.com/xonsh/xonsh/commit/04c03e783bb3e04c4fb8a422b69c19f04333356f))
+
+
+### Bug Fixes
+
+* **Builtins:** `xcontext` is working on Windows without exception ([#6199](https://github.com/xonsh/xonsh/issues/6199)) ([2652dc7](https://github.com/xonsh/xonsh/commit/2652dc7b278a48c284b7ab7fd3f4e7e1c0aa4380))
+* **Callable aliases:** Added exception with workaround in case of using explicit unthreadable callable alias in pipe ([#6165](https://github.com/xonsh/xonsh/issues/6165)) ([643d630](https://github.com/xonsh/xonsh/commit/643d630d0fb1519ab70ab216044b0962cd2d5fc7))
+* Env: Fix empty path in PATH ([#6169](https://github.com/xonsh/xonsh/issues/6169)) ([ebf58b5](https://github.com/xonsh/xonsh/commit/ebf58b5cf797300e3a5bffd022b7f670ec7434cf))
+* Env: Fix EnvPath (e.g. PATH) mirroring to `os.environ` in case of update and `UPDATE_OS_ENVIRON=True` ([#6171](https://github.com/xonsh/xonsh/issues/6171)) ([112514a](https://github.com/xonsh/xonsh/commit/112514a09bd508807790f04f8953e287f16d9791))
+* **Env:** Detype and detype_all now in sync ([#6195](https://github.com/xonsh/xonsh/issues/6195)) ([c50f443](https://github.com/xonsh/xonsh/commit/c50f443cfb6175f72d28d1b2ce0852ca02f6186b))
+* **install:** update mamba git+extras install docs and script ([#6151](https://github.com/xonsh/xonsh/issues/6151)) ([c7d393f](https://github.com/xonsh/xonsh/commit/c7d393fa7fd68b9157c5298c289d8a02912be280))
+* **Mac:** Fix `xonsh.platforms.sysctlbyname` returns bytes instead of string when return_str=True ([#6190](https://github.com/xonsh/xonsh/issues/6190)) ([e5a31f7](https://github.com/xonsh/xonsh/commit/e5a31f7eaa09fbf9116a006ff0b5a82193163436)), closes [#6189](https://github.com/xonsh/xonsh/issues/6189)
+* Parser: fix regress with parsing `a#b;c` ([#6168](https://github.com/xonsh/xonsh/issues/6168)) ([fb1be47](https://github.com/xonsh/xonsh/commit/fb1be479875b7b0401bfba247b6db4160312839a))
+* **Parser:** Fix loop on `\ ` sequence ([#6194](https://github.com/xonsh/xonsh/issues/6194)) ([1658c53](https://github.com/xonsh/xonsh/commit/1658c537b34b90287f684ef9dd99bf978585ecda))
+* **Parser:** Fix parsing path with num in case `cd /tmp/123 && ...` ([#6193](https://github.com/xonsh/xonsh/issues/6193)) ([4529265](https://github.com/xonsh/xonsh/commit/45292652a67531197bfb422ec30fe0c8557780be))
+* **prompt-toolkit:** Restore terminal state after using captured subprocess in key bindings ([#6182](https://github.com/xonsh/xonsh/issues/6182)) ([6ecc8fd](https://github.com/xonsh/xonsh/commit/6ecc8fdc27583c0d9e3fbb8a205a1ee66ca04387))
+* **prompt-toolkit:** Support retry on EINTR (errno 4) in ptk. Fixed exceptions when xonsh run as a child process. ([#6192](https://github.com/xonsh/xonsh/issues/6192)) ([2ffd785](https://github.com/xonsh/xonsh/commit/2ffd78535a8f98e87673fe45c058a54c848f4eca))
+* **Readline:** Fix the case when output disappears in case of no new line character ([#6177](https://github.com/xonsh/xonsh/issues/6177)) ([78ad7de](https://github.com/xonsh/xonsh/commit/78ad7de787fc1aa3a8d0b752003ae4abb8108b81))
+* **Refactor:** Fixed small issues in code ([#6191](https://github.com/xonsh/xonsh/issues/6191)) ([463c387](https://github.com/xonsh/xonsh/commit/463c387b1fa353b1d2c47c15d68fe39cfefd946f))
+* **Tests:** Added strict check of using `python -m pytest` instead of `pytest`. ([#6173](https://github.com/xonsh/xonsh/issues/6173)) ([6ad6ae9](https://github.com/xonsh/xonsh/commit/6ad6ae92448c9dd9c6338a8397077f8366eaf932))
+* **Tests:** Fix unwanted output and exceptions from tests ([#6178](https://github.com/xonsh/xonsh/issues/6178)) ([322f1ca](https://github.com/xonsh/xonsh/commit/322f1ca6f44914ba2de946df1d31e969cce08431))
+* Windows: fix unstable tests ([#6163](https://github.com/xonsh/xonsh/issues/6163)) ([d3b22b9](https://github.com/xonsh/xonsh/commit/d3b22b91f53709089b747f3aa0c833651fb0bd45))
+* **Windows:** Fixed CDLL exception in MSYS2 when running xonsh ([#6176](https://github.com/xonsh/xonsh/issues/6176)) ([e8427b8](https://github.com/xonsh/xonsh/commit/e8427b8da3bd1449e5a6e687f9c8634e8685c6f3))
+
 ## [0.22.8](https://github.com/xonsh/xonsh/compare/0.22.7...0.22.8) (2026-03-17)
 
 
