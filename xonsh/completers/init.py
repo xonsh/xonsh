@@ -2,6 +2,7 @@
 
 import collections
 
+import xonsh.platform as xp
 from xonsh.completers._aliases import complete_aliases
 from xonsh.completers.base import complete_base
 from xonsh.completers.bash import complete_from_bash
@@ -33,12 +34,17 @@ def default_completers(cmd_cache):
         ("import", complete_import),
     ]
 
-    for cmd, func in [
-        ("bash", complete_from_bash),
-        ("man", complete_from_man),
-    ]:
-        if cmd in cmd_cache:
-            defaults.append((cmd, func))
+    # On Windows, bash/man completers are skipped: the available bash
+    # (WSL or Git Bash) operates in a different environment, and spawning
+    # it corrupts the Windows console mode, breaking arrow keys in
+    # prompt-toolkit.
+    if not xp.ON_WINDOWS:
+        for cmd, func in [
+            ("bash", complete_from_bash),
+            ("man", complete_from_man),
+        ]:
+            if cmd in cmd_cache:
+                defaults.append((cmd, func))
 
     defaults.extend(
         [
