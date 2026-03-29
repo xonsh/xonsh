@@ -104,6 +104,13 @@ def test_path_from_partial_string_raw_trailing_backslash(quote):
     assert out[1] == "C:\\App\\x\\"  # extracted path value
 
 
+def test_quote_paths_uppercase_raw_prefix():
+    """Uppercase R prefix (R'...') should not get an extra r prepended."""
+    out, _ = xcp._quote_paths({r"c:\dir1"}, "R'", "'", append_end=True)
+    result = out.pop()
+    assert result.startswith("R'"), f"Expected R' prefix but got: {result}"
+
+
 def test_quote_paths_raw_string_trailing_backslash():
     """When a directory completion is inside a raw string, the trailing
     separator must not be \\ (which would make r\"path\\\" invalid).

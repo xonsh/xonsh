@@ -195,7 +195,7 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
             _tail = space
         else:
             _tail = ""
-        if start != "" and "r" not in start and backslash in s:
+        if start != "" and "r" not in start.lower() and backslash in s:
             start = f"r{start}"
         s = s + _tail
         # Raw strings can't end with \ before closing quote (e.g. r"path\" is
