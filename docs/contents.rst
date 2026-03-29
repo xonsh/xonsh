@@ -37,11 +37,11 @@ Everyday User
     xonshrc
     envvars
     aliases
-    events
     tutorial_hist
     customization
     keyboard_shortcuts
     tutorial_ptk
+    events
     tutorial_macros
     Open technical issue <https://github.com/xonsh/xonsh>
 
