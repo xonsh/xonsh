@@ -1134,11 +1134,11 @@ def test_exec_function_scope(cmd):
 @skip_if_on_unix
 def test_run_currentfolder(monkeypatch):
     """Ensure we can run an executable in the current folder
-    when file is not on path
+    when using an explicit path prefix (e.g. .\\file.bat).
     """
     batfile = Path(__file__).parent / "bin" / "hello_world.bat"
     monkeypatch.chdir(batfile.parent)
-    cmd = batfile.name
+    cmd = f".\\{batfile.name}"
     out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
     assert out.strip() == "hello world"
 
