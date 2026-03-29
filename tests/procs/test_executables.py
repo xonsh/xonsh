@@ -7,6 +7,7 @@ from xonsh.procs.executables import (
     get_possible_names,
     locate_executable,
     locate_file,
+    locate_relative_path,
 )
 from xonsh.tools import chdir
 
@@ -87,6 +88,20 @@ def test_locate_executable(tmpdir, xession):
             assert locate_executable("file1") is None
             assert locate_executable("file4") is None
             assert locate_executable("file2") is None
+
+
+def test_locate_relative_path_returns_found_name(tmpdir, xession):
+    """When PATHEXT finds a file with extension, the returned path must include that extension."""
+    bindir = tmpdir.mkdir("reldir")
+    # use lowercase extension: get_possible_names lowercases extensions for lowercase input
+    (f := bindir / "myapp.exe").write_text("binary", encoding="utf8")
+    os.chmod(f, 0o777)
+
+    pathext = [".EXE"]
+    with xession.env.swap(PATH=[], PATHEXT=pathext), chdir(str(bindir)):
+        result = locate_relative_path("./myapp", use_pathext=True)
+        assert result is not None
+        assert os.path.basename(result) == "myapp.exe"
 
 
 def test_locate_file(tmpdir, xession):
