@@ -8,7 +8,6 @@ from xonsh.built_ins import XSH
 from xonsh.lib.itertools import unique_everseen
 from xonsh.platform import ON_WINDOWS
 
-
 # Extensions that xonsh always recognises as executable on Windows,
 # regardless of the PATHEXT environment variable.
 XONSH_KNOWN_EXTENSIONS = frozenset({".XSH", ".PY"})
@@ -40,7 +39,9 @@ def get_possible_names(name, env=None):
     if not extensions:
         return [name]
     upper = name.upper() == name
-    return [name] + [name + (ext.upper() if upper else ext.lower()) for ext in extensions]
+    return [name] + [
+        name + (ext.upper() if upper else ext.lower()) for ext in extensions
+    ]
 
 
 def clear_paths(paths):
