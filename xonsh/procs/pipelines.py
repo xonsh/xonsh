@@ -691,6 +691,16 @@ class CommandPipeline:
         """Closes last proc's stdout."""
         s = self.spec
         p = self.proc
+        # Wait for the last proc thread to finish before closing handles
+        # it may still be flushing.  Without this, tee.close() in the
+        # caller can destroy the mem buffer while the thread still uses it.
+        # Only join threads — ProcProxy.wait() is not idempotent (it re-runs
+        # parse_proxy_return, duplicating output).
+        if p is not None and hasattr(p, "join"):
+            try:
+                p.join(timeout=3)
+            except Exception:
+                pass
         self._safe_close(s.stdin)
         self._safe_close(s.stdout)
         self._safe_close(s.stderr)

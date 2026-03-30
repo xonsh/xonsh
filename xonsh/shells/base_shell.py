@@ -287,10 +287,15 @@ class Tee:
         self.stdout = self.stderr = None
 
     def close(self):
-        """Closes the buffer as well as the stdout and stderr tees."""
+        """Restores the original stdout/stderr streams.
+
+        The memory buffer is intentionally NOT closed here because
+        background pipeline threads (captured="object") may still
+        hold references to the Tee'd handles and flush after this
+        point.  The buffer is released when the Tee is GC'd.
+        """
         self.stdout.close()
         self.stderr.close()
-        self.memory.close()
 
     def getvalue(self):
         """Gets the current contents of the in-memory buffer."""
