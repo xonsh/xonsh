@@ -30,7 +30,7 @@ def test_signal_int_leaves_pipes_open():
         proc.returncode = None
         proc.spec = None
 
-        with patch("signal.pthread_kill"):
+        with patch("signal.pthread_kill", create=True):
             proc._signal_int(signal.SIGINT, None)
 
         assert proc._interrupted is True
