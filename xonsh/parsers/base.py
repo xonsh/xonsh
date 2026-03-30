@@ -1885,9 +1885,6 @@ class BaseParser:
     def _attach_nodedent_base_rules(self):
         toks = set(self.tokens)
         toks.remove("DEDENT")
-        toks.discard("FSTRING_START")
-        toks.discard("FSTRING_MIDDLE")
-        toks.discard("FSTRING_END")
         ts = "\n       | ".join(sorted(toks))
         doc = "nodedent : " + ts + "\n"
         self.p_nodedent_base.__func__.__doc__ = doc
@@ -1935,9 +1932,6 @@ class BaseParser:
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
-            "FSTRING_START",
-            "FSTRING_MIDDLE",
-            "FSTRING_END",
         }
         ts = "\n        | ".join(sorted(toks))
         doc = "nonewline : " + ts + "\n"
@@ -2561,9 +2555,6 @@ class BaseParser:
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
-            "FSTRING_START",
-            "FSTRING_MIDDLE",
-            "FSTRING_END",
         }
         ts = "\n       | ".join(sorted(toks))
         doc = "nocloser : " + ts + "\n"
@@ -2822,9 +2813,6 @@ class BaseParser:
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
-            "FSTRING_START",
-            "FSTRING_MIDDLE",
-            "FSTRING_END",
         }
         ts = "\n            | ".join(sorted(toks))
         doc = "nocomma_tok : " + ts + "\n"
@@ -3644,9 +3632,6 @@ class BaseParser:
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
             "AMPERSAND",
-            "FSTRING_START",
-            "FSTRING_MIDDLE",
-            "FSTRING_END",
         }
         ts = "\n                 | ".join(sorted(t.lower() + "_tok" for t in toks))
         doc = "subproc_arg_part : " + ts + "\n"

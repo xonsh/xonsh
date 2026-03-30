@@ -425,8 +425,6 @@ def subproc_toks(
 
 def check_bad_str_token(tok):
     """Checks if a token is a bad string."""
-    if tok.type in ("FSTRING_START", "FSTRING_MIDDLE", "FSTRING_END"):
-        return False
     if tok.type == "ERRORTOKEN" and tok.value == "EOF in multi-line string":
         return True
     elif isinstance(tok.value, str) and not check_quotes(tok.value):
