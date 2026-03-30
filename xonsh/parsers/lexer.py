@@ -19,6 +19,9 @@ from xonsh.parsers.tokenize import (
     ENCODING,
     ENDMARKER,
     ERRORTOKEN,
+    FSTRING_END,
+    FSTRING_MIDDLE,
+    FSTRING_START,
     GREATER,
     INDENT,
     IOREDIRECT1,
@@ -104,6 +107,9 @@ def token_map():
     tm[IOREDIRECT1] = "IOREDIRECT1"
     tm[IOREDIRECT2] = "IOREDIRECT2"
     tm[STRING] = "STRING"
+    tm[FSTRING_START] = "FSTRING_START"
+    tm[FSTRING_MIDDLE] = "FSTRING_MIDDLE"
+    tm[FSTRING_END] = "FSTRING_END"
     tm[DOLLARNAME] = "DOLLAR_NAME"
     tm[NUMBER] = "NUMBER"
     tm[SEARCHPATH] = "SEARCHPATH"
