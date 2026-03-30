@@ -1,6 +1,8 @@
 
 Frequently Asked Questions
 ==========================
+*(by Anthony Scopatz)*
+
 Ok, so, maybe no one actually asked them.
 
 1. Why xonsh?

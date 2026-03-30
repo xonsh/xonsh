@@ -10,4 +10,3 @@ If you have questions or comments, please:
 * `Join Zulip Community with core xonsh developers <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>`_
 * Page us on `Gitter <https://gitter.im/xonsh/xonsh>`_
 * `Want a t-shirt? <https://www.hellotux.com/xonsh>`_
-* `Public talks <talks_and_articles.html>`_
