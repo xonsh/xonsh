@@ -537,14 +537,14 @@ class ProcProxyThread(threading.Thread):
         if self._interrupted:
             return
         self._interrupted = True
-        # close all pipe channels owned by this proc
-        for pipe in self.pipe_channels:
-            pipe.close()
-        # close spec pipe channels if available
-        spec = getattr(self, "spec", None)
-        if spec is not None:
-            for ch in spec.pipe_channels:
-                ch.close()
+        # Do NOT close pipe FDs here.  The child subprocesses (e.g.
+        # /bin/sleep) are in the same process group and receive SIGINT
+        # directly from the terminal — they will die on their own.
+        # The worker thread's run() method handles flush/close of its
+        # FD wrappers after the child exits.  Closing FDs from the
+        # signal handler races with the thread and causes
+        # "ValueError: I/O operation on closed file" or, worse,
+        # FD-reuse corruption.
         if self.poll() is not None:
             self._restore_sigint(frame=frame)
         if xt.on_main_thread() and not xp.ON_WINDOWS:
