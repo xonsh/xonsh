@@ -30,7 +30,7 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
     get_tasks().clear()
     # needed for ci tests
     monkeypatch.setitem(
-        xonsh_session.env, "RAISE_SUBPROC_ERROR", False
+        xonsh_session.env, "XONSH_SUBPROC_RAISE_ERROR", False
     )  # for the failing `grep` commands
     monkeypatch.setitem(
         xonsh_session.env, "XONSH_CAPTURE_ALWAYS", True

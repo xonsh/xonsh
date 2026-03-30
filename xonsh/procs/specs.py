@@ -467,7 +467,7 @@ class SubprocSpec:
         self.decorators = []  # List of DecoratorAlias objects that applied to spec.
         self.pipe_channels = []  # PipeChannel objects owned by this spec
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
-        self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
+        self.raise_subproc_error = None  # Spec-based $XONSH_SUBPROC_RAISE_ERROR.
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "

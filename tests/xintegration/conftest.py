@@ -26,7 +26,7 @@ base_env = {
     "PATH": PATH,
     "XONSH_DEBUG": "0",
     "XONSH_SHOW_TRACEBACK": "1",
-    "RAISE_SUBPROC_ERROR": "0",
+    "XONSH_SUBPROC_RAISE_ERROR": "0",
     "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": "1",
     "PROMPT": "",
     "TERM": "linux",  # disable ansi escape codes

@@ -9,10 +9,10 @@ def run(cmd, cwd=None, check=False):
     """Drop in replacement for ``subprocess.run`` like functionality"""
     env = XSH.env
     if cwd is None:
-        with env.swap(RAISE_SUBPROC_ERROR=check):
+        with env.swap(XONSH_SUBPROC_RAISE_ERROR=check):
             p = subproc_captured_hiddenobject(cmd)
     else:
-        with indir(cwd), env.swap(RAISE_SUBPROC_ERROR=check):
+        with indir(cwd), env.swap(XONSH_SUBPROC_RAISE_ERROR=check):
             p = subproc_captured_hiddenobject(cmd)
     return p
 
@@ -28,9 +28,9 @@ def check_output(cmd, cwd=None):
     env = XSH.env
 
     if cwd is None:
-        with env.swap(RAISE_SUBPROC_ERROR=True):
+        with env.swap(XONSH_SUBPROC_RAISE_ERROR=True):
             output = subproc_captured_stdout(cmd)
     else:
-        with indir(cwd), env.swap(RAISE_SUBPROC_ERROR=True):
+        with indir(cwd), env.swap(XONSH_SUBPROC_RAISE_ERROR=True):
             output = subproc_captured_stdout(cmd)
     return output.encode("utf-8")

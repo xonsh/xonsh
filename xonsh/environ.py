@@ -1192,17 +1192,21 @@ class GeneralSetting(Xettings):
 class SubprocessSetting(Xettings):
     """Subprocess Settings"""
 
-    RAISE_SUBPROC_ERROR = Var.with_default(
-        False,
+    XONSH_SUBPROC_RAISE_ERROR = Var.with_default(
+        True,
         "Whether or not to raise an error if a subprocess (captured or "
         "uncaptured) returns a non-zero exit status, which indicates failure. "
         "This is most useful in xonsh scripts or modules where failures "
         "should cause an end to execution. This is less useful at a terminal. "
-        "The error that is raised is a ``subprocess.CalledProcessError``.",
+        "The error that is raised is a ``subprocess.CalledProcessError``. "
+        "Use ``@raise_error`` or ``@no_raise_error`` command decorators to "
+        "manage the error explicitly e.g. ``@no_raise_error ls nofile``",
+        sync="RAISE_SUBPROC_ERROR",
     )
-    LAST_RETURN_CODE = Var.with_default(
+    XONSH_SUBPROC_LAST_RETURN_CODE = Var.with_default(
         0,
         "Integer return code of the last command. Only updated during interactive use, i.e. not during execution of scripts.",
+        sync="XONSH_LAST_RETURN_CODE",
     )
     XONSH_SUBPROC_CAPTURED_PRINT_STDERR = Var.with_default(
         False,
@@ -2150,6 +2154,14 @@ class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
         {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
     )
 
+    RAISE_SUBPROC_ERROR = SubprocessSetting.XONSH_SUBPROC_RAISE_ERROR.set_attrs(
+        {"sync": "XONSH_SUBPROC_RAISE_ERROR", "deprecated": True}
+    )
+
+    XONSH_LAST_RETURN_CODE = SubprocessSetting.XONSH_SUBPROC_LAST_RETURN_CODE.set_attrs(
+        {"sync": "XONSH_SUBPROC_LAST_RETURN_CODE", "deprecated": True}
+    )
+
 
 # Please keep the following in alphabetic order - scopatz
 @lazyobject
@@ -2469,7 +2481,7 @@ class Env(cabc.MutableMapping):
         if check_sync and key in self._vars:
             if self._vars[key].deprecated:
                 sync_txt = (
-                    f" Replace it to {self._vars[key].sync!r}."
+                    f" Replace it to {self._vars[key].sync!r} and check <https://xon.sh/envvars.html>."
                     if self._vars[key].sync
                     else ""
                 )

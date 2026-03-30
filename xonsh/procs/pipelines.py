@@ -831,7 +831,7 @@ class CommandPipeline:
         if raise_subproc_error is False:
             return
 
-        if raise_subproc_error or XSH.env.get("RAISE_SUBPROC_ERROR", True):
+        if raise_subproc_error or XSH.env.get("XONSH_SUBPROC_RAISE_ERROR", True):
             try:
                 raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
             finally:

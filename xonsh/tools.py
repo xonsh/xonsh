@@ -937,7 +937,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         # if traceback output is disabled, print the exception's
         # error message on stderr.
         if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get(
-            "RAISE_SUBPROC_ERROR"
+            "XONSH_SUBPROC_RAISE_ERROR"
         ):
             display_colored_error_message(exc_info, limit=1)
         else:
@@ -950,7 +950,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
 def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=None):
     no_trace_and_raise_subproc_error = not xsh.env.get(
         "XONSH_SHOW_TRACEBACK"
-    ) and xsh.env.get("RAISE_SUBPROC_ERROR")
+    ) and xsh.env.get("XONSH_SUBPROC_RAISE_ERROR")
 
     if no_trace_and_raise_subproc_error:
         limit = 1
