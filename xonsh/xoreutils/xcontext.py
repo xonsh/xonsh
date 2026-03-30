@@ -1,7 +1,6 @@
 """The xontext command."""
 
 import shutil
-import subprocess
 import sys
 
 from xonsh.built_ins import XSH
@@ -9,35 +8,31 @@ from xonsh.cli_utils import ArgParserAlias
 from xonsh.platform import IN_APPIMAGE
 
 
-def _get_version(binary):
-    """Helper to get version string from a binary."""
+def _get_version(binary, arg_ver="--version"):
+    """Helper to get version string from a python/xonsh/pip binary."""
+    version = ""
     try:
-        out = subprocess.check_output(
-            [binary, "--version"], text=True, stderr=subprocess.STDOUT
-        )
-        return out.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        try:
-            out = subprocess.check_output(
-                [binary, "-V"], text=True, stderr=subprocess.STDOUT
-            )
-            return out.strip()
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return ""
+        if isinstance(binary, str):
+            version = XSH.subproc_captured_stdout([binary, arg_ver])
+        elif isinstance(binary, list):
+            version = XSH.subproc_captured_stdout(binary + [arg_ver])
+    except Exception:
+        if XSH.env.get("DEBUG", False):
+            raise
+    return (version.split("from")[0] if "from" in version else version).strip()
 
 
 def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
     """Report information about the current xonsh environment."""
     stdout = _stdout or sys.stdout
-    print("[Current xonsh session]", file=stdout)
-
     current_xonsh = sys.argv[0]
-    print(f"xonsh: {current_xonsh}", file=stdout)
-
     appimage_python = XSH.env.get("_") if IN_APPIMAGE else None
     xpy = appimage_python if appimage_python else sys.executable
     xpy_ver = _get_version(xpy)
-    print(f"xpython: {xpy} # {xpy_ver}", file=stdout)
+
+    print("[Current xonsh session]", file=stdout)
+    print(f"xonsh: {current_xonsh}", file=stdout)
+    print(f"xpython: {xpy}  # {xpy_ver}", file=stdout)
 
     xpip = XSH.aliases.get("xpip")
     if xpip:
@@ -58,11 +53,12 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
         if path:
             ver = ""
             if cmd == "python":
-                ver = f" # {_get_version(path)}"
+                ver = f"  # {_get_version(path)}"
             print(f"{cmd}: {path}{ver}", file=stdout)
         else:
             print(f"{cmd}: not found", file=stdout)
     print("", file=stdout)
+    print("[Current environment]", file=stdout)
     envs = ["CONDA_DEFAULT_ENV", "VIRTUAL_ENV"]
     for ev in envs:
         val = XSH.env.get(ev)
