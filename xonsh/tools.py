@@ -40,19 +40,6 @@ import typing as tp
 import warnings
 from contextlib import contextmanager
 
-try:
-    from prompt_toolkit.cursor_shapes import (
-        CursorShape,
-        CursorShapeConfig,
-        DynamicCursorShapeConfig,
-        ModalCursorShapeConfig,
-        SimpleCursorShapeConfig,
-    )
-
-    HAVE_CURSOR_SHAPE = True
-except ImportError:
-    HAVE_CURSOR_SHAPE = False
-
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
@@ -66,6 +53,17 @@ from xonsh.platform import (
     os_environ,
     pygments_version_info,
 )
+
+
+@lazyobject
+def _ptk_cursor_shapes():
+    """Lazily load prompt_toolkit cursor shapes module."""
+    try:
+        from prompt_toolkit import cursor_shapes
+
+        return cursor_shapes
+    except ImportError:
+        return None
 
 
 @contextmanager
@@ -1592,42 +1590,44 @@ def ptk2_color_depth_setter(x):
 
 def ptk_cursor_shape_vi_modal():
     if xsh.env.get("VI_MODE"):
-        return ModalCursorShapeConfig()
+        return _ptk_cursor_shapes.ModalCursorShapeConfig()
     else:
-        return SimpleCursorShapeConfig()
+        return _ptk_cursor_shapes.SimpleCursorShapeConfig()
 
 
 def to_ptk_cursor_shape(x):
-    if not HAVE_CURSOR_SHAPE:
+    if not _ptk_cursor_shapes:
         return None
-    if isinstance(x, CursorShape | CursorShapeConfig):
+    if isinstance(
+        x, _ptk_cursor_shapes.CursorShape | _ptk_cursor_shapes.CursorShapeConfig
+    ):
         return x
     if not isinstance(x, str):
         raise ValueError("invalid cursor shape")
     x = str(x).upper().replace("-", "_")
     if x == "MODAL":
-        return ModalCursorShapeConfig()
+        return _ptk_cursor_shapes.ModalCursorShapeConfig()
     elif x == "MODAL_VI_MODE_ONLY":
-        return DynamicCursorShapeConfig(ptk_cursor_shape_vi_modal)
+        return _ptk_cursor_shapes.DynamicCursorShapeConfig(ptk_cursor_shape_vi_modal)
     try:
-        return CursorShape[x]
+        return _ptk_cursor_shapes.CursorShape[x]
     except KeyError:
-        return SimpleCursorShapeConfig()
+        return _ptk_cursor_shapes.SimpleCursorShapeConfig()
 
 
 def to_ptk_cursor_shape_display_value(x):
     if not x:
         return ""
-    if isinstance(x, SimpleCursorShapeConfig):
+    if isinstance(x, _ptk_cursor_shapes.SimpleCursorShapeConfig):
         x = x.get_cursor_shape(None)
-    if isinstance(x, CursorShape):
+    if isinstance(x, _ptk_cursor_shapes.CursorShape):
         x = x.value.lower().replace("_", "-")
         if x.startswith("-"):
             x = x[1:]
         return x
-    if isinstance(x, ModalCursorShapeConfig):
+    if isinstance(x, _ptk_cursor_shapes.ModalCursorShapeConfig):
         return "modal"
-    if isinstance(x, DynamicCursorShapeConfig):
+    if isinstance(x, _ptk_cursor_shapes.DynamicCursorShapeConfig):
         return "modal-vi-mode-only"
     return "unknown"
 
