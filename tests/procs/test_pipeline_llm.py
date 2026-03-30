@@ -12,8 +12,6 @@ import signal
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import pytest
-
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread, parse_proxy_return
 
 
@@ -65,7 +63,9 @@ def test_proc_proxy_wait_not_idempotent(xonsh_session):
     second = stdout.getvalue()
 
     assert first == "ok"
-    assert second == "okok", "wait() is not idempotent — this is why _close_proc must not call it"
+    assert second == "okok", (
+        "wait() is not idempotent — this is why _close_proc must not call it"
+    )
 
 
 def test_close_proc_skips_non_thread_procs():
