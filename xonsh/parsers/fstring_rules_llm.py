@@ -1,4 +1,4 @@
-"""PEP 701 f-string grammar rules for the PLY parser (Python 3.12+).
+"""PEP 701 f-string grammar rules for the PLY parser. Python 3.12+.
 
 Provides a mixin class ``FStringRules`` with all ``p_fstring_*`` methods
 that assemble FSTRING_START / FSTRING_MIDDLE / FSTRING_END tokens into
