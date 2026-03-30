@@ -146,7 +146,7 @@ def get_script_subproc_command(fname, args):
         if ext_upper in {".XSH", ".PY", ".PYW"}:
             return [sys.executable, "-m", "xonsh", fname] + args
         # 3) Other PATHEXT extensions — delegate to OS file associations
-        if ext_upper in XSH.env.get("PATHEXT"):
+        if ext_upper in {e.upper() for e in XSH.env.get("PATHEXT", [])}:
             return ["cmd", "/c", fname] + args
         # 4) Try shebang for any other text file
         shebang = parse_shebang_from_file(fname)
