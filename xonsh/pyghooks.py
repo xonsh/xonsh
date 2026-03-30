@@ -1663,7 +1663,7 @@ def _command_is_autocd(cmd):
 
 
 def _schedule_bg_validation():
-    """Restart the 50 ms debounce timer on every cache miss."""
+    """Restart the 10 ms debounce timer on every cache miss."""
     global _debounce_timer, _ptk_app, _validation_gen
     if _debounce_timer is not None:
         _debounce_timer.cancel()
@@ -1677,7 +1677,7 @@ def _schedule_bg_validation():
         _ptk_app = get_app_or_none()
     except Exception:
         pass
-    _debounce_timer = threading.Timer(0.05, _run_bg_validation, args=[gen])
+    _debounce_timer = threading.Timer(0.01, _run_bg_validation, args=[gen])
     _debounce_timer.daemon = True
     _debounce_timer.start()
 
@@ -1685,9 +1685,10 @@ def _schedule_bg_validation():
 def _run_bg_validation(gen):
     """Background thread: validate pending commands via locate_executable.
 
-    *gen* is the generation token captured at scheduling time.  If
-    ``_validation_gen`` has moved on (new keystrokes arrived), this thread
-    is stale — it stops early and discards its results.
+    *gen* is the generation token captured at scheduling time.  Results are
+    always saved to cache (even if gen is stale) so that later renders can
+    reuse them.  Only the re-render / invalidate step is gated by gen —
+    a stale thread must not trigger a repaint for an outdated input.
     """
     cmds = set(_pending_cmds)
     _pending_cmds.clear()
@@ -1695,16 +1696,25 @@ def _run_bg_validation(gen):
         return
     changed = False
     for cmd in cmds:
-        if gen != _validation_gen:
-            return  # Stale — newer validation supersedes us
         if cmd not in _cmd_valid_cache:
             found = bool(locate_executable(cmd))
             _cmd_valid_cache[cmd] = found
-            changed = True
-        if gen != _validation_gen:
-            return  # Check again after the expensive locate_executable
+            if gen == _validation_gen:
+                changed = True
     if gen == _validation_gen and changed and _ptk_app is not None:
         try:
+            # Clear the BufferControl fragment cache so that
+            # prompt_toolkit re-lexes instead of returning stale tokens.
+            # Without this, pressing Up / Ctrl-R shows wrong highlights
+            # because the cache key (document.text, invalidation_hash)
+            # hasn't changed — only our internal _cmd_valid_cache has.
+            from prompt_toolkit.layout.controls import BufferControl
+
+            for control in _ptk_app.layout.find_all_controls():
+                if isinstance(control, BufferControl) and hasattr(
+                    control, "_fragment_cache"
+                ):
+                    control._fragment_cache.clear()
             _ptk_app.invalidate()
         except Exception:
             pass
