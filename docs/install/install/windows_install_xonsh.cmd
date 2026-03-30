@@ -46,7 +46,7 @@ del "%XONSH_DIR%\get-pip.py"
 
 :install_xonsh
 echo [4/4] Installing xonsh...
-"%XONSH_DIR%\python.exe" -m pip install "xonsh[full]" --no-warn-script-location -q
+"%XONSH_DIR%\python.exe" -m pip install setuptools "xonsh[full]" --no-warn-script-location -q
 if errorlevel 1 (
     echo ERROR: Failed to install xonsh.
     exit /b 1
