@@ -1596,7 +1596,9 @@ def ptk_cursor_shape_vi_modal():
 def to_ptk_cursor_shape(x):
     if not _ptk_cursor_shapes:
         return None
-    if isinstance(x, _ptk_cursor_shapes.CursorShape | _ptk_cursor_shapes.CursorShapeConfig):
+    if isinstance(
+        x, _ptk_cursor_shapes.CursorShape | _ptk_cursor_shapes.CursorShapeConfig
+    ):
         return x
     if not isinstance(x, str):
         raise ValueError("invalid cursor shape")
