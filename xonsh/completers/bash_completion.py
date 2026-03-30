@@ -191,7 +191,7 @@ def _bash_quote_paths(paths, start, end):
             _tail = space
         else:
             _tail = ""
-        if start != "" and "r" not in start and backslash in s:
+        if start != "" and "r" not in start.lower() and backslash in s:
             start = f"r{start}"
         s = s + _tail
         if end != "":

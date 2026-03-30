@@ -6,7 +6,16 @@ Development Spiral
     :titlesonly:
     :maxdepth: 1
 
-    api/index
     devguide
+    api/index
+
+Chronicle
+=========
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
     changelog
+    talks_and_articles
     faq
