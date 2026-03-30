@@ -114,7 +114,7 @@ Install independent Xonsh on Windows (no admin rights):
 .. code-block:: console
 
     curl -L -o install_xonsh.cmd https://xon.sh/install/windows_install_xonsh.cmd
-    install_xonsh.cmd
+    install_xonsh.cmd  # Install to ~/xonsh-env/
 
 Package
 ========================
