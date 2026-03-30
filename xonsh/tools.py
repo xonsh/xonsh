@@ -40,7 +40,6 @@ import typing as tp
 import warnings
 from contextlib import contextmanager
 
-
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
