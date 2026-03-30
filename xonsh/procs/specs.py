@@ -93,7 +93,7 @@ def _un_shebang(x):
     elif x.endswith("python") or x.endswith("python.exe"):
         x = "python"
     if x == "xonsh":
-        return ["python", "-m", "xonsh"]
+        return [sys.executable, "-m", "xonsh"]
     return [x]
 
 
@@ -139,12 +139,28 @@ def get_script_subproc_command(fname, args):
         # if the file is a binary, we should call it directly
         return None
     if xp.ON_WINDOWS:
-        # Windows can execute various filetypes directly
-        # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-        if ext.upper() in XSH.env.get("PATHEXT"):
-            return [fname] + args
-    # find interpreter
+        ext_upper = ext.upper()
+        # 1) .xsh / .py / .pyw — run with the current xonsh interpreter
+        #    (xonsh compiles .py as pure Python and .xsh as xonsh code
+        #    via codecache, matching the Linux behaviour)
+        if ext_upper in {".XSH", ".PY", ".PYW"}:
+            return [sys.executable, "-m", "xonsh", fname] + args
+        # 3) Other PATHEXT extensions — delegate to OS file associations
+        if ext_upper in XSH.env.get("PATHEXT"):
+            return ["cmd", "/c", fname] + args
+        # 4) Try shebang for any other text file
+        shebang = parse_shebang_from_file(fname)
+        m = RE_SHEBANG.match(shebang)
+        if m is not None:
+            interp = shlex.split(m.group(1).strip())
+            o = []
+            for i in interp:
+                o.extend(_un_shebang(i))
+            return o + [fname] + args
+        # 5) Unknown file type — no recognised extension, no shebang
+        return None
+    # --- POSIX path (unchanged) ---
     shebang = parse_shebang_from_file(fname)
     m = RE_SHEBANG.match(shebang)
     # xonsh is the default interpreter
@@ -156,11 +172,6 @@ def get_script_subproc_command(fname, args):
             interp = shlex.split(interp)
         else:
             interp = ["xonsh"]
-    if xp.ON_WINDOWS:
-        o = []
-        for i in interp:
-            o.extend(_un_shebang(i))
-        interp = o
     return interp + [fname] + args
 
 
@@ -860,6 +871,15 @@ class SubprocSpec:
                 # Otherwise _run_binary() (PR #4077) would launch the script
                 # directly via CreateProcess, causing WinError 193 on Windows.
                 self.binary_loc = locate_executable(scriptcmd[0])
+            elif xp.ON_WINDOWS and not _is_binary(fname):
+                # get_script_subproc_command returned None for a non-binary
+                # file — it has no recognised extension and no shebang.
+                # (None for a binary is normal — it runs via CreateProcess.)
+                _, ext = os.path.splitext(fname)
+                raise xt.XonshError(
+                    f"xonsh: {self.cmd[0]}: unknown file type {ext!r} — "
+                    f"not in $PATHEXT."
+                )
         except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise xt.XonshError(e.format(self.cmd[0])) from ex
