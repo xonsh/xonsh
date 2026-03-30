@@ -96,7 +96,7 @@ such as Miniconda or Micromamba, should be used.
 macOS / Linux / WSL
 -------------------
 
-Install independent Xonsh with Micromamba:
+Install Xonsh independently using Micromamba:
 
 .. code-block:: console
 
@@ -109,7 +109,7 @@ Learn more: `Mamba installer <install_mamba.html>`_.
 Windows
 -------
 
-Install independent Xonsh on Windows (no admin rights):
+Install Xonsh independently on Windows (without admin rights):
 
 .. code-block:: console
 

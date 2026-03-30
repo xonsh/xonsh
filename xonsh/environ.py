@@ -1866,7 +1866,7 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         always_false,
         to_ptk_cursor_shape,
         to_ptk_cursor_shape_display_value,
-        to_ptk_cursor_shape("modal-vi-mode-only"),
+        default_value(lambda env: to_ptk_cursor_shape("modal-vi-mode-only")),
         "The cursor shape. Possible values for prompt toolkit are: "
         "``block``, ``beam``, ``underline``, "
         "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "
