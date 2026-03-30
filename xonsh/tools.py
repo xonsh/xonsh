@@ -1616,7 +1616,6 @@ def to_ptk_cursor_shape(x):
 
 
 def to_ptk_cursor_shape_display_value(x):
-    _ensure_cursor_shapes()
     if not x:
         return ""
     if isinstance(x, _ptk_cursor_shapes.SimpleCursorShapeConfig):
