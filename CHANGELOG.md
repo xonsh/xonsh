@@ -5496,7 +5496,7 @@
 -   Macro function calls are now available. These use a Rust-like
     `f!(arg)` syntax.
 -   Macro subprocess call now available with the `echo! x y z` syntax.
--   A new [event subsystem](http://xon.sh/tutorial_events.html) has been
+-   A new [event subsystem](http://xon.sh/events_tutorial.html) has been
     added.
 -   howto install sections for Debian/Ubuntu and Fedora.
 -   `History` methods `__iter__` and `__getitem__`

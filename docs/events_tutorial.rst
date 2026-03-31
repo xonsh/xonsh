@@ -1,8 +1,8 @@
-.. _tutorial_events:
+.. _events_tutorial:
 
-************************************
-Tutorial: Events
-************************************
+******
+Events
+******
 What's the best way to keep informed in xonsh? Subscribe to an event!
 
 Overview

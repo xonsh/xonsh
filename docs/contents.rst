@@ -57,7 +57,7 @@ Creator
     xonsh_projects
     xontrib
     Xontrib template <https://github.com/xonsh/xontrib-cookiecutter>
-    tutorial_events
+    events_tutorial
     tutorial_completers
     tutorial_history_backend
 

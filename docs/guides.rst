@@ -43,7 +43,7 @@ Creator
     python_virtual_environments
     xonsh_projects
     xontrib
-    tutorial_events
+    events_tutorial
     tutorial_completers
     tutorial_history_backend
 
