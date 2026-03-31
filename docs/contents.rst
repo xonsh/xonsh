@@ -72,7 +72,6 @@ developer tools.
     Extension template <https://github.com/xonsh/xontrib-cookiecutter>
     events_tutorial
     completers
-    history_backend
 
 Contributor
 -----------
@@ -86,8 +85,9 @@ and collaborating with others
     :maxdepth: 1
 
     developer
-    api/index
     Xonsh on Github <https://github.com/xonsh/xonsh>
+    api/index
+    history_backend
 
 
 Links
