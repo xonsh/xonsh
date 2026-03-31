@@ -665,9 +665,9 @@ class CommandPipeline:
         * *xonsh's own group* — holds subprocesses spawned *inside*
           the callable alias (they run on a non-main thread, so
           CommandPipeline.__init__ sets their pipeline_group to
-          os.getpgid(0)).  These are killed directly by the kernel
-          when Ctrl+C sends SIGINT to the foreground (xonsh) group;
-          no action is needed here.
+          os.getpgid(0)).  For a real Ctrl+C the kernel sends SIGINT
+          to this group automatically; the killpg below covers the
+          programmatic case (e.g. os.kill(pid, SIGINT)).
         """
         if not xp.ON_POSIX:
             return
@@ -677,6 +677,15 @@ class CommandPipeline:
                 os.killpg(self._pgid, signal.SIGINT)
             except (ProcessLookupError, OSError):
                 pass
+        # Kill xonsh's own group to reach subprocesses spawned inside
+        # callable aliases.  For real Ctrl+C this is redundant (kernel
+        # already sent SIGINT), but harmless.  The current SIGINT
+        # handler has _interrupted=True and will return immediately,
+        # so xonsh itself is not affected.
+        try:
+            os.killpg(os.getpgrp(), signal.SIGINT)
+        except (ProcessLookupError, OSError):
+            pass
         # Also signal individual procs that may be in other groups
         my_pid = os.getpid()
         for p in self.procs:
