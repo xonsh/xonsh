@@ -193,11 +193,7 @@ class CommandPipeline:
                 self._return_terminal()
                 self.proc = None
                 return
-            if (
-                proc.pid
-                and pipeline_group is None
-                and not spec.is_proxy
-            ):
+            if proc.pid and pipeline_group is None and not spec.is_proxy:
                 # All non-proxy pipeline members must share a single
                 # process group so that one os.killpg() can reach them
                 # all on Ctrl+C.  The first subprocess becomes the group
