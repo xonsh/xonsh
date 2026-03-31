@@ -26,7 +26,7 @@ Everyday User
     envvars
     aliases
     events
-    tutorial_hist
+    history
     customization
     keyboard_shortcuts
     tutorial_ptk

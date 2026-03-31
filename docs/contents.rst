@@ -37,7 +37,7 @@ Everyday User
     xonshrc
     envvars
     aliases
-    tutorial_hist
+    history
     customization
     keyboard_shortcuts
     tutorial_ptk

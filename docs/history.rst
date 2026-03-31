@@ -1,4 +1,4 @@
-.. _tutorial_hist:
+.. _history:
 
 ************************************
 Tutorial: History
