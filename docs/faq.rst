@@ -1,6 +1,8 @@
 
 Frequently Asked Questions
 ==========================
+*(by Anthony Scopatz)*
+
 Ok, so, maybe no one actually asked them.
 
 1. Why xonsh?
@@ -139,10 +141,10 @@ syntax and don't share a namespace.  Therefore, in xonsh,
 .. code-block:: xonshcon
 
     # exec() as a function is run as Python's exec
-    >>> exec('x = 41; x += 1', globals(), locals())
+    @ exec('x = 41; x += 1', globals(), locals())
 
     # while exec as a statement is like bash's exec
-    >>> exec gdb
+    @ exec gdb
     (gdb)
 
 Yes, this is potentially confusing. This is particularly true since earlier
@@ -162,22 +164,22 @@ that you can remove the ``exec`` alias and use the ``xexec`` alias instead:
 
 .. code-block:: xonshcon
 
-    >>> del aliases['exec']
-    >>> xexec ssh
+    @ del aliases['exec']
+    @ xexec ssh
 
 Alternatively, you can always be sure to run the exec command explicitly in
 subprocess mode with ``![]`` or ``!()``:
 
 .. code-block:: xonshcon
 
-    >>> ![exec bash]
+    @ ![exec bash]
 
 Lastly, you can assign the result of the exec() function to a throw away
 variable (since the return is always None):
 
 .. code-block:: xonshcon
 
-    >>> _ = exec('x = 42')
+    @ _ = exec('x = 42')
 
 Hopefully, though, this trade-off makes sense and you never have to worry about
 it...unless chimera slaying is your bag.
@@ -193,22 +195,3 @@ as recursive globbing is `new in Python 3.5 <https://docs.python.org/3/library/g
 
 To keep available packages independent from underlying environments, use the provided `xpip` alias in the same way as `pip` is installed.
 It will make sure that the installed packages are available to `xonsh`
-
-9. How to add xonsh into the context menu for Windows?
-------------------------------------------------------
-In Windows, there's a context menu support for opening a folder in a shell, such as `Open PowerShell window here`. You might want to have a similar menu that opens a folder in xonsh:
-
-.. image:: _static/context_menu_windows.png
-   :width: 80 %
-   :alt: context_menu_windows
-   :align: center
-
-Usually it involves modifying registry to get it, but `a contributed script <https://gist.github.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055>`_ can be used for automating chores for you.
-
- .. code-block:: xonshcon
-
-    # Open xonsh and copy-paste the following line:
-    >>> exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_register_right_click()
-
-    # To remove the menu, use following line instead:
-    >>> exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_unregister_right_click()

@@ -6,6 +6,7 @@ from importlib import import_module
 import pytest
 
 from xonsh import imphooks
+from xonsh.pytest.tools import ON_WINDOWS
 
 
 @pytest.fixture(autouse=True)
@@ -15,10 +16,18 @@ def imp_env(xession):
     yield
 
 
+def check_out(out):
+    if ON_WINDOWS:
+        # Windows `echo` (`cmd /c echo`) keeps quotes in case of using space.
+        assert '"hello mom" jawaka\n' == out
+    else:
+        assert "hello mom jawaka\n" == out
+
+
 def test_import():
     import sample
 
-    assert "hello mom jawaka\n" == sample.x
+    check_out(sample.x)
 
 
 def test_import_empty():
@@ -30,20 +39,23 @@ def test_import_empty():
 def test_absolute_import():
     from xpack import sample
 
-    assert "hello mom jawaka\n" == sample.x
+    check_out(sample.x)
 
 
 def test_relative_import():
     from xpack import relimp
 
-    assert "hello mom jawaka\n" == relimp.sample.x
-    assert "hello mom jawaka\ndark chest of wonders" == relimp.y
+    check_out(relimp.sample.x)
+
+    first, second = relimp.y.split("\n")
+    check_out(first + "\n")
+    assert "dark chest of wonders" == second
 
 
 def test_sub_import():
     from xpack.sub import sample
 
-    assert "hello mom jawaka\n" == sample.x
+    check_out(sample.x)
 
 
 TEST_DIR = os.path.dirname(__file__)

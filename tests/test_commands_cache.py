@@ -2,6 +2,7 @@ import os
 import pickle
 import stat
 import time
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -11,6 +12,7 @@ from xonsh.commands_cache import (
     CaseInsensitiveDict,
     CommandsCache,
     _Commands,
+    default_threadable_predictors,
     executables_in,
     predict_false,
     predict_shell,
@@ -242,31 +244,40 @@ def test_exes_in_cwd_are_not_matched(faux_binary, monkeypatch):
     assert cache.locate_binary(faux_binary.name) is None
 
 
+@skip_if_on_windows
 def test_nixos_coreutils(tmp_path):
     """On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file."""
     path = tmp_path / "core"
     coreutils = path / "coreutils"
-    echo = path / "echo"
+    myecho = path / "myecho"
     echo2 = path / "echo2"
     echo3 = path / "echo3"
     cat = path / "cat"
 
     path.mkdir()
-    coreutils.write_bytes(b"Binary with isatty, tcgetattr, tcsetattr.")
-    echo.symlink_to(echo2)
+    coreutils.write_bytes(
+        b"Binary with isatty, tcgetattr, tcsetattr to have threadable=False in case of binary scan."
+    )
+    myecho.symlink_to(echo2)
     echo2.symlink_to(echo3)
     echo3.symlink_to(coreutils)
     cat.symlink_to(coreutils)
 
-    for toolpath in [coreutils, echo, echo2, echo3, cat]:
+    for toolpath in [coreutils, myecho, echo2, echo3, cat]:
         # chmod a+x toolpath
         current_permissions = toolpath.stat().st_mode
         toolpath.chmod(current_permissions | 0o111)
 
     cache = CommandsCache({"PATH": [path]})
+    cache.update_cache()
 
-    assert cache.predict_threadable(["echo", "1"]) is True
-    assert cache.predict_threadable(["cat", "file"]) is False
+    assert cache.predict_threadable([str(myecho), "1"]) is True  # from coreutils fix
+    assert (
+        cache.predict_threadable([str(cat), "file"]) is False
+    )  # from default_threadable_predictors
+    assert (
+        cache.predict_threadable(["yes"]) is False
+    )  # from default_threadable_predictors
 
 
 def test_executables_in(xession):
@@ -381,3 +392,81 @@ def test_caseinsdict_copy():
     actual = initial.copy()
     assert actual == initial
     assert id(actual) != id(initial)
+
+
+@skip_if_on_windows
+def test_cached_name():
+    cache = CommandsCache({"PATH": ["/bin"]})
+    cache._cmds_cache["bash"] = ("/bin/bash", None)
+    assert cache.cached_name("/path/to/bash") == "bash"
+
+
+def test_predictor_alias_forwards_args(xession):
+    """A simple alias like tst -> ['echo', 'hello'] should forward alias args to predictor."""
+    cc = xession.commands_cache
+    received = {}
+
+    def spy_predictor(args, cache):
+        received["args"] = list(args)
+        received["cache"] = cache
+        return True
+
+    cc.threadable_predictors["echo"] = spy_predictor
+    xession.aliases["tst"] = ["echo", "hello"]
+
+    result = cc.predict_threadable(["tst", "world"])
+
+    assert result is True
+    assert received["args"] == ["hello", "world"]
+    assert received["cache"] is cc
+
+
+def test_predictor_alias_chained_preserves_arg_order(xession):
+    """Multi-hop alias: tst -> ['tst2', '-a'], tst2 -> ['echo', '-b'] should give ['-b', '-a']."""
+    cc = xession.commands_cache
+    received = {}
+
+    def spy_predictor(args, cache):
+        received["args"] = list(args)
+        return True
+
+    cc.threadable_predictors["echo"] = spy_predictor
+    xession.aliases["tst"] = ["tst2", "-a"]
+    xession.aliases["tst2"] = ["echo", "-b"]
+
+    cc.predict_threadable(["tst", "-c"])
+
+    assert received["args"] == ["-b", "-a", "-c"]
+
+
+def test_predictor_alias_callable_returns_predict_true(xession):
+    """Callable (non-Sequence) aliases should return predict_true."""
+    cc = xession.commands_cache
+    xession.aliases["tst"] = lambda args: None
+
+    predictor = cc.get_predictor_threadable("tst")
+    assert predictor is predict_true
+
+
+def test_predictor_alias_self_referencing(xession):
+    """Self-referencing alias like ls -> ['ls', '--color'] should return predict_true."""
+    cc = xession.commands_cache
+    xession.aliases["ls"] = ["ls", "--color"]
+
+    predictor = cc.get_predictor_threadable("ls")
+    assert predictor is predict_true
+
+
+@skip_if_on_windows
+def test_symlink_predict_threadable(xession, tmpdir_factory):
+    temp_dir = Path(tmpdir_factory.mktemp("test_symlink_predict_threadable"))
+    bash_path = Path(temp_dir) / "bash"
+    bash_path.write_bytes(
+        b"ncurses/libgpm/isatty/tcgetattr/tcsetattr"
+    )  # Bytes that are related to interactive behavior from cc.default_predictor_readbin
+    symlink_path = Path(temp_dir) / "maybebash"
+    os.symlink(bash_path, symlink_path)
+    default_predictors = default_threadable_predictors()
+    cc = xession.commands_cache
+    cc._cmds_cache["bash"] = ("/bin/bash", None)
+    assert cc.get_predictor_threadable(str(symlink_path)) == default_predictors["bash"]

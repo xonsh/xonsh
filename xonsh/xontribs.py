@@ -102,6 +102,8 @@ def _get_installed_xontribs(pkg_name="xontrib"):
     spec = importlib.util.find_spec(pkg_name)
 
     def iter_paths():
+        if spec is None or spec.submodule_search_locations is None:
+            return
         for loc in spec.submodule_search_locations:
             path = Path(loc)
             if path.exists():
@@ -319,11 +321,19 @@ def xontrib_data():
     """Collects and returns the data about installed xontribs."""
     data = {}
     for xo_name, xontrib in get_xontribs().items():
+        desc = xontrib.get_description()
+        try:
+            max_desc = os.get_terminal_size().columns - 40
+        except (OSError, ValueError):
+            max_desc = 60
+        max_desc = max(max_desc, 20)
+        short_desc = desc.split("\n")[0][:max_desc] if desc else ""
         data[xo_name] = {
             "name": xo_name,
             "loaded": xontrib.is_loaded,
             "auto": xontrib.is_auto_loaded,
             "module": xontrib.module,
+            "description": short_desc,
         }
 
     return dict(sorted(data.items()))
@@ -358,7 +368,9 @@ def xontribs_list(to_json=False, _stdout=None):
                 elif d["loaded"]:
                     s += "  {CYAN}manual{RESET}"
             else:
-                s += "{RED}not-loaded{RESET}"
+                s += "{RED}not-loaded{RESET}" + " " * 8
+            if d.get("description"):
+                s += "  " + d["description"]
             s += "\n"
         print_color(s[:-1], file=_stdout)
 

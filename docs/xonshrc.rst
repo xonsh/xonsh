@@ -40,7 +40,7 @@ initializes your personal run control file (usually at ``~/.xonshrc``).  To invo
 
 .. code-block:: xonshcon
 
-  >>> xonfig web
+  @ xonfig web
   Web config started at 'http://localhost:8421'. Hit Ctrl+C to stop.
   127.0.0.1 - - [23/Aug/2020 15:04:39] "GET / HTTP/1.1" 200 -
 

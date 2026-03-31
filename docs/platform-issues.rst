@@ -30,51 +30,8 @@ lines to your ``~/.bashrc file``:
     unset module
     unset scl
 
-Use the Nix Package manager with Xonsh
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To users of the `Nix Package Manager <https://www.nixos.org/>`_ these few lines might be life-savers:
-
-.. code-block:: xonshcon
-
-    if p"~/.nix-profile".exists() and not @.env.get("NIX_PATH"):
-        $NIX_REMOTE="daemon"
-        $NIX_USER_PROFILE_DIR="/nix/var/nix/profiles/per-user/" + $USER
-        $NIX_PROFILES="/nix/var/nix/profiles/default " + $HOME + "/.nix-profile"
-        $NIX_SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
-        $NIX_PATH="nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs:/nix/var/nix/profiles/per-user/root/channels"
-        $PATH += ["~/.nix-profile/bin", "/nix/var/nix/profiles/default/bin"]
-
-Btw. a hacky solution to install xontribs that do not yet ship with ``nixpkgs`` is:
-
-.. code-block:: xonshcon
-
-    for p in map(lambda s: str(s.resolve()), p"~/.local/lib/".glob("python*/site-packages")):
-        if p not in sys.path:
-            sys.path.append(p)
-
-    $PYTHONPATH = "$USER/.local/lib/python3.7/site-packages"
-
-    python -m ensurepip --user
-    xonsh
-    python -m pip install --user -U pip xontrib-z xonsh-direnv
-
-Just run the last three lines, do not put them in your `xonshrc`!
-
-MacOS, OSX
+macOS, OSX
 ----------
-
-readline
-^^^^^^^^
-
-[ed note: This recommendation seems to be `out of date <https://pypi.org/project/gnureadline/>`_.
-It's retained in the current docs in case you have an older version of Python or macOS.  But if
-you have Mac platform experience and can clarify, please open an issue or even a PR to correct the documentation.]
-
-On macOS, it is *strongly* recommended to install the ``gnureadline`` library if using the readline shell.  ``gnureadline`` can be installed via pip:
-
-.. code-block:: console
-
-    @ pip3 install gnureadline
 
 Path Helper
 ^^^^^^^^^^^
@@ -101,6 +58,9 @@ To incorporate the whole functionality of ``/etc/profile``:
 
 Tab completion
 ^^^^^^^^^^^^^^
+
+First of all take a look `xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_ for a modern approach.
+
 Xonsh has support for using bash completion files on the shell, to use it you need to install
 the bash-completion package.
 The regular bash-completion package uses v1 which mostly works, but `occasionally has rough edges <https://github.com/xonsh/xonsh/issues/2111>`_ so we recommend using bash-completion v2.
@@ -188,6 +148,27 @@ to open automatically in xonsh. Here is a sample settings.json:
         . . .
 
 
+How to add xonsh into the context menu for Windows?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In Windows, there's a context menu support for opening a folder in a shell, such as `Open PowerShell window here`. You might want to have a similar menu that opens a folder in xonsh:
+
+.. image:: _static/context_menu_windows.png
+   :width: 80 %
+   :alt: context_menu_windows
+   :align: center
+
+Usually it involves modifying registry to get it, but `a contributed script <https://gist.github.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055>`_ can be used for automating chores for you.
+
+ .. code-block:: xonshcon
+
+    # Open xonsh and copy-paste the following line:
+    @ exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_register_right_click()
+
+    # To remove the menu, use following line instead:
+    @ exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_unregister_right_click()
+
+
 Nice colors
 ^^^^^^^^^^^
 
@@ -228,13 +209,13 @@ back-end. To enable that behaviour run the following:
 
 .. code-block:: xonshcon
 
-   >>> xpip install xontrib-free-cwd
+   @ xpip install xontrib-free-cwd
 
 Add this line to your ``~/.xonshrc`` file to have it always enabled.
 
 .. code-block:: xonshcon
 
-   >>> xontrib load free_cwd
+   @ xontrib load free_cwd
 
 
 Name space conflicts
@@ -245,7 +226,7 @@ you must explicitly request the ``.``, like this:
 
 .. code-block:: xonshcon
 
-   >>> dir .
+   @ dir .
     Volume in drive C is Windows
     Volume Serial Number is 30E8-8B86
 
@@ -264,7 +245,7 @@ typing and avoid the ambiguity altogether:
 
 .. code-block:: xonshcon
 
-   >>> aliases['d'] = ['cmd', '/c', 'dir']
+   @ aliases['d'] = ['cmd', '/c', 'dir']
 
 You can add aliases to your `xonshrc <xonshrc.rst>`_ to have it always
 available when xonsh starts.
@@ -285,13 +266,13 @@ explicitly:
 
 .. code-block:: xonshcon
 
-    >>> ./my-program
+    @ ./my-program
 
 Although not recommended, to restore the behavior found in the
 ``cmd.exe`` shell, simply append ``.`` to the ``PATH``:
 
 .. code-block:: xonshcon
 
-    >>> $PATH.append('.')
+    @ $PATH.append('.')
 
 Add that to ``~/.xonshrc`` to enable that as the default behavior.

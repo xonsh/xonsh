@@ -1,16 +1,14 @@
 import builtins
-from contextlib import contextmanager
-from unittest.mock import MagicMock
+from unittest.mock import mock_open
 
 import xonsh.platform as xp
 
 
 def test_githash_value_error(monkeypatch):
-    @contextmanager
-    def mocked_open(*args):
-        yield MagicMock(read=lambda: "abc123")
-
+    mocked_open = mock_open(read_data="abc123")
     monkeypatch.setattr(builtins, "open", mocked_open)
+
+    xp.githash.cache_clear()  # githash has lru_cache
     sha, date_ = xp.githash()
     assert date_ is None
     assert sha is None

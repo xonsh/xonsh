@@ -80,7 +80,7 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
             Adds a validator function to a handler to limit when it is considered.
             """
             if debug_level():
-                if not has_kwargs(handler):
+                if not has_kwargs(vfunc):
                     raise ValueError(
                         "Event validators need a **kwargs for future proofing"
                     )
@@ -355,6 +355,41 @@ class EventManager:
         setattr(self, name, e)
         # Now it exists, and we won't be called again.
         return e
+
+    def handlers(self, name=None):
+        """
+        Returns a dictionary of all registered events and their handlers.
+        If ``name`` is provided, returns handlers only for that event.
+        """
+        res = {}
+        if name:
+            if hasattr(self, name):
+                val = getattr(self, name)
+                if isinstance(val, AbstractEvent):
+                    res[name] = [
+                        f"{getattr(h, '__module__', 'unknown')}.{getattr(h, '__name__', repr(h))}"
+                        for h in val
+                    ]
+            return res
+
+        for attr_name in dir(self):
+            if attr_name.startswith("_"):
+                continue
+            val = getattr(self, attr_name)
+            if isinstance(val, AbstractEvent):
+                res[attr_name] = [
+                    f"{getattr(h, '__module__', 'unknown')}.{getattr(h, '__name__', repr(h))}"
+                    for h in val
+                ]
+        return res
+
+    def __repr__(self):
+        res = []
+        for name, handlers in self.handlers().items():
+            res.append(f"{name}:")
+            for h in handlers:
+                res.append(f"  - {h}")
+        return "\n".join(res)
 
 
 # Not lazy because:

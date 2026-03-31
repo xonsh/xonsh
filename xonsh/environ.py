@@ -1,10 +1,12 @@
 """Environment for the xonsh shell."""
 
-import collections.abc as cabc
 import contextlib
 import inspect
+import json
 import locale
+import operator
 import os
+import pathlib
 import platform
 import pprint
 import re
@@ -15,6 +17,7 @@ import threading
 import typing as tp
 import warnings
 from collections import ChainMap
+from collections import abc as cabc
 from pathlib import Path
 
 import xonsh.prompt.base as prompt
@@ -36,13 +39,15 @@ from xonsh.platform import (
     ON_CYGWIN,
     ON_LINUX,
     ON_WINDOWS,
+    ON_WSL,
     PATH_DEFAULT,
     os_environ,
 )
 from xonsh.tools import (
     DefaultNotGiven,
     DefaultNotGivenType,
-    EnvPath,
+    _expandpath,
+    abs_path_to_str,
     adjust_shlvl,
     always_false,
     always_true,
@@ -50,11 +55,13 @@ from xonsh.tools import (
     bool_or_none_to_str,
     bool_to_str,
     csv_to_set,
+    decode_bytes,
     detype,
     dict_to_str,
     dynamic_cwd_tuple_to_str,
     ensure_string,
     env_path_to_str,
+    expand_path,
     history_tuple_to_str,
     intensify_colors_on_win_setter,
     is_bool,
@@ -63,7 +70,6 @@ from xonsh.tools import (
     is_completion_mode,
     is_completions_display_value,
     is_dynamic_cwd_width,
-    is_env_path,
     is_float,
     is_history_backend,
     is_history_tuple,
@@ -86,8 +92,6 @@ from xonsh.tools import (
     ptk2_color_depth_setter,
     seq_to_upper_pathsep,
     set_to_csv,
-    str_to_env_path,
-    str_to_path,
     swap_values,
     to_bool,
     to_bool_or_int,
@@ -125,6 +129,15 @@ on_envvar_change(name: str, oldvalue: Any, newvalue: Any) -> None
 Fires after an environment variable is changed.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
+
+.. code-block:: python
+
+    @events.on_envvar_change
+    def _on_env_path_change(name, oldvalue, newvalue):
+        '''Keep `/tmp/bin` on top of PATH.'''
+        if name == 'PATH' and (newvalue == [] or newvalue[0] != '/tmp/bin'):
+            $PATH = ['/tmp/bin'] + [v for v in newvalue if v != '/tmp/bin']
+
 """,
 )
 
@@ -151,6 +164,40 @@ Does not fire for each value when LS_COLORS is first instantiated.
 Normal usage is to arm the event handler, then read (not modify) all existing values.
 """,
 )
+
+
+def is_env_path(x):
+    """This tests if something is an environment path, ie a list of strings."""
+    return isinstance(x, EnvPath)
+
+
+def str_to_path(x):
+    """Converts a string to a path."""
+    if x is None or x == "":
+        return None
+    elif isinstance(x, str):
+        return pathlib.Path(x)
+    elif isinstance(x, pathlib.Path):
+        return x
+    elif isinstance(x, EnvPath) and len(x) == 1:
+        return pathlib.Path(x[0]) if x[0] else None
+    else:
+        raise TypeError(
+            f"Variable should be a pathlib.Path, str or single EnvPath type. {type(x)} given."
+        )
+
+
+def str_to_abs_path(x):
+    """Converts a string to an absolute path."""
+    return r.absolute() if (r := str_to_path(x)) is not None else r
+
+
+def str_to_env_path(x):
+    """Converts a string to an environment path, ie a list of strings,
+    splitting on the OS separator.
+    """
+    # splitting will be done implicitly in EnvPath's __init__
+    return EnvPath(x)
 
 
 @lazyobject
@@ -545,6 +592,7 @@ ENSURERS = {
     "str": (is_string, ensure_string, ensure_string),
     "path": (is_path, str_to_path, path_to_str),
     "env_path": (is_env_path, str_to_env_path, env_path_to_str),
+    "abs_path": (is_path, str_to_abs_path, abs_path_to_str),
     "float": (is_float, float, str),
     "int": (is_int, int, str),
 }
@@ -872,6 +920,26 @@ class Xettings:
         return ""
 
 
+def _commands_cache_read_dir_once_default():
+    """Compute the default for $XONSH_COMMANDS_CACHE_READ_DIR_ONCE.
+
+    - Windows: ``[%WINDIR%]`` (typically ``C:\\Windows``).
+    - WSL: auto-detect ``/mnt/*/Windows`` directories (may include multiple
+      drives, e.g. ``/mnt/c/Windows``, ``/mnt/d/Windows``).
+    - Linux/Mac: empty list.
+    """
+    if ON_WINDOWS:
+        windir = os.environ.get("WINDIR", "")
+        return [windir] if windir else []
+    if ON_WSL:
+        import glob
+
+        # WSL mounts Windows drives under /mnt/<letter>/
+        # Windows can be installed on any drive, not just C:
+        return sorted(glob.glob("/mnt/*/Windows"))
+    return []
+
+
 class GeneralSetting(Xettings):
     """General"""
 
@@ -986,6 +1054,14 @@ class GeneralSetting(Xettings):
         xonsh_config_dir,
         "This is the location where xonsh user-level configuration information is stored.",
         type_str="str",
+    )
+    XONSH_ORIGIN_ENV_FILE = Var.no_default(
+        "str",
+        "The path to the file where environment variables are saved when "
+        "running ``xonsh --save-origin-env``. When xonsh ``--load-origin-env`` "
+        "is executed, this file is used as the basis for the environment. "
+        "Thus, from an existing xonsh session, you can start a new one with "
+        "the same environment variables that were used when launching the original session.",
     )
     XONSH_SYS_CONFIG_DIR = Var.with_default(
         xonsh_sys_config_dir,
@@ -1283,6 +1359,28 @@ class CacheSetting(Xettings):
     COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
         False,
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
+    )
+
+    XONSH_COMMANDS_CACHE_READ_DIR_ONCE = Var.with_default(
+        _commands_cache_read_dir_once_default(),
+        "List of directory prefixes whose contents are cached on first access and "
+        "never re-read within the session.  Any ``$PATH`` entry that starts with "
+        "one of these prefixes (or is a subdirectory) will have its file listing "
+        "cached as a frozenset after the first ``locate_executable`` call, so "
+        "subsequent lookups are O(1) hash checks instead of per-file stat() calls.  "
+        "On Windows this defaults to ``['C:\\\\Windows']`` (via ``%WINDIR%``).  "
+        "On WSL it auto-detects ``/mnt/*/Windows`` directories "
+        "(9P-mounted Windows dirs are very slow to stat).  "
+        "On Linux/Mac it is empty by default but can be extended "
+        "(e.g. ``['/usr']``).",
+        type_str="env_path",
+    )
+
+    XONSH_COMMANDS_CACHE_DEBUG = Var.with_default(
+        False,
+        "If True, print debug messages showing where each command was resolved "
+        "from (cached directory listing XONSH_COMMANDS_CACHE_READ_DIR_ONCE vs. disk stat) "
+        "and how long it took.",
     )
 
 
@@ -1661,7 +1759,7 @@ class PromptHistorySetting(Xettings):
         "Location of history file set by history backend (default) or set by the user.",
         is_configurable=False,
         doc_default="None",
-        type_str="path",
+        type_str="abs_path",
     )
     HISTCONTROL = Var(
         is_string_set,
@@ -1733,6 +1831,15 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         sync="AUTO_SUGGEST",
     )
 
+    XONSH_PROMPT_NEXT_CMD = Var.with_default(
+        "",
+        "The text of the next command that will be inserted in the next prompt.",
+    )
+    XONSH_PROMPT_NEXT_CMD_SUGGESTION = Var.with_default(
+        "",
+        "The text of the next command suggestion that will be inserted in the next prompt.",
+    )
+
     AUTO_SUGGEST_IN_COMPLETIONS = Var.with_default(
         False,
         "Places the auto-suggest result as the first option in the completions. "
@@ -1759,7 +1866,7 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         always_false,
         to_ptk_cursor_shape,
         to_ptk_cursor_shape_display_value,
-        to_ptk_cursor_shape("modal-vi-mode-only"),
+        default_value(lambda env: to_ptk_cursor_shape("modal-vi-mode-only")),
         "The cursor shape. Possible values for prompt toolkit are: "
         "``block``, ``beam``, ``underline``, "
         "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "
@@ -2049,8 +2156,8 @@ def DEFAULT_VARS():
 
 
 class Env(cabc.MutableMapping):
-    """A xonsh environment, whose variables have limited typing
-    (unlike BASH). Most variables are, by default, strings (like BASH).
+    """A xonsh environment, whose variables have limited typing.
+    Most variables are, by default, strings.
     However, the following rules also apply based on variable-name:
 
     * PATH: any variable whose name ends in PATH is a list of strings.
@@ -2112,12 +2219,16 @@ class Env(cabc.MutableMapping):
         self._detyped = ctx
         return ctx
 
-    def detype_all(self):  # __getitem__
-        """Returns a dict of all available detyped env variables."""
-        if self._detyped is not None:
-            return self._detyped
-        ctx = {}
+    def detype_all(self):
+        """Returns a dict of all available detyped env variables.
+
+        Builds on top of detype() by adding default values for keys
+        that weren't explicitly set.
+        """
+        ctx = dict(self.detype())
         for key in self.rawkeys():
+            if key in ctx:
+                continue
             if not isinstance(key, str):
                 key = str(key)
             val = self.__getitem__(key)
@@ -2127,7 +2238,6 @@ class Env(cabc.MutableMapping):
             if not isinstance(val, str):
                 continue
             ctx[key] = val
-        self._detyped = ctx
         return ctx
 
     def replace_env(self):
@@ -2324,6 +2434,8 @@ class Env(cabc.MutableMapping):
             val, cabc.MutableSet | cabc.MutableSequence | cabc.MutableMapping
         ):
             self._detyped = None
+        if isinstance(val, EnvPath):
+            val.target_env_var = key
         return val
 
     def __setitem__(self, key, val):
@@ -2479,7 +2591,8 @@ class Env(cabc.MutableMapping):
             Default value for variable. ``ValueError`` raised if type does not match
             that specified by `type` (or `validate`).
         doc : str, optional
-            Docstring for variable.
+            Docstring for variable. This description will be shown in the
+            autocomplete menu (tab-completion).
         validate : func, optional
             Function to validate type.
         convert : func, optional
@@ -2734,7 +2847,9 @@ def default_env(env=None):
         "PROMPT_FIELDS": DEFAULT_VARS["PROMPT_FIELDS"].default(env),
         "XONSH_VERSION": XONSH_VERSION,
     }
+
     ctx.update(os_environ)
+
     ctx["PWD"] = _get_cwd() or ""
     # These can cause problems for programs (#2543)
     ctx.pop("LINES", None)
@@ -2762,3 +2877,197 @@ def make_args_env(args=None):
     env = {"ARG" + str(i): arg for i, arg in enumerate(args)}
     env["ARGS"] = list(args)  # make a copy so we don't interfere with original variable
     return env
+
+
+class EnvPath(cabc.MutableSequence):
+    """A class that implements an environment path, which is a list of
+    strings. Provides a custom method that expands all paths if the
+    relevant env variable has been set.
+    """
+
+    def __init__(self, args=None):
+        self.target_env_var = None  # Will be populated by Env
+
+        if not args:
+            self._l = []
+        else:
+            if isinstance(args, str):
+                self._l = [i for i in args.split(os.pathsep) if i.strip()]
+            elif isinstance(args, pathlib.Path):
+                self._l = [args]
+            elif isinstance(args, bytes):
+                # decode bytes to a string and then split based on
+                # the default path separator
+                self._l = [i for i in decode_bytes(args).split(os.pathsep) if i.strip()]
+            elif isinstance(args, cabc.Iterable):
+                # put everything in a list -before- performing the type check
+                # in order to be able to retrieve it later, for cases such as
+                # when a generator expression was passed as an argument
+                args = [i for i in list(args) if str(i).strip()]
+                if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
+                    # make TypeError's message as informative as possible
+                    # when given an invalid initialization sequence
+                    raise TypeError(
+                        "EnvPath's initialization sequence should only "
+                        "contain str, bytes and pathlib.Path entries"
+                    )
+                self._l = args
+            else:
+                raise TypeError(
+                    f"EnvPath cannot be initialized with items of type {type(args)}: {args!r}"
+                )
+
+    def __getitem__(self, item):
+        # handle slices separately
+        if isinstance(item, slice):
+            return [_expandpath(i) for i in self._l[item]]
+        else:
+            return _expandpath(self._l[item])
+
+    def __setitem__(self, index, item):
+        with EnvPath._OnPathChange(self):
+            self._l.__setitem__(index, item)
+
+    def __len__(self):
+        return len(self._l)
+
+    def __delitem__(self, key):
+        with EnvPath._OnPathChange(self):
+            self._l.__delitem__(key)
+
+    @staticmethod
+    def _prepare_path(p):
+        return str(expand_path(p))
+
+    def insert(self, index, value):
+        with EnvPath._OnPathChange(self):
+            self._l.insert(index, self._prepare_path(value))
+
+    def append(self, value):
+        with EnvPath._OnPathChange(self):
+            self._l.append(self._prepare_path(value))
+
+    def prepend(self, value):
+        with EnvPath._OnPathChange(self):
+            self._l.insert(0, self._prepare_path(value))
+
+    def remove(self, value):
+        try:
+            with EnvPath._OnPathChange(self):
+                self._l.remove(self._prepare_path(value))
+        except ValueError:
+            print(f"EnvPath warning: path {repr(value)} not found.", file=sys.stderr)
+
+    @property
+    def paths(self):
+        """
+        Returns the list of directories that this EnvPath contains.
+        """
+        return list(self)
+
+    def __repr__(self):
+        return repr(self._l)
+
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+        return all(map(operator.eq, self, other))
+
+    def _repr_pretty_(self, p, cycle):
+        """Pretty print path list"""
+        if cycle:
+            p.text("EnvPath(...)")
+        else:
+            with p.group(1, "EnvPath(\n[", "]\n)"):
+                for idx, item in enumerate(self):
+                    if idx:
+                        p.text(",")
+                        p.breakable()
+                    p.pretty(item)
+
+    def __add__(self, other):
+        if isinstance(other, EnvPath):
+            other = other._l
+        return EnvPath(self._l + other)
+
+    def __radd__(self, other):
+        if isinstance(other, EnvPath):
+            other = other._l
+        return EnvPath(other + self._l)
+
+    def add(self, data, front=False, replace=False):
+        """Add a value to this EnvPath,
+
+        path.add(data, front=bool, replace=bool) -> ensures that path contains data, with position determined by kwargs
+
+        Parameters
+        ----------
+        data : string or bytes or pathlib.Path
+            value to be added
+        front : bool
+            whether the value should be added to the front, will be
+            ignored if the data already exists in this EnvPath and
+            replace is False
+            Default : False
+        replace : bool
+            If True, the value will be removed and added to the
+            start or end(depending on the value of front)
+            Default : False
+
+        Returns
+        -------
+        None
+
+        """
+        with EnvPath._OnPathChange(self):
+            data = self._prepare_path(data)
+            if data not in self._l:
+                self._l.insert(0 if front else len(self._l), data)
+            elif replace:
+                # https://stackoverflow.com/a/25251306/1621381
+                self._l = list(filter(lambda x: x != data, self._l))
+                self._l.insert(0 if front else len(self._l), data)
+
+    class _OnPathChange:
+        """Track paths change event."""
+
+        def __init__(self, obj):
+            self.obj = obj
+
+        def __enter__(self):
+            self.before = list(self.obj._l)
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if self.obj.target_env_var and self.before != self.obj._l:
+                events.on_envvar_change.fire(
+                    name=self.obj.target_env_var,
+                    oldvalue=self.before,
+                    newvalue=self.obj._l,
+                )
+                if XSH.env.get("UPDATE_OS_ENVIRON", False):
+                    XSH.env[self.obj.target_env_var] = self.obj._l
+
+
+def save_origin_env_to_file(env, session_id):
+    data_dir = env.get("XONSH_DATA_DIR", None)
+    env_file_name = Path(data_dir) / f"origin-env-{session_id}.json"
+
+    if os.access(env_file_name.parent, os.W_OK):
+        env_file_name.write_text(json.dumps(dict(os_environ)))
+        env["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
+    else:
+        print(f"xonsh: Write access denied for {data_dir!r}", file=sys.stderr)
+
+
+def load_origin_env_from_file():
+    e = os_environ
+    if "XONSH_ORIGIN_ENV_FILE" not in e:
+        print("xonsh: No env file to restore", file=sys.stderr)
+        raise SystemExit(1)
+
+    load_origin_env_file = Path(e["XONSH_ORIGIN_ENV_FILE"])
+    if load_origin_env_file.is_file() and os.access(load_origin_env_file, os.R_OK):
+        return json.loads(load_origin_env_file.read_text(encoding="utf-8"))
+    else:
+        print(f"xonsh: Failed to load file {load_origin_env_file!r}", file=sys.stderr)
+        raise SystemExit(1)

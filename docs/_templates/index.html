@@ -7,29 +7,32 @@
 
     <!-- This is SEO section. Don't change if you don't know how it will affect Google and other search engines. -->
         <title>The Xonsh Shell — Python-powered shell. Python shell. Python in the shell. Shell in Python. Shell and Python. Python and shell.</title>
-        <meta name="description" content="The xonsh shell is a Python-powered shell. Full-featured and cross-platform.">
-        <meta name="keywords" content="xonsh, xonsh shell, python shell, terminal, console, bash alternative, zsh alternative, fish alternative, devops tools, hacking tools">
+        <meta name="description" content="The xonsh shell is a Python-powered shell. Full-featured, cross-platform and AI-friendly.">
+        <meta name="keywords" content="xonsh, xonsh shell, python shell, terminal, console, bash alternative, zsh alternative, fish alternative, nushell alternative, devops tools, hacking tools">
 
         <meta name="twitter:image:src" content="https://xon.sh/_static/landing2/images/xonsh_landing_preview.png" />
         <meta name="twitter:site" content="https://xon.sh/" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="The Xonsh Shell — Python-powered shell" />
-        <meta name="twitter:description" content="The xonsh shell is a Python-powered shell. Full-featured and cross-platform." />
+        <meta name="twitter:description" content="The xonsh shell is a Python-powered shell. Full-featured, cross-platform and AI-friendly." />
 
         <meta property="og:image" content="https://xon.sh/_static/landing2/images/xonsh_landing_preview.png" />
-        <meta property="og:image:alt" content="The xonsh shell is a Python-powered shell. Full-featured and cross-platform." />
+        <meta property="og:image:alt" content="The xonsh shell is a Python-powered shell. Full-featured, cross-platform and AI-friendly." />
         <meta property="og:site_name" content="The xonsh shell" />
         <meta property="og:type" content="object" />
         <meta property="og:title" content="The Xonsh Shell — Python-powered shell." />
         <meta property="og:url" content="https://xon.sh/" />
-        <meta property="og:description" content="The xonsh shell is a Python-powered shell. Full-featured and cross-platform." />
+        <meta property="og:description" content="The xonsh shell is a Python-powered shell. Full-featured, cross-platform and AI-friendly." />
     <!-- The end of SEO section. -->
 
     <!-- Modern browser. -->
+    <link rel="icon" type="image/svg+xml" href="_static/xonsh_terminal_icon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="_static/landing2/images/xonsh_term_icon_32x32.png">
     <link rel="icon" type="image/png" sizes="128x128" href="_static/landing2/images/xonsh_term_icon_128x128.png">
     <link rel="icon" type="image/png" sizes="256x256" href="_static/landing2/images/xonsh_term_icon_256x256.png">
     <link rel="icon" type="image/png" sizes="512x512" href="_static/landing2/images/xonsh_term_icon_512x512.png">
+    <!-- Apple devices -->
+    <link rel="apple-touch-icon" sizes="180x180" href="_static/landing2/images/xonsh_term_icon_180x180.png">
     <!-- Old browser. -->
     <link rel="shortcut icon" type="image/png" href="_static/landing2/images/xonsh_term_icon_256x256.png">
 
@@ -87,20 +90,20 @@
                         <li class="nav-item">
                             <a class="nav-link" href="#about-area" data-scroll-nav="1">What is Xonsh?</a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a class="nav-link" href="#features-area" data-scroll-nav="2">Features</a>
-                        </li>
+                        </li> -->
                         <li class="nav-item">
-                            <a class="nav-link" href="#faq-area" data-scroll-nav="3">Install</a>
+                            <a class="nav-link" href="install.html" target="_blank">Install</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#product-area" data-scroll-nav="4">Xontribs</a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a class="nav-link" href="#blog-area" data-scroll-nav="5">Talks</a>
-                        </li>
+                        </li> -->
                         <li class="nav-item">
-                            <a class="nav-link" href="contents.html">Docs</a>
+                            <a class="nav-link" href="contents.html" target="_blank">Docs</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="https://github.com/xonsh/xonsh" target="_blank">Github</a>
@@ -130,12 +133,12 @@
                         <div class="d-table-cell align-middle" >
                             <h2 style="color:white;"><b>XONSH</b> is a Python-powered shell</h2>
                             <br>
-                            <p style="font-size: 20px; font-weight: 1;">Xonsh is a modern, full-featured and cross-platform python shell.  The language is a superset of Python 3.6+ with additional shell primitives that you are used to from Bash and IPython.
+                            <p style="font-size: 20px; font-weight: 1;">Xonsh <span style="color:#CCC;">(sounds like "consh")</span> is a modern, full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands.
                                 It works on all major systems including Linux, OSX, and Windows. Xonsh is meant for the daily use of experts and novices.</p>
-                            <a href="#" data-scroll-nav="3"><i class="icofont-download"></i> Install</a>
+                            <a href="install.html" target="_blank"><i class="icofont-download"></i> Install</a>
                             <a href="contents.html" target="_blank"><i class="icofont-ui-note"></i> Docs</a>
                             <a href="https://github.com/xonsh/xonsh" target="_blank"><i class="icofont-github"></i> Github</a>
-                            <a href="https://github.com/sponsors/xonsh" target="_blank"><i class="icofont-dollar"></i> Donate</a>
+                            <a href="https://github.com/sponsors/xonsh" target="_blank"><i class="icofont-dollar"></i> Sponsor</a>
                         </div>
                     </div>
                 </div>
@@ -144,6 +147,7 @@
     </section>
 
     <section id="about-area" data-scroll-index="1">
+
         <div class="container text-center section-heading">
             <h2>What is Xonsh?</h2>
             <p>The xonsh as a python shell lets you easily mix Python and shell commands in a powerful and simplified approach to the command line.</p>
@@ -154,19 +158,23 @@
                 <div class="col-lg-6 col-md-7">
                     <div class="about-content">
                         <h3>Xonsh is the Shell</h3>
-                        <p>The xonsh language has shell primitives that you are used to from Bash. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>The xonsh language provides the shell primitives commonly found in traditional Unix shells, including interaction with standard utilities, pipelines, and input/output streams. <a href="tutorial.html" target="_blank">Read more →</a></p>
                     </div>
                 </div>
 
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-                        <pre class="code">
-<span unselectable-text="@ "></span><b>cd</b> /home
+<pre class="code">
+<span unselectable-text="@ "></span><b>cd</b> $HOME
+
+<span unselectable-text="@ "></span><b>id</b> <span style="color: lightgreen;">$(whoami)</span> > ~/id.txt
 
 <span unselectable-text="@ "></span><b>cat</b> /etc/passwd | <b>grep</b> root
 
-<span unselectable-text="@ "></span><b>ls</b> -la</pre>
+<span unselectable-text="@ "></span>$PROMPT = <span style="color: lightblue;">'@ '</span>
+</pre>
+
 
                     </div>
                 </div>
@@ -180,7 +188,7 @@
                     <div class="about-content">
                         <h3>Xonsh is Python</h3>
 
-                        <p>The xonsh language is a superset of Python 3.6+ and you can run Python code and import modules. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>The xonsh language is a superset of Python 3, allowing you to execute Python code directly, install and use third-party libraries, import modules, and take advantage of the broader Python ecosystem and tooling.</p>
                     </div>
                 </div>
 
@@ -190,9 +198,13 @@
                         <pre class="code">
 <span unselectable-text="@ "></span>2 + 2
 
-<span unselectable-text="@ "></span><b>import</b> json
-<span unselectable-text="  "></span>j = json.loads(<span style="color: lightblue;">'{"Hello": "world!", "Answer": 42}'</span>)
-<span unselectable-text="  "></span><b>print</b>(j[<span style="color: lightblue;">'Answer'</span>])</pre>
+<span unselectable-text="@ "></span>var = <span style="color: lightblue;">"hello"</span>.upper()
+
+<span unselectable-text="@ "></span><b>import</b> json; json.loads(<span style="color: lightblue;">'{"a":1}'</span>)
+
+<span unselectable-text="@ "></span>[i <b>for</b> i <b>in</b> range(0,10)]
+</pre>
+
 
                     </div>
                 </div>
@@ -207,7 +219,7 @@
                     <div class="about-content">
                         <h3>Xonsh is the Shell in Python</h3>
 
-                        <p>With xonsh you can combine Python with shell commands. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>Xonsh provides a unified environment where shell functionality and Python code work together naturally.</p>
                     </div>
                 </div>
 
@@ -215,11 +227,18 @@
                     <div class="text-center">
 
                         <pre class="code">
-<span unselectable-text="@ "></span><b>len</b>(<span style="color: lightgreen">$(curl -L https://xon.sh)</span>)
+<span unselectable-text="@ "></span><b>len</b>(<span style="color: lightgreen;">$(curl -L https://xon.sh)</span>)
 
-<span unselectable-text="@ "></span><b>for</b> filename <b>in</b> <span style="color: yellow">`.*`</span>:
-<span unselectable-text="  "></span>    <b>print</b>(filename)
-<span unselectable-text="  "></span>    <b>du</b> -sh <span style="color: lightsalmon">@(filename)</span></pre>
+<span unselectable-text="@ "></span>$PATH.append(<span style="color: lightblue;">'/tmp'</span>)
+
+<span unselectable-text="@ "></span>p<span style="color: lightblue;">'/etc/passwd'</span>.read_text().find(<span style="color: lightblue;">'usr'</span>)
+
+<span unselectable-text="@ "></span>id = <span style="color: lightgreen;">$(<span style="color: lightsalmon;">@json</span> podman ps --format json)</span>[<span style="color: lightblue;">'ID'</span>]
+<span unselectable-text="  "></span>cfg = <span style="color: lightgreen;">$(<span style="color: lightsalmon;">@yaml</span> cat config.yaml)</span>
+
+<span unselectable-text="@ "></span><b>@</b>.imp.pathlib.Path(<span style="color: lightblue;">'~/bin'</span>).exists()
+</pre>
+
 
                     </div>
                 </div>
@@ -235,28 +254,132 @@
                     <div class="about-content">
                         <h3>Xonsh is Python in the Shell</h3>
 
-                        <p>Prepare environment variables and arguments in Python and use them in shell commands. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <p>Xonsh shell session builtins allow xonsh to function as a fully featured shell, tightly integrated with the operating system and its environment.</p>
                     </div>
                 </div>
 
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-                        <pre class="code">
-<span unselectable-text="@ "></span>var = <span style="color: lightblue;">'he'</span> + <span style="color: lightblue;">'llo'</span>
+<pre class="code">
+<span unselectable-text="@ "></span>name = <span style="color: lightblue;">'snail'</span>
+<span unselectable-text="  "></span><b>echo</b> <span style="color: lightsalmon;">@(name)</span> > /tmp/<span style="color: lightsalmon;">@(name)</span>
 
-<span unselectable-text="@ "></span><b>echo</b> <span style="color: lightsalmon">@(var)</span> > /tmp/<span style="color: lightsalmon">@(var)</span>
+<span unselectable-text="@ "></span><b>with</b> p<span style="color: lightblue;">'/tmp/dir'</span>.mkdir().cd():
+<span unselectable-text="  "></span>    <b>touch</b> <span style="color: lightsalmon;">@(input(<span style="color: lightblue;">'Create file: '</span>))</span>
 
-<span unselectable-text="@ "></span><b>echo</b> <span style="color: lightsalmon">@(i for i in range(42))</span></pre>
+<span unselectable-text="@ "></span>aliases[<span style="color: lightblue;">'e'</span>] = <span style="color: lightblue;">'echo @(2+2)'</span>
+<span unselectable-text="  "></span>aliases[<span style="color: lightblue;">'a'</span>] = <b>lambda</b> args: <b>print</b>(args)
+</pre>
+
 
                     </div>
                 </div>
 
             </div>
         </div>
+
+        <div class="container" style="margin-top: 30px">
+          <div class="row">
+            <div class="col-lg-6 col-md-7">
+              <div class="about-content">
+                <h3>Xonsh is a Meta-Shell</h3>
+                <p>
+                  Xonsh can orchestrate and unify other shells and tools, allowing you to combine
+                    external programs into a single programmable environment.
+                </p>
+              </div>
+            </div>
+
+    <div class="col-lg-6 col-md-5">
+      <div class="text-center">
+        <pre class="code">
+<span unselectable-text="@ "></span><b>xontrib</b> load sh \
+<span unselectable-text="  "></span>             fish_completer
+
+<span unselectable-text="@ "></span><b>def</b> nudf(cmd):
+<span unselectable-text="  "></span>    <b>return</b> <b>@</b>.imp.pandas.DataFrame(
+<span unselectable-text="  "></span>      <b>@</b>.imp.json.loads(
+<span unselectable-text="  "></span>          <span style="color: lightgreen;">$(nu -c <span style="color: lightsalmon;">@(cmd + <span style="color: lightblue;">'| to json'</span>)</span>)</span>))
+
+<span unselectable-text="  "></span>nudf!(<span style="color: lightgreen;">ls -la</span>)
+
+<span unselectable-text="@ "></span>aliases[<span style="color: lightblue;">'ai'</span>] = <span style="color: lightblue;">'ollama run llama3'</span>
+<span unselectable-text="  "></span><b>ai!</b> command to remove images from podman
+</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<div class="container" style="margin-top: 30px">
+  <div class="row">
+    <div class="col-lg-6 col-md-7">
+      <div class="about-content">
+        <h3>Xonsh is an Ecosystem</h3>
+        <p>
+          Xonsh extends beyond a shell through xontribs — community-driven plugins that integrate
+          frameworks, developer tools, AI assistants, themes, and system features into a cohesive ecosystem.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-lg-6 col-md-5">
+      <div class="text-center">
+        <pre class="code">
+<span unselectable-text="@ "></span><b>xontrib</b> load term_integration \
+<span unselectable-text="  "></span>             prompt_starship  \
+<span unselectable-text="  "></span>             powerline        \
+<span unselectable-text="  "></span>             dracula          \
+<span unselectable-text="  "></span>             chatgpt          \
+<span unselectable-text="  "></span>             django           \
+<span unselectable-text="  "></span>             jupyter          \
+<span unselectable-text="  "></span>             1password        \
+<span unselectable-text="  "></span>             github_copilot   \
+<span unselectable-text="  "></span>             history_encrypt
+</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="margin-top: 30px">
+  <div class="row">
+    <div class="col-lg-6 col-md-7">
+      <div class="about-content">
+        <h3>Xonsh is Everywhere</h3>
+        <p>
+        Xonsh is cross-platform by design, enabling the same workflows to run seamlessly
+        across macOS, Linux, Windows and WSL, so scripts, aliases, and tools behave consistently.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-lg-6 col-md-5">
+      <div class="text-center">
+        <pre class="code">
+<span unselectable-text="@ "></span>$PATH
+<span unselectable-text="  "></span><span style="color: lightgrey;">['/bin', '/usr/bin', '/sbin']</span>
+<span unselectable-text="  "></span><span style="color: lightgrey;">[r'c:\Windows\System32', r'c:\Users\pc']</span>
+<span unselectable-text="  "></span><span style="color: lightgrey;">['/System/Cryptexes/App/usr/bin', '/homebrew/bin']</span>
+<span unselectable-text="  "></span><span style="color: lightgrey;">['/usr/sbin', '/mnt/c/Windows/System32']</span>
+<span unselectable-text="  "></span><span style="color: lightgrey;">['/nix/store/0x736e61696c-python/bin']</span>
+<span unselectable-text="@ "></span>$PATH.append(<span style="color: lightblue;">'/my/own/path'</span>)
+</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+            <div class="col-lg-12">
+                <div class="load-more-btn text-center">
+                    <a href="contents.html" target="_blank"><i class="icofont-ui-note"></i> Learn more →</a>
+                </div>
+            </div>
     </section>
 
-    <section id="features-area" data-scroll-index="2">
+    <!-- <section id="features-area" data-scroll-index="2">
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
@@ -274,7 +397,7 @@
                         </div>
                         <div class="content">
                             <h4>Combine shell commands with Python or vice versa.</h4>
-                            <p>The language is a superset of Python 3.6+ with additional shell primitives that you are used to from Bash and IPython.</p>
+                            <p>The language is a superset of Python 3 with seamless integration of shell functionality and commands.</p>
                         </div>
                     </div>
                 </div>
@@ -317,152 +440,7 @@
 
             </div>
         </div>
-    </section>
-
-    <section id="faq-area" data-scroll-index="3">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
-                    <div class="section-heading text-center">
-                        <h2>Install Xonsh</h2>
-                        <p>Xonsh can be installed and run with various package managers, by using appimage, or from a docker container.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-8 offset-lg-2 col-md-10 offset-md-1">
-                    <div id="accordion" role="tablist">
-                        <div class="card">
-                            <div class="card-header active" role="tab" id="faq1">
-                                <h5 class="mb-0">
-                                    <a data-toggle="collapse" href="#collapse0" aria-expanded="true" aria-controls="collapse0">PyPi package</a>
-                                </h5>
-                            </div>
-                            <div id="collapse0" class="collapse show" role="tabpanel" aria-labelledby="faq1" data-parent="#accordion">
-                                <div class="card-body">
-                                    <p>Install the <a href="https://github.com/xonsh/xonsh/releases">latest release</a>:</p>
-                                    <pre class="code">python -m pip install 'xonsh[full]'</pre>
-                                    <a href="packages.html">Learn more →</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header" role="tab" id="faq2">
-                                <h5 class="mb-0">
-                                    <a data-toggle="collapse" href="#collapse1" aria-expanded="false" aria-controls="collapse1">Install as a core shell</a>
-                                </h5>
-                            </div>
-                            <div id="collapse1" class="collapse" role="tabpanel" aria-labelledby="faq2" data-parent="#accordion">
-                                <div class="card-body">
-                                    <p>
-                                        When using xonsh as a default shell (and we do!), it's important to ensure that it is installed
-                                        in a Python environment that is independent of changes from the system package manager.
-                                        If you are installing xonsh via your system package-manager, this is handled for you.
-                                        If you install xonsh outside of your system package manager, you can use
-                                        <a href="https://github.com/anki-code/xonsh-install">xonsh-install</a> for this.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header" role="tab" id="faq3">
-                                <h5 class="mb-0">
-                                    <a class="collapsed" data-toggle="collapse" href="#collapse2" aria-expanded="false" aria-controls="collapse2">Conda package</a>
-                                </h5>
-                            </div>
-                            <div id="collapse2" class="collapse" role="tabpanel" aria-labelledby="faq2" data-parent="#accordion">
-                                <div class="card-body">
-                                    <p>Install:</p>
-                                    <pre class="code">
-conda config --add channels conda-forge
-conda install xonsh</pre>
-
-<a href="packages.html">Learn more →</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header" role="tab" id="faq4">
-                                <h5 class="mb-0">
-                                    <a class="collapsed" data-toggle="collapse" href="#collapse3" aria-expanded="false" aria-controls="collapse3">Portable Linux AppImage</a>
-                                </h5>
-                            </div>
-                            <div id="collapse3" class="collapse" role="tabpanel" aria-labelledby="faq3" data-parent="#accordion">
-                                <div class="card-body">
-                                    <p>
-                                        <a href="https://appimage.org/">AppImage</a> is a format for distributing portable software on Linux without needing superuser permissions to install the application.
-                                        The xonsh AppImage file contains both xonsh and Python and allows xonsh to be run on any AppImage-supported Linux distribution without installation or root access.
-                                    </p>
-                                    <p>
-                                    Download and run:
-                                    </p>
-                                    <pre class="code">
-wget https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage
-chmod +x xonsh-x86_64.AppImage
-./xonsh-x86_64.AppImage</pre>
-
-                                    <a href="appimage.html" target="_blank">Learn more →</a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header" role="tab" id="faq5">
-                                <h5 class="mb-0">
-                                    <a class="collapsed" data-toggle="collapse" href="#collapse4" aria-expanded="false" aria-controls="collapse4">Docker container</a>
-                                </h5>
-                            </div>
-                            <div id="collapse4" class="collapse" role="tabpanel" aria-labelledby="faq4" data-parent="#accordion">
-                                <div class="card-body">
-                                    <p>
-                                        Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. All of them are published on <a href="https://hub.docker.com/u/xonsh">Docker Hub</a>.
-                                    </p>
-                                    <p>
-                                    Run the xonsh shell in a small size docker container:
-                                    </p>
-                                    <pre class="code">docker run -it --rm xonsh/xonsh:slim</pre>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header" role="tab" id="faq6">
-                                <h5 class="mb-0">
-                                    <a class="collapsed" data-toggle="collapse" href="#collapse5" aria-expanded="false" aria-controls="collapse5">Platform package managers: brew, apt, pacman, dnf, guix</a>
-                                </h5>
-                            </div>
-                            <div id="collapse5" class="collapse" role="tabpanel" aria-labelledby="faq5" data-parent="#accordion">
-                                <div class="card-body">
-                                    <p>
-                                        Another way is to install xonsh from the package manager that is supplied by the operating system. This way is <b>not</b> recommended
-                                        because in operating systems without the <a href="https://en.wikipedia.org/wiki/Rolling_release">rolling release concept</a>
-                                        the xonsh shell version may be very old (<a href="https://github.com/xonsh/xonsh/releases/">check latest release</a>).
-                                    </p>
-                                    <p>OSX brew:</p><pre class="code">brew install xonsh</pre>
-                                    <p>Debian/Ubuntu apt:</p><pre class="code">apt install xonsh</pre>
-                                    <p>Arch Linux pacman:</p><pre class="code">pacman -S xonsh</pre>
-                                    <p>Fedora dnf:</p><pre class="code">dnf install xonsh</pre>
-                                    <p>GNU guix:</p><pre class="code">guix install xonsh</pre>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="text-center">
-                <p style="margin-top: 30px;">
-                    <a href="contents.html#installation" target="_blank"> <i class="icofont-ui-note"></i> More installation methods →</a>
-                </p>
-            </div>
-
-        </div>
-    </section>
+    </section> -->
 
     <section id="product-area" data-scroll-index="4">
         <div class="container">
@@ -533,7 +511,7 @@ chmod +x xonsh-x86_64.AppImage
         </div>
     </section>
 
-    <section id="blog-area" data-scroll-index="5">
+    <!-- <section id="blog-area" data-scroll-index="5">
         <div class="container">
             <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
                 <div class="section-heading text-center">
@@ -580,7 +558,7 @@ chmod +x xonsh-x86_64.AppImage
 
             </div>
         </div>
-    </section>
+    </section> -->
 
     <section id="contact-area">
         <div class="container">
@@ -595,22 +573,19 @@ chmod +x xonsh-x86_64.AppImage
                                 <h4>Xonsh</h4>
                             </div>
                         <p>
-                            <a href="https://xon.sh/">Website</a>
+                            <a href="https://xon.sh/" target="_blank">Website</a>
                         </p>
                         <p>
-                            <a href="contents.html">Documentation</a></li>
+                            <a href="contents.html" target="_blank">Documentation</a></li>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh/releases">Releases</a>
+                            <a href="https://github.com/xonsh/xonsh/releases" target="_blank">Releases</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh">Source Code</a>
+                            <a href="https://hub.docker.com/u/xonsh" target="_blank">Docker Hub</a>
                         </p>
                         <p>
-                            <a href="https://hub.docker.com/u/xonsh">Docker Hub</a>
-                        </p>
-                        <p>
-                            <a href="https://github.com/sponsors/xonsh">Donate</a>
+                            <a href="https://github.com/xonsh/xonsh/issues" target="_blank">Issue Tracker</a>
                         </p>
                     </div>
                     <div class="col-lg-3 col-sm-6">
@@ -618,22 +593,19 @@ chmod +x xonsh-x86_64.AppImage
                             <h4>Community</h4>
                         </div>
                         <p>
-                            <a href="https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/">Zulip Community</a>
+                            <a href="https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/" target="_blank">Zulip Community</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh/issues">Issue Tracker</a>
+                            <a href="https://github.com/xonsh/xonsh/discussions" target="_blank">Discussions</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh/discussions">Discussions</a>
+                            <a href="https://mastodon.online/@xonsh" target="_blank">Mastodon</a>
                         </p>
                         <p>
-                            <a href="https://mastodon.online/@xonsh">Mastodon</a>
+                            <a href="http://www.oftc.net/" target="_blank">IRC</a>, <a href="https://gitter.im/xonsh/xonsh" target="_blank">Gitter</a>
                         </p>
                         <p>
-                            <a href="https://groups.google.com/forum/#!forum/xonsh">Mailing List</a>
-                        </p>
-                        <p>
-                            <a href="http://www.oftc.net/">IRC</a>, <a href="https://gitter.im/xonsh/xonsh">Gitter</a>
+                            <a href="https://www.hellotux.com/xonsh" target="_blank">👕 Xonsh merch</a>
                         </p>
                     </div>
                     <div class="col-lg-3 col-sm-6">
@@ -641,16 +613,16 @@ chmod +x xonsh-x86_64.AppImage
                             <h4>Xontribs</h4>
                         </div>
                         <p>
-                            <a href="https://github.com/topics/xontrib">Github xontribs</a>
+                            <a href="https://github.com/topics/xontrib" target="_blank">Github xontribs</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/awesome-xontribs#awesome-xontribs">Awesome xontribs</a>
+                            <a href="https://github.com/xonsh/awesome-xontribs#awesome-xontribs" target="_blank">Awesome xontribs</a>
                         </p>
                         <p>
-                            <a href="tutorial_xontrib.html">Xontrib tutorial</a>
+                            <a href="tutorial_xontrib.html" target="_blank">Xontrib tutorial</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xontrib-template">Xontrib template</a>
+                            <a href="https://github.com/xonsh/xontrib-template" target="_blank">Xontrib template</a>
                         </p>
                     </div>
                     <div class="col-lg-3 col-sm-6">
@@ -658,13 +630,16 @@ chmod +x xonsh-x86_64.AppImage
                             <h4>Open Source</h4>
                         </div>
                         <p>
+                            <a href="https://github.com/xonsh/xonsh" target="_blank">Source Code</a>
+                        </p>
+                        <p>
                             <a href="https://github.com/xonsh/xonsh/blob/main/license" target="_blank">License</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh" target="_blank">Github</a>
+                            <a href="devguide.html" target="_blank">Developer’s Guide</a>
                         </p>
                         <p>
-                            <a href="devguide.html" target="_blank">Developer’s Guide</a>
+                            <a href="https://github.com/sponsors/xonsh" target="_blank">Sponsor</a>
                         </p>
                     </div>
                 </div>

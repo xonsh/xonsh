@@ -1,5 +1,6 @@
 """Completer implementation to use with prompt_toolkit."""
 
+import ast
 import os
 
 from prompt_toolkit.application.current import get_app
@@ -8,6 +9,44 @@ from prompt_toolkit.completion import Completer, Completion
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
+from xonsh.lib.string import commonprefix
+from xonsh.tools import print_exception
+
+
+def unquote(completion):
+    s: str = str(completion)
+    quote: str
+    if s.startswith("r'") or s.startswith("'"):
+        quote = "'"
+    elif s.startswith('r"') or s.startswith('"'):
+        quote = '"'
+    else:
+        # No quote
+        return s
+    if not s.endswith(quote):
+        return s
+    if s[0] == "r" or "\\" not in s:
+        # Simple path for raw strings and strings without escaping backslash
+        if s[0] == "r":
+            s = s[1:]
+        if s.startswith(quote * 3) and s.endswith(quote * 3):
+            return s[3:-3]
+        else:
+            return s[1:-1]
+    else:
+        # Theoretically this should happen only when both " and '
+        # appears in the original completion,
+        # and ' is escaped as \' while " is retained as " in a '...' quoted string
+        # There may also be \\ in such quoted strings
+        try:
+            # Use literal eval for this rare case for simplicity
+            # https://docs.python.org/3/library/ast.html#ast.literal_eval
+            return ast.literal_eval(s)
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+            # Give up if something unexpected happen
+            if XSH.env.get("XONSH_DEBUG"):
+                print_exception(f"Unable to unquote completion {s}")
+            return s
 
 
 class PromptToolkitCompleter(Completer):
@@ -84,10 +123,10 @@ class PromptToolkitCompleter(Completer):
         # reserve space, if needed.
         if len(completions) <= 1:
             pass
-        elif len(os.path.commonprefix(completions)) <= len(prefix):
+        elif len(commonprefix(completions)) <= len(prefix):
             self.reserve_space()
         # Find common prefix (strip quoting)
-        c_prefix = os.path.commonprefix([a.strip("r'\"") for a in completions])
+        c_prefix = commonprefix([unquote(a) for a in completions])
         # Find last split symbol, do not trim the last part
         while c_prefix:
             if c_prefix[-1] in r"/\.:@,":
@@ -110,14 +149,16 @@ class PromptToolkitCompleter(Completer):
                 yield Completion(
                     comp,
                     -comp.prefix_len if comp.prefix_len is not None else -plen,
-                    display=comp.display or comp[pre:].strip("r'\""),
+                    display=comp.display or unquote(comp)[pre:],
                     display_meta=desc,
                     style=comp.style or "",
                 )
             elif isinstance(comp, Completion):
                 yield comp
             else:
-                disp = comp[pre:].strip("r'\"")
+                # pre is calculated after unquote,
+                # so prefix cutting should also be performed afterwards
+                disp = unquote(comp)[pre:]
                 yield Completion(comp, -plen, display=disp)
 
     def suggestion_completion(self, document, line):
@@ -126,9 +167,14 @@ class PromptToolkitCompleter(Completer):
         sug = self.hist_suggester.get_suggestion(app.current_buffer, document)
         if sug is None:
             return None
-        comp, _, _ = sug.text.partition(" ")
         _, _, prev = line.rpartition(" ")
-        return prev + comp
+        full_completion = prev + sug.text
+        if len(full_completion) > 60:
+            display_text = full_completion[:57] + "..."
+            return RichCompletion(
+                full_completion, display=display_text, append_space=False
+            )
+        return full_completion
 
     def reserve_space(self):
         """Adjust the height for showing autocompletion menu."""

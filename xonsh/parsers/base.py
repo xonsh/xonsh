@@ -1885,6 +1885,9 @@ class BaseParser:
     def _attach_nodedent_base_rules(self):
         toks = set(self.tokens)
         toks.remove("DEDENT")
+        toks.discard("FSTRING_START")
+        toks.discard("FSTRING_MIDDLE")
+        toks.discard("FSTRING_END")
         ts = "\n       | ".join(sorted(toks))
         doc = "nodedent : " + ts + "\n"
         self.p_nodedent_base.__func__.__doc__ = doc
@@ -1932,6 +1935,9 @@ class BaseParser:
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "FSTRING_START",
+            "FSTRING_MIDDLE",
+            "FSTRING_END",
         }
         ts = "\n        | ".join(sorted(toks))
         doc = "nonewline : " + ts + "\n"
@@ -2555,6 +2561,9 @@ class BaseParser:
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "FSTRING_START",
+            "FSTRING_MIDDLE",
+            "FSTRING_END",
         }
         ts = "\n       | ".join(sorted(toks))
         doc = "nocloser : " + ts + "\n"
@@ -2813,6 +2822,9 @@ class BaseParser:
             "DOLLAR_LBRACE",
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
+            "FSTRING_START",
+            "FSTRING_MIDDLE",
+            "FSTRING_END",
         }
         ts = "\n            | ".join(sorted(toks))
         doc = "nocomma_tok : " + ts + "\n"
@@ -3402,7 +3414,10 @@ class BaseParser:
         self.p_subproc_atom_uncaptured(p)
 
     def p_subproc_atom_captured_stdout(self, p):
-        """subproc_atom : dollar_lparen_tok subproc RPAREN"""
+        """
+        subproc_atom : dollar_lparen_tok subproc RPAREN
+        subproc_arg_part : dollar_lparen_tok subproc RPAREN
+        """
         p1 = p[1]
         p0 = xonsh_call(
             "__xonsh__.subproc_captured_stdout",
@@ -3414,12 +3429,18 @@ class BaseParser:
         p[0] = p0
 
     def p_subproc_atom_captured_stdout_bang_empty(self, p):
-        """subproc_atom : dollar_lparen_tok subproc bang_tok RPAREN"""
+        """
+        subproc_atom : dollar_lparen_tok subproc bang_tok RPAREN
+        subproc_arg_part : dollar_lparen_tok subproc bang_tok RPAREN
+        """
         self._append_subproc_bang_empty(p)
         self.p_subproc_atom_captured_stdout(p)
 
     def p_subproc_atom_captured_stdout_bang(self, p):
-        """subproc_atom : dollar_lparen_tok subproc bang_tok nocloser rparen_tok"""
+        """
+        subproc_atom : dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        subproc_arg_part : dollar_lparen_tok subproc bang_tok nocloser rparen_tok
+        """
         self._append_subproc_bang(p)
         self.p_subproc_atom_captured_stdout(p)
 
@@ -3623,6 +3644,9 @@ class BaseParser:
             "DOLLAR_LBRACKET",
             "ATDOLLAR_LPAREN",
             "AMPERSAND",
+            "FSTRING_START",
+            "FSTRING_MIDDLE",
+            "FSTRING_END",
         }
         ts = "\n                 | ".join(sorted(t.lower() + "_tok" for t in toks))
         doc = "subproc_arg_part : " + ts + "\n"

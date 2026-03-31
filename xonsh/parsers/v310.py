@@ -10,11 +10,12 @@ handle
 
 import ast
 
+from xonsh.parsers.fstring_rules_llm import FStringRules
 from xonsh.parsers.ply import yacc
 from xonsh.parsers.v39 import Parser as ThreeNineParser
 
 
-class Parser(ThreeNineParser):
+class Parser(FStringRules, ThreeNineParser):
     def p_import_from_post_times(self, p):
         """import_from_post : TIMES"""
         p[0] = [ast.alias(name=p[1], asname=None, **self.get_line_cols(p, 1))]

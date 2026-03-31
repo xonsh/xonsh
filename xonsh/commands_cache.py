@@ -306,7 +306,7 @@ class CommandsCache(cabc.Mapping):
 
     def cached_name(self, name):
         """Returns the name that would appear in the cache, if it exists."""
-        cached = pathbasename(name) if os.pathsep in name else name
+        cached = pathbasename(name) if os.sep in name else name
         keys = self.get_possible_names(cached)
         return next((k for k in keys if k in self._cmds_cache), name)
 
@@ -410,6 +410,14 @@ class CommandsCache(cabc.Mapping):
         """Return the predictor whether a command list is able to be run on a
         background thread, rather than the main thread.
         """
+        if link := self.resolve_symlink(cmd0):
+            link_name = self.cached_name(link)
+            if not link_name == "coreutils":
+                """
+                On NixOS the core tools are the symlinks to one universal ``coreutils`` binary file.
+                Here if cmd0 is the link to coreutils we're going to use the predictor for cmd0 first.
+                """
+                cmd0 = link
         name = self.cached_name(cmd0)
         predictors = self.threadable_predictors
         if name not in predictors:
@@ -443,9 +451,9 @@ class CommandsCache(cabc.Mapping):
         alias_recursion_limit = (
             10  # this limit is se to handle infinite loops in aliases definition
         )
-        first_args = []  # contains in reverse order args passed to the aliased command
+        first_args = []  # accumulated args from the alias chain, in correct order
         while cmd0 in self.aliases:
-            alias_name = self.aliases
+            alias_name = self.aliases[cmd0]
             if isinstance(alias_name, str | bytes) or not isinstance(
                 alias_name, cabc.Sequence
             ):
@@ -460,7 +468,7 @@ class CommandsCache(cabc.Mapping):
             if alias_recursion_limit == 0:
                 return predict_true
         predictor_cmd0 = self.get_predictor_threadable(cmd0)
-        return lambda cmd1: predictor_cmd0(first_args[::-1] + cmd1, self)
+        return lambda cmd1, cache: predictor_cmd0(first_args + cmd1, cache)
 
     def default_predictor_readbin(self, name, cmd0, timeout, failure):
         """Make a default predictor by

@@ -15,6 +15,8 @@ import subprocess
 import sys
 import typing as tp
 
+from xonsh.lib.string import commonprefix
+
 __version__ = "0.2.8"
 
 
@@ -189,7 +191,7 @@ def _bash_quote_paths(paths, start, end):
             _tail = space
         else:
             _tail = ""
-        if start != "" and "r" not in start and backslash in s:
+        if start != "" and "r" not in start.lower() and backslash in s:
             start = f"r{start}"
         s = s + _tail
         if end != "":
@@ -404,8 +406,7 @@ def bash_completions(
     # From GNU Bash document: The results of the expansion are prefix-matched
     # against the word being completed
 
-    # Ensure input to `commonprefix` is a list (now required by Python 3.6)
-    commprefix = os.path.commonprefix(list(out))
+    commprefix = commonprefix(out)
 
     if prefix.startswith("~") and commprefix and prefix not in commprefix:
         home_ = os.path.expanduser("~")
