@@ -41,7 +41,7 @@ Creator
 
     editors
     python_virtual_environments
-    tutorial_xonsh_projects
+    xonsh_projects
     tutorial_xontrib
     tutorial_events
     tutorial_completers

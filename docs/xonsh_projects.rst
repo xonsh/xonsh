@@ -1,8 +1,8 @@
-.. _tutorial_xonsh_projects:
+.. _xonsh_projects:
 
-************************************
-Tutorial: Xonsh Projects
-************************************
+**************
+Xonsh Projects
+**************
 Bam! Suppose you want to get beyond scripting and write a whole
 library, utility, or other big project in xonsh. Here is how you do
 that. Spoiler alert: it is easy, powerful, and fun!
