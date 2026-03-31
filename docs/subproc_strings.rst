@@ -1,7 +1,7 @@
-.. _tutorial_subproc_strings:
+.. _subproc_strings:
 
 ************************************
-Tutorial: Subprocess Strings
+Subprocess Strings
 ************************************
 Strings in xonsh follow two simple rules:
 

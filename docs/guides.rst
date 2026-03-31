@@ -10,7 +10,7 @@ Starter
     :maxdepth: 2
 
     tutorial
-    tutorial_subproc_strings
+    subproc_strings
     subproc_types
     bash_to_xsh
     platform-issues
