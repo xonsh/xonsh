@@ -1134,13 +1134,24 @@ def test_exec_function_scope(cmd):
 @skip_if_on_unix
 def test_run_currentfolder(monkeypatch):
     """Ensure we can run an executable in the current folder
-    when file is not on path
+    only when using an explicit path prefix (e.g. .\\file.bat).
+    Bare names without a path prefix must NOT run from CWD,
+    matching POSIX shell behaviour.
     """
     batfile = Path(__file__).parent / "bin" / "hello_world.bat"
     monkeypatch.chdir(batfile.parent)
-    cmd = batfile.name
+
+    # With explicit path prefix: should work
+    cmd = f".\\{batfile.name}"
     out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
     assert out.strip() == "hello world"
+
+    # Without path prefix: should NOT run from CWD
+    cmd_bare = batfile.name
+    out, _, _ = run_xonsh(
+        cmd_bare, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"]
+    )
+    assert "hello world" not in out.strip().lower()
 
 
 @skip_if_on_unix
@@ -1156,9 +1167,7 @@ def test_run_dynamic_on_path():
 
 @skip_if_on_unix
 def test_run_fail_not_on_path():
-    """Test that xonsh fails to run an executable when not on path
-    or in current folder
-    """
+    """Test that xonsh fails to run an executable when not on path."""
     cmd = "hello_world.bat"
     out, _, _ = run_xonsh(cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"])
     assert out != "Hello world"

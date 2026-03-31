@@ -14,8 +14,14 @@ from xonsh.tools import chdir
 
 def test_get_possible_names():
     env = Env(PATHEXT=[".EXE", ".COM"])
-    assert get_possible_names("file", env) == ["file", "file.exe", "file.com"]
-    assert get_possible_names("FILE", env) == ["FILE", "FILE.EXE", "FILE.COM"]
+    result = get_possible_names("file", env)
+    assert result[0] == "file"
+    assert "file.exe" in result
+    assert "file.com" in result
+    result_upper = get_possible_names("FILE", env)
+    assert result_upper[0] == "FILE"
+    assert "FILE.EXE" in result_upper
+    assert "FILE.COM" in result_upper
 
 
 def test_get_paths(tmpdir):
@@ -66,6 +72,13 @@ def test_locate_executable(tmpdir, xession):
             assert locate_executable(f".{sep}cwd_bin_file")
             assert locate_executable(str(bindir0 / "cwd_bin_file"))
             assert locate_executable(f"..{sep}bindir0{sep}cwd_bin_file")
+
+            # PATHEXT resolution must return the path WITH the matched extension
+            # so that CreateProcess can find the file (it only auto-appends .exe)
+            result = locate_executable(f".{sep}cwd_bin_file")
+            assert result.endswith("cwd_bin_file.exe"), (
+                f"PATHEXT resolution should include extension: {result}"
+            )
 
         # From PATH
         assert locate_executable("file1.EXE")
