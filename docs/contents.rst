@@ -55,7 +55,7 @@ Creator
     editors
     python_virtual_environments
     xonsh_projects
-    tutorial_xontrib
+    xontrib
     Xontrib template <https://github.com/xonsh/xontrib-cookiecutter>
     tutorial_events
     tutorial_completers

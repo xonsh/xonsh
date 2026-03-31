@@ -154,7 +154,7 @@ Report information about the current xonsh environment, including paths to the P
 
 ``xontrib``
 --------------------
-Manages xonsh extensions. More information is available at :doc:`tutorial_xontrib`
+Manages xonsh extensions. More information is available at :doc:`xontrib`
 
 
 ``xpip``

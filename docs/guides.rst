@@ -42,7 +42,7 @@ Creator
     editors
     python_virtual_environments
     xonsh_projects
-    tutorial_xontrib
+    xontrib
     tutorial_events
     tutorial_completers
     tutorial_history_backend
