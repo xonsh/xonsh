@@ -85,7 +85,7 @@ and collaborating with others
     :titlesonly:
     :maxdepth: 1
 
-    devguide
+    developer
     api/index
     Xonsh on Github <https://github.com/xonsh/xonsh>
 

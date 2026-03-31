@@ -54,5 +54,5 @@ Xontributor
     :titlesonly:
     :maxdepth: 1
 
-    devguide
+    developer
     api/index
