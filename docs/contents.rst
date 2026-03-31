@@ -60,7 +60,6 @@ Creator
     tutorial_events
     tutorial_completers
     tutorial_history_backend
-    Xonsh Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>
 
 Xontributor
 -----------
@@ -72,7 +71,6 @@ Xontributor
     devguide
     api/index
     Xonsh on Github <https://github.com/xonsh/xonsh>
-    Xonsh Zulip Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>
 
 
 Helpful Links
@@ -81,6 +79,7 @@ Helpful Links
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+* `Xonsh Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>`_
 * `Follow us on Mastodon <https://mastodon.online/@xonsh>`_
 * `Want a t-shirt? <https://www.hellotux.com/xonsh>`_
 
