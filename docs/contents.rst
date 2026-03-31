@@ -15,7 +15,7 @@ Guides
 Beginner
 --------
 
-You will learn the fundamentals of using Xonsh, including basic commands, syntax,
+The fundamentals of using Xonsh, including basic commands, syntax,
 and how subprocesses work in practice. This section introduces key concepts
 step by step and helps you build a solid foundation for working in the shell.
 
@@ -33,7 +33,7 @@ step by step and helps you build a solid foundation for working in the shell.
 Everyday User
 -------------
 
-You will learn how to use Xonsh efficiently in daily workflows by configuring
+How to use Xonsh efficiently in daily workflows by configuring
 environment variables, aliases, and history. It also covers customization
 options, keyboard shortcuts, and practical tips to improve productivity
 and streamline your command-line experience.
@@ -56,7 +56,7 @@ and streamline your command-line experience.
 Creator
 -------
 
-You will learn how to extend Xonsh by building projects, creating extensions,
+How to extend Xonsh by building projects, creating extensions,
 and customizing tab-completion. This section also explores deeper integrations,
 event handling, and advanced customization techniques for building powerful
 developer tools.
@@ -76,7 +76,7 @@ developer tools.
 Contributor
 -----------
 
-You will learn about the internal architecture of Xonsh and how to work with its API.
+The internal architecture of Xonsh and how to work with its API.
 It also guides you through contributing to the project, understanding the codebase,
 and collaborating with others
 
