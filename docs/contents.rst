@@ -68,10 +68,10 @@ developer tools.
     editors
     python_virtual_environments
     xonsh_projects
-    xontrib
-    Extension template <https://github.com/xonsh/xontrib-cookiecutter>
     events_tutorial
     completers
+    xontrib
+    Create an extension using template <https://github.com/xonsh/xontrib-template>
 
 Contributor
 -----------
@@ -88,6 +88,7 @@ and collaborating with others
     Xonsh on Github <https://github.com/xonsh/xonsh>
     api/index
     history_backend
+    Open Pull Request <https://github.com/xonsh/xonsh/pulls>
 
 
 Links
