@@ -1,8 +1,8 @@
-.. _tutorial_ptk:
+.. _prompt_toolkit:
 
-***********************************************
-Tutorial: ``prompt_toolkit`` custom keybindings
-***********************************************
+**************
+Prompt Toolkit
+**************
 
 Are you really jonesing for some special keybindings? We can help you out with
 that. The first time is free and so is every other time!

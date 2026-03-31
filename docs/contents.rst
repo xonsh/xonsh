@@ -40,7 +40,7 @@ Everyday User
     history
     customization
     keyboard_shortcuts
-    tutorial_ptk
+    prompt_toolkit
     events
     tutorial_macros
     Open technical issue <https://github.com/xonsh/xonsh>

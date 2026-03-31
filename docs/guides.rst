@@ -29,7 +29,7 @@ Everyday User
     history
     customization
     keyboard_shortcuts
-    tutorial_ptk
+    prompt_toolkit
     tutorial_macros
 
 Creator
