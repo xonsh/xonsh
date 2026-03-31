@@ -75,7 +75,7 @@ developer tools.
     completers
     history_backend
 
-Xontributor
+Contributor
 -----------
 
 You will learn about the internal architecture of Xonsh and how to work with its API.
