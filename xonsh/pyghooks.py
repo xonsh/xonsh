@@ -4,6 +4,7 @@ import os
 import re
 import stat
 import sys
+import threading
 from collections import ChainMap
 from collections.abc import MutableMapping
 from keyword import iskeyword
@@ -1595,13 +1596,63 @@ def color_file(file_path: str, path_stat: os.stat_result) -> tuple[_TokenType, s
 
 
 # pygments hooks.
+#
+# Command validation uses async model.  Alias and keyword checks
+# are instant (O(1) dict/set lookups, no I/O).  The expensive part —
+# locate_executable() — runs in a debounced background thread.  Until the
+# bg thread reports back, unknown commands appear as invalid (Error token).
+# Once validated, prompt_toolkit re-renders with the correct colours.
+
+_cmd_valid_cache: dict[str, bool] = {}
+_pending_cmds: set[str] = set()
+_debounce_timer: threading.Timer | None = None
+_ptk_app: object | None = None  # Captured on the main thread for bg invalidation
+_validation_gen: int = 0  # Generation token — incremented on each new input
+
+
+@events.on_pre_prompt
+def _clear_cmd_caches(**kwargs):
+    global _validation_gen
+    _cmd_valid_cache.clear()
+    _pending_cmds.clear()
+    _validation_gen += 1  # Invalidate any in-flight bg thread
 
 
 def _command_is_valid(cmd):
-    return (cmd in XSH.aliases or locate_executable(cmd)) and not iskeyword(cmd)
+    """Check command validity with instant alias/keyword checks.
+
+    Only ``locate_executable`` is deferred to a background thread when a
+    prompt_toolkit app is running (interactive mode).  Without an app
+    (tests, scripts, non-interactive) the lookup is synchronous because
+    there is no way to trigger a re-render later.
+    """
+    if iskeyword(cmd):
+        return False
+    if cmd in _cmd_valid_cache:
+        return _cmd_valid_cache[cmd]
+    if cmd in XSH.aliases:
+        _cmd_valid_cache[cmd] = True
+        return True
+    # Need locate_executable — check if we can defer to bg thread
+    try:
+        from prompt_toolkit.application import get_app_or_none
+
+        has_app = get_app_or_none() is not None
+    except Exception:
+        has_app = False
+    if has_app:
+        # Interactive with ptk — defer to bg, pessimistic default
+        _pending_cmds.add(cmd)
+        _schedule_bg_validation()
+        return False
+    # No ptk app — synchronous fallback (tests, scripts, non-interactive)
+    result = bool(locate_executable(cmd))
+    _cmd_valid_cache[cmd] = result
+    return result
 
 
 def _command_is_autocd(cmd):
+    """Synchronous — single os.path.isdir() call, acceptable cost."""
     if not XSH.env.get("AUTO_CD", False):
         return False
     try:
@@ -1609,6 +1660,64 @@ def _command_is_autocd(cmd):
     except OSError:
         return False
     return os.path.isdir(cmd_abspath)
+
+
+def _schedule_bg_validation():
+    """Restart the 10 ms debounce timer on every cache miss."""
+    global _debounce_timer, _ptk_app, _validation_gen
+    if _debounce_timer is not None:
+        _debounce_timer.cancel()
+    _validation_gen += 1  # Abandon any in-flight bg thread
+    gen = _validation_gen
+    # Capture the running app reference on the main thread so the bg
+    # thread can call invalidate() later.
+    try:
+        from prompt_toolkit.application import get_app_or_none
+
+        _ptk_app = get_app_or_none()
+    except Exception:
+        pass
+    _debounce_timer = threading.Timer(0.01, _run_bg_validation, args=[gen])
+    _debounce_timer.daemon = True
+    _debounce_timer.start()
+
+
+def _run_bg_validation(gen):
+    """Background thread: validate pending commands via locate_executable.
+
+    *gen* is the generation token captured at scheduling time.  Results are
+    always saved to cache (even if gen is stale) so that later renders can
+    reuse them.  Only the re-render / invalidate step is gated by gen —
+    a stale thread must not trigger a repaint for an outdated input.
+    """
+    cmds = set(_pending_cmds)
+    _pending_cmds.clear()
+    if not cmds:
+        return
+    changed = False
+    for cmd in cmds:
+        if cmd not in _cmd_valid_cache:
+            found = bool(locate_executable(cmd))
+            _cmd_valid_cache[cmd] = found
+            if gen == _validation_gen:
+                changed = True
+    if gen == _validation_gen and changed and _ptk_app is not None:
+        try:
+            # Clear the BufferControl fragment cache so that
+            # prompt_toolkit re-lexes instead of returning stale tokens.
+            # Without this, pressing Up / Ctrl-R shows wrong highlights
+            # because the cache key (document.text, invalidation_hash)
+            # hasn't changed — only our internal _cmd_valid_cache has.
+            from prompt_toolkit.layout.controls import BufferControl
+
+            for control in _ptk_app.layout.find_all_controls():
+                if isinstance(control, BufferControl) and hasattr(
+                    control, "_fragment_cache"
+                ):
+                    control._fragment_cache.clear()
+            _ptk_app.invalidate()
+        except Exception:
+            pass
 
 
 def subproc_cmd_callback(_, match):
