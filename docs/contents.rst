@@ -89,6 +89,7 @@ and collaborating with others
     Xonsh on Github <https://github.com/xonsh/xonsh>
     api/index
     history_backend
+    Edit the article on this page <https://github.com/xonsh/xonsh/tree/main/docs>
     Open Pull Request <https://github.com/xonsh/xonsh/pulls>
 
 
