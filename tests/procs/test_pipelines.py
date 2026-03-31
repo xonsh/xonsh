@@ -161,8 +161,6 @@ def test_remove_hide_escape(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
     assert pipeline.raw_err == stderr.replace("\n", os.linesep).encode()
 
 
-
-
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_callable_alias_redirect_e2o(xonsh_session):
