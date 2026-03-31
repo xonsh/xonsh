@@ -326,8 +326,10 @@ class Completer:
                   3 - case-insensitive substring match
                   4 - no match (sorted last)
 
-                Within each tier, completions starting with '_' are sorted
-                last, then by position of the match, then alphabetically.
+                Within each tier, completions whose last component starts
+                with '_' are sorted last (handles both bare names like
+                ``_codecs`` and dotted names like ``json._default_decoder``),
+                then by position of the match, then alphabetically.
                 """
                 text = str(s)
                 ltext = text.lower()
@@ -341,7 +343,8 @@ class Completer:
                     tier = 3
                 else:
                     tier = 4
-                has_leading_underscore = text.startswith("_")
+                last_part = text.rsplit(".", 1)[-1]
+                has_leading_underscore = last_part.startswith("_")
                 pos = ltext.find(lower_prefix) if lower_prefix else 0
                 if pos < 0:
                     pos = 0
