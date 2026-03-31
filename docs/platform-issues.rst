@@ -282,8 +282,4 @@ Add that to ``~/.xonshrc`` to enable that as the default behavior.
 See Also
 -----------
 
-.. toctree::
-    :titlesonly:
-    :maxdepth: 1
-
-    bash_to_xsh
+ - `Bash to Xonsh <bash_to_xsh.html>`_
