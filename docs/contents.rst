@@ -26,7 +26,6 @@ step by step and helps you build a solid foundation for working in the shell.
     tutorial
     subproc_strings
     subproc_types
-    bash_to_xsh
     platform-issues
     Extensions (xontribs) on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
