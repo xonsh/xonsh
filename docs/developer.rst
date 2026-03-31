@@ -374,7 +374,14 @@ One can leverage the Github Actions to provide a reverse shell to test things ou
 Solutions like `actions-tmate <https://mxschmitt.github.io/action-tmate/>`_ are available,
 but they should not in any way violate the Github Action policies.
 
-.. include:: python-versions-support-policy.rst
+
+Python versions support policy
+------------------------------
+
+Xonsh adopts `NEP-0029 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_ in supporting Python versions.
+Simply speaking a minor Python release (X.*) will be supported for 42 months from its date of initial release.
+Since Python has adopted yearly release cycle, most of the time,
+the latest 4 minor versions of Python would be supported at any given time.
 
 
 Document History
@@ -384,7 +391,7 @@ Portions of this page have been forked from the PyNE documentation,
 Copyright 2011-2015, the PyNE Development Team. All rights reserved.
 
 Chronicle
-=========
+-----------------
 
 .. toctree::
     :titlesonly:
