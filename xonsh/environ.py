@@ -38,6 +38,7 @@ from xonsh.platform import (
     DEFAULT_ENCODING,
     ON_CYGWIN,
     ON_WINDOWS,
+    ON_WSL,
     PATH_DEFAULT,
     os_environ,
 )
@@ -918,6 +919,26 @@ class Xettings:
         return ""
 
 
+def _commands_cache_read_dir_once_default():
+    """Compute the default for $XONSH_COMMANDS_CACHE_READ_DIR_ONCE.
+
+    - Windows: ``[%WINDIR%]`` (typically ``C:\\Windows``).
+    - WSL: auto-detect ``/mnt/*/Windows`` directories (may include multiple
+      drives, e.g. ``/mnt/c/Windows``, ``/mnt/d/Windows``).
+    - Linux/Mac: empty list.
+    """
+    if ON_WINDOWS:
+        windir = os.environ.get("WINDIR", "")
+        return [windir] if windir else []
+    if ON_WSL:
+        import glob
+
+        # WSL mounts Windows drives under /mnt/<letter>/
+        # Windows can be installed on any drive, not just C:
+        return sorted(glob.glob("/mnt/*/Windows"))
+    return []
+
+
 class GeneralSetting(Xettings):
     """General"""
 
@@ -1337,6 +1358,28 @@ class CacheSetting(Xettings):
     COMMANDS_CACHE_SAVE_INTERMEDIATE = Var.with_default(
         False,
         "If enabled, the CommandsCache is saved between runs and can reduce the startup time.",
+    )
+
+    XONSH_COMMANDS_CACHE_READ_DIR_ONCE = Var.with_default(
+        _commands_cache_read_dir_once_default(),
+        "List of directory prefixes whose contents are cached on first access and "
+        "never re-read within the session.  Any ``$PATH`` entry that starts with "
+        "one of these prefixes (or is a subdirectory) will have its file listing "
+        "cached as a frozenset after the first ``locate_executable`` call, so "
+        "subsequent lookups are O(1) hash checks instead of per-file stat() calls.  "
+        "On Windows this defaults to ``['C:\\\\Windows']`` (via ``%WINDIR%``).  "
+        "On WSL it auto-detects ``/mnt/*/Windows`` directories "
+        "(9P-mounted Windows dirs are very slow to stat).  "
+        "On Linux/Mac it is empty by default but can be extended "
+        "(e.g. ``['/usr']``).",
+        type_str="env_path",
+    )
+
+    XONSH_COMMANDS_CACHE_DEBUG = Var.with_default(
+        False,
+        "If True, print debug messages showing where each command was resolved "
+        "from (cached directory listing XONSH_COMMANDS_CACHE_READ_DIR_ONCE vs. disk stat) "
+        "and how long it took.",
     )
 
 
@@ -1822,7 +1865,7 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
         always_false,
         to_ptk_cursor_shape,
         to_ptk_cursor_shape_display_value,
-        to_ptk_cursor_shape("modal-vi-mode-only"),
+        default_value(lambda env: to_ptk_cursor_shape("modal-vi-mode-only")),
         "The cursor shape. Possible values for prompt toolkit are: "
         "``block``, ``beam``, ``underline``, "
         "``blinking-block``, ``blinking-beam``, ``blinking-underline``, "

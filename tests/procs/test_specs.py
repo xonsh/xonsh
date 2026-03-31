@@ -1,6 +1,7 @@
 """Tests the xonsh.procs.specs"""
 
 import itertools
+import os
 import signal
 import sys
 from subprocess import CalledProcessError, Popen
@@ -13,6 +14,7 @@ from xonsh.procs.specs import (
     DecoratorAlias,
     SpecAttrDecoratorAlias,
     SubprocSpec,
+    _has_path_component,
     _run_command_pipeline,
     cmds_to_specs,
     get_script_subproc_command,
@@ -20,7 +22,7 @@ from xonsh.procs.specs import (
     safe_close,
 )
 from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
-from xonsh.tools import XonshError
+from xonsh.tools import XonshError, chdir
 
 # TODO: track down which pipeline + spec test is hanging CI
 # Skip entire test file for Linux on Python 3.12
@@ -143,13 +145,8 @@ def test_capture_always(
     # Explicitly captured commands are always captured
     hidden = run_subproc(cmds, "object")  # !()
     hidden.end()
-    if thread_subprocs:
-        assert exp not in capfd.readouterr().out
-        assert hidden.out == exp
-    else:
-        # for some reason THREAD_SUBPROCS=False fails to capture in `!()` but still succeeds in `$()`
-        assert exp in capfd.readouterr().out
-        assert not hidden.out
+    assert exp not in capfd.readouterr().out
+    assert hidden.out == exp
 
     output = run_subproc(cmds, "stdout")  # $()
     assert exp not in capfd.readouterr().out
@@ -727,3 +724,80 @@ def test_redirect_without_left_part(tmpdir):
     with pytest.raises(XonshError) as expected:
         SubprocSpec.build([(">", file)])
     assert "subprocess mode: command is empty" in str(expected.value)
+
+
+def test_resolve_executable_commands_updates_binary_loc(tmpdir, xession):
+    """After resolve_executable_commands wraps a script with an interpreter,
+    binary_loc must point to the interpreter, not the script.
+    Otherwise _run_binary (PR #4077) would try to launch the script directly
+    via CreateProcess on Windows, causing WinError 193."""
+    script = tmpdir / "test_script.xsh"
+    script.write_text("echo hello", encoding="utf-8")
+    if not ON_WINDOWS:
+        script.chmod(0o755)
+    spec = SubprocSpec.build([str(script)])
+    # The command should be wrapped with an interpreter (python -m xonsh.main
+    # on Windows, or xonsh on POSIX)
+    assert spec.cmd[0] != str(script), "script should be wrapped with interpreter"
+    # binary_loc must match the interpreter, not the original script
+    if spec.binary_loc is not None:
+        assert not spec.binary_loc.endswith(".xsh"), (
+            f"binary_loc should point to interpreter, not script: {spec.binary_loc}"
+        )
+
+
+def test_has_path_component():
+    """_has_path_component correctly distinguishes bare names from paths."""
+    # Bare names — no path component
+    assert not _has_path_component("ls")
+    assert not _has_path_component("ls.exe")
+    assert not _has_path_component("script.xsh")
+    assert not _has_path_component("python")
+
+    # Forward-slash paths (work on all platforms)
+    assert _has_path_component("./script.sh")
+    assert _has_path_component("../script.sh")
+    assert _has_path_component("subdir/script.sh")
+    assert _has_path_component("/usr/bin/ls")
+
+    if ON_WINDOWS:
+        assert _has_path_component(".\\script.exe")
+        assert _has_path_component("..\\script.exe")
+        assert _has_path_component("C:\\Windows\\cmd.exe")
+        assert _has_path_component("subdir\\script.exe")
+
+
+def test_bare_script_in_cwd_not_detected(tmpdir, xession):
+    """Typing a bare script name that exists in CWD should NOT activate
+    script detection.  The user must use an explicit path prefix
+    (e.g. ./script.xsh) to run scripts from the current directory,
+    matching POSIX shell behaviour."""
+    script = tmpdir / "my_script.xsh"
+    script.write_text("echo hello", encoding="utf-8")
+    if not ON_WINDOWS:
+        script.chmod(0o755)
+
+    with chdir(str(tmpdir)):
+        spec = SubprocSpec.build(["my_script.xsh"])
+        # Script detection must NOT wrap the bare name with an interpreter
+        assert spec.cmd[0] == "my_script.xsh", (
+            "bare script name in CWD should not be resolved"
+        )
+        assert spec.binary_loc is None
+
+
+def test_explicit_path_script_in_cwd_detected(tmpdir, xession):
+    """Scripts referenced with an explicit path (./script.xsh) should
+    still be detected and wrapped with an interpreter."""
+    script = tmpdir / "my_script.xsh"
+    script.write_text("echo hello", encoding="utf-8")
+    if not ON_WINDOWS:
+        script.chmod(0o755)
+
+    sep = os.path.sep
+    with chdir(str(tmpdir)):
+        spec = SubprocSpec.build([f".{sep}my_script.xsh"])
+        # Script detection MUST activate for explicit paths
+        assert spec.cmd[0] != f".{sep}my_script.xsh", (
+            "script with explicit path prefix should be wrapped with interpreter"
+        )

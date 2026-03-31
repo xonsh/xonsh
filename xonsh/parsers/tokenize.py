@@ -113,6 +113,9 @@ __all__ = token.__all__ + [  # type:ignore
     "IOREDIRECT2",
     "MATCH",
     "CASE",
+    "FSTRING_START",
+    "FSTRING_MIDDLE",
+    "FSTRING_END",
 ]
 HAS_ASYNC = PYTHON_VERSION_INFO < (3, 7, 0)
 if HAS_ASYNC:
@@ -155,6 +158,15 @@ tok_name[N_TOKENS] = "MATCH"
 N_TOKENS += 1  # type: ignore
 CASE = N_TOKENS
 tok_name[N_TOKENS] = "CASE"
+N_TOKENS += 1  # type: ignore
+FSTRING_START = N_TOKENS
+tok_name[N_TOKENS] = "FSTRING_START"
+N_TOKENS += 1  # type: ignore
+FSTRING_MIDDLE = N_TOKENS
+tok_name[N_TOKENS] = "FSTRING_MIDDLE"
+N_TOKENS += 1  # type: ignore
+FSTRING_END = N_TOKENS
+tok_name[N_TOKENS] = "FSTRING_END"
 N_TOKENS += 1  # type: ignore
 _xonsh_tokens = {
     "?": "QUESTION",
@@ -530,17 +542,17 @@ for t in (
     "pR'''",
     'pR""""',
     "rp'''",
-    'rp""""',
+    'rp"""',
     "Rp'''",
-    'Rp""""',
+    'Rp"""',
     "pf'''",
-    'pf""""',
+    'pf"""',
     "pF'''",
-    'pF""""',
+    'pF"""',
     "fp'''",
-    'fp""""',
+    'fp"""',
     "Fp'''",
-    'Fp""""',
+    'Fp"""',
 ):
     triple_quoted[t] = t
 single_quoted = {}
@@ -617,6 +629,14 @@ for t in (
     single_quoted[t] = t
 
 tabsize = 8
+
+# Build set of f-string prefix+quote tokens for quick detection.
+# E.g., "f'", 'f"', "fr'", "pf'", "f'''", 'f"""', etc.
+_fstring_start_tokens = frozenset(
+    t
+    for t in list(single_quoted) + list(triple_quoted)
+    if any(c in t.split("'")[0].split('"')[0].lower() for c in "f")
+)
 
 
 class TokenError(Exception):
@@ -886,6 +906,11 @@ def _tokenize(
     async_def_indent = 0
     async_def_nl = False
 
+    # PEP 701 f-string state (Python 3.12+)
+    # Stack of dicts: {"quote", "prefix", "start", "brace_depth",
+    #                  "paren_depth", "in_expr", "in_format_spec"}
+    fstring_stack = [] if PYTHON_VERSION_INFO >= (3, 12) else None
+
     if encoding is not None:
         if encoding == "utf-8-sig":
             # BOM will already have been stripped.
@@ -904,7 +929,7 @@ def _tokenize(
         lnum += 1
         pos, max = 0, len(line)
 
-        if contstr:  # continued string
+        if contstr:  # continued string (non-fstring)
             if not line:
                 if tolerant:
                     # return the partial string
@@ -933,6 +958,22 @@ def _tokenize(
                 contstr = contstr + line
                 contline = contline + line
                 continue
+
+        elif (
+            fstring_stack is not None
+            and fstring_stack
+            and not fstring_stack[-1]["in_expr"]
+        ):
+            # Continuing an f-string literal on a new line (triple-quoted)
+            if not line:
+                if tolerant:
+                    yield TokenInfo(ERRORTOKEN, "", (lnum, 0), (lnum, 0), "")
+                    fstring_stack.clear()
+                    break
+                else:
+                    raise TokenError("EOF in f-string", fstring_stack[-1]["start"])
+            # pos is already 0; fall through to the inner while loop
+            # which will resume f-string literal scanning
 
         elif parenlev == 0 and not continued:  # new statement
             if not line:
@@ -1009,6 +1050,194 @@ def _tokenize(
             continued = 0
 
         while pos < max:
+            # PEP 701: detect f-string opening before pseudomatch.
+            # Needed because the pseudomatch regex expects complete
+            # string content on one line, but PEP 701 allows multi-line
+            # expressions inside {}, so f"{\n is valid.
+            if fstring_stack is not None and (
+                not fstring_stack or fstring_stack[-1]["in_expr"]
+            ):
+                _fs_tok = None
+                for _fs_end in range(min(pos + 5, max), pos, -1):
+                    _fs_candidate = line[pos:_fs_end]
+                    if _fs_candidate in _fstring_start_tokens:
+                        _fs_tok = _fs_candidate
+                        break
+                if _fs_tok is not None:
+                    spos = (lnum, pos)
+                    pos += len(_fs_tok)
+                    epos = (lnum, pos)
+                    fstring_stack.append(
+                        {
+                            "quote": _fs_tok[len(_fs_tok.rstrip("'\"")) :],
+                            "prefix": _fs_tok.rstrip("'\""),
+                            "start": spos,
+                            "brace_depth": 0,
+                            "paren_depth": 0,
+                            "in_expr": False,
+                            "in_format_spec": False,
+                        }
+                    )
+                    yield TokenInfo(
+                        FSTRING_START,
+                        _fs_tok,
+                        spos,
+                        epos,
+                        line,
+                    )
+                    continue
+
+            # PEP 701: scan f-string literal text (outside expressions)
+            if (
+                fstring_stack is not None
+                and fstring_stack
+                and not fstring_stack[-1]["in_expr"]
+            ):
+                fs = fstring_stack[-1]
+                quote = fs["quote"]
+                is_raw = "r" in fs["prefix"].lower()
+                # Resume accumulated text from previous lines (triple-quoted)
+                text = fs.pop("_pending_text", "")
+                text_start_saved = fs.pop("_pending_start", None)
+                text_start = text_start_saved if text_start_saved is not None else pos
+
+                while pos < max:
+                    ch = line[pos]
+
+                    # Check for closing quote
+                    if line[pos : pos + len(quote)] == quote:
+                        if text:
+                            yield TokenInfo(
+                                FSTRING_MIDDLE,
+                                text,
+                                (lnum, text_start),
+                                (lnum, pos),
+                                line,
+                            )
+                        yield TokenInfo(
+                            FSTRING_END,
+                            quote,
+                            (lnum, pos),
+                            (lnum, pos + len(quote)),
+                            line,
+                        )
+                        pos += len(quote)
+                        fstring_stack.pop()
+                        break
+
+                    # In format spec mode, } ends the entire field
+                    if fs["in_format_spec"] and ch == "}":
+                        if text:
+                            yield TokenInfo(
+                                FSTRING_MIDDLE,
+                                text,
+                                (lnum, text_start),
+                                (lnum, pos),
+                                line,
+                            )
+                        fs["in_format_spec"] = False
+                        # Emit } as OP to close the replacement field
+                        yield TokenInfo(
+                            OP,
+                            "}",
+                            (lnum, pos),
+                            (lnum, pos + 1),
+                            line,
+                        )
+                        parenlev -= 1
+                        pos += 1
+                        break
+
+                    # Escaped braces: {{ and }}
+                    if ch == "{" and pos + 1 < max and line[pos + 1] == "{":
+                        text += "{"
+                        pos += 2
+                        continue
+                    if ch == "}" and pos + 1 < max and line[pos + 1] == "}":
+                        text += "}"
+                        pos += 2
+                        continue
+
+                    # Start of expression: single {
+                    if ch == "{":
+                        if text:
+                            yield TokenInfo(
+                                FSTRING_MIDDLE,
+                                text,
+                                (lnum, text_start),
+                                (lnum, pos),
+                                line,
+                            )
+                        fs["in_expr"] = True
+                        fs["paren_depth"] = 0
+                        # brace_depth will be incremented by the OP
+                        # handler when it processes the '{' token
+                        break  # fall through to pseudomatch for the '{'
+
+                    # Lone } outside expression (not in format spec)
+                    if ch == "}":
+                        if tolerant:
+                            text += ch
+                            pos += 1
+                            continue
+                        raise TokenError(
+                            "single '}' is not allowed in f-string",
+                            (lnum, pos),
+                        )
+
+                    # Escape sequences (non-raw)
+                    if ch == "\\" and not is_raw and pos + 1 < max:
+                        text += line[pos : pos + 2]
+                        pos += 2
+                        continue
+
+                    # Newline handling
+                    if ch in "\r\n":
+                        if len(quote) == 3:
+                            text += ch
+                            pos += 1
+                            if ch == "\r" and pos < max and line[pos] == "\n":
+                                text += "\n"
+                                pos += 1
+                            continue
+                        else:
+                            if tolerant:
+                                break
+                            raise TokenError(
+                                "EOL while scanning f-string",
+                                (lnum, pos),
+                            )
+
+                    text += ch
+                    pos += 1
+
+                else:
+                    # Reached end of line
+                    if fstring_stack and not fstring_stack[-1]["in_expr"]:
+                        if len(quote) == 3:
+                            # Triple-quoted: carry text to next line
+                            fs["_pending_text"] = text
+                            fs["_pending_start"] = text_start
+                            break  # break inner while, read next line
+                        elif tolerant:
+                            if text:
+                                yield TokenInfo(
+                                    FSTRING_MIDDLE,
+                                    text,
+                                    (lnum, text_start),
+                                    (lnum, pos),
+                                    line,
+                                )
+                            fstring_stack.pop()
+                            break
+                        else:
+                            raise TokenError(
+                                "EOL while scanning f-string",
+                                (lnum, text_start),
+                            )
+
+                continue  # re-enter the while pos < max loop
+
             pseudomatch = _compile(
                 getPseudoToken(is_subproc=is_subproc)
                 if tokenize_ioredirects
@@ -1052,22 +1281,74 @@ def _tokenize(
                 elif re.match(SearchPath, token):
                     yield TokenInfo(SEARCHPATH, token, spos, epos, line)
                 elif token in triple_quoted:
-                    endprog = _compile(endpats[token])
-                    endmatch = endprog.match(line, pos)
-                    if endmatch:  # all on one line
-                        pos = endmatch.end(0)
-                        token = line[start:pos]
-                        yield TokenInfo(STRING, token, spos, (lnum, pos), line)
+                    if fstring_stack is not None and token in _fstring_start_tokens:
+                        fstring_stack.append(
+                            {
+                                "quote": token[len(token.rstrip("'\"")) :],
+                                "prefix": token.rstrip("'\""),
+                                "start": spos,
+                                "brace_depth": 0,
+                                "paren_depth": 0,
+                                "in_expr": False,
+                                "in_format_spec": False,
+                            }
+                        )
+                        yield TokenInfo(
+                            FSTRING_START,
+                            token,
+                            spos,
+                            (lnum, pos),
+                            line,
+                        )
                     else:
-                        strstart = (lnum, start)  # multiple lines
-                        contstr = line[start:]
-                        contline = line
-                        break
+                        endprog = _compile(endpats[token])
+                        endmatch = endprog.match(line, pos)
+                        if endmatch:  # all on one line
+                            pos = endmatch.end(0)
+                            token = line[start:pos]
+                            yield TokenInfo(STRING, token, spos, (lnum, pos), line)
+                        else:
+                            strstart = (lnum, start)  # multiple lines
+                            contstr = line[start:]
+                            contline = line
+                            break
                 elif (
                     initial in single_quoted
                     or token[:2] in single_quoted
                     or token[:3] in single_quoted
                 ):
+                    # Check for f-string (PEP 701)
+                    if fstring_stack is not None:
+                        if token[:3] in _fstring_start_tokens:
+                            _fst = token[:3]
+                        elif token[:2] in _fstring_start_tokens:
+                            _fst = token[:2]
+                        elif initial in _fstring_start_tokens:
+                            _fst = initial
+                        else:
+                            _fst = None
+                        if _fst is not None:
+                            fstring_stack.append(
+                                {
+                                    "quote": _fst[len(_fst.rstrip("'\"")) :],
+                                    "prefix": _fst.rstrip("'\""),
+                                    "start": spos,
+                                    "brace_depth": 0,
+                                    "paren_depth": 0,
+                                    "in_expr": False,
+                                    "in_format_spec": False,
+                                }
+                            )
+                            pos = start + len(_fst)
+                            yield TokenInfo(
+                                FSTRING_START,
+                                _fst,
+                                spos,
+                                (lnum, pos),
+                                line,
+                            )
+                            continue
+
                     if token[-1] == "\n":  # continued string
                         strstart = (lnum, start)
                         endprog = _compile(
@@ -1138,6 +1419,57 @@ def _tokenize(
                         parenlev -= 1
                     elif token in additional_parenlevs:
                         parenlev += 1
+
+                    # PEP 701: track f-string expression nesting
+                    if (
+                        fstring_stack is not None
+                        and fstring_stack
+                        and fstring_stack[-1]["in_expr"]
+                    ):
+                        fs = fstring_stack[-1]
+                        if (
+                            initial == "{"
+                            or token in additional_parenlevs
+                            and token.endswith("{")
+                        ):
+                            fs["brace_depth"] += 1
+                        elif (
+                            initial in "(["
+                            or token in additional_parenlevs
+                            and not token.endswith("{")
+                        ):
+                            fs["paren_depth"] += 1
+                        elif initial in ")]":
+                            fs["paren_depth"] -= 1
+                        elif initial == "}":
+                            fs["brace_depth"] -= 1
+                            if fs["brace_depth"] == 0:
+                                # End of f-string expression
+                                fs["in_expr"] = False
+                                fs["in_format_spec"] = False
+                                if stashed:
+                                    yield stashed
+                                    stashed = None
+                                yield TokenInfo(OP, "}", spos, epos, line)
+                                continue
+                        elif (
+                            token == ":"
+                            and fs["brace_depth"] == 1
+                            and fs["paren_depth"] == 0
+                            and not fs["in_format_spec"]
+                        ):
+                            # Start of format spec — emit ':' then
+                            # switch to format spec scanning mode.
+                            # Set in_expr=False so the fstring literal
+                            # scanner handles the format spec text.
+                            fs["in_format_spec"] = True
+                            fs["in_expr"] = False
+                            if stashed:
+                                yield stashed
+                                stashed = None
+                            yield TokenInfo(OP, ":", spos, epos, line)
+                            continue
+
                     if stashed:
                         yield stashed
                         stashed = None

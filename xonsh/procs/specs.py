@@ -18,16 +18,33 @@ import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
-from xonsh.procs.executables import locate_executable
+from xonsh.procs.executables import (
+    get_possible_names,
+    is_file,
+    locate_executable,
+)
 from xonsh.procs.pipelines import (
     STDOUT_CAPTURE_KINDS,
     CommandPipeline,
     HiddenCommandPipeline,
     resume_process,
 )
+from xonsh.procs.pipes import PipeChannel
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
+
+
+def _has_path_component(name):
+    """Check if a command name contains any path component (directory separator).
+
+    Commands with path separators (like ``./script``, ``subdir/script``,
+    or absolute paths) are explicit path references and may be resolved
+    relative to CWD.  Bare names (like ``ls`` or ``script.xsh``) must be
+    found in ``$PATH`` only — matching Linux/POSIX behaviour where CWD is
+    never searched implicitly.
+    """
+    return os.sep in name or (os.sep != "/" and "/" in name)
 
 
 @xl.lazyobject
@@ -76,7 +93,7 @@ def _un_shebang(x):
     elif x.endswith("python") or x.endswith("python.exe"):
         x = "python"
     if x == "xonsh":
-        return ["python", "-m", "xonsh.main"]
+        return [sys.executable, "-m", "xonsh"]
     return [x]
 
 
@@ -122,12 +139,28 @@ def get_script_subproc_command(fname, args):
         # if the file is a binary, we should call it directly
         return None
     if xp.ON_WINDOWS:
-        # Windows can execute various filetypes directly
-        # as given in PATHEXT
         _, ext = os.path.splitext(fname)
-        if ext.upper() in XSH.env.get("PATHEXT"):
-            return [fname] + args
-    # find interpreter
+        ext_upper = ext.upper()
+        # 1) .xsh / .py / .pyw — run with the current xonsh interpreter
+        #    (xonsh compiles .py as pure Python and .xsh as xonsh code
+        #    via codecache, matching the Linux behaviour)
+        if ext_upper in {".XSH", ".PY", ".PYW"}:
+            return [sys.executable, "-m", "xonsh", fname] + args
+        # 3) Other PATHEXT extensions — delegate to OS file associations
+        if ext_upper in {e.upper() for e in XSH.env.get("PATHEXT", [])}:
+            return ["cmd", "/c", fname] + args
+        # 4) Try shebang for any other text file
+        shebang = parse_shebang_from_file(fname)
+        m = RE_SHEBANG.match(shebang)
+        if m is not None:
+            interp = shlex.split(m.group(1).strip())
+            o = []
+            for i in interp:
+                o.extend(_un_shebang(i))
+            return o + [fname] + args
+        # 5) Unknown file type — no recognised extension, no shebang
+        return None
+    # --- POSIX path (unchanged) ---
     shebang = parse_shebang_from_file(fname)
     m = RE_SHEBANG.match(shebang)
     # xonsh is the default interpreter
@@ -139,11 +172,6 @@ def get_script_subproc_command(fname, args):
             interp = shlex.split(interp)
         else:
             interp = ["xonsh"]
-    if xp.ON_WINDOWS:
-        o = []
-        for i in interp:
-            o.extend(_un_shebang(i))
-        interp = o
     return interp + [fname] + args
 
 
@@ -436,6 +464,7 @@ class SubprocSpec:
         self.captured_stderr = None
         self.stack = None
         self.decorators = []  # List of DecoratorAlias objects that applied to spec.
+        self.pipe_channels = []  # PipeChannel objects owned by this spec
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
         self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
 
@@ -543,6 +572,15 @@ class SubprocSpec:
                 cmd = [self.binary_loc] + self.cmd[1:]
             else:
                 cmd = self.cmd
+            # On Windows, CreateProcess searches the current directory for
+            # executables before PATH.  Block that for bare command names
+            # (no directory separator) so the behaviour matches POSIX shells
+            # where CWD is never searched implicitly.
+            if xp.ON_WINDOWS and self.binary_loc is None:
+                cmd0 = cmd[0]
+                if cmd0 and not _has_path_component(cmd0):
+                    if any(is_file(n) for n in get_possible_names(cmd0)):
+                        raise FileNotFoundError(cmd0)
             p = self.cls(cmd, bufsize=bufsize, **kwargs)
         except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
@@ -810,12 +848,38 @@ class SubprocSpec:
         else:
             self.cmd = alias
             self.resolve_redirects()
-        if self.binary_loc is None:
+        # Determine the file to inspect for script detection.
+        # binary_loc may be None on Windows for files whose extension is not
+        # in PATHEXT (e.g. .xsh), even though the file exists and is a script.
+        # Only allow CWD-relative lookup when the command has an explicit path
+        # component (e.g. ./script.xsh, subdir/script, or an absolute path).
+        # Bare names like "script.xsh" must come from $PATH, not CWD — this
+        # matches POSIX shell behaviour and avoids accidental execution of
+        # files that happen to sit in the current directory.
+        fname = self.binary_loc
+        if fname is None:
+            cmd0 = self.cmd[0] if self.cmd else None
+            if cmd0 and _has_path_component(cmd0) and os.path.isfile(cmd0):
+                fname = os.path.abspath(cmd0)
+        if fname is None:
             return
         try:
-            scriptcmd = get_script_subproc_command(self.binary_loc, self.cmd[1:])
+            scriptcmd = get_script_subproc_command(fname, self.cmd[1:])
             if scriptcmd is not None:
                 self.cmd = scriptcmd
+                # Update binary_loc to the interpreter, not the script.
+                # Otherwise _run_binary() (PR #4077) would launch the script
+                # directly via CreateProcess, causing WinError 193 on Windows.
+                self.binary_loc = locate_executable(scriptcmd[0])
+            elif xp.ON_WINDOWS and not _is_binary(fname):
+                # get_script_subproc_command returned None for a non-binary
+                # file — it has no recognised extension and no shebang.
+                # (None for a binary is normal — it runs via CreateProcess.)
+                _, ext = os.path.splitext(fname)
+                raise xt.XonshError(
+                    f"xonsh: {self.cmd[0]}: unknown file type {ext!r} — "
+                    f"not in $PATHEXT."
+                )
         except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
             raise xt.XonshError(e.format(self.cmd[0])) from ex
@@ -855,7 +919,11 @@ def _safe_pipe_properties(fd, use_tty=False):
     # protocols, like git and ssh, which expect unix line endings.
     # see https://mail.python.org/pipermail/python-list/2013-June/650460.html
     # for more details and the following solution.
-    props = xli.termios.tcgetattr(fd)
+    try:
+        props = xli.termios.tcgetattr(fd)
+    except xli.termios.error:
+        # fd is not a TTY (e.g. PTY exhaustion caused fallback to os.pipe)
+        return
     props[1] = props[1] & (~xli.termios.ONLCR) | xli.termios.ONLRET
     xli.termios.tcsetattr(fd, xli.termios.TCSANOW, props)
     # newly created PTYs have a stardard size (24x80), set size to the same size
@@ -912,7 +980,9 @@ def _last_spec_update_threading(last: SubprocSpec):
 def _last_spec_update_captured(last: SubprocSpec):
     captured = (
         (captured := last.captured)
-        and not (captured in ["object", "hiddenobject"] and not last.threadable)
+        # Explicit captures ("object") must always work
+        # even when THREAD_SUBPROCS is disabled (e.g. during rc-file loading).
+        and not (captured == "hiddenobject" and not last.threadable)
         # a ProcProxy run using ![] should not be captured
         and not (
             callable(last.alias)
@@ -944,45 +1014,53 @@ def _make_last_spec_captured(last: SubprocSpec):
         last.universal_newlines = True
     elif captured in STDOUT_CAPTURE_KINDS:
         last.universal_newlines = False
-        r, w = os.pipe()
-        last.stdout = safe_open(w, "wb")
-        last.captured_stdout = safe_open(r, "rb")
+        pipe = PipeChannel.from_pipe()
+        last.stdout = pipe.open_writer("wb")
+        last.captured_stdout = pipe.open_reader("rb")
+        last.pipe_channels.append(pipe)
     elif XSH.stdout_uncaptured is not None:
         last.universal_newlines = True
         last.stdout = XSH.stdout_uncaptured
         last.captured_stdout = last.stdout
-    elif xp.ON_WINDOWS and not callable_alias:
+    elif (
+        xp.ON_WINDOWS and not callable_alias and not XSH.env.get("XONSH_CAPTURE_ALWAYS")
+    ):
         last.universal_newlines = True
         last.stdout = None  # must truly stream on windows
         last.captured_stdout = ConsoleParallelReader(1)
     else:
         last.universal_newlines = True
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
-        _safe_pipe_properties(w, use_tty=use_tty)
-        last.stdout = safe_open(w, "w")
-        _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stdout = safe_open(r, "r")
+        pipe = PipeChannel.from_pty() if use_tty else PipeChannel.from_pipe()
+        _safe_pipe_properties(pipe.write_fd, use_tty=use_tty)
+        last.stdout = pipe.open_writer("w")
+        _safe_pipe_properties(pipe.read_fd, use_tty=use_tty)
+        last.captured_stdout = pipe.open_reader("r")
+        last.pipe_channels.append(pipe)
     # set standard error
     if last.stderr is not None:
         pass
     elif captured == "stdout":
         pass
     elif captured == "object":
-        r, w = os.pipe()
-        last.stderr = safe_open(w, "w")
-        last.captured_stderr = safe_open(r, "r")
+        pipe = PipeChannel.from_pipe()
+        last.stderr = pipe.open_writer("w")
+        last.captured_stderr = pipe.open_reader("r")
+        last.pipe_channels.append(pipe)
     elif XSH.stderr_uncaptured is not None:
         last.stderr = XSH.stderr_uncaptured
         last.captured_stderr = last.stderr
-    elif xp.ON_WINDOWS and not callable_alias:
+    elif (
+        xp.ON_WINDOWS and not callable_alias and not XSH.env.get("XONSH_CAPTURE_ALWAYS")
+    ):
         last.universal_newlines = True
         last.stderr = None  # must truly stream on windows
     else:
-        r, w = xli.pty.openpty() if use_tty else os.pipe()
-        _safe_pipe_properties(w, use_tty=use_tty)
-        last.stderr = safe_open(w, "w")
-        _safe_pipe_properties(r, use_tty=use_tty)
-        last.captured_stderr = safe_open(r, "r")
+        pipe = PipeChannel.from_pty() if use_tty else PipeChannel.from_pipe()
+        _safe_pipe_properties(pipe.write_fd, use_tty=use_tty)
+        last.stderr = pipe.open_writer("w")
+        _safe_pipe_properties(pipe.read_fd, use_tty=use_tty)
+        last.captured_stderr = pipe.open_reader("r")
+        last.pipe_channels.append(pipe)
     # redirect stdout to stderr, if we should
     if isinstance(last.stdout, int) and last.stdout == 2:
         # need to use private interface to avoid duplication.
@@ -990,7 +1068,7 @@ def _make_last_spec_captured(last: SubprocSpec):
     # redirect stderr to stdout, if we should
     if callable_alias and last.stderr == subprocess.STDOUT:
         last._stderr = last.stdout
-        last.captured_stderr = last.captured_stdout
+        last.captured_stderr = None
 
 
 def _update_proc_alias_threadable(proc):
@@ -1073,9 +1151,10 @@ def cmds_to_specs(cmds, captured=False, envs=None):
         if redirect == "|":
             # these should remain integer file descriptors, and not Python
             # file objects since they connect processes.
-            r, w = os.pipe()
-            specs[i].stdout = w
-            specs[i + 1].stdin = r
+            pipe = PipeChannel.from_pipe()
+            specs[i].stdout = pipe.write_fd
+            specs[i + 1].stdin = pipe.read_fd
+            specs[i].pipe_channels.append(pipe)
         elif redirect == "&" and i == len(redirects) - 1:
             specs[i].background = True
         else:
