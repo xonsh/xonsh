@@ -24,7 +24,7 @@ Beginner
     subproc_types
     bash_to_xsh
     platform-issues
-    Extensions (xontribs) <https://github.com/topics/xontrib>
+    Extensions (xontribs) on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
 
 Everyday User

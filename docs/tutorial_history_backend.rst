@@ -1,8 +1,8 @@
 .. _tutorial_history_backend:
 
-****************************************
-Tutorial: Write Your Own History Backend
-****************************************
+******************************
+Write Your Own History Backend
+******************************
 
 One of the great things about xonsh is how easy it is to customize. In
 this tutorial, let's write our own history backend based on CouchDB.
