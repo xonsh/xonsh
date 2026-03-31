@@ -346,14 +346,11 @@ class CommandPipeline:
                 time.sleep(0.1)  # probably not leaving any time soon
                 continue
 
-            # When the last process (e.g. head) has exited but upstream
-            # processes are still alive, close the inter-process pipe read
-            # ends so that upstream writers get SIGPIPE instead of blocking
-            # on a full pipe buffer.
-            if not prev_procs_closed and proc.poll() is not None:
-                self._close_prev_procs()
-                prev_procs_closed = True
-
+            # Drain stdout/stderr BEFORE closing previous procs.
+            # _close_prev_procs() may block waiting for upstream processes
+            # (e.g. sleep) and get interrupted by Ctrl+C.  Reading first
+            # ensures that output already produced by the last process
+            # (e.g. echo) is captured in self.lines regardless.
             stdout_lines = safe_readlines(stdout, 1024)
             i = len(stdout_lines)
             if i != 0:
@@ -362,6 +359,14 @@ class CommandPipeline:
             j = len(stderr_lines)
             if j != 0:
                 self.stream_stderr(stderr_lines)
+
+            # When the last process (e.g. head) has exited but upstream
+            # processes are still alive, close the inter-process pipe read
+            # ends so that upstream writers get SIGPIPE instead of blocking
+            # on a full pipe buffer.
+            if not prev_procs_closed and proc.poll() is not None:
+                self._close_prev_procs()
+                prev_procs_closed = True
             if not check_prev_done:
                 # if we are piping...
                 if stdout_lines or stderr_lines:
@@ -728,7 +733,11 @@ class CommandPipeline:
                         p.join(timeout=3)
                     else:
                         p.wait(timeout=3)
-                except Exception:
+                except BaseException:
+                    # BaseException (not Exception) — KeyboardInterrupt during
+                    # this wait must not prevent closing FDs below.  The
+                    # _interrupted flag on the proc is already set by
+                    # _signal_int and will be handled by the caller.
                     pass
             self._safe_close(s.stdout)
             for ch in s.pipe_channels:
