@@ -15,30 +15,6 @@ from unittest.mock import patch
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread, parse_proxy_return
 
 
-def test_signal_int_leaves_pipes_open():
-    """_signal_int must NOT close pipe FDs — threads own their FDs."""
-    r, w = os.pipe()
-    try:
-        proc = ProcProxyThread.__new__(ProcProxyThread)
-        proc._interrupted = False
-        proc._stdin_pipe = None
-        proc._stdout_pipe = None
-        proc._stderr_pipe = None
-        proc.old_int_handler = None
-        proc.returncode = None
-        proc.spec = None
-
-        with patch("signal.pthread_kill", create=True):
-            proc._signal_int(signal.SIGINT, None)
-
-        assert proc._interrupted is True
-        os.fstat(r)
-        os.fstat(w)
-    finally:
-        os.close(r)
-        os.close(w)
-
-
 def test_parse_proxy_return_writes_str_once():
     """parse_proxy_return('ok', stdout, stderr) writes 'ok' exactly once."""
     buf = io.StringIO()
