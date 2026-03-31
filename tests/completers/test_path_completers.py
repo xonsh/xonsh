@@ -19,7 +19,6 @@ def test_pattern_need_quotes():
 
 def test_complete_path(xession, completion_context_parse):
     xession.env = {
-        "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
         "FUZZY_PATH_COMPLETION": False,
@@ -32,7 +31,6 @@ def test_complete_path(xession, completion_context_parse):
 @patch("xonsh.completers.path._add_cdpaths")
 def test_cd_path_no_cd(mock_add_cdpaths, xession, completion_context_parse):
     xession.env = {
-        "CASE_SENSITIVE_COMPLETIONS": False,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
         "FUZZY_PATH_COMPLETION": False,
@@ -48,7 +46,6 @@ def test_complete_path_when_prefix_is_raw_path_string(
     quote, xession, completion_context_parse
 ):
     xession.env = {
-        "CASE_SENSITIVE_COMPLETIONS": True,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
         "FUZZY_PATH_COMPLETION": False,
@@ -66,7 +63,6 @@ def test_complete_path_when_prefix_is_raw_path_string(
 
 def test_complete_path_ending_with_equal_sign(xession, completion_context_parse):
     xession.env = {
-        "CASE_SENSITIVE_COMPLETIONS": True,
         "GLOB_SORTED": True,
         "SUBSEQUENCE_PATH_COMPLETION": False,
         "FUZZY_PATH_COMPLETION": False,

@@ -37,7 +37,6 @@ from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
     DEFAULT_ENCODING,
     ON_CYGWIN,
-    ON_LINUX,
     ON_WINDOWS,
     ON_WSL,
     PATH_DEFAULT,
@@ -1984,11 +1983,6 @@ This is to reduce the noise in generated completions.""",
             "Other OS-specific defaults may be added in the future."
         ),
         type_str="env_path",
-    )
-    CASE_SENSITIVE_COMPLETIONS = Var.with_default(
-        ON_LINUX,
-        "Sets whether completions should be case sensitive or case insensitive.",
-        doc_default="True on Linux, False otherwise.",
     )
     COMPLETIONS_BRACKETS = Var.with_default(
         True,

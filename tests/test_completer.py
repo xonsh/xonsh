@@ -170,6 +170,65 @@ def test_env_completer_sort(completer, completers_mock):
     assert set(comps[0]) == {"$WOW0", "$WOW1", "$MID_WOW", "$SUPER_WOW"}
 
 
+def test_sortkey_tiers(completer, completers_mock):
+    """Completions should be ranked by match quality tier."""
+
+    @contextual_command_completer
+    def comp(context: CommandContext):
+        return {"decoder", "Decoder", "JSONDecoder", "jsondecoder", "foobar"}
+
+    completers_mock["a"] = comp
+
+    comps = completer.complete(
+        "dec", "dec", 0, 3, {}, multiline_text="dec", cursor_index=3
+    )
+    result = comps[0]
+    # Tier 0 (case-sensitive prefix) before tier 1 (case-insensitive prefix)
+    assert result.index("decoder") < result.index("Decoder")
+    # Tier 1 (case-insensitive prefix) before tier 2 (case-sensitive substring)
+    assert result.index("Decoder") < result.index("jsondecoder")
+    # Tier 2 (case-sensitive substring) before tier 3 (case-insensitive substring)
+    assert result.index("jsondecoder") < result.index("JSONDecoder")
+    # All matches before non-matches
+    assert result.index("JSONDecoder") < result.index("foobar")
+
+
+def test_deduplicate_trailing_space(completer, completers_mock):
+    """Completions that differ only by a trailing space should be deduplicated.
+
+    When a command like ``_cd`` is completed both as a Python name (no space)
+    and as an executable (with ``append_space=True``), only the spaced variant
+    should appear in the final results.
+
+    This simulates the real scenario where ``complete_base`` is a single
+    generator-completer that yields plain Python-name completions AND
+    command completions with ``append_space=True`` for the same name.
+    """
+    from xonsh.completers.tools import contextual_completer
+    from xonsh.parsers.completion_context import CompletionContext
+
+    @contextual_completer
+    def comp(context: CompletionContext):
+        # Simulates complete_base: first yields python names (no space),
+        # then yields command completions (with trailing space)
+        yield "_cd"
+        yield "cdr"
+        yield RichCompletion("_cd", append_space=True)
+
+    completers_mock["a"] = comp
+
+    comps = completer.complete(
+        "cd", "cd", 0, 2, {}, multiline_text="cd", cursor_index=2
+    )
+    result = comps[0]
+    result_strs = [str(c) for c in result]
+    # Only the spaced "_cd " variant should remain, not bare "_cd"
+    assert "_cd " in result_strs
+    assert "_cd" not in result_strs
+    # Unrelated completions must survive
+    assert "cdr" in result_strs
+
+
 def test_python_only_context(completer, completers_mock):
     assert completer.complete_line("echo @(") != ()
     assert completer.complete("", "echo @(", 0, 0, {}, "echo @(", 7) != ()
