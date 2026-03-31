@@ -338,7 +338,14 @@ class PopenThread(threading.Thread):
         if self._interrupted:
             return
         self._interrupted = True
-        self.send_signal(signal.CTRL_C_EVENT if xp.ON_WINDOWS else signum)
+        if xp.ON_POSIX:
+            try:
+                pgid = os.getpgid(self.proc.pid)
+                os.killpg(pgid, signum)
+            except (ProcessLookupError, OSError):
+                self.send_signal(signum)
+        else:
+            self.send_signal(signal.CTRL_C_EVENT)
         if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
         if xt.on_main_thread() and not xp.ON_WINDOWS:

@@ -197,14 +197,27 @@ class CommandPipeline:
                 proc.pid
                 and pipeline_group is None
                 and not spec.is_proxy
-                and self.captured != "object"
             ):
+                # All non-proxy pipeline members must share a single
+                # process group so that one os.killpg() can reach them
+                # all on Ctrl+C.  The first subprocess becomes the group
+                # leader (via os.setpgrp() in its preexec_fn); subsequent
+                # ones join it (via os.setpgid(0, pipeline_group)).
+                # Proxy specs (callable aliases) are Python threads inside
+                # xonsh, not child processes, so they cannot join the
+                # group — they are skipped here.
                 pipeline_group = proc.pid
-                if update_process_group(pipeline_group, background):
+                # Terminal ownership is a separate concern: for
+                # captured="object" the pipeline is returned as a live
+                # Python object, so the terminal must stay with xonsh.
+                if self.captured != "object" and update_process_group(
+                    pipeline_group, background
+                ):
                     self.term_pgid = pipeline_group
                     self._save_term_state()
             self.procs.append(proc)
         self.proc = self.procs[-1]
+        self._pgid = pipeline_group  # process group for interrupt handling
 
     def __repr__(self):
         debug = XSH.env.get("XONSH_DEBUG", False)
@@ -375,6 +388,13 @@ class CommandPipeline:
             else:
                 cnt = 1
             time.sleep(timeout * cnt)
+
+            # Check if SIGINT was caught but not raised as KeyboardInterrupt.
+            # ProcProxyThread's _signal_int sets _interrupted without raising,
+            # so the while loop keeps spinning.  Detect it and kill everything.
+            if getattr(proc, "_interrupted", False):
+                self._signal_pipeline()
+                return
 
         if not prev_procs_closed:
             self._close_prev_procs()
@@ -630,6 +650,44 @@ class CommandPipeline:
             if p.poll() is None:
                 return True
         return False
+
+    def _signal_pipeline(self):
+        """Send SIGINT to all alive pipeline processes.
+
+        Two process groups are involved when a pipeline contains a
+        callable alias (ProcProxyThread):
+
+        * The *pipeline group* (self._pgid) — holds the non-proxy
+          subprocesses of the outer pipeline (e.g. ``sleep 100`` and
+          ``echo 1`` in ``sleep 100 | echo 1 | alias``).  Reached by
+          os.killpg() below.
+
+        * *xonsh's own group* — holds subprocesses spawned *inside*
+          the callable alias (they run on a non-main thread, so
+          CommandPipeline.__init__ sets their pipeline_group to
+          os.getpgid(0)).  These are killed directly by the kernel
+          when Ctrl+C sends SIGINT to the foreground (xonsh) group;
+          no action is needed here.
+        """
+        if not xp.ON_POSIX:
+            return
+        # Kill the pipeline process group (covers grouped subprocesses)
+        if self._pgid is not None:
+            try:
+                os.killpg(self._pgid, signal.SIGINT)
+            except (ProcessLookupError, OSError):
+                pass
+        # Also signal individual procs that may be in other groups
+        my_pid = os.getpid()
+        for p in self.procs:
+            if p is not None and p.poll() is None:
+                pid = getattr(p, "pid", None)
+                # Skip ProcProxyThread whose pid == xonsh's own pid
+                if pid and pid != my_pid:
+                    try:
+                        os.kill(pid, signal.SIGINT)
+                    except (ProcessLookupError, OSError):
+                        pass
 
     def _prev_procs_done(self):
         """Boolean for if all previous processes have completed. If there
