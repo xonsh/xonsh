@@ -1649,7 +1649,7 @@ on the names of executable files on your ``$PATH``, alias keys, and various
 additional completers.
 
 xonsh also provides a means of modifying the behavior of the tab completer.  More
-detail is available on the `Tab Completion page <tutorial_completers.html>`_.
+detail is available on the `Tab Completion page <completers.html>`_.
 
 .. _customprompt:
 

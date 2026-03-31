@@ -72,8 +72,8 @@ developer tools.
     xontrib
     Xontrib template <https://github.com/xonsh/xontrib-cookiecutter>
     events_tutorial
-    tutorial_completers
-    tutorial_history_backend
+    completers
+    history_backend
 
 Xontributor
 -----------
@@ -100,15 +100,3 @@ Links
 * `Xonsh Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>`_
 * `Follow us on Mastodon <https://mastodon.online/@xonsh>`_
 * `Want a t-shirt? <https://www.hellotux.com/xonsh>`_
-
-
-Chronicle
-=========
-
-.. toctree::
-    :titlesonly:
-    :maxdepth: 1
-
-    changelog
-    talks_and_articles
-    faq

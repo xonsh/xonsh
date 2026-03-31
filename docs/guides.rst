@@ -44,8 +44,8 @@ Creator
     xonsh_projects
     xontrib
     events_tutorial
-    tutorial_completers
-    tutorial_history_backend
+    completers
+    history_backend
 
 Xontributor
 -----------
