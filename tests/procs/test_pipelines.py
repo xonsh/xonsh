@@ -173,6 +173,7 @@ def test_sigint_no_recursion(xonsh_session):
     child process was still alive.
     """
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    orig_handler = signal.getsignal(signal.SIGINT)
 
     # Use a delayed self-signal instead of real Ctrl+C
     def _interrupt():
@@ -184,10 +185,19 @@ def test_sigint_no_recursion(xonsh_session):
     t = threading.Thread(target=_interrupt, daemon=True)
     t.start()
 
-    xonsh_session.execer.eval("!(sleep 10)")
+    try:
+        pipeline = xonsh_session.execer.eval("!(sleep 10)")
+        # end() blocks in iterraw(); the SIGINT arrives during the wait.
+        pipeline.end()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        t.join(timeout=5)
+        # PopenThread._signal_int may not restore the original handler on
+        # the interrupted code path.  Restore it so later tests (and pytest
+        # itself) can still receive SIGINT.
+        signal.signal(signal.SIGINT, orig_handler)
     # If we get here without RecursionError, the fix works.
-    # The pipeline should end with KeyboardInterrupt caught internally.
-    t.join(timeout=5)
 
 
 @skip_if_on_windows
@@ -200,6 +210,7 @@ def test_pipeline_access_after_interrupt(xonsh_session):
     access tried to re-read from closed pipes → ValueError.
     """
     xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    orig_handler = signal.getsignal(signal.SIGINT)
 
     # Get the pipeline without triggering end()
     pipeline: CommandPipeline = xonsh_session.execer.eval("!(sleep 10)")
@@ -219,7 +230,9 @@ def test_pipeline_access_after_interrupt(xonsh_session):
         pipeline.end()
     except KeyboardInterrupt:
         pass
-    t.join(timeout=5)
+    finally:
+        t.join(timeout=5)
+        signal.signal(signal.SIGINT, orig_handler)
 
     # After interrupt, pipeline should be ended and accessible without crash
     assert pipeline.ended
