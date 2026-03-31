@@ -7,12 +7,9 @@ Regression tests for:
 """
 
 import io
-import os
-import signal
 from types import SimpleNamespace
-from unittest.mock import patch
 
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread, parse_proxy_return
+from xonsh.procs.proxies import ProcProxy, parse_proxy_return
 
 
 def test_parse_proxy_return_writes_str_once():
