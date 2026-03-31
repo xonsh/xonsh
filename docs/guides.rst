@@ -30,7 +30,7 @@ Everyday User
     customization
     keyboard_shortcuts
     prompt_toolkit
-    tutorial_macros
+    macros
 
 Creator
 -------

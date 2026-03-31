@@ -42,7 +42,7 @@ Everyday User
     keyboard_shortcuts
     prompt_toolkit
     events
-    tutorial_macros
+    macros
     Open technical issue <https://github.com/xonsh/xonsh>
 
 Creator
