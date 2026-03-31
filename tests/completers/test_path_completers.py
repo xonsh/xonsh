@@ -1,3 +1,4 @@
+import os
 import tempfile
 from unittest.mock import patch
 
@@ -91,6 +92,105 @@ def test_path_from_partial_string(prefix):
     else:
         expected = (f"{quote}{string}{quote}", string, f"{prefix}{quote}", quote)
     assert out == expected
+
+
+@pytest.mark.parametrize("quote", ('"', "'"))
+def test_path_from_partial_string_raw_trailing_backslash(quote):
+    """Raw strings can't end with \\, but _path_from_partial_string should
+    still extract the path by falling back to direct extraction."""
+    # Partial (unclosed) raw string ending with backslash
+    inp = f"r{quote}C:\\App\\x\\"
+    out = xcp._path_from_partial_string(inp)
+    assert out is not None
+    assert out[1] == "C:\\App\\x\\"  # extracted path value
+
+
+def test_quote_paths_uppercase_raw_prefix():
+    """Uppercase R prefix (R'...') should not get an extra r prepended."""
+    out, _ = xcp._quote_paths({r"c:\dir1"}, "R'", "'", append_end=True)
+    result = out.pop()
+    assert result.startswith("R'"), f"Expected R' prefix but got: {result}"
+
+
+@pytest.mark.skipif(os.sep != "\\", reason="Backslash separator is Windows-only")
+def test_quote_paths_raw_string_trailing_backslash():
+    """When a directory completion is inside a raw string, the trailing
+    backslash is doubled so the string stays valid (r"path\\")."""
+    with tempfile.TemporaryDirectory() as td:
+        real_dir = os.path.join(td, "somedir")
+        os.makedirs(real_dir)
+        with patch(
+            "xonsh.completers.path.XSH.expand_path",
+            side_effect=lambda s: os.path.join(td, s),
+        ):
+            out, _ = xcp._quote_paths({"somedir"}, 'r"', '"', append_end=True)
+    result = out.pop()
+    # Must end with \\" — doubled backslash keeps raw string valid
+    assert result.endswith('\\\\"'), f"Expected trailing '\\\\.\"' but got: {result}"
+
+
+@pytest.mark.parametrize("quote", ('"', "'"))
+def test_complete_path_raw_string_with_backslash(
+    quote, xession, completion_context_parse
+):
+    """End-to-end: completing r\"<partial_path_with_backslash>\" should
+    return valid completions, not break."""
+    xession.env = {
+        "CASE_SENSITIVE_COMPLETIONS": True,
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 1,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        import os
+
+        os.makedirs(os.path.join(td, "sub"))
+        # Use forward slashes up to the last component, then trailing backslash
+        td_fwd = td.replace("\\", "/")
+        prefix = f"r{quote}{td_fwd}/"
+        line = f"ls {prefix}"
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        completions = out[0] if out else set()
+        assert len(completions) > 0, "Expected at least one completion"
+        for c in completions:
+            # A raw string ending with an odd number of backslashes before
+            # the closing quote is invalid (the last \ escapes the quote).
+            # Doubled backslash (\\) before the quote is fine.
+            if c.endswith(quote):
+                before_quote = c[:-1]
+                trailing = len(before_quote) - len(before_quote.rstrip("\\"))
+                assert trailing % 2 == 0, (
+                    f"Invalid raw string completion (odd trailing backslashes): {c}"
+                )
+
+
+@pytest.mark.skipif(os.sep != "\\", reason="Backslash separator is Windows-only")
+def test_empty_dir_no_spurious_completion(xession):
+    """Completing inside an empty directory should return nothing, not a
+    spurious root-path completion caused by subsequence matching."""
+    xession.env = {
+        "CASE_SENSITIVE_COMPLETIONS": True,
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": True,
+        "FUZZY_PATH_COMPLETION": True,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        import os
+
+        os.makedirs(os.path.join(td, "aaa", "1"))  # empty dir
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            # Simulate second Tab on r'aaa\1\\' (closed raw string, empty dir)
+            pfx = "r'" + os.sep.join(["aaa", "1"]) + os.sep * 2 + "'"
+            out, _ = xcp._complete_path_raw(pfx, pfx, 0, len(pfx), ctx={})
+            assert len(out) == 0, f"Expected no completions for empty dir, got: {out}"
+        finally:
+            os.chdir(old_cwd)
 
 
 @pytest.mark.parametrize("num_args", (0, 1, 2, 3))
