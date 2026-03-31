@@ -283,6 +283,18 @@ def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars:
             yield comp
 
 
+def _shlex_split_safe(s):
+    """Split like shlex but preserve backslashes on Windows.
+
+    ``shlex.split`` in POSIX mode treats ``\\`` as an escape character,
+    which corrupts Windows paths (``".\\dir"`` → ``".dir"``).  Using
+    ``posix=False`` keeps backslashes intact.
+    """
+    lex = shlex.shlex(s, posix=False)
+    lex.whitespace_split = True
+    return list(lex)
+
+
 def comp_based_completer(ctx: CommandContext, start_index=0, **env: str):
     """Helper function to complete commands such as ``pip``,``django-admin``,... that use bash's ``complete``"""
     prefix = ctx.prefix
@@ -293,7 +305,7 @@ def comp_based_completer(ctx: CommandContext, start_index=0, **env: str):
 
     yield from complete_from_sub_proc(
         *args[: start_index + 1],
-        sep=shlex.split,
+        sep=_shlex_split_safe,
         COMP_WORDS=os.linesep.join(args[start_index:]) + os.linesep,
         COMP_CWORD=str(ctx.arg_index - start_index),
         **env,
