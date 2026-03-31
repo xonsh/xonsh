@@ -91,8 +91,8 @@ and collaborating with others
     Xonsh on Github <https://github.com/xonsh/xonsh>
 
 
-Helpful Links
-=============
+Links
+=====
 
 * :ref:`genindex`
 * :ref:`modindex`
@@ -101,8 +101,6 @@ Helpful Links
 * `Follow us on Mastodon <https://mastodon.online/@xonsh>`_
 * `Want a t-shirt? <https://www.hellotux.com/xonsh>`_
 
-
-.. include:: python-versions-support-policy.rst
 
 Chronicle
 =========

@@ -1,8 +1,8 @@
 .. _history:
 
-************************************
-Tutorial: History
-************************************
+*******
+History
+*******
 Import your best Leonard Nimoy documentary voice and get ready for the xonsh tutorial
 on ``history``.
 
