@@ -1,8 +1,8 @@
 .. _xontrib:
 
-*********************
-Extensions (Xontribs)
-*********************
+**********
+Extensions
+**********
 Take a deep breath and prepare for some serious Show & Tell; it's time to
 learn about xonsh extensions!
 

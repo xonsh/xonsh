@@ -21,7 +21,7 @@ step by step and helps you build a solid foundation for working in the shell.
 
 .. toctree::
     :titlesonly:
-    :maxdepth: 2
+    :maxdepth: 1
 
     tutorial
     subproc_strings
@@ -40,7 +40,7 @@ and streamline your command-line experience.
 
 .. toctree::
     :titlesonly:
-    :maxdepth: 2
+    :maxdepth: 1
 
     xonshrc
     envvars
@@ -63,13 +63,13 @@ developer tools.
 
 .. toctree::
     :titlesonly:
-    :maxdepth: 2
+    :maxdepth: 1
 
     editors
     python_virtual_environments
     xonsh_projects
     xontrib
-    Xontrib template <https://github.com/xonsh/xontrib-cookiecutter>
+    Extension template <https://github.com/xonsh/xontrib-cookiecutter>
     events_tutorial
     completers
     history_backend
