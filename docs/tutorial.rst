@@ -1613,20 +1613,17 @@ convert subprocess command output into Python object with your own logic:
 
     from xonsh.procs.specs import SpecAttrDecoratorAlias
 
-    aliases['@path'] = SpecAttrDecoratorAlias(
-                        {"output_format": lambda lines: @.imp.pathlib.Path(':'.join(lines))},
-                        "Set `path` output format.")
-    aliases['@noerr'] = SpecAttrDecoratorAlias(
-                          {"raise_subproc_error": False},
-                          "Set `raise_subproc_error` to False.")
+    aliases['@andjoin'] = SpecAttrDecoratorAlias(
+                        {"output_format": lambda lines: ' and '.join([l.strip() for l in lines])},
+                        "Join lines with 'and'.")
 
 
 Now you can run:
 
 .. code-block:: xonshcon
 
-    @ $(@path which xonsh)
-    Path('/path/to/xonsh')
+    @ $(@andjoin echo '1\n2')
+    '1 and 2'
 
 
 -------------
