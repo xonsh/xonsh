@@ -340,7 +340,6 @@ def _insert_text_func(s, readline):
     return inserter
 
 
-
 DEDENT_TOKENS = LazyObject(
     lambda: frozenset(["raise", "return", "pass", "break", "continue"]),
     globals(),
@@ -502,7 +501,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
             if c_plen > readline_plen:
                 offset = c_plen - readline_plen
-                overlap = line[max(0, begidx - offset):begidx]
+                overlap = line[max(0, begidx - offset) : begidx]
                 if len(c_str) >= offset and c_str.lower().startswith(overlap.lower()):
                     new_val = c_str[offset:]
                 else:
@@ -514,7 +513,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 new_val = c_str
 
             if is_rich:
-                rtn_completions.append(c.replace(value=new_val, prefix_len=readline_plen))
+                rtn_completions.append(
+                    c.replace(value=new_val, prefix_len=readline_plen)
+                )
             else:
                 rtn_completions.append(new_val)
 
@@ -532,8 +533,12 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         # matches without corrupting the line, so we enforce prefix-only
         # matching here at the readline boundary.
         lower_prefix = prefix.lower()
-        completions = [c for c in completions if str(c).lower().startswith(lower_prefix)]
-        rtn_completions = [c for c in rtn_completions if str(c).lower().startswith(lower_prefix)]
+        completions = [
+            c for c in completions if str(c).lower().startswith(lower_prefix)
+        ]
+        rtn_completions = [
+            c for c in rtn_completions if str(c).lower().startswith(lower_prefix)
+        ]
 
         if not completions:
             return []
@@ -566,8 +571,6 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             return completions
         else:
             raise ValueError("query completions flag not understood.")
-
-
 
     # tab complete on first index too
     completenames = completedefault  # type:ignore
