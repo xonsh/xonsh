@@ -1107,6 +1107,7 @@ def _output_to_path_object(lines):
     else:
         return None
 
+
 def _output_to_path_objects(lines):
     """Transform lines output into list of path objects. Skip empty lines."""
     if lines:
