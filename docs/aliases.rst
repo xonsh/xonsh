@@ -164,12 +164,10 @@ The behavior is similar with ``$RAISE_SUBPROC_ERROR``. Use ``@error_ignore`` for
 
 .. code-block:: console
 
-    @ @error_raise ls nonono
-      # ls: nonono: No such file or directory
-      # subprocess.CalledProcessError: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
+    @ r = !(@error_raise ls nonono)
+    subprocess.CalledProcessError: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
 
-    @ @error_ignore ls nonono
-      # ls: nonono: No such file or directory
+    @ r = !(@error_ignore ls nonono)
 
 ``@thread`` and ``@unthread``
 -----------------------------
