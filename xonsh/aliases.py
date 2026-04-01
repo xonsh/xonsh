@@ -1100,6 +1100,21 @@ def _find_cmd_exe() -> str:
     return str(canonical) if canonical.is_file() else os.environ["COMSPEC"]
 
 
+def _output_to_path_object(lines):
+    """Transform first output line into single path. Return None if the output is empty."""
+    if lines and (path_str := lines[0].strip()):
+        return XSH.imp.pathlib.Path(path_str)
+    else:
+        return None
+
+def _output_to_path_objects(lines):
+    """Transform lines output into list of path objects. Skip empty lines."""
+    if lines:
+        return [XSH.imp.pathlib.Path(line.strip()) for line in lines if line.strip()]
+    else:
+        return None
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -1144,6 +1159,14 @@ def make_default_aliases():
         else [sys.executable],
         "xreset": xonsh_reset,
         # Command decorators
+        "@error_raise": SpecAttrDecoratorAlias(
+            {"raise_subproc_error": True},
+            "Command decorator. Raise an exception if the command returns a non-zero exit code.",
+        ),
+        "@error_ignore": SpecAttrDecoratorAlias(
+            {"raise_subproc_error": False},
+            "Command decorator. Do not raise an exception if the command returns a non-zero exit code.",
+        ),
         "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Command decorator. Mark current command as threadable.",
@@ -1155,6 +1178,14 @@ def make_default_aliases():
         "@lines": SpecAttrDecoratorAlias(
             {"output_format": "list_lines"},
             "Command decorator. Return output as list of lines.",
+        ),
+        "@path": SpecAttrDecoratorAlias(
+            {"output_format": _output_to_path_object},
+            "Command decorator. Return Path object for the first line in output.",
+        ),
+        "@paths": SpecAttrDecoratorAlias(
+            {"output_format": _output_to_path_objects},
+            "Command decorator. Return Path objects for the lines in output.",
         ),
         "@json": SpecAttrDecoratorAlias(
             {"output_format": lambda lines: XSH.imp.json.loads("\n".join(lines))},
@@ -1168,14 +1199,6 @@ def make_default_aliases():
             {"output_format": lambda lines: XSH.imp.yaml.safe_load("\n".join(lines))},
             "Command decorator. Parses YAML and returns dict.",
         ),
-        "@error_raise": SpecAttrDecoratorAlias(
-            {"raise_subproc_error": True},
-            "Command decorator. Raise an exception if the command returns a non-zero exit code.",
-        ),        
-        "@error_ignore": SpecAttrDecoratorAlias(
-            {"raise_subproc_error": False},
-            "Command decorator. Do not raise an exception if the command returns a non-zero exit code.",
-        ),        
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
