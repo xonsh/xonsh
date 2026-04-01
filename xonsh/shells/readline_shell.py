@@ -522,27 +522,37 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         completions = rtn_completions
         # --- End Boundary Alignment ---
 
-        # --- Readline Prefix Safety Filter ---
-        # Readline replaces the current word with the longest common prefix
-        # of ALL returned completions. If any completion does not start with
-        # `prefix`, the common prefix can become SHORTER than what the user
-        # typed, causing readline to delete characters ("prefix swallowing").
-        #
-        # Xonsh's completion engine uses substring matching (designed for
-        # prompt_toolkit's dropdown UI). Readline cannot display substring
-        # matches without corrupting the line, so we enforce prefix-only
-        # matching here at the readline boundary.
-        lower_prefix = prefix.lower()
-        completions = [
-            c for c in completions if str(c).lower().startswith(lower_prefix)
-        ]
-        rtn_completions = [
-            c for c in rtn_completions if str(c).lower().startswith(lower_prefix)
-        ]
+        # --- Readline Substring Safety Filter ---
+        if len(rtn_completions) > 1 and readline_plen > 0:
+            cps = [str(c).lower() for c in rtn_completions]
+            cp = commonprefix(cps)
+            
+            # --- DEBUG LOGGING ---
+            # with open("/tmp/xonsh_readline.log", "a") as f:
+            #     f.write(f"typed: {line[begidx:endidx]!r} (len {readline_plen}), cp: {cp!r} (len {len(cp)})\n")
+            
+            if len(cp) < readline_plen:
+                # The substring matches diverge too early. Returning them will
+                # cause Readline to swallow the user's typed prefix.
+                # Fallback: strictly enforce prefix matching to protect the buffer.
+                readline_prefix = line[begidx:endidx].lower()
+                safe_rtn = []
+                safe_orig = []
+                for orig, rtn in zip(completions, rtn_completions):
+                    if str(rtn).lower().startswith(readline_prefix):
+                        safe_rtn.append(rtn)
+                        safe_orig.append(orig)
+                        
+                # with open("/tmp/xonsh_readline.log", "a") as f:
+                #     f.write(f"  [!] Fallback triggered. Pruned {len(rtn_completions) - len(safe_rtn)} dangerous substrings.\n")
+                
+                rtn_completions = safe_rtn
+                completions = safe_orig
 
         if not completions:
             return []
-        # --- End Prefix Safety Filter ---
+        # --- End Substring Safety Filter ---
+
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
