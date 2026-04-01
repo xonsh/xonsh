@@ -255,7 +255,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
 
     def _indent_lines(b, indent=True):
         """Indent or dedent selected lines, preserving selection."""
-        ind = XSH.env.get("INDENT", " "*4)
+        ind = XSH.env.get("INDENT", " " * 4)
         ind_len = len(ind)
         doc = b.document
         text = doc.text
@@ -332,7 +332,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         if b.complete_state:
             b.complete_previous()
             return
-        indent = XSH.env.get("INDENT", " "*4)
+        indent = XSH.env.get("INDENT", " " * 4)
         indent_len = len(indent)
         doc = b.document
         line = doc.current_line
