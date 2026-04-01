@@ -1171,11 +1171,11 @@ def make_default_aliases():
         "@error_raise": SpecAttrDecoratorAlias(
             {"raise_subproc_error": True},
             "Command decorator. Raise an exception if the command returns a non-zero exit code.",
-        ),        
+        ),
         "@error_ignore": SpecAttrDecoratorAlias(
             {"raise_subproc_error": False},
             "Command decorator. Do not raise an exception if the command returns a non-zero exit code.",
-        ),        
+        ),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
