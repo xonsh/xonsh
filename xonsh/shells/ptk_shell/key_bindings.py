@@ -227,6 +227,22 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     has_selection = HasSelection()
     insert_mode = ViInsertMode() | EmacsInsertMode()
 
+    # Register Shift+Enter as a distinct key that always inserts a newline.
+    # Terminals must support xterm modifyOtherKeys or Kitty keyboard protocol
+    # to send a distinguishable sequence for Shift+Enter.
+    # We enable modifyOtherKeys mode in ptk_shell/__init__.py.
+    SHIFT_ENTER = "\x80"  # single-char key slot (PTK requires single chars)
+    # xterm modifyOtherKeys format
+    ansi_escape_sequences.ANSI_SEQUENCES["\x1b[27;2;13~"] = SHIFT_ENTER  # type: ignore
+    # Kitty keyboard protocol format
+    ansi_escape_sequences.ANSI_SEQUENCES["\x1b[13;2u"] = SHIFT_ENTER  # type: ignore
+    ansi_escape_sequences.REVERSE_ANSI_SEQUENCES[SHIFT_ENTER] = "\x1b[27;2;13~"  # type: ignore
+
+    @handle(SHIFT_ENTER, filter=insert_mode)
+    def shift_enter_newline(event):
+        """Shift+Enter always inserts a newline with auto-indent."""
+        event.current_buffer.newline(copy_margin=True)
+
     if XSH.env["XONSH_CTRL_BKSP_DELETION"]:
         # Not all terminal emulators emit the same keys for backspace, therefore
         # ptk always maps backspace ("\x7f") to ^H ("\x08"), and all the backspace bindings are registered for ^H.
