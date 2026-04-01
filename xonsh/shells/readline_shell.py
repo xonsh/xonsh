@@ -526,11 +526,11 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         if len(rtn_completions) > 1 and readline_plen > 0:
             cps = [str(c).lower() for c in rtn_completions]
             cp = commonprefix(cps)
-            
+
             # --- DEBUG LOGGING ---
             # with open("/tmp/xonsh_readline.log", "a") as f:
             #     f.write(f"typed: {line[begidx:endidx]!r} (len {readline_plen}), cp: {cp!r} (len {len(cp)})\n")
-            
+
             if len(cp) < readline_plen:
                 # The substring matches diverge too early. Returning them will
                 # cause Readline to swallow the user's typed prefix.
@@ -542,17 +542,16 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                     if str(rtn).lower().startswith(readline_prefix):
                         safe_rtn.append(rtn)
                         safe_orig.append(orig)
-                        
+
                 # with open("/tmp/xonsh_readline.log", "a") as f:
                 #     f.write(f"  [!] Fallback triggered. Pruned {len(rtn_completions) - len(safe_rtn)} dangerous substrings.\n")
-                
+
                 rtn_completions = safe_rtn
                 completions = safe_orig
 
         if not completions:
             return []
         # --- End Substring Safety Filter ---
-
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')

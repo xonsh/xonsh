@@ -24,12 +24,15 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
 
     # -- SCENARIO 1: Safe Substring (Single candidate expands the word) --
     mock_completer.complete.return_value = (
-        {RichCompletion("detect_encoding", prefix_len=3)}, 3
+        {RichCompletion("detect_encoding", prefix_len=3)},
+        3,
     )
     # User types "enc" -> len 3
     results = readline_shell.completedefault("enc", "enc", 0, 3)
     result_strs = [str(r) for r in results]
-    assert result_strs == ["detect_encoding"], "Safe substring expansion should be allowed"
+    assert result_strs == ["detect_encoding"], (
+        "Safe substring expansion should be allowed"
+    )
 
     # -- SCENARIO 2: Safe Substring (Multiple candidates, long common prefix) --
     mock_completer.complete.return_value = (
@@ -37,13 +40,15 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             RichCompletion("detect_encoding", prefix_len=3),
             RichCompletion("detect_encoder", prefix_len=3),
         },
-        3
+        3,
     )
     results = readline_shell.completedefault("enc", "enc", 0, 3)
     result_strs = [str(r) for r in results]
     assert "detect_encoding" in result_strs
     assert "detect_encoder" in result_strs
-    assert len(result_strs) == 2, "Should allow multiple if common prefix >= readline_plen"
+    assert len(result_strs) == 2, (
+        "Should allow multiple if common prefix >= readline_plen"
+    )
 
     # -- SCENARIO 3: DANGEROUS Substring (Multiple candidates, short common prefix) --
     # User types "enc" (len 3). Candidates have common prefix "" (len 0).
@@ -55,11 +60,11 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             RichCompletion("detect_encoding", prefix_len=3),
             RichCompletion("JSONEncoder", prefix_len=3),
         },
-        3
+        3,
     )
     results = readline_shell.completedefault("enc", "enc", 0, 3)
     result_strs = [str(r) for r in results]
-    
+
     # "encode_this" starts with "enc". The others do not.
     # The fallback should prune the dangerous substrings and keep the safe prefix match.
     assert "encode_this" in result_strs
