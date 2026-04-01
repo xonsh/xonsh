@@ -340,26 +340,6 @@ def _insert_text_func(s, readline):
     return inserter
 
 
-def _render_completions(completions, prefix, prefix_len):
-    """Render the completions according to the required prefix_len.
-
-    Readline will replace the current prefix with the chosen rendered completion.
-    """
-    chopped = prefix[:-prefix_len] if prefix_len else prefix
-
-    rendered_completions = []
-    for comp in completions:
-        if isinstance(comp, xct.RichCompletion) and comp.prefix_len is not None:
-            if comp.prefix_len:
-                comp = prefix[: -comp.prefix_len] + comp
-            else:
-                comp = prefix + comp
-        elif chopped:
-            comp = chopped + comp
-        rendered_completions.append(comp)
-
-    return rendered_completions
-
 
 DEDENT_TOKENS = LazyObject(
     lambda: frozenset(["raise", "return", "pass", "break", "continue"]),
@@ -508,7 +488,56 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             multiline_text=prev_text + line,
             cursor_index=len(prev_text) + endidx,
         )
-        rtn_completions = _render_completions(completions, prefix, plen)
+
+        # --- Boundary Alignment ---
+        # When xonsh's prefix length differs from readline's, realign
+        # completion strings so readline replaces exactly the right span.
+        readline_plen = endidx - begidx
+        rtn_completions = []
+
+        for c in completions:
+            c_str = str(c)
+            is_rich = hasattr(c, "replace") and hasattr(c, "prefix_len")
+            c_plen = c.prefix_len if is_rich and c.prefix_len is not None else plen
+
+            if c_plen > readline_plen:
+                offset = c_plen - readline_plen
+                overlap = line[max(0, begidx - offset):begidx]
+                if len(c_str) >= offset and c_str.lower().startswith(overlap.lower()):
+                    new_val = c_str[offset:]
+                else:
+                    new_val = c_str
+            elif c_plen < readline_plen:
+                gap = readline_plen - c_plen
+                new_val = line[begidx : begidx + gap] + c_str
+            else:
+                new_val = c_str
+
+            if is_rich:
+                rtn_completions.append(c.replace(value=new_val, prefix_len=readline_plen))
+            else:
+                rtn_completions.append(new_val)
+
+        completions = rtn_completions
+        # --- End Boundary Alignment ---
+
+        # --- Readline Prefix Safety Filter ---
+        # Readline replaces the current word with the longest common prefix
+        # of ALL returned completions. If any completion does not start with
+        # `prefix`, the common prefix can become SHORTER than what the user
+        # typed, causing readline to delete characters ("prefix swallowing").
+        #
+        # Xonsh's completion engine uses substring matching (designed for
+        # prompt_toolkit's dropdown UI). Readline cannot display substring
+        # matches without corrupting the line, so we enforce prefix-only
+        # matching here at the readline boundary.
+        lower_prefix = prefix.lower()
+        completions = [c for c in completions if str(c).lower().startswith(lower_prefix)]
+        rtn_completions = [c for c in rtn_completions if str(c).lower().startswith(lower_prefix)]
+
+        if not completions:
+            return []
+        # --- End Prefix Safety Filter ---
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
@@ -526,8 +555,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 i_has_space,
             )
             rtn.append(last if self._complete_only_last_table[key] else i)
+
         # return based on show completions
-        show_completions = self._querycompletions(completions, endidx - begidx)
+        show_completions = self._querycompletions(completions, readline_plen)
         if show_completions == 0:
             return []
         elif show_completions == 1:
@@ -536,6 +566,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             return completions
         else:
             raise ValueError("query completions flag not understood.")
+
+
 
     # tab complete on first index too
     completenames = completedefault  # type:ignore
