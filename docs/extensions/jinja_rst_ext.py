@@ -68,16 +68,19 @@ def fix_envvar_section_ids(app, doctree):
         # Canonical old-style ID for backward compat with existing URLs
         old_style_id = var_name.lower().replace("_", "-")
 
-        for old_id in section.get("ids", []):
+        old_ids = set(section.get("ids", []))
+        for old_id in old_ids:
             doctree.ids.pop(old_id, None)
 
         section["ids"] = [var_name, old_style_id]
         for sid in section["ids"]:
             doctree.ids[sid] = section
 
-        # Update nameids so cross-references resolve to the new primary ID
-        for name in section.get("names", []):
-            doctree.nameids[name] = var_name
+        # Update ALL nameids entries that pointed to old IDs,
+        # including the .. _label: target and the title-derived name.
+        for name, nid in list(doctree.nameids.items()):
+            if nid in old_ids:
+                doctree.nameids[name] = var_name
 
 
 def setup(app):
