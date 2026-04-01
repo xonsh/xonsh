@@ -352,17 +352,13 @@ def test_highlight_match_pre_offset_substring_visible():
 def test_highlight_match_pre_offset_true_substring():
     """Substring match after the common prefix strip point."""
     result = _highlight_match("baz_bar_qux", "foo/baz_bar_qux", "bar", 4)
-    assert result == FormattedText(
-        [("", "baz_"), ("underline", "bar"), ("", "_qux")]
-    )
+    assert result == FormattedText([("", "baz_"), ("underline", "bar"), ("", "_qux")])
 
 
 def test_highlight_match_import_substring():
     """Import completions: 'de' should be underlined in 'JSONDecoder'."""
     result = _highlight_match("JSONDecoder", "JSONDecoder", "de", 0)
-    assert result == FormattedText(
-        [("", "JSON"), ("underline", "De"), ("", "coder")]
-    )
+    assert result == FormattedText([("", "JSON"), ("underline", "De"), ("", "coder")])
 
 
 def test_highlight_match_import_prefix():
@@ -374,9 +370,7 @@ def test_highlight_match_dotted_prefix_substring():
     """Dotted completions: 'json.de' prefix with 'json.' stripped — 'De' in
     'JSONDecoder' should be underlined via visible prefix fallback."""
     result = _highlight_match("JSONDecoder", "json.JSONDecoder", "json.de", 5)
-    assert result == FormattedText(
-        [("", "JSON"), ("underline", "De"), ("", "coder")]
-    )
+    assert result == FormattedText([("", "JSON"), ("underline", "De"), ("", "coder")])
 
 
 def test_highlight_match_dotted_prefix_no_underline():
@@ -388,9 +382,7 @@ def test_highlight_match_dotted_prefix_no_underline():
 def test_highlight_match_dotted_prefix_encoder():
     """Dotted completions: 'de' in 'encoder' at position 4 should be underlined."""
     result = _highlight_match("encoder", "json.encoder", "json.de", 5)
-    assert result == FormattedText(
-        [("", "enco"), ("underline", "de"), ("", "r")]
-    )
+    assert result == FormattedText([("", "enco"), ("underline", "de"), ("", "r")])
 
 
 def test_completion_substring_highlight(monkeypatch, xession):
