@@ -1,6 +1,14 @@
 ==========
 Quotes
 ==========
+
+`@AstraLuma <https://github.com/AstraLuma>`_ **says,**
+
+.. epigraph::
+
+    "It turns out shells have some tricky edge cases."
+
+
 `@gilforsyth <https://twitter.com/gilforsyth>`_ **says,**
 
 .. epigraph::
