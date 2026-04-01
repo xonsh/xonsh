@@ -2097,10 +2097,8 @@ class PTKCompletionSetting(AutoCompletionSetting):
     )
 
 
-class WindowsSetting(GeneralSetting):
-    """Windows OS
-    Windows OS specific settings
-    """
+class WindowsSetting(Xettings):
+    """Windows OS"""
 
     ANSICON = Var.no_default(
         "str",
