@@ -69,3 +69,8 @@ Exit
 Press ``Ctrl-D`` to exit xonsh and return to original terminal.
 If not called by another terminal, then exit current terminal window.
 Similar to ``exit``.
+
+Links
+-----
+
+ - `Add your own key bindings <prompt_toolkit.html>`_
