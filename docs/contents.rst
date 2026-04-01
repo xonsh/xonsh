@@ -15,66 +15,86 @@ Guides
 Beginner
 --------
 
-.. toctree::
-    :titlesonly:
-    :maxdepth: 2
-
-    tutorial
-    tutorial_subproc_strings
-    subproc_types
-    bash_to_xsh
-    platform-issues
-    Extensions (xontribs) <https://github.com/topics/xontrib>
-    Ask question <https://github.com/xonsh/xonsh/discussions>
-
-Everyday User
--------------
-
-.. toctree::
-    :titlesonly:
-    :maxdepth: 2
-
-    xonshrc
-    envvars
-    aliases
-    tutorial_hist
-    customization
-    keyboard_shortcuts
-    tutorial_ptk
-    events
-    tutorial_macros
-    Open technical issue <https://github.com/xonsh/xonsh>
-
-Creator
--------
-
-.. toctree::
-    :titlesonly:
-    :maxdepth: 2
-
-    editors
-    python_virtual_environments
-    tutorial_xonsh_projects
-    tutorial_xontrib
-    Xontrib template <https://github.com/xonsh/xontrib-cookiecutter>
-    tutorial_events
-    tutorial_completers
-    tutorial_history_backend
-
-Xontributor
------------
+The fundamentals of using Xonsh, including basic commands, syntax,
+and how subprocesses work in practice. This section introduces key concepts
+step by step and helps you build a solid foundation for working in the shell.
 
 .. toctree::
     :titlesonly:
     :maxdepth: 1
 
-    devguide
-    api/index
+    tutorial
+    subproc_strings
+    subproc_types
+    platform-issues
+    Extensions (xontribs) on Github <https://github.com/topics/xontrib>
+    Ask question <https://github.com/xonsh/xonsh/discussions>
+
+Everyday User
+-------------
+
+How to use Xonsh efficiently in daily workflows by configuring
+environment variables, aliases, and history. It also covers customization
+options, keyboard shortcuts, and practical tips to improve productivity
+and streamline your command-line experience.
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    tutorial
+    xonshrc
+    envvars
+    aliases
+    history
+    customization
+    keyboard_shortcuts
+    prompt_toolkit
+    events
+    macros
+    Open technical issue <https://github.com/xonsh/xonsh>
+
+Creator
+-------
+
+How to extend Xonsh by building projects, creating extensions,
+and customizing tab-completion. This section also explores deeper integrations,
+event handling, and advanced customization techniques for building powerful
+developer tools.
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    editors
+    python_virtual_environments
+    xonsh_projects
+    events_tutorial
+    completers
+    xontrib
+    Create an extension using template <https://github.com/xonsh/xontrib-template>
+
+Contributor
+-----------
+
+The internal architecture of Xonsh and how to work with its API.
+It also guides you through contributing to the project, understanding the codebase,
+and collaborating with others
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    developer
     Xonsh on Github <https://github.com/xonsh/xonsh>
+    api/index
+    history_backend
+    Edit the article on this page <https://github.com/xonsh/xonsh/tree/main/docs>
+    Open Pull Request <https://github.com/xonsh/xonsh/pulls>
 
 
-Helpful Links
-=============
+Links
+=====
 
 * :ref:`genindex`
 * :ref:`modindex`
@@ -82,17 +102,3 @@ Helpful Links
 * `Xonsh Community <https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/>`_
 * `Follow us on Mastodon <https://mastodon.online/@xonsh>`_
 * `Want a t-shirt? <https://www.hellotux.com/xonsh>`_
-
-
-.. include:: python-versions-support-policy.rst
-
-Chronicle
-=========
-
-.. toctree::
-    :titlesonly:
-    :maxdepth: 1
-
-    changelog
-    talks_and_articles
-    faq

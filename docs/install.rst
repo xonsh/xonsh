@@ -29,7 +29,7 @@ the main approaches and their advantages.
       <thead>
         <tr>
           <th></th>
-          <th class="head"><p>Use as core shell</p></th>
+          <th class="head"><p>Use as <br>core shell</p></th>
           <th class="head"><p>Isolated env</p></th>
           <th class="head"><p>Fresh version</p></th>
           <th class="head"><p>Automation</p></th>

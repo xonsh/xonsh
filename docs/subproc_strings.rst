@@ -1,7 +1,7 @@
-.. _tutorial_subproc_strings:
+.. _subproc_strings:
 
 ************************************
-Tutorial: Subprocess Strings
+Subprocess Strings
 ************************************
 Strings in xonsh follow two simple rules:
 
@@ -65,7 +65,7 @@ The reasons for not having additional escape sequences, as in sh-langs, are:
 3. We have literal input in subprocess mode via macros.
 
 On this last point, if you don't already know about
-`Subprocess Macros <tutorial_macros.html#subprocess-macros>`_,
+`Subprocess Macros <macros.html#subprocess-macros>`_,
 these allow all input following an ``!`` to be treated as a single argument.
 For example,
 

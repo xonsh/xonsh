@@ -276,3 +276,10 @@ Although not recommended, to restore the behavior found in the
     @ $PATH.append('.')
 
 Add that to ``~/.xonshrc`` to enable that as the default behavior.
+
+
+
+See Also
+-----------
+
+ - `Bash to Xonsh <bash_to_xsh.html>`_

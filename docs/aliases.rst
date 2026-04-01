@@ -27,7 +27,7 @@ The ``grep`` command is aliased to ``['grep', '--color=auto']``.
 
 ``history``
 --------------------
-Tools for dealing with xonsh history. See `the history tutorial <tutorial_hist.html>`_
+Tools for dealing with xonsh history. See `the history tutorial <history.html>`_
 for more information all the history command and all of its sub-commands.
 
 .. command-help:: xonsh.history.main.history_main
@@ -43,69 +43,6 @@ Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
 The commands ``EOF``, ``exit``, and ``quit`` all alias the same action, which is to
 leave xonsh in a safe manner. Typing ``Ctrl-d`` is the same as typing ``EOF`` and
 pressing enter.
-
-
-Directory Stack
-====================
-
-
-``pushd``
---------------------
-Adds a directory to the top of the directory stack, or rotates the stack,
-making the new top of the stack the current working directory.
-
-.. command-help:: xonsh.dirstack.pushd
-
-
-``popd``
---------------------
-Removes entries from the directory stack.
-
-.. command-help:: xonsh.dirstack.popd
-
-
-``dirs``
---------------------
-Displays the list of currently remembered directories.  Can also be used to clear the
-directory stack.
-
-.. command-help:: xonsh.dirstack.dirs
-
-
-Jobs
-====================
-
-``jobs``
---------------------
-Display a list of all current jobs.
-
-
-``fg``
---------------------
-Bring the currently active job to the foreground, or, if a single number is
-given as an argument, bring that job to the foreground.
-
-
-``bg``
---------------------
-Resume execution of the currently active job in the background, or, if a
-single number is given as an argument, resume that job in the background.
-
-
-``disown``
---------------------
-The behavior of this command matches the behavior of zsh's disown
-command which is as follows:
-
-Remove the specified jobs from the job table; the shell will no longer
-report their status, and will not complain if you try to exit an
-interactive shell with them running or stopped. If no job is specified,
-disown the current job.
-If the jobs are currently stopped and the $AUTO_CONTINUE option is set
-($AUTO_CONTINUE = True), a warning is printed containing information about
-how to make them running after they have been disowned. If one of the
-latter two forms is used, the jobs will automatically be made running,
-independent of the setting of the $AUTO_CONTINUE option.
 
 
 Xonsh-specific Aliases
@@ -154,7 +91,7 @@ Report information about the current xonsh environment, including paths to the P
 
 ``xontrib``
 --------------------
-Manages xonsh extensions. More information is available at :doc:`tutorial_xontrib`
+Manages xonsh extensions. More information is available at :doc:`xontrib`
 
 
 ``xpip``
@@ -264,6 +201,70 @@ Parses YAML and returns a dict.
 .. code-block:: console
 
     @ config = $(@yaml cat config.yaml)
+
+
+Directory Stack
+====================
+
+
+``pushd``
+--------------------
+Adds a directory to the top of the directory stack, or rotates the stack,
+making the new top of the stack the current working directory.
+
+.. command-help:: xonsh.dirstack.pushd
+
+
+``popd``
+--------------------
+Removes entries from the directory stack.
+
+.. command-help:: xonsh.dirstack.popd
+
+
+``dirs``
+--------------------
+Displays the list of currently remembered directories.  Can also be used to clear the
+directory stack.
+
+.. command-help:: xonsh.dirstack.dirs
+
+
+Jobs
+====================
+
+``jobs``
+--------------------
+Display a list of all current jobs.
+
+
+``fg``
+--------------------
+Bring the currently active job to the foreground, or, if a single number is
+given as an argument, bring that job to the foreground.
+
+
+``bg``
+--------------------
+Resume execution of the currently active job in the background, or, if a
+single number is given as an argument, resume that job in the background.
+
+
+``disown``
+--------------------
+The behavior of this command matches the behavior of zsh's disown
+command which is as follows:
+
+Remove the specified jobs from the job table; the shell will no longer
+report their status, and will not complain if you try to exit an
+interactive shell with them running or stopped. If no job is specified,
+disown the current job.
+If the jobs are currently stopped and the $AUTO_CONTINUE option is set
+($AUTO_CONTINUE = True), a warning is printed containing information about
+how to make them running after they have been disowned. If one of the
+latter two forms is used, the jobs will automatically be made running,
+independent of the setting of the $AUTO_CONTINUE option.
+
 
 
 Source Aliases

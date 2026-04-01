@@ -339,6 +339,8 @@ One can leverage the Github Actions to provide a reverse shell to test things ou
 Solutions like [actions-tmate](https://mxschmitt.github.io/action-tmate/) are available,
 but they should not in any way violate the Github Action policies.
 
+.. include:: python-versions-support-policy.rst
+
 ## Document History
 
 Portions of this page have been forked from the PyNE documentation,

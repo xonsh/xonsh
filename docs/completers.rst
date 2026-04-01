@@ -1,8 +1,8 @@
-.. _tutorial_completers:
+.. _completers:
 
-*************************************
-Tutorial: Programmable Tab-Completion
-*************************************
+***************************
+Programmable Tab-Completion
+***************************
 
 Overview
 ================================

@@ -290,6 +290,19 @@ class Completer:
                     )
                 break
 
+        # Deduplicate completions that differ only by a trailing space.
+        # For example, ``_cd`` (from Python name completions) and ``_cd ``
+        # (from command completions with append_space=True) should appear
+        # only once.  We keep the spaced variant because it carries the
+        # richer completion metadata.
+        spaced = {str(c) for c in completions if str(c).endswith(" ")}
+        if spaced:
+            completions = {
+                c: None
+                for c in completions
+                if str(c).endswith(" ") or (str(c) + " ") not in spaced
+            }
+
         if completion_context:
             if completion_context.python is not None:
                 prefix = completion_context.python.prefix
@@ -301,9 +314,41 @@ class Completer:
             if prefix.startswith("$"):
                 prefix = prefix[1:]
 
+            lower_prefix = prefix.lower()
+
             def sortkey(s):
-                """Sort values by prefix position and then alphabetically."""
-                return (s.lower().find(prefix.lower()), s.lower())
+                """Sort completions by match quality tier, then by underscore prefix, match position, and name.
+
+                Tiers:
+                  0 - case-sensitive prefix match
+                  1 - case-insensitive prefix match
+                  2 - case-sensitive substring match
+                  3 - case-insensitive substring match
+                  4 - no match (sorted last)
+
+                Within each tier, completions whose last component starts
+                with '_' are sorted last (handles both bare names like
+                ``_codecs`` and dotted names like ``json._default_decoder``),
+                then by position of the match, then alphabetically.
+                """
+                text = str(s)
+                ltext = text.lower()
+                if text.startswith(prefix):
+                    tier = 0
+                elif ltext.startswith(lower_prefix):
+                    tier = 1
+                elif prefix in text:
+                    tier = 2
+                elif lower_prefix in ltext:
+                    tier = 3
+                else:
+                    tier = 4
+                last_part = text.rsplit(".", 1)[-1]
+                has_leading_underscore = last_part.startswith("_")
+                pos = ltext.find(lower_prefix) if lower_prefix else 0
+                if pos < 0:
+                    pos = 0
+                return (tier, has_leading_underscore, pos, ltext)
         else:
             # Fallback sort.
             sortkey = lambda s: s.lstrip(''''"''').lower()

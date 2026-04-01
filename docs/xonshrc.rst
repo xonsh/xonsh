@@ -7,7 +7,7 @@ exactly once at startup.
 The control file usually contains:
 
 * Assignment statements setting `environment variables <envvars.html>`_. This includes standard OS environment variables that affect other programs and many that Xonsh uses for itself.
-* ``xontrib`` commands to load selected add-ins (`xontribs <tutorial_xontrib.html#loading-xontribs>`_).
+* ``xontrib`` commands to load selected add-ins (`xontribs <xontrib.html#loading-xontribs>`_).
 * Xonsh function definitions.
 * `Alias definitions <aliases.html>`_, many of which invoke the above functions with specified arguments.
 
@@ -25,7 +25,7 @@ In addition:
 * Use ``xonsh --rc snail.xsh`` to run only a certain control file.
 * Use ``xonsh -i script.xsh`` to run xonsh in interactive mode with loading all possible control files.
 * Use ``xonsh --rc rc1.xsh rc2.xsh -- script.xsh`` to run scripts with multiple control files.
-* You can create autoloadable `xontrib <tutorial_xontrib.html#loading-xontribs>`_ as alternative to run control file and reuse it as python package.
+* You can create autoloadable `xontrib <xontrib.html#loading-xontribs>`_ as alternative to run control file and reuse it as python package.
 
 The options set per user override settings in the system-wide control file.
 
@@ -56,7 +56,7 @@ The page has:
 :Xontribs: are community-contributed add-ins often used to enhance command completion and line editing,
   but can affect any aspect of Xonsh behavior.
   Choose one or more to suit your needs but note that they will require installation of additional
-  packages.  You can extend Xonsh by `writing your own xontrib <tutorial_xontrib.html>`_, and are invited/urged to do so!
+  packages.  You can extend Xonsh by `writing your own xontrib <xontrib.html>`_, and are invited/urged to do so!
 :Save: Click to write the configuration choices to your ``~/.xonshrc``. This will add a few tagged lines to your run control file, but will not
   overwrite it completely, so you can run `xonfig web` at any time.
 

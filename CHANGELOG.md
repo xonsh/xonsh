@@ -1110,7 +1110,7 @@
     unloading](https://github.com/xonsh/xonsh/issues/4541) with
     functions `_load_xontrib_(xsh: XonshSession, **kwargs) -> dict`,
     `_unload_xontrib_(xsh: XonshSession, **kwargs) -> None` defined in
-    their module. [Updated doc](https://xon.sh/tutorial_xontrib.html)
+    their module. [Updated doc](https://xon.sh/xontrib.html)
 -   Added a special \'\$LAST_RETURN_CODE\' environment variable to
     access the return code of the last issued command. (Only set during
     interactive use).
@@ -5496,7 +5496,7 @@
 -   Macro function calls are now available. These use a Rust-like
     `f!(arg)` syntax.
 -   Macro subprocess call now available with the `echo! x y z` syntax.
--   A new [event subsystem](http://xon.sh/tutorial_events.html) has been
+-   A new [event subsystem](http://xon.sh/events_tutorial.html) has been
     added.
 -   howto install sections for Debian/Ubuntu and Fedora.
 -   `History` methods `__iter__` and `__getitem__`

@@ -140,12 +140,11 @@ def _dots(prefix):
 def _add_cdpaths(paths, prefix):
     """Completes current prefix using CDPATH"""
     env = XSH.env
-    csc = env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = env.get("GLOB_SORTED")
     for cdp in env.get("CDPATH"):
         test_glob = os.path.join(cdp, prefix) + "*"
         for s in xt.iglobpath(
-            test_glob, ignore_case=(not csc), sort_result=glob_sorted
+            test_glob, ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
         ):
             if os.path.isdir(s):
                 paths.add(os.path.relpath(s, cdp))
@@ -311,10 +310,11 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     tilde = "~"
     paths = set()
     env = XSH.env
-    csc = env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = env.get("GLOB_SORTED")
     prefix = glob.escape(prefix)
-    for s in xt.iglobpath(prefix + "*", ignore_case=(not csc), sort_result=glob_sorted):
+    for s in xt.iglobpath(
+        prefix + "*", ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
+    ):
         paths.add(s)
     # When the prefix ends with a path separator we are listing directory
     # contents, not matching a partial name.  If the glob above found nothing
@@ -346,7 +346,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
                 basedir = None
             matches_so_far = {basedir}
             for i in p:
-                matches_so_far = _expand_one(matches_so_far, i, csc)
+                matches_so_far = _expand_one(matches_so_far, i, False)
             paths |= {_joinpath(i) for i in matches_so_far}
     if (
         len(paths) == 0
@@ -356,7 +356,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
         threshold = env.get("SUGGEST_THRESHOLD")
         for s in xt.iglobpath(
             os.path.dirname(prefix) + "*",
-            ignore_case=(not csc),
+            ignore_case=(not xp.ON_WINDOWS),
             sort_result=glob_sorted,
         ):
             if xt.levenshtein(prefix, s, threshold) < threshold:

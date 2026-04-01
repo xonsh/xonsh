@@ -10,7 +10,7 @@ Starter
     :maxdepth: 2
 
     tutorial
-    tutorial_subproc_strings
+    subproc_strings
     subproc_types
     bash_to_xsh
     platform-issues
@@ -26,11 +26,11 @@ Everyday User
     envvars
     aliases
     events
-    tutorial_hist
+    history
     customization
     keyboard_shortcuts
-    tutorial_ptk
-    tutorial_macros
+    prompt_toolkit
+    macros
 
 Creator
 -------
@@ -41,11 +41,11 @@ Creator
 
     editors
     python_virtual_environments
-    tutorial_xonsh_projects
-    tutorial_xontrib
-    tutorial_events
-    tutorial_completers
-    tutorial_history_backend
+    xonsh_projects
+    xontrib
+    events_tutorial
+    completers
+    history_backend
 
 Xontributor
 -----------
@@ -54,5 +54,5 @@ Xontributor
     :titlesonly:
     :maxdepth: 1
 
-    devguide
+    developer
     api/index
