@@ -538,7 +538,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 readline_prefix = line[begidx:endidx].lower()
                 safe_rtn = []
                 safe_orig = []
-                for orig, rtn in zip(completions, rtn_completions):
+                for orig, rtn in zip(completions, rtn_completions, strict=False):
                     if str(rtn).lower().startswith(readline_prefix):
                         safe_rtn.append(rtn)
                         safe_orig.append(orig)
