@@ -124,7 +124,7 @@ def test_boundary_alignment(
     assert len(results) == 1
 
     res = results[0]
-    assert type(res) == expected_type
+    assert isinstance(res, expected_type)
     assert str(res) == expected_str
 
     # If the original had append_space=True, assert the new object retained it
