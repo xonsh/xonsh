@@ -340,9 +340,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
             # remove one indent level from line start
             cursor_col = doc.cursor_position_col
             line_start = doc.cursor_position - cursor_col
-            b.transform_region(
-                line_start, line_start + indent_len, lambda _: ""
-            )
+            b.transform_region(line_start, line_start + indent_len, lambda _: "")
             # keep cursor in place (shifted left, but not before col 0)
             b.cursor_position = line_start + max(0, cursor_col - indent_len)
 
