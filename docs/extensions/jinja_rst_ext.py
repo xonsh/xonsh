@@ -9,6 +9,8 @@ Usage:
 
 from pathlib import Path
 
+import re
+
 import jinja2
 from docutils import nodes
 
@@ -61,6 +63,8 @@ def fix_envvar_section_ids(app, doctree):
             continue
 
         var_name = title_text[1:]  # e.g. XONSH_CAPTURE_ALWAYS
+        # Sanitize special chars (e.g. w*DIRS$ -> w_DIRS_)
+        var_name = re.sub(r"[^\w]", "_", var_name)
         # Canonical old-style ID for backward compat with existing URLs
         old_style_id = var_name.lower().replace("_", "-")
 
