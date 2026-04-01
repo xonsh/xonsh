@@ -35,8 +35,16 @@ Editing
 Indentation
 -----------
 
-After selecting text with ``Shift`` and the arrow keys,
-you can press ``Tab`` or ``Shift+Tab`` to add or remove indentation.
+.. list-table::
+    :widths: 40 60
+    :header-rows: 1
+
+    * - Shortcut
+      - Description
+    * - Selection + ``Tab``
+      - Indentation selected lines.
+    * - Selection + ``Shift+Tab``
+      - Unindentation selected lines.
 
 Execution
 ---------
