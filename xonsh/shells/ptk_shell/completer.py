@@ -73,33 +73,40 @@ def _highlight_match(display_text, full_text, prefix, pre):
     if not prefix:
         return display_text
 
+    # Try to find the full prefix in the full text
     match_start = full_text.lower().find(prefix.lower())
-    if match_start < 0:
-        return display_text
 
-    # Adjust for the stripped common prefix
-    disp_start = match_start - pre
-    disp_end = disp_start + len(prefix)
+    if match_start >= 0:
+        disp_start = match_start - pre
+        disp_end = disp_start + len(prefix)
 
-    # Only underline non-prefix matches (substring matches in the middle).
-    # When disp_start <= 0 the match is at the beginning of the displayed
-    # text (or partially hidden by the common-prefix strip), so no visual
-    # highlight is needed — the user can already see the match.
-    if disp_start <= 0:
-        return display_text
+        if disp_start > 0:
+            # Substring match visible in display — underline it
+            disp_end = min(len(display_text), disp_end)
+            if disp_start < disp_end:
+                parts = [("", display_text[:disp_start])]
+                parts.append(("underline", display_text[disp_start:disp_end]))
+                if disp_end < len(display_text):
+                    parts.append(("", display_text[disp_end:]))
+                return FormattedText(parts)
 
-    # Clamp end to display text bounds
-    disp_end = min(len(display_text), disp_end)
+    # Full prefix not usable (not found, or falls at/before display start).
+    # For dotted completions like "json.de" → "JSONDecoder", match the
+    # visible portion of the prefix against the display text.
+    if pre > 0:
+        visible_prefix = prefix[pre:]
+        if visible_prefix:
+            vis_start = display_text.lower().find(visible_prefix.lower())
+            if vis_start > 0:
+                vis_end = min(len(display_text), vis_start + len(visible_prefix))
+                if vis_start < vis_end:
+                    parts = [("", display_text[:vis_start])]
+                    parts.append(("underline", display_text[vis_start:vis_end]))
+                    if vis_end < len(display_text):
+                        parts.append(("", display_text[vis_end:]))
+                    return FormattedText(parts)
 
-    if disp_start >= disp_end:
-        return display_text
-
-    parts = [("", display_text[:disp_start])]
-    parts.append(("underline", display_text[disp_start:disp_end]))
-    if disp_end < len(display_text):
-        parts.append(("", display_text[disp_end:]))
-
-    return FormattedText(parts)
+    return display_text
 
 
 class PromptToolkitCompleter(Completer):

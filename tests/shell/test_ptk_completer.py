@@ -307,52 +307,90 @@ def test_completion_display(
     ]
 
 
-class TestHighlightMatch:
-    """Tests for _highlight_match — underline styling on substring matches."""
+def test_highlight_match_empty_prefix():
+    assert _highlight_match("foobar", "foobar", "", 0) == "foobar"
 
-    def test_empty_prefix(self):
-        assert _highlight_match("foobar", "foobar", "", 0) == "foobar"
 
-    def test_no_match(self):
-        assert _highlight_match("foobar", "foobar", "xyz", 0) == "foobar"
+def test_highlight_match_no_match():
+    assert _highlight_match("foobar", "foobar", "xyz", 0) == "foobar"
 
-    def test_prefix_match_no_underline(self):
-        """Prefix matches should not be underlined — they are visually obvious."""
-        assert _highlight_match("foobar", "foobar", "foo", 0) == "foobar"
 
-    def test_substring_match_underline(self):
-        """Substring matches in the middle should be underlined."""
-        result = _highlight_match("foobar", "foobar", "oba", 0)
-        assert result == FormattedText([("", "fo"), ("underline", "oba"), ("", "r")])
+def test_highlight_match_prefix_no_underline():
+    """Prefix matches should not be underlined — they are visually obvious."""
+    assert _highlight_match("foobar", "foobar", "foo", 0) == "foobar"
 
-    def test_substring_match_at_end(self):
-        result = _highlight_match("foobar", "foobar", "bar", 0)
-        assert result == FormattedText([("", "foo"), ("underline", "bar")])
 
-    def test_case_insensitive(self):
-        result = _highlight_match("FooBar", "FooBar", "oba", 0)
-        assert result == FormattedText([("", "Fo"), ("underline", "oBa"), ("", "r")])
+def test_highlight_match_substring_underline():
+    """Substring matches in the middle should be underlined."""
+    result = _highlight_match("foobar", "foobar", "oba", 0)
+    assert result == FormattedText([("", "fo"), ("underline", "oba"), ("", "r")])
 
-    def test_with_pre_offset_hides_prefix_match(self):
-        """When pre strips the common prefix, a match at position 0 in the
-        full text falls before the displayed text — no underline."""
-        assert _highlight_match("bar", "foobar", "foo", 3) == "bar"
 
-    def test_with_pre_offset_substring_visible(self):
-        """When pre strips a common prefix and the match lands at position 0
-        in the displayed text, it's treated as a prefix match — no underline."""
-        result = _highlight_match("bar_baz", "foo/bar_baz", "bar", 4)
-        # match_start=4 in full text, pre=4, disp_start=0 → prefix match in
-        # display → no underline (disp_start <= 0)
-        assert result == "bar_baz"
+def test_highlight_match_substring_at_end():
+    result = _highlight_match("foobar", "foobar", "bar", 0)
+    assert result == FormattedText([("", "foo"), ("underline", "bar")])
 
-    def test_with_pre_offset_true_substring(self):
-        """Substring match after the common prefix strip point."""
-        result = _highlight_match("baz_bar_qux", "foo/baz_bar_qux", "bar", 4)
-        # match_start=8 in full text, pre=4, disp_start=4
-        assert result == FormattedText(
-            [("", "baz_"), ("underline", "bar"), ("", "_qux")]
-        )
+
+def test_highlight_match_case_insensitive():
+    result = _highlight_match("FooBar", "FooBar", "oba", 0)
+    assert result == FormattedText([("", "Fo"), ("underline", "oBa"), ("", "r")])
+
+
+def test_highlight_match_pre_offset_hides_prefix():
+    """When pre strips the common prefix, a match at position 0 in the
+    full text falls before the displayed text — no underline."""
+    assert _highlight_match("bar", "foobar", "foo", 3) == "bar"
+
+
+def test_highlight_match_pre_offset_substring_visible():
+    """When pre strips a common prefix and the match lands at position 0
+    in the displayed text, it's treated as a prefix match — no underline."""
+    result = _highlight_match("bar_baz", "foo/bar_baz", "bar", 4)
+    assert result == "bar_baz"
+
+
+def test_highlight_match_pre_offset_true_substring():
+    """Substring match after the common prefix strip point."""
+    result = _highlight_match("baz_bar_qux", "foo/baz_bar_qux", "bar", 4)
+    assert result == FormattedText(
+        [("", "baz_"), ("underline", "bar"), ("", "_qux")]
+    )
+
+
+def test_highlight_match_import_substring():
+    """Import completions: 'de' should be underlined in 'JSONDecoder'."""
+    result = _highlight_match("JSONDecoder", "JSONDecoder", "de", 0)
+    assert result == FormattedText(
+        [("", "JSON"), ("underline", "De"), ("", "coder")]
+    )
+
+
+def test_highlight_match_import_prefix():
+    """Import completions: 'de' at the start of 'decoder' is a prefix — no underline."""
+    assert _highlight_match("decoder", "decoder", "de", 0) == "decoder"
+
+
+def test_highlight_match_dotted_prefix_substring():
+    """Dotted completions: 'json.de' prefix with 'json.' stripped — 'De' in
+    'JSONDecoder' should be underlined via visible prefix fallback."""
+    result = _highlight_match("JSONDecoder", "json.JSONDecoder", "json.de", 5)
+    assert result == FormattedText(
+        [("", "JSON"), ("underline", "De"), ("", "coder")]
+    )
+
+
+def test_highlight_match_dotted_prefix_no_underline():
+    """Dotted completions: 'de' at the start of display 'decoder' is a
+    prefix match — no underline."""
+    assert _highlight_match("decoder", "json.decoder", "json.de", 5) == "decoder"
+
+
+def test_highlight_match_dotted_prefix_encoder():
+    """Dotted completions: 'de' in 'encoder' at position 4 should be underlined."""
+    result = _highlight_match("encoder", "json.encoder", "json.de", 5)
+    assert result == FormattedText(
+        [("", "enco"), ("underline", "de"), ("", "r")]
+    )
 
 
 def test_completion_substring_highlight(monkeypatch, xession):
