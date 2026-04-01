@@ -41,6 +41,8 @@ Indentation
 
     * - Shortcut
       - Description
+    * - ``Shift+Enter``
+      - Start new line without execution. Terminal need to support xterm modifyOtherKeys mode 1 or Kitty keyboard protocol.
     * - Selection + ``Tab``
       - Indentation selected lines.
     * - Selection + ``Shift+Tab``
