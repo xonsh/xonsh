@@ -399,19 +399,30 @@ class PromptToolkitShell(BaseShell):
             prompt_args["cursor"] = cursor_shape
 
         events.on_pre_prompt.fire()
-        while True:
-            try:
-                line = self.prompter.prompt(**prompt_args)
-                break
-            except Exception as e:
-                # Retry on EINTR (errno 4) — tcsetattr in prompt_toolkit's
-                # raw_mode() is not automatically retried by Python (PEP 475
-                # doesn't cover termios).  This happens when a signal (e.g.
-                # SIGCHLD from a process launcher like `uv run`) arrives
-                # during terminal setup.
-                if getattr(e, "args", (None,))[0] == 4:
-                    continue
-                raise
+        # Enable xterm modifyOtherKeys mode so the terminal sends
+        # distinct escape sequences for Shift+Enter, Ctrl+Enter, etc.
+        # Mode 2 = all keys except those with well-known behavior.
+        output = self.prompter.app.output
+        output.write_raw("\x1b[>4;1m")
+        output.flush()
+        try:
+            while True:
+                try:
+                    line = self.prompter.prompt(**prompt_args)
+                    break
+                except Exception as e:
+                    # Retry on EINTR (errno 4) — tcsetattr in prompt_toolkit's
+                    # raw_mode() is not automatically retried by Python (PEP 475
+                    # doesn't cover termios).  This happens when a signal (e.g.
+                    # SIGCHLD from a process launcher like `uv run`) arrives
+                    # during terminal setup.
+                    if getattr(e, "args", (None,))[0] == 4:
+                        continue
+                    raise
+        finally:
+            # Disable modifyOtherKeys to avoid affecting child processes.
+            output.write_raw("\x1b[>4;0m")
+            output.flush()
         events.on_post_prompt.fire()
         return line
 
