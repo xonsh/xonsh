@@ -83,7 +83,7 @@ master_doc = "contents"
 
 # General information about the project.
 project = "xonsh"
-copyright = "2015, Anthony Scopatz"
+copyright = ""
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
