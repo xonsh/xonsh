@@ -1613,7 +1613,7 @@ convert subprocess command output into Python object with your own logic:
 
     from xonsh.procs.specs import SpecAttrDecoratorAlias
 
-    aliases['@andjoin'] = SpecAttrDecoratorAlias(
+    aliases['@and'] = SpecAttrDecoratorAlias(
                         {"output_format": lambda lines: ' and '.join([l.strip() for l in lines])},
                         "Join lines with 'and'.")
 
@@ -1622,8 +1622,8 @@ Now you can run:
 
 .. code-block:: xonshcon
 
-    @ $(@andjoin echo '1\n2')
-    '1 and 2'
+    @ $(@and ls /)
+    '/bin and /etc and /home'
 
 
 -------------
