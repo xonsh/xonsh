@@ -253,11 +253,10 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
             """Delete a single word (like ALT-backspace)"""
             get_by_name("backward-kill-word").call(event)
 
-    @handle(Keys.Tab, filter=has_selection)
-    def indent_selection(event):
-        """Indent selected lines by INDENT."""
-        b = event.current_buffer
-        indent = XSH.env.get("INDENT")
+    def _indent_lines(b, indent=True):
+        """Indent or dedent selected lines, preserving selection."""
+        ind = XSH.env.get("INDENT")
+        ind_len = len(ind)
         doc = b.document
         text = doc.text
         sel_ranges = list(doc.selection_ranges())
@@ -269,35 +268,38 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         line_end = text.find("\n", end)
         if line_end == -1:
             line_end = len(text)
+
+        selection_state = b.selection_state
         region = text[line_start:line_end]
-        indented = "\n".join(indent + line for line in region.split("\n"))
-        b.transform_region(line_start, line_end, lambda _: indented)
+
+        if indent:
+            new_region = "\n".join(ind + line for line in region.split("\n"))
+        else:
+            lines = []
+            for line in region.split("\n"):
+                if line[:ind_len] == ind:
+                    lines.append(line[ind_len:])
+                else:
+                    lines.append(line.lstrip(" "))
+            new_region = "\n".join(lines)
+
+        b.transform_region(line_start, line_end, lambda _: new_region)
+
+        # restore selection over the full line range
+        delta = len(new_region) - len(region)
+        selection_state.original_cursor_position = line_start
+        b.cursor_position = line_end + delta
+        b.selection_state = selection_state
+
+    @handle(Keys.Tab, filter=has_selection)
+    def indent_selection(event):
+        """Indent selected lines by INDENT."""
+        _indent_lines(event.current_buffer, indent=True)
 
     @handle(Keys.BackTab, filter=has_selection)
     def dedent_selection(event):
         """Dedent selected lines by INDENT."""
-        b = event.current_buffer
-        indent = XSH.env.get("INDENT")
-        indent_len = len(indent)
-        doc = b.document
-        text = doc.text
-        sel_ranges = list(doc.selection_ranges())
-        if not sel_ranges:
-            return
-        start, end = sel_ranges[0]
-        # expand to full lines
-        line_start = text.rfind("\n", 0, start) + 1
-        line_end = text.find("\n", end)
-        if line_end == -1:
-            line_end = len(text)
-        region = text[line_start:line_end]
-        lines = []
-        for line in region.split("\n"):
-            if line[:indent_len] == indent:
-                lines.append(line[indent_len:])
-            else:
-                lines.append(line.lstrip(" "))
-        b.transform_region(line_start, line_end, lambda _: "\n".join(lines))
+        _indent_lines(event.current_buffer, indent=False)
 
     @handle(Keys.Tab, filter=tab_insert_indent & ~has_selection)
     def insert_indent(event):
