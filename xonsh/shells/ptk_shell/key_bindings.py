@@ -253,7 +253,53 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
             """Delete a single word (like ALT-backspace)"""
             get_by_name("backward-kill-word").call(event)
 
-    @handle(Keys.Tab, filter=tab_insert_indent)
+    @handle(Keys.Tab, filter=has_selection)
+    def indent_selection(event):
+        """Indent selected lines by INDENT."""
+        b = event.current_buffer
+        indent = XSH.env.get("INDENT")
+        doc = b.document
+        text = doc.text
+        sel_ranges = list(doc.selection_ranges())
+        if not sel_ranges:
+            return
+        start, end = sel_ranges[0]
+        # expand to full lines
+        line_start = text.rfind("\n", 0, start) + 1
+        line_end = text.find("\n", end)
+        if line_end == -1:
+            line_end = len(text)
+        region = text[line_start:line_end]
+        indented = "\n".join(indent + line for line in region.split("\n"))
+        b.transform_region(line_start, line_end, lambda _: indented)
+
+    @handle(Keys.BackTab, filter=has_selection)
+    def dedent_selection(event):
+        """Dedent selected lines by INDENT."""
+        b = event.current_buffer
+        indent = XSH.env.get("INDENT")
+        indent_len = len(indent)
+        doc = b.document
+        text = doc.text
+        sel_ranges = list(doc.selection_ranges())
+        if not sel_ranges:
+            return
+        start, end = sel_ranges[0]
+        # expand to full lines
+        line_start = text.rfind("\n", 0, start) + 1
+        line_end = text.find("\n", end)
+        if line_end == -1:
+            line_end = len(text)
+        region = text[line_start:line_end]
+        lines = []
+        for line in region.split("\n"):
+            if line[:indent_len] == indent:
+                lines.append(line[indent_len:])
+            else:
+                lines.append(line.lstrip(" "))
+        b.transform_region(line_start, line_end, lambda _: "\n".join(lines))
+
+    @handle(Keys.Tab, filter=tab_insert_indent & ~has_selection)
     def insert_indent(event):
         """
         If there are only whitespaces before current cursor position insert
@@ -262,7 +308,7 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         env = XSH.env
         event.cli.current_buffer.insert_text(env.get("INDENT"))
 
-    @handle(Keys.Tab, filter=~tab_insert_indent & tab_menu_complete)
+    @handle(Keys.Tab, filter=~tab_insert_indent & tab_menu_complete & ~has_selection)
     def menu_complete_select(event):
         """Start completion in menu-complete mode, or tab to next completion"""
         b = event.current_buffer
@@ -277,15 +323,26 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         event.current_buffer.tempfile_suffix = ".xsh"
         event.current_buffer.open_in_editor(event.cli)
 
-    @handle(Keys.BackTab, filter=insert_mode)
-    def insert_literal_tab(event):
-        """Insert literal tab on Shift+Tab instead of autocompleting"""
+    @handle(Keys.BackTab, filter=insert_mode & ~has_selection)
+    def dedent_current_line(event):
+        """Dedent current line or navigate completions backward."""
         b = event.current_buffer
         if b.complete_state:
             b.complete_previous()
-        else:
-            env = XSH.env
-            event.cli.current_buffer.insert_text(env.get("INDENT"))
+            return
+        indent = XSH.env.get("INDENT")
+        indent_len = len(indent)
+        doc = b.document
+        line = doc.current_line
+        if line[:indent_len] == indent:
+            # remove one indent level from line start
+            cursor_col = doc.cursor_position_col
+            line_start = doc.cursor_position - cursor_col
+            b.transform_region(
+                line_start, line_start + indent_len, lambda _: ""
+            )
+            # keep cursor in place (shifted left, but not before col 0)
+            b.cursor_position = line_start + max(0, cursor_col - indent_len)
 
     def generate_parens_handlers(left, right):
         @handle(left, filter=autopair_condition)
