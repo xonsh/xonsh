@@ -157,6 +157,19 @@ Provides an interface to printing lines of source code prior to their execution.
 Command Decorators (Decorator Aliases)
 ======================================
 
+``@error_raise`` and ``@error_ignore``
+-----------------------------
+Use ``@error_raise`` to raise an exception if the command returns a non-zero exit code.
+The behavior is similar with ``$RAISE_SUBPROC_ERROR``. Use ``@error_ignore`` for explicit disable that.
+
+.. code-block:: console
+
+    @ @error_raise ls nonono
+      # ls: nonono: No such file or directory
+      # subprocess.CalledProcessError: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
+
+    @ @error_ignore ls nonono
+      # ls: nonono: No such file or directory
 
 ``@thread`` and ``@unthread``
 -----------------------------
@@ -165,6 +178,18 @@ Use ``@thread`` and ``@unthread`` to run command as threadable or unthreadable e
 .. code-block:: console
 
     @ !(@thread ssh host -T "echo 1")
+
+
+``@path`` and ``@paths``
+-----------------------------
+Use ``@path`` and ``@paths`` to get Path object(s) from the command output.
+
+.. code-block:: console
+
+    @ dir = $(@path echo '/bin')
+      dir.exists()
+    @ dirs = $(@paths echo '/bin\n/etc')
+      [p.exists() for p in dirs]
 
 
 ``@lines``
