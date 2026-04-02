@@ -1718,7 +1718,8 @@ class PromptSetting(Xettings):
     )
     XONSH_STDERR_PREFIX = Var.with_default(
         "",
-        "A format string, using the same keys and colors as ``$PROMPT``, that "
+        "It works if ``$XONSH_CAPTURE_ALWAYS=True``. A format string, "
+        "using the same keys and colors as ``$PROMPT``, that "
         "is prepended whenever stderr is displayed. This may be used in "
         "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
         "For example, to have stderr appear on a red background, the "
@@ -1726,7 +1727,8 @@ class PromptSetting(Xettings):
     )
     XONSH_STDERR_POSTFIX = Var.with_default(
         "",
-        "A format string, using the same keys and colors as ``$PROMPT``, that "
+        "It works if ``$XONSH_CAPTURE_ALWAYS=True``. A format string, "
+        "using the same keys and colors as ``$PROMPT``, that "
         "is appended whenever stderr is displayed. This may be used in "
         "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
         "For example, to have stderr appear on a red background, the "
