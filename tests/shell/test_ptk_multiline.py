@@ -95,6 +95,31 @@ def test_cant_compile_newline(ctx):
         assert ctx.buffer.document.current_line == ""
 
 
+@pytest.mark.parametrize("keyword", ["pass", "break", "continue", "return", "raise"])
+def test_dedent_token_at_col0_not_truncated(ctx, keyword):
+    """Dedent tokens at column 0 must not be truncated.
+
+    Regression: 'pass' became 'p' because newline(copy_margin) copied 0
+    spaces (line already at col 0), then delete_before_cursor(4) ate into
+    the keyword itself.
+    """
+    document = Document("\n" + keyword)
+    ctx.buffer.set_document(document)
+    ctx.cr(ctx.buffer, ctx.cli)
+    # The keyword must survive intact on the previous line
+    prev_line = ctx.buffer.document.lines[-2]
+    assert prev_line == keyword, f"{keyword!r} was truncated to {prev_line!r}"
+
+
+@pytest.mark.parametrize("keyword", ["pass", "break", "continue"])
+def test_dedent_token_with_indent_removes_one_level(ctx, keyword):
+    """Dedent tokens with sufficient indent should lose one indent level."""
+    document = Document("\n" + ctx.indent + keyword)
+    ctx.buffer.set_document(document)
+    ctx.cr(ctx.buffer, ctx.cli)
+    assert ctx.buffer.document.current_line == ""
+
+
 def test_can_compile_and_executes(ctx):
     mock = MagicMock(return_value=True)
     with patch("xonsh.shells.ptk_shell.key_bindings.can_compile", mock):
