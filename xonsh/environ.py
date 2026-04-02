@@ -1369,7 +1369,7 @@ class CacheSetting(Xettings):
         "On Windows this defaults to ``['C:\\\\Windows']`` (via ``%WINDIR%``).  "
         "On WSL it auto-detects ``/mnt/*/Windows`` directories. "
         "On Linux/Mac it is empty by default but can be extended "
-        "(e.g. ``['/usr']``).",
+        "(e.g. ``['/bin', '/sbin']``).",
         type_str="env_path",
     )
 
