@@ -2121,7 +2121,7 @@ def hardcode_colors_for_win10(style_map):
                     # Win10  doesn't yet handle bold colors. Instead dark
                     # colors are mapped to their lighter version. We simulate
                     # the same here.
-                    style_str.replace("bold", "")
+                    style_str = style_str.replace("bold", "")
                     hexcolor = WIN10_COLOR_MAP[
                         WIN_BOLD_COLOR_MAP.get(ansicolor, ansicolor)
                     ]
