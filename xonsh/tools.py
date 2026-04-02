@@ -894,7 +894,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         """
         if sys.version_info >= (3, 12):
             # https://docs.python.org/3/library/sys.html#sys.last_exc
-            sys.last_exc = exc_info
+            sys.last_exc = exc_info[1]
         else:
             sys.last_type, sys.last_value, sys.last_traceback = exc_info
 
