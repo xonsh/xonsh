@@ -482,7 +482,9 @@ def premain(argv=None):
         os.environ.clear()
         os.environ.update(origin_env)
 
-    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
+    pre_env["COLOR_RESULTS"] = os.getenv(
+        "COLOR_RESULTS", str(pre_env["XONSH_INTERACTIVE"])
+    )
 
     start_services(shell_kwargs, args, pre_env=pre_env)
     return args
