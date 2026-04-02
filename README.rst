@@ -69,10 +69,10 @@ xonsh
 
             $PATH
             # ['/bin', '/sbin']           # Linux
-            # [r'c:\Windows\System32']    # Windows
             # ['/homebrew/bin']           # macOS
-            # ['/mnt/c/Windows/System32'] # WSL
             # ['/nix/store/0-python/bin'] # Nix
+            # ['/mnt/c/Windows/System32'] # WSL
+            # [r'c:\Windows\System32']    # Windows
 
             $PATH = ['/my/own/path']
 
