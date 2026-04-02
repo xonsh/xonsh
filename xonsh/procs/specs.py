@@ -353,6 +353,7 @@ class SpecAttrDecoratorAlias(DecoratorAlias):
     def __init__(self, set_attributes: dict, descr=""):
         self.set_attributes = set_attributes
         self.descr = descr
+        self.__doc__ = descr
         super().__init__()
 
     def decorate_spec(self, spec):

@@ -1583,10 +1583,17 @@ In xonsh you can decorate the command to transform output into desired object:
 .. code-block:: xonshcon
 
     @ $(@lines ls /)
-    ['bin', 'etc', 'home']
+    ['/bin', '/etc', '/home']
 
-    @ showcmd echo prefix/$(@lines ls /)
+
+    @ showcmd echo prefix$(@lines ls /)
     ['echo', 'prefix/bin', 'prefix/etc', 'prefix/home']
+
+    @ $(@paths ls /)
+    [Path('/bin'), Path('/etc'), Path('/home')]
+
+    @ $(@path pwd)
+    Path('/home/snail')
 
     @ $(@json curl -s https://api.github.com/repos/xonsh/xonsh)['default_branch']
     main
@@ -1606,20 +1613,17 @@ convert subprocess command output into Python object with your own logic:
 
     from xonsh.procs.specs import SpecAttrDecoratorAlias
 
-    aliases['@path'] = SpecAttrDecoratorAlias(
-                        {"output_format": lambda lines: @.imp.pathlib.Path(':'.join(lines))},
-                        "Set `path` output format.")
-    aliases['@noerr'] = SpecAttrDecoratorAlias(
-                          {"raise_subproc_error": False},
-                          "Set `raise_subproc_error` to False.")
+    aliases['@and'] = SpecAttrDecoratorAlias(
+                        {"output_format": lambda lines: ' and '.join([l.strip() for l in lines])},
+                        "Join lines with 'and'.")
 
 
 Now you can run:
 
 .. code-block:: xonshcon
 
-    @ $(@path which xonsh)
-    Path('/path/to/xonsh')
+    @ $(@and ls /)
+    '/bin and /etc and /home'
 
 
 -------------

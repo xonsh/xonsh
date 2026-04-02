@@ -1365,13 +1365,11 @@ class CacheSetting(Xettings):
         "List of directory prefixes whose contents are cached on first access and "
         "never re-read within the session.  Any ``$PATH`` entry that starts with "
         "one of these prefixes (or is a subdirectory) will have its file listing "
-        "cached as a frozenset after the first ``locate_executable`` call, so "
-        "subsequent lookups are O(1) hash checks instead of per-file stat() calls.  "
+        "cached. This helps on systems with I/O lag, network drives, and similar issues. "
         "On Windows this defaults to ``['C:\\\\Windows']`` (via ``%WINDIR%``).  "
-        "On WSL it auto-detects ``/mnt/*/Windows`` directories "
-        "(9P-mounted Windows dirs are very slow to stat).  "
+        "On WSL it auto-detects ``/mnt/*/Windows`` directories. "
         "On Linux/Mac it is empty by default but can be extended "
-        "(e.g. ``['/usr']``).",
+        "(e.g. ``$XONSH_COMMANDS_CACHE_READ_DIR_ONCE += ['/bin', '/sbin']``).",
         type_str="env_path",
     )
 
@@ -2097,10 +2095,8 @@ class PTKCompletionSetting(AutoCompletionSetting):
     )
 
 
-class WindowsSetting(GeneralSetting):
-    """Windows OS
-    Windows OS specific settings
-    """
+class WindowsSetting(Xettings):
+    """Windows OS"""
 
     ANSICON = Var.no_default(
         "str",
