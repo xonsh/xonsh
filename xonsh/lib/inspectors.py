@@ -159,9 +159,11 @@ def getsource(obj, is_binary=False):
             obj = obj.__wrapped__
         try:
             src = inspect.getsource(obj)
-        except TypeError:
-            if hasattr(obj, "__class__"):
+        except (TypeError, OSError):
+            try:
                 src = inspect.getsource(obj.__class__)
+            except (TypeError, AttributeError, OSError):
+                return None
         encoding = get_encoding(obj)
         return cast_unicode(src, encoding=encoding)
 
