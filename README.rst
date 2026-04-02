@@ -5,7 +5,7 @@ xonsh
 
     <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="left" width="100px">
 
-**Xonsh** is a Python-powered shell. Full-featured, cross-platform and AI-friendly. The language is a superset of Python 3 with seamless integration of shell functionality and commands. The name Xonsh should be pronounced like "consh" — a softer form of the word "conch" (🐚, ``@``), referring to the world of command shells.
+**Xonsh** (sounds like "consh") is a modern, full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands. It works on all major systems including Linux, OSX, and Windows. Xonsh is meant for the daily use of experts and novices.
 
 .. raw:: html
 
