@@ -49,7 +49,7 @@ def _xhj_gc_commands_to_rmfiles(hsize, files):
         n += 1
 
     cmds_removed = 0
-    files_removed = files[:-n]
+    files_removed = files[:-n] if n > 0 else files
     for _, fcmds, _, _ in files_removed:
         cmds_removed += fcmds
 
@@ -87,7 +87,7 @@ def _xhj_gc_bytes_to_rmfiles(hsize, files):
         nbytes += fsize
         n += 1
     bytes_removed = 0
-    files_removed = files[:-n]
+    files_removed = files[:-n] if n > 0 else files
     for _, _, _, fsize in files_removed:
         bytes_removed += fsize
 
