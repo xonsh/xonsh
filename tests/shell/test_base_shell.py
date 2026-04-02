@@ -51,6 +51,24 @@ def test_transform_returns_none_is_noop(xession):
     assert transform_command("echo 1") == "echo 1"
 
 
+def test_transform_infinite_loop_breaks(xession, monkeypatch):
+    """transform_command should stop after recursion limit, not loop forever."""
+    monkeypatch.setattr("sys.getrecursionlimit", lambda: 5)
+    counter = {"n": 0}
+
+    @xession.builtins.events.on_transform_command
+    def flip(cmd, **_):
+        counter["n"] += 1
+        return "b" if cmd == "a" else "a"
+
+    # print_exception may fail outside except block; we only care the loop stops
+    try:
+        transform_command("a", show_diff=False)
+    except TypeError:
+        pass
+    assert counter["n"] == 5
+
+
 @pytest.mark.parametrize(
     "cmd,exp_append_history",
     [

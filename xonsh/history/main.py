@@ -340,6 +340,7 @@ class HistoryAlias(xcli.ArgParserAlias):
                 f"Pull method is not supported in {backend} history backend.",
                 file=_stdout,
             )
+            return
 
         lines_added = hist.pull(show_commands, session_id)
         if lines_added:

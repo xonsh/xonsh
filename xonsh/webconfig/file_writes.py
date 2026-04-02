@@ -38,7 +38,7 @@ def config_to_xonsh(
             renderers.remove(start)
             key, func = RENDERERS[start]
             if value := config.get(key):
-                yield start + func(value, existing.strip(start))
+                yield start + func(value, existing[len(start) :])
             else:
                 yield existing
         else:
@@ -87,5 +87,5 @@ def insert_into_xonshrc(
     )
     # write out the file
     with open(fname, "w", encoding="utf-8") as f:
-        f.write(before + re.sub(r"\\r", "", "\n".join(lines)) + after)
+        f.write(before + re.sub(r"\r", "", "\n".join(lines)) + after)
     return fname

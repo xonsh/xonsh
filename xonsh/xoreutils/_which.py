@@ -316,7 +316,7 @@ def main(argv):
             "haVvqp:e:",
             ["help", "all", "version", "verbose", "quiet", "path=", "exts="],
         )
-    except getopt.GetoptErrsor as msg:
+    except getopt.GetoptError as msg:
         sys.stderr.write(f"which: error: {msg}. Your invocation was: {argv}\n")
         sys.stderr.write("Try 'which --help'.\n")
         return 1
