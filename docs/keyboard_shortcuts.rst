@@ -14,6 +14,8 @@ Editing
 
     * - Shortcut
       - Description
+    * - ``Ctrl-C``
+      - Cancel the current command entry.
     * - ``Shift-Left`` or ``Shift-Right``
       - Select one character in either direction.
     * - ``Ctrl-Shift-Left`` or ``Ctrl-Shift-Right``
