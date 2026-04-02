@@ -72,6 +72,16 @@ def test_var_pattern_int():
     assert type(env["QWE_NUM"]) is int
 
 
+def test_var_pattern_exclude():
+    """Test that exclude disables pattern matching after initial failure."""
+    env = Env()
+    with pytest.raises(TypeError, match=r"matches pattern \$XONSH_ENV_PATTERN_DIRS"):
+        env["JU_DIRS"] = 1
+    env["XONSH_ENV_PATTERN_DIRS"].exclude.append("JU_DIRS")
+    env["JU_DIRS"] = 1
+    assert env["JU_DIRS"] == 1
+
+
 def test_env_detype():
     env = Env(MYPATH=["wakka", "jawaka"])
     assert "wakka" + os.pathsep + "jawaka" == env.detype()["MYPATH"]
