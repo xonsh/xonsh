@@ -110,7 +110,7 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             3,
             3,
             RichCompletion("a.bc", prefix_len=3),
-            "a.bc",          # path 2 returns raw original, not trimmed
+            "a.bc",  # path 2 returns raw original, not trimmed
             RichCompletion,
         ),
         # Xonsh plen < Readline plen (Pad missing prefix from buffer at front)
@@ -123,7 +123,7 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             3,
             1,
             RichCompletion("bc", prefix_len=1),
-            "bc",            # path 2 returns raw original, not padded
+            "bc",  # path 2 returns raw original, not padded
             RichCompletion,
         ),
         # Metadata check - Ensure append_space=True survives the slicing/padding math
@@ -144,7 +144,7 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             0,
             3,
             3,
-            "json",           # plain string, no prefix_len attribute
+            "json",  # plain string, no prefix_len attribute
             "json",
             str,
         ),
@@ -163,7 +163,7 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
         (
             "",
             "jso",
-            3,      # begidx == endidx == 3
+            3,  # begidx == endidx == 3
             3,
             0,
             RichCompletion("json", prefix_len=0),

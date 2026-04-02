@@ -20,13 +20,13 @@ import sys
 import threading
 import typing as tp
 
-from xonsh.completers.tools import RichCompletion
 from xonsh.ansi_colors import (
     ansi_color_style,
     ansi_color_style_names,
     ansi_partial_color_format,
 )
 from xonsh.built_ins import XSH
+from xonsh.completers.tools import RichCompletion
 from xonsh.events import events
 from xonsh.lib.lazyasd import LazyObject, lazyobject
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
@@ -490,7 +490,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
 
         # --- Boundary Alignment ---
         readline_plen = endidx - begidx
-        orig_completions = list(completions)   # preserve raw completer output
+        orig_completions = list(completions)  # preserve raw completer output
         rtn_completions = []
 
         for c in orig_completions:
@@ -504,7 +504,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 if len(c_str) >= offset and c_str.lower().startswith(overlap.lower()):
                     new_val = c_str[offset:]
                 else:
-                    new_val = c_str[offset:]    # Bug 5 fix: trim unconditionally (see below)
+                    new_val = c_str[
+                        offset:
+                    ]  # Bug 5 fix: trim unconditionally (see below)
             elif c_plen < readline_plen:
                 gap = readline_plen - c_plen
                 new_val = line[begidx : begidx + gap] + c_str
@@ -564,10 +566,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif show_completions == 1:
             return rtn
         elif show_completions == 2:
-            return orig_completions          # <-- was `completions`, now correctly the raw originals
+            return orig_completions  # <-- was `completions`, now correctly the raw originals
         else:
             raise ValueError("query completions flag not understood.")
-
 
     # tab complete on first index too
     completenames = completedefault  # type:ignore
