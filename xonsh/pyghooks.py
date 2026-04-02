@@ -1492,7 +1492,7 @@ Initialized by XonshStyle."""
 def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
     """if LS_COLORS updated, update file_color_tokens and  corresponding color token in style"""
     if newvalue is None:
-        del file_color_tokens[key]
+        file_color_tokens.pop(key, None)
     else:
         file_color_tokens[key] = color_token_by_name(newvalue)
 
