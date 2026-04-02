@@ -241,6 +241,19 @@ def test_callable_alias_o2e_uncaptured(xonsh_session):
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_stderr_prefix_postfix(xonsh_session):
+    """XONSH_STDERR_PREFIX/POSTFIX should wrap captured stderr output."""
+    xonsh_session.env["XONSH_STDERR_PREFIX"] = "PRE"
+    xonsh_session.env["XONSH_STDERR_POSTFIX"] = "POST"
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(echo error o>e)")
+    assert pipeline.raw_err.startswith(b"PRE")
+    assert pipeline.raw_err.endswith(b"POST")
+    assert b"error" in pipeline.raw_err
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_object_capture_without_threading(capfd, xonsh_session):
     """!() must capture output even when THREAD_SUBPROCS is disabled.
 

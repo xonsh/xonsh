@@ -1718,21 +1718,21 @@ class PromptSetting(Xettings):
     )
     XONSH_STDERR_PREFIX = Var.with_default(
         "",
-        "It works if ``$XONSH_CAPTURE_ALWAYS=True``. A format string, "
-        "using the same keys and colors as ``$PROMPT``, that "
+        "A format string, using the same keys and colors as ``$PROMPT``, that "
         "is prepended whenever stderr is displayed. This may be used in "
         "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
         "For example, to have stderr appear on a red background, the "
-        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
+        'It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.',
     )
     XONSH_STDERR_POSTFIX = Var.with_default(
         "",
-        "It works if ``$XONSH_CAPTURE_ALWAYS=True``. A format string, "
-        "using the same keys and colors as ``$PROMPT``, that "
+        "A format string, using the same keys and colors as ``$PROMPT``, that "
         "is appended whenever stderr is displayed. This may be used in "
         "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
         "For example, to have stderr appear on a red background, the "
-        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
+        'It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.',
     )
     XONSH_SUPPRESS_WELCOME = Var.with_default(
         False,
