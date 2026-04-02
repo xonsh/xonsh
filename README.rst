@@ -112,10 +112,14 @@ xonsh
 
             @events.on_ptk_create
             def custom_keybindings(bindings, **kw):
-
                 @bindings.add(Keys.ControlI)
                 def say_whoami(event):
                     echo $(whoami)
+
+            @events.on_postcommand
+            def _prompt_err_cmd(cmd, rtn, out, ts):
+                if rtn != 0:
+                    $XONSH_PROMPT_NEXT_CMD = cmd.rstrip()
 
 If you like xonsh, :star: the repo and spread the word about xonsh.
 
