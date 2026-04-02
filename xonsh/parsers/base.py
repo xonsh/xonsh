@@ -1881,18 +1881,26 @@ class BaseParser:
         beg = (beg_line, 0)
         end = (p5.lineno, p5.lexpos)
         s = self._source_slice(beg, end)
-        # Exclude trailing blank lines and unindented comments that
-        # belong to subsequent code, not to this block.
+        # Exclude trailing unindented comments (and surrounding blank
+        # lines) that belong to subsequent code, not to this block.
+        # Only strip if there are actual unindented comments at the tail;
+        # trailing blank lines alone are kept (they may be part of the block).
         slines = s.splitlines(keepends=True)
-        while slines:
-            stripped = slines[-1].strip()
-            if stripped == "" or (
-                stripped.startswith("#") and not slines[-1][0].isspace()
-            ):
-                slines.pop()
-            else:
-                break
-        s = "".join(slines)
+        has_unindented_comment = any(
+            ln.strip().startswith("#") and not ln[0].isspace()
+            for ln in reversed(slines)
+            if ln.strip()
+        )
+        if has_unindented_comment:
+            while slines:
+                stripped = slines[-1].strip()
+                if stripped == "" or (
+                    stripped.startswith("#") and not slines[-1][0].isspace()
+                ):
+                    slines.pop()
+                else:
+                    break
+            s = "".join(slines)
         s = textwrap.dedent(s)
         p[0] = ast.const_str(s=s, lineno=beg[0], col_offset=beg[1])
 
