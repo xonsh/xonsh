@@ -1136,7 +1136,6 @@ def cmds_to_specs(cmds, captured=False, envs=None):
     ready to be executed.
     """
     # first build the subprocs independently and separate from the redirects
-    i = 0
     specs = []
     redirects = []
     for i, cmd in enumerate(cmds):
@@ -1145,9 +1144,8 @@ def cmds_to_specs(cmds, captured=False, envs=None):
         else:
             env = envs[i] if envs is not None else None
             spec = SubprocSpec.build(cmd, captured=captured, env=env)
-            spec.pipeline_index = i
+            spec.pipeline_index = len(specs)
             specs.append(spec)
-            i += 1
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
         if redirect == "|":
