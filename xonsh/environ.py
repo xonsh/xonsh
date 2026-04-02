@@ -2331,9 +2331,7 @@ class Env(cabc.MutableMapping):
         # User-set values first (in _d)
         for val in self._d.values():
             if isinstance(val, VarPattern) and val.match(key):
-                var = val.to_var()
-                self._vars[key] = var  # cache for future lookups
-                return var
+                return val.to_var()
         # Fall back to defaults, but skip vars the user has overridden
         for var_name, var in self._vars.items():
             if (
@@ -2341,9 +2339,7 @@ class Env(cabc.MutableMapping):
                 and var_name not in self._d
                 and var.default.match(key)
             ):
-                result = var.default.to_var()
-                self._vars[key] = result
-                return result
+                return var.default.to_var()
         return None
 
     def _find_var_pattern_name(self, key):
@@ -2534,7 +2530,7 @@ class Env(cabc.MutableMapping):
                     raise type(exc)(
                         f"${key} matches pattern ${pat_name} which sets type "
                         f"{var_type!r}. Cannot convert {val!r}. "
-                        f"To exclude run: `${pat_name}.exclude.append('{key}`')"
+                        f"To exclude run: `${pat_name}.exclude.append('{key}')`"
                     ) from None
                 raise
         # existing envvars can have any value including None
