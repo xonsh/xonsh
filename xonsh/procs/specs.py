@@ -692,7 +692,7 @@ class SubprocSpec:
             event.fire(spec=self, proc=proc)
         if events.exists("on_post_spec_run"):
             event = events.on_post_spec_run
-            event.fire(spec=self)
+            event.fire(spec=self, proc=proc)
 
     #
     # Building methods
