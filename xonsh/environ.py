@@ -209,6 +209,23 @@ def HELP_TEMPLATE():
     )
 
 
+def _rst_inline_to_color(s):
+    """Replace RST inline code ``...`` with colored output."""
+    import re
+
+    return re.sub(r"``(.+?)``", r"{CYAN}\1{RESET}", s)
+
+
+@lazyobject
+def HELP_TEMPLATE_SHORT():
+    return (
+        "{{INTENSE_YELLOW}}Name:{{RESET}} ${envvar}\n"
+        "{{INTENSE_YELLOW}}Description:{{RESET}} {docstr}\n"
+        "{{INTENSE_YELLOW}}Default:{{RESET}} {default}\n"
+        "{{INTENSE_YELLOW}}Configurable:{{RESET}} {configurable}"
+    )
+
+
 @lazyobject
 def LOCALE_CATS():
     lc = {
@@ -2347,17 +2364,30 @@ class Env(cabc.MutableMapping):
             vd = vd._replace(doc_default=dval)
         return vd
 
-    def help(self, key):
+    def help(self, key, short=False):
         """Get information about a specific environment variable."""
         vardocs = self.get_docs(key)
-        width = min(79, os.get_terminal_size()[0])
-        docstr = "\n".join(textwrap.wrap(vardocs.doc, width=width))
-        template = HELP_TEMPLATE.format(
-            envvar=key,
-            docstr=docstr,
-            default=vardocs.doc_default,
-            configurable=vardocs.is_configurable,
-        )
+        try:
+            width = min(79, os.get_terminal_size()[0])
+        except OSError:
+            width = 79
+        if short:
+            doc = vardocs.doc.replace("\n", " ").strip()
+            template = HELP_TEMPLATE_SHORT.format(
+                envvar=key,
+                docstr=doc,
+                default=vardocs.doc_default,
+                configurable=vardocs.is_configurable,
+            )
+            template = _rst_inline_to_color(template)
+        else:
+            docstr = "\n".join(textwrap.wrap(vardocs.doc, width=width))
+            template = HELP_TEMPLATE.format(
+                envvar=key,
+                docstr=docstr,
+                default=vardocs.doc_default,
+                configurable=vardocs.is_configurable,
+            )
         print_color(template)
 
     def is_manually_set(self, varname):

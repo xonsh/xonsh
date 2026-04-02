@@ -2363,7 +2363,21 @@ class BaseParser:
                 margs = [leader, trailer, gblcall, loccall]
                 p0 = xonsh_call("__xonsh__.call_macro", margs, lineno=l, col=c)
             elif isinstance(trailer, str):
-                if trailer == "?":
+                if trailer in ("?", "??") and self._is_envvar_node(leader):
+                    # $VAR? → short help, $VAR?? → full help
+                    key = self._envvar_node_key(leader)
+                    short = ast.Constant(
+                        value=(trailer == "?"),
+                        lineno=leader.lineno,
+                        col_offset=leader.col_offset,
+                    )
+                    p0 = xonsh_call(
+                        "__xonsh__.env.help",
+                        [key, short],
+                        lineno=leader.lineno,
+                        col=leader.col_offset,
+                    )
+                elif trailer == "?":
                     p0 = xonsh_help(leader, lineno=leader.lineno, col=leader.col_offset)
                 elif trailer == "??":
                     p0 = xonsh_superhelp(
@@ -2467,12 +2481,23 @@ class BaseParser:
         """
         p[0] = p[1]
 
+    _NAME_CONST_MAP = {"True": True, "False": False, "None": None}
+
     def p_atom_name(self, p):
         """atom : name"""
         p1 = p[1]
-        p[0] = ast.Name(
-            id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
-        )
+        # In subproc mode, True/False/None may arrive as NAME instead of
+        # keyword tokens.  Emit ast.Constant so compile() doesn't reject them.
+        if p1.value in self._NAME_CONST_MAP:
+            p[0] = ast.const_name(
+                value=self._NAME_CONST_MAP[p1.value],
+                lineno=p1.lineno,
+                col_offset=p1.lexpos,
+            )
+        else:
+            p[0] = ast.Name(
+                id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
+            )
 
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""
@@ -3254,6 +3279,25 @@ class BaseParser:
         return ast.Subscript(
             value=xenv, slice=idx, ctx=ast.Load(), lineno=lineno, col_offset=col
         )
+
+    @staticmethod
+    def _is_envvar_node(node):
+        """Check if an AST node is __xonsh__.env[KEY]."""
+        return (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.value, ast.Attribute)
+            and node.value.attr == "env"
+            and isinstance(node.value.value, ast.Name)
+            and node.value.value.id == "__xonsh__"
+        )
+
+    @staticmethod
+    def _envvar_node_key(node):
+        """Extract the key AST node from __xonsh__.env[KEY]."""
+        s = node.slice
+        if isinstance(s, ast.Index):
+            return s.value
+        return s
 
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""

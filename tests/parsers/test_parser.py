@@ -2342,6 +2342,14 @@ def test_question_chain(check_xonsh_ast):
     check_xonsh_ast({}, "range?.index?")
 
 
+def test_envvar_question(check_xonsh_ast):
+    check_xonsh_ast({}, "$HOME?")
+
+
+def test_envvar_double_question(check_xonsh_ast):
+    check_xonsh_ast({}, "$HOME??")
+
+
 def test_ls_regex(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls `[Ff]+i*LE` -l)", False)
 
