@@ -172,7 +172,7 @@ def _xhj_pull_items(pull_times, src_sessionid=None):
         if path == current_session_path:
             continue
         try:
-            lj = xlj.LazyJSON(open(path))
+            lj = xlj.LazyJSON(path)
         except (JSONDecodeError, ValueError):
             continue
 
