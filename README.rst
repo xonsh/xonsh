@@ -73,6 +73,7 @@ xonsh
             # ['/homebrew/bin']           # macOS
             # ['/mnt/c/Windows/System32'] # WSL
             # ['/nix/store/0-python/bin'] # Nix
+
             $PATH = ['/my/own/path']
 
 
