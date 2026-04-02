@@ -423,11 +423,11 @@ if ON_WINDOWS:
             """Ensure that the case sensitive map of the keys are
             in sync with os.environ
             """
-            envkeys = set(os.environ.keys())
-            for key in envkeys.difference(self._upperkeys):
-                self._upperkeys[key] = key.upper()
-            for key in set(self._upperkeys).difference(envkeys):
-                del self._upperkeys[key]
+            envkeys = {k.upper(): k for k in os.environ.keys()}
+            for ukey in set(envkeys).difference(self._upperkeys):
+                self._upperkeys[ukey] = envkeys[ukey]
+            for ukey in set(self._upperkeys).difference(envkeys):
+                del self._upperkeys[ukey]
 
         def __contains__(self, k):
             self._sync()
