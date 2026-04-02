@@ -442,6 +442,7 @@ class Parser(ThreeSixParser):
         p1, p2 = p[1], p[2]
         targ = p2[0]
         targ.decorator_list = p1
+        targ.lineno = p1[0].lineno
         # async functions take the col number of the 'def', unless they are
         # decorated, in which case they have the col of the 'async'. WAT?
         if hasattr(targ, "_async_tok"):
