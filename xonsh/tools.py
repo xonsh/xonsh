@@ -1831,6 +1831,8 @@ def is_history_tuple(x):
 
 def is_regex(x):
     """Tests if something is a valid regular expression."""
+    if x is None:
+        return False
     try:
         re.compile(x)
         return True
