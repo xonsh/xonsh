@@ -1891,6 +1891,8 @@ def to_history_tuple(x):
         raise ValueError("history size must be given as a sequence or number")
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
+        if m is None:
+            raise ValueError(f"could not parse history size: {x!r}")
         return to_history_tuple((m.group(1), m.group(3)))
     elif isinstance(x, float | int):
         return to_history_tuple((x, "commands"))
