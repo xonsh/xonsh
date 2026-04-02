@@ -1216,7 +1216,7 @@ class GeneralSetting(Xettings):
         type_str="var_pattern",
     )
     XONSH_ENV_PATTERN_DIRS = Var.with_default(
-        VarPattern(r"\w*DнетнетIRS$", "env_path", exclude=["JUPYTER_PLATFORM_DIRS"]),
+        VarPattern(r"\w*DIRS$", "env_path", exclude=["JUPYTER_PLATFORM_DIRS"]),
         "Pattern rule: env vars matching this regex are treated as env_path.",
         type_str="var_pattern",
     )
@@ -2329,7 +2329,7 @@ class Env(cabc.MutableMapping):
         Setting a VarPattern variable to None disables that pattern.
         """
         # User-set values first (in _d)
-        for pat_name, val in self._d.items():
+        for val in self._d.values():
             if isinstance(val, VarPattern) and val.match(key):
                 var = val.to_var()
                 self._vars[key] = var  # cache for future lookups
