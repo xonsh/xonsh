@@ -242,7 +242,7 @@ def get_col(node, default=-1):
 
 def min_col(node):
     """Computes the minimum col_offset."""
-    return min(map(get_col, walk(node), itertools.repeat(node.col_offset)))
+    return min(map(get_col, walk(node), itertools.repeat(get_col(node))))
 
 
 def max_col(node):

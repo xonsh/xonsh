@@ -100,7 +100,7 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
         if task is not None:
             task["status"] = "stopped"
         info["backgrounded"] = True
-        proc.signal = (os.WSTOPSIG(wcode), os.WCOREDUMP(wcode))
+        proc.signal = (os.WSTOPSIG(wcode), False)
         info["signal"] = os.WSTOPSIG(wcode)
         proc.suspended = True
 

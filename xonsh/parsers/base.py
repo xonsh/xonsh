@@ -3705,5 +3705,5 @@ class BaseParser:
                     p.value, self.currloc(lineno=p.lineno, column=p.lexpos)
                 )
         else:
-            msg = (f"code: {p.value}",)
+            msg = f"code: {p.value}"
             self._parse_error(msg, self.currloc(lineno=p.lineno, column=p.lexpos))

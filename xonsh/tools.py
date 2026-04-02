@@ -894,7 +894,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         """
         if sys.version_info >= (3, 12):
             # https://docs.python.org/3/library/sys.html#sys.last_exc
-            sys.last_exc = exc_info
+            sys.last_exc = exc_info[1]
         else:
             sys.last_type, sys.last_value, sys.last_traceback = exc_info
 
@@ -1753,7 +1753,7 @@ _year_to_sec = lambda x: 365.25 * _day_to_sec(x)
 _kb_to_b = lambda x: 1024 * int(x)
 _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
-_tb_to_b = lambda x: 1024 * _tb_to_b(x)  # type: ignore
+_tb_to_b = lambda x: 1024 * _gb_to_b(x)  # type: ignore
 
 CANON_HISTORY_UNITS = LazyObject(
     lambda: frozenset(["commands", "files", "s", "b"]), globals(), "CANON_HISTORY_UNITS"
@@ -1831,6 +1831,8 @@ def is_history_tuple(x):
 
 def is_regex(x):
     """Tests if something is a valid regular expression."""
+    if x is None:
+        return False
     try:
         re.compile(x)
         return True
@@ -1891,6 +1893,8 @@ def to_history_tuple(x):
         raise ValueError("history size must be given as a sequence or number")
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
+        if m is None:
+            raise ValueError(f"could not parse history size: {x!r}")
         return to_history_tuple((m.group(1), m.group(3)))
     elif isinstance(x, float | int):
         return to_history_tuple((x, "commands"))
@@ -2121,7 +2125,7 @@ def hardcode_colors_for_win10(style_map):
                     # Win10  doesn't yet handle bold colors. Instead dark
                     # colors are mapped to their lighter version. We simulate
                     # the same here.
-                    style_str.replace("bold", "")
+                    style_str = style_str.replace("bold", "")
                     hexcolor = WIN10_COLOR_MAP[
                         WIN_BOLD_COLOR_MAP.get(ansicolor, ansicolor)
                     ]
@@ -2659,8 +2663,8 @@ def deprecated(deprecated_in=None, removed_in=None):
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
             _deprecated_error_on_expiration(func.__name__, removed_in)
-            func(*args, **kwargs)
             warnings.warn(warning_message, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
 
         wrapped.__doc__ = (
             f"{wrapped.__doc__}\n\n{warning_message}"

@@ -220,7 +220,7 @@ def completion_from_cmd_output(line: str, append_space=False):
 
     # special treatment for path completions.
     # not appending space even if it is a single candidate.
-    if cmd.endswith(os.pathsep) or (os.altsep and cmd.endswith(os.altsep)):
+    if cmd.endswith(os.sep) or (os.altsep and cmd.endswith(os.altsep)):
         append_space = False
 
     return RichCompletion(

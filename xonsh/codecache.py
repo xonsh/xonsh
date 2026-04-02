@@ -228,5 +228,6 @@ def run_code_with_cache(
         run_cached, ccode = code_cache_check(cachefname)
     if not run_cached:
         ccode = compile_code(display_filename, code, execer, glb, loc, mode)
-        update_cache(ccode, cachefname)
+        if use_cache:
+            update_cache(ccode, cachefname)
     return run_compiled_code(ccode, glb, loc, mode)

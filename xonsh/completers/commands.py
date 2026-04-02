@@ -156,7 +156,7 @@ class CommandCompleter:
         for ex in exts:
             if cmd_name.endswith(ex.lower()):
                 # windows handling
-                cmd_name = cmd_name.rstrip(ex.lower())
+                cmd_name = cmd_name.removesuffix(ex.lower())
                 break
         return cmd_name
 

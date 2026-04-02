@@ -1434,9 +1434,12 @@ def XonshHtmlFormatter():
             return (style[:-2], ttype, len(ttype))
 
         def _set_ndef_for_color_token(self, ttype):
+            if ttype is None:
+                self.style._styles[ttype] = ["", 0, 0, 0, "", "", 0, 0, 0]
+                return
             ndef = self.style._styles.get(ttype.parent, None)
             styledefs = self.style.styles.get(ttype, "").split()
-            if not ndef or ttype is None:
+            if not ndef:
                 ndef = ["", 0, 0, 0, "", "", 0, 0, 0]
             elif "noinherit" in styledefs and ttype is not Token:
                 ndef = self.style._styles[Token][:]
@@ -1489,7 +1492,7 @@ Initialized by XonshStyle."""
 def on_lscolors_change(key, oldvalue, newvalue, **kwargs):
     """if LS_COLORS updated, update file_color_tokens and  corresponding color token in style"""
     if newvalue is None:
-        del file_color_tokens[key]
+        file_color_tokens.pop(key, None)
     else:
         file_color_tokens[key] = color_token_by_name(newvalue)
 

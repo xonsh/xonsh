@@ -647,7 +647,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 if len(self.cmdqueue) > 0:
                     line = self.cmdqueue.popleft()
                     exec_now = line.endswith("\n")
-                if self.use_rawinput and not exec_now:
+                if self.use_rawinput and not exec_now and have_readline:
                     inserter = (
                         None if line is None else _insert_text_func(line, readline)
                     )
