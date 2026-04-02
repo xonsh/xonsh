@@ -2528,7 +2528,9 @@ class Env(cabc.MutableMapping):
                     pat_val = self._d.get(pat_name)
                     if pat_val is None and pat_name in self._vars:
                         pat_val = self._vars[pat_name].default
-                    var_type = pat_val.var_type if isinstance(pat_val, VarPattern) else "?"
+                    var_type = (
+                        pat_val.var_type if isinstance(pat_val, VarPattern) else "?"
+                    )
                     raise type(exc)(
                         f"${key} matches pattern ${pat_name} which sets type "
                         f"{var_type!r}. Cannot convert {val!r}. "
