@@ -27,7 +27,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import Env, Var, Xettings
 
 if tp.TYPE_CHECKING:
-    from xonsh.environ import VarKeyType
+    pass
 import xonsh.main as xmain
 
 xmain.setup()
@@ -280,7 +280,7 @@ class VarDoc(tp.NamedTuple):
 
 
 class EnvVarGroup(tp.NamedTuple):
-    vars: tp.Dict["VarKeyType", VarDoc]  # sorted variables in the section
+    vars: tp.Dict[str, VarDoc]  # sorted variables in the section
     children: tp.Dict[Xettings, "EnvVarGroup"]  # child sections
 
 

@@ -63,6 +63,15 @@ def test_env_path_str(path):
     assert path == env["MYPATH"].paths
 
 
+def test_var_pattern_int():
+    from xonsh.environ import VarPattern
+
+    env = Env(XONSH_ENV_PATTERN_NUM=VarPattern(r"\w*_NUM$", "int"))
+    env["QWE_NUM"] = "42"
+    assert env["QWE_NUM"] == 42
+    assert type(env["QWE_NUM"]) is int
+
+
 def test_env_detype():
     env = Env(MYPATH=["wakka", "jawaka"])
     assert "wakka" + os.pathsep + "jawaka" == env.detype()["MYPATH"]
