@@ -2659,8 +2659,8 @@ def deprecated(deprecated_in=None, removed_in=None):
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
             _deprecated_error_on_expiration(func.__name__, removed_in)
-            func(*args, **kwargs)
             warnings.warn(warning_message, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
 
         wrapped.__doc__ = (
             f"{wrapped.__doc__}\n\n{warning_message}"
