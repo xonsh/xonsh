@@ -205,7 +205,7 @@ def _boot_time_windows():
         # Vista/Server 2008 or later.
         xp.LIBC.GetTickCount64.restype = ctypes.c_uint64
         uptime = xp.LIBC.GetTickCount64() / 1000.0
-    if hasattr(xp.LIBC, "GetTickCount"):
+    elif hasattr(xp.LIBC, "GetTickCount"):
         # WinCE and Win2k or later; gives wrong answers after 49.7 days.
         xp.LIBC.GetTickCount.restype = ctypes.c_uint32
         uptime = xp.LIBC.GetTickCount() / 1000.0
