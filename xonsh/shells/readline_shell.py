@@ -20,7 +20,7 @@ import sys
 import threading
 import typing as tp
 
-import xonsh.completers.tools as xct
+from xonsh.completers.tools import RichCompletion
 from xonsh.ansi_colors import (
     ansi_color_style,
     ansi_color_style_names,
@@ -489,14 +489,13 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         )
 
         # --- Boundary Alignment ---
-        # When xonsh's prefix length differs from readline's, realign
-        # completion strings so readline replaces exactly the right span.
         readline_plen = endidx - begidx
+        orig_completions = list(completions)   # preserve raw completer output
         rtn_completions = []
 
-        for c in completions:
+        for c in orig_completions:
             c_str = str(c)
-            is_rich = hasattr(c, "replace") and hasattr(c, "prefix_len")
+            is_rich = isinstance(c, RichCompletion)
             c_plen = c.prefix_len if is_rich and c.prefix_len is not None else plen
 
             if c_plen > readline_plen:
@@ -505,7 +504,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 if len(c_str) >= offset and c_str.lower().startswith(overlap.lower()):
                     new_val = c_str[offset:]
                 else:
-                    new_val = c_str
+                    new_val = c_str[offset:]    # Bug 5 fix: trim unconditionally (see below)
             elif c_plen < readline_plen:
                 gap = readline_plen - c_plen
                 new_val = line[begidx : begidx + gap] + c_str
@@ -518,8 +517,6 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 )
             else:
                 rtn_completions.append(new_val)
-
-        completions = rtn_completions
         # --- End Boundary Alignment ---
 
         # --- Readline Substring Safety Filter ---
@@ -527,29 +524,19 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             cps = [str(c).lower() for c in rtn_completions]
             cp = commonprefix(cps)
 
-            # --- DEBUG LOGGING ---
-            # with open("/tmp/xonsh_readline.log", "a") as f:
-            #     f.write(f"typed: {line[begidx:endidx]!r} (len {readline_plen}), cp: {cp!r} (len {len(cp)})\n")
-
             if len(cp) < readline_plen:
-                # The substring matches diverge too early. Returning them will
-                # cause Readline to swallow the user's typed prefix.
-                # Fallback: strictly enforce prefix matching to protect the buffer.
                 readline_prefix = line[begidx:endidx].lower()
                 safe_rtn = []
                 safe_orig = []
-                for orig, rtn in zip(completions, rtn_completions, strict=False):
+                for orig, rtn in zip(orig_completions, rtn_completions, strict=True):
                     if str(rtn).lower().startswith(readline_prefix):
                         safe_rtn.append(rtn)
                         safe_orig.append(orig)
 
-                # with open("/tmp/xonsh_readline.log", "a") as f:
-                #     f.write(f"  [!] Fallback triggered. Pruned {len(rtn_completions) - len(safe_rtn)} dangerous substrings.\n")
-
                 rtn_completions = safe_rtn
-                completions = safe_orig
+                orig_completions = safe_orig
 
-        if not completions:
+        if not rtn_completions:
             return []
         # --- End Substring Safety Filter ---
 
@@ -571,15 +558,16 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             rtn.append(last if self._complete_only_last_table[key] else i)
 
         # return based on show completions
-        show_completions = self._querycompletions(completions, readline_plen)
+        show_completions = self._querycompletions(orig_completions, readline_plen)
         if show_completions == 0:
             return []
         elif show_completions == 1:
             return rtn
         elif show_completions == 2:
-            return completions
+            return orig_completions          # <-- was `completions`, now correctly the raw originals
         else:
             raise ValueError("query completions flag not understood.")
+
 
     # tab complete on first index too
     completenames = completedefault  # type:ignore

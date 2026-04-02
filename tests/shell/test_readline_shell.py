@@ -72,6 +72,19 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
     assert "JSONEncoder" not in result_strs
     assert len(result_strs) == 1
 
+    # -- SCENARIO 4: show_completions == 2 returns orig_completions (raw output) --
+    # With show_completions==2, completedefault must return the raw completer output,
+    # not the boundary-aligned rtn_completions. We verify the returned objects
+    # are still RichCompletion instances (not plain strings).
+    monkeypatch.setattr(readline_shell, "_querycompletions", MagicMock(return_value=2))
+    comp = RichCompletion("json", prefix_len=3)
+    mock_completer.complete.return_value = ({comp}, 3)
+    results = readline_shell.completedefault("jso", "jso", 0, 3)
+    assert len(results) == 1
+    assert isinstance(results[0], RichCompletion), (
+        "show_completions==2 must return orig_completions, which are RichCompletion objects"
+    )
+
 
 @pytest.mark.parametrize(
     "prefix, line, begidx, endidx, plen, mock_comp, expected_str, expected_type",
@@ -88,7 +101,8 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             RichCompletion,
         ),
         # Xonsh plen > Readline plen (Trim offset from front of completion)
-        # Type "a.b", readline thinks word is "b" (idx 2-3), plen is 3. offset = 3 - 1 = 2
+        # Type "a.b", readline thinks word is "b" (begidx=2, endidx=3), plen=3, offset=2
+        # show_completions==2 returns orig_completions (raw), so expected is original value
         (
             "b",
             "a.b",
@@ -96,12 +110,12 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             3,
             3,
             RichCompletion("a.bc", prefix_len=3),
-            "bc",
+            "a.bc",          # path 2 returns raw original, not trimmed
             RichCompletion,
         ),
         # Xonsh plen < Readline plen (Pad missing prefix from buffer at front)
         # Type "a.b", readline considers whole "a.b", plen only 1
-        # gap = 3 - 1 = 2 -> Add "a." to the completion
+        # show_completions==2 returns orig_completions (raw), so expected is original value
         (
             "a.b",
             "a.b",
@@ -109,7 +123,7 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             3,
             1,
             RichCompletion("bc", prefix_len=1),
-            "a.bc",
+            "bc",            # path 2 returns raw original, not padded
             RichCompletion,
         ),
         # Metadata check - Ensure append_space=True survives the slicing/padding math
@@ -120,6 +134,39 @@ def test_completedefault_substring_safety(readline_shell, monkeypatch):
             3,
             3,
             RichCompletion("json", prefix_len=3, append_space=True),
+            "json",
+            RichCompletion,
+        ),
+        # Plain string completion (not RichCompletion) — must pass through as plain str
+        (
+            "jso",
+            "jso",
+            0,
+            3,
+            3,
+            "json",           # plain string, no prefix_len attribute
+            "json",
+            str,
+        ),
+        # RichCompletion with prefix_len=None — should fall back to plen
+        (
+            "jso",
+            "jso",
+            0,
+            3,
+            3,
+            RichCompletion("json", prefix_len=None),
+            "json",
+            RichCompletion,
+        ),
+        # Empty prefix — begidx == endidx, readline_plen is 0
+        (
+            "",
+            "jso",
+            3,      # begidx == endidx == 3
+            3,
+            0,
+            RichCompletion("json", prefix_len=0),
             "json",
             RichCompletion,
         ),
@@ -140,6 +187,8 @@ def test_boundary_alignment(
     """
     Test that boundary adjustments correctly slice or pad the returned text
     while preserving RichCompletion objects and their metadata.
+    show_completions==2 returns orig_completions (raw completer output),
+    so expected_str reflects the original unmodified value.
     """
     import xonsh.shells.readline_shell as rlshell
 
