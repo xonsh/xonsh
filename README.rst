@@ -62,22 +62,18 @@ xonsh
             aliases['e'] = 'echo @(2+2)'
             aliases['a'] = lambda args: print(args)
 
-   *  -  **Xonsh is a Meta-Shell**
+   *  -  **Xonsh is Everywhere**
       -  **Xonsh is an Ecosystem**
 
    *  -  .. code-block:: python
 
-            xontrib load sh \
-                         fish_completer
-
-            def nudf(cmd):
-                return @.imp.pandas.DataFrame(
-                  @.imp.json.loads(
-                    $(nu -c @(cmd+'| to json'))))
-            nudf!(ls -la)
-
-            aliases['ai'] = 'ollama run llama3'
-            ai! how to remove images in podman
+            $PATH
+            # ['/bin', '/sbin']           # Linux
+            # [r'c:\Windows\System32']    # Windows
+            # ['/homebrew/bin']           # macOS
+            # ['/mnt/c/Windows/System32'] # WSL
+            # ['/nix/store/0-python/bin'] # Nix
+            $PATH = ['/my/own/path']
 
 
       -  .. code-block:: python
@@ -93,6 +89,32 @@ xonsh
                          github_copilot   \
                          history_encrypt
 
+   *  -  **Xonsh is a Meta-Shell**
+      -  **Xonsh is User-extensible**
+
+
+   *  -  .. code-block:: python
+
+            xontrib load sh \
+                         fish_completer
+
+            def nudf(cmd):
+                return @.imp.pandas.DataFrame(
+                  @.imp.json.loads(
+                    $(nu -c @(cmd+'| to json'))))
+            nudf!(ls -la)
+
+            aliases['ai'] = 'ollama run llama3'
+            ai! how to remove images in podman
+
+      -  .. code-block:: python
+
+            @events.on_ptk_create
+            def custom_keybindings(bindings, **kw):
+
+                @bindings.add(Keys.ControlI)
+                def say_whoami(event):
+                    echo $(whoami)
 
 If you like xonsh, :star: the repo and spread the word about xonsh.
 
