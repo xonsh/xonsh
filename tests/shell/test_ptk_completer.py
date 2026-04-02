@@ -385,6 +385,17 @@ def test_highlight_match_dotted_prefix_encoder():
     assert result == FormattedText([("", "enco"), ("underline", "de"), ("", "r")])
 
 
+def test_highlight_match_empty_display_text():
+    """Empty display_text should be returned as-is without error."""
+    assert _highlight_match("", "abc", "abc", 3) == ""
+
+
+def test_highlight_match_case_insensitive_at_display_start():
+    """Case-insensitive match landing at display position 0 is a prefix
+    match and should NOT be underlined."""
+    assert _highlight_match("Foo", "xFoo", "foo", 1) == "Foo"
+
+
 def test_completion_substring_highlight(monkeypatch, xession):
     """Integration test: substring completions get underline styling."""
     xonsh_completer_mock = MagicMock()

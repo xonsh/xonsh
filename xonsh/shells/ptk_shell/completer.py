@@ -50,6 +50,14 @@ def unquote(completion):
             return s
 
 
+def _underline_span(text, start, end):
+    """Build a FormattedText that underlines ``text[start:end]``."""
+    parts = [("", text[:start]), ("underline", text[start:end])]
+    if end < len(text):
+        parts.append(("", text[end:]))
+    return FormattedText(parts)
+
+
 def _highlight_match(display_text, full_text, prefix, pre):
     """Create FormattedText with underline on the matched substring.
 
@@ -70,7 +78,7 @@ def _highlight_match(display_text, full_text, prefix, pre):
         Plain string if no highlight needed, FormattedText with underline
         on the matched portion otherwise.
     """
-    if not prefix:
+    if not prefix or not display_text:
         return display_text
 
     # Try to find the full prefix in the full text
@@ -84,13 +92,12 @@ def _highlight_match(display_text, full_text, prefix, pre):
             # Substring match visible in display — underline it
             disp_end = min(len(display_text), disp_end)
             if disp_start < disp_end:
-                parts = [("", display_text[:disp_start])]
-                parts.append(("underline", display_text[disp_start:disp_end]))
-                if disp_end < len(display_text):
-                    parts.append(("", display_text[disp_end:]))
-                return FormattedText(parts)
+                return _underline_span(display_text, disp_start, disp_end)
+        elif disp_start == 0:
+            # Prefix match at display start — no underline needed
+            return display_text
 
-    # Full prefix not usable (not found, or falls at/before display start).
+    # Full prefix not usable (not found, or falls before display start).
     # For dotted completions like "json.de" → "JSONDecoder", match the
     # visible portion of the prefix against the display text.
     if pre > 0:
@@ -100,11 +107,7 @@ def _highlight_match(display_text, full_text, prefix, pre):
             if vis_start > 0:
                 vis_end = min(len(display_text), vis_start + len(visible_prefix))
                 if vis_start < vis_end:
-                    parts = [("", display_text[:vis_start])]
-                    parts.append(("underline", display_text[vis_start:vis_end]))
-                    if vis_end < len(display_text):
-                        parts.append(("", display_text[vis_end:]))
-                    return FormattedText(parts)
+                    return _underline_span(display_text, vis_start, vis_end)
 
     return display_text
 
