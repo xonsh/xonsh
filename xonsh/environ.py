@@ -609,12 +609,13 @@ class VarPattern:
         $XONSH_ENV_PATTERN_PATH = VarPattern(r"\\w*PATH$", "env_path")
     """
 
-    def __init__(self, pattern, var_type):
+    def __init__(self, pattern, var_type, exclude=None):
         self.pattern = re.compile(pattern) if isinstance(pattern, str) else pattern
         self.var_type = var_type
+        self.exclude = list(exclude) if exclude else []
 
     def match(self, key):
-        return self.pattern.match(key) is not None
+        return key not in self.exclude and self.pattern.match(key) is not None
 
     def to_var(self):
         """Return a Var with the type handling from ENSURERS."""
@@ -1215,7 +1216,7 @@ class GeneralSetting(Xettings):
         type_str="var_pattern",
     )
     XONSH_ENV_PATTERN_DIRS = Var.with_default(
-        VarPattern(r"\w*DIRS$", "env_path"),
+        VarPattern(r"\w*DнетнетIRS$", "env_path", exclude=["JUPYTER_PLATFORM_DIRS"]),
         "Pattern rule: env vars matching this regex are treated as env_path.",
         type_str="var_pattern",
     )
@@ -2328,7 +2329,7 @@ class Env(cabc.MutableMapping):
         Setting a VarPattern variable to None disables that pattern.
         """
         # User-set values first (in _d)
-        for val in self._d.values():
+        for pat_name, val in self._d.items():
             if isinstance(val, VarPattern) and val.match(key):
                 var = val.to_var()
                 self._vars[key] = var  # cache for future lookups
@@ -2343,6 +2344,20 @@ class Env(cabc.MutableMapping):
                 result = var.default.to_var()
                 self._vars[key] = result
                 return result
+        return None
+
+    def _find_var_pattern_name(self, key):
+        """Return the name of the VarPattern variable that matches key."""
+        for pat_name, val in self._d.items():
+            if isinstance(val, VarPattern) and val.match(key):
+                return pat_name
+        for var_name, var in self._vars.items():
+            if (
+                isinstance(var.default, VarPattern)
+                and var_name not in self._d
+                and var.default.match(key)
+            ):
+                return var_name
         return None
 
     def get_validator(self, key, default=None):
@@ -2505,7 +2520,21 @@ class Env(cabc.MutableMapping):
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
         if not validator(val):
-            val = converter(val)
+            try:
+                val = converter(val)
+            except (TypeError, ValueError) as exc:
+                pat_name = self._find_var_pattern_name(key)
+                if pat_name is not None:
+                    pat_val = self._d.get(pat_name)
+                    if pat_val is None and pat_name in self._vars:
+                        pat_val = self._vars[pat_name].default
+                    var_type = pat_val.var_type if isinstance(pat_val, VarPattern) else "?"
+                    raise type(exc)(
+                        f"${key} matches pattern ${pat_name} which sets type "
+                        f"{var_type!r}. Cannot convert {val!r}. "
+                        f"To exclude run: `${pat_name}.exclude.append('{key}`')"
+                    ) from None
+                raise
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
         if thread_local:
