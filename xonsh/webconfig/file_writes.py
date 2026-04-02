@@ -87,5 +87,5 @@ def insert_into_xonshrc(
     )
     # write out the file
     with open(fname, "w", encoding="utf-8") as f:
-        f.write(before + re.sub(r"\\r", "", "\n".join(lines)) + after)
+        f.write(before + re.sub(r"\r", "", "\n".join(lines)) + after)
     return fname
