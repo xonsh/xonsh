@@ -38,7 +38,7 @@ def config_to_xonsh(
             renderers.remove(start)
             key, func = RENDERERS[start]
             if value := config.get(key):
-                yield start + func(value, existing.strip(start))
+                yield start + func(value, existing[len(start):])
             else:
                 yield existing
         else:
