@@ -9,8 +9,8 @@ The Xonsh Shell
 .. include:: installation.rst
 
 
-Guides
-======
+Docs
+====
 
 Beginner
 --------
