@@ -442,7 +442,11 @@ class Parser(ThreeSixParser):
         p1, p2 = p[1], p[2]
         targ = p2[0]
         targ.decorator_list = p1
-        targ.lineno = p1[0].lineno
+
+        # In Python 3.8+, FunctionDef.lineno points to the 'def' line,
+        # not the first decorator line (unlike Python 3.6 in base.py).
+        # targ.lineno = p1[0].lineno
+
         # async functions take the col number of the 'def', unless they are
         # decorated, in which case they have the col of the 'async'. WAT?
         if hasattr(targ, "_async_tok"):
