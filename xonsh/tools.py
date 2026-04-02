@@ -1753,7 +1753,7 @@ _year_to_sec = lambda x: 365.25 * _day_to_sec(x)
 _kb_to_b = lambda x: 1024 * int(x)
 _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
-_tb_to_b = lambda x: 1024 * _tb_to_b(x)  # type: ignore
+_tb_to_b = lambda x: 1024 * _gb_to_b(x)  # type: ignore
 
 CANON_HISTORY_UNITS = LazyObject(
     lambda: frozenset(["commands", "files", "s", "b"]), globals(), "CANON_HISTORY_UNITS"
