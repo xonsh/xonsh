@@ -70,6 +70,7 @@ developer tools.
     python_virtual_environments
     xonsh_projects
     events_tutorial
+    env
     completers
     xontrib
     Create an extension using template <https://github.com/xonsh/xontrib-template>
