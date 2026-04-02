@@ -2188,26 +2188,25 @@ def format_std_prepost(template, env=None):
         return ""
     env = xsh.env if env is None else env
     invis = "\001\002"
+    from xonsh.ansi_colors import ansi_partial_color_format
+
     if xsh.shell is None:
         # shell hasn't fully started up (probably still in xonshrc)
-        from xonsh.ansi_colors import ansi_partial_color_format
         from xonsh.prompt.base import PromptFormatter
 
         pf = PromptFormatter()
         s = pf(template)
-        style = env.get("XONSH_COLOR_STYLE")
-        s = ansi_partial_color_format(invis + s + invis, hide=False, style=style)
     else:
-        # shell has fully started. do the normal thing
         shell = xsh.shell.shell
         try:
             s = shell.prompt_formatter(template)
         except Exception:
             print_exception()
-        # \001\002 is there to fool pygments into not returning an empty string
-        # for potentially empty input. This happens when the template is just a
-        # color code with no visible text.
-        s = shell.format_color(invis + s + invis, force_string=True)
+    # Use ansi_partial_color_format directly instead of shell.format_color
+    # because PTK's partial_color_tokenize starts with Color.RESET,
+    # making {RESET} a no-op that produces an empty string.
+    style = env.get("XONSH_COLOR_STYLE")
+    s = ansi_partial_color_format(invis + s + invis, hide=False, style=style)
     s = s.replace(invis, "")
     return s
 
