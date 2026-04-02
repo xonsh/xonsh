@@ -76,7 +76,7 @@ def _is_binary(fname, limit=80):
                 if char == b"\n":
                     return False
                 if char == b"":
-                    return
+                    return False
     except OSError as e:
         if xp.ON_WINDOWS and is_app_execution_alias(fname):
             return True
