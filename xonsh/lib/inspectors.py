@@ -132,7 +132,7 @@ def getdoc(obj):
     except Exception:  # pylint:disable=broad-except
         # Harden against an inspect failure, which can occur with
         # SWIG-wrapped extensions.
-        raise
+        return None
 
 
 def getsource(obj, is_binary=False):
