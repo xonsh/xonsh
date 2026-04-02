@@ -1585,7 +1585,6 @@ In xonsh you can decorate the command to transform output into desired object:
     @ $(@lines ls /)
     ['/bin', '/etc', '/home']
 
-
     @ showcmd echo prefix$(@lines ls /)
     ['echo', 'prefix/bin', 'prefix/etc', 'prefix/home']
 
