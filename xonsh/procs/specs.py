@@ -836,7 +836,8 @@ class SubprocSpec:
         ):
             return
         self.cmd.insert(0, "cd")
-        self.alias = XSH.aliases.get("cd", None)[0]
+        cd_alias = XSH.aliases.get("cd")
+        self.alias = cd_alias[0] if cd_alias else None
 
     def resolve_executable_commands(self):
         """Resolve command executables, if applicable."""
