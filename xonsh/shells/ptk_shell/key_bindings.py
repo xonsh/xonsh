@@ -67,8 +67,10 @@ def carriage_return(b, cli, *, autoindent=True):
         and doc.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS
         and doc.line_count > 1
     ):
+        margin = len(doc.current_line) - len(doc.current_line.lstrip())
         b.newline(copy_margin=autoindent)
-        b.delete_before_cursor(count=len(indent))
+        if margin >= len(indent):
+            b.delete_before_cursor(count=len(indent))
     elif not doc.on_first_line and not current_line_blank:
         b.newline(copy_margin=autoindent)
     elif doc.current_line.endswith(get_line_continuation()):
