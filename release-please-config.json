@@ -5,7 +5,7 @@
   "bump-patch-for-minor-pre-major": true,
   "include-v-in-tag": false,
   "release-search-depth": 1,
-  "commit-search-depth": 100,
+  "commit-search-depth": 1000,
   "packages": {
     ".": {
       "changelog-path": "CHANGELOG.md",
@@ -16,5 +16,14 @@
       "draft": false,
       "prerelease": false
     }
-  }
+  },
+  "changelog-sections": [
+    {"type": "feat", "section": "Features"},
+    {"type": "fix", "section": "Fixes"},
+    {"type": "perf", "section": "Performance"},
+    {"type": "deps", "section": "Dependencies"},
+    {"type": "docs", "section": "Documentation"},
+    {"type": "chore", "section": "Chores"},
+    {"type": "refactor", "section": "Refactoring"}
+  ]
 }

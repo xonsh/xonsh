@@ -2342,6 +2342,14 @@ def test_question_chain(check_xonsh_ast):
     check_xonsh_ast({}, "range?.index?")
 
 
+def test_envvar_question(check_xonsh_ast):
+    check_xonsh_ast({}, "$HOME?")
+
+
+def test_envvar_double_question(check_xonsh_ast):
+    check_xonsh_ast({}, "$HOME??")
+
+
 def test_ls_regex(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls `[Ff]+i*LE` -l)", False)
 
@@ -2576,6 +2584,18 @@ def test_ls_quotes_3_space(check_xonsh_ast):
 
 def test_leading_envvar_assignment(check_xonsh_ast):
     check_xonsh_ast({}, "![$FOO='foo' $BAR=2 echo r'$BAR']", False)
+
+
+def test_leading_envvar_assignment_bool(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=False echo 1]", False)
+
+
+def test_leading_envvar_assignment_true(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=True echo 1]", False)
+
+
+def test_leading_envvar_assignment_none(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=None echo 1]", False)
 
 
 def test_echo_comma(check_xonsh_ast):
