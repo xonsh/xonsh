@@ -197,6 +197,35 @@ def regexsearch(s):
     return reglob(s)
 
 
+def regexmatchsearch(s):
+    """Regex glob that returns match groups instead of paths."""
+    s = expand_path(s)
+    dotglob = XSH.env.get("DOTGLOB")
+    regex = re.compile(s)
+    # Find the static prefix (path before any regex special chars)
+    _RE_SPECIAL = re.compile(r"[\\()\[\]{}.*+?|^$]")
+    m = _RE_SPECIAL.search(s)
+    if m:
+        prefix = s[: m.start()]
+        start = prefix.rsplit("/", 1)[0] or "."
+    else:
+        start = s if os.path.isdir(s) else os.path.dirname(s) or "."
+    results = []
+    for root, dirs, files in os.walk(start):
+        if not dotglob:
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+        for name in dirs + files:
+            if not dotglob and name.startswith("."):
+                continue
+            path = os.path.join(root, name)
+            match = regex.fullmatch(path)
+            if match:
+                groups = match.groups()
+                results.append(groups if groups else path)
+    results.sort()
+    return results
+
+
 def globsearch(s):
     glob_sorted = XSH.env.get("GLOB_SORTED")
     dotglob = XSH.env.get("DOTGLOB")
@@ -705,6 +734,7 @@ class XonshSession:
         self.pathsearch = pathsearch
         self.globsearch = globsearch
         self.regexsearch = regexsearch
+        self.regexmatchsearch = regexmatchsearch
         self.glob = globpath
         self.expand_path = expand_path
 
