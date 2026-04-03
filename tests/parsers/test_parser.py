@@ -2191,6 +2191,31 @@ def test_dollar_py_set(check_xonsh):
     check_xonsh({"WAKKA": 42}, 'x = "WAKKA"; ${x} = 65')
 
 
+def test_bare_builtin_becomes_cmd_call(parser, xsh):
+    """Bare builtin name as statement should become __xonsh__.builtin_cmd() call."""
+    import ast as stdlib_ast
+
+    tree = parser.parse("zip\n", debug_level=0)
+    xsh.env.update({})
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, "zip\n", set(dir(__builtins__)))
+    expr_node = tree.body[0]
+    assert isinstance(expr_node, stdlib_ast.Expr)
+    call = expr_node.value
+    assert isinstance(call, stdlib_ast.Call)
+    assert call.args[0].value == "zip"
+
+
+def test_bare_builtin_subprocess(check_xonsh):
+    """With $XONSH_BUILTINS_TO_CMD=True, bare builtin runs as subprocess."""
+    check_xonsh(
+        {"XONSH_BUILTINS_TO_CMD": True},
+        "result = $(type echo)\nassert 'echo' in result",
+    )
+
+
 def test_dollar_sub(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls)", False)
 

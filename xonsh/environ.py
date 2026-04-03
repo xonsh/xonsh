@@ -1261,6 +1261,13 @@ class SubprocessSetting(Xettings):
         False,
         "If ``True`` the stderr from captured subproc will be printed automatically.",
     )
+    XONSH_BUILTINS_TO_CMD = Var.with_default(
+        False,
+        "If True, bare Python builtin names (e.g. `dir`, `zip`, `type`) "
+        "typed as a standalone expression will be executed as a subprocess command "
+        "if a matching alias or executable exists. "
+        "Otherwise the Python builtin value is returned as usual.",
+    )
     XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
         "stream_lines",
         "Set output format for subprocess e.g. ``du $(ls)``. "

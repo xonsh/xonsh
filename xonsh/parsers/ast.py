@@ -526,6 +526,19 @@ class CtxAwareTransformer(NodeTransformer):
         """Handle visiting an expression."""
         if isdescendable(node.value):
             node.value = self.visit(node.value)  # this allows diving into BoolOps
+        if self._is_bare_builtin(node.value):
+            name = node.value.id if isinstance(node.value, Name) else "..."
+            node.value = xonsh_call(
+                "__xonsh__.builtin_cmd",
+                [const_str(
+                    s=name,
+                    lineno=node.lineno,
+                    col_offset=node.col_offset,
+                )],
+                lineno=node.lineno,
+                col=node.col_offset,
+            )
+            return node
         if self.is_in_scope(node) or isinstance(node.value, Lambda):
             return node
         else:
@@ -538,6 +551,17 @@ class CtxAwareTransformer(NodeTransformer):
                     newnode.max_lineno = node.max_lineno
                     newnode.max_col = node.max_col
             return newnode
+
+    @staticmethod
+    def _is_bare_builtin(node):
+        """Check if node is a bare Name referencing a Python builtin, or Ellipsis."""
+        import builtins as _builtins
+
+        if isinstance(node, Name) and hasattr(_builtins, node.id):
+            return True
+        if isinstance(node, Constant) and node.value is ...:
+            return True
+        return False
 
     def visit_UnaryOp(self, node):
         """Handle visiting an unary operands, like not."""
