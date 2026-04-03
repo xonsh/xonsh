@@ -2709,8 +2709,17 @@ def _deprecated_error_on_expiration(name, removed_in):
         raise AssertionError(f"{name} has passed its version {removed_in} expiry date!")
 
 
+def qualified_name(obj) -> str:
+    """Return fully qualified class name, e.g. 'xonsh.environ.VarPattern'."""
+    cls = obj if isinstance(obj, type) else type(obj)
+    module = getattr(cls, "__module__", None)
+    if module and not module.startswith("builtins"):
+        return f"{module}.{cls.__name__}"
+    return cls.__name__
+
+
 def to_repr_pretty_(inst, p, cycle):
-    name = f"{inst.__class__.__module__}.{inst.__class__.__name__}"
+    name = qualified_name(inst)
     with p.group(0, name + "(", ")"):
         if cycle:
             p.text("...")

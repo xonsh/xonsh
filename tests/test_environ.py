@@ -587,15 +587,8 @@ def test_deregister_custom_var():
     env.deregister("MY_SPECIAL_VAR")
 
     # deregistering a variable that has a value set doesn't
-    # remove it from env;
-    # the existing variable also maintains its type validation, conversion
+    # remove it from env, but type handling is removed
     assert "MY_SPECIAL_VAR" in env
-    with pytest.raises(TypeError):
-        env["MY_SPECIAL_VAR"] = 32
-
-    # removing, then re-adding the variable without registering
-    # gives it only default permissive validation, conversion
-    del env["MY_SPECIAL_VAR"]
     env["MY_SPECIAL_VAR"] = 32
 
 

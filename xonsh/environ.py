@@ -89,6 +89,7 @@ from xonsh.tools import (
     print_exception,
     print_warning,
     ptk2_color_depth_setter,
+    qualified_name,
     seq_to_upper_pathsep,
     set_to_csv,
     swap_values,
@@ -616,6 +617,56 @@ ENSURERS = {
 }
 
 
+class VarPattern:
+    """A pattern rule for dynamic env var typing.
+
+    When stored as the value of an env variable, any env var whose name
+    matches ``pattern`` will receive the type handling specified by
+    ``var_type`` (a key in ``ENSURERS``, e.g. ``"env_path"``).
+
+    Example::
+
+        $XONSH_ENV_PATTERN_PATH = VarPattern(r"\\w*PATH$", "env_path")
+    """
+
+    def __init__(self, pattern, var_type, exclude=None):
+        self.pattern = re.compile(pattern) if isinstance(pattern, str) else pattern
+        self.var_type = var_type
+        self.exclude = list(exclude) if exclude else []
+
+    def match(self, key):
+        return key not in self.exclude and self.pattern.match(key) is not None
+
+    def to_var(self):
+        """Return a Var with the type handling from ENSURERS."""
+        validate, convert, detype = ENSURERS[self.var_type]
+        return Var(validate=validate, convert=convert, detype=detype)
+
+    def __repr__(self):
+        return f"VarPattern({self.pattern.pattern!r}, {self.var_type!r})"
+
+    @staticmethod
+    def is_var_pattern(x):
+        return isinstance(x, VarPattern) or x is None
+
+    @staticmethod
+    def to_var_pattern(x):
+        if isinstance(x, VarPattern) or x is None:
+            return x
+        raise ValueError(f"Cannot convert {x!r} to VarPattern")
+
+    @staticmethod
+    def detype_var_pattern(x):
+        return repr(x)
+
+
+ENSURERS["var_pattern"] = (
+    VarPattern.is_var_pattern,
+    VarPattern.to_var_pattern,
+    VarPattern.detype_var_pattern,
+)
+
+
 #
 # Defaults
 #
@@ -783,12 +834,9 @@ def default_lscolors(env):
 
 @default_value
 def default_prompt_fields(env):
-    """``xonsh.prompt.PROMPT_FIELDS``"""
+    """``xonsh.prompt.base.PromptFields``"""
     # todo: generate document for all default fields
     return prompt.PromptFields(XSH)
-
-
-VarKeyType = tp.Union[str, tp.Pattern]  # noqa: UP007
 
 
 class Var(tp.NamedTuple):
@@ -835,7 +883,7 @@ class Var(tp.NamedTuple):
     is_configurable: bool | LazyBool = True
     doc_default: str | DefaultNotGivenType = DefaultNotGiven
     can_store_as_str: bool = False
-    pattern: VarKeyType | None = None
+    pattern: tp.Pattern | None = None
     sync: str = ""
     deprecated: bool = False
 
@@ -878,9 +926,6 @@ class Var(tp.NamedTuple):
             default=locale.setlocale(getattr(locale, lcle)),
         )
 
-    def get_key(self, var_name: str) -> VarKeyType:
-        return self.pattern or var_name
-
     def set_attrs(self, attrs: dict):
         return self._replace(**attrs)
 
@@ -892,10 +937,10 @@ class Xettings:
     """
 
     @classmethod
-    def get_settings(cls) -> tp.Iterator[tuple[VarKeyType, Var]]:
+    def get_settings(cls) -> tp.Iterator[tuple[str, Var]]:
         for var_name, var in vars(cls).items():
             if not var_name.startswith("__") and var_name.isupper():
-                yield var.get_key(var_name), var
+                yield var_name, var
 
     @staticmethod
     def _get_groups(cls, _seen: set["Xettings"] | None = None, *bases: "Xettings"):
@@ -912,7 +957,7 @@ class Xettings:
     @classmethod
     def get_groups(
         cls,
-    ) -> tp.Iterator[tuple[tuple["Xettings", ...], tuple[tuple[VarKeyType, Var], ...]]]:
+    ) -> tp.Iterator[tuple[tuple["Xettings", ...], tuple[tuple[str, Var], ...]]]:
         yield from Xettings._get_groups(cls)
 
     @classmethod
@@ -1185,8 +1230,16 @@ class GeneralSetting(Xettings):
         "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
         "(The rules above are all have the same effect.)",
     )
-    STAR_PATH = Var.no_default("env_path", pattern=re.compile(r"\w*PATH$"))
-    STAR_DIRS = Var.no_default("env_path", pattern=re.compile(r"\w*DIRS$"))
+    XONSH_ENV_PATTERN_PATH = Var.with_default(
+        VarPattern(r"\w*PATH$", "env_path"),
+        "Pattern rule: env vars matching this regex are treated as env_path.",
+        type_str="var_pattern",
+    )
+    XONSH_ENV_PATTERN_DIRS = Var.with_default(
+        VarPattern(r"\w*DIRS$", "env_path", exclude=["JUPYTER_PLATFORM_DIRS"]),
+        "Pattern rule: env vars matching this regex are treated as env_path.",
+        type_str="var_pattern",
+    )
 
 
 class SubprocessSetting(Xettings):
@@ -2290,59 +2343,65 @@ class Env(cabc.MutableMapping):
             default = ensure_string
         return default
 
+    def _find_var_pattern(self, key):
+        """Check VarPattern values in env data (and defaults) for a match.
+
+        Setting a VarPattern variable to None disables that pattern.
+        """
+        # User-set values first (in _d)
+        for val in self._d.values():
+            if isinstance(val, VarPattern) and val.match(key):
+                return val.to_var()
+        # Fall back to defaults, but skip vars the user has overridden
+        for var_name, var in self._vars.items():
+            if (
+                isinstance(var.default, VarPattern)
+                and var_name not in self._d
+                and var.default.match(key)
+            ):
+                return var.default.to_var()
+        return None
+
+    def _find_var_pattern_name(self, key):
+        """Return the name of the VarPattern variable that matches key."""
+        for pat_name, val in self._d.items():
+            if isinstance(val, VarPattern) and val.match(key):
+                return pat_name
+        for var_name, var in self._vars.items():
+            if (
+                isinstance(var.default, VarPattern)
+                and var_name not in self._d
+                and var.default.match(key)
+            ):
+                return var_name
+        return None
+
     def get_validator(self, key, default=None):
         """Gets a validator for the given key."""
         if key in self._vars:
             return self._vars[key].validate
-
-        # necessary for keys that match regexes, such as `*PATH`s
-        for k, var in self._vars.items():
-            if isinstance(k, str):
-                continue
-            if k.match(key) is not None:
-                validator = var.validate
-                self._vars[key] = var
-                break
-        else:
-            validator = self._get_default_validator(default=default)
-
-        return validator
+        var = self._find_var_pattern(key)
+        if var is not None:
+            return var.validate
+        return self._get_default_validator(default=default)
 
     def get_converter(self, key, default=None):
         """Gets a converter for the given key."""
         if key in self._vars:
             return self._vars[key].convert
-
-        # necessary for keys that match regexes, such as `*PATH`s
-        for k, var in self._vars.items():
-            if isinstance(k, str):
-                continue
-            if k.match(key) is not None:
-                converter = var.convert
-                self._vars[key] = var
-                break
-        else:
-            converter = self._get_default_converter(default=default)
-
-        return converter
+        var = self._find_var_pattern(key)
+        if var is not None:
+            return var.convert
+        return self._get_default_converter(default=default)
 
     def get_detyper(self, key, default=None):
         """Gets a detyper for the given key."""
         if key in self._vars:
             return self._vars[key].detype
-
-        # necessary for keys that match regexes, such as `*PATH`s
-        for k, var in self._vars.items():
-            if isinstance(k, str):
-                continue
-            if k.match(key) is not None:
-                detyper = var.detype
-                self._vars[key] = var
-                break
-        else:
-            detyper = self._get_default_detyper(default=default)
-
-        return detyper
+        var = self._find_var_pattern(key)
+        if var is not None:
+            return var.detype
+        return self._get_default_detyper(default=default)
 
     def get_default(self, key, default=None):
         """Gets default for the given key."""
@@ -2358,11 +2417,14 @@ class Env(cabc.MutableMapping):
             vd = Var(default="", doc_default="")
         if vd.doc_default is DefaultNotGiven:
             var_default = self._vars.get(key, "<default not set>").default
-            dval = (
-                "not defined"
-                if var_default is DefaultNotGiven
-                else pprint.pformat(var_default)
-            )
+            if var_default is DefaultNotGiven:
+                dval = "not defined"
+            else:
+                dval = pprint.pformat(var_default)
+                cls_name = type(var_default).__name__
+                qname = qualified_name(var_default)
+                if qname != cls_name:
+                    dval = dval.replace(cls_name, qname, 1)
             vd = vd._replace(doc_default=dval)
         return vd
 
@@ -2490,7 +2552,23 @@ class Env(cabc.MutableMapping):
         converter = self.get_converter(key)
         detyper = self.get_detyper(key)
         if not validator(val):
-            val = converter(val)
+            try:
+                val = converter(val)
+            except (TypeError, ValueError) as exc:
+                pat_name = self._find_var_pattern_name(key)
+                if pat_name is not None:
+                    pat_val = self._d.get(pat_name)
+                    if pat_val is None and pat_name in self._vars:
+                        pat_val = self._vars[pat_name].default
+                    var_type = (
+                        pat_val.var_type if isinstance(pat_val, VarPattern) else "?"
+                    )
+                    raise type(exc)(
+                        f"${key} matches pattern ${pat_name} which sets type "
+                        f"{var_type!r}. Cannot convert {val!r}. "
+                        f"To exclude run: `${pat_name}.exclude.append('{key}')`"
+                    ) from None
+                raise
         # existing envvars can have any value including None
         old_value = self._d[key] if key in self._d else self._no_value
         if thread_local:
@@ -2993,6 +3071,8 @@ class EnvPath(cabc.MutableSequence):
         return repr(self._l)
 
     def __eq__(self, other):
+        if not isinstance(other, cabc.Sized):
+            return NotImplemented
         if len(self) != len(other):
             return False
         return all(map(operator.eq, self, other))
