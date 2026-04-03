@@ -3071,6 +3071,8 @@ class EnvPath(cabc.MutableSequence):
         return repr(self._l)
 
     def __eq__(self, other):
+        if not isinstance(other, cabc.Sized):
+            return NotImplemented
         if len(self) != len(other):
             return False
         return all(map(operator.eq, self, other))
