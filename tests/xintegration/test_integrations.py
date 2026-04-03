@@ -11,6 +11,13 @@ from pathlib import Path
 import pytest
 
 import xonsh
+from tests.xintegration.conftest import (
+    check_run_xonsh,
+    run_xonsh,
+    skip_if_no_make,
+    skip_if_no_sleep,
+    skip_if_no_xonsh,
+)
 from xonsh.dirstack import with_pushd
 from xonsh.pytest.tools import (
     ON_DARWIN,
@@ -22,15 +29,6 @@ from xonsh.pytest.tools import (
     skip_if_on_unix,
     skip_if_on_windows,
 )
-
-from tests.xintegration.conftest import (
-    check_run_xonsh,
-    run_xonsh,
-    skip_if_no_make,
-    skip_if_no_sleep,
-    skip_if_no_xonsh,
-)
-
 
 #
 # The following list contains a (stdin, stdout, returncode) tuples
@@ -239,11 +237,11 @@ g
     (
         f"""
 import tempfile
-temp_path = tempfile.mktemp()        
-        
+temp_path = tempfile.mktemp()
+
 with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
-    
+
 pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
 
@@ -256,8 +254,8 @@ pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
     (
         f"""
 import tempfile
-temp_path = tempfile.mktemp()        
-        
+temp_path = tempfile.mktemp()
+
 with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
 
@@ -414,9 +412,9 @@ echo foo_@$(echo spam sausage)_bar
     (
         f"""
 import tempfile
-temp_path = tempfile.mktemp()        
-        
-pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')        
+temp_path = tempfile.mktemp()
+
+pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 echo Just the place for a snark. >@(temp_path)
 python @(pathcat) @(temp_path)
 """,
@@ -880,8 +878,8 @@ def test_sourcefile():
         (
             """
 import tempfile
-temp_path = tempfile.mktemp()            
-            
+temp_path = tempfile.mktemp()
+
 with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
 
@@ -894,8 +892,8 @@ with open(temp_path, 'w') as fp:
         (
             """
 import tempfile
-temp_path = tempfile.mktemp()                 
-            
+temp_path = tempfile.mktemp()
+
 with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
 
