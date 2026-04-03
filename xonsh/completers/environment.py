@@ -28,12 +28,29 @@ def complete_environment_vars(context: CompletionContext):
         lprefix += 1
     env = XSH.env
 
-    vars = [k for k, v in env.items() if key.lower() in k.lower()]
-    return (
-        RichCompletion(
-            "$" + k,
-            display=f"${k} [{type(env[k]).__name__}]",
-            description=env.get_docs(k).doc,
-        )
-        for k in vars
-    ), lprefix
+    # Strip trailing '?' to support "$VAR?" help completions
+    help_query = key.endswith("?")
+    search_key = key[:-1] if help_query else key
+
+    vars = [k for k, v in env.items() if search_key.lower() in k.lower()]
+
+    def _completions():
+        for k in vars:
+            vd = env.get_docs(k)
+            type_name = type(env[k]).__name__
+            yield RichCompletion(
+                "$" + k,
+                display=f"${k} [{type_name}]",
+                description=vd.doc,
+            )
+            if not help_query:
+                doc_str = vd.doc
+                default_str = vd.doc_default
+                desc = f"{doc_str} | Type: {type_name} | Default: {default_str}"
+                yield RichCompletion(
+                    "$" + k + "?",
+                    display=f"${k}? [{type_name}]",
+                    description=desc,
+                )
+
+    return _completions(), lprefix

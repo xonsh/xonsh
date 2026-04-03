@@ -28,7 +28,7 @@ def test_simple(cmd, xession, monkeypatch, parser):
         assert lprefix == 5
     else:
         assert lprefix == 4
-    assert set(comps) == {"$WOWZER"}
+    assert set(comps) == {"$WOWZER", "$WOWZER?"}
 
 
 def test_rich_completions(xession, monkeypatch, parser):
@@ -39,3 +39,29 @@ def test_rich_completions(xession, monkeypatch, parser):
     completion = next(complete_environment_vars(context)[0])
     assert completion.display == "$WOWZER [int]"
     assert completion.description == "Nice Docs!"
+
+
+def test_question_mark_completions(xession, monkeypatch, parser):
+    """$VAR? completions should include type and default in description."""
+    xession.env.update({"WOWZER": 1})
+    xession.env.register("WOWZER", type=int, doc="Nice Docs!")
+
+    context = parser.parse("$WOW", 4)
+    comps = list(complete_environment_vars(context)[0])
+    help_comp = next(c for c in comps if str(c) == "$WOWZER?")
+    assert help_comp.display == "$WOWZER? [int]"
+    assert "Nice Docs!" in help_comp.description
+    assert "int" in help_comp.description
+
+
+def test_question_mark_prefix(xession, monkeypatch, parser):
+    """Typing $VAR? as prefix should complete to $VAR (and $VAR?)."""
+    xession.env.update({"WOWZER": 1})
+    xession.env.register("WOWZER", type=int, doc="Nice Docs!")
+
+    context = parser.parse("$WOWZER?", 8)
+    result = complete_environment_vars(context)
+    assert result is not None
+    comps, lprefix = result
+    comp_set = set(comps)
+    assert "$WOWZER" in comp_set
