@@ -11,7 +11,7 @@ import pytest
 
 from tests.xintegration.conftest import run_xonsh
 from xonsh.pytest.tools import skip_if_on_windows
-
+from xonsh.platform import ON_WINDOWS
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
@@ -155,14 +155,23 @@ def _b(args, stdin, stdout, stderr):
 
 for i in range(111):
     $(a | b)
-
+    
+""" +
+    (
+"""
+for i in range(10):
+    for j in range(10):
+        $(a | b)
+""" 
+    if ON_WINDOWS else
+"""
 # Empirically, in case of a leak, the output
 # drops out at ~600-1000 function calls.
 for i in range(10):
     for j in range(100):
         $(a | b)
 
-"""
+""")
 ]
 
 
