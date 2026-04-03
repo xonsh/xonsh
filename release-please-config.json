@@ -16,5 +16,14 @@
       "draft": false,
       "prerelease": false
     }
-  }
+  },
+  "changelog-sections": [
+    {"type": "feat", "section": "Features"},
+    {"type": "fix", "section": "Fixes"},
+    {"type": "perf", "section": "Performance"},
+    {"type": "deps", "section": "Dependencies"},
+    {"type": "docs", "section": "Documentation"},
+    {"type": "chore", "section": "Chores"},
+    {"type": "refactor", "section": "Refactoring"}
+  ]
 }

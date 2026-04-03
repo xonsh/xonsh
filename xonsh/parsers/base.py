@@ -2363,7 +2363,21 @@ class BaseParser:
                 margs = [leader, trailer, gblcall, loccall]
                 p0 = xonsh_call("__xonsh__.call_macro", margs, lineno=l, col=c)
             elif isinstance(trailer, str):
-                if trailer == "?":
+                if trailer in ("?", "??") and self._is_envvar_node(leader):
+                    # $VAR? → short help, $VAR?? → full help
+                    key = self._envvar_node_key(leader)
+                    short = ast.Constant(
+                        value=(trailer == "?"),
+                        lineno=leader.lineno,
+                        col_offset=leader.col_offset,
+                    )
+                    p0 = xonsh_call(
+                        "__xonsh__.env.help",
+                        [key, short],
+                        lineno=leader.lineno,
+                        col=leader.col_offset,
+                    )
+                elif trailer == "?":
                     p0 = xonsh_help(leader, lineno=leader.lineno, col=leader.col_offset)
                 elif trailer == "??":
                     p0 = xonsh_superhelp(
@@ -3265,6 +3279,25 @@ class BaseParser:
         return ast.Subscript(
             value=xenv, slice=idx, ctx=ast.Load(), lineno=lineno, col_offset=col
         )
+
+    @staticmethod
+    def _is_envvar_node(node):
+        """Check if an AST node is __xonsh__.env[KEY]."""
+        return (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.value, ast.Attribute)
+            and node.value.attr == "env"
+            and isinstance(node.value.value, ast.Name)
+            and node.value.value.id == "__xonsh__"
+        )
+
+    @staticmethod
+    def _envvar_node_key(node):
+        """Extract the key AST node from __xonsh__.env[KEY]."""
+        s = node.slice
+        if isinstance(s, ast.Index):
+            return s.value
+        return s
 
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
