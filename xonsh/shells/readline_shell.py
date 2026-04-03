@@ -347,6 +347,23 @@ DEDENT_TOKENS = LazyObject(
 )
 
 
+def _align_completion(c, c_plen, readline_plen, begidx, line):
+    """Trim or pad a single completion value to match readline's word boundary."""
+    c_str = str(c)
+    if c_plen > readline_plen:
+        offset = c_plen - readline_plen
+        overlap = line[max(0, begidx - offset) : begidx]
+        if len(c_str) >= offset and c_str.startswith(overlap):
+            return c_str[offset:]
+        else:
+            return None  # can't align safely — discard
+    elif c_plen < readline_plen:
+        gap = readline_plen - c_plen
+        return line[begidx : begidx + gap] + c_str
+    else:
+        return c_str
+
+
 class ReadlineShell(BaseShell, cmd.Cmd):
     """The readline based xonsh shell."""
 
@@ -435,6 +452,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         and they should be shown, while 2 means that there is no common prefix but
         we are under the query limit and they should be shown.
         """
+        # RichCompletion subclasses str, so c[loc:] slice is safe for all completion types.
         if commonprefix([c[loc:] for c in completions]):
             return 1
         elif len(completions) <= XSH.env.get("COMPLETION_QUERY_LIMIT"):
@@ -488,59 +506,32 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             cursor_index=len(prev_text) + endidx,
         )
 
-        # --- Boundary Alignment ---
+        # --- Boundary Alignment (Stage 1) ---
         readline_plen = endidx - begidx
         orig_completions = list(completions)  # preserve raw completer output
         rtn_completions = []
+        safe_orig = []
 
         for c in orig_completions:
-            c_str = str(c)
             is_rich = isinstance(c, RichCompletion)
             c_plen = c.prefix_len if is_rich and c.prefix_len is not None else plen
 
-            if c_plen > readline_plen:
-                offset = c_plen - readline_plen
-                overlap = line[max(0, begidx - offset) : begidx]
-                if len(c_str) >= offset and c_str.lower().startswith(overlap.lower()):
-                    new_val = c_str[offset:]
+            aligned_str = _align_completion(c, c_plen, readline_plen, begidx, line)
+
+            if aligned_str is not None:
+                if is_rich:
+                    rtn_completions.append(
+                        c.replace(value=aligned_str, prefix_len=readline_plen)
+                    )
                 else:
-                    new_val = c_str[
-                        offset:
-                    ]  # Bug 5 fix: trim unconditionally (see below)
-            elif c_plen < readline_plen:
-                gap = readline_plen - c_plen
-                new_val = line[begidx : begidx + gap] + c_str
-            else:
-                new_val = c_str
+                    rtn_completions.append(aligned_str)
+                safe_orig.append(c)
 
-            if is_rich:
-                rtn_completions.append(
-                    c.replace(value=new_val, prefix_len=readline_plen)
-                )
-            else:
-                rtn_completions.append(new_val)
+        orig_completions = safe_orig
         # --- End Boundary Alignment ---
-
-        # --- Readline Substring Safety Filter ---
-        if len(rtn_completions) > 1 and readline_plen > 0:
-            cps = [str(c).lower() for c in rtn_completions]
-            cp = commonprefix(cps)
-
-            if len(cp) < readline_plen:
-                readline_prefix = line[begidx:endidx].lower()
-                safe_rtn = []
-                safe_orig = []
-                for orig, rtn in zip(orig_completions, rtn_completions, strict=True):
-                    if str(rtn).lower().startswith(readline_prefix):
-                        safe_rtn.append(rtn)
-                        safe_orig.append(orig)
-
-                rtn_completions = safe_rtn
-                orig_completions = safe_orig
 
         if not rtn_completions:
             return []
-        # --- End Substring Safety Filter ---
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
@@ -563,10 +554,8 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         show_completions = self._querycompletions(orig_completions, readline_plen)
         if show_completions == 0:
             return []
-        elif show_completions == 1:
+        elif show_completions in (1, 2):
             return rtn
-        elif show_completions == 2:
-            return orig_completions  # <-- was `completions`, now correctly the raw originals
         else:
             raise ValueError("query completions flag not understood.")
 
