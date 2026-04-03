@@ -729,7 +729,7 @@ if not ON_WINDOWS:
 def test_script(case):
     script, exp_out, exp_rtn = case
     if ON_DARWIN:
-        script = script.replace("tests/bin", str(Path(__file__).parent / "bin"))
+        script = script.replace("tests/bin", str(Path(__file__).parent.parent / "bin"))
     out, err, rtn = run_xonsh(script)
     out = out.replace("bash: no job control in this shell\n", "")
     if callable(exp_out):
@@ -1087,7 +1087,7 @@ def test_run_currentfolder(monkeypatch):
     Bare names without a path prefix must NOT run from CWD,
     matching POSIX shell behaviour.
     """
-    batfile = Path(__file__).parent / "bin" / "hello_world.bat"
+    batfile = Path(__file__).parent.parent / "bin" / "hello_world.bat"
     monkeypatch.chdir(batfile.parent)
 
     # With explicit path prefix: should work
@@ -1108,7 +1108,7 @@ def test_run_dynamic_on_path():
     """Ensure we can run an executable which is added to the path
     after xonsh is loaded
     """
-    batfile = Path(__file__).parent / "bin" / "hello_world.bat"
+    batfile = Path(__file__).parent.parent / "bin" / "hello_world.bat"
     cmd = f"$PATH.add(r'{batfile.parent}');![hello_world.bat]"
     out, _, _ = run_xonsh(cmd, path=os.environ["PATH"])
     assert out.strip() == "hello world"
