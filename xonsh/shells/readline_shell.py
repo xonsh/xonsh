@@ -513,10 +513,12 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         # Substring matches (e.g. _json for prefix "jso") would cause readline's
         # Greatest Common Prefix to shrink below what was typed.
         filtered = [
-            (r, c) for r, c in zip(rtn_completions, completions) if r.startswith(prefix)
+            (r, c)
+            for r, c in zip(rtn_completions, completions, strict=True)
+            if r.startswith(prefix)
         ]
         if filtered:
-            rtn_completions, completions = zip(*filtered)
+            rtn_completions, completions = zip(*filtered, strict=True)
         else:
             return []
 
