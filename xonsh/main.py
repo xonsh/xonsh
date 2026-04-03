@@ -482,7 +482,9 @@ def premain(argv=None):
         os.environ.clear()
         os.environ.update(origin_env)
 
-    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
+    pre_env["COLOR_RESULTS"] = os.getenv(
+        "COLOR_RESULTS", str(pre_env["XONSH_INTERACTIVE"])
+    )
 
     start_services(shell_kwargs, args, pre_env=pre_env)
     return args
@@ -616,9 +618,14 @@ def main_xonsh(args):
                 env.update(make_args_env())  # $ARGS is not sys.argv
                 env["XONSH_SOURCE"] = path
                 shell.ctx.update({"__file__": args.file, "__name__": "__main__"})
+                # Add script directory to sys.path[0], matching CPython behavior.
+                # See https://docs.python.org/3/library/sys_path_init.html
+                script_dir = os.path.dirname(path)
+                sys.path.insert(0, script_dir)
                 exc_info = run_script_with_cache(
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
+                sys.path.remove(script_dir)
             else:
                 print(f"xonsh: {args.file}: No such file.")
                 exit_code = 1

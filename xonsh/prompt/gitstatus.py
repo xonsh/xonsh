@@ -224,7 +224,7 @@ def porcelain(fld, ctx: PromptFields):
                     changed += 1
                 elif line[1] == "D":
                     deleted += 1
-            if len(line) > 0 and line[0] == "U":
+            if line[:2] in ("DD", "AU", "UD", "UA", "DU", "AA", "UU"):
                 conflicts += 1
             elif len(line) > 0 and line[0] != " ":
                 staged += 1

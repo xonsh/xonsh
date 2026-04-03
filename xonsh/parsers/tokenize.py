@@ -536,11 +536,11 @@ for t in (
     "U'''",
     'U"""',
     "p'''",
-    'p""""',
+    'p"""',
     "pr'''",
-    'pr""""',
+    'pr"""',
     "pR'''",
-    'pR""""',
+    'pR"""',
     "rp'''",
     'rp"""',
     "Rp'''",
@@ -934,7 +934,7 @@ def _tokenize(
                 if tolerant:
                     # return the partial string
                     yield TokenInfo(
-                        ERRORTOKEN, contstr, strstart, (lnum, end), contline + line
+                        ERRORTOKEN, contstr, strstart, (lnum, 0), contline + line
                     )
                     break
                 else:

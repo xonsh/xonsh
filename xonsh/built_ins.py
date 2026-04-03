@@ -818,7 +818,10 @@ class XonshSession:
         elif inherit_env:
             self.env = Env(default_env())
         else:
-            self.env = Env({"XONSH_ENV_INHERITED": False})
+            no_env = {"XONSH_ENV_INHERITED": False}
+            # TERM is essential for proper terminal operation
+            no_env["TERM"] = os.environ.get("TERM", "xterm")
+            self.env = Env(no_env)
         self.interface.env = self.env
 
         if save_origin_env:

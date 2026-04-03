@@ -963,7 +963,7 @@ class CommandPipeline:
         """Redirection used for stderr."""
         stderr = self.spec.stderr
         name = getattr(stderr, "name", "<stderr>")
-        mode = getattr(stderr, "mode", "r")
+        mode = getattr(stderr, "mode", "a")
         return [name, mode]
 
     @property

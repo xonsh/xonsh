@@ -187,7 +187,7 @@ class HistoryDiffer:
             s += lt.format(color=color, reset=COLORS.RESET, line=line, pre="...")
         if not self.verbose:
             return s + "\n"
-        out = xlj["cmds"][0].get("out", "Note: no output stored")
+        out = xlj["cmds"][i].get("out", "Note: no output stored")
         s += out.rstrip() + "\n\n"
         return s
 

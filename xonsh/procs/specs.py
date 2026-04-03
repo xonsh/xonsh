@@ -76,7 +76,7 @@ def _is_binary(fname, limit=80):
                 if char == b"\n":
                     return False
                 if char == b"":
-                    return
+                    return False
     except OSError as e:
         if xp.ON_WINDOWS and is_app_execution_alias(fname):
             return True
@@ -692,7 +692,7 @@ class SubprocSpec:
             event.fire(spec=self, proc=proc)
         if events.exists("on_post_spec_run"):
             event = events.on_post_spec_run
-            event.fire(spec=self)
+            event.fire(spec=self, proc=proc)
 
     #
     # Building methods
@@ -836,7 +836,8 @@ class SubprocSpec:
         ):
             return
         self.cmd.insert(0, "cd")
-        self.alias = XSH.aliases.get("cd", None)[0]
+        cd_alias = XSH.aliases.get("cd")
+        self.alias = cd_alias[0] if cd_alias else None
 
     def resolve_executable_commands(self):
         """Resolve command executables, if applicable."""
@@ -1135,7 +1136,6 @@ def cmds_to_specs(cmds, captured=False, envs=None):
     ready to be executed.
     """
     # first build the subprocs independently and separate from the redirects
-    i = 0
     specs = []
     redirects = []
     for i, cmd in enumerate(cmds):
@@ -1144,9 +1144,8 @@ def cmds_to_specs(cmds, captured=False, envs=None):
         else:
             env = envs[i] if envs is not None else None
             spec = SubprocSpec.build(cmd, captured=captured, env=env)
-            spec.pipeline_index = i
+            spec.pipeline_index = len(specs)
             specs.append(spec)
-            i += 1
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
         if redirect == "|":

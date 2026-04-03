@@ -69,7 +69,6 @@ def generate_options_of(cmd: str):
         text = text.strip()
         regex = _man_option_string_regex()
 
-        regex.findall(text)
         options = []
         for match in regex.finditer(text):
             option = match.groupdict().pop("option", None)

@@ -38,8 +38,6 @@ class Xontrib(tp.NamedTuple):
     """short description about the xontrib."""
 
     def get_description(self):
-        if self.distribution:
-            print(self, file=sys.stderr)
         if self.distribution and (
             summary := self.distribution.metadata.get("Summary", "")
         ):

@@ -209,6 +209,25 @@ def HELP_TEMPLATE():
     )
 
 
+def _rst_inline_to_color(s):
+    """Replace RST inline code ``...`` and `...` with colored output."""
+    import re
+
+    s = re.sub(r"``(.+?)``", r"{CYAN}\1{RESET}", s)
+    s = re.sub(r"`(.+?)`", r"{CYAN}\1{RESET}", s)
+    return re.sub(r"(?<!\{CYAN\})\$(\w+)", r"{CYAN}$\1{RESET}", s)
+
+
+@lazyobject
+def HELP_TEMPLATE_SHORT():
+    return (
+        "{{INTENSE_YELLOW}}Name:{{RESET}} ${envvar}\n"
+        "{{INTENSE_YELLOW}}Description:{{RESET}} {docstr}\n"
+        "{{INTENSE_YELLOW}}Default:{{RESET}} {default}\n"
+        "{{INTENSE_YELLOW}}Configurable:{{RESET}} {configurable}"
+    )
+
+
 @lazyobject
 def LOCALE_CATS():
     lc = {
@@ -1448,7 +1467,7 @@ class InterpreterSetting(Xettings):
         "Whether or not foreign aliases should override xonsh aliases "
         "with the same name. Note that setting of this must happen in the "
         "environment that xonsh was started from. "
-        "It cannot be set in the ``.xonshrc`` as loading of foreign aliases happens before"
+        "It cannot be set in the ``.xonshrc`` as loading of foreign aliases happens before "
         "``.xonshrc`` is parsed",
         is_configurable=True,
     )
@@ -1722,7 +1741,8 @@ class PromptSetting(Xettings):
         "is prepended whenever stderr is displayed. This may be used in "
         "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
         "For example, to have stderr appear on a red background, the "
-        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
+        "It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.",
     )
     XONSH_STDERR_POSTFIX = Var.with_default(
         "",
@@ -1730,7 +1750,8 @@ class PromptSetting(Xettings):
         "is appended whenever stderr is displayed. This may be used in "
         "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
         "For example, to have stderr appear on a red background, the "
-        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".',
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
+        "It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.",
     )
     XONSH_SUPPRESS_WELCOME = Var.with_default(
         False,
@@ -2345,17 +2366,30 @@ class Env(cabc.MutableMapping):
             vd = vd._replace(doc_default=dval)
         return vd
 
-    def help(self, key):
+    def help(self, key, short=False):
         """Get information about a specific environment variable."""
         vardocs = self.get_docs(key)
-        width = min(79, os.get_terminal_size()[0])
-        docstr = "\n".join(textwrap.wrap(vardocs.doc, width=width))
-        template = HELP_TEMPLATE.format(
-            envvar=key,
-            docstr=docstr,
-            default=vardocs.doc_default,
-            configurable=vardocs.is_configurable,
-        )
+        try:
+            width = min(79, os.get_terminal_size()[0])
+        except OSError:
+            width = 79
+        if short:
+            docstr = vardocs.doc.strip()
+            template = HELP_TEMPLATE_SHORT.format(
+                envvar=key,
+                docstr=docstr,
+                default=vardocs.doc_default,
+                configurable=vardocs.is_configurable,
+            )
+            template = _rst_inline_to_color(template)
+        else:
+            docstr = "\n".join(textwrap.wrap(vardocs.doc, width=width))
+            template = HELP_TEMPLATE.format(
+                envvar=key,
+                docstr=docstr,
+                default=vardocs.doc_default,
+                configurable=vardocs.is_configurable,
+            )
         print_color(template)
 
     def is_manually_set(self, varname):

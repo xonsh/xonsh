@@ -126,10 +126,7 @@ class FStringAdaptor:
                 continue
             value = value.replace(match.group(1), field[0], 1)
 
-            if ast.is_const_str(node):
-                node.value = value
-            else:
-                node.value = value
+            node.value = value
 
     def _fix_eval_field_params(self):
         """Replace f-string field ID placeholders with the actual field
