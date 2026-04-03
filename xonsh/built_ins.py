@@ -113,13 +113,14 @@ def reglob(path, parts=None, i=None, include_dotfiles=False):
             i += 1
     try:
         regex = re.compile(parts[i])
-    except Exception as e:
-        if isinstance(e, re.error) and str(e) == "nothing to repeat at position 0":
-            raise XonshError(
-                "Consider adding a leading '.' to your glob regex pattern."
-            ) from e
-        else:
-            raise e
+    except re.error as e:
+        original = "/".join(parts)
+        raise XonshError(
+            f"Regex glob error in segment {parts[i]!r} of pattern {original!r}: {e}. "
+            f"Regex globs are split by '/' and each segment is compiled separately, "
+            f"so groups and backreferences cannot span across '/'. "
+            f"See https://xon.sh/globbing.html"
+        ) from e
 
     files = os.listdir(subdir)
     files.sort()
