@@ -54,7 +54,7 @@ class Execer:
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
 
-    def parse(self, input, ctx, mode="exec", filename=None, transform=True):
+    def parse(self, input, ctx, mode="exec", filename=None, transform=True, user_names=None):
         """Parses xonsh code in a context-aware fashion. For context-free
         parsing, please use the Parser class directly or pass in
         transform=False.
@@ -100,7 +100,8 @@ class Execer:
         elif isinstance(ctx, cabc.Mapping):
             ctx = set(ctx.keys())
         tree = self.ctxtransformer.ctxvisit(
-            tree, input, ctx, mode=mode, debug_level=self.debug_level
+            tree, input, ctx, mode=mode, debug_level=self.debug_level,
+            user_names=user_names,
         )
         return tree
 
@@ -127,8 +128,12 @@ class Execer:
                 frame = frame.f_back
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
-        ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
-        tree = self.parse(input, ctx, mode=mode, filename=filename, transform=transform)
+        user_names = set(glbs.keys()) | set(locs.keys())
+        ctx = set(dir(builtins)) | user_names
+        tree = self.parse(
+            input, ctx, mode=mode, filename=filename,
+            transform=transform, user_names=user_names,
+        )
         if tree is None:
             return (
                 compile("pass", filename, mode) if compile_empty_tree else None
