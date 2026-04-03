@@ -210,10 +210,12 @@ def HELP_TEMPLATE():
 
 
 def _rst_inline_to_color(s):
-    """Replace RST inline code ``...`` with colored output."""
+    """Replace RST inline code ``...`` and `...` with colored output."""
     import re
 
-    return re.sub(r"``(.+?)``", r"{CYAN}\1{RESET}", s)
+    s = re.sub(r"``(.+?)``", r"{CYAN}\1{RESET}", s)
+    s = re.sub(r"`(.+?)`", r"{CYAN}\1{RESET}", s)
+    return re.sub(r"(?<!\{CYAN\})\$(\w+)", r"{CYAN}$\1{RESET}", s)
 
 
 @lazyobject
@@ -1465,7 +1467,7 @@ class InterpreterSetting(Xettings):
         "Whether or not foreign aliases should override xonsh aliases "
         "with the same name. Note that setting of this must happen in the "
         "environment that xonsh was started from. "
-        "It cannot be set in the ``.xonshrc`` as loading of foreign aliases happens before"
+        "It cannot be set in the ``.xonshrc`` as loading of foreign aliases happens before "
         "``.xonshrc`` is parsed",
         is_configurable=True,
     )
@@ -2372,10 +2374,10 @@ class Env(cabc.MutableMapping):
         except OSError:
             width = 79
         if short:
-            doc = vardocs.doc.replace("\n", " ").strip()
+            docstr = vardocs.doc.strip()
             template = HELP_TEMPLATE_SHORT.format(
                 envvar=key,
-                docstr=doc,
+                docstr=docstr,
                 default=vardocs.doc_default,
                 configurable=vardocs.is_configurable,
             )
