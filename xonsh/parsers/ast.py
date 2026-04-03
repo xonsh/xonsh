@@ -387,7 +387,9 @@ class CtxAwareTransformer(NodeTransformer):
         self.filename = "<xonsh-code>"
         self.debug_level = 0
 
-    def ctxvisit(self, node, inp, ctx, mode="exec", filename=None, debug_level=0, user_names=None):
+    def ctxvisit(
+        self, node, inp, ctx, mode="exec", filename=None, debug_level=0, user_names=None
+    ):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -532,11 +534,21 @@ class CtxAwareTransformer(NodeTransformer):
             subproc_node = self.try_subproc_toks(node)
             if subproc_node is not node:
                 # Generate: subproc if __xonsh__.env.get('XONSH_BUILTINS_TO_CMD') else original
-                subproc_value = subproc_node.value if isinstance(subproc_node, Expr) else subproc_node
+                subproc_value = (
+                    subproc_node.value
+                    if isinstance(subproc_node, Expr)
+                    else subproc_node
+                )
                 node.value = IfExp(
                     test=xonsh_call(
                         "__xonsh__.env.get",
-                        [const_str(s="XONSH_BUILTINS_TO_CMD", lineno=node.lineno, col_offset=node.col_offset)],
+                        [
+                            const_str(
+                                s="XONSH_BUILTINS_TO_CMD",
+                                lineno=node.lineno,
+                                col_offset=node.col_offset,
+                            )
+                        ],
                         lineno=node.lineno,
                         col=node.col_offset,
                     ),
