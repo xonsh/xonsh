@@ -2467,12 +2467,23 @@ class BaseParser:
         """
         p[0] = p[1]
 
+    _NAME_CONST_MAP = {"True": True, "False": False, "None": None}
+
     def p_atom_name(self, p):
         """atom : name"""
         p1 = p[1]
-        p[0] = ast.Name(
-            id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
-        )
+        # In subproc mode, True/False/None may arrive as NAME instead of
+        # keyword tokens.  Emit ast.Constant so compile() doesn't reject them.
+        if p1.value in self._NAME_CONST_MAP:
+            p[0] = ast.const_name(
+                value=self._NAME_CONST_MAP[p1.value],
+                lineno=p1.lineno,
+                col_offset=p1.lexpos,
+            )
+        else:
+            p[0] = ast.Name(
+                id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
+            )
 
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""

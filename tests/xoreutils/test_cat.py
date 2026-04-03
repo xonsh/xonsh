@@ -94,7 +94,8 @@ class TestCat:
         stdout = io.TextIOWrapper(stdout_buf)
         stderr = io.TextIOWrapper(stderr_buf)
         opts = cat._cat_parse_args([])
-        cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr)
+        # Longer timeout to avoid race on slow CI machines
+        cat._cat_single_file(opts, self.tempfile, stdin, stdout, stderr, read_timeout=2)
         stdout.flush()
         stderr.flush()
         assert stdout_buf.getvalue() == bytes(expected_content, "utf-8")

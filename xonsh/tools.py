@@ -2209,6 +2209,14 @@ def format_std_prepost(template, env=None):
         # color code with no visible text.
         s = shell.format_color(invis + s + invis, force_string=True)
     s = s.replace(invis, "")
+    if not s and template:
+        # PTK's pygments formatter produces no ANSI for Color.RESET tokens
+        # (it treats RESET as "no style").  Fall back to direct ANSI conversion.
+        from xonsh.ansi_colors import ansi_partial_color_format
+
+        style = env.get("XONSH_COLOR_STYLE")
+        s = ansi_partial_color_format(invis + template + invis, hide=False, style=style)
+        s = s.replace(invis, "")
     return s
 
 

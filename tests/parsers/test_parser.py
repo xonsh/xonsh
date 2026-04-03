@@ -2578,6 +2578,18 @@ def test_leading_envvar_assignment(check_xonsh_ast):
     check_xonsh_ast({}, "![$FOO='foo' $BAR=2 echo r'$BAR']", False)
 
 
+def test_leading_envvar_assignment_bool(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=False echo 1]", False)
+
+
+def test_leading_envvar_assignment_true(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=True echo 1]", False)
+
+
+def test_leading_envvar_assignment_none(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=None echo 1]", False)
+
+
 def test_echo_comma(check_xonsh_ast):
     check_xonsh_ast({}, "![echo ,]", False)
 
