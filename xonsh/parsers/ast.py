@@ -387,7 +387,9 @@ class CtxAwareTransformer(NodeTransformer):
         self.filename = "<xonsh-code>"
         self.debug_level = 0
 
-    def ctxvisit(self, node, inp, ctx, mode="exec", filename=None, debug_level=0, user_names=None):
+    def ctxvisit(
+        self, node, inp, ctx, mode="exec", filename=None, debug_level=0, user_names=None
+    ):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -531,11 +533,13 @@ class CtxAwareTransformer(NodeTransformer):
             name = node.value.id if isinstance(node.value, Name) else "..."
             node.value = xonsh_call(
                 "__xonsh__.builtin_cmd",
-                [const_str(
-                    s=name,
-                    lineno=node.lineno,
-                    col_offset=node.col_offset,
-                )],
+                [
+                    const_str(
+                        s=name,
+                        lineno=node.lineno,
+                        col_offset=node.col_offset,
+                    )
+                ],
                 lineno=node.lineno,
                 col=node.col_offset,
             )
