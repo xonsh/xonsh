@@ -46,7 +46,7 @@ def _boot_time_linux() -> "float|None":
     # https://stackoverflow.com/questions/42471475/fastest-way-to-get-system-uptime-in-python-in-linux
     bt_flag = getattr(time, "CLOCK_BOOTTIME", None)
     if bt_flag is not None:
-        return time.clock_gettime(bt_flag)
+        return time.time() - time.clock_gettime(bt_flag)
     try:
         with open("/proc/stat") as f:
             for line in f:
@@ -205,7 +205,7 @@ def _boot_time_windows():
         # Vista/Server 2008 or later.
         xp.LIBC.GetTickCount64.restype = ctypes.c_uint64
         uptime = xp.LIBC.GetTickCount64() / 1000.0
-    if hasattr(xp.LIBC, "GetTickCount"):
+    elif hasattr(xp.LIBC, "GetTickCount"):
         # WinCE and Win2k or later; gives wrong answers after 49.7 days.
         xp.LIBC.GetTickCount.restype = ctypes.c_uint32
         uptime = xp.LIBC.GetTickCount() / 1000.0

@@ -161,6 +161,8 @@ def transform_command(src, show_diff=True):
                 "the recursion limit number of iterations to "
                 "converge."
             )
+            break
+
     debug_level = XSH.env.get("XONSH_DEBUG")
     if show_diff and debug_level >= 1 and src != raw:
         sys.stderr.writelines(

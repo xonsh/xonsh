@@ -1723,7 +1723,7 @@ class PromptSetting(Xettings):
         "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
         "For example, to have stderr appear on a red background, the "
         'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
-        'It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.',
+        "It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.",
     )
     XONSH_STDERR_POSTFIX = Var.with_default(
         "",
@@ -1732,7 +1732,7 @@ class PromptSetting(Xettings):
         "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
         "For example, to have stderr appear on a red background, the "
         'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
-        'It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.',
+        "It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.",
     )
     XONSH_SUPPRESS_WELCOME = Var.with_default(
         False,

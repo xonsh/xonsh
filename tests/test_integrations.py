@@ -862,6 +862,25 @@ def test_single_command_no_windows(cmd, fmt, exp):
 
 
 @skip_if_no_xonsh
+def test_script_local_import(tmp_path):
+    """xonsh script-file should add script dir to sys.path like CPython does."""
+    pkg_dir = tmp_path / "pkg"
+    pkg_dir.mkdir()
+    (pkg_dir / "__init__.py").write_text("")
+    (pkg_dir / "mod.py").write_text("X = 42\n")
+    script = tmp_path / "run.py"
+    script.write_text("import pkg.mod\nprint(pkg.mod.X)\n")
+    out, err, rtn = run_xonsh(
+        None,
+        stdin=None,
+        args=["--no-rc", str(script)],
+        stderr=sp.PIPE,
+    )
+    assert rtn == 0, f"stderr: {err}"
+    assert out.strip() == "42"
+
+
+@skip_if_no_xonsh
 def test_eof_syntax_error():
     """Ensures syntax errors for EOF appear on last line."""
     script = "x = 1\na = (1, 0\n"

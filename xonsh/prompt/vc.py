@@ -158,7 +158,8 @@ def get_fossil_branch():
     except (subprocess.CalledProcessError, OSError):
         branch = None
     else:
-        branch = RE_REMOVE_ANSI.sub("", branch.splitlines()[0])
+        lines = branch.splitlines()
+        branch = RE_REMOVE_ANSI.sub("", lines[0]) if lines else None
     return branch
 
 

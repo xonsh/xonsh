@@ -257,6 +257,7 @@ class LoadEvent(AbstractEvent):
         while self._unfired:
             handler = self._unfired.pop()
             self._call(handler)
+            self._fired.add(handler)
         self._hasfired = True
         return ()  # Entirely for API compatibility
 
