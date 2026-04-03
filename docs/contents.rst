@@ -51,6 +51,7 @@ and streamline your command-line experience.
     keyboard_shortcuts
     prompt_toolkit
     events
+    globbing
     macros
     Open technical issue <https://github.com/xonsh/xonsh>
 
