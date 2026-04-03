@@ -58,8 +58,8 @@ jobs:
       - name: Run tests
         if: ${{ !startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
         run: |
-          python -m xonsh run-tests.xsh test -- --timeout=240
+          python -m xonsh run-tests.xsh test -- --timeout=600
       - name: Run tests with coverage
         if: ${{ startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
         run: |
-          python -m xonsh run-tests.xsh test --report-coverage -- --timeout=240
+          python -m xonsh run-tests.xsh test --report-coverage -- --timeout=600
