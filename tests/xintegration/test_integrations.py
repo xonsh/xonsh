@@ -23,7 +23,7 @@ from xonsh.pytest.tools import (
     skip_if_on_windows,
 )
 
-from tests.integration.conftest import (
+from tests.xintegration.conftest import (
     check_run_xonsh,
     run_xonsh,
     skip_if_no_make,

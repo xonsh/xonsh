@@ -9,7 +9,7 @@ import re
 
 import pytest
 
-from tests.integration.conftest import run_xonsh
+from tests.xintegration.conftest import run_xonsh
 from xonsh.pytest.tools import skip_if_on_windows
 
 
