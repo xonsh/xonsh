@@ -4,7 +4,6 @@ This requires Xonsh installed in venv or otherwise available on PATH
 
 import os
 import re
-import shutil
 import subprocess as sp
 import tempfile
 from pathlib import Path
@@ -24,119 +23,20 @@ from xonsh.pytest.tools import (
     skip_if_on_windows,
 )
 
-PATH = (
-    os.path.join(os.path.abspath(os.path.dirname(__file__)), "bin")
-    + os.pathsep
-    + os.environ["PATH"]
+from tests.integration.conftest import (
+    check_run_xonsh,
+    run_xonsh,
+    skip_if_no_make,
+    skip_if_no_sleep,
+    skip_if_no_xonsh,
 )
-
-
-skip_if_no_xonsh = pytest.mark.skipif(
-    shutil.which("xonsh") is None, reason="xonsh not on PATH"
-)
-skip_if_no_make = pytest.mark.skipif(
-    shutil.which("make") is None, reason="make command not on PATH"
-)
-skip_if_no_sleep = pytest.mark.skipif(
-    shutil.which("sleep") is None, reason="sleep command not on PATH"
-)
-
-base_env = {
-    "PATH": PATH,
-    "XONSH_DEBUG": "0",
-    "XONSH_SHOW_TRACEBACK": "1",
-    "RAISE_SUBPROC_ERROR": "0",
-    "FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE": "1",
-    "PROMPT": "",
-    "TERM": "linux",  # disable ansi escape codes
-}
-
-
-def run_xonsh(
-    cmd,
-    stdin=sp.PIPE,
-    stdin_cmd=None,
-    stdout=sp.PIPE,
-    stderr=sp.STDOUT,
-    single_command=False,
-    interactive=False,
-    path=None,
-    args=None,
-    timeout=20,
-    env=None,
-    blocking=True,
-    xonsh_cmd="python -m xonsh",
-):
-    # Env
-    popen_env = dict(os.environ)
-    popen_env |= base_env
-    if path:
-        popen_env["PATH"] = path
-    if env:
-        popen_env |= env
-
-    # Args
-    xonsh_cmd = xonsh_cmd.split()
-    xonsh_cmd[0] = shutil.which(xonsh_cmd[0], path=PATH)
-    popen_args = xonsh_cmd
-
-    if not args:
-        popen_args += ["--no-rc"]
-    else:
-        popen_args += args
-
-    if interactive:
-        popen_args.append("-i")
-        if cmd and isinstance(cmd, str) and not cmd.endswith("\n"):
-            # In interactive mode we need to emulate "Press Enter".
-            cmd += "\n"
-
-    if single_command:
-        popen_args += ["-c", cmd]
-        input = None
-    else:
-        input = cmd
-
-    proc = sp.Popen(
-        popen_args,
-        env=popen_env,
-        stdin=stdin,
-        stdout=stdout,
-        stderr=stderr,
-        universal_newlines=True,
-    )
-
-    if stdin_cmd:
-        proc.stdin.write(stdin_cmd)
-        proc.stdin.flush()
-
-    if not blocking:
-        return proc
-
-    try:
-        out, err = proc.communicate(input=input, timeout=timeout)
-    except sp.TimeoutExpired:
-        proc.kill()
-        raise
-    return out, err, proc.returncode
-
-
-def check_run_xonsh(cmd, fmt, exp, exp_rtn=0):
-    """The ``fmt`` parameter is a function
-    that formats the output of cmd, can be None.
-    """
-    out, err, rtn = run_xonsh(cmd, stderr=sp.PIPE)
-    if callable(fmt):
-        out = fmt(out)
-    if callable(exp):
-        exp = exp()
-    assert out == exp, err
-    assert rtn == exp_rtn, err
 
 
 #
 # The following list contains a (stdin, stdout, returncode) tuples
 #
+
+tests_path = str(Path(__file__).absolute().parent.parent)
 
 ALL_PLATFORMS = [
     # conch in action
@@ -186,9 +86,13 @@ def _f():
     print('Wow Mom!')
 
 aliases['f'] = _f
-f > tttt
 
-with open('tttt') as tttt:
+import tempfile
+temp_path = tempfile.mktemp()
+
+f > @(temp_path)
+
+with open(temp_path) as tttt:
     s = tttt.read().strip()
 print('REDIRECTED OUTPUT: ' + s)
 """,
@@ -213,8 +117,11 @@ f e>o
 def _f():
     print('Wow Mom!')
 aliases['f'] = _f
-f > @('tttt')
-with open('tttt') as tttt:
+
+temp_path = @.imp.tempfile.mktemp()
+
+f > @(temp_path)
+with open(temp_path) as tttt:
     s = tttt.read().strip()
 print('REDIRECTED OUTPUT: ' + s)
 """,
@@ -227,8 +134,9 @@ print('REDIRECTED OUTPUT: ' + s)
 def _f():
     print('Wow Mom!')
 aliases['f'] = _f
-f > @(p'tttt')
-with open('tttt') as tttt:
+temp_path = @.imp.tempfile.mktemp()
+f > @(@.imp.pathlib.Path(temp_path))
+with open(temp_path) as tttt:
     s = tttt.read().strip()
 print('REDIRECTED OUTPUT: ' + s)
 """,
@@ -329,22 +237,34 @@ g
     ),
     # test piping 'real' command
     (
-        """
-with open('tttt', 'w') as fp:
+        f"""
+import tempfile
+temp_path = tempfile.mktemp()        
+        
+with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
+    
+pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
+pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
 
-![python tests/bin/cat tttt | python tests/bin/wc]
+![python @(pathcat) @(temp_path) | python @(pathwc)]
 """,
         " 1  2 10 <stdin>\n" if ON_WINDOWS else " 1  2 9 <stdin>\n",
         0,
     ),
     # test double  piping 'real' command
     (
-        """
-with open('tttt', 'w') as fp:
+        f"""
+import tempfile
+temp_path = tempfile.mktemp()        
+        
+with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
 
-![python tests/bin/cat tttt | python tests/bin/wc | python tests/bin/wc]
+pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
+pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
+
+![python @(pathcat) @(temp_path) | python @(pathwc) | python @(pathwc)]
 """,
         " 1  4 18 <stdin>\n" if ON_WINDOWS else " 1  4 16 <stdin>\n",
         0,
@@ -492,9 +412,13 @@ echo foo_@$(echo spam sausage)_bar
     # test redirection
     #
     (
-        """
-echo Just the place for a snark. >tttt
-python tests/bin/cat tttt
+        f"""
+import tempfile
+temp_path = tempfile.mktemp()        
+        
+pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')        
+echo Just the place for a snark. >@(temp_path)
+python @(pathcat) @(temp_path)
 """,
         "Just the place for a snark.\n",
         0,
@@ -955,10 +879,13 @@ def test_sourcefile():
         # test subshell wrapping
         (
             """
-with open('tttt', 'w') as fp:
+import tempfile
+temp_path = tempfile.mktemp()            
+            
+with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
 
-(wc) < tttt
+(wc) < @(temp_path)
 """,
             None,
             " 1  2 9 <stdin>\n",
@@ -966,10 +893,13 @@ with open('tttt', 'w') as fp:
         # test subshell statement wrapping
         (
             """
-with open('tttt', 'w') as fp:
+import tempfile
+temp_path = tempfile.mktemp()                 
+            
+with open(temp_path, 'w') as fp:
     fp.write("Wow mom!\\n")
 
-(wc;) < tttt
+(wc;) < @(temp_path)
 """,
             None,
             " 1  2 9 <stdin>\n",
@@ -1505,24 +1435,6 @@ def test_suspended_captured_process_pipeline():
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
-def test_alias_stability():
-    """Testing alias stability after amalgamation regress that described in #5435."""
-    stdin_cmd = (
-        "aliases['tst'] = lambda: [print('sleep'), __import__('time').sleep(1)]\n"
-        "tst\ntst\ntst\n"
-    )
-    out, err, ret = run_xonsh(
-        cmd=None,
-        stdin_cmd=stdin_cmd,
-        interactive=True,
-        single_command=False,
-        timeout=10,
-    )
-    assert re.match(".*sleep.*sleep.*sleep.*", out, re.MULTILINE | re.DOTALL)
-
-
-@skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_captured_subproc_is_not_affected_next_command():
     """Testing #5769."""
     stdin_cmd = (
@@ -1563,30 +1475,6 @@ def test_spec_decorator_alias():
         timeout=10,
     )
     assert "Answer = 42" in out
-
-
-@skip_if_on_windows
-@pytest.mark.flaky(reruns=3, reruns_delay=1)
-def test_alias_stability_exception():
-    """Testing alias stability (exception) after amalgamation regress that described in #5435."""
-    stdin_cmd = (
-        "aliases['tst1'] = lambda: [print('sleep'), __import__('time').sleep(1)]\n"
-        "aliases['tst2'] = lambda: [1/0]\n"
-        "tst1\ntst2\ntst1\ntst2\n"
-    )
-    out, err, ret = run_xonsh(
-        cmd=None,
-        stdin_cmd=stdin_cmd,
-        interactive=True,
-        single_command=False,
-        timeout=10,
-    )
-    assert re.match(
-        ".*sleep.*ZeroDivisionError.*sleep.*ZeroDivisionError.*",
-        out,
-        re.MULTILINE | re.DOTALL,
-    )
-    assert "Bad file descriptor" not in out
 
 
 @pytest.mark.parametrize(
@@ -1692,136 +1580,3 @@ def test_shebang_cr(tmpdir):
     command = f"cd {testdir}; ./{testfile}\n"
     out, err, rtn = run_xonsh(command)
     assert out == f"{expected_out}\n"
-
-
-test_code = [
-    """
-$XONSH_SHOW_TRACEBACK = True
-@aliases.register
-def _e(a,i,o,e):
-    echo -n O
-    echo -n E 1>2
-    # execx("echo -n O")      # Excluded until fix https://github.com/xonsh/xonsh/issues/5631
-    # execx("echo -n E 1>2")  # Excluded until fix https://github.com/xonsh/xonsh/issues/5631
-    print("o")
-    print("O", file=o)
-    print("E", file=e)
-
-import tempfile
-for i in range(0, 12):
-    echo -n e
-    print($(e), !(e), $[e], ![e])
-    print($(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
-    print(!(e > @(tempfile.NamedTemporaryFile(delete=False).name)))
-    print($[e > @(tempfile.NamedTemporaryFile(delete=False).name)])
-    print(![e > @(tempfile.NamedTemporaryFile(delete=False).name)])
-"""
-]
-
-
-@skip_if_on_windows
-@pytest.mark.parametrize("test_code", test_code)
-def test_callable_alias_no_bad_file_descriptor(test_code):
-    """Test no exceptions during any kind of capturing of callable alias. See also #5631."""
-
-    out, err, ret = run_xonsh(
-        test_code, interactive=False, single_command=True, timeout=60
-    )
-    assert ret == 0
-    assert "Error" not in out
-    assert "Exception" not in out
-
-
-test_code = [
-    """
-$XONSH_SHOW_TRACEBACK = True
-import sys
-
-@aliases.register
-def _a(args, stdin, stdout, stderr):
-    name = 'a'
-
-    print(f"{name}: print out alias.stdout", file=stdout)
-    print(f"{name}: print err alias.stderr", file=stderr)
-
-    print(f"{name}: print out sys.stdout", file=sys.stdout)
-    print(f"{name}: print err sys.stderr", file=sys.stderr)
-
-    echo @(f"{name}: echo stdout")
-    echo @(f"{name}: echo stderr") o>e
-
-    ![echo @(f"{name}: ![] echo stdout")]
-    $[echo @(f"{name}: $[] echo stdout")]
-
-    $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
-    $(echo @(f"{name}: $() echo stderr") o>e)
-
-    !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
-    !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
-
-    execx(f'echo "{name}: execx echo stdout"')
-    execx(f'echo "{name}: execx echo stderr" o>e')
-
-    echo 1 && echo 2
-
-
-@aliases.register
-def _b(args, stdin, stdout, stderr):
-    name = 'b'
-
-    print(f"{name}: print out alias.stdout", file=stdout)
-    print(f"{name}: print err alias.stderr", file=stderr)
-
-    print(f"{name}: print out sys.stdout", file=sys.stdout)
-    print(f"{name}: print err sys.stderr", file=sys.stderr)
-
-    echo @(f"{name}: echo stdout")
-    echo @(f"{name}: echo stderr") o>e
-
-    ![echo @(f"{name}: ![] echo stdout")]
-    $[echo @(f"{name}: $[] echo stdout")]
-
-    $(echo @(f"{name}: $() echo stdout LEAKING TEST"))
-    $(echo @(f"{name}: $() echo stderr") o>e)
-
-    !(echo @(f"{name}: !() echo stdout LEAKING TEST"))
-    !(echo @(f"{name}: !() echo stderr LEAKING TEST") o>e)
-
-    execx(f'echo "{name}: execx echo stdout"')
-    execx(f'echo "{name}: execx echo stderr" o>e')
-
-    echo 3 && echo 4
-
-for i in range(111):
-    $(a | b)
-
-# Empirically, in case of a leak, the output
-# drops out at ~600-1000 function calls.
-for i in range(10):
-    for j in range(100):
-        $(a | b)
-
-"""
-]
-
-
-@pytest.mark.parametrize("test_code", test_code)
-@pytest.mark.timeout(600)
-def test_callable_alias_fd_leaking(test_code):
-    """Testing callable alias on leaks and errors in pipe.
-    1. No fd leaking: no output interrupting during 1000+ pipe calls.
-    2. No I/O errors or "Bad file descriptor" errors.
-    3. No stdout leaking from alias `a`.
-    See also #6159.
-    """
-
-    out, err, ret = run_xonsh(
-        test_code, interactive=False, single_command=True, timeout=600
-    )
-    assert ret == 0
-    assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
-    assert "Exception" not in out  # No I/O errors or "Bad file descriptor" errors.
-    assert "LEAKING" not in out  # No captured stdout/stderr leaking.
-    assert out.count("3\\n4\\n") == 1111  # No fd leaking.
-    assert "1" not in out  # No stdout leaking from alias `a`.
-    assert "2" not in out  # No stdout leaking from alias `a`.
