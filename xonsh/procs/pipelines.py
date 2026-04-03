@@ -103,6 +103,10 @@ def _drain_stdout(stdout):
     return _read_all(stdout).splitlines(keepends=True)
 
 
+class blocking_property(property):
+    """Property that may block waiting for process completion."""
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -890,25 +894,25 @@ class CommandPipeline:
         else:
             return self.get_formatted_lines(self.lines)
 
-    @property
+    @blocking_property
     def out(self):
         """Output value as a str."""
         self.end()
         return self.output
 
-    @property
+    @blocking_property
     def err(self):
         """Error messages as a string."""
         self.end()
         return self.errors
 
-    @property
+    @blocking_property
     def raw_out(self):
         """Output as raw bytes."""
         self.end()
         return self._raw_output
 
-    @property
+    @blocking_property
     def raw_err(self):
         """Errors as raw bytes."""
         self.end()
@@ -919,7 +923,7 @@ class CommandPipeline:
         """Process identifier."""
         return self.proc.pid if self.proc else None
 
-    @property
+    @blocking_property
     def returncode(self):
         """Process return code, waits until command is completed."""
         self.end()
@@ -932,7 +936,7 @@ class CommandPipeline:
         """Arguments to the process."""
         return self.spec.args
 
-    @property
+    @blocking_property
     def rtn(self):
         """Alias to return code."""
         return self.returncode
