@@ -2492,19 +2492,6 @@ def globpath(
     return o if len(o) != 0 else no_match
 
 
-def _dotglobstr(s):
-    modified = False
-    dotted_s = s
-    if "/*" in dotted_s:
-        dotted_s = dotted_s.replace("/*", "/.*")
-        dotted_s = dotted_s.replace("/.**/.*", "/**/.*")
-        modified = True
-    if dotted_s.startswith("*") and not dotted_s.startswith("**"):
-        dotted_s = "." + dotted_s
-        modified = True
-    return dotted_s, modified
-
-
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     s = xsh.expand_path(s)
     if sort_result is None:
@@ -2513,20 +2500,11 @@ def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
         include_dotfiles = xsh.env.get("DOTGLOB")
     if ignore_case:
         s = expand_case_matching(s)
-    if "**" in s and "**/*" not in s:
-        s = s.replace("**", "**/*")
-    if include_dotfiles:
-        dotted_s, dotmodified = _dotglobstr(s)
+    kwargs = {"recursive": True, "include_hidden": include_dotfiles or False}
     if sort_result:
-        paths = glob.glob(s, recursive=True)
-        if include_dotfiles and dotmodified:
-            paths.extend(glob.iglob(dotted_s, recursive=True))
-        paths.sort()
-        paths = iter(paths)
+        paths = iter(sorted(glob.glob(s, **kwargs)))
     else:
-        paths = glob.iglob(s, recursive=True)
-        if include_dotfiles and dotmodified:
-            paths = itertools.chain(glob.iglob(dotted_s, recursive=True), paths)
+        paths = glob.iglob(s, **kwargs)
     return paths, s
 
 
