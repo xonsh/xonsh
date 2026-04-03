@@ -715,6 +715,15 @@ three
         ),
         marks=pytest.mark.xfail(reason="$[] does not send stdout through the pipe"),
     ),
+    # test $XONSH_BUILTINS_TO_CMD: bare `id` (a Python builtin) runs as command
+    (
+        """
+$XONSH_BUILTINS_TO_CMD = True
+id
+""",
+        lambda out: "uid=" in out,
+        0,
+    ),
 ]
 
 if not ON_WINDOWS:

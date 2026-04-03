@@ -2208,14 +2208,6 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
     assert call.args[0].value == "zip"
 
 
-def test_bare_builtin_subprocess(check_xonsh):
-    """With $XONSH_BUILTINS_TO_CMD=True, bare builtin runs as subprocess."""
-    check_xonsh(
-        {"XONSH_BUILTINS_TO_CMD": True},
-        "result = $(type echo)\nassert 'echo' in result",
-    )
-
-
 def test_dollar_sub(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls)", False)
 
