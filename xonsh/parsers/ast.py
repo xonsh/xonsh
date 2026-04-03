@@ -528,23 +528,17 @@ class CtxAwareTransformer(NodeTransformer):
         if isdescendable(node.value):
             node.value = self.visit(node.value)  # this allows diving into BoolOps
         if self._is_bare_builtin(node.value):
-            original = node.value
-            subproc_node = self.try_subproc_toks(node)
-            if subproc_node is not node:
-                # Generate: subproc if __xonsh__.env.get('XONSH_BUILTINS_TO_CMD') else original
-                subproc_value = subproc_node.value if isinstance(subproc_node, Expr) else subproc_node
-                node.value = IfExp(
-                    test=xonsh_call(
-                        "__xonsh__.env.get",
-                        [const_str(s="XONSH_BUILTINS_TO_CMD", lineno=node.lineno, col_offset=node.col_offset)],
-                        lineno=node.lineno,
-                        col=node.col_offset,
-                    ),
-                    body=subproc_value,
-                    orelse=original,
+            name = node.value.id if isinstance(node.value, Name) else "..."
+            node.value = xonsh_call(
+                "__xonsh__.builtin_cmd",
+                [const_str(
+                    s=name,
                     lineno=node.lineno,
                     col_offset=node.col_offset,
-                )
+                )],
+                lineno=node.lineno,
+                col=node.col_offset,
+            )
             return node
         if self.is_in_scope(node) or isinstance(node.value, Lambda):
             return node
