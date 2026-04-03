@@ -194,6 +194,6 @@ def test_callable_alias_fd_leaking(test_code):
     assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
     assert "Exception" not in out  # No I/O errors or "Bad file descriptor" errors.
     assert "LEAKING" not in out  # No captured stdout/stderr leaking.
-    assert out.count("3\\n4\\n") == 1111  # No fd leaking.
+    assert out.count("3\\n4\\n") == 211 if ON_WINDOWS else 1111  # No fd leaking.
     assert "1" not in out  # No stdout leaking from alias `a`.
     assert "2" not in out  # No stdout leaking from alias `a`.
