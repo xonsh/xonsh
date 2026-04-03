@@ -111,7 +111,7 @@ def test_dedent_token_at_col0_not_truncated(ctx, keyword):
     assert prev_line == keyword, f"{keyword!r} was truncated to {prev_line!r}"
 
 
-@pytest.mark.parametrize("keyword", ["pass", "break", "continue"])
+@pytest.mark.parametrize("keyword", ["pass", "break", "continue", "return", "raise"])
 def test_dedent_token_with_indent_removes_one_level(ctx, keyword):
     """Dedent tokens with sufficient indent should lose one indent level."""
     document = Document("\n" + ctx.indent + keyword)
