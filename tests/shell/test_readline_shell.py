@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from xonsh.completers.tools import RichCompletion
 from xonsh.shells.readline_shell import _render_completions
