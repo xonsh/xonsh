@@ -2527,6 +2527,11 @@ class Env(cabc.MutableMapping):
     def __setitem__(self, key, val):
         self._set_item(key, val)
 
+    def set(self, key, val):
+        """Set an environment variable and return the stored value. Used by ``$VAR := val``."""
+        self._set_item(key, val)
+        return self._d[key]
+
     def _set_item(self, key, val, thread_local=False, check_sync=True):
         if check_sync and key in self._vars:
             if self._vars[key].deprecated:
