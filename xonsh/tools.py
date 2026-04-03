@@ -2209,6 +2209,14 @@ def format_std_prepost(template, env=None):
         # color code with no visible text.
         s = shell.format_color(invis + s + invis, force_string=True)
     s = s.replace(invis, "")
+    if not s and template:
+        # PTK's pygments formatter produces no ANSI for Color.RESET tokens
+        # (it treats RESET as "no style").  Fall back to direct ANSI conversion.
+        from xonsh.ansi_colors import ansi_partial_color_format
+
+        style = env.get("XONSH_COLOR_STYLE")
+        s = ansi_partial_color_format(invis + template + invis, hide=False, style=style)
+        s = s.replace(invis, "")
     return s
 
 
@@ -2701,8 +2709,17 @@ def _deprecated_error_on_expiration(name, removed_in):
         raise AssertionError(f"{name} has passed its version {removed_in} expiry date!")
 
 
+def qualified_name(obj) -> str:
+    """Return fully qualified class name, e.g. 'xonsh.environ.VarPattern'."""
+    cls = obj if isinstance(obj, type) else type(obj)
+    module = getattr(cls, "__module__", None)
+    if module and not module.startswith("builtins"):
+        return f"{module}.{cls.__name__}"
+    return cls.__name__
+
+
 def to_repr_pretty_(inst, p, cycle):
-    name = f"{inst.__class__.__module__}.{inst.__class__.__name__}"
+    name = qualified_name(inst)
     with p.group(0, name + "(", ")"):
         if cycle:
             p.text("...")

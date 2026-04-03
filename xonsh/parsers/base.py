@@ -1868,9 +1868,39 @@ class BaseParser:
     def p_rawsuite_indent(self, p):
         """rawsuite : COLON NEWLINE indent_tok nodedent dedent_tok"""
         p3, p5 = p[3], p[5]
-        beg = (p3.lineno, p3.lexpos)
+        # Include leading comments: INDENT skips them, so scan backwards
+        # to the first non-comment, non-blank line (the with! line itself).
+        beg_line = p3.lineno
+        while beg_line > 1:
+            prev = self.lines[beg_line - 2]
+            stripped = prev.strip()
+            if stripped == "" or stripped.startswith("#"):
+                beg_line -= 1
+            else:
+                break
+        beg = (beg_line, 0)
         end = (p5.lineno, p5.lexpos)
         s = self._source_slice(beg, end)
+        # Exclude trailing unindented comments (and surrounding blank
+        # lines) that belong to subsequent code, not to this block.
+        # Only strip if there are actual unindented comments at the tail;
+        # trailing blank lines alone are kept (they may be part of the block).
+        slines = s.splitlines(keepends=True)
+        has_unindented_comment = any(
+            ln.strip().startswith("#") and not ln[0].isspace()
+            for ln in reversed(slines)
+            if ln.strip()
+        )
+        if has_unindented_comment:
+            while slines:
+                stripped = slines[-1].strip()
+                if stripped == "" or (
+                    stripped.startswith("#") and not slines[-1][0].isspace()
+                ):
+                    slines.pop()
+                else:
+                    break
+            s = "".join(slines)
         s = textwrap.dedent(s)
         p[0] = ast.const_str(s=s, lineno=beg[0], col_offset=beg[1])
 
@@ -2363,7 +2393,21 @@ class BaseParser:
                 margs = [leader, trailer, gblcall, loccall]
                 p0 = xonsh_call("__xonsh__.call_macro", margs, lineno=l, col=c)
             elif isinstance(trailer, str):
-                if trailer == "?":
+                if trailer in ("?", "??") and self._is_envvar_node(leader):
+                    # $VAR? → short help, $VAR?? → full help
+                    key = self._envvar_node_key(leader)
+                    short = ast.Constant(
+                        value=(trailer == "?"),
+                        lineno=leader.lineno,
+                        col_offset=leader.col_offset,
+                    )
+                    p0 = xonsh_call(
+                        "__xonsh__.env.help",
+                        [key, short],
+                        lineno=leader.lineno,
+                        col=leader.col_offset,
+                    )
+                elif trailer == "?":
                     p0 = xonsh_help(leader, lineno=leader.lineno, col=leader.col_offset)
                 elif trailer == "??":
                     p0 = xonsh_superhelp(
@@ -2467,12 +2511,23 @@ class BaseParser:
         """
         p[0] = p[1]
 
+    _NAME_CONST_MAP = {"True": True, "False": False, "None": None}
+
     def p_atom_name(self, p):
         """atom : name"""
         p1 = p[1]
-        p[0] = ast.Name(
-            id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
-        )
+        # In subproc mode, True/False/None may arrive as NAME instead of
+        # keyword tokens.  Emit ast.Constant so compile() doesn't reject them.
+        if p1.value in self._NAME_CONST_MAP:
+            p[0] = ast.const_name(
+                value=self._NAME_CONST_MAP[p1.value],
+                lineno=p1.lineno,
+                col_offset=p1.lexpos,
+            )
+        else:
+            p[0] = ast.Name(
+                id=p1.value, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos
+            )
 
     def p_atom_ellip(self, p):
         """atom : ellipsis_tok"""
@@ -3254,6 +3309,25 @@ class BaseParser:
         return ast.Subscript(
             value=xenv, slice=idx, ctx=ast.Load(), lineno=lineno, col_offset=col
         )
+
+    @staticmethod
+    def _is_envvar_node(node):
+        """Check if an AST node is __xonsh__.env[KEY]."""
+        return (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.value, ast.Attribute)
+            and node.value.attr == "env"
+            and isinstance(node.value.value, ast.Name)
+            and node.value.value.id == "__xonsh__"
+        )
+
+    @staticmethod
+    def _envvar_node_key(node):
+        """Extract the key AST node from __xonsh__.env[KEY]."""
+        s = node.slice
+        if isinstance(s, ast.Index):
+            return s.value
+        return s
 
     def _subproc_cliargs(self, args, lineno=None, col=None):
         """Creates an expression for subprocess CLI arguments."""
