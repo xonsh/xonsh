@@ -2191,8 +2191,8 @@ def test_dollar_py_set(check_xonsh):
     check_xonsh({"WAKKA": 42}, 'x = "WAKKA"; ${x} = 65')
 
 
-def test_bare_builtin_becomes_cmd_call(parser, xsh):
-    """Bare builtin name as statement should become __xonsh__.builtin_cmd() call."""
+def test_bare_builtin_becomes_ifexp(parser, xsh):
+    """Bare builtin as statement becomes IfExp: subproc if flag else builtin."""
     import ast as stdlib_ast
 
     tree = parser.parse("zip\n", debug_level=0)
@@ -2203,9 +2203,11 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
     tree = ctxtr.ctxvisit(tree, "zip\n", set(dir(__builtins__)))
     expr_node = tree.body[0]
     assert isinstance(expr_node, stdlib_ast.Expr)
-    call = expr_node.value
-    assert isinstance(call, stdlib_ast.Call)
-    assert call.args[0].value == "zip"
+    ifexp = expr_node.value
+    assert isinstance(ifexp, stdlib_ast.IfExp)
+    # orelse is the original builtin Name
+    assert isinstance(ifexp.orelse, stdlib_ast.Name)
+    assert ifexp.orelse.id == "zip"
 
 
 def test_bare_builtin_subprocess(check_xonsh):
