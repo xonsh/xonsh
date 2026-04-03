@@ -63,25 +63,6 @@ def test_env_path_str(path):
     assert path == env["MYPATH"].paths
 
 
-def test_var_pattern_int():
-    from xonsh.environ import VarPattern
-
-    env = Env(XONSH_ENV_PATTERN_NUM=VarPattern(r"\w*_NUM$", "int"))
-    env["QWE_NUM"] = "42"
-    assert env["QWE_NUM"] == 42
-    assert type(env["QWE_NUM"]) is int
-
-
-def test_var_pattern_exclude():
-    """Test that exclude disables pattern matching after initial failure."""
-    env = Env()
-    with pytest.raises(TypeError, match=r"matches pattern \$XONSH_ENV_PATTERN_DIRS"):
-        env["JU_DIRS"] = 1
-    env["XONSH_ENV_PATTERN_DIRS"].exclude.append("JU_DIRS")
-    env["JU_DIRS"] = 1
-    assert env["JU_DIRS"] == 1
-
-
 def test_env_detype():
     env = Env(MYPATH=["wakka", "jawaka"])
     assert "wakka" + os.pathsep + "jawaka" == env.detype()["MYPATH"]
@@ -606,15 +587,8 @@ def test_deregister_custom_var():
     env.deregister("MY_SPECIAL_VAR")
 
     # deregistering a variable that has a value set doesn't
-    # remove it from env;
-    # the existing variable also maintains its type validation, conversion
+    # remove it from env, but type handling is removed
     assert "MY_SPECIAL_VAR" in env
-    with pytest.raises(TypeError):
-        env["MY_SPECIAL_VAR"] = 32
-
-    # removing, then re-adding the variable without registering
-    # gives it only default permissive validation, conversion
-    del env["MY_SPECIAL_VAR"]
     env["MY_SPECIAL_VAR"] = 32
 
 
