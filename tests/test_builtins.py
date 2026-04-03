@@ -119,6 +119,7 @@ def test_repath_HOME_PATH_itself(home_env):
 
 @skip_if_on_windows
 def test_repath_HOME_PATH_contents(home_env):
+    home_env.env["DOTGLOB"] = True
     exp = os.listdir(HOME_PATH)
     exp = {os.path.join(HOME_PATH, p) for p in exp}
     obs = set(pathsearch(regexsearch, "~/.*"))
