@@ -533,7 +533,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif show_completions == 1:
             return rtn
         elif show_completions == 2:
-            return completions
+            return rtn
         else:
             raise ValueError("query completions flag not understood.")
 

@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock
 
 from xonsh.completers.tools import RichCompletion
 from xonsh.shells.readline_shell import _render_completions
@@ -23,6 +24,31 @@ def test_render_completions(prefix, completion, prefix_len, readline_completion)
     assert _render_completions({completion}, prefix, prefix_len) == [
         readline_completion
     ]
+
+
+def test_completedefault_preserves_prefix(readline_shell):
+    """Completions must include the full prefix so readline does not strip it.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/6209:
+    typing ``@.imp.jso<Tab>`` was collapsing to ``@.imp.`` because
+    ``completedefault`` returned raw (prefix-free) completions when
+    ``_querycompletions`` returned 2.
+    """
+    shell = readline_shell
+    # Simulate what xonsh's completer returns for "@.imp.jso":
+    # the raw suffix completions plus plen=3 (length of "jso").
+    raw_completions = ["json", "json_decoder"]
+    shell.completer = MagicMock()
+    shell.completer.complete.return_value = (raw_completions, 3)
+
+    prefix = "@.imp.jso"
+    result = shell.completedefault(prefix, prefix, 0, len(prefix))
+
+    # Every returned completion must start with the preserved prefix part.
+    for comp in result:
+        assert comp.startswith("@.imp."), (
+            f"completion {comp!r} lost the '@.imp.' prefix"
+        )
 
 
 @pytest.mark.parametrize(
