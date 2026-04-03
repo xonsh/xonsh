@@ -509,6 +509,16 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             cursor_index=len(prev_text) + endidx,
         )
         rtn_completions = _render_completions(completions, prefix, plen)
+        # Filter out completions that don't start with the readline prefix.
+        # Substring matches (e.g. _json for prefix "jso") would cause readline's
+        # Greatest Common Prefix to shrink below what was typed.
+        filtered = [
+            (r, c) for r, c in zip(rtn_completions, completions) if r.startswith(prefix)
+        ]
+        if filtered:
+            rtn_completions, completions = zip(*filtered)
+        else:
+            return []
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
