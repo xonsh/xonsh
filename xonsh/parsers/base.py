@@ -1868,9 +1868,39 @@ class BaseParser:
     def p_rawsuite_indent(self, p):
         """rawsuite : COLON NEWLINE indent_tok nodedent dedent_tok"""
         p3, p5 = p[3], p[5]
-        beg = (p3.lineno, p3.lexpos)
+        # Include leading comments: INDENT skips them, so scan backwards
+        # to the first non-comment, non-blank line (the with! line itself).
+        beg_line = p3.lineno
+        while beg_line > 1:
+            prev = self.lines[beg_line - 2]
+            stripped = prev.strip()
+            if stripped == "" or stripped.startswith("#"):
+                beg_line -= 1
+            else:
+                break
+        beg = (beg_line, 0)
         end = (p5.lineno, p5.lexpos)
         s = self._source_slice(beg, end)
+        # Exclude trailing unindented comments (and surrounding blank
+        # lines) that belong to subsequent code, not to this block.
+        # Only strip if there are actual unindented comments at the tail;
+        # trailing blank lines alone are kept (they may be part of the block).
+        slines = s.splitlines(keepends=True)
+        has_unindented_comment = any(
+            ln.strip().startswith("#") and not ln[0].isspace()
+            for ln in reversed(slines)
+            if ln.strip()
+        )
+        if has_unindented_comment:
+            while slines:
+                stripped = slines[-1].strip()
+                if stripped == "" or (
+                    stripped.startswith("#") and not slines[-1][0].isspace()
+                ):
+                    slines.pop()
+                else:
+                    break
+            s = "".join(slines)
         s = textwrap.dedent(s)
         p[0] = ast.const_str(s=s, lineno=beg[0], col_offset=beg[1])
 
