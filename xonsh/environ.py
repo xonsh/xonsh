@@ -104,6 +104,7 @@ from xonsh.tools import (
     to_logfile_opt,
     to_ptk_cursor_shape,
     to_ptk_cursor_shape_display_value,
+    qualified_name,
     to_repr_pretty_,
     to_shlvl,
     to_tok_color_dict,
@@ -833,7 +834,7 @@ def default_lscolors(env):
 
 @default_value
 def default_prompt_fields(env):
-    """``xonsh.prompt.PROMPT_FIELDS``"""
+    """``xonsh.prompt.base.PromptFields``"""
     # todo: generate document for all default fields
     return prompt.PromptFields(XSH)
 
@@ -2416,11 +2417,14 @@ class Env(cabc.MutableMapping):
             vd = Var(default="", doc_default="")
         if vd.doc_default is DefaultNotGiven:
             var_default = self._vars.get(key, "<default not set>").default
-            dval = (
-                "not defined"
-                if var_default is DefaultNotGiven
-                else pprint.pformat(var_default)
-            )
+            if var_default is DefaultNotGiven:
+                dval = "not defined"
+            else:
+                dval = pprint.pformat(var_default)
+                cls_name = type(var_default).__name__
+                qname = qualified_name(var_default)
+                if qname != cls_name:
+                    dval = dval.replace(cls_name, qname, 1)
             vd = vd._replace(doc_default=dval)
         return vd
 
