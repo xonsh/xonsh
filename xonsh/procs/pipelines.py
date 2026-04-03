@@ -926,10 +926,7 @@ class CommandPipeline:
     @property
     def pipestatus(self):
         """Return codes of all commands in the pipeline."""
-        return [
-            None if p is None else p.returncode
-            for p in self.procs
-        ]
+        return [None if p is None else p.returncode for p in self.procs]
 
     @property
     def pipecode(self):
