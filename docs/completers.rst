@@ -301,20 +301,18 @@ On Windows, extensions like ``.exe`` are stripped automatically via ``$PATHEXT``
 so ``gh.exe`` will find ``gh.py``.
 
 However, if a command has other name variants (e.g. ``pip3.11``, ``python3.12``),
-the exact file name won't match. For these cases, regex patterns are registered
-in ``CommandCompleter.matcher`` using ``wrap(pattern, module_name)``:
+the exact file name won't match. For these cases, you can register regex patterns
+from your ``xonshrc`` or xontrib:
 
 .. code-block:: python
 
-    # in xonsh/completers/commands.py
-    self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
+    from xonsh.completers.commands import complete_xompletions as xmp
+    xmp.wrap(r"\bmycmd(?:\d)*$", "mycmd")
 
-This maps ``pip``, ``xpip``, ``pip3.11``, ``pip.exe`` etc. to ``xompletions/pip.py``.
+This maps ``mycmd``, ``mycmd2``, ``mycmd3`` etc. to the ``mycmd`` completer module.
 
-.. note::
-
-    If your command has name variants, you need to register a ``wrap`` pattern
-    in ``xonsh/completers/commands.py``. The completer module alone is not enough.
+xonsh ships with built-in patterns for ``pip`` (covers ``xpip``, ``pip3.11``, ``pip.exe``)
+and ``python`` (covers ``python3``, ``python3.12``, ``python.exe``).
 
 
 Legacy Completers Support
