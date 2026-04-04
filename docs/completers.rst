@@ -253,6 +253,103 @@ So if you want to change/remove the quotes from a string, the following complete
         raw_prefix_len = len(command.raw_prefix)  # this includes the closing quote if it exists
         return {RichCompletion(command.prefix, prefix_len=raw_prefix_len, append_closing_quote=False)}
 
+Command Completers (xompletions)
+================================
+
+xonsh includes a package called ``xompletions`` that provides tab-completions for
+specific commands like ``pip``, ``gh``, ``cd``, etc. Each command gets its own Python
+module inside the ``xompletions/`` directory.
+
+How it works:
+
+1. When the user presses TAB, the ``xompleter`` completer (registered as ``complete_xompletions``)
+   extracts the command name from ``args[0]``.
+2. It looks for a matching module in ``xompletions/`` — first by exact name, then by regex patterns.
+3. If found, it calls the module's ``xonsh_complete(ctx)`` function.
+4. The function returns completions or ``None`` (to let the next completer handle it).
+
+Creating a command completer
+----------------------------
+
+To create a completer for a command, place a Python file named after the command
+in any directory listed in ``$XONSH_COMPLETER_DIRS``. The file must contain
+a ``xonsh_complete`` function:
+
+.. code-block:: python
+
+    # ~/.config/xonsh/completers/mycmd.py
+    from xonsh.parsers.completion_context import CommandContext
+
+    def xonsh_complete(ctx: CommandContext):
+        """Completes mycmd subcommands."""
+        if ctx.arg_index == 1:
+            return {'start', 'stop', 'status'}
+
+.. code-block:: xonsh
+
+    $XONSH_COMPLETER_DIRS = ["~/.config/xonsh/completers"]
+
+Now ``mycmd <TAB>`` will suggest ``start``, ``stop``, and ``status``.
+
+xonsh also ships built-in completers in the ``xompletions/`` package (for ``pip``, ``gh``, ``cd``, etc.).
+
+Handling command name variants with ``wrap``
+--------------------------------------------
+
+The file name must match the command name exactly (``gh.py`` for ``gh``).
+On Windows, extensions like ``.exe`` are stripped automatically via ``$PATHEXT``,
+so ``gh.exe`` will find ``gh.py``.
+
+However, if a command has other name variants (e.g. ``pip3.11``, ``python3.12``),
+the exact file name won't match. For these cases, you can register regex patterns
+from your ``xonshrc`` or xontrib:
+
+.. code-block:: python
+
+    from xonsh.completers.commands import complete_xompletions as xmp
+    xmp.wrap(r"\bmycmd(?:\d)*$", "mycmd")
+
+This maps ``mycmd``, ``mycmd2``, ``mycmd3`` etc. to the ``mycmd`` completer module.
+
+xonsh ships with built-in patterns for ``pip`` (covers ``xpip``, ``pip3.11``, ``pip.exe``)
+and ``python`` (covers ``python3``, ``python3.12``, ``python.exe``).
+
+Completing ``python -m <module>``
+---------------------------------
+
+When an alias resolves to ``python -m <module>`` (e.g. ``xpip`` → ``python -m pip``),
+xonsh uses the ``xompletions/python.py`` completer to delegate to the module's completer.
+
+The mapping is stored in ``PYTHON_MODULE_COMPLETERS`` and can be extended from xonshrc:
+
+.. code-block:: python
+
+    from xompletions.python import PYTHON_MODULE_COMPLETERS
+
+    # Simple completer with static options
+    def _complete_mytool(ctx, module_arg_index):
+        return {'start', 'stop', 'status'}
+
+    PYTHON_MODULE_COMPLETERS['mytool'] = _complete_mytool
+
+Now ``python -m mytool <TAB>`` will suggest ``start``, ``stop``, and ``status``.
+This also works through aliases:
+
+.. code-block:: xonsh
+
+    aliases['mt'] = ['python', '-m', 'mytool']
+    mt <TAB>  # completes with start, stop, status
+
+For modules that use the `argcomplete <https://github.com/kislyuk/argcomplete>`_ protocol,
+a ready-made helper is available:
+
+.. code-block:: python
+
+    from xompletions.python import PYTHON_MODULE_COMPLETERS, _complete_argcomplete
+
+    PYTHON_MODULE_COMPLETERS['my_argcomplete_tool'] = _complete_argcomplete
+
+
 Legacy Completers Support
 =========================
 
