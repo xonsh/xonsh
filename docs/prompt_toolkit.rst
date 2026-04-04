@@ -4,28 +4,33 @@
 Prompt Toolkit
 **************
 
-Are you really jonesing for some special keybindings? We can help you out with
-that. The first time is free and so is every other time!
+xonsh uses `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_ as
+its default interactive shell (``$SHELL_TYPE='prompt_toolkit'``). It provides
+syntax highlighting, multi-line editing, completion menus, and more.
 
-.. warning:: This tutorial will let you hook directly into the
-             ``prompt_toolkit`` keybinding manager. It will not stop you from
-             rendering your prompt completely unusable, so tread lightly.
+This page covers prompt_toolkit-specific features and customization options
+available in xonsh. For full prompt_toolkit documentation, see the
+`official docs <https://python-prompt-toolkit.readthedocs.io/>`_.
 
 
-Overview
-========
+Custom Keybindings
+==================
 
 The ``prompt_toolkit`` shell has a registry for handling custom keybindings. You
 may not like the default keybindings in xonsh, or you may want to add a new key
 binding.
 
-We'll walk you though how to do this using ``prompt_toolkit`` tools to define
-keybindings and warn you about potential pitfalls.
+This section walks you through how to do this using ``prompt_toolkit`` tools to
+define keybindings and warns you about potential pitfalls.
 
-All of the code below can be entered into your `xonshrc <xonshrc.html>`_
+All of the code below can be entered into your `xonshrc <xonshrc.html>`_.
+
+.. warning:: This will let you hook directly into the ``prompt_toolkit``
+             keybinding manager. It will not stop you from rendering your
+             prompt completely unusable, so tread lightly.
 
 Control characters
-==================
+------------------
 
 We can't and won't stop you from doing what you want, but in the interest of a
 functioning shell, you probably shouldn't mess with the following keystrokes.
@@ -59,7 +64,7 @@ functionality (in less you take the time to rebind them elsewhere).
 
 
 Useful imports
-==============
+--------------
 
 There are a few useful ``prompt_toolkit`` tools that will help us create better
 bindings::
@@ -68,7 +73,7 @@ bindings::
     from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
 
 Custom keyload function
-=======================
+-----------------------
 
 We need our additional keybindings to load after the shell is initialized, so we
 define a function that contains all of the custom keybindings and decorate it
@@ -90,7 +95,7 @@ pressing ``Ctrl-w`` does anything (it should!)
 
 
 What commands can keybindings run?
-==================================
+----------------------------------
 
 Pretty much anything! Since we're defining these commands after xonsh has
 started up, we can create keybinding events that run subprocess commands with
@@ -107,7 +112,7 @@ hardly any effort at all. If we wanted to, say, have a command that runs ``ls
           after asking for a separate command to send information to ``STDOUT``
 
 Restrict actions with filters
-=============================
+-----------------------------
 
 Often we want a key command to only work if certain conditions are met. For
 instance, the ``<TAB>`` key in xonsh brings up the completions menu, but then it
@@ -139,3 +144,56 @@ Now that the condition is defined, we can pass it as a ``filter`` keyword to a k
 With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
 contents of your current directory if there are fewer than 10 items in it.
 Useful? Debatable. Powerful? Yes.
+
+
+Pre-filling the next command
+============================
+
+xonsh can pre-fill the prompt input for the next command using two environment
+variables. This is useful for building interactive workflows, wizards, or
+keybindings that prepare a command for the user to review and edit before running.
+
+``$XONSH_PROMPT_NEXT_CMD``
+--------------------------
+
+Sets the text that will appear in the next prompt as editable input::
+
+    $XONSH_PROMPT_NEXT_CMD = 'git commit -m ""'
+
+The next time the prompt appears, ``git commit -m ""`` will be pre-filled
+and the user can edit it before pressing Enter.
+
+**Cursor positioning:** Use the ``<cursor>`` marker to place the cursor at a
+specific position::
+
+    $XONSH_PROMPT_NEXT_CMD = 'git commit -m "<cursor>"'
+
+The marker is removed from the text and the cursor is placed at its position —
+in this case, between the quotes.
+
+**Example — a keybinding that prepares a git commit:**
+
+.. code-block:: python
+
+    @events.on_ptk_create
+    def custom_keybindings(bindings, **kw):
+
+        @bindings.add('c-g')
+        def prepare_commit(event):
+            $XONSH_PROMPT_NEXT_CMD = 'git commit -m "<cursor>"'
+
+Now pressing ``Ctrl-G`` will pre-fill the next prompt with ``git commit -m ""``
+and place the cursor between the quotes.
+
+``$XONSH_PROMPT_NEXT_CMD_SUGGESTION``
+-------------------------------------
+
+Sets a greyed-out suggestion (like auto-suggest from history) for the next prompt.
+The user can accept it by pressing the right arrow key::
+
+    $XONSH_PROMPT_NEXT_CMD_SUGGESTION = 'git push origin main'
+
+Unlike ``$XONSH_PROMPT_NEXT_CMD``, this does not pre-fill the input — it only
+shows a suggestion that the user can accept or ignore.
+
+Both variables are cleared automatically after being consumed by the prompt.
