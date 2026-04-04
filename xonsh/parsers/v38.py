@@ -457,10 +457,13 @@ class Parser(ThreeSixParser):
     def p_argument_colonequal(self, p):
         """argument : test COLONEQUAL test"""
         p1 = p[1]
-        store_ctx(p1)
-        p[0] = ast.NamedExpr(
-            target=p1, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
-        )
+        if self._is_envvar_node(p1):
+            p[0] = self._envvar_set_call(p1, p[3])
+        else:
+            store_ctx(p1)
+            p[0] = ast.NamedExpr(
+                target=p1, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
+            )
 
     def p_namedexpr_test(self, p):
         """
@@ -471,10 +474,13 @@ class Parser(ThreeSixParser):
             p[0] = p[1]
         else:
             p1 = p[1]
-            store_ctx(p1)
-            p[0] = ast.NamedExpr(
-                target=p1, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
-            )
+            if self._is_envvar_node(p1):
+                p[0] = self._envvar_set_call(p1, p[3])
+            else:
+                store_ctx(p1)
+                p[0] = ast.NamedExpr(
+                    target=p1, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
+                )
 
     def p_namedexpr_test_or_star_expr(self, p):
         """
