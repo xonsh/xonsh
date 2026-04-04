@@ -64,6 +64,14 @@ def test_completions(line, prefix, exp, check_completer, xsh_with_env):
     assert comps.intersection(exp)
 
 
+def test_xpip_completions(check_completer, xsh_with_env):
+    """xpip resolves to 'python -m pip' — completions should still work."""
+    import sys
+
+    comps = check_completer(f"{sys.executable} -m pip", prefix="c")
+    assert comps.intersection({"cache", "check", "config"})
+
+
 @pytest.mark.parametrize(
     "inp, expected",
     [
