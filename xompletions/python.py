@@ -37,12 +37,12 @@ def _complete_argcomplete(ctx, module_arg_index):
 
 
 # Map module names to their completer functions.
-# Extend from xonshrc: ``from xompletions.python import MODULE_COMPLETERS``
+# Extend from xonshrc: ``from xompletions.python import PYTHON_MODULE_COMPLETERS``
 #
 # Available helpers:
 #   _complete_pip          — pip's PIP_AUTO_COMPLETE protocol
 #   _complete_argcomplete  — argcomplete protocol (_ARGCOMPLETE=1, output to stdout)
-MODULE_COMPLETERS = {
+PYTHON_MODULE_COMPLETERS = {
     "pip": _complete_pip,
 }
 
@@ -57,7 +57,7 @@ def xonsh_complete(ctx: CommandContext):
         and ctx.arg_index >= 3
     ):
         module_name = ctx.args[2].value
-        completer = MODULE_COMPLETERS.get(module_name)
+        completer = PYTHON_MODULE_COMPLETERS.get(module_name)
         if completer:
             return completer(ctx, module_arg_index=2)
     return None
