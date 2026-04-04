@@ -62,6 +62,16 @@ def EXEC_ALIAS_RE():
     return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
 
 
+class AliasReturnCommandResult(list):
+    """List subclass that can carry local_env from return_command aliases."""
+
+    local_env: dict
+
+    def __init__(self, *args, local_env=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.local_env = local_env or {}
+
+
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
@@ -96,6 +106,7 @@ class FuncAlias:
         decorators=None,
         alias_name=None,
         called_alias_name=None,
+        env=None,
     ):
         return run_alias_by_params(
             self.func,
@@ -109,6 +120,7 @@ class FuncAlias:
                 "decorators": decorators,
                 "alias_name": getattr(self.func, "__alias_name__", alias_name),
                 "called_alias_name": called_alias_name,
+                "env": env,
             },
         )
 
@@ -222,8 +234,9 @@ class Aliases(cabc.MutableMapping):
             value = value[i:]
 
         if callable(value) and getattr(value, "return_what", "result") == "command":
+            local_env = {}
             try:
-                value = value(acc_args, decorators=decorators)
+                value = value(acc_args, decorators=decorators, env=local_env)
                 acc_args = []
             except Exception as e:
                 print_exception(f"Exception inside alias {value}: {e}")
@@ -278,10 +291,11 @@ class Aliases(cabc.MutableMapping):
         if isinstance(key, list):
             args = key[1:]
             key = key[0]
+        local_env = {}
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_what", "result") == "command":
             try:
-                val = val(args, decorators=decorators)
+                val = val(args, decorators=decorators, env=local_env)
                 args = []
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
@@ -294,12 +308,15 @@ class Aliases(cabc.MutableMapping):
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
-            return self.eval_alias(
+            result = self.eval_alias(
                 val,
                 seen_tokens={key},
                 decorators=decorators,
                 acc_args=args,
             )
+            if local_env and result is not None:
+                result = AliasReturnCommandResult(result, local_env=local_env)
+            return result
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
@@ -430,6 +447,7 @@ ALIAS_PARAMS_DEFAULT = {
     "decorators": None,
     "alias_name": None,
     "called_alias_name": None,
+    "env": None,
 }
 ALIAS_KWARG_NAMES = frozenset(ALIAS_PARAMS_DEFAULT)
 

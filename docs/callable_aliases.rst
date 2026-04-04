@@ -39,6 +39,10 @@ combination of the following parameters in any order:
    * - ``called_alias_name``
      - The name actually used to invoke the alias (may differ if one alias
        points to another).
+   * - ``env``
+     - A local environment overlay dict. Values set here shadow the global
+       env during alias execution and are visible to subprocesses. Removed
+       automatically when the alias exits.
 
 You only need to declare the parameters you actually use:
 
@@ -92,6 +96,68 @@ invoked. The ``alias_name`` and ``called_alias_name`` parameters provide this:
 ``alias_name`` is set at registration time and never changes.
 ``called_alias_name`` is set at each invocation and reflects the name the user
 actually typed.
+
+
+Local Environment Overlay
+-------------------------
+
+The ``env`` parameter provides a local environment overlay. Values set in
+``env`` shadow the global environment during alias execution — both for xonsh
+``$VAR`` reads and for subprocesses. When the alias exits, the overlay is
+removed and the global environment is unchanged.
+
+Direct writes to ``$VAR`` or ``@.env`` modify the global environment as usual
+and persist after the alias exits:
+
+.. code-block:: xonshcon
+
+    @ @aliases.register
+      def _ca(env=None):
+          $GLOBAL = 2
+          echo GLOBAL before overlay = $GLOBAL
+          env['GLOBAL'] = 1
+          echo GLOBAL after overlay = $GLOBAL
+          printenv GLOBAL
+
+    @ ca
+    GLOBAL before overlay = 2
+    GLOBAL after overlay = 1
+    1
+    @ echo GLOBAL after alias = $GLOBAL
+    GLOBAL after alias = 2
+
+Inside the alias, ``$GLOBAL`` returns ``1`` (overlay has priority) and
+subprocesses see ``GLOBAL=1`` in their environment. After the alias exits,
+``$GLOBAL`` is back to ``2`` (the global value set by ``$GLOBAL = 2``).
+
+
+Return Command Aliases
+----------------------
+
+The ``@aliases.return_command`` decorator creates aliases that return a new
+command to execute instead of running it themselves. The ``env`` overlay works
+here too — values set in ``env`` are passed to the returned command's
+environment:
+
+.. code-block:: xonshcon
+
+    @ @aliases.register
+      @aliases.return_command
+      def _rca(args, env=None):
+          env['LOCAL'] = 123
+          $GLOBAL = 321
+          return ['bash', '-c', 'echo $LOCAL']
+
+    @ rca
+    123
+    @ $LOCAL
+    Unknown environment variable: $LOCAL
+    @ $GLOBAL
+    321
+
+The returned command ``bash -c 'echo $LOCAL'`` sees ``LOCAL=123`` in its
+process environment, but ``$LOCAL`` does not exist in the global xonsh env
+after the alias exits. ``$GLOBAL = 321`` was a direct write and persists.
 
 
 Return Values

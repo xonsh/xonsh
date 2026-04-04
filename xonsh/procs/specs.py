@@ -800,6 +800,9 @@ class SubprocSpec:
                 )
             if alias is not None:
                 self.alias_name = cmd0
+                # Apply local_env from return_command aliases
+                if hasattr(alias, "local_env") and alias.local_env:
+                    self.env = (self.env or {}) | alias.local_env
                 if callable(alias[0]):
                     # E.g. `alias == [FuncAlias({'name': 'cd'}), '/tmp']`
                     self.alias = alias[0]

@@ -256,3 +256,57 @@ def test_run_alias_by_params():
         None,
         4,
     )
+
+
+class TestEnvOverlay:
+    """Test the env parameter overlay in callable aliases."""
+
+    def test_overlay_shadows_global(self, xession):
+        """env overlay has priority over global env for reads."""
+        xession.env["X"] = "global"
+        alias_env = {}
+        with xession.env.swap(overlay=alias_env):
+            alias_env["X"] = "local"
+            assert xession.env["X"] == "local"
+        assert xession.env["X"] == "global"
+
+    def test_overlay_does_not_persist(self, xession):
+        """Overlay keys are removed after exit."""
+        with xession.env.swap(overlay={}):
+            pass
+        assert "OVERLAY_ONLY" not in xession.env
+
+    def test_global_write_persists(self, xession):
+        """Direct writes to env persist after overlay is removed."""
+        alias_env = {}
+        with xession.env.swap(overlay=alias_env):
+            alias_env["LOCAL"] = 1
+            xession.env["GLOBAL"] = 2
+        assert "LOCAL" not in xession.env
+        assert xession.env["GLOBAL"] == 2
+
+    def test_overlay_visible_in_detype(self, xession):
+        """Overlay values are included in detype() for subprocesses."""
+        alias_env = {}
+        with xession.env.swap(overlay=alias_env):
+            alias_env["MY_VAR"] = "from_overlay"
+            detyped = xession.env.detype()
+            assert detyped["MY_VAR"] == "from_overlay"
+
+    def test_overlay_thread_isolation(self, xession):
+        """Overlay in one thread is not visible in another."""
+        from threading import Thread
+
+        alias_env = {"THREAD_VAR": "yes"}
+        visible_in_other = []
+
+        def check():
+            visible_in_other.append("THREAD_VAR" in xession.env)
+
+        with xession.env.swap(overlay=alias_env):
+            t = Thread(target=check)
+            t.start()
+            t.join()
+            assert xession.env["THREAD_VAR"] == "yes"  # visible in this thread
+
+        assert visible_in_other == [False]  # not visible in other thread
