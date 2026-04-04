@@ -160,31 +160,6 @@ class CommandCompleter:
                 break
         return cmd_name
 
-    def _find_module(self, ctx):
-        """Find a completer module by checking command args.
-
-        Checks the primary command first, then falls back to scanning args
-        for patterns like ``python -m pip`` where the real command is an argument.
-        """
-        cmd_name = self.clean_cmd_name(ctx.command)
-        module = self.matcher.get_module(cmd_name) or self.matcher.search_completer(
-            cmd_name, cleaned=True
-        )
-        if module:
-            return module, 0
-
-        # Check other args (e.g. "python -m pip" → pip is in args[2])
-        for i, arg in enumerate(ctx.args[1:], 1):
-            if i >= ctx.arg_index:
-                break
-            name = self.clean_cmd_name(arg.value)
-            module = self.matcher.get_module(name) or self.matcher.search_completer(
-                name, cleaned=True
-            )
-            if module:
-                return module, i
-        return None, 0
-
     def __call__(self, full_ctx: CompletionContext):
         """For the given command load completions lazily"""
 
@@ -196,18 +171,16 @@ class CommandCompleter:
         if ctx.arg_index == 0:
             return
 
-        module, start_index = self._find_module(ctx)
+        cmd_name = self.clean_cmd_name(ctx.command)
+        module = self.matcher.get_module(cmd_name) or self.matcher.search_completer(
+            cmd_name, cleaned=True
+        )
 
         if not module:
             return
 
         if hasattr(module, "xonsh_complete"):
             func = module.xonsh_complete
-            if start_index:
-                ctx = ctx._replace(
-                    args=ctx.args[start_index:],
-                    arg_index=ctx.arg_index - start_index,
-                )
             return func(ctx)
 
 
