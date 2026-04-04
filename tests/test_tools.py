@@ -6,15 +6,21 @@ import pathlib
 import re
 import subprocess
 import warnings
+from collections.abc import Iterable
 
 import pytest
 
 from xonsh import __version__
+from xonsh.environ import (
+    EnvPath,
+    is_env_path,
+    str_to_env_path,
+    str_to_path,
+)
 from xonsh.parsers.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
-    EnvPath,
     all_permutations,
     always_false,
     always_true,
@@ -49,7 +55,6 @@ from xonsh.tools import (
     is_completion_mode,
     is_completions_display_value,
     is_dynamic_cwd_width,
-    is_env_path,
     is_float,
     is_int,
     is_int_as_str,
@@ -75,8 +80,6 @@ from xonsh.tools import (
     seq_to_upper_pathsep,
     set_to_pathsep,
     simple_random_choice,
-    str_to_env_path,
-    str_to_path,
     subexpr_before_unbalanced,
     subexpr_from_unbalanced,
     subproc_toks,
@@ -874,6 +877,19 @@ def test_is_path(inp, exp):
 def test_is_env_path(inp, exp):
     obs = is_env_path(inp)
     assert exp == obs
+
+
+def test_env_path_removes_empty():
+    exp = ["a", "b", "c"]
+    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"])) == exp
+    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"]).encode("utf-8")) == exp
+
+    class MyIterablePaths(Iterable):
+        def __iter__(self):
+            data = ["a", "b", "", pathlib.Path("c"), "\n"]
+            return iter(data)
+
+    assert EnvPath(MyIterablePaths()) == exp
 
 
 @pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None)])
@@ -1851,6 +1867,63 @@ def test_iglobpath_dotfiles_recursive(xession):
     assert d + "/bin/.someotherdotfile" in files
 
 
+@pytest.fixture
+def glob_tree(tmp_path):
+    """Create a directory tree for glob tests.
+
+    Structure:
+        tmp/f.ile
+        tmp/.hidden
+        tmp/a/f.ile
+        tmp/a/.hidden
+        tmp/a/b/f.ile
+    """
+    (tmp_path / "a" / "b").mkdir(parents=True)
+    (tmp_path / "f.ile").touch()
+    (tmp_path / ".hidden").touch()
+    (tmp_path / "a" / "f.ile").touch()
+    (tmp_path / "a" / ".hidden").touch()
+    (tmp_path / "a" / "b" / "f.ile").touch()
+    return tmp_path
+
+
+def _glob(glob_tree, pattern, **kwargs):
+    return sorted(iglobpath(str(glob_tree / pattern), **kwargs))
+
+
+def _paths(glob_tree, *relative):
+    return sorted(str(glob_tree / r) for r in relative)
+
+
+class TestIglobpathRecursive:
+    """Tests for ** recursive globbing (issue #4538)."""
+
+    def test_zero_intermediate_dirs(self, glob_tree, xession):
+        """**/f.ile must match f.ile at root (zero intermediate dirs)."""
+        assert _glob(glob_tree, "**/f.ile") == _paths(
+            glob_tree, "a/b/f.ile", "a/f.ile", "f.ile"
+        )
+
+    def test_trailing_doublestar(self, glob_tree, xession):
+        """/** must match all entries recursively."""
+        files = _glob(glob_tree, "**")
+        for expected in ["a", "a/b", "a/b/f.ile", "a/f.ile", "f.ile"]:
+            assert str(glob_tree / expected) in files
+
+    def test_doublestar_with_wildcard(self, glob_tree, xession):
+        """/**/*.ile must also match at root level."""
+        assert _glob(glob_tree, "**/*.ile") == _paths(
+            glob_tree, "a/b/f.ile", "a/f.ile", "f.ile"
+        )
+
+    @skip_if_on_windows
+    def test_dotfiles_zero_intermediate_dirs(self, glob_tree, xession):
+        """**/. pattern with include_dotfiles must match dotfiles at root."""
+        files = _glob(glob_tree, "**/.*", include_dotfiles=True)
+        assert str(glob_tree / ".hidden") in files
+        assert str(glob_tree / "a/.hidden") in files
+
+
 def test_iglobpath_empty_str(monkeypatch, xession):
     # makes sure that iglobpath works, even when os.scandir() and os.listdir()
     # fail to return valid results, like an empty filename
@@ -2045,7 +2118,9 @@ from xonsh.style_tools import Token
     ],
 )
 def test_is_tok_color_dict(val, exp):
-    assert is_tok_color_dict(val) == exp
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        assert is_tok_color_dict(val) == exp
 
 
 def test_print_exception_msg(xession, capsys):

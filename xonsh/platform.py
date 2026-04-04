@@ -13,6 +13,7 @@ import platform
 import signal
 import subprocess
 import sys
+from pathlib import Path
 
 from xonsh.lib.lazyasd import LazyBool, lazybool, lazyobject
 
@@ -47,26 +48,24 @@ ON_CYGWIN = LazyBool(lambda: sys.platform == "cygwin", globals(), "ON_CYGWIN")
 """``True`` if executed on a Cygwin Windows platform, else ``False``. """
 ON_MSYS = LazyBool(lambda: sys.platform == "msys", globals(), "ON_MSYS")
 """``True`` if executed on a MSYS Windows platform, else ``False``. """
-ON_POSIX = LazyBool(lambda: (os.name == "posix"), globals(), "ON_POSIX")
+ON_POSIX = LazyBool(lambda: os.name == "posix", globals(), "ON_POSIX")
 """``True`` if executed on a POSIX-compliant platform, else ``False``. """
 ON_FREEBSD = LazyBool(
-    lambda: (sys.platform.startswith("freebsd")), globals(), "ON_FREEBSD"
+    lambda: sys.platform.startswith("freebsd"), globals(), "ON_FREEBSD"
 )
 """``True`` if on a FreeBSD operating system, else ``False``."""
 ON_DRAGONFLY = LazyBool(
-    lambda: (sys.platform.startswith("dragonfly")), globals(), "ON_DRAGONFLY"
+    lambda: sys.platform.startswith("dragonfly"), globals(), "ON_DRAGONFLY"
 )
 """``True`` if on a DragonFly BSD operating system, else ``False``."""
-ON_NETBSD = LazyBool(
-    lambda: (sys.platform.startswith("netbsd")), globals(), "ON_NETBSD"
-)
+ON_NETBSD = LazyBool(lambda: sys.platform.startswith("netbsd"), globals(), "ON_NETBSD")
 """``True`` if on a NetBSD operating system, else ``False``."""
 ON_OPENBSD = LazyBool(
-    lambda: (sys.platform.startswith("openbsd")), globals(), "ON_OPENBSD"
+    lambda: sys.platform.startswith("openbsd"), globals(), "ON_OPENBSD"
 )
 """``True`` if on a OpenBSD operating system, else ``False``."""
 IN_APPIMAGE = LazyBool(
-    lambda: ("APPIMAGE" in os.environ and "APPDIR" in os.environ),
+    lambda: "APPIMAGE" in os.environ and "APPDIR" in os.environ,
     globals(),
     "IN_APPIMAGE",
 )
@@ -424,11 +423,11 @@ if ON_WINDOWS:
             """Ensure that the case sensitive map of the keys are
             in sync with os.environ
             """
-            envkeys = set(os.environ.keys())
-            for key in envkeys.difference(self._upperkeys):
-                self._upperkeys[key] = key.upper()
-            for key in set(self._upperkeys).difference(envkeys):
-                del self._upperkeys[key]
+            envkeys = {k.upper(): k for k in os.environ.keys()}
+            for ukey in set(envkeys).difference(self._upperkeys):
+                self._upperkeys[ukey] = envkeys[ukey]
+            for ukey in set(self._upperkeys).difference(envkeys):
+                del self._upperkeys[ukey]
 
         def __contains__(self, k):
             self._sync()
@@ -539,6 +538,19 @@ def PATH_DEFAULT():
                 "/usr/games",
                 "/usr/local/games",
             )
+
+            """
+            On NixOS the coreutils bin path is versioned in /nix/store,
+            so we need to locate something like: `/nix/store/<hash>-<coreutils>-<version>/bin`.
+            """
+            if Path("/nix").exists() and "PATH" in os.environ:
+                path_list = os.environ["PATH"].split(os.pathsep)
+                pd += tuple(
+                    path
+                    for path in path_list
+                    if path.startswith("/nix") and path.endswith("/bin")
+                )
+
     elif ON_DARWIN:
         pd = ("/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin")
     elif ON_WINDOWS:
@@ -565,10 +577,17 @@ def LIBC():
         import ctypes.util
 
         libc = ctypes.CDLL(ctypes.util.find_library("c"))
-    elif ON_CYGWIN:
-        libc = ctypes.CDLL("cygwin1.dll")
-    elif ON_MSYS:
-        libc = ctypes.CDLL("msys-2.0.dll")
+    elif ON_CYGWIN or ON_MSYS:
+        # In MSYS2, sys.platform may report "cygwin" even though the
+        # runtime library is msys-2.0.dll (not cygwin1.dll).  Try both.
+        for _dll in ("msys-2.0.dll", "cygwin1.dll"):
+            try:
+                libc = ctypes.CDLL(_dll)
+                break
+            except OSError:
+                continue
+        else:
+            libc = None
     elif ON_FREEBSD:
         try:
             libc = ctypes.CDLL("libc.so.7")

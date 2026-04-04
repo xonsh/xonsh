@@ -4,6 +4,7 @@ import subprocess
 import pytest
 
 from xonsh.completers.commands import complete_xompletions
+from xonsh.completers.tools import _shlex_split_safe
 
 regex_cases = [
     "pip",
@@ -61,3 +62,28 @@ def test_completions(line, prefix, exp, check_completer, xsh_with_env):
     if callable(exp):
         exp = exp()
     assert comps.intersection(exp)
+
+
+def test_xpip_completions(check_completer, xsh_with_env):
+    """xpip resolves to 'python -m pip' — completions should still work."""
+    import sys
+
+    comps = check_completer(f"{sys.executable} -m pip", prefix="c")
+    assert comps.intersection({"cache", "check", "config"})
+
+
+@pytest.mark.parametrize(
+    "inp, expected",
+    [
+        ("simple words", ["simple", "words"]),
+        (r".\file", [r".\file"]),
+        (r".\dir\file other\path", [r".\dir\file", r"other\path"]),
+        (r".\dir\ ", [r".\dir" + "\\"]),
+        (".\\", [".\\"]),
+        ("", []),
+    ],
+)
+def test_shlex_split_safe_preserves_backslashes(inp, expected):
+    """shlex.split() in POSIX mode eats backslashes in Windows paths.
+    _shlex_split_safe() must preserve them."""
+    assert _shlex_split_safe(inp) == expected

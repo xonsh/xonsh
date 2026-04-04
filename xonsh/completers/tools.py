@@ -21,25 +21,19 @@ def _filter_with_func(text, prefix, func):
     return func(text, prefix)
 
 
-def _filter_normal(text, prefix):
-    return _filter_with_func(text, prefix, str.startswith)
-
-
 def _filter_ignorecase(text, prefix):
-    func = lambda txt, pre: txt.lower().startswith(pre.lower())
+    func = lambda txt, pre: pre.lower() in txt.lower()
     return _filter_with_func(text, prefix, func)
 
 
 def get_filter_function():
+    """Return a case-insensitive filtering function for completions.
+
+    Completions are always filtered case-insensitively; the sort order
+    (see ``Completer.complete_from_context``) already ranks exact-case
+    matches above case-insensitive ones.
     """
-    Return an appropriate filtering function for completions, given the valid
-    of $CASE_SENSITIVE_COMPLETIONS
-    """
-    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
-    if csc:
-        return _filter_normal
-    else:
-        return _filter_ignorecase
+    return _filter_ignorecase
 
 
 def justify(s, max_length, left_pad=0):
@@ -226,7 +220,7 @@ def completion_from_cmd_output(line: str, append_space=False):
 
     # special treatment for path completions.
     # not appending space even if it is a single candidate.
-    if cmd.endswith(os.pathsep) or (os.altsep and cmd.endswith(os.altsep)):
+    if cmd.endswith(os.sep) or (os.altsep and cmd.endswith(os.altsep)):
         append_space = False
 
     return RichCompletion(
@@ -283,6 +277,18 @@ def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars:
             yield comp
 
 
+def _shlex_split_safe(s):
+    """Split like shlex but preserve backslashes on Windows.
+
+    ``shlex.split`` in POSIX mode treats ``\\`` as an escape character,
+    which corrupts Windows paths (``".\\dir"`` → ``".dir"``).  Using
+    ``posix=False`` keeps backslashes intact.
+    """
+    lex = shlex.shlex(s, posix=False)
+    lex.whitespace_split = True
+    return list(lex)
+
+
 def comp_based_completer(ctx: CommandContext, start_index=0, **env: str):
     """Helper function to complete commands such as ``pip``,``django-admin``,... that use bash's ``complete``"""
     prefix = ctx.prefix
@@ -293,7 +299,7 @@ def comp_based_completer(ctx: CommandContext, start_index=0, **env: str):
 
     yield from complete_from_sub_proc(
         *args[: start_index + 1],
-        sep=shlex.split,
+        sep=_shlex_split_safe,
         COMP_WORDS=os.linesep.join(args[start_index:]) + os.linesep,
         COMP_CWORD=str(ctx.arg_index - start_index),
         **env,

@@ -36,12 +36,12 @@ def complete_command(command: CommandContext):
             yield RichCompletion(s, append_space=True, **kwargs)  # type: ignore
     if xp.ON_WINDOWS:
         for i in executables_in("."):
-            if i.startswith(cmd):
+            if get_filter_function()(i, cmd):
                 yield RichCompletion(i, append_space=True)
     base = os.path.basename(cmd)
     if os.path.isdir(base):
         for i in executables_in(base):
-            if i.startswith(cmd):
+            if get_filter_function()(i, cmd):
                 yield RichCompletion(os.path.join(base, i))
 
 
@@ -146,7 +146,20 @@ class CommandCompleter:
                 *XSH.env.get("XONSH_COMPLETER_DIRS", []),
             )
             self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
+            self._matcher.wrap(r"\bpython(?:\d|\.)*(exe)?$", "python")
+            # More patterns can be registered via self.wrap() from xonshrc/xontrib
         return self._matcher
+
+    def wrap(self, pattern, module_name):
+        """Register a regex pattern to map command name variants to a completer module.
+
+        Can be called from xonshrc or xontrib::
+
+            from xonsh.completers.commands import complete_xompletions as xmp
+            xmp.wrap(r"\\bmycmd(?:\\d)*$", "mycmd")
+
+        """
+        self.matcher.wrap(pattern, module_name)
 
     @staticmethod
     @functools.lru_cache(10)
@@ -156,7 +169,7 @@ class CommandCompleter:
         for ex in exts:
             if cmd_name.endswith(ex.lower()):
                 # windows handling
-                cmd_name = cmd_name.rstrip(ex.lower())
+                cmd_name = cmd_name.removesuffix(ex.lower())
                 break
         return cmd_name
 

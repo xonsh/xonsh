@@ -1,8 +1,8 @@
-.. _tutorial_macros:
+.. _macros:
 
-************************************
-Tutorial: Macros
-************************************
+******
+Macros
+******
 Bust out your DSLRs, people. It is time to closely examine macros!
 
 What are macro instructions?

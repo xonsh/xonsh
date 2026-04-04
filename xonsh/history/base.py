@@ -61,6 +61,9 @@ class History:
 
         Parameters
         ----------
+        remember_history : bool
+            Сontrols whether entered commands are saved to the command history.
+            If True, commands are saved; if False, command history is not kept.
         sessionid : int, uuid, str, optional
             Current session identifier, will generate a new sessionid if not
             set.

@@ -9,10 +9,11 @@ def yes(args, stdin, stdout, stderr):
 
     to_print = ["y"] if len(args) == 0 else [str(i) for i in args]
 
-    while True:
-        print(*to_print, file=stdout)
-
-    return 0
+    try:
+        while True:
+            print(*to_print, file=stdout)
+    except KeyboardInterrupt:
+        return 130
 
 
 YES_HELP = """Usage: yes [STRING]...

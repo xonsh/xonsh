@@ -56,7 +56,7 @@ class QueueReader:
     def read(self, size=-1):
         """Reads bytes from the file."""
         buf = bytearray()
-        while size < 0 or len(buf) != size:
+        while size < 0 or len(buf) < size:
             line = self.read_queue()
             if line:
                 buf += line
@@ -68,7 +68,7 @@ class QueueReader:
         """Reads a line, or a partial line from the file descriptor."""
         nl = b"\n"
         buf = bytearray()
-        while size < 0 or len(buf) != size:
+        while size < 0 or len(buf) < size:
             line = self.read_queue()
             if line:
                 buf += line
@@ -93,7 +93,7 @@ class QueueReader:
         if hint == -1:
             return self._read_all_lines()
         lines = []
-        while len(lines) != hint:
+        while len(lines) < hint:
             chunk = self.read_queue()
             if not chunk:
                 break

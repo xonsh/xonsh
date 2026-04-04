@@ -144,6 +144,16 @@ events.doc(
 on_chdir(olddir: str, newdir: str) -> None
 
 Fires when the current directory is changed for any reason.
+
+.. code-block:: python
+
+    @events.on_chdir
+    def _source_env_xsh(olddir, newdir):
+        '''Source `env.xsh` file if it's exist in the new directory.'''
+        env_file = @.imp.pathlib.Path(newdir) / 'env.xsh'
+        if env_file.exists():
+            print(f'Source {env_file}')
+            source @(env_file)
 """,
 )
 
@@ -409,8 +419,8 @@ def popd_fn(
         BACKWARD = "-"
         FORWARD = "+"
     else:
-        BACKWARD = "-"
-        FORWARD = "+"
+        BACKWARD = "+"
+        FORWARD = "-"
 
     new_pwd: str | None = None
     if nth is None:
@@ -501,8 +511,8 @@ def dirs_fn(
         BACKWARD = "-"
         FORWARD = "+"
     else:
-        BACKWARD = "-"
-        FORWARD = "+"
+        BACKWARD = "+"
+        FORWARD = "-"
 
     if clear:
         DIRSTACK = []
@@ -535,7 +545,7 @@ def dirs_fn(
 
         if num < 0:
             e = "Invalid argument to dirs: {0}\n"
-            return None, e.format(len(o)), 1
+            return None, e.format(nth), 1
 
         if num >= len(o):
             e = "Too few elements in dirstack ({0} elements)\n"

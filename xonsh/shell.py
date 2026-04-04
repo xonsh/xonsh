@@ -28,6 +28,16 @@ interactive sessions.
 
 This may be fired multiple times per command, with other transformers input or
 output, so design any handlers for this carefully.
+
+.. code-block:: python
+
+    @events.on_transform_command
+    def _pipe_prev_command(cmd, **kw):
+        '''Pipe prev command e.g. `| grep 1` will be `<prev cmd> | grep 1`.'''
+        if cmd and cmd.startswith('| ') and __xonsh__.history:
+            return __xonsh__.history[-1].cmd.rstrip() + cmd.rstrip()
+        return cmd
+
 """,
 )
 
@@ -54,6 +64,16 @@ Parameters:
 * ``rtn``: The result of the command executed (``0`` for success)
 * ``out``: If xonsh stores command output, this is the output
 * ``ts``: Timestamps, in the order of ``[starting, ending]``
+
+Example:
+
+.. code-block:: python
+
+    @events.on_postcommand
+    def _prompt_err_command_again(cmd, rtn, out, ts):
+        '''If the result of executing the command is not zero, repeat the command on the next command prompt.'''
+        if rtn != 0:
+            $XONSH_PROMPT_NEXT_CMD = cmd.rstrip()
 """,
 )
 
@@ -128,9 +148,12 @@ def transform_command(src, show_diff=True):
         lst = src
         srcs = events.on_transform_command.fire(cmd=src)
         for s in srcs:
+            if s is None:
+                continue
             if s != lst:
                 src = s
                 break
+
         i += 1
         if i == limit:
             print_exception(
@@ -138,6 +161,8 @@ def transform_command(src, show_diff=True):
                 "the recursion limit number of iterations to "
                 "converge."
             )
+            break
+
     debug_level = XSH.env.get("XONSH_DEBUG")
     if show_diff and debug_level >= 1 and src != raw:
         sys.stderr.writelines(
@@ -244,7 +269,9 @@ class Shell:
                 raise XonshError(f"{backend} is not recognized as a shell type")
         return cls(**kwargs)
 
-    def __init__(self, execer, ctx=None, shell_type=None, **kwargs):
+    def __init__(
+        self, execer, ctx=None, shell_type=None, history_backend=None, **kwargs
+    ):
         """
         Parameters
         ----------
@@ -258,6 +285,8 @@ class Shell:
         shell_type : str, optional
             The shell type to start, such as 'readline', 'prompt_toolkit1',
             or 'random'.
+        history_backend : str, optional
+            The name of the history backend to use.
         """
         self.execer = execer
         self.ctx = {} if ctx is None else ctx
@@ -270,12 +299,15 @@ class Shell:
                 ts=[time.time(), None],
                 locked=True,
                 filename=env.get("XONSH_HISTORY_FILE", None),
+                sessionid=XSH.sessionid,
+                backend=history_backend,
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:
             XSH.history = hist = DummyHistory()
             env["XONSH_HISTORY_FILE"] = None
 
+        XSH.interface.history = XSH.history
         shell_type = self.choose_shell_type(shell_type, env)
 
         self.shell_type = env["SHELL_TYPE"] = shell_type

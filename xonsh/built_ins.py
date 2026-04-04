@@ -18,6 +18,7 @@ import re
 import signal
 import sys
 import types
+import uuid
 import warnings
 from ast import AST
 from collections.abc import Iterator
@@ -197,12 +198,11 @@ def regexsearch(s):
 
 
 def globsearch(s):
-    csc = XSH.env.get("CASE_SENSITIVE_COMPLETIONS")
     glob_sorted = XSH.env.get("GLOB_SORTED")
     dotglob = XSH.env.get("DOTGLOB")
     return globpath(
         s,
-        ignore_case=(not csc),
+        ignore_case=True,
         return_empty=True,
         sort_result=glob_sorted,
         include_dotfiles=dotglob,
@@ -243,8 +243,8 @@ def subproc_captured_inject(*cmds, envs=None):
     """
     import xonsh.procs.specs
 
-    o = xonsh.procs.specs.run_subproc(cmds, captured="object", envs=envs)
-    o.end()
+    o = xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
+    o = o if isinstance(o, list) else o.splitlines()
     toks = []
     for line in o:
         line = line.rstrip(os.linesep)
@@ -651,6 +651,11 @@ class XonshSessionInterface:
     env : xonsh.environ.Env
         A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
 
+    history : xonsh.history.History
+        Xonsh history backend e.g. `@.history[-1].cmd`.
+        See also `history --help` to manage history from
+        command line.
+
     imp : xonsh.built_ins.InlineImporter
         The inline importer provides instant access to library
         functions and attributes e.g. `@.imp.time.time()`.
@@ -661,6 +666,7 @@ class XonshSessionInterface:
     """
 
     env = None  # type: ignore
+    history = None  # type: ignore
     imp: InlineImporter = InlineImporter()
     lastcmd = None  # type: ignore
 
@@ -729,6 +735,7 @@ class XonshSession:
         self._initial_builtin_names = None
         self.lastcmd = None
         self._last = None
+        self.sessionid = str(uuid.uuid4())
 
     @property
     def last(self):
@@ -777,7 +784,14 @@ class XonshSession:
         if self._py_quit is not None:
             builtins.quit = self._py_quit
 
-    def load(self, execer=None, ctx=None, inherit_env=True, **kwargs):
+    def load(
+        self,
+        execer=None,
+        ctx=None,
+        inherit_env=True,
+        save_origin_env=False,
+        **kwargs,
+    ):
         """Loads the session with default values.
 
         Parameters
@@ -792,7 +806,7 @@ class XonshSession:
             set ``$XONSH_ENV_INHERITED = False``.
         """
         from xonsh.commands_cache import CommandsCache
-        from xonsh.environ import Env, default_env
+        from xonsh.environ import Env, default_env, save_origin_env_to_file
 
         if not hasattr(builtins, "__xonsh__"):
             builtins.__xonsh__ = self
@@ -804,8 +818,14 @@ class XonshSession:
         elif inherit_env:
             self.env = Env(default_env())
         else:
-            self.env = Env({"XONSH_ENV_INHERITED": False})
+            no_env = {"XONSH_ENV_INHERITED": False}
+            # TERM is essential for proper terminal operation
+            no_env["TERM"] = os.environ.get("TERM", "xterm")
+            self.env = Env(no_env)
         self.interface.env = self.env
+
+        if save_origin_env:
+            save_origin_env_to_file(self.env, self.sessionid)
 
         self.exit = None
         self.stdout_uncaptured = None
@@ -926,7 +946,7 @@ class DynamicAccessProxy:
         return getattr(self.obj, name)
 
     def __setattr__(self, name, value):
-        return super().__setattr__(self.obj, name, value)
+        return super().__setattr__(name, value)
 
     def __delattr__(self, name):
         return delattr(self.obj, name)

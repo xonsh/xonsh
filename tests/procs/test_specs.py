@@ -1,6 +1,7 @@
 """Tests the xonsh.procs.specs"""
 
 import itertools
+import os
 import signal
 import sys
 from subprocess import CalledProcessError, Popen
@@ -13,13 +14,15 @@ from xonsh.procs.specs import (
     DecoratorAlias,
     SpecAttrDecoratorAlias,
     SubprocSpec,
+    _has_path_component,
     _run_command_pipeline,
     cmds_to_specs,
     get_script_subproc_command,
     run_subproc,
+    safe_close,
 )
 from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
-from xonsh.tools import XonshError
+from xonsh.tools import XonshError, chdir
 
 # TODO: track down which pipeline + spec test is hanging CI
 # Skip entire test file for Linux on Python 3.12
@@ -113,8 +116,8 @@ def test_capture_always(
         # Enable capfd for function aliases:
         monkeypatch.setattr(STDOUT_DISPATCHER, "default", sys.stdout)
         if alias_type == "func":
-            xonsh_session.aliases["tst"] = (
-                lambda: run_subproc([first_cmd], "hiddenobject") and None
+            xonsh_session.aliases["tst"] = lambda: (
+                run_subproc([first_cmd], "hiddenobject") and None
             )  # Don't return a value
         elif alias_type == "exec":
             first_cmd = " ".join(repr(arg) for arg in first_cmd)
@@ -142,13 +145,8 @@ def test_capture_always(
     # Explicitly captured commands are always captured
     hidden = run_subproc(cmds, "object")  # !()
     hidden.end()
-    if thread_subprocs:
-        assert exp not in capfd.readouterr().out
-        assert hidden.out == exp
-    else:
-        # for some reason THREAD_SUBPROCS=False fails to capture in `!()` but still succeeds in `$()`
-        assert exp in capfd.readouterr().out
-        assert not hidden.out
+    assert exp not in capfd.readouterr().out
+    assert hidden.out == exp
 
     output = run_subproc(cmds, "stdout")  # $()
     assert exp not in capfd.readouterr().out
@@ -291,7 +289,9 @@ def test_subproc_output_format(cmds, exp_stream_lines, exp_list_lines, xonsh_ses
         (False, True),
     ],
 )
-def test_run_subproc_background(captured, exp_is_none):
+def test_run_subproc_background(captured, exp_is_none, xonsh_session):
+    # Suppress job notification print from add_job()
+    xonsh_session.env["XONSH_INTERACTIVE"] = False
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
@@ -395,6 +395,12 @@ def test_callable_alias_cls(thread_subprocs, xession):
     spec = cmds_to_specs(cmds, captured="stdout")[0]
     proc = spec.run()
     assert proc.f == obj
+    if hasattr(proc, "join"):
+        proc.join()
+    safe_close(spec.stdout)
+    safe_close(spec.stderr)
+    safe_close(spec.captured_stdout)
+    safe_close(spec.captured_stderr)
 
 
 def test_specs_resolve_args_list():
@@ -471,6 +477,8 @@ def test_on_command_not_found_replacement(xession):
 
     def replacement_handler(cmd, **kwargs):
         if cmd[0] == "xonshcommandnotfound":
+            if ON_WINDOWS:
+                return ["cmd", "/c", "echo", "replaced"]
             return ["echo", "replaced"]
         return None
 
@@ -537,12 +545,14 @@ def test_on_command_not_found_fallback_on_bad_replacement(xession):
     assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
 
 
-def test_redirect_to_substitution(xession):
+def test_redirect_to_substitution(tmpdir):
+    file = str(tmpdir / "test_redirect_to_substitution.txt")
     s = SubprocSpec.build(
         # `echo hello > @('file')`
-        ["echo", "hello", (">", ["file"])]
+        ["echo", "hello", (">", [file])]
     )
-    assert s.stdout.name == "file"
+    assert s.stdout.name == file
+    s.stdout.close()
 
 
 def test_partial_args_from_classmethod(xession):
@@ -569,6 +579,17 @@ def test_alias_return_command_alone(xession):
     spec = cmds_to_specs(cmds, captured="object")[-1]
     assert spec.cmd == ["echo"]
     assert spec.alias_name == "wakka"
+
+
+@pytest.mark.parametrize("ret", [None, 1, [], False])
+def test_alias_return_command_wrong_return(xession, ret):
+    @xession.aliases.register
+    @xession.aliases.return_command
+    def _nop():
+        return ret
+
+    with pytest.raises(ValueError):
+        cmds_to_specs([["nop"]], captured="object")[-1]
 
 
 def test_alias_return_command_alone_args(xession):
@@ -677,6 +698,7 @@ def test_auto_cd(xession, tmpdir):
 @pytest.mark.parametrize(
     "inp,exp",
     [
+        ["echo command", ["xonsh", "{file}", "--arg", "1"]],
         ["#!/bin/bash", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\n\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
@@ -695,3 +717,87 @@ def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
     file.chmod(0o755)
     cmd = get_script_subproc_command(file_str, ["--arg", "1"])
     assert [c if c != file_str else "{file}" for c in cmd] == exp
+
+
+def test_redirect_without_left_part(tmpdir):
+    file = str(tmpdir / "test_redirect_without_left_part.txt")
+    with pytest.raises(XonshError) as expected:
+        SubprocSpec.build([(">", file)])
+    assert "subprocess mode: command is empty" in str(expected.value)
+
+
+def test_resolve_executable_commands_updates_binary_loc(tmpdir, xession):
+    """After resolve_executable_commands wraps a script with an interpreter,
+    binary_loc must point to the interpreter, not the script.
+    Otherwise _run_binary (PR #4077) would try to launch the script directly
+    via CreateProcess on Windows, causing WinError 193."""
+    script = tmpdir / "test_script.xsh"
+    script.write_text("echo hello", encoding="utf-8")
+    if not ON_WINDOWS:
+        script.chmod(0o755)
+    spec = SubprocSpec.build([str(script)])
+    # The command should be wrapped with an interpreter (python -m xonsh.main
+    # on Windows, or xonsh on POSIX)
+    assert spec.cmd[0] != str(script), "script should be wrapped with interpreter"
+    # binary_loc must match the interpreter, not the original script
+    if spec.binary_loc is not None:
+        assert not spec.binary_loc.endswith(".xsh"), (
+            f"binary_loc should point to interpreter, not script: {spec.binary_loc}"
+        )
+
+
+def test_has_path_component():
+    """_has_path_component correctly distinguishes bare names from paths."""
+    # Bare names — no path component
+    assert not _has_path_component("ls")
+    assert not _has_path_component("ls.exe")
+    assert not _has_path_component("script.xsh")
+    assert not _has_path_component("python")
+
+    # Forward-slash paths (work on all platforms)
+    assert _has_path_component("./script.sh")
+    assert _has_path_component("../script.sh")
+    assert _has_path_component("subdir/script.sh")
+    assert _has_path_component("/usr/bin/ls")
+
+    if ON_WINDOWS:
+        assert _has_path_component(".\\script.exe")
+        assert _has_path_component("..\\script.exe")
+        assert _has_path_component("C:\\Windows\\cmd.exe")
+        assert _has_path_component("subdir\\script.exe")
+
+
+def test_bare_script_in_cwd_not_detected(tmpdir, xession):
+    """Typing a bare script name that exists in CWD should NOT activate
+    script detection.  The user must use an explicit path prefix
+    (e.g. ./script.xsh) to run scripts from the current directory,
+    matching POSIX shell behaviour."""
+    script = tmpdir / "my_script.xsh"
+    script.write_text("echo hello", encoding="utf-8")
+    if not ON_WINDOWS:
+        script.chmod(0o755)
+
+    with chdir(str(tmpdir)):
+        spec = SubprocSpec.build(["my_script.xsh"])
+        # Script detection must NOT wrap the bare name with an interpreter
+        assert spec.cmd[0] == "my_script.xsh", (
+            "bare script name in CWD should not be resolved"
+        )
+        assert spec.binary_loc is None
+
+
+def test_explicit_path_script_in_cwd_detected(tmpdir, xession):
+    """Scripts referenced with an explicit path (./script.xsh) should
+    still be detected and wrapped with an interpreter."""
+    script = tmpdir / "my_script.xsh"
+    script.write_text("echo hello", encoding="utf-8")
+    if not ON_WINDOWS:
+        script.chmod(0o755)
+
+    sep = os.path.sep
+    with chdir(str(tmpdir)):
+        spec = SubprocSpec.build([f".{sep}my_script.xsh"])
+        # Script detection MUST activate for explicit paths
+        assert spec.cmd[0] != f".{sep}my_script.xsh", (
+            "script with explicit path prefix should be wrapped with interpreter"
+        )

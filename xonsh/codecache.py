@@ -95,14 +95,19 @@ def update_cache(ccode, cache_file_name):
     represented by ``ccode``.
     """
     if cache_file_name is not None:
-        if not is_writable_file(cache_file_name):
+        try:
+            os.makedirs(os.path.dirname(cache_file_name), exist_ok=True)
+        except OSError:
+            writable = False
+        else:
+            writable = is_writable_file(cache_file_name)
+        if not writable:
             if XSH.env.get("XONSH_DEBUG", "False"):
                 print_warning(
                     f"update_cache: Cache file is not writable: {cache_file_name}\n"
                     f"Set $XONSH_CACHE_SCRIPTS=0, $XONSH_CACHE_EVERYTHING=0 to disable cache."
                 )
             return
-        os.makedirs(os.path.dirname(cache_file_name), exist_ok=True)
         with open(cache_file_name, "wb") as cfile:
             cfile.write(XONSH_VERSION.encode() + b"\n")
             cfile.write(bytes(PYTHON_VERSION_INFO_BYTES) + b"\n")
@@ -223,5 +228,6 @@ def run_code_with_cache(
         run_cached, ccode = code_cache_check(cachefname)
     if not run_cached:
         ccode = compile_code(display_filename, code, execer, glb, loc, mode)
-        update_cache(ccode, cachefname)
+        if use_cache:
+            update_cache(ccode, cachefname)
     return run_compiled_code(ccode, glb, loc, mode)

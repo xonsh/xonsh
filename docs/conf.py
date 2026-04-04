@@ -27,7 +27,7 @@ from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import Env, Var, Xettings
 
 if tp.TYPE_CHECKING:
-    from xonsh.environ import VarKeyType
+    pass
 import xonsh.main as xmain
 
 xmain.setup()
@@ -83,7 +83,7 @@ master_doc = "contents"
 
 # General information about the project.
 project = "xonsh"
-copyright = "2015, Anthony Scopatz"
+copyright = 'Xonsh Contributors / https://github.com/xonsh/xonsh/graphs/contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -186,7 +186,7 @@ html_favicon = "_static/magic_conch.ico"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_extra_path = ["_static/robots.txt"]
+html_extra_path = ["_static/robots.txt", "install"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -280,7 +280,7 @@ class VarDoc(tp.NamedTuple):
 
 
 class EnvVarGroup(tp.NamedTuple):
-    vars: tp.Dict["VarKeyType", VarDoc]  # sorted variables in the section
+    vars: tp.Dict[str, VarDoc]  # sorted variables in the section
     children: tp.Dict[Xettings, "EnvVarGroup"]  # child sections
 
 
@@ -362,6 +362,8 @@ def setup(app: Sphinx):
     app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")
 
+# To avoid having red highlighting in python/xonshcon blocks.
+suppress_warnings = ["misc.highlighting_failure"]
 
 if __name__ == "__main__":
     # use this to debug the process from IDEs

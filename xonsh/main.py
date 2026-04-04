@@ -13,7 +13,13 @@ import xonsh.procs.pipelines as xpp
 from xonsh import __version__
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_code_with_cache, run_script_with_cache
-from xonsh.environ import get_home_xonshrc_path, make_args_env, xonshrc_context
+from xonsh.environ import (
+    get_home_xonshrc_path,
+    load_origin_env_from_file,
+    make_args_env,
+    os_environ,
+    xonshrc_context,
+)
 from xonsh.events import events
 from xonsh.execer import Execer
 from xonsh.imphooks import install_import_hooks
@@ -217,7 +223,7 @@ def parser():
         "-D",
         dest="defines",
         help="Define an environment variable, in the form of "
-        "-DNAME=VAL. May be used many times.",
+        "-DVAR=VAL or inherit existing variable with -DVAR. May be used many times.",
         metavar="ITEM",
         action="append",
         default=None,
@@ -256,6 +262,20 @@ def parser():
         help="Additional arguments to the script specified by script-file.",
         nargs=argparse.REMAINDER,
         default=[],
+    )
+    p.add_argument(
+        "--save-origin-env",
+        help="Save origin environment variables before running xonsh. Use --load-origin-env to run xonsh with saved origin environment.",
+        dest="save_origin_env",
+        action="store_true",
+        default=False,
+    )
+    p.add_argument(
+        "--load-origin-env",
+        help="Load origin environment variables that were saved before running xonsh by using --save-origin-env",
+        dest="load_origin_env",
+        action="store_true",
+        default=False,
     )
     return p
 
@@ -363,7 +383,12 @@ def start_services(shell_kwargs, args, pre_env=None):
     )
     events.on_timingprobe.fire(name="post_execer_init")
     events.on_timingprobe.fire(name="pre_xonsh_session_load")
-    XSH.load(ctx=ctx, execer=execer, inherit_env=shell_kwargs.get("inherit_env", True))
+    XSH.load(
+        ctx=ctx,
+        execer=execer,
+        inherit_env=shell_kwargs.get("inherit_env", True),
+        save_origin_env=args.save_origin_env,
+    )
     events.on_timingprobe.fire(name="post_xonsh_session_load")
 
     install_import_hooks(execer)
@@ -434,20 +459,32 @@ def premain(argv=None):
         or (args.mode == XonshMode.interactive),
         "XONSH_MODE": xonsh_mode,
     }
-    pre_env["COLOR_RESULTS"] = os.getenv("COLOR_RESULTS", pre_env["XONSH_INTERACTIVE"])
 
     # Load -DVAR=VAL arguments.
     if args.defines is not None:
         for x in args.defines:
-            try:
-                var, val = x.split("=", 1)
+            var = x.split("=", 1)
+            if len(var) == 2:
+                var, val = var
                 pre_env[var] = unquote(val)
-            except Exception:
-                print(
-                    f"Wrong format for -D{x} argument. Use -DVAR=VAL form.",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
+            elif len(var) == 1:
+                var = var[0]
+                if var in os_environ:
+                    pre_env[var] = os_environ[var]
+                elif os_environ.get("XONSH_DEBUG", "0") != "0":
+                    print(
+                        f"Variable {var!r} is not defined in origin environment.",
+                        file=sys.stderr,
+                    )
+
+    if args.load_origin_env:
+        origin_env = load_origin_env_from_file()
+        os.environ.clear()
+        os.environ.update(origin_env)
+
+    pre_env["COLOR_RESULTS"] = os.getenv(
+        "COLOR_RESULTS", str(pre_env["XONSH_INTERACTIVE"])
+    )
 
     start_services(shell_kwargs, args, pre_env=pre_env)
     return args
@@ -581,9 +618,14 @@ def main_xonsh(args):
                 env.update(make_args_env())  # $ARGS is not sys.argv
                 env["XONSH_SOURCE"] = path
                 shell.ctx.update({"__file__": args.file, "__name__": "__main__"})
+                # Add script directory to sys.path[0], matching CPython behavior.
+                # See https://docs.python.org/3/library/sys_path_init.html
+                script_dir = os.path.dirname(path)
+                sys.path.insert(0, script_dir)
                 exc_info = run_script_with_cache(
                     args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
                 )
+                sys.path.remove(script_dir)
             else:
                 print(f"xonsh: {args.file}: No such file.")
                 exit_code = 1
@@ -653,6 +695,7 @@ def setup(
     aliases=(),
     xontribs=(),
     threadable_predictors=(),
+    history_backend=None,
 ):
     """Starts up a new xonsh shell. Calling this in function in another
     packages ``__init__.py`` will allow xonsh to be fully used in the
@@ -688,7 +731,9 @@ def setup(
     if not hasattr(builtins, "__xonsh__"):
         execer = Execer(filename="<stdin>")
         XSH.load(ctx=ctx, execer=execer)
-        XSH.shell = Shell(execer, ctx=ctx, shell_type=shell_type)
+        XSH.shell = Shell(
+            execer, ctx=ctx, shell_type=shell_type, history_backend=history_backend
+        )
     XSH.env.update(env)
     install_import_hooks(XSH.execer)
     XSH.aliases.update(aliases)

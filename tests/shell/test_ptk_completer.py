@@ -4,11 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 from prompt_toolkit.completion import Completion as PTKCompletion
 from prompt_toolkit.document import Document
+from prompt_toolkit.formatted_text import FormattedText
 
 from xonsh.aliases import Aliases
 from xonsh.completer import Completer
 from xonsh.completers.tools import RichCompletion
-from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
+from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter, _highlight_match
 
 
 @pytest.mark.parametrize(
@@ -257,3 +258,173 @@ def test_auto_suggest_completion_with_spaces(xession):
     assert res == long_cmd
     assert len(res.display) < len(res)
     assert res.display.endswith("...")
+
+
+@pytest.mark.parametrize(
+    "current_line, completions, lprefix, displays",
+    [
+        ("./", ["'./abc'"], 3, ["abc"]),  # trim prefix path and unquoting
+        (  # raw string unquoting
+            "./ab",
+            [r"r'./ab\c'", "r'./abc'"],  # avoid trimming c_prefix at backslash
+            6,
+            [r"ab\c", "abc"],
+        ),
+        ("./r", ["./result"], 3, ["result"]),  # start with r
+        ("./t", ["./tester"], 3, ["tester"]),  # end with r
+        ("./", ["./'''"], 2, ["'''"]),  # file name contains quotes
+        ("./", ["\"./r'abc'\""], 3, ["r'abc'"]),  # file name mimicing raw string syntax
+        ('"""/pr', ['"""/proc"""'], 6, ["proc"]),  # triple quotes unquoting
+        (  # file name containing ' " \
+            "./",
+            ["'./r\\'\\\\\"'", "./abc"],
+            3,
+            ["r'\\\"", "abc"],
+        ),
+    ],
+)
+def test_completion_display(
+    current_line, completions, lprefix, displays, monkeypatch, xession
+):
+    xonsh_completer_mock = MagicMock()
+    xonsh_completer_mock.complete.return_value = completions, lprefix
+
+    ptk_completer = PromptToolkitCompleter(xonsh_completer_mock, None, None)
+    ptk_completer.reserve_space = lambda: None
+    ptk_completer.suggestion_completion = lambda _, __: None
+
+    document_mock = MagicMock()
+    document_mock.text = ""
+    document_mock.current_line = current_line
+    document_mock.cursor_position_col = len(current_line)
+
+    monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
+
+    ptk_completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
+    assert ptk_completions == [
+        PTKCompletion(completion, -lprefix, display)
+        for completion, display in zip(completions, displays, strict=True)
+    ]
+
+
+def test_highlight_match_empty_prefix():
+    assert _highlight_match("foobar", "foobar", "", 0) == "foobar"
+
+
+def test_highlight_match_no_match():
+    assert _highlight_match("foobar", "foobar", "xyz", 0) == "foobar"
+
+
+def test_highlight_match_prefix_no_underline():
+    """Prefix matches should not be underlined — they are visually obvious."""
+    assert _highlight_match("foobar", "foobar", "foo", 0) == "foobar"
+
+
+def test_highlight_match_substring_underline():
+    """Substring matches in the middle should be underlined."""
+    result = _highlight_match("foobar", "foobar", "oba", 0)
+    assert result == FormattedText([("", "fo"), ("underline", "oba"), ("", "r")])
+
+
+def test_highlight_match_substring_at_end():
+    result = _highlight_match("foobar", "foobar", "bar", 0)
+    assert result == FormattedText([("", "foo"), ("underline", "bar")])
+
+
+def test_highlight_match_case_insensitive():
+    result = _highlight_match("FooBar", "FooBar", "oba", 0)
+    assert result == FormattedText([("", "Fo"), ("underline", "oBa"), ("", "r")])
+
+
+def test_highlight_match_pre_offset_hides_prefix():
+    """When pre strips the common prefix, a match at position 0 in the
+    full text falls before the displayed text — no underline."""
+    assert _highlight_match("bar", "foobar", "foo", 3) == "bar"
+
+
+def test_highlight_match_pre_offset_substring_visible():
+    """When pre strips a common prefix and the match lands at position 0
+    in the displayed text, it's treated as a prefix match — no underline."""
+    result = _highlight_match("bar_baz", "foo/bar_baz", "bar", 4)
+    assert result == "bar_baz"
+
+
+def test_highlight_match_pre_offset_true_substring():
+    """Substring match after the common prefix strip point."""
+    result = _highlight_match("baz_bar_qux", "foo/baz_bar_qux", "bar", 4)
+    assert result == FormattedText([("", "baz_"), ("underline", "bar"), ("", "_qux")])
+
+
+def test_highlight_match_import_substring():
+    """Import completions: 'de' should be underlined in 'JSONDecoder'."""
+    result = _highlight_match("JSONDecoder", "JSONDecoder", "de", 0)
+    assert result == FormattedText([("", "JSON"), ("underline", "De"), ("", "coder")])
+
+
+def test_highlight_match_import_prefix():
+    """Import completions: 'de' at the start of 'decoder' is a prefix — no underline."""
+    assert _highlight_match("decoder", "decoder", "de", 0) == "decoder"
+
+
+def test_highlight_match_dotted_prefix_substring():
+    """Dotted completions: 'json.de' prefix with 'json.' stripped — 'De' in
+    'JSONDecoder' should be underlined via visible prefix fallback."""
+    result = _highlight_match("JSONDecoder", "json.JSONDecoder", "json.de", 5)
+    assert result == FormattedText([("", "JSON"), ("underline", "De"), ("", "coder")])
+
+
+def test_highlight_match_dotted_prefix_no_underline():
+    """Dotted completions: 'de' at the start of display 'decoder' is a
+    prefix match — no underline."""
+    assert _highlight_match("decoder", "json.decoder", "json.de", 5) == "decoder"
+
+
+def test_highlight_match_dotted_prefix_encoder():
+    """Dotted completions: 'de' in 'encoder' at position 4 should be underlined."""
+    result = _highlight_match("encoder", "json.encoder", "json.de", 5)
+    assert result == FormattedText([("", "enco"), ("underline", "de"), ("", "r")])
+
+
+def test_highlight_match_empty_display_text():
+    """Empty display_text should be returned as-is without error."""
+    assert _highlight_match("", "abc", "abc", 3) == ""
+
+
+def test_highlight_match_case_insensitive_at_display_start():
+    """Case-insensitive match landing at display position 0 is a prefix
+    match and should NOT be underlined."""
+    assert _highlight_match("Foo", "xFoo", "foo", 1) == "Foo"
+
+
+def test_completion_substring_highlight(monkeypatch, xession):
+    """Integration test: substring completions get underline styling."""
+    xonsh_completer_mock = MagicMock()
+    xonsh_completer_mock.complete.return_value = (
+        ["prefix_match", "has_bar_suffix"],
+        3,
+    )
+
+    ptk_completer = PromptToolkitCompleter(xonsh_completer_mock, None, None)
+    ptk_completer.reserve_space = lambda: None
+    ptk_completer.suggestion_completion = lambda _, __: None
+
+    document_mock = MagicMock()
+    document_mock.text = "bar"
+    document_mock.current_line = "bar"
+    document_mock.cursor_position_col = 3
+
+    monkeypatch.setattr(xession.commands_cache, "aliases", Aliases())
+
+    completions = list(ptk_completer.get_completions(document_mock, MagicMock()))
+
+    # "prefix_match" does not contain "bar" → no underline, plain display
+    # "has_bar_suffix" contains "bar" at position 4 → underline
+    assert len(completions) == 2
+
+    # prefix_match: "bar" not found in "prefix_match" → plain display
+    assert completions[0].display == FormattedText([("", "prefix_match")])
+
+    # has_bar_suffix: "bar" found at position 4, pre=0, disp_start=4
+    assert completions[1].display == FormattedText(
+        [("", "has_"), ("underline", "bar"), ("", "_suffix")]
+    )

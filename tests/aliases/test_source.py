@@ -1,12 +1,14 @@
 import builtins
 import os.path
+import shlex
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from xonsh.aliases import make_default_aliases, source_alias_fn
+from xonsh.aliases import make_default_aliases, source_alias_fn, source_foreign_fn
+from xonsh.tools import argvquote
 
 
 @pytest.fixture
@@ -100,3 +102,39 @@ def test_source_foreign_fn_parser(alias, xession):
         "dryrun",
         "interactive",
     ]
+
+
+def _spy_foreign_shell(monkeypatch):
+    calls = {}
+
+    def fake_foreign_shell_data(*args, **kwargs):
+        calls["kwargs"] = kwargs
+        return {}, {}
+
+    fake_foreign_shell_data.cache_clear = lambda: None
+    monkeypatch.setattr(
+        "xonsh.aliases.foreign_shell_data", fake_foreign_shell_data, raising=False
+    )
+    return calls
+
+
+def test_source_foreign_quotes_posix_paths(monkeypatch, xession):
+    calls = _spy_foreign_shell(monkeypatch)
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
+    target = "/Applications/Visual Studio Code.app/foo.sh"
+
+    source_foreign_fn("bash", [target], sourcer="source")
+
+    expected = f"source {shlex.quote(target)}\n"
+    assert calls["kwargs"]["prevcmd"] == expected
+
+
+def test_source_foreign_quotes_cmd_paths(monkeypatch, xession):
+    calls = _spy_foreign_shell(monkeypatch)
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
+    target = r"C:\\Program Files\\foo.bat"
+
+    source_foreign_fn("cmd.exe", [target], sourcer="call")
+
+    expected = f"call {argvquote(target, force=True)}\n"
+    assert calls["kwargs"]["prevcmd"] == expected

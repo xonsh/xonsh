@@ -100,7 +100,7 @@ def proc_untraced_waitpid(proc, hang, task=None, raise_child_process_error=False
         if task is not None:
             task["status"] = "stopped"
         info["backgrounded"] = True
-        proc.signal = (os.WSTOPSIG(wcode), os.WCOREDUMP(wcode))
+        proc.signal = (os.WSTOPSIG(wcode), False)
         info["signal"] = os.WSTOPSIG(wcode)
         proc.suspended = True
 
@@ -419,7 +419,13 @@ def format_job_string(num: int, format="dict") -> str:
     }
 
     if format == "posix":
-        r["pos"] = "+" if tasks[0] == num else "-" if tasks[1] == num else " "
+        r["pos"] = (
+            "+"
+            if tasks[0] == num
+            else "-"
+            if len(tasks) > 1 and tasks[1] == num
+            else " "
+        )
         r["bg"] = " &" if job["bg"] else ""
         r["pid"] = f"({','.join(str(pid) for pid in r['pids'])})" if r["pids"] else ""
         return "[{num}]{pos} {status}: {cmd}{bg} {pid}".format(**r)

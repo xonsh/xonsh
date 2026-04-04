@@ -26,7 +26,6 @@ import datetime
 import functools
 import glob
 import itertools
-import operator
 import os
 import pathlib
 import re
@@ -41,19 +40,6 @@ import typing as tp
 import warnings
 from contextlib import contextmanager
 
-try:
-    from prompt_toolkit.cursor_shapes import (
-        CursorShape,
-        CursorShapeConfig,
-        DynamicCursorShapeConfig,
-        ModalCursorShapeConfig,
-        SimpleCursorShapeConfig,
-    )
-
-    HAVE_CURSOR_SHAPE = True
-except ImportError:
-    HAVE_CURSOR_SHAPE = False
-
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
@@ -67,6 +53,17 @@ from xonsh.platform import (
     os_environ,
     pygments_version_info,
 )
+
+
+@lazyobject
+def _ptk_cursor_shapes():
+    """Lazily load prompt_toolkit cursor shapes module."""
+    try:
+        from prompt_toolkit import cursor_shapes
+
+        return cursor_shapes
+    except ImportError:
+        return None
 
 
 @contextmanager
@@ -205,147 +202,6 @@ def findfirst(s, substrs):
     return i, result
 
 
-class EnvPath(cabc.MutableSequence):
-    """A class that implements an environment path, which is a list of
-    strings. Provides a custom method that expands all paths if the
-    relevant env variable has been set.
-    """
-
-    def __init__(self, args=None):
-        if not args:
-            self._l = []
-        else:
-            if isinstance(args, str):
-                self._l = args.split(os.pathsep)
-            elif isinstance(args, pathlib.Path):
-                self._l = [args]
-            elif isinstance(args, bytes):
-                # decode bytes to a string and then split based on
-                # the default path separator
-                self._l = decode_bytes(args).split(os.pathsep)
-            elif isinstance(args, cabc.Iterable):
-                # put everything in a list -before- performing the type check
-                # in order to be able to retrieve it later, for cases such as
-                # when a generator expression was passed as an argument
-                args = list(args)
-                if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
-                    # make TypeError's message as informative as possible
-                    # when given an invalid initialization sequence
-                    raise TypeError(
-                        "EnvPath's initialization sequence should only "
-                        "contain str, bytes and pathlib.Path entries"
-                    )
-                self._l = args
-            else:
-                raise TypeError(
-                    f"EnvPath cannot be initialized with items of type {type(args)}: {args!r}"
-                )
-
-    def __getitem__(self, item):
-        # handle slices separately
-        if isinstance(item, slice):
-            return [_expandpath(i) for i in self._l[item]]
-        else:
-            return _expandpath(self._l[item])
-
-    def __setitem__(self, index, item):
-        self._l.__setitem__(index, item)
-
-    def __len__(self):
-        return len(self._l)
-
-    def __delitem__(self, key):
-        self._l.__delitem__(key)
-
-    @staticmethod
-    def _prepare_path(p):
-        return str(expand_path(p))
-
-    def insert(self, index, value):
-        self._l.insert(index, self._prepare_path(value))
-
-    def append(self, value):
-        self._l.append(self._prepare_path(value))
-
-    def prepend(self, value):
-        self._l.insert(0, self._prepare_path(value))
-
-    def remove(self, value):
-        try:
-            self._l.remove(self._prepare_path(value))
-        except ValueError:
-            print(f"EnvPath warning: path {repr(value)} not found.", file=sys.stderr)
-
-    @property
-    def paths(self):
-        """
-        Returns the list of directories that this EnvPath contains.
-        """
-        return list(self)
-
-    def __repr__(self):
-        return repr(self._l)
-
-    def __eq__(self, other):
-        if len(self) != len(other):
-            return False
-        return all(map(operator.eq, self, other))
-
-    def _repr_pretty_(self, p, cycle):
-        """Pretty print path list"""
-        if cycle:
-            p.text("EnvPath(...)")
-        else:
-            with p.group(1, "EnvPath(\n[", "]\n)"):
-                for idx, item in enumerate(self):
-                    if idx:
-                        p.text(",")
-                        p.breakable()
-                    p.pretty(item)
-
-    def __add__(self, other):
-        if isinstance(other, EnvPath):
-            other = other._l
-        return EnvPath(self._l + other)
-
-    def __radd__(self, other):
-        if isinstance(other, EnvPath):
-            other = other._l
-        return EnvPath(other + self._l)
-
-    def add(self, data, front=False, replace=False):
-        """Add a value to this EnvPath,
-
-        path.add(data, front=bool, replace=bool) -> ensures that path contains data, with position determined by kwargs
-
-        Parameters
-        ----------
-        data : string or bytes or pathlib.Path
-            value to be added
-        front : bool
-            whether the value should be added to the front, will be
-            ignored if the data already exists in this EnvPath and
-            replace is False
-            Default : False
-        replace : bool
-            If True, the value will be removed and added to the
-            start or end(depending on the value of front)
-            Default : False
-
-        Returns
-        -------
-        None
-
-        """
-        data = self._prepare_path(data)
-        if data not in self._l:
-            self._l.insert(0 if front else len(self._l), data)
-        elif replace:
-            # https://stackoverflow.com/a/25251306/1621381
-            self._l = list(filter(lambda x: x != data, self._l))
-            self._l.insert(0 if front else len(self._l), data)
-
-
 class FlexibleFormatter(string.Formatter):
     """Support nested fields inside conditional formatters
 
@@ -447,7 +303,7 @@ def find_next_break(line, mincol=0, lexer=None):
         return None
     maxcol = None
     lparens = []
-    lexer.input(line)
+    lexer.input(line, is_subproc=True)
     for tok in lexer:
         if tok.type in LPARENS:
             lparens.append(tok.type)
@@ -515,6 +371,7 @@ def subproc_toks(
             elif pos < maxcol and tok.type not in ("NEWLINE", "DEDENT", "WS"):
                 if not greedy:
                     toks.clear()
+                    lparens.clear()
                 if tok.type in BEG_TOK_SKIPS:
                     continue
             else:
@@ -576,6 +433,8 @@ def subproc_toks(
 
 def check_bad_str_token(tok):
     """Checks if a token is a bad string."""
+    if tok.type in ("FSTRING_START", "FSTRING_MIDDLE", "FSTRING_END"):
+        return False
     if tok.type == "ERRORTOKEN" and tok.value == "EOF in multi-line string":
         return True
     elif isinstance(tok.value, str) and not check_quotes(tok.value):
@@ -1043,7 +902,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         """
         if sys.version_info >= (3, 12):
             # https://docs.python.org/3/library/sys.html#sys.last_exc
-            sys.last_exc = exc_info
+            sys.last_exc = exc_info[1]
         else:
             sys.last_type, sys.last_value, sys.last_traceback = exc_info
 
@@ -1341,40 +1200,6 @@ def ensure_string(x):
 def is_path(x):
     """This tests if something is a path."""
     return isinstance(x, pathlib.Path)
-
-
-def is_env_path(x):
-    """This tests if something is an environment path, ie a list of strings."""
-    return isinstance(x, EnvPath)
-
-
-def str_to_path(x):
-    """Converts a string to a path."""
-    if x is None or x == "":
-        return None
-    elif isinstance(x, str):
-        return pathlib.Path(x)
-    elif isinstance(x, pathlib.Path):
-        return x
-    elif isinstance(x, EnvPath) and len(x) == 1:
-        return pathlib.Path(x[0]) if x[0] else None
-    else:
-        raise TypeError(
-            f"Variable should be a pathlib.Path, str or single EnvPath type. {type(x)} given."
-        )
-
-
-def str_to_abs_path(x):
-    """Converts a string to an absolute path."""
-    return r.absolute() if (r := str_to_path(x)) is not None else r
-
-
-def str_to_env_path(x):
-    """Converts a string to an environment path, ie a list of strings,
-    splitting on the OS separator.
-    """
-    # splitting will be done implicitly in EnvPath's __init__
-    return EnvPath(x)
 
 
 def path_to_str(x):
@@ -1773,42 +1598,44 @@ def ptk2_color_depth_setter(x):
 
 def ptk_cursor_shape_vi_modal():
     if xsh.env.get("VI_MODE"):
-        return ModalCursorShapeConfig()
+        return _ptk_cursor_shapes.ModalCursorShapeConfig()
     else:
-        return SimpleCursorShapeConfig()
+        return _ptk_cursor_shapes.SimpleCursorShapeConfig()
 
 
 def to_ptk_cursor_shape(x):
-    if not HAVE_CURSOR_SHAPE:
+    if not _ptk_cursor_shapes:
         return None
-    if isinstance(x, CursorShape | CursorShapeConfig):
+    if isinstance(
+        x, _ptk_cursor_shapes.CursorShape | _ptk_cursor_shapes.CursorShapeConfig
+    ):
         return x
     if not isinstance(x, str):
         raise ValueError("invalid cursor shape")
     x = str(x).upper().replace("-", "_")
     if x == "MODAL":
-        return ModalCursorShapeConfig()
+        return _ptk_cursor_shapes.ModalCursorShapeConfig()
     elif x == "MODAL_VI_MODE_ONLY":
-        return DynamicCursorShapeConfig(ptk_cursor_shape_vi_modal)
+        return _ptk_cursor_shapes.DynamicCursorShapeConfig(ptk_cursor_shape_vi_modal)
     try:
-        return CursorShape[x]
+        return _ptk_cursor_shapes.CursorShape[x]
     except KeyError:
-        return SimpleCursorShapeConfig()
+        return _ptk_cursor_shapes.SimpleCursorShapeConfig()
 
 
 def to_ptk_cursor_shape_display_value(x):
     if not x:
         return ""
-    if isinstance(x, SimpleCursorShapeConfig):
+    if isinstance(x, _ptk_cursor_shapes.SimpleCursorShapeConfig):
         x = x.get_cursor_shape(None)
-    if isinstance(x, CursorShape):
+    if isinstance(x, _ptk_cursor_shapes.CursorShape):
         x = x.value.lower().replace("_", "-")
         if x.startswith("-"):
             x = x[1:]
         return x
-    if isinstance(x, ModalCursorShapeConfig):
+    if isinstance(x, _ptk_cursor_shapes.ModalCursorShapeConfig):
         return "modal"
-    if isinstance(x, DynamicCursorShapeConfig):
+    if isinstance(x, _ptk_cursor_shapes.DynamicCursorShapeConfig):
         return "modal-vi-mode-only"
     return "unknown"
 
@@ -1934,7 +1761,7 @@ _year_to_sec = lambda x: 365.25 * _day_to_sec(x)
 _kb_to_b = lambda x: 1024 * int(x)
 _mb_to_b = lambda x: 1024 * _kb_to_b(x)
 _gb_to_b = lambda x: 1024 * _mb_to_b(x)
-_tb_to_b = lambda x: 1024 * _tb_to_b(x)  # type: ignore
+_tb_to_b = lambda x: 1024 * _gb_to_b(x)  # type: ignore
 
 CANON_HISTORY_UNITS = LazyObject(
     lambda: frozenset(["commands", "files", "s", "b"]), globals(), "CANON_HISTORY_UNITS"
@@ -2012,6 +1839,8 @@ def is_history_tuple(x):
 
 def is_regex(x):
     """Tests if something is a valid regular expression."""
+    if x is None:
+        return False
     try:
         re.compile(x)
         return True
@@ -2072,6 +1901,8 @@ def to_history_tuple(x):
         raise ValueError("history size must be given as a sequence or number")
     if isinstance(x, str):
         m = RE_HISTORY_TUPLE.match(x.strip().lower())
+        if m is None:
+            raise ValueError(f"could not parse history size: {x!r}")
         return to_history_tuple((m.group(1), m.group(3)))
     elif isinstance(x, float | int):
         return to_history_tuple((x, "commands"))
@@ -2302,7 +2133,7 @@ def hardcode_colors_for_win10(style_map):
                     # Win10  doesn't yet handle bold colors. Instead dark
                     # colors are mapped to their lighter version. We simulate
                     # the same here.
-                    style_str.replace("bold", "")
+                    style_str = style_str.replace("bold", "")
                     hexcolor = WIN10_COLOR_MAP[
                         WIN_BOLD_COLOR_MAP.get(ansicolor, ansicolor)
                     ]
@@ -2386,6 +2217,14 @@ def format_std_prepost(template, env=None):
         # color code with no visible text.
         s = shell.format_color(invis + s + invis, force_string=True)
     s = s.replace(invis, "")
+    if not s and template:
+        # PTK's pygments formatter produces no ANSI for Color.RESET tokens
+        # (it treats RESET as "no style").  Fall back to direct ANSI conversion.
+        from xonsh.ansi_colors import ansi_partial_color_format
+
+        style = env.get("XONSH_COLOR_STYLE")
+        s = ansi_partial_color_format(invis + template + invis, hide=False, style=style)
+        s = s.replace(invis, "")
     return s
 
 
@@ -2623,6 +2462,9 @@ def expand_case_matching(s):
         t.append(drive_part)
         s = s[len(drive_part) :]
 
+    if ON_WINDOWS:
+        s = s.replace("\\", "/")
+
     for c in s:
         if c in openers:
             nesting += 1
@@ -2658,19 +2500,6 @@ def globpath(
     return o if len(o) != 0 else no_match
 
 
-def _dotglobstr(s):
-    modified = False
-    dotted_s = s
-    if "/*" in dotted_s:
-        dotted_s = dotted_s.replace("/*", "/.*")
-        dotted_s = dotted_s.replace("/.**/.*", "/**/.*")
-        modified = True
-    if dotted_s.startswith("*") and not dotted_s.startswith("**"):
-        dotted_s = "." + dotted_s
-        modified = True
-    return dotted_s, modified
-
-
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     s = xsh.expand_path(s)
     if sort_result is None:
@@ -2679,20 +2508,11 @@ def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
         include_dotfiles = xsh.env.get("DOTGLOB")
     if ignore_case:
         s = expand_case_matching(s)
-    if "**" in s and "**/*" not in s:
-        s = s.replace("**", "**/*")
-    if include_dotfiles:
-        dotted_s, dotmodified = _dotglobstr(s)
+    kwargs = {"recursive": True, "include_hidden": include_dotfiles or False}
     if sort_result:
-        paths = glob.glob(s, recursive=True)
-        if include_dotfiles and dotmodified:
-            paths.extend(glob.iglob(dotted_s, recursive=True))
-        paths.sort()
-        paths = iter(paths)
+        paths = iter(sorted(glob.glob(s, **kwargs)))
     else:
-        paths = glob.iglob(s, recursive=True)
-        if include_dotfiles and dotmodified:
-            paths = itertools.chain(glob.iglob(dotted_s, recursive=True), paths)
+        paths = glob.iglob(s, **kwargs)
     return paths, s
 
 
@@ -2837,8 +2657,8 @@ def deprecated(deprecated_in=None, removed_in=None):
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
             _deprecated_error_on_expiration(func.__name__, removed_in)
-            func(*args, **kwargs)
             warnings.warn(warning_message, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwargs)
 
         wrapped.__doc__ = (
             f"{wrapped.__doc__}\n\n{warning_message}"
@@ -2875,8 +2695,17 @@ def _deprecated_error_on_expiration(name, removed_in):
         raise AssertionError(f"{name} has passed its version {removed_in} expiry date!")
 
 
+def qualified_name(obj) -> str:
+    """Return fully qualified class name, e.g. 'xonsh.environ.VarPattern'."""
+    cls = obj if isinstance(obj, type) else type(obj)
+    module = getattr(cls, "__module__", None)
+    if module and not module.startswith("builtins"):
+        return f"{module}.{cls.__name__}"
+    return cls.__name__
+
+
 def to_repr_pretty_(inst, p, cycle):
-    name = f"{inst.__class__.__module__}.{inst.__class__.__name__}"
+    name = qualified_name(inst)
     with p.group(0, name + "(", ")"):
         if cycle:
             p.text("...")

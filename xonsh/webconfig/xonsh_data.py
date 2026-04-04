@@ -36,7 +36,7 @@ def get_rst_formatter(**kwargs):
 
 
 def escape(s):
-    return s.replace(r"\n", "<br/>")
+    return s.replace("\n", "<br/>")
 
 
 def invert_color(orig):

@@ -1,6 +1,21 @@
 ==========
 Quotes
 ==========
+
+`@anki-code <https://github.com/anki-code>`_ **says,**
+
+.. epigraph::
+
+    "In theory, theory and practice are the same. In practice, they are not."
+
+
+`@AstraLuma <https://github.com/AstraLuma>`_ **says,**
+
+.. epigraph::
+
+    "It turns out shells have some tricky edge cases."
+
+
 `@gilforsyth <https://twitter.com/gilforsyth>`_ **says,**
 
 .. epigraph::

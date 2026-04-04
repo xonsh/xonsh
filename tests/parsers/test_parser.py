@@ -6,79 +6,13 @@ import textwrap
 
 import pytest
 
-from xonsh.parser import Parser
 from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
-    ON_WINDOWS,
     VER_MAJOR_MINOR,
-    nodes_equal,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
 )
-
-
-@pytest.fixture
-def xsh(xession, monkeypatch, parser):
-    monkeypatch.setattr(xession.execer, "parser", parser)
-    return xession
-
-
-@pytest.fixture(scope="module")
-def parser():
-    return Parser(yacc_optimize=False, yacc_debug=True)
-
-
-@pytest.fixture
-def check_ast(parser, xsh):
-    def factory(inp, run=True, mode="eval", debug_level=0):
-        __tracebackhide__ = True
-        # expect a Python AST
-        exp = ast.parse(inp, mode=mode)
-        # observe something from xonsh
-        obs = parser.parse(inp, debug_level=debug_level)
-        # Check that they are equal
-        assert nodes_equal(exp, obs)
-        # round trip by running xonsh AST via Python
-        if run:
-            exec(compile(obs, "<test-ast>", mode))
-
-    return factory
-
-
-@pytest.fixture
-def check_stmts(check_ast):
-    def factory(inp, run=True, mode="exec", debug_level=0):
-        __tracebackhide__ = True
-        if not inp.endswith("\n"):
-            inp += "\n"
-        check_ast(inp, run=run, mode=mode, debug_level=debug_level)
-
-    return factory
-
-
-@pytest.fixture
-def check_xonsh_ast(xsh, parser):
-    def factory(
-        xenv,
-        inp,
-        run=True,
-        mode="eval",
-        debug_level=0,
-        return_obs=False,
-        globals=None,
-        locals=None,
-    ):
-        xsh.env.update(xenv)
-        obs = parser.parse(inp, debug_level=debug_level)
-        if obs is None:
-            return  # comment only
-        bytecode = compile(obs, "<test-xonsh-ast>", mode)
-        if run:
-            exec(bytecode, globals, locals)
-        return obs if return_obs else True
-
-    return factory
 
 
 @pytest.fixture
@@ -170,8 +104,6 @@ def test_string_literal_concat(first_prefix, second_prefix, check_ast):
 
 
 def test_f_env_var(check_xonsh_ast):
-    if VER_MAJOR_MINOR > (3, 11):
-        pytest.xfail("f-string with special syntax are not supported yet")
     check_xonsh_ast({}, 'f"{$HOME}"', run=False)
     check_xonsh_ast({}, "f'{$XONSH_DEBUG}'", run=False)
     check_xonsh_ast({}, 'F"{$PATH} and {$XONSH_DEBUG}"', run=False)
@@ -222,6 +154,12 @@ def test_fstring_adaptor(inp, exp, xsh, monkeypatch):
         monkeypatch.setitem(xsh.env, key, val)
     obs = eval(code)
     assert exp == obs
+
+
+from tests.parsers.test_parser_fstring_llm import (  # noqa: F401
+    TestPEP701FStrings,
+    TestPEP701XonshFStrings,
+)
 
 
 def test_raw_bytes_literal(check_ast):
@@ -2319,6 +2257,19 @@ def test_ls_nest_ls_dashl(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls $(ls) -l)", False)
 
 
+@pytest.mark.parametrize(
+    "case",
+    [
+        "![echo a/b$(echo 1)/c]",
+        "![echo $(echo 1)suffix]",
+        "![echo prefix$(echo 1)]",
+        "![echo prefix$(echo 1)suffix]",
+    ],
+)
+def test_dollar_paren_adjacent_text(case, check_xonsh_ast):
+    check_xonsh_ast({}, case, False)
+
+
 def test_ls_envvar_strval(check_xonsh_ast):
     check_xonsh_ast({"WAKKA": "."}, "$(ls $WAKKA)", False)
 
@@ -2389,6 +2340,14 @@ def test_dobquestion(check_xonsh_ast):
 
 def test_question_chain(check_xonsh_ast):
     check_xonsh_ast({}, "range?.index?")
+
+
+def test_envvar_question(check_xonsh_ast):
+    check_xonsh_ast({}, "$HOME?")
+
+
+def test_envvar_double_question(check_xonsh_ast):
+    check_xonsh_ast({}, "$HOME??")
 
 
 def test_ls_regex(check_xonsh_ast):
@@ -2627,6 +2586,18 @@ def test_leading_envvar_assignment(check_xonsh_ast):
     check_xonsh_ast({}, "![$FOO='foo' $BAR=2 echo r'$BAR']", False)
 
 
+def test_leading_envvar_assignment_bool(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=False echo 1]", False)
+
+
+def test_leading_envvar_assignment_true(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=True echo 1]", False)
+
+
+def test_leading_envvar_assignment_none(check_xonsh_ast):
+    check_xonsh_ast({}, "![$QWE=None echo 1]", False)
+
+
 def test_echo_comma(check_xonsh_ast):
     check_xonsh_ast({}, "![echo ,]", False)
 
@@ -2639,6 +2610,19 @@ def test_comment_only(check_xonsh_ast):
     check_xonsh_ast({}, "# hello")
 
 
+@pytest.mark.parametrize(
+    "inp",
+    [
+        "echo a#b;c",
+        "echo a#b",
+        "echo x#y;z;w",
+    ],
+)
+def test_parse_hash_in_arg_no_hang(inp, xsh):
+    """Regression test for #5976: parser must not hang on '#' inside arguments."""
+    xsh.execer.compile(inp, mode="single", glbs={}, locs={})
+
+
 def test_echo_slash_question(check_xonsh_ast):
     check_xonsh_ast({}, "![echo /?]", False)
 
@@ -2646,14 +2630,7 @@ def test_echo_slash_question(check_xonsh_ast):
 @pytest.mark.parametrize(
     "case",
     [
-        pytest.param(
-            "[]",
-            marks=pytest.mark.xfail(
-                ON_WINDOWS,
-                reason="non-zero exit code being raised by brackets",
-                strict=True,
-            ),  # TODO: fix this on a windows machine
-        ),
+        "[]",
         "[[]]",
         "[a]",
         "[a][b]",

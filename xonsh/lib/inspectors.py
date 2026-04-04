@@ -132,7 +132,7 @@ def getdoc(obj):
     except Exception:  # pylint:disable=broad-except
         # Harden against an inspect failure, which can occur with
         # SWIG-wrapped extensions.
-        raise
+        return None
 
 
 def getsource(obj, is_binary=False):
@@ -159,9 +159,11 @@ def getsource(obj, is_binary=False):
             obj = obj.__wrapped__
         try:
             src = inspect.getsource(obj)
-        except TypeError:
-            if hasattr(obj, "__class__"):
+        except (TypeError, OSError):
+            try:
                 src = inspect.getsource(obj.__class__)
+            except (TypeError, AttributeError, OSError):
+                return None
         encoding = get_encoding(obj)
         return cast_unicode(src, encoding=encoding)
 
@@ -760,7 +762,6 @@ class Inspector:
             if safe_hasattr(obj, "__call__") and not is_simple_callable(obj):
                 call_def = self._getdef(obj.__call__, oname)
                 if call_def:
-                    call_def = call_def
                     # it may never be the case that call def and definition
                     # differ, but don't include the same signature twice
                     if call_def != out.get("definition"):

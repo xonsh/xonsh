@@ -2,9 +2,12 @@
 
 import builtins
 import gc
+import json
 import os
 import os.path
 import sys
+import tempfile
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryFile
@@ -13,6 +16,7 @@ import pytest
 
 import xonsh.main
 from xonsh.main import XonshMode
+from xonsh.platform import os_environ
 from xonsh.pytest.tools import ON_WINDOWS, TEST_DIR, skip_if_on_windows
 
 
@@ -57,9 +61,19 @@ def test_premain_login(shell, xession):
 
 
 def test_premain_D(shell, xession):
+    # Set variables.
     xonsh.main.premain(["-DTEST1=1616", "-DTEST2=LOL"])
     assert xession.env.get("TEST1") == "1616"
     assert xession.env.get("TEST2") == "LOL"
+
+    # Unknown variable.
+    xonsh.main.premain(["-DORIGIN_VAR"])
+    assert xession.env.get("ORIGIN_VAR") is None
+
+    # Inherit variable.
+    os.environ["ORIGIN_VAR"] = "origin_val"
+    xonsh.main.premain(["--no-env", "-DORIGIN_VAR"])
+    assert xession.env.get("ORIGIN_VAR") == "origin_val"
 
 
 def test_premain_custom_rc(shell, tmpdir, monkeypatch, xession):
@@ -654,3 +668,39 @@ def test_script_missing_file(xession, monkeypatch, capsys, tmpdir):
 
     stdout, stderr = capsys.readouterr()
     assert "No such file." in stdout
+
+
+def test_premain_save_origin_env(shell, xession):
+    origin_env = os_environ
+
+    with tempfile.TemporaryDirectory() as tmp:
+        xession.env["XONSH_DATA_DIR"] = tmp
+
+        xonsh.main.premain(["--save-origin-env"])
+    assert "XONSH_ORIGIN_ENV_FILE" in xession.env
+
+    data_dir = xession.env.get("XONSH_DATA_DIR", None)
+    env_file_name = Path(data_dir) / f"origin-env-{xession.sessionid}.json"
+
+    assert xession.env["XONSH_ORIGIN_ENV_FILE"] == str(env_file_name)
+    assert origin_env == json.loads(env_file_name.read_text())
+
+
+def test_premain_load_origin_error(monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["xonsh", "--load-origin-env"])
+    with pytest.raises(SystemExit, match="1"):
+        xonsh.main.main()
+
+    _, stderr = capsys.readouterr()
+    assert "xonsh: No env file to restore" in stderr
+
+
+def test_premain_load_origin_env(shell, xession, capsys):
+    with tempfile.TemporaryDirectory() as tmp:
+        env_file_name = Path(tmp) / f"origin-env-{uuid.uuid4()}.json"
+        os.environ["ABCD"] = "DEF"
+        env_file_name.write_text(json.dumps(dict(os_environ)))
+        os.environ["XONSH_ORIGIN_ENV_FILE"] = str(env_file_name)
+        os.environ["ABCD"] = "000"
+        xonsh.main.premain(["--load-origin-env"])
+        assert xession.env["ABCD"] == "DEF"

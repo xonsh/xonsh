@@ -30,6 +30,7 @@ from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.lib.lazyasd import LazyObject, lazyobject
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
+from xonsh.lib.string import commonprefix
 from xonsh.platform import (
     ON_CYGWIN,
     ON_DARWIN,
@@ -59,7 +60,47 @@ RL_VARIABLE_VALUE: "tp.Callable[..., tp.Any]|None" = None
 _RL_STATE_DONE = 0x1000000
 _RL_STATE_ISEARCH = 0x0000080
 
-_RL_PREV_CASE_SENSITIVE_COMPLETIONS = "to-be-set"
+_RL_PREV_COMPLETION_CASE_SENSITIVE = "to-be-set"
+
+
+def _ensure_newline():
+    """Print a newline if the cursor is not at column 1.
+
+    Uses the DSR (Device Status Report) escape sequence to query the
+    terminal for the current cursor position.  If the cursor is past
+    column 1, a previous command left a partial line (output without a
+    trailing newline) and we need to move to a fresh line so that the
+    prompt does not overwrite it.
+    """
+    import termios  # noqa: E401
+    import tty
+
+    fd = sys.stdin.fileno()
+    if not os.isatty(fd):
+        return
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setcbreak(fd)
+        # Ask the terminal: "where is the cursor?"
+        sys.stdout.write("\033[6n")
+        sys.stdout.flush()
+        # Read response: ESC [ row ; col R
+        resp = ""
+        while True:
+            ch = sys.stdin.read(1)
+            resp += ch
+            if ch == "R":
+                break
+        # Parse ";col" from the response  e.g. "\033[42;1R"
+        semi = resp.index(";")
+        col = int(resp[semi + 1 : -1])  # between ";" and "R"
+        if col > 1:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+    except (ValueError, IndexError, OSError, termios.error):
+        pass
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
 def setup_readline():
@@ -96,7 +137,11 @@ def setup_readline():
     uses_libedit = readline.__doc__ and "libedit" in readline.__doc__
     readline.set_completer_delims(" \t\n")
     # Cygwin seems to hang indefinitely when querying the readline lib
-    if (not ON_CYGWIN) and (not ON_MSYS) and (not readline.__file__.endswith(".py")):
+    if (
+        (not ON_CYGWIN)
+        and (not ON_MSYS)
+        and (readline.__spec__.has_location and (not readline.__file__.endswith(".py")))
+    ):
         RL_LIB = lib = ctypes.cdll.LoadLibrary(readline.__file__)
         try:
             RL_COMPLETION_SUPPRESS_APPEND = ctypes.c_int.in_dll(
@@ -129,7 +174,7 @@ def setup_readline():
 
     # handle tab completion differences found in libedit readline compatibility
     # as discussed at http://stackoverflow.com/a/7116997
-    if uses_libedit and ON_DARWIN:
+    if uses_libedit:
         readline.parse_and_bind("bind ^I rl_complete")
         print(
             "\n".join(
@@ -167,7 +212,7 @@ def setup_readline():
         try:
             readline.read_init_file(inputrc_name)
         except Exception:
-            # this seems to fail with libedit
+            # this fails with libedit
             print_exception("xonsh: could not load readline default init file.")
 
     # Protection against paste jacking (issue #1154)
@@ -189,17 +234,16 @@ def teardown_readline():
 
 
 def _rebind_case_sensitive_completions():
-    # handle case sensitive, see Github issue #1342 for details
-    global _RL_PREV_CASE_SENSITIVE_COMPLETIONS
-    env = XSH.env
-    case_sensitive = env.get("CASE_SENSITIVE_COMPLETIONS")
-    if case_sensitive is _RL_PREV_CASE_SENSITIVE_COMPLETIONS:
+    # Tell readline to ignore case when presenting completions.
+    # Without this, readline may reject candidates before xonsh's
+    # own completer sees them.  Xonsh handles case preference via
+    # sort-order tiers in Completer.complete_from_context.
+    # See Github issue #1342 for background.
+    global _RL_PREV_COMPLETION_CASE_SENSITIVE
+    if _RL_PREV_COMPLETION_CASE_SENSITIVE is False:
         return
-    if case_sensitive:
-        readline.parse_and_bind("set completion-ignore-case off")
-    else:
-        readline.parse_and_bind("set completion-ignore-case on")
-    _RL_PREV_CASE_SENSITIVE_COMPLETIONS = case_sensitive
+    readline.parse_and_bind("set completion-ignore-case on")
+    _RL_PREV_COMPLETION_CASE_SENSITIVE = False
 
 
 def fix_readline_state_after_ctrl_c():
@@ -387,10 +431,13 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         if not store_in_history:  # store current position to remove it later
             try:
                 import readline
+
+                pos = readline.get_current_history_length() - 1
             except ImportError:
                 store_in_history = True
-            pos = readline.get_current_history_length() - 1
         events.on_pre_prompt_format.fire()
+        if ON_POSIX:
+            _ensure_newline()
         prompt = self.prompt
         events.on_pre_prompt.fire()
         rtn = input(prompt)
@@ -409,7 +456,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         and they should be shown, while 2 means that there is no common prefix but
         we are under the query limit and they should be shown.
         """
-        if os.path.commonprefix([c[loc:] for c in completions]):
+        if commonprefix([c[loc:] for c in completions]):
             return 1
         elif len(completions) <= XSH.env.get("COMPLETION_QUERY_LIMIT"):
             return 2
@@ -462,6 +509,18 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             cursor_index=len(prev_text) + endidx,
         )
         rtn_completions = _render_completions(completions, prefix, plen)
+        # Filter out completions that don't start with the readline prefix.
+        # Substring matches (e.g. _json for prefix "jso") would cause readline's
+        # Greatest Common Prefix to shrink below what was typed.
+        filtered = [
+            (r, c)
+            for r, c in zip(rtn_completions, completions, strict=True)
+            if r.startswith(prefix)
+        ]
+        if filtered:
+            rtn_completions, completions = zip(*filtered, strict=True)
+        else:
+            return []
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
@@ -486,7 +545,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif show_completions == 1:
             return rtn
         elif show_completions == 2:
-            return completions
+            return rtn
         else:
             raise ValueError("query completions flag not understood.")
 
@@ -567,7 +626,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
                 if len(self.cmdqueue) > 0:
                     line = self.cmdqueue.popleft()
                     exec_now = line.endswith("\n")
-                if self.use_rawinput and not exec_now:
+                if self.use_rawinput and not exec_now and have_readline:
                     inserter = (
                         None if line is None else _insert_text_func(line, readline)
                     )

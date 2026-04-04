@@ -17,12 +17,15 @@ def xs_orig_commands_cache(xession):
     pass
 
 
-def test_complete_command(completion_context_parse):
-    if ON_WINDOWS:
-        command = "dir.exe"
-    else:
-        command = "grep"
+def test_complete_command(completion_context_parse, tmp_path, xession):
+    command = "somefile.exe" if ON_WINDOWS else "somefile"
+    tmpdir = tmp_path / "test_complete_command"
+    tmpdir.mkdir()
+    testfile = tmpdir / command
+    testfile.write_text("some file")
+    testfile.chmod(0o777)
 
+    xession.env["PATH"].append(str(tmpdir))
     comps = complete_command(
         completion_context_parse(command[:-1], len(command) - 1).command
     )
@@ -80,3 +83,38 @@ def test_argparse_completer_after_option(check_completer, tmp_path):
     prefix = str(tmp_path)[:-1]
     # has one or more completions including the above tmp_path
     assert check_completer("xonsh --no-rc", prefix)
+
+
+@skip_if_on_windows
+def test_complete_command_substring(completion_context_parse):
+    """Completers should match by substring, not just prefix (xonsh#6082)."""
+    # 'grep' should match prefix 'rep' via substring
+    comps = set(map(str, complete_command(completion_context_parse("rep", 3).command)))
+    assert "grep" in comps
+
+
+def test_filter_function_substring(xession):
+    """Filter functions should use case-insensitive substring matching."""
+    from xonsh.completers.tools import (
+        RichCompletion,
+        _filter_ignorecase,
+    )
+
+    # case-insensitive substring match (middle of string)
+    assert _filter_ignorecase("Dev-Xonsh-Deploy", "deploy")
+    assert _filter_ignorecase("ASDFGH", "asd")
+    assert not _filter_ignorecase("asdfgh", "xyz")
+
+    # prefix match should still work
+    assert _filter_ignorecase("asdfgh", "asdf")
+
+    # empty prefix matches everything
+    assert _filter_ignorecase("anything", "")
+    # prefix longer than text
+    assert not _filter_ignorecase("ls", "longprefix")
+
+    # RichCompletion with display text
+    assert _filter_ignorecase(
+        RichCompletion("val", display="Foo, Bar-Deploy"), "deploy"
+    )
+    assert not _filter_ignorecase(RichCompletion("val", display="foo, bar"), "xyz")

@@ -126,6 +126,7 @@ class PopenThread(threading.Thread):
             self.stderr = io.BytesIO()
         self.suspended = False
         self.prevs_are_closed = False
+        self._interrupted = False
         # This is so the thread will use the same swapped values as the origin one.
         self.original_swapped_values = XSH.env.get_swapped_values()
         self.start()
@@ -209,6 +210,10 @@ class PopenThread(threading.Thread):
         # with orig_* needed to be closed before cap*
         safe_fdclose(self.orig_stdout)
         safe_fdclose(self.orig_stderr)
+        # Close pipe channel write ends (the wrappers above have closefd=False,
+        # so we must close the actual fds via PipeChannel to send EOF).
+        for ch in spec.pipe_channels:
+            ch.close_writer()
         if xp.ON_WINDOWS:
             safe_fdclose(capout)
             safe_fdclose(caperr)
@@ -239,7 +244,12 @@ class PopenThread(threading.Thread):
         for i, chunk in enumerate(iter(reader.read_queue, b"")):  # noqa
             self._alt_mode_switch(chunk, writer, stdbuf)
         if i >= 0:
-            writer.flush()
+            try:
+                writer.flush()
+            except (OSError, ValueError):
+                # Avoid race with the main thread closing PipeChannel fds
+                # before this background thread finishes flushing.
+                pass
             stdbuf.flush()
         return i + 1
 
@@ -309,7 +319,7 @@ class PopenThread(threading.Thread):
             return
         # Get the terminal size of the real terminal, set it on the
         #       pseudoterminal.
-        buf = array.array("h", [0, 0, 0, 0])
+        buf = array.array("h", [0, 0, 0, 0, 0, 0, 0, 0])
         # 1 = stdout here
         try:
             xli.fcntl.ioctl(1, xli.termios.TIOCGWINSZ, buf, True)
@@ -323,7 +333,19 @@ class PopenThread(threading.Thread):
 
     def _signal_int(self, signum, frame):
         """Signal handler for SIGINT - Ctrl+C may have been pressed."""
-        self.send_signal(signal.CTRL_C_EVENT if xp.ON_WINDOWS else signum)
+        # Check if we have already been interrupted. This should prevent
+        # the possibility of infinite recursion via pthread_kill.
+        if self._interrupted:
+            return
+        self._interrupted = True
+        if xp.ON_POSIX:
+            try:
+                pgid = os.getpgid(self.proc.pid)
+                os.killpg(pgid, signum)
+            except (ProcessLookupError, OSError):
+                self.send_signal(signum)
+        else:
+            self.send_signal(signal.CTRL_C_EVENT)
         if self.proc is not None and self.proc.poll() is not None:
             self._restore_sigint(frame=frame)
         if xt.on_main_thread() and not xp.ON_WINDOWS:
@@ -484,7 +506,7 @@ class PopenThread(threading.Thread):
         if s is None:
             rtn = self.returncode
             if rtn is not None and rtn != 0:
-                s = (-1 * rtn, rtn < 0 if xp.ON_WINDOWS else os.WCOREDUMP(rtn))
+                s = (-1 * rtn, False)
         return s
 
     @signal.setter

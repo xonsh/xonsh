@@ -482,9 +482,9 @@ class GroupQueue:
 
     def deq(self):
         for stack in self.queue:
-            for idx, group in enumerate(reversed(stack)):
+            for group in reversed(stack):
                 if group.breakables:
-                    del stack[idx]
+                    stack.remove(group)
                     group.want_break = True
                     return group
             for group in stack:

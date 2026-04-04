@@ -11,4 +11,4 @@ Config Files and Settings
     envvars
     aliases
     events
-    platform-issues
+    platforms

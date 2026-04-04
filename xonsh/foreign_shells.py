@@ -652,8 +652,9 @@ def load_foreign_aliases(shells):
     for shell in shells:
         shell = ensure_shell(shell)
         _, shaliases = foreign_shell_data(**shell)
+        if shaliases is None:
+            shaliases = {}
         if not XSH.env.get("FOREIGN_ALIASES_OVERRIDE"):
-            shaliases = {} if shaliases is None else shaliases
             for alias in set(shaliases) & set(xonsh_aliases):
                 del shaliases[alias]
                 if XSH.env.get("XONSH_DEBUG") >= 1:

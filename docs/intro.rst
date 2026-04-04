@@ -43,7 +43,15 @@
         "This fix was trickier than expected",
         "The unholy cross of Shell/Python",
         "Exploiting the workers and hanging on to outdated imperialist dogma since 2015.",
-        "Not perfect but ahead"
+        "Not perfect but ahead",
+        "We call @ a conch",
+        "Still a shell, now with feelings",
+        "The only shell that knows what your code meant",
+        "Shell yeah",
+        "Tab completion as a service",
+        "Now powered by vibes and unit tests",
+        "Infrastructure as a conchline",
+        "Reproducibility is a lifestyle"
         ];
     document.write(taglines[Math.floor(Math.random() * taglines.length)]);
     </script>
@@ -54,7 +62,6 @@
     </p>
 
 Xonsh (sounds like "consh") is a modern, full-featured and cross-platform python shell.
-The language is a superset of Python 3.6+ with additional shell
-primitives that you are used to from Bash and IPython. It works
-on all major systems including Linux, OSX, and Windows.
+The language is a superset of Python 3 with seamless integration of shell functionality and commands.
+It works on all major systems including Linux, OSX, and Windows.
 Xonsh is meant for the daily use of experts and novices.
