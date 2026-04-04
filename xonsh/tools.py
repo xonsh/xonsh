@@ -133,25 +133,27 @@ class XonshCalledProcessError(XonshError, subprocess.CalledProcessError):
         self.completed_command = completed_command
 
 
+
 def expand_path(s, expand_user=True):
-    """Takes a string path and expands ~ to home if expand_user is set
-    and environment vars if EXPAND_ENV_VARS is set."""
-    env = xsh.env or os_environ
+    env = getattr(xsh, "env", None) or os.environ
+
     if env.get("EXPAND_ENV_VARS", False):
-        s = expandvars(s)
-    if expand_user:
-        # expand ~ according to Bash unquoted rules "Each variable assignment is
-        # checked for unquoted tilde-prefixes immediately following a ':' or the
-        # first '='". See the following for more details.
-        # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
-        if s == "~":return s
-        pre, char, post = s.partition("=")
-        if char:
-            s = expanduser(pre) + char
-            s += os.pathsep.join(map(expanduser, post.split(os.pathsep)))
+        s = expandvars(s)  
+    if not expand_user:
+        return s
+
+    parts = s.split(os.pathsep)
+    expanded_parts = []
+
+    for part in parts:
+        if "=" in part:
+            key, val = part.split("=", 1)
+            val = expanduser(val)  # expand RHS
+            expanded_parts.append(f"{key}={val}")
         else:
-            s = expanduser(s)
-    return s
+            expanded_parts.append(expanduser(part))  # expand whole part
+
+    return os.pathsep.join(expanded_parts)
 
 
 def _expandpath(path):

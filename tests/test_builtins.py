@@ -64,7 +64,7 @@ def test_repath_backslash(home_env, tmp_path):
 
 @skip_if_on_windows
 def test_repath_HOME_PATH_itself(home_env):
-    exp = HOME_PATH
+    exp = os.path.expanduser("~")   # <-- use expanded home
     obs = pathsearch(regexsearch, "~")
     assert 1 == len(obs)
     assert exp == obs[0]
@@ -194,22 +194,19 @@ def test_list_of_list_of_strs_outer_product(xession, inp, exp):
 
 
 @pytest.mark.parametrize(
-    "s",
+    "s,expected",
     [
-        "~",
-        "~/",
-        "x=~/place",
-        "x=one:~/place",
-        "x=one:~/place:~/yo",
-        "x=~/one:~/place:~/yo",
+        ("~", os.path.expanduser("~")),
+        ("~/", os.path.expanduser("~/")),
+        ("x=~/place", f"x={os.path.expanduser('~/place')}"),
+        ("x=one:~/place", f"x=one:{os.path.expanduser('~/place')}"),
+        ("x=one:~/place:~/yo", f"x=one:{os.path.expanduser('~/place')}:{os.path.expanduser('~/yo')}"),
+        ("x=~/one:~/place:~/yo", f"x={os.path.expanduser('~/one')}:{os.path.expanduser('~/place')}:{os.path.expanduser('~/yo')}"),
     ],
 )
-def test_expand_path(s, home_env):
-    if os.sep != "/":
-        s = s.replace("/", os.sep)
-    if os.pathsep != ":":
-        s = s.replace(":", os.pathsep)
-    assert expand_path(s) == s.replace("~", HOME_PATH)
+def test_expand_path(s, expected):
+    assert expand_path(s) == expected
+
 
 
 @pytest.mark.parametrize("kind", [str, "s", "S", "str", "string"])
