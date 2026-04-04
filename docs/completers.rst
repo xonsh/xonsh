@@ -314,6 +314,41 @@ This maps ``mycmd``, ``mycmd2``, ``mycmd3`` etc. to the ``mycmd`` completer modu
 xonsh ships with built-in patterns for ``pip`` (covers ``xpip``, ``pip3.11``, ``pip.exe``)
 and ``python`` (covers ``python3``, ``python3.12``, ``python.exe``).
 
+Completing ``python -m <module>``
+---------------------------------
+
+When an alias resolves to ``python -m <module>`` (e.g. ``xpip`` → ``python -m pip``),
+xonsh uses the ``xompletions/python.py`` completer to delegate to the module's completer.
+
+The mapping is stored in ``PYTHON_MODULE_COMPLETERS`` and can be extended from xonshrc:
+
+.. code-block:: python
+
+    from xompletions.python import PYTHON_MODULE_COMPLETERS
+
+    # Simple completer with static options
+    def _complete_mytool(ctx, module_arg_index):
+        return {'start', 'stop', 'status'}
+
+    PYTHON_MODULE_COMPLETERS['mytool'] = _complete_mytool
+
+Now ``python -m mytool <TAB>`` will suggest ``start``, ``stop``, and ``status``.
+This also works through aliases:
+
+.. code-block:: xonsh
+
+    aliases['mt'] = ['python', '-m', 'mytool']
+    mt <TAB>  # completes with start, stop, status
+
+For modules that use the `argcomplete <https://github.com/kislyuk/argcomplete>`_ protocol,
+a ready-made helper is available:
+
+.. code-block:: python
+
+    from xompletions.python import PYTHON_MODULE_COMPLETERS, _complete_argcomplete
+
+    PYTHON_MODULE_COMPLETERS['my_argcomplete_tool'] = _complete_argcomplete
+
 
 Legacy Completers Support
 =========================
