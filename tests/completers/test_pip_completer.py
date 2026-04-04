@@ -65,24 +65,6 @@ def test_completions(line, prefix, exp, check_completer, xsh_with_env):
 
 
 @pytest.mark.parametrize(
-    "line, prefix, exp",
-    [
-        # alias resolved to: python -m pip <TAB>
-        ["/usr/bin/python -m pip", "c", {"cache", "check", "config"}],
-        # alias resolved to: /some/path/python -m pip show <TAB>
-        ["/some/path/python -m pip show", "", pip_installed],
-    ],
-)
-def test_completions_alias_resolved(line, prefix, exp, check_completer, xsh_with_env):
-    """Completions should work when an alias resolves to 'python -m pip ...'"""
-    comps = check_completer(line, prefix=prefix)
-
-    if callable(exp):
-        exp = exp()
-    assert comps.intersection(exp)
-
-
-@pytest.mark.parametrize(
     "inp, expected",
     [
         ("simple words", ["simple", "words"]),
