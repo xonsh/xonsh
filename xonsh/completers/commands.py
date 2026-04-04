@@ -147,6 +147,7 @@ class CommandCompleter:
             )
             self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
             self._matcher.wrap(r"\bpython(?:\d|\.)*(exe)?$", "python")
+            # More patterns can be registered via self.wrap() from xonshrc/xontrib
         return self._matcher
 
     def wrap(self, pattern, module_name):
