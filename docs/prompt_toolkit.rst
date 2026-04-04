@@ -5,8 +5,10 @@ Prompt Toolkit
 **************
 
 xonsh uses `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_ as
-its default interactive shell (``$SHELL_TYPE='prompt_toolkit'``). It provides
+its primary interactive shell (``$SHELL_TYPE='prompt_toolkit'``). It provides
 syntax highlighting, multi-line editing, completion menus, and more.
+It is included when installing the full package (``pip install 'xonsh[full]'``).
+If prompt_toolkit is not available, xonsh falls back to the readline shell.
 
 This page covers prompt_toolkit-specific features and customization options
 available in xonsh. For full prompt_toolkit documentation, see the
