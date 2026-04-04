@@ -1733,6 +1733,24 @@ def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xession):
         assert path == "~" + exp_end
 
 
+@pytest.mark.parametrize(
+    "inp, exp_expanded, exp_literal",
+    [
+        ("~/docs", os.path.expanduser("~") + "/docs", "~/docs"),
+        ("~", os.path.expanduser("~"), "~"),
+        ("x=~/path", "x=" + os.path.expanduser("~") + "/path", "x=~/path"),
+        ("no-tilde", "no-tilde", "no-tilde"),
+    ],
+)
+def test_expand_path_expanduser_toggle(inp, exp_expanded, exp_literal, xession):
+    """$XONSH_SUBPROC_ARG_EXPANDUSER controls ~ expansion in subprocess args."""
+    xession.env["XONSH_SUBPROC_ARG_EXPANDUSER"] = True
+    assert expand_path(inp) == exp_expanded
+
+    xession.env["XONSH_SUBPROC_ARG_EXPANDUSER"] = False
+    assert expand_path(inp) == exp_literal
+
+
 def test_swap_values():
     orig = {"x": 1}
     updates = {"x": 42, "y": 43}
