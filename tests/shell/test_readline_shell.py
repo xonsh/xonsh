@@ -25,6 +25,24 @@ def test_render_completions(prefix, completion, prefix_len, readline_completion)
     ]
 
 
+def test_render_completions_filters_substring_matches():
+    """Substring matches that would shrink readline's GCP must be filtered out.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/6209
+    e.g. typing '@.imp.jso<Tab>' should not shrink to '@.imp.' because
+    '_json' (a substring match) has a different prefix than 'json'.
+    """
+    prefix = "@.imp.jso"
+    plen = 3  # replace last 3 chars ("jso")
+    completions = {"json", "jsonrpc", "_json"}
+    rendered = _render_completions(completions, prefix, plen)
+    # _json renders to @.imp._json which does NOT start with @.imp.jso
+    safe = [c for c in rendered if c.startswith(prefix)]
+    assert all(c.startswith(prefix) for c in safe)
+    assert "@.imp._json" not in safe
+    assert "@.imp.json" in safe
+
+
 @pytest.mark.parametrize(
     "line, exp",
     [
