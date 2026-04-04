@@ -211,11 +211,12 @@ def HELP_TEMPLATE():
 
 
 def _rst_inline_to_color(s):
-    """Replace RST inline code ``...`` and `...` with colored output."""
+    """Replace RST inline markup with colored output."""
     import re
 
     s = re.sub(r"``(.+?)``", r"{CYAN}\1{RESET}", s)
     s = re.sub(r"`(.+?)`", r"{CYAN}\1{RESET}", s)
+    s = re.sub(r"\*\*(.+?)\*\*", r"{BOLD_WHITE}\1{RESET}", s)
     return re.sub(r"(?<!\{CYAN\})\$(\w+)", r"{CYAN}$\1{RESET}", s)
 
 
@@ -223,9 +224,9 @@ def _rst_inline_to_color(s):
 def HELP_TEMPLATE_SHORT():
     return (
         "{{INTENSE_YELLOW}}Name:{{RESET}} ${envvar}\n"
+        "{{INTENSE_YELLOW}}Configurable:{{RESET}} {configurable}\n"
         "{{INTENSE_YELLOW}}Description:{{RESET}} {docstr}\n"
-        "{{INTENSE_YELLOW}}Default:{{RESET}} {default}\n"
-        "{{INTENSE_YELLOW}}Configurable:{{RESET}} {configurable}"
+        "{{INTENSE_YELLOW}}Default:{{RESET}} {default}"
     )
 
 
@@ -1032,15 +1033,15 @@ class GeneralSetting(Xettings):
         PATH_DEFAULT,
         "List of strings representing where to look for executables.",
         type_str="env_path",
-        doc_default="On Windows: it is ``Path`` value of register's "
-        "``HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment``. "
-        "On Mac OSX: ``('/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin')`` "
-        "On Linux & on Cygwin & on MSYS, when detected that the distro "
-        "is like arch, the default PATH is "
+        doc_default="\n\n"
+        "- **Windows**: ``Path`` value from registry "
+        "``HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment``\n"
+        "- **macOS**: ``('/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin')``\n"
+        "- **Linux/Cygwin/MSYS** (arch-like): "
         "``('/usr/local/sbin', '/usr/local/bin', '/usr/bin', "
-        "'/usr/bin/site_perl', '/usr/bin/vendor_perl', '/usr/bin/core_perl')``"
-        " and otherwise is "
-        "``('~/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin',"
+        "'/usr/bin/site_perl', '/usr/bin/vendor_perl', '/usr/bin/core_perl')``\n"
+        "- **Linux/Cygwin/MSYS** (other): "
+        "``('~/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', "
         "'/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games')``",
     )
     PATHEXT = Var(
@@ -1048,7 +1049,7 @@ class GeneralSetting(Xettings):
         pathsep_to_upper_seq,
         seq_to_upper_pathsep,
         [".COM", ".EXE", ".BAT", ".CMD"] if ON_WINDOWS else [],
-        "Sequence of extension strings (eg, ``.EXE``) for "
+        "Sequence of extension strings (e.g., ``.EXE``) for "
         "filtering valid executables by. Each element must be "
         "uppercase.",
     )
@@ -1143,7 +1144,7 @@ class GeneralSetting(Xettings):
     XONSHRC_DIR = Var.with_default(
         default_xonshrcdir,
         "A list of directories, from which all .xsh|.py files will be loaded "
-        "at startup, sorted in lexographic order. Files in these directories "
+        "at startup, sorted in lexicographic order. Files in these directories "
         "are loaded after any files in XONSHRC.",
         type_str="env_path",
     )
@@ -1201,9 +1202,9 @@ class GeneralSetting(Xettings):
     XONSH_MODE = Var.with_default(
         default="interactive",  # In sync with ``main.py``.
         doc="A string value representing the current xonsh execution mode: "
-        "``interactive``, ``script_from_file``, ``source``, ``single_command``, ``script_from_stdin``."
-        "Note! This variable reflects the mode at start time  (e.g. ``script_from_file``) "
-        "or code execution (e.g. ``source``).  If you need to gate behavior in an RC file that "
+        "``interactive``, ``script_from_file``, ``source``, ``single_command``, ``script_from_stdin``. "
+        "Note! This variable reflects the mode at start time (e.g. ``script_from_file``) "
+        "or code execution (e.g. ``source``). If you need to gate behavior in an RC file that "
         "you plan to ``source``, use ``$XONSH_INTERACTIVE`` as the flag instead.",
         type_str="str",
     )
@@ -1228,7 +1229,7 @@ class GeneralSetting(Xettings):
         "    - ``pygments.token.Token`` - ``$XONSH_STYLE_OVERRIDES[Token.Keyword] = '#ff0000'``\n"
         "    - pygments token name (string) - ``$XONSH_STYLE_OVERRIDES['Token.Keyword'] = '#ff0000'``\n"
         "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
-        "(The rules above are all have the same effect.)",
+        "(The rules above all have the same effect.)",
     )
     XONSH_ENV_PATTERN_PATH = Var.with_default(
         VarPattern(r"\w*PATH$", "env_path"),
@@ -1291,7 +1292,7 @@ class SubprocessSetting(Xettings):
         not ON_CYGWIN,
         "Note: The ``$XONSH_CAPTURE_ALWAYS`` variable introduces finer control "
         "and you should probably use that instead.\n\n"
-        "Whether or not to try to run subrocess mode in a Python thread, "
+        "Whether or not to try to run subprocess mode in a Python thread, "
         "when trying to capture its output. There are various trade-offs.\n\n"
         "If True, xonsh is able capture & store the stdin, stdout, and stderr"
         " of threadable subprocesses.\n"
@@ -1419,11 +1420,11 @@ class CacheSetting(Xettings):
 
     ENABLE_COMMANDS_CACHE = Var(
         default=True,
-        doc="command names in a directory are cached when enabled. "
-        "On some platforms it may not be accurate enough"
+        doc="Command names in a directory are cached when enabled. "
+        "On some platforms it may not be accurate enough "
         "(e.g. Windows, Linux save mtime in seconds). "
         "Setting it to False would disable the caching mechanism "
-        "and may slow down the shell",
+        "and may slow down the shell.",
         doc_default="True",
     )
 
@@ -1486,10 +1487,10 @@ class ChangeDirSetting(Xettings):
     COMPLETE_DOTS = Var.with_default(
         "matching",
         doc="Flag to specify how current and previous directories should be "
-        "tab completed  ('./', '../'):\n"
-        "    - ``always`` Always complete paths with ./ and ../\n"
-        "    - ``never`` Never complete paths with ./ and ../\n"
-        "    - ``matching`` Complete if path starts with . or ..",
+        "tab completed (``./``, ``../``):\n\n"
+        "    - ``always`` - Always complete paths with ``./`` and ``../``\n"
+        "    - ``never`` - Never complete paths with ``./`` and ``../``\n"
+        "    - ``matching`` - Complete if path starts with ``.`` or ``..``",
     )
 
 
@@ -1498,9 +1499,9 @@ class InterpreterSetting(Xettings):
 
     DOTGLOB = Var.with_default(
         False,
-        'Globbing files with "*" or "**" will also match '
-        "dotfiles, or those 'hidden' files whose names "
-        "begin with a literal '.'. Such files are filtered "
+        "Globbing files with ``*`` or ``**`` will also match "
+        "dotfiles, or those hidden files whose names "
+        "begin with a literal ``.``. Such files are filtered "
         "out by default.",
     )
     EXPAND_ENV_VARS = Var.with_default(
@@ -1528,7 +1529,7 @@ class InterpreterSetting(Xettings):
         "with the same name. Note that setting of this must happen in the "
         "environment that xonsh was started from. "
         "It cannot be set in the ``.xonshrc`` as loading of foreign aliases happens before "
-        "``.xonshrc`` is parsed",
+        "``.xonshrc`` is parsed.",
         is_configurable=True,
     )
     GLOB_SORTED = Var.with_default(
@@ -1546,6 +1547,7 @@ class XontribSetting(Xettings):
         type_str="bool",
         doc="""\
     Controls auto-loading behaviour of xontrib packages at the startup.
+
     * Set this to ``True`` to disable autoloading completely.
     * Setting this to a list of xontrib names will block loading those specifically.
     """,
@@ -1799,18 +1801,18 @@ class PromptSetting(Xettings):
         "",
         "A format string, using the same keys and colors as ``$PROMPT``, that "
         "is prepended whenever stderr is displayed. This may be used in "
-        "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block."
+        "conjunction with ``$XONSH_STDERR_POSTFIX`` to close out the block. "
         "For example, to have stderr appear on a red background, the "
-        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}". '
         "It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.",
     )
     XONSH_STDERR_POSTFIX = Var.with_default(
         "",
         "A format string, using the same keys and colors as ``$PROMPT``, that "
         "is appended whenever stderr is displayed. This may be used in "
-        "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block."
+        "conjunction with ``$XONSH_STDERR_PREFIX`` to start the block. "
         "For example, to have stderr appear on a red background, the "
-        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}".'
+        'prefix & postfix pair would be "{BACKGROUND_RED}" & "{RESET}". '
         "It works with ``!()`` (colors will be reduced) or ``$XONSH_CAPTURE_ALWAYS=True``.",
     )
     XONSH_SUPPRESS_WELCOME = Var.with_default(
@@ -1971,14 +1973,14 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     )
     XONSH_COPY_ON_DELETE = Var.with_default(
         False,
-        "Whether to copy words/lines to clipboard on deletion (must be set in the run control file)."
-        "Does not have any effect in ``vi_mode``."
+        "Whether to copy words/lines to clipboard on deletion (must be set in the run control file). "
+        "Does not have any effect in ``vi_mode``. "
         "Only available under the prompt-toolkit shell.",
     )
     XONSH_USE_SYSTEM_CLIPBOARD = Var.with_default(
         True,
-        "Whether to let the shell use the system clipboard (must be set in the run control file)."
-        "The main use-case is to fully disable clipboard integration in ``vi_mode``."
+        "Whether to let the shell use the system clipboard (must be set in the run control file). "
+        "The main use-case is to fully disable clipboard integration in ``vi_mode``. "
         "Only available under the prompt-toolkit shell.",
     )
     XONSH_CTRL_BKSP_DELETION = Var.with_default(
@@ -2012,7 +2014,7 @@ class AsyncPromptSetting(PTKSetting):
     ENABLE_ASYNC_PROMPT = Var.with_default(
         False,
         "When enabled the prompt is rendered using threads. "
-        "``$PROMPT_FIELD`` that take long will be updated in the background and will not affect prompt speed. ",
+        "``$PROMPT_FIELDS`` that take long will be updated in the background and will not affect prompt speed.",
     )
 
 
@@ -2444,10 +2446,19 @@ class Env(cabc.MutableMapping):
             width = 79
         if short:
             docstr = vardocs.doc.strip()
+            doc_default = vardocs.doc_default
+            if isinstance(doc_default, str):
+                doc_default = doc_default.strip()
+            # If value starts with a list, put it on the next line
+            if docstr.startswith(("- ", "* ")):
+                docstr = "\n" + docstr
+            doc_default_str = str(doc_default) if doc_default is not None else ""
+            if doc_default_str.startswith(("- ", "* ")):
+                doc_default = "\n" + doc_default_str
             template = HELP_TEMPLATE_SHORT.format(
                 envvar=key,
                 docstr=docstr,
-                default=vardocs.doc_default,
+                default=doc_default,
                 configurable=vardocs.is_configurable,
             )
             template = _rst_inline_to_color(template)
