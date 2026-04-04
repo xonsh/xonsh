@@ -27,7 +27,9 @@ def _complete_argcomplete(ctx, module_arg_index):
         comp_line += " "
 
     return complete_from_sub_proc(
-        ctx.args[0].value, "-m", module_name,
+        ctx.args[0].value,
+        "-m",
+        module_name,
         _ARGCOMPLETE="1",
         _ARGCOMPLETE_IFS="\n",
         _ARGCOMPLETE_OUTPUT_FD="1",
