@@ -155,6 +155,10 @@ class CommandPipeline:
             The output lines
         starttime : floats or None
             Pipeline start timestamp.
+        pipestatus : list of int or None
+            Current return codes of all commands in the pipeline.
+        pipecode : int
+            Current pipeline status: 1 if any command returned non-zero or is still running, 0 if all succeeded.
         """
         self.starttime = None
         self.ended = False
@@ -918,6 +922,16 @@ class CommandPipeline:
     def pid(self):
         """Process identifier."""
         return self.proc.pid if self.proc else None
+
+    @property
+    def pipestatus(self):
+        """Return codes of all commands in the pipeline."""
+        return [None if p is None else p.returncode for p in self.procs]
+
+    @property
+    def pipecode(self):
+        """1 if any command in the pipeline returned non-zero or is still running, 0 if all succeeded."""
+        return 0 if all(r == 0 for r in self.pipestatus) else 1
 
     @property
     def returncode(self):
