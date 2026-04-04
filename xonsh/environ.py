@@ -1801,7 +1801,7 @@ class PromptSetting(Xettings):
     XONSH_HISTORY_MATCH_ANYWHERE = Var.with_default(
         False,
         "When searching history from a partial string (by pressing up arrow), "
-        "match command history anywhere in a given line (not just the start)",
+        "match command history anywhere in a given line (not just the start).",
         doc_default="False",
     )
     XONSH_STDERR_PREFIX = Var.with_default(
@@ -1861,7 +1861,7 @@ class PromptHistorySetting(Xettings):
         "exit status) to not be added to the history list\n"
         "- ``ignorespace`` will not save the command if it begins with a space\n"
         "- ``erasedups`` will remove all previous commands that matches and updates the frequency "
-        "(Note: only supported in sqlite backend)",
+        "(Note: only supported in sqlite backend).",
         can_store_as_str=True,
     )
     XONSH_HISTORY_SIZE = Var(
