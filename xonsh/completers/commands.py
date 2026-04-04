@@ -146,6 +146,7 @@ class CommandCompleter:
                 *XSH.env.get("XONSH_COMPLETER_DIRS", []),
             )
             self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
+            self._matcher.wrap(r"\bpython(?:\d|\.)*(exe)?$", "python")
         return self._matcher
 
     @staticmethod
