@@ -296,10 +296,19 @@ def attr_complete(prefix, ctx, filter_func):
         opts = [o for o in dir(val) if not o.startswith("_")]
     else:
         opts = [o for o in dir(val) if filter_func(o, attr)]
+    from xonsh.procs.pipelines import CommandPipeline, blocking_property
+
+    might_block = isinstance(val, CommandPipeline)
     prelen = len(prefix)
     for opt in opts:
         # check whether these options actually work (e.g., disallow 7.imag)
         _expr = f"{expr}.{opt}"
+        # skip properties marked as blocking (e.g. CommandPipeline.returncode)
+        if might_block:
+            static_attr = inspect.getattr_static(val, opt, None)
+            if isinstance(static_attr, blocking_property):
+                attrs.add(prefix[: prelen - len(attr)] + opt)
+                continue
         _val_, _ctx_ = _safe_eval(_expr, _ctx)
         if _val_ is None and _ctx_ is None:
             continue
