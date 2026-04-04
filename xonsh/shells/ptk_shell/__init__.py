@@ -10,6 +10,7 @@ from prompt_toolkit import ANSI
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, Suggestion
 from prompt_toolkit.clipboard import InMemoryClipboard
+from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.history import ThreadedHistory
@@ -312,8 +313,16 @@ class PromptToolkitShell(BaseShell):
         events.on_pre_prompt_format.fire()
         env = XSH.env
 
-        if next_command := env.get("XONSH_PROMPT_NEXT_CMD", ""):
+        next_command: str | Document = ""
+        if next_cmd_raw := env.get("XONSH_PROMPT_NEXT_CMD", ""):
             env["XONSH_PROMPT_NEXT_CMD"] = ""
+            cursor_marker = "<cursor>"
+            if cursor_marker in next_cmd_raw:
+                cursor_pos = next_cmd_raw.index(cursor_marker)
+                text = next_cmd_raw.replace(cursor_marker, "")
+                next_command = Document(text, cursor_pos)
+            else:
+                next_command = next_cmd_raw
 
         mouse_support = env.get("MOUSE_SUPPORT")
         auto_suggest = auto_suggest if env.get("XONSH_PROMPT_AUTO_SUGGEST") else None

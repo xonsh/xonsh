@@ -1920,7 +1920,9 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
 
     XONSH_PROMPT_NEXT_CMD = Var.with_default(
         "",
-        "The text of the next command that will be inserted in the next prompt.",
+        "The text of the next command that will be inserted in the next prompt. "
+        "Use ``<cursor>`` marker to set the cursor position, "
+        "e.g. ``$XONSH_PROMPT_NEXT_CMD = 'echo <cursor> world'``.",
     )
     XONSH_PROMPT_NEXT_CMD_SUGGESTION = Var.with_default(
         "",
