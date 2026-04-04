@@ -144,6 +144,8 @@ def expand_path(s, expand_user=True):
         # checked for unquoted tilde-prefixes immediately following a ':' or the
         # first '='". See the following for more details.
         # https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html
+        if s == "~":
+            return s
         pre, char, post = s.partition("=")
         if char:
             s = expanduser(pre) + char
