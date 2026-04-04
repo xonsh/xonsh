@@ -1867,6 +1867,63 @@ def test_iglobpath_dotfiles_recursive(xession):
     assert d + "/bin/.someotherdotfile" in files
 
 
+@pytest.fixture
+def glob_tree(tmp_path):
+    """Create a directory tree for glob tests.
+
+    Structure:
+        tmp/f.ile
+        tmp/.hidden
+        tmp/a/f.ile
+        tmp/a/.hidden
+        tmp/a/b/f.ile
+    """
+    (tmp_path / "a" / "b").mkdir(parents=True)
+    (tmp_path / "f.ile").touch()
+    (tmp_path / ".hidden").touch()
+    (tmp_path / "a" / "f.ile").touch()
+    (tmp_path / "a" / ".hidden").touch()
+    (tmp_path / "a" / "b" / "f.ile").touch()
+    return tmp_path
+
+
+def _glob(glob_tree, pattern, **kwargs):
+    return sorted(iglobpath(str(glob_tree / pattern), **kwargs))
+
+
+def _paths(glob_tree, *relative):
+    return sorted(str(glob_tree / r) for r in relative)
+
+
+class TestIglobpathRecursive:
+    """Tests for ** recursive globbing (issue #4538)."""
+
+    def test_zero_intermediate_dirs(self, glob_tree, xession):
+        """**/f.ile must match f.ile at root (zero intermediate dirs)."""
+        assert _glob(glob_tree, "**/f.ile") == _paths(
+            glob_tree, "a/b/f.ile", "a/f.ile", "f.ile"
+        )
+
+    def test_trailing_doublestar(self, glob_tree, xession):
+        """/** must match all entries recursively."""
+        files = _glob(glob_tree, "**")
+        for expected in ["a", "a/b", "a/b/f.ile", "a/f.ile", "f.ile"]:
+            assert str(glob_tree / expected) in files
+
+    def test_doublestar_with_wildcard(self, glob_tree, xession):
+        """/**/*.ile must also match at root level."""
+        assert _glob(glob_tree, "**/*.ile") == _paths(
+            glob_tree, "a/b/f.ile", "a/f.ile", "f.ile"
+        )
+
+    @skip_if_on_windows
+    def test_dotfiles_zero_intermediate_dirs(self, glob_tree, xession):
+        """**/. pattern with include_dotfiles must match dotfiles at root."""
+        files = _glob(glob_tree, "**/.*", include_dotfiles=True)
+        assert str(glob_tree / ".hidden") in files
+        assert str(glob_tree / "a/.hidden") in files
+
+
 def test_iglobpath_empty_str(monkeypatch, xession):
     # makes sure that iglobpath works, even when os.scandir() and os.listdir()
     # fail to return valid results, like an empty filename
