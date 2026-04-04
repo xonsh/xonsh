@@ -162,6 +162,11 @@ def complete_aliases(command: CommandContext):
 
     completer = getattr(alias, "xonsh_complete", None)
     if not completer:
+        from xonsh.aliases import FuncAlias
+
+        if isinstance(alias, FuncAlias):
+            completer = getattr(alias.func, "xonsh_complete", None)
+    if not completer:
         return
 
     if command.suffix:
