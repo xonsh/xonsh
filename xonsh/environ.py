@@ -1385,7 +1385,7 @@ class LangSetting(Xettings):
 
     LANG = Var.with_default(
         default="C.UTF-8",
-        doc="Fallback locale setting for systems where it matters",
+        doc="Fallback locale setting for systems where it matters.",
         type_str="str",
     )
     LC_COLLATE = Var.for_locale("LC_COLLATE")
@@ -1687,7 +1687,7 @@ class PromptSetting(Xettings):
         detype=None,
         doc="Dictionary containing variables to be used when formatting ``$PROMPT`` "
         "and ``$TITLE``. See 'Customizing the Prompt' "
-        "http://xon.sh/tutorial.html#customizing-the-prompt",
+        "http://xon.sh/tutorial.html#customizing-the-prompt.",
         is_configurable=False,
     )
     PROMPT_REFRESH_INTERVAL = Var.with_default(
@@ -1738,7 +1738,7 @@ class PromptSetting(Xettings):
         "`prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_"
         " library installed. To specify which shell should be used, do so in "
         "the run control file. "
-        "It also accepts a class type that inherits from ``xonsh.shells.base_shell.BaseShell``",
+        "It also accepts a class type that inherits from ``xonsh.shells.base_shell.BaseShell``.",
         doc_default="``best``",
     )
     SUGGEST_COMMANDS = Var.with_default(
