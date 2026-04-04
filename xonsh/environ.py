@@ -214,9 +214,17 @@ def _rst_inline_to_color(s):
     """Replace RST inline markup with colored output."""
     import re
 
+    # :class:`mod.Class` → Class in cyan
+    s = re.sub(r":class:`([^`]+)`", r"{CYAN}\1{RESET}", s)
+    # `text <url>`_ → text (url)
+    s = re.sub(r"`([^<`]+?)\s*<([^>]+)>`_", r"\1 (\2)", s)
+    # ``code`` → cyan
     s = re.sub(r"``(.+?)``", r"{CYAN}\1{RESET}", s)
+    # `code` → cyan
     s = re.sub(r"`(.+?)`", r"{CYAN}\1{RESET}", s)
+    # **bold** → bold white
     s = re.sub(r"\*\*(.+?)\*\*", r"{BOLD_WHITE}\1{RESET}", s)
+    # $VAR not already colored → cyan
     return re.sub(r"(?<!\{CYAN\})\$(\w+)", r"{CYAN}$\1{RESET}", s)
 
 
@@ -1226,9 +1234,9 @@ class GeneralSetting(Xettings):
         {},
         "A dictionary containing custom prompt_toolkit/pygments style definitions.\n"
         "The following style definitions are supported:\n\n"
-        "    - ``pygments.token.Token`` - ``$XONSH_STYLE_OVERRIDES[Token.Keyword] = '#ff0000'``\n"
-        "    - pygments token name (string) - ``$XONSH_STYLE_OVERRIDES['Token.Keyword'] = '#ff0000'``\n"
-        "    - ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
+        "- ``pygments.token.Token`` - ``$XONSH_STYLE_OVERRIDES[Token.Keyword] = '#ff0000'``\n"
+        "- pygments token name (string) - ``$XONSH_STYLE_OVERRIDES['Token.Keyword'] = '#ff0000'``\n"
+        "- ptk style name (string) - ``$XONSH_STYLE_OVERRIDES['pygments.keyword'] = '#ff0000'``\n\n"
         "(The rules above all have the same effect.)",
     )
     XONSH_ENV_PATTERN_PATH = Var.with_default(
@@ -1488,9 +1496,9 @@ class ChangeDirSetting(Xettings):
         "matching",
         doc="Flag to specify how current and previous directories should be "
         "tab completed (``./``, ``../``):\n\n"
-        "    - ``always`` - Always complete paths with ``./`` and ``../``\n"
-        "    - ``never`` - Never complete paths with ``./`` and ``../``\n"
-        "    - ``matching`` - Complete if path starts with ``.`` or ``..``",
+        "- ``always`` - Always complete paths with ``./`` and ``../``\n"
+        "- ``never`` - Never complete paths with ``./`` and ``../``\n"
+        "- ``matching`` - Complete if path starts with ``.`` or ``..``",
     )
 
 
@@ -1722,11 +1730,10 @@ class PromptSetting(Xettings):
     SHELL_TYPE = Var.with_default(
         "best",
         "Which shell is used. Currently two base shell types are supported:\n\n"
-        "    - ``readline`` that is backed by Python's readline module\n"
-        "    - ``prompt_toolkit`` that uses external library of the same name\n"
-        "    - ``random`` selects a random shell from the above on startup\n"
-        "    - ``best`` selects the most feature-rich shell available on the\n"
-        "       user's system\n\n"
+        "- ``readline`` - backed by Python's readline module\n"
+        "- ``prompt_toolkit`` - uses external library of the same name\n"
+        "- ``random`` - selects a random shell from the above on startup\n"
+        "- ``best`` - selects the most feature-rich shell available on the user's system\n\n"
         "To use the ``prompt_toolkit`` shell you need to have the "
         "`prompt_toolkit <https://github.com/jonathanslenders/python-prompt-toolkit>`_"
         " library installed. To specify which shell should be used, do so in "

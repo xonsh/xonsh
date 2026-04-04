@@ -139,3 +139,20 @@ Now that the condition is defined, we can pass it as a ``filter`` keyword to a k
 With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
 contents of your current directory if there are fewer than 10 items in it.
 Useful? Debatable. Powerful? Yes.
+
+Copy current command to clipboard
+=================================
+
+You can add a shortcut like ``Ctrl+Y`` (crossplatform) to copy the current
+command line text to the system clipboard without any selection::
+
+    @events.on_ptk_create
+    def custom_keybindings(bindings, **kw):
+
+        @bindings.add("c-y")
+        def copy_current_command(event):  # Ctrl+Y (cross-platform)
+            if (text := event.current_buffer.text):
+                event.app.clipboard.set_data(
+                    @.imp.prompt_toolkit.clipboard.ClipboardData(text)
+                )
+                @.imp.prompt_toolkit.shortcuts.print_formatted_text('Copied!')
