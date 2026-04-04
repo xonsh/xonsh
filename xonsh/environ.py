@@ -1508,6 +1508,13 @@ class InterpreterSetting(Xettings):
         "Toggles whether environment variables are expanded inside of strings "
         "in subprocess mode.",
     )
+    XONSH_SUBPROC_ARG_EXPANDUSER = Var.with_default(
+        True,
+        "If True, ``~`` and ``~user`` in subprocess arguments are expanded to "
+        "home directories (e.g. ``~/docs`` → ``/home/user/docs``, "
+        "``~bob/docs`` → ``/home/bob/docs``). "
+        "Set to False to pass ``~`` through as a literal character.",
+    )
     FOREIGN_ALIASES_SUPPRESS_SKIP_MESSAGE = Var.with_default(
         False,
         "Whether or not foreign aliases should suppress the message "
