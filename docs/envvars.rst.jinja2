@@ -8,8 +8,8 @@ applicable.
 {% set env_vars = make_envvars() %}
 
 {% macro list_table(vars) %}
-    {% for vardoc in rst.iterator_for_divmod(vars.values()) %}
-{% if loop.index0 % 3 == 0 %}* {% else %}  {% endif %}- {% if vardoc %}{{ rst.to_ref_string(vardoc.info.title) }}{% endif %}
+    {% for vardoc in rst.iterator_for_divmod(vars.values(), 2) %}
+{% if loop.index0 % 2 == 0 %}* {% else %}  {% endif %}- {% if vardoc %}{{ rst.to_ref_string(vardoc.info.title) }}{% endif %}
 
     {% endfor %}
 {% endmacro %}
