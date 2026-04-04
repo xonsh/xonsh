@@ -274,7 +274,7 @@ def to_debug(x):
 
 
 class LsColors(cabc.MutableMapping):
-    """Helps convert to/from $LS_COLORS format, respecting the xonsh color style.
+    """Helps convert to/from ``$LS_COLORS`` format, respecting the xonsh color style.
     This accepts the same inputs as dict(). The special value ``target`` is
     replaced by no color, but sets a flag for cognizant application (see is_target()).
     """
@@ -590,7 +590,7 @@ def is_lscolors(x):
 
 @events.on_pre_spec_run_ls
 def ensure_ls_colors_in_env(spec=None, **kwargs):
-    """This ensures that the $LS_COLORS environment variable is in the
+    """This ensures that the ``$LS_COLORS`` environment variable is in the
     environment. This fires exactly once upon the first time the
     ls command is called.
     """
@@ -686,7 +686,7 @@ DEFAULT_TITLE = "{current_job:{} | }{user}@{hostname}: {cwd} | xonsh"
 
 @default_value
 def xonsh_data_dir(env):
-    """Ensures and returns the $XONSH_DATA_DIR"""
+    """Ensures and returns the ``$XONSH_DATA_DIR``"""
     xdd = os.path.expanduser(
         os.getenv("XONSH_DATA_DIR") or os.path.join(env.get("XDG_DATA_HOME"), "xonsh")
     )
@@ -696,7 +696,7 @@ def xonsh_data_dir(env):
 
 @default_value
 def xonsh_cache_dir(env):
-    """Ensures and returns the $XONSH_CACHE_DIR"""
+    """Ensures and returns the ``$XONSH_CACHE_DIR``"""
     xdd = os.path.expanduser(
         os.getenv("XONSH_CACHE_DIR") or os.path.join(env.get("XDG_CACHE_HOME"), "xonsh")
     )
@@ -745,7 +745,7 @@ def xonsh_sys_config_dir(env):
 
 
 def xonshconfig(env):
-    """Ensures and returns the $XONSHCONFIG"""
+    """Ensures and returns the ``$XONSHCONFIG``"""
     xcd = env.get("XONSH_CONFIG_DIR")
     xc = os.path.join(xcd, "config.json")
     return xc
@@ -984,7 +984,7 @@ class Xettings:
 
 
 def _commands_cache_read_dir_once_default():
-    """Compute the default for $XONSH_COMMANDS_CACHE_READ_DIR_ONCE.
+    """Compute the default for ``$XONSH_COMMANDS_CACHE_READ_DIR_ONCE``.
 
     - Windows: ``[%WINDIR%]`` (typically ``C:\\Windows``).
     - WSL: auto-detect ``/mnt/*/Windows`` directories (may include multiple
@@ -1058,7 +1058,7 @@ class GeneralSetting(Xettings):
         to_shlvl,
         str,
         0,
-        "Shell nesting level typed as integer, mirrors bash's $SHLVL.",
+        "Shell nesting level typed as integer, mirrors bash's ``$SHLVL``.",
         is_configurable=False,
     )
 
@@ -1136,7 +1136,7 @@ class GeneralSetting(Xettings):
         default_xonshrc,
         "A list of the locations of run control files, if they exist.  User "
         "defined run control file will supersede values set in system-wide "
-        "control file if there is a naming collision. $THREAD_SUBPROCS=None "
+        "control file if there is a naming collision. ``$THREAD_SUBPROCS=None`` "
         "when reading in run control files.",
         type_str="env_path",
     )
@@ -1325,7 +1325,7 @@ class SubprocessSetting(Xettings):
     XONSH_TRACE_SUBPROC_FUNC = Var.with_default(
         None,
         doc=(
-            "A callback function used to format the trace output shown when $XONSH_TRACE_SUBPROC=True."
+            "A callback function used to format the trace output shown when ``$XONSH_TRACE_SUBPROC=True``."
         ),
         doc_default="""\
     By default it just prints ``cmds`` like below.
@@ -1675,8 +1675,8 @@ class PromptSetting(Xettings):
         validate=always_true,
         convert=None,
         detype=None,
-        doc="Dictionary containing variables to be used when formatting $PROMPT "
-        "and $TITLE. See 'Customizing the Prompt' "
+        doc="Dictionary containing variables to be used when formatting ``$PROMPT`` "
+        "and ``$TITLE``. See 'Customizing the Prompt' "
         "http://xon.sh/tutorial.html#customizing-the-prompt",
         is_configurable=False,
     )
@@ -1992,7 +1992,7 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
 
 class AsyncPromptSetting(PTKSetting):
     """Asynchronous Prompt
-    Load $PROMPT in background without blocking read-eval loop.
+    Load ``$PROMPT`` in background without blocking read-eval loop.
     """
 
     ASYNC_INVALIDATE_INTERVAL = Var.with_default(
@@ -2012,7 +2012,7 @@ class AsyncPromptSetting(PTKSetting):
     ENABLE_ASYNC_PROMPT = Var.with_default(
         False,
         "When enabled the prompt is rendered using threads. "
-        "$PROMPT_FIELD that take long will be updated in the background and will not affect prompt speed. ",
+        "``$PROMPT_FIELD`` that take long will be updated in the background and will not affect prompt speed. ",
     )
 
 
@@ -2983,7 +2983,7 @@ def default_env(env=None):
 
 
 def make_args_env(args=None):
-    """Makes a dictionary containing the $ARGS and $ARG<N> environment
+    """Makes a dictionary containing the ``$ARGS`` and ``$ARG<N>`` environment
     variables. If the supplied ARGS is None, then sys.argv is used.
     """
     if args is None:
