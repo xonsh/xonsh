@@ -7,10 +7,10 @@ from functools import wraps
 from types import MethodType
 
 from prompt_toolkit import ANSI
-from prompt_toolkit.document import Document
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, Suggestion
 from prompt_toolkit.clipboard import InMemoryClipboard
+from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
 from prompt_toolkit.history import ThreadedHistory
