@@ -454,7 +454,9 @@ class ProcProxyThread(threading.Thread):
                         "spec": spec,
                         "stack": spec.stack,
                         "alias_name": getattr(self.f, "__alias_name__", None),
-                        "called_alias_name": self.env.get("__ALIAS_NAME") if self.env else None,
+                        "called_alias_name": self.env.get("__ALIAS_NAME")
+                        if self.env
+                        else None,
                     },
                 )
         except SystemExit as e:
@@ -702,7 +704,9 @@ class ProcProxy:
                         "spec": spec,
                         "stack": spec.stack,
                         "alias_name": getattr(self.f, "__alias_name__", None),
-                        "called_alias_name": self.env.get("__ALIAS_NAME") if self.env else None,
+                        "called_alias_name": self.env.get("__ALIAS_NAME")
+                        if self.env
+                        else None,
                     },
                 )
         except SystemExit as e:

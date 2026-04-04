@@ -2591,8 +2591,6 @@ def columnize(elems, width=80, newline="\n"):
     return lines
 
 
-
-
 def unthreadable(f):
     """Decorator that specifies that a callable alias should be run only
     on the main thread process. This is often needed for debuggers and
