@@ -2293,7 +2293,12 @@ class Env(cabc.MutableMapping):
             if detyper is None:
                 # cannot be detyped
                 continue
-            deval = detyper(val)
+            try:
+                deval = detyper(val)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Error during detyping ${key}: {exc}"
+                ) from exc
             if deval is None:
                 # cannot be detyped
                 continue
@@ -2326,10 +2331,11 @@ class Env(cabc.MutableMapping):
         """Replaces the contents of os_environ with a detyped version
         of the xonsh environment.
         """
+        new_env = self.detype()
         if self._orig_env is None:
             self._orig_env = dict(os_environ)
         os_environ.clear()
-        os_environ.update(self.detype())
+        os_environ.update(new_env)
 
     def undo_replace_env(self):
         """Replaces the contents of os_environ with a detyped version
@@ -2610,7 +2616,16 @@ class Env(cabc.MutableMapping):
         self._detyped = None
         if self.get("UPDATE_OS_ENVIRON"):
             if self._orig_env is None:
-                self.replace_env()
+                try:
+                    self.replace_env()
+                except Exception:
+                    # Rollback to keep xonsh env and os.environ in sync.
+                    if old_value is self._no_value:
+                        del self._d[key]
+                    else:
+                        self._d[key] = old_value
+                    self._detyped = None
+                    raise
             elif detyper is None:
                 pass
             else:
