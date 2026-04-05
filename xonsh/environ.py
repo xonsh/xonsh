@@ -563,7 +563,7 @@ class LsColors(cabc.MutableMapping):
         # run dircolors
         try:
             out = subprocess.check_output(
-                cmd, env=denv, text=True, stderr=subprocess.DEVNULL
+                cmd, env=denv, encoding="utf-8", stderr=subprocess.DEVNULL
             )
         except (subprocess.CalledProcessError, FileNotFoundError, NotADirectoryError):
             return cls(cls.default_settings)

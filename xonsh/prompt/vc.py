@@ -121,7 +121,7 @@ def get_hg_branch(root=None):
         # get branch name
         branch_path = root / ".hg" / "branch"
         if branch_path.exists():
-            with open(branch_path) as branch_file:
+            with open(branch_path, encoding="utf-8") as branch_file:
                 branch = branch_file.read().strip()
         else:
             branch = "default"
@@ -131,7 +131,7 @@ def get_hg_branch(root=None):
     for filename in ["bookmarks.current", "topic"]:
         feature_branch_path = root / ".hg" / filename
         if feature_branch_path.exists():
-            with open(feature_branch_path) as file:
+            with open(feature_branch_path, encoding="utf-8") as file:
                 feature_branch = file.read().strip()
             if feature_branch:
                 if branch:

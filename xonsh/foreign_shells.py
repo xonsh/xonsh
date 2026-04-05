@@ -2,6 +2,7 @@
 
 import collections.abc as cabc
 import functools
+import locale
 import os
 import re
 import shlex
@@ -247,7 +248,7 @@ def foreign_shell_data(
             # start new session to avoid hangs
             # (doesn't work on Cygwin though)
             start_new_session=((not ON_CYGWIN) and (not ON_MSYS)),
-            text=True,
+            encoding=locale.getpreferredencoding(False),
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
