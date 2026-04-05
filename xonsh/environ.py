@@ -733,7 +733,7 @@ def xdg_data_dirs(env):
     On Linux and Unix based systemd it is the same as in open-desktop standard: ``['/usr/share', '/usr/local/share']``
     """
     if ON_WINDOWS:
-        return [os_environ["ProgramData"]]
+        return [os_environ.get("ProgramData", r"C:\ProgramData")]
     return [
         os.path.join("/usr", "share"),
         os.path.join("/usr", "local", "share"),
