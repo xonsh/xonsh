@@ -59,10 +59,14 @@ def _get_color_cache():
 def _get_simple_cache():
     global _SIMPLE_CACHE
     if _SIMPLE_CACHE is None:
+        from wcwidth import wcwidth
+
         _SIMPLE_CACHE = []
         for start, end in _SIMPLE_RANGES:
             for cp in range(start, end + 1):
                 ch = chr(cp)
+                if wcwidth(ch) != 1:
+                    continue
                 try:
                     _SIMPLE_CACHE.append((ch, unicodedata.name(ch).lower()))
                 except ValueError:
