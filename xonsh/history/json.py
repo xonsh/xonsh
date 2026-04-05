@@ -391,7 +391,10 @@ class JsonHistoryFlusher(threading.Thread):
         try:
             os.replace(tmpname, self.filename)
         except Exception as err:
-            print(f"history: failed to replace {tmpname!r} -> {self.filename!r}: {err}", file=sys.stderr)
+            print(
+                f"history: failed to replace {tmpname!r} -> {self.filename!r}: {err}",
+                file=sys.stderr,
+            )
 
 
 class JsonCommandField(cabc.Sequence):
