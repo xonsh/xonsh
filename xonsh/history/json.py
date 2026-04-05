@@ -5,6 +5,7 @@ import collections.abc as cabc
 import os
 import re
 import sys
+import tempfile
 import threading
 import time
 
@@ -325,8 +326,11 @@ class JsonHistoryFlusher(threading.Thread):
         self.at_exit = at_exit
         self.skip = skip
         if at_exit:
-            self.dump()
-            queue.popleft()
+            with self.cond:
+                self.cond.wait_for(self.i_am_at_the_front)
+                self.dump()
+                self.queue.popleft()
+                self.cond.notify_all()
         else:
             self.start()
 
@@ -335,6 +339,7 @@ class JsonHistoryFlusher(threading.Thread):
             self.cond.wait_for(self.i_am_at_the_front)
             self.dump()
             self.queue.popleft()
+            self.cond.notify_all()
 
     def i_am_at_the_front(self):
         """Tests if the flusher is at the front of the queue."""
@@ -359,8 +364,12 @@ class JsonHistoryFlusher(threading.Thread):
 
             cmds.append(cmd)
             last_inp = cmd["inp"]
-        with open(self.filename, newline="\n") as f:
-            hist = xlj.LazyJSON(f).load()
+        try:
+            with open(self.filename, newline="\n") as f:
+                hist = xlj.LazyJSON(f).load()
+        except (JSONDecodeError, ValueError, OSError):
+            # File is corrupted or unreadable - start with empty history
+            hist = {"cmds": [], "sessionid": "", "ts": [time.time(), 0], "locked": True}
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
         if self.at_exit:
@@ -370,8 +379,19 @@ class JsonHistoryFlusher(threading.Thread):
             hist["locked"] = False
         if not XSH.env.get("XONSH_STORE_STDOUT", False):
             [cmd.pop("out") for cmd in hist["cmds"][load_hist_len:] if "out" in cmd]
-        with open(self.filename, "w", newline="\n") as f:
-            xlj.ljdump(hist, f, sort_keys=True)
+        # Atomic write: write to temp file, then os.replace()
+        dirname = os.path.dirname(self.filename)
+        fd, tmpname = tempfile.mkstemp(dir=dirname, suffix=".json.tmp")
+        try:
+            with os.fdopen(fd, "w", newline="\n") as f:
+                xlj.ljdump(hist, f, sort_keys=True)
+            os.replace(tmpname, self.filename)
+        except BaseException:
+            try:
+                os.unlink(tmpname)
+            except OSError:
+                pass
+            raise
 
 
 class JsonCommandField(cabc.Sequence):
