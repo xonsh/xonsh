@@ -40,10 +40,12 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
         monkeypatch.setattr(
             xonsh_session.commands_cache,
             "aliases",
-            Aliases({
-                "echo": "cmd /c echo".split(),
-                "grep": "cmd /c findstr".split(),
-            }),
+            Aliases(
+                {
+                    "echo": "cmd /c echo".split(),
+                    "grep": "cmd /c findstr".split(),
+                }
+            ),
             raising=False,
         )
 
