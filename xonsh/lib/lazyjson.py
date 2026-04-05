@@ -15,7 +15,7 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
     if isinstance(obj, str):
         s = json.dumps(obj)
         o = offset
-        n = size = len(s.encode())  # size in bytes
+        n = size = len(s)
     elif isinstance(obj, cabc.Mapping):
         s = "{"
         j = offset + 1
