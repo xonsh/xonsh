@@ -788,17 +788,11 @@ class SubprocSpec:
             self.alias = cmd0
         else:
             decorators = []
-            if isinstance(XSH.aliases, dict):
-                # Windows tests
-                alias = XSH.aliases.get(cmd0, None)
-                if alias is not None:
-                    alias = alias + self.cmd[1:]
-            else:
-                alias = XSH.aliases.get(
-                    self.cmd,
-                    None,
-                    decorators=decorators,
-                )
+            alias = XSH.aliases.get(
+                self.cmd,
+                None,
+                decorators=decorators,
+            )
             if alias is not None:
                 self.alias_name = cmd0
                 # Apply local_env from return_command aliases
