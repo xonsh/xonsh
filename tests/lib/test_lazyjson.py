@@ -171,3 +171,48 @@ def test_lazy_dict_dict_int():
     assert 42 == lj["wakka"]["jawaka"]
     assert 1 == len(lj)
     assert x == lj.load()
+
+
+def test_lazy_non_ascii_str():
+    """Non-ASCII string offsets must be correct (chars, not bytes)."""
+    f = StringIO()
+    ljdump("日本語", f)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert "日本語" == lj.load()
+
+
+def test_lazy_list_non_ascii():
+    """List with non-ASCII strings must have correct offsets."""
+    x = ["hello", "世界", "🌍"]
+    f = StringIO()
+    ljdump(x, f)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert "世界" == lj[1]
+    assert "🌍" == lj[2]
+    assert x == lj.load()
+
+
+def test_lazy_dict_non_ascii():
+    """Dict with non-ASCII keys and values must have correct offsets."""
+    x = {"clé": "données", "key": "日本語"}
+    f = StringIO()
+    ljdump(x, f, sort_keys=True)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert "données" == lj["clé"]
+    assert "日本語" == lj["key"]
+    assert x == lj.load()
+
+
+def test_lazy_nested_non_ascii():
+    """Nested structure with non-ASCII must have correct offsets."""
+    x = {"data": ["αβγ", {"emoji": "🎉"}]}
+    f = StringIO()
+    ljdump(x, f)
+    f.seek(0)
+    lj = LazyJSON(f)
+    assert "αβγ" == lj["data"][0]
+    assert "🎉" == lj["data"][1]["emoji"]
+    assert x == lj.load()

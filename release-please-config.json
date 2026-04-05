@@ -5,7 +5,7 @@
   "bump-patch-for-minor-pre-major": true,
   "include-v-in-tag": false,
   "release-search-depth": 1,
-  "commit-search-depth": 1000,
+  "commit-search-depth": 2000,
   "packages": {
     ".": {
       "changelog-path": "CHANGELOG.md",
