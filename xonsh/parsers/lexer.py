@@ -497,7 +497,7 @@ class Lexer:
         """Splits a string into a list of strings which are whitespace-separated
         tokens.
         """
-        self.input(s)
+        self.input(s, is_subproc=True)
         elements = []
         l = c = -1
         ws = "WS"

@@ -482,6 +482,9 @@ def test_redir_whitespace(case):
         ("echo -n $HOME", ["echo", "-n", "$HOME"]),
         ("echo --go=away", ["echo", "--go=away"]),
         ("echo --go=$HOME", ["echo", "--go=$HOME"]),
+        ("echo a#b c # d", ["echo", "a#b", "c"]),
+        ("echo a#b", ["echo", "a#b"]),
+        ("echo # comment", ["echo"]),
     ],
 )
 def test_lexer_split(s, exp):
