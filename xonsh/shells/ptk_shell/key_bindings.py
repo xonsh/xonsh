@@ -493,6 +493,12 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         data = event.current_buffer.copy_selection()
         event.app.clipboard.set_data(data)
 
+    @handle(Keys.ControlC, filter=has_selection)
+    def _copy_or_sigint(event):
+        """Copy selected text on Ctrl+C if there is a selection."""
+        data = event.current_buffer.copy_selection()
+        event.app.clipboard.set_data(data)
+
     @handle(Keys.ControlV, filter=insert_mode | has_selection)
     def _yank(event):
         """Paste selected text."""

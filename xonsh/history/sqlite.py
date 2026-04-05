@@ -425,7 +425,7 @@ class SqliteHistory(History):
         self.gc = SqliteHistoryGC(wait_for_shell=False, size=size)
         if blocking:
             while self.gc.is_alive():
-                continue
+                time.sleep(0.1)  # don't monopolize the CPU while waiting for gc
 
     def clear(self):
         """Clears the current session's history from both memory and disk."""
