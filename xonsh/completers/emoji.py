@@ -83,7 +83,9 @@ def _search(cache, query, prefix_len):
             if ch not in seen:
                 seen.add(ch)
                 results.append(
-                    RichCompletion(ch, display=ch, description=name, prefix_len=prefix_len)
+                    RichCompletion(
+                        ch, display=ch, description=name, prefix_len=prefix_len
+                    )
                 )
                 if len(results) >= 200:
                     break
@@ -93,7 +95,9 @@ def _search(cache, query, prefix_len):
             if any(w.startswith(query) for w in name.split()) and ch not in seen:
                 seen.add(ch)
                 results.append(
-                    RichCompletion(ch, display=ch, description=name, prefix_len=prefix_len)
+                    RichCompletion(
+                        ch, display=ch, description=name, prefix_len=prefix_len
+                    )
                 )
         # Substring matches
         if len(results) < 50:
@@ -101,7 +105,9 @@ def _search(cache, query, prefix_len):
                 if query in name and ch not in seen:
                     seen.add(ch)
                     results.append(
-                        RichCompletion(ch, display=ch, description=name, prefix_len=prefix_len)
+                        RichCompletion(
+                            ch, display=ch, description=name, prefix_len=prefix_len
+                        )
                     )
 
     return set(results) if results else None
@@ -114,7 +120,7 @@ def _find_trigger(raw_prefix, trigger):
     idx = raw_prefix.find(trigger)
     if idx == -1:
         return None
-    return raw_prefix[idx + len(trigger):].lower()
+    return raw_prefix[idx + len(trigger) :].lower()
 
 
 @contextual_command_completer
