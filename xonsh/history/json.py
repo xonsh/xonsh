@@ -707,8 +707,11 @@ class JsonHistory(History):
         self._len = 0
         self._skipped = 0
 
-        # Flush empty history object to disk, overwriting previous data.
-        self.flush()
+        # Write empty history directly — flush() would skip empty buffer.
+        if self.filename:
+            meta = {"cmds": [], "sessionid": str(self.sessionid)}
+            with open(self.filename, "w", newline="\n", encoding="utf-8") as f:
+                xlj.ljdump(meta, f, sort_keys=True)
 
     def delete(self, pattern):
         """Deletes all entries in history which matches a pattern."""
