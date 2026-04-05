@@ -15,15 +15,11 @@ Editing
     * - Shortcut
       - Description
     * - ``Ctrl-C``
-      - Cancel the current command entry.
+      - Cancel the current command if nothing is selected.
     * - ``Shift-Left`` or ``Shift-Right``
       - Select one character in either direction.
     * - ``Ctrl-Shift-Left`` or ``Ctrl-Shift-Right``
       - Select one word in either direction.
-    * - ``Ctrl-X + Ctrl-C``
-      - Copy highlighted section.
-    * - ``Ctrl-X + Ctrl-X``
-      - Cut highlighted section.
     * - ``Ctrl-V``
       - Paste clipboard contents.
     * - ``Ctrl-Backspace`` or ``Ctrl-H``
@@ -32,10 +28,15 @@ Editing
       - Open the current buffer in your default text editor.
     * - ``Ctrl-Right``
       - Complete a single auto-suggestion word.
+    * - ``Shift+Enter``
+      - Start new line without execution.
+        Terminal must support xterm modifyOtherKeys mode 1 or Kitty keyboard protocol.
 
 
-Indentation
------------
+Selection Actions
+-----------------
+
+The following shortcuts work when text is selected (e.g. via ``Shift+Arrow`` keys):
 
 .. list-table::
     :widths: 40 60
@@ -43,12 +44,18 @@ Indentation
 
     * - Shortcut
       - Description
-    * - ``Shift+Enter``
-      - Start new line without execution. Terminal need to support xterm modifyOtherKeys mode 1 or Kitty keyboard protocol.
-    * - Selection + ``Tab``
-      - Indentation selected lines.
-    * - Selection + ``Shift+Tab``
-      - Unindentation selected lines.
+    * - ``Ctrl-C``
+      - Copy selected text.
+    * - ``Ctrl-X + Ctrl-C``
+      - Copy selected text (alternative).
+    * - ``Ctrl-X + Ctrl-X``
+      - Cut selected text.
+    * - ``Tab``
+      - Indent selected lines.
+    * - ``Shift+Tab``
+      - Unindent selected lines.
+    * - ``Escape``
+      - Cancel selection.
 
 Execution
 ---------
