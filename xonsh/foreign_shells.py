@@ -201,7 +201,12 @@ def foreign_shell_data(
         cmd.append("-i")
     if login:
         cmd.append("-l")
-    shkey = CANON_SHELL_NAMES[shell]
+    shkey = CANON_SHELL_NAMES.get(shell) or CANON_SHELL_NAMES.get(os.path.basename(shell))
+    if shkey is None:
+        raise KeyError(
+            f"Unknown foreign shell {shell!r}. "
+            f"Supported: {', '.join(sorted(set(CANON_SHELL_NAMES.values())))}"
+        )
     envcmd = DEFAULT_ENVCMDS.get(shkey, "env") if envcmd is None else envcmd
     aliascmd = DEFAULT_ALIASCMDS.get(shkey, "alias") if aliascmd is None else aliascmd
     funcscmd = DEFAULT_FUNCSCMDS.get(shkey, "echo {}") if funcscmd is None else funcscmd
