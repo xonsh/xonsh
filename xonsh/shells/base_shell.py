@@ -392,6 +392,7 @@ class BaseShell:
         err = env.get("XONSH_ENCODING_ERRORS")
         tee = Tee(encoding=enc, errors=err)
         ts0 = time.time()
+        exc_info = (None, None, None)
         try:
             exc_info = run_compiled_code(code, self.ctx, None, "single")
             if exc_info != (None, None, None):

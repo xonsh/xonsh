@@ -85,13 +85,20 @@ def _ensure_newline():
         sys.stdout.write("\033[6n")
         sys.stdout.flush()
         # Read response: ESC [ row ; col R
+        import select
+
         resp = ""
         while True:
+            ready, _, _ = select.select([sys.stdin], [], [], 0.5)
+            if not ready:
+                break
             ch = sys.stdin.read(1)
             resp += ch
             if ch == "R":
                 break
         # Parse ";col" from the response  e.g. "\033[42;1R"
+        if ";" not in resp or not resp.endswith("R"):
+            return
         semi = resp.index(";")
         col = int(resp[semi + 1 : -1])  # between ";" and "R"
         if col > 1:

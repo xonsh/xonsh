@@ -3602,3 +3602,22 @@ def test_decorator_atat_call(parser):
     assert dec.func.value.attr == "interface"
     assert dec.args == []
     assert dec.keywords == []
+
+
+def test_yacc_loader_failure_does_not_hang():
+    """If yacc.yacc() fails, parse() should raise instead of hanging."""
+    from unittest.mock import patch
+
+    from xonsh.parsers.base import YaccLoader
+
+    class FakeParser:
+        parser = None
+
+    fp = FakeParser()
+    with patch("xonsh.parsers.base.yacc") as mock_yacc:
+        mock_yacc.yacc.side_effect = RuntimeError("grammar broken")
+        loader = YaccLoader(fp, {})
+        loader.ready.wait(timeout=2)
+
+    assert loader.error is not None
+    assert fp.parser is None
