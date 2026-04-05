@@ -191,13 +191,11 @@ def getargspec(obj):
     return inspect.getfullargspec(obj)
 
 
-def format_argspec(argspec):
-    """Format argspec dict into a human-readable call signature string."""
-    args = argspec.get("args") or []
-    varargs = argspec.get("varargs")
-    varkw = argspec.get("varkw")
-    defaults = argspec.get("defaults") or ()
-    # align defaults with the end of args
+def formatargspec(args=(), varargs=None, varkw=None, defaults=()):
+    """Reimplements ``inspect.formatargspec`` which was deprecated in Python 3.5
+    and removed in Python 3.11.
+    """
+    defaults = defaults or ()
     n_no_default = len(args) - len(defaults)
     parts = []
     for i, arg in enumerate(args):
@@ -210,6 +208,16 @@ def format_argspec(argspec):
     if varkw:
         parts.append(f"**{varkw}")
     return "(" + ", ".join(parts) + ")"
+
+
+def format_argspec(argspec):
+    """Format argspec dict into a human-readable call signature string."""
+    return formatargspec(
+        argspec.get("args") or (),
+        argspec.get("varargs"),
+        argspec.get("varkw"),
+        argspec.get("defaults"),
+    )
 
 
 def call_tip(oinfo, format_call=True):
