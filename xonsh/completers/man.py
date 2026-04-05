@@ -33,7 +33,8 @@ def _get_man_page(cmd: str):
     ) as manpage:
         # This is a trick to get rid of reverse line feeds
         result = subprocess.check_output(["col", "-b"], stdin=manpage.stdout, env=env)
-        manpage.stdout.close()
+        if manpage.stdout:
+            manpage.stdout.close()
         manpage.wait()
         return result
 
