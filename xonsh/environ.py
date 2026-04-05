@@ -2296,9 +2296,7 @@ class Env(cabc.MutableMapping):
             try:
                 deval = detyper(val)
             except Exception as exc:
-                raise RuntimeError(
-                    f"Error during detyping ${key}: {exc}"
-                ) from exc
+                raise RuntimeError(f"Error during detyping ${key}: {exc}") from exc
             if deval is None:
                 # cannot be detyped
                 continue
