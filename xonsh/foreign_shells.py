@@ -201,7 +201,9 @@ def foreign_shell_data(
         cmd.append("-i")
     if login:
         cmd.append("-l")
-    shkey = CANON_SHELL_NAMES.get(shell) or CANON_SHELL_NAMES.get(os.path.basename(shell))
+    shkey = CANON_SHELL_NAMES.get(shell) or CANON_SHELL_NAMES.get(
+        os.path.basename(shell)
+    )
     if shkey is None:
         raise KeyError(
             f"Unknown foreign shell {shell!r}. "
