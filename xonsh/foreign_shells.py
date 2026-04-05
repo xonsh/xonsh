@@ -325,7 +325,7 @@ def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
             # undo bash's weird quoting of single quotes (sh_single_quote)
             value = value.replace("'\\''", "'")
             # strip one single quote at the start and end of value
-            if value[0] == "'" and value[-1] == "'":
+            if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
                 value = value[1:-1]
             # now compute actual alias
             if FS_EXEC_ALIAS_RE.search(value) is None:
