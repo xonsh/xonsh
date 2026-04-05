@@ -8,6 +8,7 @@ import time
 import typing as tp
 from ast import parse as pyparse
 from collections.abc import Iterable, Mapping, Sequence
+import threading
 from threading import Thread
 
 from xonsh.lib.lazyasd import LazyObject
@@ -226,10 +227,17 @@ class YaccLoader(Thread):
         self.daemon = True
         self.parser = parser
         self.yacc_kwargs = yacc_kwargs
+        self.ready = threading.Event()
+        self.error = None
         self.start()
 
     def run(self):
-        self.parser.parser = yacc.yacc(**self.yacc_kwargs)
+        try:
+            self.parser.parser = yacc.yacc(**self.yacc_kwargs)
+        except Exception as e:
+            self.error = e
+        finally:
+            self.ready.set()
 
 
 class BaseParser:
@@ -465,7 +473,7 @@ class BaseParser:
             self.parser = yacc.yacc(**yacc_kwargs)
         else:
             self.parser = None
-            YaccLoader(self, yacc_kwargs)
+            self._yacc_loader = YaccLoader(self, yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -500,8 +508,10 @@ class BaseParser:
         self.reset()
         self._source = s
         self.lexer.fname = filename
-        while self.parser is None:
-            time.sleep(0.01)  # block until the parser is ready
+        if self.parser is None:
+            self._yacc_loader.ready.wait()
+            if self._yacc_loader.error is not None:
+                raise self._yacc_loader.error
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         if self._error is not None:
             self._parse_error(self._error[0], self._error[1])
