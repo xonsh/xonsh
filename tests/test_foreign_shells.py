@@ -46,6 +46,26 @@ def test_parse_env_equals():
     assert exp == obs
 
 
+def test_parse_env_null_separated():
+    """env -0 output with null bytes correctly handles multi-line values (issue #4947)."""
+    exp = {
+        "SIMPLE": "value",
+        "BASH_FUNC_which%%": "() {  ( alias;\n eval ${which_declare} ) | /usr/bin/which\n}",
+        "PATH": "/usr/bin:/bin",
+    }
+    s = (
+        "some garbage\n"
+        "__XONSH_ENV_BEG__\n"
+        "SIMPLE=value\0"
+        "BASH_FUNC_which%%=() {  ( alias;\n eval ${which_declare} ) | /usr/bin/which\n}\0"
+        "PATH=/usr/bin:/bin\0"
+        "__XONSH_ENV_END__\n"
+        "more filth"
+    )
+    obs = parse_env(s)
+    assert exp == obs
+
+
 def test_parse_aliases():
     exp = {
         "x": ["yes", "-1"],
