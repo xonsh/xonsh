@@ -291,7 +291,10 @@ class CommandsCache(cabc.Mapping):
 
         updated = False
         for path in paths:
-            modified_time = os.path.getmtime(path)
+            try:
+                modified_time = os.path.getmtime(path)
+            except OSError:
+                continue
             if (
                 (not self.env.get("ENABLE_COMMANDS_CACHE", True))
                 or (path not in self._paths_cache)
