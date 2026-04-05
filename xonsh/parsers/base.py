@@ -4,11 +4,10 @@ import itertools
 import os
 import re
 import textwrap
-import time
+import threading
 import typing as tp
 from ast import parse as pyparse
 from collections.abc import Iterable, Mapping, Sequence
-import threading
 from threading import Thread
 
 from xonsh.lib.lazyasd import LazyObject
