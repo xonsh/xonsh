@@ -95,8 +95,15 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
         Helper method for implementing classes. Generates the handlers that pass validation.
         """
         for handler in handlers:
-            if handler.__validator is not None and not handler.__validator(**kwargs):
-                continue
+            if handler.__validator is not None:
+                try:
+                    if not handler.__validator(**kwargs):
+                        continue
+                except Exception:
+                    print_exception(
+                        "Exception raised in event validator; handler skipped."
+                    )
+                    continue
             yield handler
 
     @abc.abstractmethod

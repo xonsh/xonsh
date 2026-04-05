@@ -31,15 +31,17 @@ def tee(args, stdin, stdout, stderr):
                 errors = True
     files.append(stdout)
 
-    while True:
-        r = stdin.read(1024)
-        if r == "":
-            break
+    try:
+        while True:
+            r = stdin.read(1024)
+            if r == "":
+                break
+            for i in files:
+                i.write(r)
+    finally:
         for i in files:
-            i.write(r)
-    for i in files:
-        if i != stdout:
-            i.close()
+            if i != stdout:
+                i.close()
 
     return int(errors)
 
