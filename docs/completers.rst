@@ -253,6 +253,40 @@ So if you want to change/remove the quotes from a string, the following complete
         raw_prefix_len = len(command.raw_prefix)  # this includes the closing quote if it exists
         return {RichCompletion(command.prefix, prefix_len=raw_prefix_len, append_closing_quote=False)}
 
+
+Completing Aliases
+==================
+
+You can attach a custom completer to a function alias using the
+``@aliases.completer`` decorator:
+
+.. code-block:: python
+
+    def _complete_hello(command, alias):
+        return {'world', 'there', 'xonsh'}
+
+    @aliases.register
+    @aliases.completer(_complete_hello)
+    def _hello(args):
+        echo @(args)
+
+Now ``hello <TAB>`` will suggest ``world``, ``there``, and ``xonsh``.
+
+You can also set the ``xonsh_complete`` attribute manually:
+
+.. code-block:: python
+
+    def _hello(args):
+        echo @(args)
+
+    _hello.xonsh_complete = lambda *a, **kw: {'world', 'there', 'xonsh'}
+    aliases['hello'] = _hello
+
+The completer function receives two keyword arguments:
+
+* ``command``: the :class:`CommandContext <xonsh.parsers.completion_context.CommandContext>` for the current completion
+* ``alias``: the resolved alias object
+
 Command Completers (xompletions)
 ================================
 

@@ -3313,6 +3313,19 @@ class BaseParser:
             value=xenv, slice=idx, ctx=ast.Load(), lineno=lineno, col_offset=col
         )
 
+    def _envvar_set_call(self, node, value):
+        """Creates __xonsh__.env.set(key, value) AST from an envvar Subscript node."""
+        key = self._envvar_node_key(node)
+        return ast.Call(
+            func=load_attribute_chain(
+                "__xonsh__.env.set", lineno=node.lineno, col=node.col_offset
+            ),
+            args=[key, value],
+            keywords=[],
+            lineno=node.lineno,
+            col_offset=node.col_offset,
+        )
+
     @staticmethod
     def _is_envvar_node(node):
         """Check if an AST node is __xonsh__.env[KEY]."""
