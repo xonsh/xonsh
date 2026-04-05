@@ -423,7 +423,7 @@ class ForeignShellBaseAlias:
         self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
         args, streaming = self._is_streaming(args)
-        input = self.INPUT.format(args=" ".join(args), **self._input_kwargs())
+        input = self.INPUT.format(args=" ".join(shlex.quote(a) for a in args), **self._input_kwargs())
         if len(self.files) > 0:
             input = (
                 "".join([f"{self.sourcer} {shlex.quote(f)}\n" for f in self.files])

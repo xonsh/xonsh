@@ -291,11 +291,12 @@ def add_custom_style(name: str, style: "Style"):
 
 def load(filename):
     """Loads the cache from a filename."""
+    import ast
+
     global CACHE
     with open(filename) as f:
         s = f.read()
-    ctx = globals()
-    CACHE = eval(s, ctx, ctx)
+    CACHE = ast.literal_eval(s)
     return CACHE
 
 
