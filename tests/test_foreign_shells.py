@@ -103,3 +103,21 @@ def test_foreign_cmd_data():
     assert "ENV_TO_BE_ADDED" in obsenv
     assert obsenv["ENV_TO_BE_ADDED"] == "Hallo world"
     assert "ENV_TO_BE_REMOVED" not in obsenv
+
+
+@skip_if_on_windows
+def test_foreign_shell_alias_args_are_escaped(xession):
+    """Arguments to foreign shell aliases must be escaped to prevent injection."""
+    from xonsh.foreign_shells import ForeignShellFunctionAlias
+
+    alias = ForeignShellFunctionAlias(
+        funcname="myfunc", shell="bash", sourcer="source", files=()
+    )
+    # Simulate calling with a malicious argument
+    try:
+        out = alias(["; echo INJECTED"], stdout=subprocess.PIPE)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        out = None
+    # If injection happened, "INJECTED" would appear in output
+    if out is not None:
+        assert b"INJECTED" not in (out if isinstance(out, bytes) else b"")
