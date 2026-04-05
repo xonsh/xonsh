@@ -226,6 +226,11 @@ class PopenThread(threading.Thread):
         # kill the process if it is still alive. Happens when piping.
         if proc.poll() is None:
             proc.terminate()
+            try:
+                proc.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
 
     def _wait_and_getattr(self, name):
         """make sure the instance has a certain attr, and return it."""
