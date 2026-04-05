@@ -99,9 +99,7 @@ class AsyncPrompt:
             except Exception:
                 from xonsh.tools import print_exception
 
-                print_exception(
-                    "Exception in async prompt field callback; ignored."
-                )
+                print_exception("Exception in async prompt field callback; ignored.")
                 continue
 
             placeholder, idx, spec, conv = futures[fut]
