@@ -431,15 +431,15 @@ class ExecAlias:
         for i, a in enumerate(args):
             alias_args[f"arg{i}"] = a
 
-        with XSH.env.swap(alias_args):
+        thread_local = {}
+        with XSH.env.swap(alias_args, __THREAD_LOCAL__=thread_local):
             execer.exec(
                 self.src,
                 glbs=frame.f_globals,
                 locs=frame.f_locals,
                 filename=self.filename,
             )
-        if XSH.history is not None:
-            return XSH.history.last_cmd_rtn
+        return thread_local.get("returncode", 0)
 
     def __repr__(self):
         return f"ExecAlias({self.src!r}, filename={self.filename!r})"
