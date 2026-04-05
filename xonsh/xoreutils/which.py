@@ -90,7 +90,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
         f = next(s.name for s in os.scandir(p) if s.name.lower() == f.lower())
         abs_name = os.path.join(p, f)
         if XSH.env.get("FORCE_POSIX_PATHS", False):
-            abs_name.replace(os.sep, os.altsep)
+            abs_name = abs_name.replace(os.sep, os.altsep)
     if verbose:
         print(f"{abs_name} ({from_where})", file=stdout)
     else:
