@@ -385,13 +385,13 @@ class JsonHistoryFlusher(threading.Thread):
         try:
             with os.fdopen(fd, "w", newline="\n") as f:
                 xlj.ljdump(hist, f, sort_keys=True)
+        except Exception as err:
+            print(f"history: failed to write {tmpname!r}: {err}", file=sys.stderr)
+            return
+        try:
             os.replace(tmpname, self.filename)
-        except BaseException:
-            try:
-                os.unlink(tmpname)
-            except OSError:
-                pass
-            raise
+        except Exception as err:
+            print(f"history: failed to replace {tmpname!r} -> {self.filename!r}: {err}", file=sys.stderr)
 
 
 class JsonCommandField(cabc.Sequence):
