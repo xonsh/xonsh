@@ -317,11 +317,14 @@ def load_or_build():
     """
     global CACHE
     fname = cache_filename()
+    _EXPECTED_KEYS = {"lexers", "formatters", "styles", "filters"}
     if os.path.exists(fname):
         try:
             load(fname)
         except (ValueError, SyntaxError):
-            # Cache file is corrupt or in old eval() format — rebuild.
+            CACHE = None
+        if CACHE is not None and not _EXPECTED_KEYS.issubset(CACHE):
+            # Cache is corrupt or has an old/incomplete structure — rebuild.
             CACHE = None
     if CACHE is None:
         import sys

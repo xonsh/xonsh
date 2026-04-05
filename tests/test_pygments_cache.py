@@ -2,7 +2,7 @@
 
 import pytest
 
-from xonsh.pygments_cache import load
+import xonsh.pygments_cache as pc
 
 
 def test_load_rejects_code_execution(tmp_path):
@@ -10,12 +10,16 @@ def test_load_rejects_code_execution(tmp_path):
     malicious = tmp_path / "cache.py"
     malicious.write_text("__import__('os').system('echo PWNED')")
     with pytest.raises(ValueError):
-        load(str(malicious))
+        pc.load(str(malicious))
 
 
 def test_load_valid_cache(tmp_path):
     """A valid cache dict should load fine."""
     cache_file = tmp_path / "cache.py"
     cache_file.write_text("{'key': ['value1', 'value2']}")
-    result = load(str(cache_file))
-    assert result == {"key": ["value1", "value2"]}
+    old_cache = pc.CACHE
+    try:
+        result = pc.load(str(cache_file))
+        assert result == {"key": ["value1", "value2"]}
+    finally:
+        pc.CACHE = old_cache
