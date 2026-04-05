@@ -25,11 +25,17 @@ def get_man_completions_path() -> Path:
 def _get_man_page(cmd: str):
     """without control characters"""
     env = XSH.env.detype()
-    manpage = subprocess.Popen(
+    # Use context manager to ensure man's Popen is waited on and its
+    # stdout fd is closed. Without this, the man process becomes a
+    # zombie (never reaped) and the pipe fd leaks.
+    with subprocess.Popen(
         ["man", cmd], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env
-    )
-    # This is a trick to get rid of reverse line feeds
-    return subprocess.check_output(["col", "-b"], stdin=manpage.stdout, env=env)
+    ) as manpage:
+        # This is a trick to get rid of reverse line feeds
+        result = subprocess.check_output(["col", "-b"], stdin=manpage.stdout, env=env)
+        manpage.stdout.close()
+        manpage.wait()
+        return result
 
 
 @functools.cache
