@@ -323,9 +323,8 @@ To set it permanently on the function, use the Python decorator:
 
 .. code-block:: xonshcon
 
-    @ from xonsh.tools import unthreadable
     @ @aliases.register
-      @unthreadable
+      @aliases.unthreadable
       def _vi(args, stdin=None):
           vim @(args)
 
@@ -342,15 +341,14 @@ work.
 
 Some aliases launch interactive programs (editors, pagers, TUI apps) that
 take over the terminal. These must not be captured, or the program will not
-display correctly. Use the ``uncapturable`` decorator, typically together with
-``unthreadable``:
+display correctly. Use ``@aliases.uncapturable``, typically together with
+``@aliases.unthreadable``:
 
 .. code-block:: xonshcon
 
-    @ from xonsh.tools import unthreadable, uncapturable
     @ @aliases.register
-      @uncapturable
-      @unthreadable
+      @aliases.uncapturable
+      @aliases.unthreadable
       def _edit(args, stdin=None):
           vim @(args)
 

@@ -50,8 +50,11 @@ from xonsh.tools import (
     print_exception,
     strip_simple_quotes,
     swap_values,
+    capturable,
+    threadable,
     to_repr_pretty_,
     to_shlvl,
+    uncapturable,
     unthreadable,
 )
 from xonsh.xontribs import xontribs_main
@@ -198,6 +201,11 @@ class Aliases(cabc.MutableMapping):
         """Decorator that switches alias from returning result to return in new command for execution."""
         f.return_what = "command"
         return f
+
+    unthreadable = staticmethod(unthreadable)
+    threadable = staticmethod(threadable)
+    uncapturable = staticmethod(uncapturable)
+    capturable = staticmethod(capturable)
 
     def eval_alias(
         self,
