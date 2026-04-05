@@ -69,7 +69,8 @@ def module_list(path):
     else:
         try:
             files = list(zipimporter(path)._files.keys())
-        except:  # noqa
+        except (ImportError, AttributeError, TypeError, OSError):
+            # Not bare except: let KeyboardInterrupt propagate
             files = []
 
     # Build a list of modules which match the import_re regex.
