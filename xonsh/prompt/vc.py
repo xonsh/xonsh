@@ -27,7 +27,7 @@ def _run_git_cmd(cmd):
     # when running git status commands we do not want to acquire locks running command like git status
     denv = dict(XSH.env.detype())
     denv.update({"GIT_OPTIONAL_LOCKS": "0"})
-    return subprocess.check_output(cmd, env=denv, stderr=subprocess.DEVNULL)
+    return subprocess.check_output(cmd, env=denv, stderr=subprocess.DEVNULL, timeout=5)
 
 
 def _get_git_branch(q):
@@ -36,7 +36,7 @@ def _get_git_branch(q):
         "git symbolic-ref --short HEAD",
         "git show-ref --head -s --abbrev",  # in detached mode return sha1
     ]:
-        with contextlib.suppress(subprocess.CalledProcessError, OSError):
+        with contextlib.suppress(subprocess.SubprocessError, OSError):
             branch = xt.decode_bytes(_run_git_cmd(cmds.split()))
             if branch:
                 q.put(branch.splitlines()[0])
@@ -159,7 +159,7 @@ def get_fossil_branch():
     cmd = "fossil branch current".split()
     try:
         branch = xt.decode_bytes(_run_fossil_cmd(cmd))
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.SubprocessError, OSError):
         branch = None
     else:
         lines = branch.splitlines()
@@ -234,7 +234,7 @@ def _git_dirty_working_directory(q, include_untracked):
             q.put(bool(status))
         else:
             q.put(None)
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.SubprocessError, OSError):
         q.put(None)
 
 
@@ -294,7 +294,7 @@ def fossil_dirty_working_directory():
     cmd = ["fossil", "changes"]
     try:
         status = _run_fossil_cmd(cmd)
-    except (subprocess.CalledProcessError, OSError):
+    except (subprocess.SubprocessError, OSError):
         status = None
     else:
         status = bool(status)
