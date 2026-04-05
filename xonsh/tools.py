@@ -2200,6 +2200,7 @@ def format_std_prepost(template, env=None):
     else:
         # shell has fully started. do the normal thing
         shell = xsh.shell.shell
+        s = ""
         try:
             s = shell.prompt_formatter(template)
         except Exception:
