@@ -139,7 +139,7 @@ def expand_path(s, expand_user=True):
     env = xsh.env or os_environ
     if env.get("EXPAND_ENV_VARS", False):
         s = expandvars(s)
-    if expand_user:
+    if expand_user and env.get("XONSH_SUBPROC_ARG_EXPANDUSER", True):
         # expand ~ according to Bash unquoted rules "Each variable assignment is
         # checked for unquoted tilde-prefixes immediately following a ':' or the
         # first '='". See the following for more details.

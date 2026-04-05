@@ -155,6 +155,29 @@ class Aliases(cabc.MutableMapping):
 
         return wrapper
 
+    @staticmethod
+    def completer(completer_func):
+        """Decorator that attaches a completer function to an alias.
+
+        Usage::
+
+            def _my_completer(command, alias):
+                return {'opt1', 'opt2'}
+
+            @aliases.register
+            @aliases.completer(_my_completer)
+            def _hello(args):
+                echo @(args)
+
+        Now ``hello <TAB>`` will suggest ``opt1`` and ``opt2``.
+        """
+
+        def decorator(func):
+            func.xonsh_complete = completer_func
+            return func
+
+        return decorator
+
     def return_command(self, f):
         """Decorator that switches alias from returning result to return in new command for execution."""
         f.return_what = "command"

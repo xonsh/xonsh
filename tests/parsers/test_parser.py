@@ -2208,6 +2208,16 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
     assert call.args[0].value == "zip"
 
 
+@skip_if_pre_3_8
+def test_dollar_name_walrus(check_xonsh):
+    check_xonsh({}, "x = ($WAKKA := 42)\nassert x == 42\nassert $WAKKA == 42")
+
+
+@skip_if_pre_3_8
+def test_dollar_name_walrus_subprocess(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @($WAKKA := 'hello'))", False)
+
+
 def test_dollar_sub(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls)", False)
 
