@@ -2,6 +2,7 @@
 
 import collections.abc as cabc
 import functools
+import locale
 import os
 import re
 import shlex
@@ -200,7 +201,14 @@ def foreign_shell_data(
         cmd.append("-i")
     if login:
         cmd.append("-l")
-    shkey = CANON_SHELL_NAMES[shell]
+    shkey = CANON_SHELL_NAMES.get(shell) or CANON_SHELL_NAMES.get(
+        os.path.basename(shell)
+    )
+    if shkey is None:
+        raise KeyError(
+            f"Unknown foreign shell {shell!r}. "
+            f"Supported: {', '.join(sorted(set(CANON_SHELL_NAMES.values())))}"
+        )
     envcmd = DEFAULT_ENVCMDS.get(shkey, "env") if envcmd is None else envcmd
     aliascmd = DEFAULT_ALIASCMDS.get(shkey, "alias") if aliascmd is None else aliascmd
     funcscmd = DEFAULT_FUNCSCMDS.get(shkey, "echo {}") if funcscmd is None else funcscmd
@@ -247,7 +255,7 @@ def foreign_shell_data(
             # start new session to avoid hangs
             # (doesn't work on Cygwin though)
             start_new_session=((not ON_CYGWIN) and (not ON_MSYS)),
-            text=True,
+            encoding=locale.getpreferredencoding(False),
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
@@ -423,7 +431,9 @@ class ForeignShellBaseAlias:
         self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
         args, streaming = self._is_streaming(args)
-        input = self.INPUT.format(args=" ".join(args), **self._input_kwargs())
+        input = self.INPUT.format(
+            args=" ".join(shlex.quote(a) for a in args), **self._input_kwargs()
+        )
         if len(self.files) > 0:
             input = (
                 "".join([f"{self.sourcer} {shlex.quote(f)}\n" for f in self.files])

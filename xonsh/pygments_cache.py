@@ -26,7 +26,7 @@ if tp.TYPE_CHECKING:
 __version__ = "0.1.1"
 CACHE: "dict[str, tp.Any] | None" = None
 CUSTOM_STYLES: "dict[str, Style]" = {}
-DEBUG = False
+DEBUG = os.environ.get("XONSH_DEBUG", "") not in ("", "0", "False")
 
 
 def _print_duplicate_message(duplicates):
@@ -291,11 +291,12 @@ def add_custom_style(name: str, style: "Style"):
 
 def load(filename):
     """Loads the cache from a filename."""
+    import ast
+
     global CACHE
     with open(filename) as f:
         s = f.read()
-    ctx = globals()
-    CACHE = eval(s, ctx, ctx)
+    CACHE = ast.literal_eval(s)
     return CACHE
 
 
@@ -316,9 +317,16 @@ def load_or_build():
     """
     global CACHE
     fname = cache_filename()
+    _EXPECTED_KEYS = {"lexers", "formatters", "styles", "filters"}
     if os.path.exists(fname):
-        load(fname)
-    else:
+        try:
+            load(fname)
+        except (ValueError, SyntaxError):
+            CACHE = None
+        if CACHE is not None and not _EXPECTED_KEYS.issubset(CACHE):
+            # Cache is corrupt or has an old/incomplete structure — rebuild.
+            CACHE = None
+    if CACHE is None:
         import sys
 
         if DEBUG:

@@ -39,6 +39,7 @@ class FStringAdaptor:
         self.prefix = prefix
         self.filename = filename
         self.fields = {}
+        self._field_counter = 0
         self.repl = ""
         self.res = None
 
@@ -76,7 +77,8 @@ class FStringAdaptor:
             # We can olny get here in the case of handled SyntaxError.
             # Patch the last error and start over.
             xonsh_field = (error_expr, self.filename if self.filename else None)
-            field_id = id(xonsh_field)
+            self._field_counter += 1
+            field_id = self._field_counter
             self.fields[field_id] = xonsh_field
             eval_field = f"__xonsh__.eval_fstring_field({field_id})"
             template = template[:epos] + eval_field + template[epos + len(error_expr) :]

@@ -1,5 +1,5 @@
+import json
 import os
-import pickle
 import stat
 import time
 from pathlib import Path
@@ -50,7 +50,7 @@ class TestCommandsCacheSaveIntermediate:
             "bin2",
         ]
 
-        files = tmp_path.glob("*.pickle")
+        files = tmp_path.glob("*.json")
         assert len(list(files)) == 1
         exin_mock.assert_called_once()
 
@@ -64,7 +64,8 @@ class TestCommandsCacheSaveIntermediate:
             )
         }
 
-        file.write_bytes(pickle.dumps(cached))
+        raw = {k: [v.mtime, list(v.cmds)] for k, v in cached.items()}
+        file.write_text(json.dumps(raw))
         assert str(cc.cache_file) == str(file)
         assert [b.lower() for b in cc.all_commands.keys()] == ["bin1", "bin2"]
         exin_mock.assert_not_called()

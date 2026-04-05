@@ -126,7 +126,7 @@ class Event(AbstractEvent):
     # Wish I could just pull from set...
     def __init__(self):
         self._handlers = set()
-        self._firing = False
+        self._firing_depth = 0
         self._delayed_adds = None
         self._delayed_discards = None
 
@@ -145,7 +145,7 @@ class Event(AbstractEvent):
 
         This has no effect if the element is already present.
         """
-        if self._firing:
+        if self._firing_depth:
             if self._delayed_adds is None:
                 self._delayed_adds = set()
             self._delayed_adds.add(item)
@@ -158,7 +158,7 @@ class Event(AbstractEvent):
 
         If the element is not a member, do nothing.
         """
-        if self._firing:
+        if self._firing_depth:
             if self._delayed_discards is None:
                 self._delayed_discards = set()
             self._delayed_discards.add(item)
@@ -184,22 +184,24 @@ class Event(AbstractEvent):
             appear multiple times.
         """
         vals = []
-        self._firing = True
-        for handler in self._filterhandlers(self._handlers, **kwargs):
-            try:
-                rv = handler(**kwargs)
-            except Exception:
-                print_exception("Exception raised in event handler; ignored.")
-            else:
-                vals.append(rv)
-        # clean up
-        self._firing = False
-        if self._delayed_adds is not None:
-            self._handlers.update(self._delayed_adds)
-            self._delayed_adds = None
-        if self._delayed_discards is not None:
-            self._handlers.difference_update(self._delayed_discards)
-            self._delayed_discards = None
+        self._firing_depth += 1
+        try:
+            for handler in self._filterhandlers(self._handlers, **kwargs):
+                try:
+                    rv = handler(**kwargs)
+                except Exception:
+                    print_exception("Exception raised in event handler; ignored.")
+                else:
+                    vals.append(rv)
+        finally:
+            self._firing_depth -= 1
+            if self._firing_depth == 0:
+                if self._delayed_adds is not None:
+                    self._handlers.update(self._delayed_adds)
+                    self._delayed_adds = None
+                if self._delayed_discards is not None:
+                    self._handlers.difference_update(self._delayed_discards)
+                    self._delayed_discards = None
         return vals
 
 

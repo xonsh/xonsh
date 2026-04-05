@@ -572,6 +572,37 @@ def test_hist_clear_cmd(hist, xession, capsys, tmpdir):
     assert len(xession.history) == 0
 
 
+def test_hist_clear_wipes_file_and_allows_new_commands(hist, xession, tmpdir):
+    """After clear, old commands are gone from disk and new ones are saved."""
+    xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xession.env["HISTCONTROL"] = set()
+
+    # Add commands
+    for ts, cmd in enumerate(CMDS):
+        hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
+    hist.flush(at_exit=True)
+    assert len(hist) == 6
+
+    # Clear
+    hist.clear()
+    assert len(hist) == 0
+
+    # Verify file on disk has no commands
+    from xonsh.lib.lazyjson import LazyJSON
+
+    with LazyJSON(hist.filename) as lj:
+        assert len(lj["cmds"]) == 0
+
+    # Add new command after clear
+    hist.append({"inp": "echo after", "rtn": 0, "ts": (100, 100.5)})
+    hist.flush(at_exit=True)
+    assert len(hist) == 1
+
+    with LazyJSON(hist.filename) as lj:
+        assert len(lj["cmds"]) == 1
+        assert lj["cmds"][0]["inp"] == "echo after"
+
+
 def test_hist_off_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history off command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
