@@ -159,6 +159,52 @@ def test_load_2nd_call(events):
     assert called == 1
 
 
+def test_nested_fire_does_not_corrupt_handlers(events):
+    """Nested fire must not process delayed adds/discards prematurely."""
+    call_log = []
+    nesting = False
+
+    @events.on_test
+    def handler_a(**_):
+        nonlocal nesting
+        call_log.append("A start")
+        if not nesting:
+            nesting = True
+            events.on_test.fire()  # one level of nested fire
+        call_log.append("A end")
+
+    @events.on_test
+    def handler_b(**_):
+        call_log.append("B")
+
+    events.on_test.fire()
+    assert call_log.count("A start") == 2  # outer + nested
+    assert call_log.count("B") == 2
+
+
+def test_delayed_add_applied_after_outermost_fire(events):
+    """Handler added during fire is not called until next fire."""
+    call_log = []
+    added = False
+
+    @events.on_test
+    def adder(**_):
+        nonlocal added
+        call_log.append("adder")
+        if not added:
+            added = True
+
+            @events.on_test
+            def late_handler(**_):
+                call_log.append("late")
+
+    events.on_test.fire()
+    assert call_log == ["adder"]  # late_handler not called yet
+
+    events.on_test.fire()
+    assert "late" in call_log  # now it's registered and called
+
+
 def test_typos(xession):
     for name, ev in vars(xession.builtins.events).items():
         if "pytest" in name:
