@@ -220,7 +220,8 @@ def safe_open(fname, mode, buffering=-1):
     """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
     try:
-        return open(fname, mode, buffering=buffering)
+        kwargs = {"encoding": "utf-8"} if "b" not in mode else {}
+        return open(fname, mode, buffering=buffering, **kwargs)
     except PermissionError as ex:
         raise xt.XonshError(f"xonsh: {fname}: permission denied") from ex
     except FileNotFoundError as ex:

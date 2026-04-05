@@ -284,7 +284,7 @@ class JsonHistoryGC(threading.Thread):
                     hist = lj.load()
                     lj.close()
                     hist["locked"] = False
-                    with open(f, "w", newline="\n") as fp:
+                    with open(f, "w", newline="\n", encoding="utf-8") as fp:
                         xlj.ljdump(hist, fp, sort_keys=True)
                     lj = xlj.LazyJSON(f, reopen=False)
                 if only_unlocked and lj.get("locked", False):
@@ -365,7 +365,7 @@ class JsonHistoryFlusher(threading.Thread):
             cmds.append(cmd)
             last_inp = cmd["inp"]
         try:
-            with open(self.filename, newline="\n") as f:
+            with open(self.filename, newline="\n", encoding="utf-8") as f:
                 hist = xlj.LazyJSON(f).load()
         except (JSONDecodeError, ValueError, OSError):
             # File is corrupted or unreadable - start with empty history
@@ -383,7 +383,7 @@ class JsonHistoryFlusher(threading.Thread):
         dirname = os.path.dirname(self.filename)
         fd, tmpname = tempfile.mkstemp(dir=dirname, suffix=".json.tmp")
         try:
-            with os.fdopen(fd, "w", newline="\n") as f:
+            with os.fdopen(fd, "w", newline="\n", encoding="utf-8") as f:
                 xlj.ljdump(hist, f, sort_keys=True)
         except Exception as err:
             print(f"history: failed to write {tmpname!r}: {err}", file=sys.stderr)
@@ -443,7 +443,7 @@ class JsonCommandField(cabc.Sequence):
         queue.append(self)
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
-            with open(self.hist.filename, newline="\n") as f:
+            with open(self.hist.filename, newline="\n", encoding="utf-8") as f:
                 lj = xlj.LazyJSON(f, reopen=False)
                 rtn = lj["cmds"][key].get(self.field, self.default)
                 if isinstance(rtn, xlj.LJNode):
@@ -501,7 +501,7 @@ class JsonHistory(History):
         if self.filename and not os.path.exists(os.path.expanduser(self.filename)):
             meta["cmds"] = []
             meta["sessionid"] = str(self.sessionid)
-            with open(self.filename, "w", newline="\n") as f:
+            with open(self.filename, "w", newline="\n", encoding="utf-8") as f:
                 xlj.ljdump(meta, f, sort_keys=True)
 
             try:
@@ -707,8 +707,11 @@ class JsonHistory(History):
         self._len = 0
         self._skipped = 0
 
-        # Flush empty history object to disk, overwriting previous data.
-        self.flush()
+        # Write empty history directly — flush() would skip empty buffer.
+        if self.filename:
+            meta = {"cmds": [], "sessionid": str(self.sessionid)}
+            with open(self.filename, "w", newline="\n", encoding="utf-8") as f:
+                xlj.ljdump(meta, f, sort_keys=True)
 
     def delete(self, pattern):
         """Deletes all entries in history which matches a pattern."""
@@ -735,7 +738,7 @@ class JsonHistory(History):
                 new_commands = [c for c in commands if not pattern.match(c["inp"])]
                 deleted += len(commands) - len(new_commands)
                 file_content["cmds"] = new_commands
-                with open(f, "w") as fp:
+                with open(f, "w", encoding="utf-8") as fp:
                     xlj.ljdump(file_content, fp)
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
