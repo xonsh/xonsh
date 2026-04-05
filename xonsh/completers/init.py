@@ -12,6 +12,7 @@ from xonsh.completers.commands import (
     complete_skipper,
     complete_xompletions,
 )
+from xonsh.completers.emoji import complete_emoji
 from xonsh.completers.environment import complete_environment_vars
 from xonsh.completers.imports import complete_import
 from xonsh.completers.man import complete_from_man
@@ -48,6 +49,7 @@ def default_completers(cmd_cache):
 
     defaults.extend(
         [
+            ("emoji", complete_emoji),
             ("xonsh_imp", complete_xonsh_imp),
             ("python", complete_python),
             ("path", complete_path),

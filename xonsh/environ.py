@@ -2117,6 +2117,18 @@ The file should contain a function with the signature
 """,
         type_str="env_path",
     )
+    XONSH_COMPLETER_EMOJI_PREFIX = Var.with_default(
+        "::",
+        "Trigger prefix for colorful emoji completion. "
+        "Type ``::<TAB>`` or ``::cat<TAB>`` to search for emoji. "
+        "Set to empty string to disable.",
+    )
+    XONSH_COMPLETER_SYMBOLS_PREFIX = Var.with_default(
+        ":::",
+        "Trigger prefix for unicode symbol completion. "
+        "Type ``:::<TAB>`` or ``:::arrow<TAB>`` to search for symbols. "
+        "Set to empty string to disable.",
+    )
     XONSH_TRACE_COMPLETIONS = Var.with_default(
         False,
         "Set to ``True`` to show completers invoked and their return values.",
