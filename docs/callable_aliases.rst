@@ -369,3 +369,94 @@ Summary of default behavior:
    * - Capturing
      - Capturable (output can be collected)
      - ``@uncapturable`` — output goes to terminal only
+
+
+String Aliases and ExecAlias
+----------------------------
+
+When you assign a string to an alias, xonsh stores it in one of two ways
+depending on the content.
+
+A **simple string** like ``"ls -la"`` is split into a list of tokens and
+stored as ``["ls", "-la"]``. This is equivalent to assigning the list
+directly:
+
+.. code-block:: xonshcon
+
+    @ aliases['ll'] = 'ls -la'
+    @ aliases['ll'] = ['ls', '-la']   # same thing
+
+A string that contains xonsh expressions (``@()``, ``$()``), pipes (``|``),
+redirections (``>``, ``<``), or logical operators (``&&``, ``||``) cannot be
+represented as a simple list — it needs to be compiled and executed as xonsh
+code. Xonsh wraps such strings in an ``ExecAlias``, which is a callable alias
+under the hood:
+
+.. code-block:: xonshcon
+
+    @ aliases['answer'] = 'echo @(21+21)'
+    @ answer
+    42
+
+    @ aliases['findpy'] = 'ls | grep $arg0'
+    @ findpy .py
+
+    @ aliases['combo'] = 'echo start && echo end'
+    @ combo
+    start
+    end
+
+
+Arguments
+^^^^^^^^^
+
+When an ``ExecAlias`` runs, the arguments passed to it are available as
+temporary environment variables:
+
+- ``$args`` — the full list of arguments.
+- ``$arg0``, ``$arg1``, … — individual positional arguments.
+
+These variables exist only while the alias body is running and are removed
+afterwards.
+
+.. code-block:: xonshcon
+
+    @ aliases['greet'] = 'echo Hello, $arg0!'
+    @ greet World
+    Hello, World!
+
+    @ aliases['piu'] = 'pip install -U @($args)'
+    @ piu xonsh prompt_toolkit
+
+    @ aliases['cdls'] = 'cd $arg0 && ls'
+    @ cdls /tmp
+
+Arguments are **not** passed automatically — you need to use ``$args`` or
+``$arg<n>`` explicitly. If you don't reference them, they are ignored:
+
+.. code-block:: xonshcon
+
+    @ aliases['noargs'] = 'echo @("arguments are ignored")'
+    @ noargs 1 2 3
+    arguments are ignored
+
+    @ aliases['withargs'] = 'echo the arguments are: @($args)'
+    @ withargs 1 2 3
+    the arguments are: 1 2 3
+
+
+Equivalence with Callable Aliases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An ``ExecAlias`` is a shorthand for a callable alias. These three definitions
+are equivalent:
+
+.. code-block:: xonshcon
+
+    @ aliases['answer'] = 'echo @(21+21)'
+
+    @ aliases['answer'] = lambda: $[echo @(21+21)]
+
+    @ @aliases.register
+      def _answer():
+          echo @(21+21)
