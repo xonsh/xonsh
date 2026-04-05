@@ -9,7 +9,7 @@ def test_load_rejects_code_execution(tmp_path):
     """ast.literal_eval must reject arbitrary code in cache files."""
     malicious = tmp_path / "cache.py"
     malicious.write_text("__import__('os').system('echo PWNED')")
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         load(str(malicious))
 
 
