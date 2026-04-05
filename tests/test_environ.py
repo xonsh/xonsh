@@ -120,6 +120,39 @@ def test_detype_and_detype_all_do_not_share_cache():
     assert "ONLY_DEFAULT" in det_all2
 
 
+def test_detype_error_message():
+    """detype() wraps detyper errors with the variable name."""
+
+    def bad_detyper(val):
+        raise ValueError("kaboom")
+
+    env = Env(BROKEN="hello")
+    env.register("BROKEN", validate=always_true, convert=None, detype=bad_detyper)
+    env._detyped = None
+    with pytest.raises(RuntimeError, match=r"Error during detyping \$BROKEN: kaboom"):
+        env.detype()
+
+
+def test_replace_env_rollback_on_detype_error():
+    """replace_env() must not corrupt os.environ if detype() fails."""
+
+    def bad_detyper(val):
+        raise ValueError("kaboom")
+
+    orig_environ = dict(os.environ)
+    env = Env(BROKEN="hello")
+    env.register("BROKEN", validate=always_true, convert=None, detype=bad_detyper)
+    env._detyped = None
+
+    with pytest.raises(RuntimeError, match=r"Error during detyping \$BROKEN"):
+        env.replace_env()
+
+    # os.environ must be untouched
+    assert dict(os.environ) == orig_environ
+    # _orig_env must stay None so replace_env() retries next time
+    assert env._orig_env is None
+
+
 def test_histcontrol_none():
     env = Env(HISTCONTROL=None)
     assert isinstance(env["HISTCONTROL"], set)
