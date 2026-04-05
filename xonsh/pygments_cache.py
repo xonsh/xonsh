@@ -26,7 +26,7 @@ if tp.TYPE_CHECKING:
 __version__ = "0.1.1"
 CACHE: "dict[str, tp.Any] | None" = None
 CUSTOM_STYLES: "dict[str, Style]" = {}
-DEBUG = False
+DEBUG = os.environ.get("XONSH_DEBUG", "") not in ("", "0", "False")
 
 
 def _print_duplicate_message(duplicates):
@@ -318,8 +318,12 @@ def load_or_build():
     global CACHE
     fname = cache_filename()
     if os.path.exists(fname):
-        load(fname)
-    else:
+        try:
+            load(fname)
+        except (ValueError, SyntaxError):
+            # Cache file is corrupt or in old eval() format — rebuild.
+            CACHE = None
+    if CACHE is None:
         import sys
 
         if DEBUG:
