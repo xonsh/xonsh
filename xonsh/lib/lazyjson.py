@@ -15,7 +15,7 @@ def _to_json_with_size(obj, offset=0, sort_keys=False):
     if isinstance(obj, str):
         s = json.dumps(obj)
         o = offset
-        n = size = len(s.encode())  # size in bytes
+        n = size = len(s)
     elif isinstance(obj, cabc.Mapping):
         s = "{"
         j = offset + 1
@@ -206,7 +206,7 @@ class LazyJSON(LJNode):
         self._f = f
         self.reopen = reopen
         if not reopen and isinstance(f, str):
-            self._f = open(f, newline="\n")
+            self._f = open(f, newline="\n", encoding="utf-8")
         self._load_index()
         self.root = weakref.proxy(self)
         self.is_mapping = isinstance(self.offsets, cabc.Mapping)
@@ -226,7 +226,7 @@ class LazyJSON(LJNode):
     @contextlib.contextmanager
     def _open(self, *args, **kwargs):
         if self.reopen and isinstance(self._f, str):
-            f = open(self._f, *args, **kwargs)
+            f = open(self._f, *args, encoding="utf-8", **kwargs)
             yield f
             f.close()
         else:

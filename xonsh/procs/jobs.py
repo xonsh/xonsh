@@ -200,7 +200,10 @@ else:
                 except Exception:
                     pass
         else:
-            os.killpg(job["pgrp"], signal)
+            try:
+                os.killpg(job["pgrp"], signal)
+            except (ProcessLookupError, PermissionError):
+                pass
 
 
 if ON_WINDOWS:

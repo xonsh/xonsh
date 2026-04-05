@@ -191,14 +191,32 @@ def getargspec(obj):
     return inspect.getfullargspec(obj)
 
 
-def format_argspec(argspec):
-    """Format argspect, convenience wrapper around inspect's.
-
-    This takes a dict instead of ordered arguments and calls
-    inspect.format_argspec with the arguments in the necessary order.
+def formatargspec(args=(), varargs=None, varkw=None, defaults=()):
+    """Reimplements ``inspect.formatargspec`` which was deprecated in Python 3.5
+    and removed in Python 3.11.
     """
-    return inspect.formatargspec(
-        argspec["args"], argspec["varargs"], argspec["varkw"], argspec["defaults"]
+    defaults = defaults or ()
+    n_no_default = len(args) - len(defaults)
+    parts = []
+    for i, arg in enumerate(args):
+        if i >= n_no_default:
+            parts.append(f"{arg}={defaults[i - n_no_default]!r}")
+        else:
+            parts.append(arg)
+    if varargs:
+        parts.append(f"*{varargs}")
+    if varkw:
+        parts.append(f"**{varkw}")
+    return "(" + ", ".join(parts) + ")"
+
+
+def format_argspec(argspec):
+    """Format argspec dict into a human-readable call signature string."""
+    return formatargspec(
+        argspec.get("args") or (),
+        argspec.get("varargs"),
+        argspec.get("varkw"),
+        argspec.get("defaults"),
     )
 
 
