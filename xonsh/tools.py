@@ -1843,7 +1843,7 @@ def is_regex(x):
 
 def is_history_backend(x):
     """Tests if something is a valid history backend."""
-    return is_string(x) or is_class(x) or isinstance(x, object)
+    return is_string(x) or is_class(x)
 
 
 def is_dynamic_cwd_width(x):
