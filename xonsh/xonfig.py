@@ -473,7 +473,9 @@ def _wizard(
     with force_hide(), env.swap(tempenv):
         try:
             pv.visit()
-        except (KeyboardInterrupt, Exception):
+        except KeyboardInterrupt:
+            print()
+        except Exception:
             print()
             print_exception()
 
