@@ -68,7 +68,7 @@ def get_git_branch():
     timeout = XSH.env.get("VC_BRANCH_TIMEOUT")
     q = queue.Queue()
 
-    t = threading.Thread(target=_get_git_branch, args=(q,))
+    t = threading.Thread(target=_get_git_branch, args=(q,), daemon=True)  # don't block exit
     t.start()
     t.join(timeout=timeout)
     try:
@@ -106,7 +106,7 @@ def get_hg_branch(root=None):
     env = XSH.env
     timeout = env["VC_BRANCH_TIMEOUT"]
     q = queue.Queue()
-    t = threading.Thread(target=_get_hg_root, args=(q,))
+    t = threading.Thread(target=_get_hg_root, args=(q,), daemon=True)  # don't block exit
     t.start()
     t.join(timeout=timeout)
     try:
@@ -243,7 +243,8 @@ def git_dirty_working_directory():
     include_untracked = env.get("VC_GIT_INCLUDE_UNTRACKED")
     q = queue.Queue()
     t = threading.Thread(
-        target=_git_dirty_working_directory, args=(q, include_untracked)
+        target=_git_dirty_working_directory, args=(q, include_untracked),
+        daemon=True,  # don't block exit
     )
     t.start()
     t.join(timeout=timeout)
