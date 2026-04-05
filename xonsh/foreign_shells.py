@@ -62,7 +62,14 @@ def CANON_SHELL_NAMES():
 
 @lazyobject
 def DEFAULT_ENVCMDS():
-    return {"bash": "env", "zsh": "env", "cmd": "set"}
+    return {
+        # env -0 uses null bytes as separators, which correctly handles
+        # multi-line values (e.g. BASH_FUNC_* exported functions).
+        # Falls back to plain env if -0 is not supported.
+        "bash": "env -0 2>/dev/null || env",
+        "zsh": "env -0 2>/dev/null || env",
+        "cmd": "set",
+    }
 
 
 @lazyobject
@@ -292,6 +299,16 @@ def parse_env(s):
         return {}
     g1 = m.group(1)
     g1 = g1[:-1] if g1.endswith("\n") else g1
+    if "\0" in g1:
+        # Null-separated output from env -0.
+        # Correctly handles multi-line values (e.g. exported bash functions).
+        env = {}
+        for entry in g1.split("\0"):
+            if "=" in entry:
+                key, value = entry.split("=", 1)
+                env[key] = value
+        return env
+    # Fallback: line-separated output from plain env.
     env = dict(ENV_SPLIT_RE.findall(g1))
     return env
 
