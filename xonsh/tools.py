@@ -1345,7 +1345,10 @@ def is_bool_or_int(x):
 def to_bool_or_int(x):
     """Converts a value to a boolean or an integer."""
     if isinstance(x, str):
-        return int(x) if x.isdigit() else to_bool(x)
+        try:
+            return int(x)
+        except ValueError:
+            return to_bool(x)
     elif is_int(x):  # bools are ints too!
         return x
     else:

@@ -1276,6 +1276,8 @@ def test_is_bool_or_int(inp, exp):
         ("f", False),
         ("0", 0),
         ("10", 10),
+        ("-1", -1),
+        ("-42", -42),
     ],
 )
 def test_to_bool_or_int(inp, exp):
