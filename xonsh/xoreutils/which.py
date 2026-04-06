@@ -156,7 +156,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
             nmatches += 1
             if not pargs.all:
                 continue
-        path = XSH.env.detype()["PATH"]
+        path = XSH.env.detype()["PATH"].split(os.pathsep)
         matches = _which.whichgen(arg, path=path, exts=exts, verbose=verbose)
         if matches is not None:
             for match in matches:
