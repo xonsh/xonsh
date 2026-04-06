@@ -1865,7 +1865,7 @@ def to_dynamic_cwd_tuple(x):
     """Convert to a canonical cwd_width tuple."""
     unit = "c"
     if isinstance(x, str):
-        if x[-1] == "%":
+        if x and x[-1] == "%":
             x = x[:-1]
             unit = "%"
         else:

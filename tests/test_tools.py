@@ -1526,6 +1526,11 @@ def test_to_dynamic_cwd_tuple(inp, exp):
     assert exp == obs
 
 
+def test_to_dynamic_cwd_tuple_empty_string():
+    with pytest.raises(ValueError):
+        to_dynamic_cwd_tuple("")
+
+
 @pytest.mark.parametrize(
     "inp, exp",
     [((20.0, "c"), "20.0"), ((20.0, "%"), "20.0%"), ((float("inf"), "c"), "inf")],
