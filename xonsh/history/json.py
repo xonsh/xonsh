@@ -166,8 +166,8 @@ def _xhj_pull_items(pull_times, src_sessionid=None):
         )
 
     # src_paths may include the current session's file, so skip it to avoid duplicates
-    custom_history_file = XSH.env.get("XONSH_HISTORY_FILE") or ""
-    current_session_path = xt.expanduser_abs_path(custom_history_file)
+    hist = XSH.history
+    current_session_path = getattr(hist, "filename", None) or ""
     items = []
     for path in src_paths:
         if path == current_session_path:
