@@ -134,8 +134,8 @@ def _unc_unmap_temp_drive(left_drive, cwd):
         if p.casefold().startswith(left_drive):
             return
 
-    _unc_tempDrives.pop(left_drive)
     subprocess.check_output(["NET", "USE", left_drive, "/delete"], text=True)
+    _unc_tempDrives.pop(left_drive)
 
 
 events.doc(
