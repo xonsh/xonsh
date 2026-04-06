@@ -255,23 +255,7 @@ Name space conflicts
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Due to ambiguity with the Python ``dir`` builtin, to list the current directory
-you must explicitly request the ``.``, like this:
-
-.. code-block:: xonshcon
-
-   @ dir .
-    Volume in drive C is Windows
-    Volume Serial Number is 30E8-8B86
-
-    Directory of C:\Users\snail\xonsh
-
-   2015-05-12  03:04    <DIR>          .
-   2015-05-12  03:04    <DIR>          ..
-   2015-05-01  01:31    <DIR>          xonsh
-                  0 File(s)              0 bytes
-                  3 Dir(s)  11,008,000,000 bytes free
-
-
+you must explicitly request the ``.`` or set ``$XONSH_BUILTINS_TO_CMD``.
 
 Many people create a ``d`` alias for the ``dir`` command to save
 typing and avoid the ambiguity altogether:
