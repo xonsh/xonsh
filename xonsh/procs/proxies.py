@@ -481,29 +481,32 @@ class ProcProxyThread(threading.Thread):
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        if not last_in_pipeline:
-            # Close wrappers before closing raw fds to avoid
-            # "Bad file descriptor" on finalization in Python 3.14+.
-            safe_fdclose(sp_stdout)
-            safe_fdclose(sp_stderr)
-            # Close write ends via PipeChannel to signal EOF to downstream
+        try:
+            if not last_in_pipeline:
+                # Close wrappers before closing raw fds to avoid
+                # "Bad file descriptor" on finalization in Python 3.14+.
+                safe_fdclose(sp_stdout)
+                safe_fdclose(sp_stderr)
+                # Close write ends via PipeChannel to signal EOF to downstream
+                for ch in spec.pipe_channels:
+                    ch.close_writer()
+                if self._stdout_pipe:
+                    self._stdout_pipe.close_writer()
+                if self._stderr_pipe:
+                    self._stderr_pipe.close_writer()
+                return
+            # clean up
+            for handle in (sp_stdout, sp_stderr):
+                safe_fdclose(handle, cache=self._closed_handle_cache)
+            # Close write ends via PipeChannel to signal EOF to readers
             for ch in spec.pipe_channels:
                 ch.close_writer()
             if self._stdout_pipe:
                 self._stdout_pipe.close_writer()
             if self._stderr_pipe:
                 self._stderr_pipe.close_writer()
-            return
-        # clean up
-        for handle in (sp_stdout, sp_stderr):
-            safe_fdclose(handle, cache=self._closed_handle_cache)
-        # Close write ends via PipeChannel to signal EOF to readers
-        for ch in spec.pipe_channels:
-            ch.close_writer()
-        if self._stdout_pipe:
-            self._stdout_pipe.close_writer()
-        if self._stderr_pipe:
-            self._stderr_pipe.close_writer()
+        finally:
+            self._close_devnull()
 
     def _wait_and_getattr(self, name):
         """make sure the instance has a certain attr, and return it."""
@@ -568,6 +571,11 @@ class ProcProxyThread(threading.Thread):
         if not hasattr(self, "_devnull"):
             self._devnull = os.open(os.devnull, os.O_RDWR)
         return self._devnull
+
+    def _close_devnull(self):
+        if hasattr(self, "_devnull"):
+            os.close(self._devnull)
+            del self._devnull
 
     def _get_handles(self, stdin, stdout, stderr):
         """Construct and return tuple with IO objects:
