@@ -169,7 +169,7 @@ Xonsh has an extension/plugin system.  We call these additions ``xontribs``.
 Projects that use xonsh or compatible
 *************************************
 
-- `Assistant <https://gitlab.com/waser-technologies/technologies/assistant>`_: an AI-powered shell that blends a full Xonsh terminal with a multi-agent LLM system.
+- `Assistant <https://gitlab.com/waser-technologies/technologies/assistant>`_: An AI-powered shell that blends a full Xonsh terminal with a multi-agent LLM system.
 - `conda <https://conda.io/projects/conda/en/latest/>`_ and `mamba <https://mamba.readthedocs.io/en/latest/>`_: Modern package managers.
 - `Starship <https://starship.rs/>`_: Cross-shell prompt.
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
