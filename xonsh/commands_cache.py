@@ -9,7 +9,6 @@ True) or must be run the foreground (returns False).
 import argparse
 import collections.abc as cabc
 import os
-
 import time
 import typing as tp
 from pathlib import Path
@@ -28,6 +27,8 @@ def json():
         import json
 
         return json
+
+
 from xonsh.procs.executables import (
     get_paths,
     get_possible_names,
