@@ -900,6 +900,11 @@ def _tokenize(
     contline = None
     indents = [0]
 
+    # Pre-compile pseudo-token regexes once instead of per-token.
+    _get = getPseudoToken if tokenize_ioredirects else getPseudoTokenWithoutIO
+    _pseudo_re = _compile(_get(is_subproc=False))
+    _pseudo_re_subproc = _compile(_get(is_subproc=True))
+
     # 'stashed' and 'async_*' are used for async/await parsing
     stashed = None
     async_def = False
@@ -1238,11 +1243,7 @@ def _tokenize(
 
                 continue  # re-enter the while pos < max loop
 
-            pseudomatch = _compile(
-                getPseudoToken(is_subproc=is_subproc)
-                if tokenize_ioredirects
-                else getPseudoTokenWithoutIO(is_subproc=is_subproc)
-            ).match(line, pos)
+            pseudomatch = (_pseudo_re_subproc if is_subproc else _pseudo_re).match(line, pos)
             if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
                 spos, epos, pos = (lnum, start), (lnum, end), end
