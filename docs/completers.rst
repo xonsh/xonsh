@@ -384,6 +384,32 @@ a ready-made helper is available:
     PYTHON_MODULE_COMPLETERS['my_argcomplete_tool'] = _complete_argcomplete
 
 
+Emoji & Symbols
+================
+
+Need a 🐱 in your commit message? xonsh has a built-in emoji completer.
+It is disabled by default. To enable, set the trigger prefixes:
+
+.. code-block:: xonshcon
+
+    @ $XONSH_COMPLETER_EMOJI_PREFIX = '::'
+    @ $XONSH_COMPLETER_SYMBOLS_PREFIX = ':::'
+
+Then type ``::`` followed by a keyword and press TAB to search for colorful
+emoji::
+
+    echo "great job ::fire<TAB>"   →  echo "great job 🔥"
+    echo "::cat<TAB>"              →  echo "🐱"
+
+For classic unicode symbols (arrows, math, stars), use ``:::``::
+
+    echo ":::arrow<TAB>"  →  echo "→"
+    echo ":::star<TAB>"   →  echo "★"
+
+Set ``$XONSH_COMPLETER_EMOJI_PREFIX`` or ``$XONSH_COMPLETER_SYMBOLS_PREFIX``
+to ``None`` to disable the corresponding completer.
+
+
 Legacy Completers Support
 =========================
 
