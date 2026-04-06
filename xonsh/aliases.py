@@ -42,17 +42,19 @@ from xonsh.procs.jobs import bg, clean_jobs, disown, fg, jobs
 from xonsh.procs.specs import DecoratorAlias, SpecAttrDecoratorAlias
 from xonsh.timings import timeit_alias
 from xonsh.tools import (
-    ALIAS_KWARG_NAMES,
     XonshError,
     adjust_shlvl,
     argvquote,
+    capturable,
     escape_windows_cmd_string,
     print_color,
     print_exception,
     strip_simple_quotes,
     swap_values,
+    threadable,
     to_repr_pretty_,
     to_shlvl,
+    uncapturable,
     unthreadable,
 )
 from xonsh.xontribs import xontribs_main
@@ -61,6 +63,16 @@ from xonsh.xontribs import xontribs_main
 @lazyobject
 def EXEC_ALIAS_RE():
     return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
+
+
+class AliasReturnCommandResult(list):
+    """List subclass that can carry local_env from return_command aliases."""
+
+    local_env: dict
+
+    def __init__(self, *args, local_env=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.local_env = local_env or {}
 
 
 class FuncAlias:
@@ -95,6 +107,9 @@ class FuncAlias:
         spec=None,
         stack=None,
         decorators=None,
+        alias_name=None,
+        called_alias_name=None,
+        env=None,
     ):
         return run_alias_by_params(
             self.func,
@@ -106,6 +121,9 @@ class FuncAlias:
                 "spec": spec,
                 "stack": stack,
                 "decorators": decorators,
+                "alias_name": getattr(self.func, "__alias_name__", alias_name),
+                "called_alias_name": called_alias_name,
+                "env": env,
             },
         )
 
@@ -132,6 +150,7 @@ class Aliases(cabc.MutableMapping):
         if dash_case:
             name = name.replace("_", "-")
 
+        func.__alias_name__ = name
         self[name] = func
         return func
 
@@ -183,6 +202,11 @@ class Aliases(cabc.MutableMapping):
         f.return_what = "command"
         return f
 
+    unthreadable = staticmethod(unthreadable)
+    threadable = staticmethod(threadable)
+    uncapturable = staticmethod(uncapturable)
+    capturable = staticmethod(capturable)
+
     def eval_alias(
         self,
         value,
@@ -218,8 +242,9 @@ class Aliases(cabc.MutableMapping):
             value = value[i:]
 
         if callable(value) and getattr(value, "return_what", "result") == "command":
+            local_env = {}
             try:
-                value = value(acc_args, decorators=decorators)
+                value = value(acc_args, decorators=decorators, env=local_env)
                 acc_args = []
             except Exception as e:
                 print_exception(f"Exception inside alias {value}: {e}")
@@ -274,10 +299,11 @@ class Aliases(cabc.MutableMapping):
         if isinstance(key, list):
             args = key[1:]
             key = key[0]
+        local_env = {}
         val = self._raw.get(key)
         if callable(val) and getattr(val, "return_what", "result") == "command":
             try:
-                val = val(args, decorators=decorators)
+                val = val(args, decorators=decorators, env=local_env)
                 args = []
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
@@ -290,12 +316,15 @@ class Aliases(cabc.MutableMapping):
         if val is None:
             return default
         elif isinstance(val, cabc.Iterable) or callable(val):
-            return self.eval_alias(
+            result = self.eval_alias(
                 val,
                 seen_tokens={key},
                 decorators=decorators,
                 acc_args=args,
             )
+            if local_env and result is not None:
+                result = AliasReturnCommandResult(result, local_env=local_env)
+            return result
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
@@ -402,108 +431,50 @@ class ExecAlias:
         for i, a in enumerate(args):
             alias_args[f"arg{i}"] = a
 
-        with XSH.env.swap(alias_args):
+        thread_local = {}
+        with XSH.env.swap(alias_args, __THREAD_LOCAL__=thread_local):
             execer.exec(
                 self.src,
                 glbs=frame.f_globals,
                 locs=frame.f_locals,
                 filename=self.filename,
             )
-        if XSH.history is not None:
-            return XSH.history.last_cmd_rtn
+        return thread_local.get("returncode", 0)
 
     def __repr__(self):
         return f"ExecAlias({self.src!r}, filename={self.filename!r})"
 
 
-class PartialEvalAliasBase:
-    """Partially evaluated alias."""
+ALIAS_PARAMS_DEFAULT = {
+    "args": None,
+    "stdin": None,
+    "stdout": None,
+    "stderr": None,
+    "spec": None,
+    "stack": None,
+    "decorators": None,
+    "alias_name": None,
+    "called_alias_name": None,
+    "env": None,
+}
+ALIAS_KWARG_NAMES = frozenset(ALIAS_PARAMS_DEFAULT)
+
+
+class PartialEvalAlias:
+    """Partially evaluated alias.
+
+    Wraps a callable alias with accumulated arguments. The wrapped function's
+    signature is inspected once at init time. At call time, arguments are
+    matched by name (with positional fallback for unnamed parameters).
+    """
 
     def __init__(self, f, acc_args=()):
-        """
-        Parameters
-        ----------
-        f : callable
-            A function to dispatch to.
-        acc_args : sequence of strings, optional
-            Additional arguments to prepent to the argument list passed in
-            when the alias is called.
-        """
         self.f = f
         self.acc_args = acc_args
         self.__name__ = getattr(f, "__name__", self.__class__.__name__)
+        self._param_names = list(inspect.signature(f).parameters.keys())
+        self._numargs = len(self._param_names)
 
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        return self.f(args, stdin, stdout, stderr, spec, stack)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.f!r}, acc_args={self.acc_args!r})"
-
-
-class PartialEvalAlias0(PartialEvalAliasBase):
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        if args:
-            msg = "callable alias {f!r} takes no arguments, but {args!r} provided. "
-            msg += "Of these {acc_args!r} were partially applied."
-            raise XonshError(msg.format(f=self.f, args=args, acc_args=self.acc_args))
-        return self.f()
-
-
-class PartialEvalAlias1(PartialEvalAliasBase):
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        return self.f(args)
-
-
-class PartialEvalAlias2(PartialEvalAliasBase):
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        return self.f(args, stdin)
-
-
-class PartialEvalAlias3(PartialEvalAliasBase):
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        return self.f(args, stdin, stdout)
-
-
-class PartialEvalAlias4(PartialEvalAliasBase):
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        return self.f(args, stdin, stdout, stderr)
-
-
-class PartialEvalAlias5(PartialEvalAliasBase):
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        return self.f(args, stdin, stdout, stderr, spec)
-
-
-class PartialEvalAlias6(PartialEvalAliasBase):
-    def __call__(
-        self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
-    ):
-        args = list(self.acc_args) + args
-        return self.f(args, stdin, stdout, stderr, spec, stack)
-
-
-class PartialEvalAlias7(PartialEvalAliasBase):
     def __call__(
         self,
         args,
@@ -512,46 +483,44 @@ class PartialEvalAlias7(PartialEvalAliasBase):
         stderr=None,
         spec=None,
         stack=None,
-        decorators=None,
+        alias_name=None,
+        called_alias_name=None,
     ):
         args = list(self.acc_args) + args
-        return self.f(args, stdin, stdout, stderr, spec, stack, decorators)
+        if self._numargs == 0:
+            if args:
+                msg = "callable alias {f!r} takes no arguments, but {args!r} provided. "
+                msg += "Of these {acc_args!r} were partially applied."
+                raise XonshError(
+                    msg.format(f=self.f, args=args, acc_args=self.acc_args)
+                )
+            return self.f()
+        available = ALIAS_PARAMS_DEFAULT.copy()
+        available.update(
+            args=args,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            spec=spec,
+            stack=stack,
+            alias_name=getattr(self.f, "__alias_name__", alias_name),
+            called_alias_name=called_alias_name,
+        )
+        kwargs = {n: available[n] for n in self._param_names if n in available}
+        if len(kwargs) != self._numargs:
+            # Positional fallback for unnamed params
+            kwargs = dict(zip(self._param_names, available.values(), strict=False))
+        return self.f(**kwargs)
 
-
-PARTIAL_EVAL_ALIASES = (
-    PartialEvalAlias0,
-    PartialEvalAlias1,
-    PartialEvalAlias2,
-    PartialEvalAlias3,
-    PartialEvalAlias4,
-    PartialEvalAlias5,
-    PartialEvalAlias6,
-    PartialEvalAlias7,
-)
+    def __repr__(self):
+        return f"PartialEvalAlias({self.f!r}, acc_args={self.acc_args!r})"
 
 
 def partial_eval_alias(f, acc_args=()):
-    """Dispatches the appropriate eval alias based on the number of args to the original callable alias
-    and how many arguments to apply.
-    """
-    # no partial needed if no extra args
+    """Wraps a callable alias with accumulated arguments."""
     if not acc_args:
         return f
-    # need to dispatch
-    numargs = 0
-    for name, param in inspect.signature(f).parameters.items():
-        if (
-            param.kind == param.POSITIONAL_ONLY
-            or param.kind == param.POSITIONAL_OR_KEYWORD
-        ):
-            numargs += 1
-        elif name in ALIAS_KWARG_NAMES and param.kind == param.KEYWORD_ONLY:
-            numargs += 1
-    if numargs < 8:
-        return PARTIAL_EVAL_ALIASES[numargs](f, acc_args=acc_args)
-    else:
-        e = "Expected proxy with 7 or fewer arguments for {}, not {}"
-        raise XonshError(e.format(", ".join(ALIAS_KWARG_NAMES), numargs))
+    return PartialEvalAlias(f, acc_args=acc_args)
 
 
 def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
@@ -560,15 +529,7 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
     If function param names are in alias signature fill them.
     If function params have unknown names fill using alias signature order.
     """
-    alias_params = {
-        "args": None,
-        "stdin": None,
-        "stdout": None,
-        "stderr": None,
-        "spec": None,
-        "stack": None,
-        "decorators": None,
-    }
+    alias_params = ALIAS_PARAMS_DEFAULT.copy()
     alias_params |= params
     sign = inspect.signature(func)
     func_params = sign.parameters.items()
