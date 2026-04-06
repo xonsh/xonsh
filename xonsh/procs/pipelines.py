@@ -584,6 +584,7 @@ class CommandPipeline:
             self.ended = True
         self._check_signal()
         self._apply_to_history()
+        self._apply_to_thread_local()
         self._raise_subproc_error()
 
     def _save_term_state(self):
@@ -824,6 +825,12 @@ class CommandPipeline:
         hist = XSH.history
         if hist is not None:
             hist.last_cmd_rtn = 1 if self.proc is None else self.proc.returncode
+
+    def _apply_to_thread_local(self):
+        """Store the return code in the thread-local dict if present."""
+        tl = XSH.env.get("__THREAD_LOCAL__")
+        if tl is not None:
+            tl["returncode"] = 1 if self.proc is None else self.proc.returncode
 
     def _raise_subproc_error(self):
         """Raises a subprocess error, if we are supposed to."""

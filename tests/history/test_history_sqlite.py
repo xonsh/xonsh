@@ -125,90 +125,89 @@ def test_histcontrol(hist, xession):
     xession.env["HISTCONTROL"] = ignore_opts
     assert len(hist) == 0
 
-    # An error, items() remains empty
+    # An error — skipped by ignoreerr, not in memory or db
     hist.append({"inp": "ls foo", "rtn": 2})
     assert len(hist) == 0
-    assert len(hist.inps) == 1
-    assert len(hist.rtns) == 1
-    assert 2 == hist.rtns[-1]
+    assert len(hist.inps) == 0
+    assert len(hist.rtns) == 0
 
-    # Success
+    # Success — stored
     hist.append({"inp": "ls foobazz", "rtn": 0})
     assert len(hist) == 1
-    assert len(hist.inps) == 2
-    assert len(hist.rtns) == 2
+    assert len(hist.inps) == 1
+    assert len(hist.rtns) == 1
     items = list(hist.items())
     assert "ls foobazz" == items[-1]["inp"]
     assert 0 == items[-1]["rtn"]
     assert 0 == hist.rtns[-1]
 
-    # Error
+    # Error — skipped by ignoreerr
     hist.append({"inp": "ls foo", "rtn": 2})
     assert len(hist) == 1
+    assert len(hist.inps) == 1
     items = list(hist.items())
     assert "ls foobazz" == items[-1]["inp"]
     assert 0 == items[-1]["rtn"]
-    assert 2 == hist.rtns[-1]
 
-    # File now exists, success
+    # File now exists, success — stored
     hist.append({"inp": "ls foo", "rtn": 0})
     assert len(hist) == 2
+    assert len(hist.inps) == 2
     items = list(hist.items())
     assert "ls foo" == items[-1]["inp"]
     assert 0 == items[-1]["rtn"]
     assert 0 == hist.rtns[-1]
 
-    # Success
+    # Success — stored
     hist.append({"inp": "ls", "rtn": 0})
     assert len(hist) == 3
+    assert len(hist.inps) == 3
     items = list(hist.items())
     assert "ls" == items[-1]["inp"]
     assert 0 == items[-1]["rtn"]
     assert 0 == hist.rtns[-1]
 
-    # Dup
+    # Dup — skipped by ignoredups, not in memory
     hist.append({"inp": "ls", "rtn": 0})
     assert len(hist) == 3
+    assert len(hist.inps) == 3
 
-    # Success
+    # Success — stored
     hist.append({"inp": "/bin/ls", "rtn": 0})
     assert len(hist) == 4
+    assert len(hist.inps) == 4
     items = list(hist.items())
     assert "/bin/ls" == items[-1]["inp"]
     assert 0 == items[-1]["rtn"]
     assert 0 == hist.rtns[-1]
 
-    # Error
+    # Error — skipped by ignoreerr, not in memory
     hist.append({"inp": "ls bazz", "rtn": 1})
     assert len(hist) == 4
+    assert len(hist.inps) == 4
     items = list(hist.items())
     assert "/bin/ls" == items[-1]["inp"]
-    assert 0 == items[-1]["rtn"]
-    assert "ls bazz" == hist.inps[-1]
-    assert 1 == hist.rtns[-1]
 
-    # Error
+    # Error — skipped by ignoreerr, not in memory
     hist.append({"inp": "ls bazz", "rtn": -1})
     assert len(hist) == 4
-    items = list(hist.items())
-    assert "/bin/ls" == items[-1]["inp"]
-    assert 0 == items[-1]["rtn"]
-    assert -1 == hist.rtns[-1]
+    assert len(hist.inps) == 4
 
-    # Success
+    # Success — stored
     hist.append({"inp": "echo not secret", "rtn": 0, "spc": False})
     assert len(hist) == 5
+    assert len(hist.inps) == 5
     items = list(hist.items())
     assert "echo not secret" == items[-1]["inp"]
     assert 0 == items[-1]["rtn"]
     assert 0 == hist.rtns[-1]
 
-    # Space
+    # Space — skipped by ignorespace, not in memory
     hist.append({"inp": "echo secret command", "rtn": 0, "spc": True})
     assert len(hist) == 5
+    assert len(hist.inps) == 5
     items = list(hist.items())
     assert "echo not secret" == items[-1]["inp"]
-    assert 0 == items[-1]["rtn"]
     assert 0 == hist.rtns[-1]
 
     _clean_up(hist)

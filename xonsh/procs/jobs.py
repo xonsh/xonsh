@@ -397,7 +397,7 @@ def get_task(tid):
 def _clear_dead_jobs():
     to_remove = set()
     tasks = get_tasks()
-    # list() creates a copy so we iterate over a static list, not the
+    # list() creates a copy so we iterate over a static snapshot, not the
     # live deque. This function may be called from the SIGHUP signal
     # handler which runs between bytecodes on the main thread. Without
     # the copy, modifying the deque/dict while the main thread iterates
@@ -410,9 +410,15 @@ def _clear_dead_jobs():
             continue
         if proc is None or proc.poll() is not None:
             to_remove.add(tid)
-    for job in to_remove:
-        tasks.remove(job)
-        get_jobs().pop(job, None)
+    if to_remove:
+        # Replace the deque contents atomically to avoid racing with
+        # the main thread's iteration over the same deque.
+        alive = collections.deque(tid for tid in tasks if tid not in to_remove)
+        tasks.clear()
+        tasks.extend(alive)
+        jobs = get_jobs()
+        for job in to_remove:
+            jobs.pop(job, None)
 
 
 def format_job_string(num: int, format="dict") -> str:

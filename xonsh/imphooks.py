@@ -240,8 +240,10 @@ class XonshImportEventHook(MetaPathFinder):
         fullname stack.
         """
         self._fullname_stack.append(fullname)
-        yield
-        del self._fullname_stack[-1]
+        try:
+            yield
+        finally:
+            del self._fullname_stack[-1]
 
     #
     # MetaPathFinder methods

@@ -195,7 +195,8 @@ def code_cache_name(code):
     """
     if isinstance(code, str):
         code = code.encode()
-    return hashlib.md5(code).hexdigest()
+    # usedforsecurity=False: allow md5 on FIPS-enabled systems
+    return hashlib.md5(code, usedforsecurity=False).hexdigest()
 
 
 def code_cache_check(cachefname):
