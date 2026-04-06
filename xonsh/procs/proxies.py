@@ -437,12 +437,13 @@ class ProcProxyThread(threading.Thread):
             if self.env and self.env.get("__ALIAS_NAME"):
                 alias_stack += ":" + self.env["__ALIAS_NAME"]
 
+            alias_env = {}
             with (
                 STDOUT_DISPATCHER.register(sp_stdout),
                 STDERR_DISPATCHER.register(sp_stderr),
                 xt.redirect_stdout(STDOUT_DISPATCHER),
                 xt.redirect_stderr(STDERR_DISPATCHER),
-                XSH.env.swap(self.env, __ALIAS_STACK=alias_stack),
+                XSH.env.swap(self.env, overlay=alias_env, __ALIAS_STACK=alias_stack),
             ):
                 r = run_with_partial_args(
                     self.f,
@@ -453,6 +454,11 @@ class ProcProxyThread(threading.Thread):
                         "stderr": sp_stderr,
                         "spec": spec,
                         "stack": spec.stack,
+                        "alias_name": getattr(self.f, "__alias_name__", None),
+                        "called_alias_name": self.env.get("__ALIAS_NAME")
+                        if self.env
+                        else None,
+                        "env": alias_env,
                     },
                 )
         except SystemExit as e:
@@ -689,7 +695,8 @@ class ProcProxy:
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
-            with XSH.env.swap(self.env):
+            alias_env = {}
+            with XSH.env.swap(self.env, overlay=alias_env):
                 r = run_with_partial_args(
                     self.f,
                     {
@@ -699,6 +706,11 @@ class ProcProxy:
                         "stderr": stderr,
                         "spec": spec,
                         "stack": spec.stack,
+                        "alias_name": getattr(self.f, "__alias_name__", None),
+                        "called_alias_name": self.env.get("__ALIAS_NAME")
+                        if self.env
+                        else None,
+                        "env": alias_env,
                     },
                 )
         except SystemExit as e:
