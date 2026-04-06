@@ -6,6 +6,7 @@ import os
 
 import pytest
 
+from xonsh.aliases import Aliases
 from xonsh.platform import ON_WINDOWS
 from xonsh.procs.pipelines import CommandPipeline
 from xonsh.pytest.tools import (
@@ -39,10 +40,12 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
         monkeypatch.setattr(
             xonsh_session.commands_cache,
             "aliases",
-            {
-                "echo": "cmd /c echo".split(),
-                "grep": "cmd /c findstr".split(),
-            },
+            Aliases(
+                {
+                    "echo": "cmd /c echo".split(),
+                    "grep": "cmd /c findstr".split(),
+                }
+            ),
             raising=False,
         )
 
