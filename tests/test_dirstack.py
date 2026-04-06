@@ -67,6 +67,18 @@ def test_cdpath_expansion(xession):
                 os.rmdir(d)
 
 
+def test_chdir_nonexistent_preserves_pwd(xession, tmpdir):
+    """cd to nonexistent dir must not change $PWD."""
+    start = str(tmpdir)
+    xession.env.update(dict(PWD=start))
+    os.chdir(start)
+
+    dirstack._change_working_directory("nonexistent_dir_xyz")
+
+    assert os.getcwd() == start
+    assert xession.env["PWD"] == start
+
+
 def test_cdpath_events(xession, tmpdir):
     xession.env.update(dict(CDPATH=PARENT, PWD=os.getcwd()))
     target = str(tmpdir)

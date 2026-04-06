@@ -375,12 +375,18 @@ def test_caseinsdict_update():
 
 def test_caseinsdict_keys():
     actual = CaseInsensitiveDict({"Key1": "Val1"})
-    assert next(actual.keys()) == "Key1"
+    keys = actual.keys()
+    assert keys == ["Key1"]
+    assert len(keys) == 1
+    assert list(keys) == list(keys)  # can iterate twice
 
 
 def test_caseinsdict_items():
     actual = CaseInsensitiveDict({"Key1": "Val1"})
-    assert next(actual.items()) == ("Key1", "Val1")
+    items = actual.items()
+    assert items == [("Key1", "Val1")]
+    assert len(items) == 1
+    assert list(items) == list(items)  # can iterate twice
 
 
 def test_caseinsdict_repr():

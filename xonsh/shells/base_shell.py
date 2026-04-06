@@ -189,7 +189,10 @@ class _TeeStd(io.TextIOBase):
             std_s = self.prestd + std_s
         if self.poststd:
             std_s += self.poststd
-        self.std.write(std_s)
+        try:
+            self.std.write(std_s)
+        except OSError:
+            pass
 
     def flush(self):
         """Flushes both the original stdout and the buffer."""

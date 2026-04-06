@@ -26,6 +26,15 @@ function_map = {
 
 
 def current_mask():
+    # On Linux 4.7+, read umask from /proc to avoid the set-then-restore race.
+    try:
+        with open("/proc/self/status") as f:
+            for line in f:
+                if line.startswith("Umask:"):
+                    return int(line.split()[1], 8)
+    except (OSError, ValueError, IndexError):
+        pass
+    # Fallback: briefly sets umask to 0 (race with other threads).
     out = os.umask(0)
     os.umask(out)
     return out

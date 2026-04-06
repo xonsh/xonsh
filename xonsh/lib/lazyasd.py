@@ -2,6 +2,7 @@
 
 # Copyright 2015-2016, the xonsh developers. All rights reserved.
 import collections.abc as cabc
+import threading
 import typing as tp
 
 __version__ = "0.1.3"
@@ -31,19 +32,22 @@ class LazyObject:
             be the name on the LHS of the assignment.
         """
         self._lasdo = {"loaded": False, "load": load, "ctx": ctx, "name": name}
+        self._lasdo_lock = threading.Lock()
 
     def _lazy_obj(self):
         d = self._lasdo
         if d["loaded"]:
-            obj = d["obj"]
-        else:
+            return d["obj"]
+        with self._lasdo_lock:
+            if d["loaded"]:
+                return d["obj"]
             obj = d["load"]()
             d["ctx"][d["name"]] = d["obj"] = obj
             d["loaded"] = True
         return obj
 
     def __getattribute__(self, name):
-        if name == "_lasdo" or name == "_lazy_obj":
+        if name in ("_lasdo", "_lasdo_lock", "_lazy_obj"):
             return super().__getattribute__(name)
         obj = self._lazy_obj()
         return getattr(obj, name)

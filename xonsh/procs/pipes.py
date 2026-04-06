@@ -45,11 +45,23 @@ class PipeChannel:
 
     def open_writer(self, mode="wb", buffering=-1):
         """Non-owning file wrapper for the write end."""
-        return open(self._write_fd, mode, buffering=buffering, closefd=False)
+        # Hold the lock to prevent close_writer() from closing the fd
+        # between our read and the open() call (fd reuse race).
+        with self._lock:
+            fd = self._write_fd
+            if fd is None:
+                raise OSError("write end is closed")
+            return open(fd, mode, buffering=buffering, closefd=False)
 
     def open_reader(self, mode="rb", buffering=-1):
         """Non-owning file wrapper for the read end."""
-        return open(self._read_fd, mode, buffering=buffering, closefd=False)
+        # Hold the lock to prevent close_reader() from closing the fd
+        # between our read and the open() call (fd reuse race).
+        with self._lock:
+            fd = self._read_fd
+            if fd is None:
+                raise OSError("read end is closed")
+            return open(fd, mode, buffering=buffering, closefd=False)
 
     def close_writer(self):
         """Close the write end fd. Thread-safe and idempotent."""
