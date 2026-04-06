@@ -1693,8 +1693,8 @@ def _run_bg_validation(gen):
     reuse them.  Only the re-render / invalidate step is gated by gen —
     a stale thread must not trigger a repaint for an outdated input.
     """
-    cmds = set(_pending_cmds)
-    _pending_cmds.clear()
+    global _pending_cmds
+    cmds, _pending_cmds = _pending_cmds, set()
     if not cmds:
         return
     changed = False

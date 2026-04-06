@@ -77,6 +77,17 @@ class TestWhich(TestCase):
             assert len(matches) == 1
             assert self._file_match(matches[0][0], os.path.join(testdir, arg))
 
+    def test_whichgen_path_as_string(self):
+        """path passed as a colon-separated string must work like a list."""
+        testdir = self.testdirs[0].name
+        arg = "whichtestapp1"
+        path_str = os.pathsep.join([testdir])
+        matches = list(
+            _which.whichgen(arg, path=path_str.split(os.pathsep), exts=self.exts)
+        )
+        assert len(matches) == 1
+        assert self._file_match(matches[0][0], os.path.join(testdir, arg))
+
     def _file_match(self, path1, path2):
         if ON_WINDOWS:
             path1 = os.path.normpath(os.path.normcase(path1))

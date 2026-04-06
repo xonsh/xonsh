@@ -156,12 +156,8 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
             nmatches += 1
             if not pargs.all:
                 continue
-        # which.whichgen gives the nicest 'verbose' output if PATH is taken
-        # from os.environ so we temporarily override it with
-        # __xosnh_env__['PATH']
-        original_os_path = xp.os_environ["PATH"]
-        xp.os_environ["PATH"] = XSH.env.detype()["PATH"]
-        matches = _which.whichgen(arg, exts=exts, verbose=verbose)
+        path = XSH.env.detype()["PATH"].split(os.pathsep)
+        matches = _which.whichgen(arg, path=path, exts=exts, verbose=verbose)
         if matches is not None:
             for match in matches:
                 if match is None:
@@ -171,7 +167,6 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
                 nmatches += 1
                 if not pargs.all:
                     break
-        xp.os_environ["PATH"] = original_os_path
         if not nmatches:
             failures.append(arg)
     if len(failures) == 0:

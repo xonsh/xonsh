@@ -227,8 +227,10 @@ class LazyJSON(LJNode):
     def _open(self, *args, **kwargs):
         if self.reopen and isinstance(self._f, str):
             f = open(self._f, *args, encoding="utf-8", **kwargs)
-            yield f
-            f.close()
+            try:
+                yield f
+            finally:
+                f.close()
         else:
             yield self._f
 
