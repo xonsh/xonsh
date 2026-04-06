@@ -740,8 +740,19 @@ class JsonHistory(History):
                 new_commands = [c for c in commands if not pattern.match(c["inp"])]
                 deleted += len(commands) - len(new_commands)
                 file_content["cmds"] = new_commands
-                with open(f, "w", encoding="utf-8") as fp:
-                    xlj.ljdump(file_content, fp)
+                dirname = os.path.dirname(f)
+                fd, tmpname = tempfile.mkstemp(dir=dirname, suffix=".json.tmp")
+                try:
+                    with os.fdopen(fd, "w", newline="\n", encoding="utf-8") as fp:
+                        xlj.ljdump(file_content, fp)
+                    os.replace(tmpname, f)
+                except Exception as err:
+                    try:
+                        os.unlink(tmpname)
+                    except OSError:
+                        pass
+                    print(f"history delete: failed to update {f!r}: {err}", file=sys.stderr)
+                    continue
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
                 if XSH.env.get("XONSH_DEBUG", 0) > 0:
