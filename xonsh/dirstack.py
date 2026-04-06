@@ -13,7 +13,6 @@ from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
-from xonsh.tools import get_sep
 
 DIRSTACK: list[str] = []
 """A list containing the currently remembered directories."""
