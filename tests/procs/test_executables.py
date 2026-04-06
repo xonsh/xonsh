@@ -183,10 +183,12 @@ def test_stable_dir_cache_skips_directories(tmpdir, xession):
     # Create a subdirectory named "man" (like coreutils gnubin/man)
     stable.mkdir("man")
     # Create a real executable so the dir is not empty
-    (f := stable / "ls").write_text("binary", encoding="utf8")
+    exe_name = "ls.EXE" if ON_WINDOWS else "ls"
+    (f := stable / exe_name).write_text("binary", encoding="utf8")
     os.chmod(f, 0o777)
 
     stable_str = str(stable)
+    pathext = [".EXE"] if ON_WINDOWS else []
 
     executables_mod._stable_prefixes_source = None
     executables_mod._stable_prefixes = ()
@@ -195,10 +197,10 @@ def test_stable_dir_cache_skips_directories(tmpdir, xession):
 
     with xession.env.swap(
         PATH=[stable_str],
-        PATHEXT=[],
+        PATHEXT=pathext,
         XONSH_COMMANDS_CACHE_READ_DIR_ONCE=[stable_str],
     ):
         # "man" is a directory — must not be found
         assert locate_executable("man") is None
-        # "ls" is a file — must be found
-        assert locate_executable("ls") is not None
+        # executable file must be found
+        assert locate_executable(exe_name) is not None
