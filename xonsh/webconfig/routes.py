@@ -213,9 +213,7 @@ class PromptsPage(Routes):
     def get_cols(self):
         style = f"min-width: {self.card_width}ch"
         for name, prompt in self.prompts.items():
-            yield t.div("col-auto", style=style)[
-                self.to_card(name, prompt["display"]),
-            ]
+            yield t.div("col-auto", style=style)[self.to_card(name, prompt["display"]),]
 
     def get(self):
         # banner
@@ -393,9 +391,7 @@ class AliasesPage(Routes):
             t.card_body()[
                 t.card_title()["Docs"],
                 t.card_body()[
-                    t.li()[
-                        t.a(href="https://xon.sh/tutorial.html")["Tutorial"]
-                    ],
+                    t.li()[t.a(href="https://xon.sh/tutorial.html")["Tutorial"]],
                     t.li()[
                         t.a(href="https://xon.sh/callable_aliases.html")[
                             "Callable Aliases"
