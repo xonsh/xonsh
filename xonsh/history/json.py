@@ -632,6 +632,8 @@ class JsonHistory(History):
         while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         for f in _xhj_get_history_files(newest_first=newest_first):
+            if f == self.filename:
+                continue
             try:
                 json_file = xlj.LazyJSON(f, reopen=False)
             except ValueError:
