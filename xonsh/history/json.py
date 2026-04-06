@@ -643,7 +643,7 @@ class JsonHistory(History):
                 commands = json_file.load()["cmds"]
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
-                if XSH.env.get("XONSH_DEBUG") > 0:
+                if XSH.env.get("XONSH_DEBUG", 0) > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
                     print(msg.format(f), file=sys.stderr)
                 continue
@@ -744,7 +744,7 @@ class JsonHistory(History):
                     xlj.ljdump(file_content, fp)
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
-                if XSH.env.get("XONSH_DEBUG") > 0:
+                if XSH.env.get("XONSH_DEBUG", 0) > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
                     print(msg.format(f), file=sys.stderr)
                 continue
