@@ -751,7 +751,10 @@ class JsonHistory(History):
                         os.unlink(tmpname)
                     except OSError:
                         pass
-                    print(f"history delete: failed to update {f!r}: {err}", file=sys.stderr)
+                    print(
+                        f"history delete: failed to update {f!r}: {err}",
+                        file=sys.stderr,
+                    )
                     continue
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
