@@ -271,6 +271,11 @@ Available methods:
      - Keep only existing directories.
    * - ``.exists()``
      - Keep only paths that exist on disk.
+   * - ``.visible()``
+     - Keep only visible (non-hidden) entries.
+   * - ``.hidden()``
+     - Keep only hidden entries (dotfiles on Unix, ``FILE_ATTRIBUTE_HIDDEN``
+       on Windows).
 
 A more complete example — find all Python test files, convert to ``Path``
 objects, and extract just the filenames:

@@ -25,7 +25,7 @@ from collections.abc import Iterator
 
 from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
-from xonsh.platform import ON_POSIX
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.tools import (
     XonshCalledProcessError,
     XonshError,
@@ -247,6 +247,37 @@ class XonshList(list):
         """Keep only paths that exist on disk."""
         self._check_paths("exists")
         return XonshList(p for p in self if os.path.exists(p))
+
+    @staticmethod
+    def _is_hidden(p):
+        """Check if a path is hidden. Cross-platform: dotfiles on Unix,
+        FILE_ATTRIBUTE_HIDDEN on Windows."""
+        name = os.path.basename(p)
+        if name.startswith("."):
+            return True
+        if ON_WINDOWS:
+            try:
+                import stat
+
+                attrs = os.stat(p).st_file_attributes
+                return bool(attrs & stat.FILE_ATTRIBUTE_HIDDEN)
+            except (OSError, AttributeError):
+                pass
+        return False
+
+    def hidden(self):
+        """Keep only hidden files and directories.
+        On Unix: names starting with '.'. On Windows: also FILE_ATTRIBUTE_HIDDEN.
+        """
+        self._check_paths("hidden")
+        return XonshList(p for p in self if self._is_hidden(p))
+
+    def visible(self):
+        """Keep only visible (non-hidden) files and directories.
+        On Unix: names not starting with '.'. On Windows: no FILE_ATTRIBUTE_HIDDEN.
+        """
+        self._check_paths("visible")
+        return XonshList(p for p in self if not self._is_hidden(p))
 
 
 def path_literal(s):
