@@ -80,7 +80,7 @@ class Functor(Block):
     def __enter__(self):
         super().__enter__()
         body = textwrap.indent(self.macro_block, "    ")
-        uid = hash(body) + sys.maxsize  # should always be a positive int
+        uid = abs(hash(body))
         name = f"__xonsh_functor_{uid}__"
         # construct signature string
         sig = rtn = ""
