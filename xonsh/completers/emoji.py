@@ -130,8 +130,8 @@ def complete_emoji(ctx: CommandContext):
     raw_prefix = ctx.opening_quote + prefix
     env = XSH.env or {}
 
-    symbol_trigger = env.get("XONSH_COMPLETER_SYMBOLS_PREFIX", ":::")
-    emoji_trigger = env.get("XONSH_COMPLETER_EMOJI_PREFIX", "::")
+    symbol_trigger = env.get("XONSH_COMPLETER_SYMBOLS_PREFIX") or ""
+    emoji_trigger = env.get("XONSH_COMPLETER_EMOJI_PREFIX") or ""
 
     # Check longer trigger first to avoid prefix conflict
     if len(symbol_trigger) >= len(emoji_trigger):

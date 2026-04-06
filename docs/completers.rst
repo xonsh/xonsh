@@ -388,8 +388,15 @@ Emoji & Symbols
 ================
 
 Need a 🐱 in your commit message? xonsh has a built-in emoji completer.
+It is disabled by default. To enable, set the trigger prefixes:
 
-Type ``::`` followed by a keyword and press TAB to search for colorful emoji::
+.. code-block:: xonshcon
+
+    @ $XONSH_COMPLETER_EMOJI_PREFIX = '::'
+    @ $XONSH_COMPLETER_SYMBOLS_PREFIX = ':::'
+
+Then type ``::`` followed by a keyword and press TAB to search for colorful
+emoji::
 
     echo "great job ::fire<TAB>"   →  echo "great job 🔥"
     echo "::cat<TAB>"              →  echo "🐱"
@@ -399,8 +406,8 @@ For classic unicode symbols (arrows, math, stars), use ``:::``::
     echo ":::arrow<TAB>"  →  echo "→"
     echo ":::star<TAB>"   →  echo "★"
 
-The trigger prefixes are configurable via ``$XONSH_COMPLETER_EMOJI_PREFIX``
-and ``$XONSH_COMPLETER_SYMBOLS_PREFIX``. Set to empty string to disable.
+Set ``$XONSH_COMPLETER_EMOJI_PREFIX`` or ``$XONSH_COMPLETER_SYMBOLS_PREFIX``
+to ``None`` to disable the corresponding completer.
 
 
 Legacy Completers Support
