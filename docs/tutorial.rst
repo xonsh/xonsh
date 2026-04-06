@@ -1110,6 +1110,32 @@ substitute variables and other expressions into the glob pattern:
     ['aba', 'abba', 'abcba']
 
 
+Match Globbing
+--------------
+
+The ``m`` modifier enables match globbing — a regex glob that returns capture
+groups instead of full paths. This is useful for extracting parts of matched
+paths directly:
+
+.. code-block:: xonshcon
+
+    @ for parent, name in m`tests/(.*)/(test_.*\.py)`:
+          print(parent, name)
+    completers test_python.py
+    completers test_path_completers.py
+    procs test_specs.py
+    procs test_pipes.py
+
+With a single capture group, a flat list of strings is returned:
+
+.. code-block:: xonshcon
+
+    @ m`xonsh/(.*\.py)`.sorted().files()
+    ['__init__.py', '__main__.py', 'aliases.py']
+
+See :doc:`globbing` for the full ``m`` glob reference and ``XonshList`` methods.
+
+
 Custom Path Searches
 --------------------
 
@@ -1463,63 +1489,6 @@ A callable alias function can accept a list of arguments for any purpose:
         return 0
 
 
-Callable Alias and Capturing
-----------------------------
-
-Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess
-operator ``$[]`` are uncapturable, and the subprocess's stdout passes directly through Xonsh to the screen.
-
-.. code-block:: python
-
-    @ @aliases.register
-      def _printer(args, stdin, stdout, stderr):
-          """Ultimate printer."""
-
-          print("print out")
-          print("print err", file=@.imp.sys.stderr)
-
-          print("print out alias stdout", file=stdout)
-          print("print err alias stderr", file=stderr)
-
-          echo @("echo out")
-          echo @("echo err") o>e
-
-          $(echo @("$() echo out"))
-          $(echo @("$() echo err") o>e)
-
-          !(echo @("!() echo out"))
-          !(echo @("!() echo err") o>e)
-
-          ![echo @("![] echo out")]
-          ![echo @("![] echo err") o>e]
-
-          $[echo @("$[] echo out")]
-          $[echo @("$[] echo err") o>e]
-
-          execx('echo "execx echo out"')
-          execx('echo "execx echo err" o>e')
-
-    @ $(printer)
-    print err
-    print err alias stderr
-    echo err
-    $() echo err
-    ![] echo err
-    $[] echo out
-    $[] echo err
-    execx echo err
-    'print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n'
-
-    @ !(printer)
-    $() echo err
-    $[] echo out
-    $[] echo err
-    CommandPipeline(
-      returncode=0,
-      output='print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n',
-      errors='print err\necho err\nprint err alias stderr\n![] echo err\nexecx echo err\n'
-    )
-
 Anonymous Aliases
 -----------------
 As mentioned above, it is also possible to treat functions outside this mapping
@@ -1625,7 +1594,9 @@ Now you can run:
 -------------
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
-with Python and subprocess.
+with Python and subprocess. See :doc:`callable_aliases` for the full callable
+aliases reference including stream capturing, ``env`` overlay, and return
+values.
 
 .. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` environment variable is False
              (the default), then foreign shell aliases that try to override
