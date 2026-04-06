@@ -13,7 +13,6 @@ import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
-from xonsh.completers.tools import RichCompletion
 from xonsh.lib.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
 from xonsh.tools import get_signal_name, on_main_thread, unthreadable
@@ -637,6 +636,8 @@ def bg(args, stdin=None):
 def job_id_completer(xsh, **_):
     """Return currently running jobs ids"""
     for job_id in get_jobs():
+        from xonsh.completers.tools import RichCompletion
+
         yield RichCompletion(str(job_id), description=format_job_string(job_id))
 
 

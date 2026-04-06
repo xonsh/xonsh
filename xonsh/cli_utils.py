@@ -15,7 +15,6 @@ from collections import defaultdict
 from typing import Annotated
 
 from xonsh.built_ins import XSH
-from xonsh.completers.tools import RichCompletion
 
 
 class ArgCompleter:
@@ -486,6 +485,8 @@ class ArgparseCompleter:
 
         if isinstance(act.choices, dict):  # sub-parsers
             for choice, sub_parser in act.choices.items():
+                from xonsh.completers.tools import RichCompletion
+
                 yield RichCompletion(
                     choice,
                     description=sub_parser.description or "",
@@ -534,6 +535,8 @@ class ArgparseCompleter:
                         desc = formatter._expand_help(act)
                     except KeyError:
                         desc = act.help
+                from xonsh.completers.tools import RichCompletion
+
                 yield RichCompletion(flag, description=desc)
                 if self.long_opts_only:
                     break

@@ -57,3 +57,19 @@ def test_no_json_in_command_mode():
     assert "ujson" not in modules, (
         "xonsh -c must not import ujson (only needed for commands cache persistence)"
     )
+
+
+def test_no_completers_in_command_mode():
+    """xonsh -c must not import completion tools."""
+    modules = _get_loaded_modules([])
+    assert "xonsh.completers.tools" not in modules, (
+        "xonsh -c must not import xonsh.completers.tools (only needed for interactive completion)"
+    )
+
+
+def test_no_ansi_colors_in_command_mode():
+    """xonsh -c must not import ansi color modules."""
+    modules = _get_loaded_modules([])
+    assert "xonsh.ansi_colors" not in modules, (
+        "xonsh -c must not import xonsh.ansi_colors (only needed for interactive display)"
+    )

@@ -122,6 +122,38 @@ def lazyobject(f: tp.Callable[..., RT]) -> RT:
     return LazyObject(f, f.__globals__, f.__name__)  # type: ignore
 
 
+class LazyCallable:
+    """Lazy proxy that defers loading until first call or attribute access.
+
+    Unlike LazyObject, this does NOT override __getattribute__, so it survives
+    isinstance() checks without triggering the load. The real object is loaded
+    on first __call__ or __getattr__.
+
+    Usage::
+
+        def my_alias():
+            from xonsh.heavy_module import real_alias
+            return real_alias
+
+        my_alias = LazyCallable(my_alias)
+    """
+
+    def __init__(self, load):
+        self._lazy_load = load
+        self._lazy_obj = None
+
+    def _get(self):
+        if self._lazy_obj is None:
+            self._lazy_obj = self._lazy_load()
+        return self._lazy_obj
+
+    def __call__(self, *args, **kwargs):
+        return self._get()(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+
 class LazyDict(cabc.MutableMapping):
     def __init__(self, loaders, ctx, name):
         """Dictionary like object that lazily loads its values from an initial

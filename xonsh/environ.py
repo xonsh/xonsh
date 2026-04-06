@@ -21,12 +21,6 @@ from collections import abc as cabc
 from pathlib import Path
 
 from xonsh import __version__ as XONSH_VERSION
-from xonsh.ansi_colors import (
-    ansi_color_escape_code_to_name,
-    ansi_color_name_to_escape_code,
-    ansi_reverse_style,
-    ansi_style_by_name,
-)
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_script_with_cache
 from xonsh.dirstack import _get_cwd
@@ -479,6 +473,8 @@ class LsColors(cabc.MutableMapping):
 
     def detype(self):
         """De-types the instance, allowing it to be exported to the environment."""
+        from xonsh.ansi_colors import ansi_color_name_to_escape_code
+
         style = self.style
         if self._detyped is None:
             self._detyped = ":".join(
@@ -513,6 +509,8 @@ class LsColors(cabc.MutableMapping):
     @property
     def style(self):
         """The ANSI color style for the current XONSH_COLOR_STYLE"""
+        from xonsh.ansi_colors import ansi_style_by_name
+
         style_name = self.style_name
         if self._style is None:
             self._style = ansi_style_by_name(style_name)
@@ -524,6 +522,11 @@ class LsColors(cabc.MutableMapping):
         """Creates a new instance of the LsColors class from a colon-separated
         string of dircolor-valid keys to ANSI color escape sequences.
         """
+        from xonsh.ansi_colors import (
+            ansi_color_escape_code_to_name,
+            ansi_reverse_style,
+        )
+
         ini_dict = dict()
         # string inputs always use default codes, so translating into
         # xonsh names should be done from defaults

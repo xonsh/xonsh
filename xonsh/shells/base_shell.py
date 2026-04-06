@@ -5,7 +5,6 @@ import os
 import sys
 import time
 
-from xonsh.ansi_colors import ansi_partial_color_format
 from xonsh.built_ins import XSH
 from xonsh.codecache import (
     code_cache_check,
@@ -15,7 +14,6 @@ from xonsh.codecache import (
     should_use_cache,
     update_cache,
 )
-from xonsh.completer import Completer
 from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
@@ -321,7 +319,12 @@ class BaseShell:
 
         self.execer = execer
         self.ctx = ctx
-        self.completer = Completer() if kwargs.get("completer", True) else None
+        if kwargs.get("completer", True):
+            from xonsh.completer import Completer
+
+            self.completer = Completer()
+        else:
+            self.completer = None
         self.buffer = []
         self.need_more_lines = False
         self.src_starts_with_space = False
@@ -609,6 +612,8 @@ class BaseShell:
         """Formats the colors in a string. ``BaseShell``'s default implementation
         of this method uses colors based on ANSI color codes.
         """
+        from xonsh.ansi_colors import ansi_partial_color_format
+
         style = XSH.env.get("XONSH_COLOR_STYLE")
         return ansi_partial_color_format(string, hide=hide, style=style)
 

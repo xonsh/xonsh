@@ -12,7 +12,6 @@ from pathlib import Path
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
-from xonsh.completers.tools import RichCompletion
 from xonsh.tools import print_color, print_exception
 
 if tp.TYPE_CHECKING:
@@ -199,6 +198,8 @@ def update_context(name, ctx: dict, full_module=False):
 def _xontrib_name_completions(loaded=False):
     for name, xontrib in get_xontribs().items():
         if xontrib.is_loaded is loaded:
+            from xonsh.completers.tools import RichCompletion
+
             yield RichCompletion(
                 name, append_space=True, description=xontrib.get_description()
             )

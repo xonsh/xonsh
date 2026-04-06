@@ -16,7 +16,6 @@ from collections import abc as cabc
 from pathlib import Path
 from typing import Literal
 
-import xonsh.completers._aliases as xca
 import xonsh.xoreutils.which as xxw
 import xonsh.xoreutils.xcontext as xxt
 from xonsh.built_ins import XSH
@@ -24,7 +23,7 @@ from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
 from xonsh.foreign_shells import foreign_shell_data
-from xonsh.lib.lazyasd import lazyobject
+from xonsh.lib.lazyasd import LazyCallable, lazyobject
 from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
     IN_APPIMAGE,
@@ -54,7 +53,6 @@ from xonsh.tools import (
     to_shlvl,
     unthreadable,
 )
-from xonsh.xontribs import xontribs_main
 
 
 @lazyobject
@@ -1028,12 +1026,9 @@ def xexec_fn(
 xexec = ArgParserAlias(func=xexec_fn, has_args=True, prog="xexec")
 
 
-@lazyobject
-def xonfig():
-    """Runs the xonsh configuration utility."""
-    from xonsh.xonfig import xonfig_main  # lazy import
-
-    return xonfig_main
+xonfig = LazyCallable(
+    lambda: __import__("xonsh.xonfig", fromlist=["xonfig_main"]).xonfig_main
+)
 
 
 @unthreadable
@@ -1138,13 +1133,18 @@ def _output_to_path_objects(lines):
         return None
 
 
-def _history_main(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
-    """Lazy wrapper that defers xonsh.history.main import until first use."""
-    import xonsh.history.main as xhm
+_completer_alias = LazyCallable(
+    lambda: __import__("xonsh.completers._aliases", fromlist=["completer_alias"]).completer_alias
+)
 
-    return xhm.history_main(
-        args, stdin=stdin, stdout=stdout, stderr=stderr, spec=spec, stack=stack
-    )
+
+_history_main = LazyCallable(
+    lambda: __import__("xonsh.history.main", fromlist=["history_main"]).history_main
+)
+
+_xontribs_main = LazyCallable(
+    lambda: __import__("xonsh.xontribs", fromlist=["xontribs_main"]).xontribs_main
+)
 
 
 def make_default_aliases():
@@ -1183,8 +1183,8 @@ def make_default_aliases():
         "showcmd": showcmd,
         "which": xxw.which,
         "xcontext": xxt.xcontext,
-        "xontrib": xontribs_main,
-        "completer": xca.completer_alias,
+        "xontrib": _xontribs_main,
+        "completer": _completer_alias,
         "xpip": detect_xpip_alias(),
         "xpython": [XSH.env.get("_", sys.executable)]
         if IN_APPIMAGE

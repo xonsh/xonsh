@@ -37,8 +37,6 @@ from xonsh.tools import (
     to_bool_or_int,
     unquote,
 )
-from xonsh.xonfig import print_welcome_screen
-from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
 
 events.transmogrify("on_post_init", "LoadEvent")
 events.doc(
@@ -358,6 +356,8 @@ def _autoload_xontribs(env):
     if disabled is True:
         return
     blocked_xontribs = disabled or ()
+    from xonsh.xontribs import auto_load_xontribs_from_entrypoints
+
     auto_load_xontribs_from_entrypoints(
         blocked_xontribs, verbose=bool(env.get("XONSH_DEBUG", False))
     )
@@ -590,6 +590,8 @@ def main_xonsh(args):
                 and not any(os.path.isfile(i) for i in env["XONSHRC"])
                 and not any(os.path.isdir(i) for i in env["XONSHRC_DIR"])
             ):
+                from xonsh.xonfig import print_welcome_screen
+
                 print_welcome_screen()
             events.on_pre_cmdloop.fire()
             try:
@@ -738,6 +740,8 @@ def setup(
     install_import_hooks(XSH.execer)
     XSH.aliases.update(aliases)
     if xontribs:
+        from xonsh.xontribs import xontribs_load
+
         xontribs_load(xontribs)
 
     if threadable_predictors:
