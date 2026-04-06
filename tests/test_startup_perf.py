@@ -3,8 +3,6 @@
 import subprocess
 import sys
 
-import pytest
-
 
 def _get_loaded_modules(xonsh_args):
     """Run xonsh with given args and return set of loaded module names."""
