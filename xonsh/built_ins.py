@@ -33,7 +33,7 @@ from xonsh.tools import (
     print_color,
 )
 
-INSPECTOR = None
+INSPECTOR: object = None
 
 warnings.filterwarnings("once", category=DeprecationWarning)
 
