@@ -58,10 +58,10 @@ class CaseInsensitiveDict(dict[tp.Any, tp.Any]):
 
     def keys(self):
         # Return the original keys with their original casing
-        return (self._store[k] for k in self._store)
+        return list(self._store.values())
 
     def items(self):
-        return ((self._store[k], self[k]) for k in self._store)
+        return [(self._store[k], self[k]) for k in self._store]
 
     def __repr__(self):
         return f"{self.__class__.__name__}({dict(self.items())})"
