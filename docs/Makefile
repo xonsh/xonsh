@@ -37,7 +37,8 @@ clean:
 	-rm -rf api/_autosummary/*
 
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	-rm -rf api/_autosummary/*  # prevent build wrong rst for deleted packages
+	PYTHONWARNINGS=ignore::DeprecationWarning $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
@@ -128,6 +129,10 @@ push-root:
 	git add . && \
 	git commit -am "Pushed root-level docs at $(date)" && \
 	git push
+
+landing:
+	cp _templates/index.html $(BUILDDIR)/html/index.html
+	@echo "Copied landing page to $(BUILDDIR)/html/index.html"
 
 serve:
 	sphinx-autobuild . "$(BUILDDIR)"/html $(SPHINXOPTS) $(O)

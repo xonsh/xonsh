@@ -203,7 +203,7 @@ The branch name changes color if the work dir is dirty or not. This is controlle
 
 The following snippet reimplements the formatter also to include untracked files when considering if a git directory is dirty.
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     from xonsh.prompt.vc import git_dirty_working_directory
     $PROMPT_FIELDS['branch_color'] = lambda: ('{BOLD_INTENSE_RED}'
@@ -227,7 +227,7 @@ Make JSON data directly pastable
 With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``.
 Note that, though practical, this is rather hacky and might break other functionality. Use at your own risk.
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     import builtins
     builtins.true = True
@@ -238,7 +238,7 @@ Display different date information every 10th time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For a compact shell prompts, some people prefer a very condensed time format. But when you have a lengthy shell session you might want the date to show up in your logs every now and then...
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     import time
     def get_shelldate():

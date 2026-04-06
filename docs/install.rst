@@ -1,6 +1,6 @@
-*******************
+**************************************
 Xonsh Installation General Guide
-*******************
+**************************************
 
 The guide is new so in case of error please open the issue in the `tracker <https://github.com/xonsh/xonsh/issues>`_.
 

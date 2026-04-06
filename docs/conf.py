@@ -11,17 +11,23 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
-# make current docs directory modules importable
+# make project root and docs directory importable
 from sphinx.application import Sphinx
 
+sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 sys.path.append(str(Path(__file__).parent.resolve()))
 
 import inspect
 import importlib
 import typing as tp
+import warnings
 
 os.environ["XONSH_DEBUG"] = "1"
 os.environ["XONSH_NO_AMALGAMATE"] = "1"
+
+# Suppress known warnings during doc build
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning, module=r"numpydoc")
 
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.environ import Env, Var, Xettings
@@ -30,7 +36,7 @@ if tp.TYPE_CHECKING:
     pass
 import xonsh.main as xmain
 
-xmain.setup()
+xmain.setup(history_backend="dummy")
 
 spec = importlib.util.find_spec("prompt_toolkit")
 if spec is not None:
@@ -363,7 +369,13 @@ def setup(app: Sphinx):
     app.add_css_file("custom.css")
 
 # To avoid having red highlighting in python/xonshcon blocks.
-suppress_warnings = ["misc.highlighting_failure"]
+suppress_warnings = [
+    #"misc.highlighting_failure",  # xonsh $VAR syntax in code blocks
+    #"autodoc",  # RichCompletion(str) signature errors
+    "docutils",  # inherited docstring formatting (importlib, pygments)
+    "myst.xref_missing",  # stale cross-references in changelog
+    "ref.ref",  # undefined labels (e.g. free_cwd from old docs)
+]
 
 if __name__ == "__main__":
     # use this to debug the process from IDEs

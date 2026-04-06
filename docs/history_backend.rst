@@ -41,7 +41,7 @@ Now we need to tell xonsh to use it as the history backend. To do this
 we need xonsh to be able to find our file and this ``CouchDBHistory`` class.
 Putting the following code into `xonshrc <xonshrc.rst>`_ file can achieve this.
 
-.. code-block:: none
+.. code-block:: python
 
     import os.path
     import sys

@@ -252,7 +252,7 @@ Callable Environment Variables
 In some cases you may want to have environment variable with dynamically created value.
 Here is the example of callable environment variable:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ class Stamp:
          """Return current date as string representation."""
@@ -529,7 +529,7 @@ This object will be "truthy" if its return code was 0, and it is equal (via
 to the string will return the output. This allows for some interesting new
 kinds of interactions with subprocess commands, for example:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     def check_file(file):
         if !(test -e @(file)):
@@ -551,7 +551,7 @@ Additionally, these objects expose a method ``itercheck``, which behaves the sam
 as the built-in iterator but raises ``XonshCalledProcessError`` if the process
 had a nonzero return code.
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     def get_wireless_interface():
         """Returns devicename of first connected wifi, None otherwise"""
@@ -1122,7 +1122,7 @@ be used with backticks with the following syntax: ``@<name>`test```
 
 The following example shows the form of these functions:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ def foo(s):
           return [i for i in os.listdir('.') if i.startswith(s)]
@@ -1232,7 +1232,7 @@ Alias to Modify Command
 The best way to modify command on the fly is to use alias that returns modified command.
 One of the most interesting application is expanding an alias:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       @aliases.return_command
@@ -1247,7 +1247,7 @@ One of the most interesting application is expanding an alias:
 
 Or implement logic to run the right command:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       @aliases.return_command
@@ -1271,7 +1271,7 @@ A callable alias is a function (or callable object) with a specific signature th
 
 Using directly with Python evaluation via ``@()``:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ def mybox():
          print('apple')
@@ -1327,7 +1327,7 @@ You need to add ``@($args)`` manually if you need arguments in ExecAlias:
 
 These three definitions are equal:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _answer():
@@ -1469,7 +1469,7 @@ Callable Alias and Capturing
 Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess
 operator ``$[]`` are uncapturable, and the subprocess's stdout passes directly through Xonsh to the screen.
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _printer(args, stdin, stdout, stderr):
@@ -1562,7 +1562,7 @@ To make an alias uncapturable, use the ``@aliases.uncapturable`` decorator.
 This is probably best used in conjunction with ``@aliases.unthreadable``.
 For example:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @aliases.register
     @aliases.uncapturable
@@ -1605,7 +1605,7 @@ See the full list of command decorators in Aliases article or build the new one.
 Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
 convert subprocess command output into Python object with your own logic:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     from xonsh.procs.specs import SpecAttrDecoratorAlias
 
@@ -1992,7 +1992,7 @@ Importing Xonsh (``*.xsh``)
 You can import xonsh source files with the ``*.xsh`` file extension using
 the normal Python syntax:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     from mine import *
 

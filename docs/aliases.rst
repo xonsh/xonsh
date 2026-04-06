@@ -39,7 +39,7 @@ Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
 
 
 ``EOF``, ``exit``, and ``quit``
---------------------
+----------------------------------
 The commands ``EOF``, ``exit``, and ``quit`` all alias the same action, which is to
 leave xonsh in a safe manner. Typing ``Ctrl-d`` is the same as typing ``EOF`` and
 pressing enter.
@@ -158,7 +158,7 @@ Command Decorators (Decorator Aliases)
 ======================================
 
 ``@error_raise`` and ``@error_ignore``
------------------------------
+----------------------------------------
 Use ``@error_raise`` to raise an exception if the command returns a non-zero exit code.
 The behavior is similar with ``$RAISE_SUBPROC_ERROR``. Use ``@error_ignore`` for explicit disable that.
 
