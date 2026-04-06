@@ -149,7 +149,7 @@ directly:
 .. code-block:: xonshcon
 
     @ for parent, file in m`.*/(.*)/(.*\.py)`:
-    ...     print(parent, file)
+          print(parent, file)
     src main.py
     src utils.py
     tests test_main.py
@@ -302,14 +302,14 @@ applied to the entire path, not split by ``/``:
 
     @ def refullglob(pattern):
           import re, os
-    .     regex = re.compile(pattern)
-    .     results = []
-    .     for root, dirs, files in os.walk('.'):
-    .         for name in dirs + files:
-    .             path = os.path.join(root, name)
-    .             if regex.fullmatch(path):
-    .                 results.append(path)
-    .     return results
+           regex = re.compile(pattern)
+           results = []
+           for root, dirs, files in os.walk('.'):
+               for name in dirs + files:
+                   path = os.path.join(root, name)
+                   if regex.fullmatch(path):
+                       results.append(path)
+           return results
     @ @refullglob`(.*/)*\w+\.py`
     ['./src/main.py', './src/utils.py', './tests/test_main.py']
 
