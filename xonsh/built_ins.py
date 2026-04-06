@@ -211,7 +211,8 @@ class XonshList(list):
     def select(self, n):
         """Pick the n-th element from each tuple, skipping None values."""
         return XonshList(
-            v for x in self
+            v
+            for x in self
             for v in [x[n] if isinstance(x, tuple) else x]
             if v is not None
         )
