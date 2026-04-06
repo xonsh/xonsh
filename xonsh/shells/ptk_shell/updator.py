@@ -132,8 +132,16 @@ class AsyncPrompt:
             formatted_tokens = tokenize_ansi(
                 PygmentsTokens(partial_color_tokenize(new_prompt))
             )
-            setattr(self.session, self.name, formatted_tokens)
-            self.session.app.invalidate()
+            app = self.session.app
+
+            def _update_in_main():
+                setattr(self.session, self.name, formatted_tokens)
+                app.invalidate()
+
+            if app.loop is not None:
+                app.loop.call_soon_threadsafe(_update_in_main)
+            else:
+                _update_in_main()
 
         self.timer = threading.Timer(XSH.env["ASYNC_INVALIDATE_INTERVAL"], _invalidate)
         self.timer.start()
@@ -182,9 +190,18 @@ class PromptUpdator:
         return self.prompts[prompt_name]
 
     def add_attrs(self):
-        for attr, val in self.shell.get_lazy_ptk_kwargs():
-            setattr(self.shell.prompter, attr, val)
-        self.shell.prompter.app.invalidate()
+        attrs = list(self.shell.get_lazy_ptk_kwargs())
+        app = self.shell.prompter.app
+
+        def _update_in_main():
+            for attr, val in attrs:
+                setattr(self.shell.prompter, attr, val)
+            app.invalidate()
+
+        if app.loop is not None:
+            app.loop.call_soon_threadsafe(_update_in_main)
+        else:
+            _update_in_main()
 
     def start(self):
         """after ptk prompt is created, update it in background."""
