@@ -148,6 +148,8 @@ class AsyncPrompt:
 
     def stop(self):
         """Stop any running threads"""
+        if self.timer:
+            self.timer.cancel()
         for fut in self.futures:
             fut.cancel()
         self.futures.clear()
