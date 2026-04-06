@@ -569,11 +569,19 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
     alias_params |= params
     sign = inspect.signature(func)
     func_params = sign.parameters.items()
-    kwargs = {
-        name: alias_params[name] for name, p in func_params if name in alias_params
-    }
+    kwargs = {}
+    for name, p in func_params:
+        if p.kind == p.VAR_KEYWORD:
+            kwargs.update(alias_params)
+            break
+        if p.kind == p.VAR_POSITIONAL:
+            continue
+        if name in alias_params:
+            kwargs[name] = alias_params[name]
 
-    if len(kwargs) != len(func_params):
+    if not any(
+        p.kind in (p.VAR_KEYWORD, p.VAR_POSITIONAL) for _, p in sign.parameters.items()
+    ) and len(kwargs) != len(sign.parameters):
         # There is unknown param. Switch to positional mode.
         kwargs = dict(
             zip(

@@ -372,6 +372,12 @@ def run_with_partial_args(func: tp.Callable, ns: dict[str, tp.Any]):
     sign = inspect.signature(func)
     kwargs = {}
     for name, param in sign.parameters.items():
+        if param.kind == param.VAR_KEYWORD:
+            # **kwargs: pass all remaining ns entries
+            kwargs.update(ns)
+            break
+        if param.kind == param.VAR_POSITIONAL:
+            continue
         default = None
         # sometimes the args are skipped in the parser.
         # like ones having _ prefix(private to the function), or some special cases like exclusive group.

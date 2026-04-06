@@ -7,6 +7,7 @@ import sys
 import pytest
 
 from xonsh.aliases import Aliases, ExecAlias, run_alias_by_params
+from xonsh.cli_utils import run_with_partial_args
 
 
 def cd(args, stdin=None):
@@ -256,3 +257,32 @@ def test_run_alias_by_params():
         None,
         4,
     )
+
+    # **kwargs signature passes all params through
+    def alias_var_kwargs(**kwargs):
+        return kwargs
+
+    result = run_alias_by_params(alias_var_kwargs, {"args": 1, "stack": 2})
+    assert result["args"] == 1
+    assert result["stack"] == 2
+
+
+def test_run_with_partial_args_var_kwargs():
+    """**kwargs signature must pass all params through."""
+
+    def func(**kwargs):
+        return kwargs
+
+    result = run_with_partial_args(func, {"args": [1], "stack": 2, "stdin": 3})
+    assert result["args"] == [1]
+    assert result["stack"] == 2
+    assert result["stdin"] == 3
+
+
+def test_run_with_partial_args_named():
+    """Named params are matched by name."""
+
+    def func(args, stdout=None):
+        return (args, stdout)
+
+    assert run_with_partial_args(func, {"args": 1, "stdout": 2, "extra": 3}) == (1, 2)
