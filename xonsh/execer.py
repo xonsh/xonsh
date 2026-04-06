@@ -127,6 +127,7 @@ class Execer:
                 frame = frame.f_back
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
+            del frame  # Fix memory leak
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
         tree = self.parse(input, ctx, mode=mode, filename=filename, transform=transform)
         if tree is None:
