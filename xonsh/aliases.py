@@ -530,7 +530,7 @@ def run_alias_by_params(func: tp.Callable, params: dict[str, tp.Any]):
     alias_params |= params
     sign = inspect.signature(func)
     func_params = sign.parameters.items()
-    kwargs = {}
+    kwargs: dict[str, tp.Any] = {}
     for name, p in func_params:
         if p.kind == p.VAR_KEYWORD:
             kwargs.update(alias_params)
