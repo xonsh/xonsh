@@ -293,6 +293,7 @@ class Shell:
         # build history backend before creating shell
         if env.get("XONSH_INTERACTIVE"):
             import xonsh.history.main as xhm
+
             XSH.history = hist = xhm.construct_history(
                 env=env.detype(),
                 ts=[time.time(), None],
