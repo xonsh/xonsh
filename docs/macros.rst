@@ -77,7 +77,7 @@ particular, each argument in the macro call is matched up with the corresponding
 parameter annotation in the callable's signature.  For example, say we have
 an ``identity()`` function that annotates its sole argument as a string:
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def identity(x : str):
         return x
@@ -158,7 +158,7 @@ The top-level commas are not included in any argument.
 This behaves analogously to normal Python function calls. For instance,
 say we have the following ``g()`` function that accepts two arguments:
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def g(x : str, y : str):
         print('x = ' + repr(x))
@@ -271,7 +271,7 @@ If an argument does not have an annotation, ``str`` is selected.
 This makes the macro function call behave like the subprocess macros and
 context manager macros below. For example,
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def func(a, b : 'AST', c : compile):
         pass
@@ -290,7 +290,7 @@ done by annotating with a (kind, mode) tuple.  The first element can
 be any valid object or flag. The second element must be a corresponding
 mode as a string.  For instance,
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def gunc(d : (exec, 'single'), e : ('c', 'exec')):
         pass
@@ -316,7 +316,7 @@ For example, consider a macro which replaces all literal ``1`` digits
 with the literal ``2``, evaluates the modification, and returns the results.
 To eval, the macro will need to pull off its globals and locals:
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def one_to_two(x : str):
         s = x.replace('1', '2')

@@ -121,37 +121,6 @@ the segments are no longer valid regexes on their own:
     @ r`(\w+)/(\1)\.py`
     re.error: cannot refer to an open group at position 8
 
-Full-Path Regex via Custom Search
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Xonsh supports custom path search functions with the ``@func`pattern``` syntax.
-This can be used to implement full-path regex matching where the pattern is
-applied to the entire path, not split by ``/``:
-
-.. code-block:: xonshcon
-
-    @ import re, os
-    @ def refullglob(pattern):
-    ...     regex = re.compile(pattern)
-    ...     results = []
-    ...     for root, dirs, files in os.walk('.'):
-    ...         for name in dirs + files:
-    ...             path = os.path.join(root, name)
-    ...             if regex.fullmatch(path):
-    ...                 results.append(path)
-    ...     return results
-    @ @refullglob`(.*/)*\w+\.py`
-    ['./src/main.py', './src/utils.py', './tests/test_main.py']
-
-This approach has trade-offs compared to the built-in ``r`` glob:
-
-- **Pro:** the full ``re`` syntax works — groups, backreferences, and
-  alternations can span across ``/``.
-- **Con:** it always walks the entire directory tree. On large trees this is
-  slower than the built-in segment-by-segment pruning.
-- **Con:** ``$DOTGLOB`` is not automatically respected — add filtering for
-  names starting with ``.`` if needed.
-
 
 Formatted Glob Literals
 -----------------------
@@ -320,3 +289,36 @@ Methods that don't need paths — ``.unique()``, ``.sorted()``, ``.filter()``
 
 ``XonshList`` is a regular ``list`` subclass, so it works everywhere a list
 does — iteration, indexing, ``len()``, passing to functions, etc.
+
+
+Full-Path Regex via Custom Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Xonsh supports custom path search functions with the ``@func`pattern``` syntax.
+This can be used to implement full-path regex matching where the pattern is
+applied to the entire path, not split by ``/``:
+
+.. code-block:: python
+
+    @ def refullglob(pattern):
+          import re, os
+    .     regex = re.compile(pattern)
+    .     results = []
+    .     for root, dirs, files in os.walk('.'):
+    .         for name in dirs + files:
+    .             path = os.path.join(root, name)
+    .             if regex.fullmatch(path):
+    .                 results.append(path)
+    .     return results
+    @ @refullglob`(.*/)*\w+\.py`
+    ['./src/main.py', './src/utils.py', './tests/test_main.py']
+
+This approach has trade-offs compared to the built-in ``r`` glob:
+
+- **Pro:** the full ``re`` syntax works — groups, backreferences, and
+  alternations can span across ``/``.
+- **Con:** it always walks the entire directory tree. On large trees this is
+  slower than the built-in segment-by-segment pruning.
+- **Con:** ``$DOTGLOB`` is not automatically respected — add filtering for
+  names starting with ``.`` if needed.
+

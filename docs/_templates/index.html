@@ -60,6 +60,81 @@
         [unselectable-text]::after {
           content: attr(unselectable-text);
         }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: rgb(24, 26, 27);
+            }
+            .dark-content h2,
+            .dark-content h3,
+            .dark-content h4,
+            .dark-content .section-heading h2 {
+                color: rgb(207, 203, 197);
+            }
+            .dark-content,
+            .dark-content p,
+            .dark-content li,
+            .dark-content a,
+            .dark-content span,
+            .dark-content .about-content,
+            .dark-content .single-service {
+                color: rgb(178, 172, 162);
+            }
+            /* 1. Keep @ prompt blue in code examples */
+            .dark-content [unselectable-text] {
+                color: #3daee9;
+            }
+            /* 2. Keep button text white */
+            .dark-content .load-more-btn a {
+                color: #fff;
+            }
+            /* 3. Code example blocks */
+            .dark-content .code {
+                background: #292c2e;
+            }
+            /* 4. Xontrib cards: transparent bg, white title, grey description */
+            .dark-content .product-single {
+                background-color: transparent;
+            }
+            .dark-content .prod-details a {
+                color: rgb(214, 206, 194);
+                border-color: #0725a5;
+                background-color: #0725a5;
+                box-shadow: 0 0 8px rgba(7, 37, 165, 0.6);
+            }
+            .dark-content .prod-details a:hover {
+                background-color: #0725a5;
+                color: #fff;
+                box-shadow: 0 0 14px rgba(7, 37, 165, 0.9);
+            }
+            .dark-content .prod-details p {
+                color: rgb(178, 172, 162);
+            }
+            .home-bg {
+                filter: brightness(0.3);
+            }
+            .footer-bg {
+                filter: brightness(0.3);
+            }
+            #footer {
+                background: none !important;
+            }
+            .contact-bg {
+                filter: brightness(0.2);
+            }
+            #contact-area {
+                background-image: none !important;
+            }
+            .caption p {
+                filter: brightness(0.9);
+            }
+            .caption a {
+                filter: brightness(0.8);
+            }
+            .dark-content .load-more-btn a {
+                filter: brightness(0.85);
+            }
+        }
     </style>
 </head>
 
@@ -117,8 +192,9 @@
         </div>
     </header>
 
-    <section id="home-area" data-scroll-index="0" style="background-image: url(_static/landing2/images/banner-1.png)">
-        <div class="container">
+    <section id="home-area" data-scroll-index="0" style="position: relative;">
+        <div class="home-bg" style="position:absolute; inset:0; z-index:0; background-image: url(_static/landing2/images/banner-1.png); background-repeat:no-repeat; background-size:cover; background-position:left bottom;"></div>
+        <div class="container" style="position:relative; z-index:1;">
             <div class="row">
                 <div class="col-lg-6 col-md-5">
                     <div class="caption-img text-center d-table">
@@ -146,7 +222,7 @@
         </div>
     </section>
 
-    <section id="about-area" data-scroll-index="1">
+    <section id="about-area" class="dark-content" data-scroll-index="1">
 
         <div class="container text-center section-heading">
             <h2>What is Xonsh?</h2>
@@ -442,7 +518,7 @@
         </div>
     </section> -->
 
-    <section id="product-area" data-scroll-index="4">
+    <section id="product-area" class="dark-content" data-scroll-index="4">
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
@@ -560,12 +636,14 @@
         </div>
     </section> -->
 
-    <section id="contact-area">
-        <div class="container">
+    <section id="contact-area" style="position: relative;">
+        <div class="contact-bg" style="position:absolute; inset:0; z-index:0; background-image:url(_static/landing2/images/banner-2.png); background-repeat:no-repeat; background-size:cover;"></div>
+        <div class="container" style="position:relative; z-index:1;">
         </div>
     </section>
-    <footer id="footer">
-        <div class="container">
+    <footer id="footer" style="position: relative;">
+        <div class="footer-bg" style="position:absolute; inset:0; z-index:0; background:linear-gradient(-90deg, #0985f9 0%, #6809dc 100%);"></div>
+        <div class="container" style="position:relative; z-index:1;">
             <div class="container text-white" >
                 <div class="row footer_inner ">
                     <div class="col-lg-3 col-sm-6 ">

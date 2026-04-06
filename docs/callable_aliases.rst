@@ -46,7 +46,7 @@ combination of the following parameters in any order:
 
 You only need to declare the parameters you actually use:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _hello():
@@ -82,7 +82,7 @@ Alias Name and Called Alias Name
 When one alias points to another, it can be useful to know how the alias was
 invoked. The ``alias_name`` and ``called_alias_name`` parameters provide this:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register('groot')
       def _groot(alias_name=None, called_alias_name=None):
@@ -109,7 +109,7 @@ removed and the global environment is unchanged.
 Direct writes to ``$VAR`` or ``@.env`` modify the global environment as usual
 and persist after the alias exits:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _ca(env=None):
@@ -139,7 +139,7 @@ command to execute instead of running it themselves. The ``env`` overlay works
 here too — values set in ``env`` are passed to the returned command's
 environment:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       @aliases.return_command
@@ -165,7 +165,7 @@ Return Values
 
 Callable aliases can return values in several forms:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _ret0():
@@ -212,7 +212,7 @@ alias's captured output, not directly to the terminal:
     print("x", file=stdout)    # same
     stdout.write("x\n")        # same
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _demo(args, stdout=None, stderr=None):
@@ -231,7 +231,7 @@ alias's captured output, not directly to the terminal:
 Here is a more complete example showing how different output methods behave
 under capture:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _printer(args, stdin, stdout, stderr):
@@ -286,7 +286,7 @@ When called uncaptured (bare command), output goes to the terminal as usual.
 The ``stderr`` argument and ``sys.stderr`` are also redirected — use
 ``sys.__stderr__`` if you need to bypass capture:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _loud(args, stdin=None):
@@ -321,7 +321,7 @@ decorators for a single invocation:
 
 To set it permanently on the function, use the Python decorator:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       @aliases.unthreadable
@@ -344,7 +344,7 @@ take over the terminal. These must not be captured, or the program will not
 display correctly. Use ``@aliases.uncapturable``, typically together with
 ``@aliases.unthreadable``:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       @aliases.uncapturable
