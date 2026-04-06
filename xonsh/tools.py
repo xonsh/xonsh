@@ -2556,6 +2556,8 @@ def columnize(elems, width=80, newline="\n"):
     elements placed in columns. Each line will be at most *width* columns.
     The newline character will be appended to the end of each line.
     """
+    if not elems:
+        return []
     sizes = [len(e) + 1 for e in elems]
     total = sum(sizes)
     nelem = len(elems)
@@ -2577,6 +2579,8 @@ def columnize(elems, width=80, newline="\n"):
             # we might be able to fit another column.
             ncols += 1
             nrows = nelem // ncols
+            if nrows == 0:
+                break
             columns = [sizes[i * nrows : (i + 1) * nrows] for i in range(ncols)]
             last_longest_row = longest_row
         else:

@@ -89,6 +89,7 @@ from xonsh.tools import (
     to_bool_or_none,
     to_completion_mode,
     to_completions_display_value,
+    columnize,
     to_dynamic_cwd_tuple,
     to_int_or_none,
     to_logfile_opt,
@@ -1529,6 +1530,14 @@ def test_to_dynamic_cwd_tuple(inp, exp):
 def test_to_dynamic_cwd_tuple_empty_string():
     with pytest.raises(ValueError):
         to_dynamic_cwd_tuple("")
+
+
+def test_columnize_nrows_zero():
+    """Width so large that nrows hits 0 — must not infinite-loop."""
+    result = columnize(["a", "b"], width=100000)
+    assert len(result) == 1
+    assert "a" in result[0]
+    assert "b" in result[0]
 
 
 @pytest.mark.parametrize(
