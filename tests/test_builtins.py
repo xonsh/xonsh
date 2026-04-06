@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from xonsh.built_ins import (
+    DynamicAccessProxy,
     call_macro,
     convert_macro_arg,
     ensure_list_of_strs,
@@ -30,6 +31,25 @@ from xonsh.environ import Env
 from xonsh.pytest.tools import skip_if_on_windows
 
 HOME_PATH = os.path.expanduser("~")
+
+
+def test_dynamic_access_proxy_setattr():
+    """__setattr__ must write to the target object, not the proxy."""
+    import builtins
+
+    target = types.SimpleNamespace(x=1)
+    builtins.__test_proxy_target__ = target
+    proxy = DynamicAccessProxy("tp", "__test_proxy_target__")
+    try:
+        proxy.x = 42
+        assert target.x == 42
+        assert proxy.x == 42
+
+        proxy.new_attr = "hello"
+        assert target.new_attr == "hello"
+        assert proxy.new_attr == "hello"
+    finally:
+        del builtins.__test_proxy_target__
 
 
 @pytest.fixture(autouse=True)

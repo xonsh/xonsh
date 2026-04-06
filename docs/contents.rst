@@ -70,6 +70,7 @@ developer tools.
     editors
     python_virtual_environments
     xonsh_projects
+    callable_aliases
     events_tutorial
     env
     completers
