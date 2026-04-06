@@ -1538,15 +1538,14 @@ Unthreadable Aliases
 Usually, callable alias commands will be run in a separate thread so that
 they may be run in the background.  However, some aliases may need to be
 executed on the thread that they were called from. This is mostly useful for
-debuggers and profilers. To make an alias run in the foreground, decorate its
-function with the ``xonsh.tools.unthreadable`` decorator.
+interactive tools (vim, less, htop), debuggers and profilers.
+To make an alias run in the foreground, use the ``@aliases.unthreadable``
+decorator:
 
 .. code-block:: python
 
-    from xonsh.tools import unthreadable
-
     @aliases.register
-    @unthreadable
+    @aliases.unthreadable
     def _mycmd(args, stdin=None):
         return 'In your face!'
 
@@ -1559,17 +1558,15 @@ However, some aliases may want to run alternate-mode commands themselves.
 Thus the callable alias can't be captured without dire consequences (tm).
 To prevent this, you can declare a callable alias uncapturable. This is mostly
 useful for aliases that then open up text editors, pagers, or the like.
-To make an alias uncapturable, decorate its
-function with the ``xonsh.tools.uncapturable`` decorator. This is probably
-best used in conjunction with the ``unthreadable`` decorator.  For example:
+To make an alias uncapturable, use the ``@aliases.uncapturable`` decorator.
+This is probably best used in conjunction with ``@aliases.unthreadable``.
+For example:
 
 .. code-block:: xonshcon
 
-    from xonsh.tools import unthreadable, uncapturable
-
     @aliases.register
-    @uncapturable
-    @unthreadable
+    @aliases.uncapturable
+    @aliases.unthreadable
     def _binvi(args, stdin=None):
         vi -b @(args)  # Edit binary files
 

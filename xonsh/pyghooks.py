@@ -1693,8 +1693,8 @@ def _run_bg_validation(gen):
     reuse them.  Only the re-render / invalidate step is gated by gen —
     a stale thread must not trigger a repaint for an outdated input.
     """
-    cmds = set(_pending_cmds)
-    _pending_cmds.clear()
+    global _pending_cmds
+    cmds, _pending_cmds = _pending_cmds, set()
     if not cmds:
         return
     changed = False
@@ -1784,7 +1784,11 @@ class XonshLexer(Python3Lexer):
                 bygroups(Keyword, Punctuation),
                 ("subproc_square_bracket", "subproc_start"),
             ),
-            (r"(g?)(`)", bygroups(String.Affix, String.Backtick), "backtick_re"),
+            (
+                r"([rgpfm]+|@\w*)?(`)",
+                bygroups(String.Affix, String.Backtick),
+                "backtick_re",
+            ),
         ],
         "subproc_bracket": [(r"\)", Punctuation, "#pop"), include("subproc")],
         "subproc_square_bracket": [(r"\]", Punctuation, "#pop"), include("subproc")],

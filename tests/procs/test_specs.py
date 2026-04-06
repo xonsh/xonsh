@@ -703,6 +703,34 @@ def test_alias_return_command_eval_inside(xession):
     assert spec.threadable is True
 
 
+def test_alias_env_overlay(xession):
+    """env overlay shadows global env during alias, global writes persist."""
+    xession.env["GLOBAL"] = "before"
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        xession.env["GLOBAL"] = "global_write"
+        alias_env["GLOBAL"] = "overlay"
+        assert xession.env["GLOBAL"] == "overlay"
+    assert xession.env["GLOBAL"] == "global_write"
+
+
+def test_return_command_alias_env(xession):
+    """return_command alias passes env overlay to the returned command."""
+
+    @xession.aliases.register("rca")
+    @xession.aliases.return_command
+    def _rca(args, env=None):
+        env["LOCAL"] = "123"
+        xession.env["GLOBAL"] = "321"
+        return ["echo", "ok"]
+
+    spec = cmds_to_specs([["rca"]], captured="object")[-1]
+    assert spec.env is not None
+    assert spec.env.get("LOCAL") == "123"
+    assert xession.env["GLOBAL"] == "321"
+    assert "LOCAL" not in xession.env
+
+
 def test_auto_cd(xession, tmpdir):
     xession.aliases["cd"] = lambda: "some_cd_alias"
     dir = str(tmpdir)
