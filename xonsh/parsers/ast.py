@@ -387,7 +387,9 @@ class CtxAwareTransformer(NodeTransformer):
         self.filename = "<xonsh-code>"
         self.debug_level = 0
 
-    def ctxvisit(self, node, inp, ctx, mode="exec", filename=None, debug_level=0):
+    def ctxvisit(
+        self, node, inp, ctx, mode="exec", filename=None, debug_level=0, user_names=None
+    ):
         """Transforms the node in a context-dependent way.
 
         Parameters
@@ -412,10 +414,11 @@ class CtxAwareTransformer(NodeTransformer):
         self.debug_level = debug_level
         self.lines = inp.splitlines()
         self.contexts = [ctx, set()]
+        self._user_names = user_names or set()
         self.mode = mode
         self._nwith = 0
         node = self.visit(node)
-        del self.lines, self.contexts, self.mode
+        del self.lines, self.contexts, self.mode, self._user_names
         self._nwith = 0
         return node
 
@@ -526,6 +529,21 @@ class CtxAwareTransformer(NodeTransformer):
         """Handle visiting an expression."""
         if isdescendable(node.value):
             node.value = self.visit(node.value)  # this allows diving into BoolOps
+        if self._is_bare_builtin(node.value):
+            name = node.value.id if isinstance(node.value, Name) else "..."
+            node.value = xonsh_call(
+                "__xonsh__.builtin_cmd",
+                [
+                    const_str(
+                        s=name,
+                        lineno=node.lineno,
+                        col_offset=node.col_offset,
+                    )
+                ],
+                lineno=node.lineno,
+                col=node.col_offset,
+            )
+            return node
         if self.is_in_scope(node) or isinstance(node.value, Lambda):
             return node
         else:
@@ -538,6 +556,22 @@ class CtxAwareTransformer(NodeTransformer):
                     newnode.max_lineno = node.max_lineno
                     newnode.max_col = node.max_col
             return newnode
+
+    def _is_bare_builtin(self, node):
+        """Check if node is a bare Name referencing a Python builtin, or Ellipsis.
+        Returns False if the name was overridden by user (e.g. ``id = 123``)."""
+        import builtins as _builtins
+
+        if isinstance(node, Name) and hasattr(_builtins, node.id):
+            if node.id in self._user_names:
+                return False
+            for ctx in self.contexts[1:]:
+                if node.id in ctx:
+                    return False
+            return True
+        if isinstance(node, Constant) and node.value is ...:
+            return True
+        return False
 
     def visit_UnaryOp(self, node):
         """Handle visiting an unary operands, like not."""

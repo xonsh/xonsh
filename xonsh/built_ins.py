@@ -286,6 +286,26 @@ def subproc_uncaptured(*cmds, envs=None):
     return xonsh.procs.specs.run_subproc(cmds, captured=False, envs=envs)
 
 
+_SPECIAL_BUILTINS = {"...": ...}
+
+
+def builtin_cmd(name):
+    """Run a builtin name as a subprocess command if $XONSH_BUILTINS_TO_CMD is set
+    and the name is a known command or alias. Otherwise return the builtin value."""
+    env = XSH.env or {}
+    if env.get("XONSH_BUILTINS_TO_CMD"):
+        has_cmd = name in (XSH.aliases or {})
+        if not has_cmd and XSH.commands_cache:
+            has_cmd = XSH.commands_cache.locate_binary(name) is not None
+        if has_cmd:
+            return subproc_captured_hiddenobject([name])
+    if name in _SPECIAL_BUILTINS:
+        return _SPECIAL_BUILTINS[name]
+    import builtins as _builtins
+
+    return getattr(_builtins, name, None)
+
+
 def ensure_list_of_strs(x):
     """Ensures that x is a list of strings."""
     if isinstance(x, str):
@@ -723,6 +743,7 @@ class XonshSession:
         self.enter_macro = enter_macro
         self.path_literal = path_literal
 
+        self.builtin_cmd = builtin_cmd
         self.list_of_strs_or_callables = list_of_strs_or_callables
         self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
         self.eval_fstring_field = eval_fstring_field
