@@ -1784,7 +1784,11 @@ class XonshLexer(Python3Lexer):
                 bygroups(Keyword, Punctuation),
                 ("subproc_square_bracket", "subproc_start"),
             ),
-            (r"(g?)(`)", bygroups(String.Affix, String.Backtick), "backtick_re"),
+            (
+                r"([rgpfm]+|@\w*)?(`)",
+                bygroups(String.Affix, String.Backtick),
+                "backtick_re",
+            ),
         ],
         "subproc_bracket": [(r"\)", Punctuation, "#pop"), include("subproc")],
         "subproc_square_bracket": [(r"\]", Punctuation, "#pop"), include("subproc")],

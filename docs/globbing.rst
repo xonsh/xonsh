@@ -1,9 +1,9 @@
 Globbing
 ========
 
-Xonsh supports three forms of filename globbing: normal (shell-style) globbing,
-regular expression globbing, and formatted glob literals. All three can be used
-in both subprocess mode and Python mode.
+Xonsh supports four forms of filename globbing: normal (shell-style) globbing,
+regular expression globbing, match globbing, and formatted glob literals. All
+can be used in both subprocess mode and Python mode.
 
 
 Normal Globbing
@@ -170,6 +170,47 @@ substitute variables and other expressions into the glob pattern:
     ['aba', 'abba', 'abcba']
 
 
+Match Globbing
+--------------
+
+The ``m`` modifier enables **match globbing** — a regex glob that returns
+capture groups instead of full paths. This lets you destructure matched paths
+directly:
+
+.. code-block:: xonshcon
+
+    @ for parent, file in m`.*/(.*)/(.*\.py)`:
+    ...     print(parent, file)
+    src main.py
+    src utils.py
+    tests test_main.py
+
+When the pattern contains capture groups ``()``, each match returns a tuple
+of the captured strings. Without groups, full paths are returned — same as
+``r`` glob, but with full-path matching instead of segment-by-segment.
+
+This is useful for extracting path components without manual splitting:
+
+.. code-block:: xonshcon
+
+    @ # Find all .png files and get (directory, filename) pairs
+    @ pairs = m`images/(.*)/(.*\.png)`
+    @ print(pairs)
+    [('icons', 'logo.png'), ('photos', 'cat.png')]
+
+    @ # Single group — returns flat list of strings
+    @ names = m`src/(.*)\.py`
+    @ print(names)
+    ['main', 'utils']
+
+Unlike ``r`` glob which matches segment-by-segment, ``m`` glob applies the
+regex to the **full path**. This means regex features like groups and
+backreferences can span across ``/``.
+
+``$DOTGLOB`` is respected — hidden files and directories are excluded by
+default.
+
+
 Sorting
 -------
 
@@ -184,3 +225,98 @@ returns results in arbitrary filesystem order:
     ['setup.py', 'README.md']
 
 Regex globs are always sorted regardless of this setting.
+
+
+XonshList
+---------
+
+All glob forms (``g``, ``r``, ``m``, ``p``) return a ``XonshList`` — an
+extended list with convenience methods for common shell operations. Every
+method returns a new ``XonshList``, so calls can be chained:
+
+.. code-block:: xonshcon
+
+    @ g`**/*.py`.files().sorted()
+    ['setup.py', 'src/main.py', 'tests/test_main.py']
+
+    @ r`.*\.log`.exists().paths()
+    [PosixPath('app.log'), PosixPath('error.log')]
+
+    @ m`src/(.*)\.py`.unique().sorted()
+    ['config', 'main', 'utils']
+
+Available methods:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Method
+     - Description
+   * - ``.sorted(key=, reverse=)``
+     - Return a new sorted list. Unlike ``list.sort()``, returns the list
+       for chaining.
+   * - ``.unique()``
+     - Remove duplicates, preserving order.
+   * - ``.filter(func)``
+     - Keep only elements where ``func(elem)`` is truthy.
+   * - ``.select(n)``
+     - Pick the n-th element from each tuple (for multi-group ``m`` globs).
+       Skips ``None`` values from optional groups.
+   * - ``.paths()``
+     - Convert elements to ``pathlib.Path`` objects.
+   * - ``.files()``
+     - Keep only existing regular files.
+   * - ``.dirs()``
+     - Keep only existing directories.
+   * - ``.exists()``
+     - Keep only paths that exist on disk.
+   * - ``.visible()``
+     - Keep only visible (non-hidden) entries.
+   * - ``.hidden()``
+     - Keep only hidden entries (dotfiles on Unix, ``FILE_ATTRIBUTE_HIDDEN``
+       on Windows).
+
+A more complete example — find all Python test files, convert to ``Path``
+objects, and extract just the filenames:
+
+.. code-block:: xonshcon
+
+    @ g`tests/**/*.py`.files().paths().filter(lambda p: p.stem.startswith('test_'))
+    [PosixPath('tests/test_main.py'), PosixPath('tests/test_utils.py')]
+
+Working with Tuples from Match Globs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When ``m`` glob has multiple capture groups, the result is a list of tuples.
+Path-based methods (``.files()``, ``.dirs()``, ``.exists()``, ``.paths()``)
+don't work on tuples — use ``.select(n)`` first to extract a specific element:
+
+.. code-block:: xonshcon
+
+    @ results = m`src/(.*)/(.*\.py)`
+    @ print(results[:2])
+    [('lib', 'utils.py'), ('lib', 'main.py')]
+
+    @ results.files()  # TypeError!
+    TypeError: .files() requires string paths, got tuples.
+    Use .select(n) to pick a tuple element first, e.g. .select(0).files()
+
+    @ # Extract directory names
+    @ results.select(0).unique().sorted()
+    ['lib', 'tests']
+
+    @ # Extract filenames
+    @ results.select(1).sorted()
+    ['main.py', 'utils.py']
+
+Methods that don't need paths — ``.unique()``, ``.sorted()``, ``.filter()``
+— work on tuples directly:
+
+.. code-block:: xonshcon
+
+    @ m`src/(.*)/(.*\.py)`.unique().sorted()[:3]
+    [('lib', 'main.py'), ('lib', 'utils.py'), ('tests', 'test_main.py')]
+
+``XonshList`` is a regular ``list`` subclass, so it works everywhere a list
+does — iteration, indexing, ``len()``, passing to functions, etc.

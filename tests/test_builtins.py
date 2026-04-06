@@ -23,6 +23,7 @@ from xonsh.built_ins import (
     list_of_strs_or_callables,
     path_literal,
     pathsearch,
+    regexmatchsearch,
     regexsearch,
     reglob,
     superhelper,
@@ -195,6 +196,45 @@ def test_repath_containing_asterisk(path, pattern):
 )
 def test_repath_containing_plus_sign(path, pattern):
     check_repath(path, pattern)
+
+
+@skip_if_on_windows
+class TestRegexMatchSearch:
+    """Test m`` modifier — regex glob returning capture groups."""
+
+    def test_returns_tuples(self, tmp_path, xession):
+        (tmp_path / "data" / "train" / "images").mkdir(parents=True)
+        (tmp_path / "data" / "train" / "images" / "cat.png").touch()
+        pattern = str(tmp_path / "data/(.*)/(.*)/(.*)\\.png")
+        results = regexmatchsearch(pattern)
+        assert ("train", "images", "cat") in results
+
+    def test_single_group_returns_strings(self, tmp_path, xession):
+        (tmp_path / "main.py").touch()
+        (tmp_path / "utils.py").touch()
+        pattern = str(tmp_path / "(.*)\\.py")
+        results = regexmatchsearch(pattern)
+        assert "main" in results
+        assert "utils" in results
+        assert all(isinstance(r, str) for r in results)
+
+    def test_no_groups_returns_paths(self, tmp_path, xession):
+        (tmp_path / "hello.txt").touch()
+        pattern = str(tmp_path / "hello\\.txt")
+        results = regexmatchsearch(pattern)
+        assert str(tmp_path / "hello.txt") in results
+        assert all(isinstance(r, str) for r in results)
+
+    def test_respects_dotglob(self, tmp_path, xession):
+        (tmp_path / ".hidden").touch()
+        (tmp_path / "visible").touch()
+        pattern = str(tmp_path / "(.*)")
+        xession.env["DOTGLOB"] = False
+        results = regexmatchsearch(pattern)
+        assert ".hidden" not in results
+        xession.env["DOTGLOB"] = True
+        results = regexmatchsearch(pattern)
+        assert ".hidden" in results
 
 
 def test_helper_int(home_env):
