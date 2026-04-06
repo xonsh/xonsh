@@ -11,6 +11,7 @@ from xonsh.procs.readers import (
     NonBlockingFDReader,
     safe_fdclose,
 )
+from xonsh.pytest.tools import skip_if_on_windows
 
 
 class TestNonBlockingFDReader:
@@ -61,6 +62,7 @@ class TestNonBlockingFDReader:
         assert reader.read() == b""
 
 
+@skip_if_on_windows
 class TestBufferedFDParallelReader:
     def test_read(self, tmp_path):
         p = tmp_path / "data.bin"
