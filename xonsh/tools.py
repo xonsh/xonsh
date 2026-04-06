@@ -2600,9 +2600,6 @@ def columnize(elems, width=80, newline="\n"):
     return lines
 
 
-ALIAS_KWARG_NAMES = frozenset(["args", "stdin", "stdout", "stderr", "spec", "stack"])
-
-
 def unthreadable(f):
     """Decorator that specifies that a callable alias should be run only
     on the main thread process. This is often needed for debuggers and
@@ -2612,12 +2609,28 @@ def unthreadable(f):
     return f
 
 
+def threadable(f):
+    """Decorator that specifies that a callable alias should be run
+    in a background thread. This is the default behavior.
+    """
+    f.__xonsh_threadable__ = True
+    return f
+
+
 def uncapturable(f):
     """Decorator that specifies that a callable alias should not be run with
     any capturing. This is often needed if the alias call interactive
     subprocess, like pagers and text editors.
     """
     f.__xonsh_capturable__ = False
+    return f
+
+
+def capturable(f):
+    """Decorator that specifies that a callable alias should be run with
+    capturing. This is the default behavior.
+    """
+    f.__xonsh_capturable__ = True
     return f
 
 
