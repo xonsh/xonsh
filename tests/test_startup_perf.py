@@ -38,3 +38,16 @@ def test_no_inspectors_in_command_mode():
     assert "xonsh.lib.inspectors" not in modules, (
         "xonsh -c must not import xonsh.lib.inspectors (only needed for ?/??)"
     )
+
+
+def test_no_heavy_prompt_in_command_mode():
+    """xonsh -c must not import heavy prompt modules (vc, gitstatus, etc)."""
+    modules = _get_loaded_modules([])
+    # prompt.base is light and pulled transitively; the heavy ones are prompt.vc, prompt.gitstatus, etc.
+    heavy_prompt = {m for m in modules if m.startswith("xonsh.prompt.")} - {
+        "xonsh.prompt.base",
+        "xonsh.prompt.times",
+    }
+    assert heavy_prompt == set(), (
+        f"Heavy prompt modules loaded in -c mode: {heavy_prompt}"
+    )

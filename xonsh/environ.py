@@ -20,7 +20,6 @@ from collections import ChainMap
 from collections import abc as cabc
 from pathlib import Path
 
-import xonsh.prompt.base as prompt
 from xonsh import __version__ as XONSH_VERSION
 from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
@@ -842,9 +841,26 @@ def default_lscolors(env):
 
 
 @default_value
+def default_prompt(env):
+    """``xonsh.environ.DEFAULT_PROMPT``"""
+    import xonsh.prompt.base as prompt
+
+    return prompt.default_prompt()
+
+
+@default_value
+def default_prompt_tokens_formatter(env):
+    """``xonsh.prompt.base.prompt_tokens_formatter_default``"""
+    import xonsh.prompt.base as prompt
+
+    return prompt.prompt_tokens_formatter_default
+
+
+@default_value
 def default_prompt_fields(env):
     """``xonsh.prompt.base.PromptFields``"""
-    # todo: generate document for all default fields
+    import xonsh.prompt.base as prompt
+
     return prompt.PromptFields(XSH)
 
 
@@ -1673,7 +1689,7 @@ class PromptSetting(Xettings):
         is_string_or_callable,
         ensure_string,
         ensure_string,
-        prompt.default_prompt(),
+        default_prompt,
         "The prompt text. May contain keyword arguments which are "
         "auto-formatted, see 'Customizing the Prompt' at "
         "http://xon.sh/tutorial.html#customizing-the-prompt. "
@@ -1701,7 +1717,7 @@ class PromptSetting(Xettings):
         validate=callable,
         convert=None,
         detype=None,
-        default=prompt.prompt_tokens_formatter_default,
+        default=default_prompt_tokens_formatter,
         doc="Final processor that receives all tokens in the prompt template. "
         "It gives option to format the prompt with different prefix based on other tokens values. "
         "Highly useful for implementing something like powerline theme.",
@@ -2991,7 +3007,6 @@ def default_env(env=None):
     # in order of increasing precedence
     ctx = {
         "BASH_COMPLETIONS": list(DEFAULT_VARS["BASH_COMPLETIONS"].default),
-        "PROMPT_FIELDS": DEFAULT_VARS["PROMPT_FIELDS"].default(env),
         "XONSH_VERSION": XONSH_VERSION,
     }
 
