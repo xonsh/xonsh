@@ -641,7 +641,8 @@ def get_sep():
     """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    if ON_WINDOWS and xsh.env.get("FORCE_POSIX_PATHS"):
+    env = xsh.env or os_environ
+    if ON_WINDOWS and env.get("FORCE_POSIX_PATHS"):
         return os.altsep
     else:
         return os.sep
@@ -858,6 +859,8 @@ def print_warning(msg):
 def print_exception(msg=None, exc_info=None, source_msg=None):
     """Print given exception (or current if None) with/without traceback and set sys.last_exc accordingly."""
 
+    env = xsh.env or os_environ
+
     # is no exec_info() triple is given, use the exception beeing handled at the moment
     if exc_info is None:
         exc_info = sys.exc_info()
@@ -886,7 +889,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         limit = 0
         chain = False
 
-    if xsh.env.get("XONSH_SHOW_TRACEBACK", False):
+    if env.get("XONSH_SHOW_TRACEBACK", False):
         """
         This moved under ``XONSH_SHOW_TRACEBACK`` because it looks that python's
         internal machinery behind ``sys.last_*`` is not thread safe
@@ -936,7 +939,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
-        if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get(
+        if not env.get("XONSH_SHOW_TRACEBACK") and env.get(
             "RAISE_SUBPROC_ERROR"
         ):
             display_colored_error_message(exc_info, limit=1)
