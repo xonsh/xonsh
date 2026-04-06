@@ -3199,6 +3199,9 @@ class EnvPath(cabc.MutableSequence):
 
 def save_origin_env_to_file(env, session_id):
     data_dir = env.get("XONSH_DATA_DIR", None)
+    if data_dir is None:
+        print("xonsh: $XONSH_DATA_DIR is not set, skipping origin env save", file=sys.stderr)
+        return
     env_file_name = Path(data_dir) / f"origin-env-{session_id}.json"
 
     if os.access(env_file_name.parent, os.W_OK):
