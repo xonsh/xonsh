@@ -277,13 +277,15 @@ def regexmatchsearch(s):
 def globsearch(s):
     glob_sorted = XSH.env.get("GLOB_SORTED")
     dotglob = XSH.env.get("DOTGLOB")
-    return XonshList(globpath(
-        s,
-        ignore_case=True,
-        return_empty=True,
-        sort_result=glob_sorted,
-        include_dotfiles=dotglob,
-    ))
+    return XonshList(
+        globpath(
+            s,
+            ignore_case=True,
+            return_empty=True,
+            sort_result=glob_sorted,
+            include_dotfiles=dotglob,
+        )
+    )
 
 
 def pathsearch(func, s, pymode=False, pathobj=False):
