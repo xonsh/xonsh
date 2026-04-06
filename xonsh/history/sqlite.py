@@ -338,11 +338,6 @@ class SqliteHistory(History):
             return
         envs = XSH.env
         inp = cmd["inp"].rstrip()
-        self.inps.append(inp)
-        self.outs.append(cmd.get("out"))
-        self.rtns.append(cmd["rtn"])
-        self.tss.append(cmd.get("ts", (None, None)))
-        self.cwds.append(cmd.get("cwd", None))
 
         opts = envs.get("HISTCONTROL", "")
         if "ignoredups" in opts and inp == self._last_hist_inp:
@@ -354,6 +349,12 @@ class SqliteHistory(History):
         if "ignorespace" in opts and cmd.get("spc"):
             # Skipping cmd starting with space
             return
+
+        self.inps.append(inp)
+        self.outs.append(cmd.get("out"))
+        self.rtns.append(cmd["rtn"])
+        self.tss.append(cmd.get("ts", (None, None)))
+        self.cwds.append(cmd.get("cwd", None))
         if not self.save_cwd and "cwd" in cmd:
             del cmd["cwd"]
 

@@ -641,7 +641,8 @@ def get_sep():
     """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    if ON_WINDOWS and xsh.env.get("FORCE_POSIX_PATHS"):
+    env = xsh.env or os_environ
+    if ON_WINDOWS and env.get("FORCE_POSIX_PATHS"):
         return os.altsep
     else:
         return os.sep
@@ -858,6 +859,8 @@ def print_warning(msg):
 def print_exception(msg=None, exc_info=None, source_msg=None):
     """Print given exception (or current if None) with/without traceback and set sys.last_exc accordingly."""
 
+    env = xsh.env or os_environ
+
     # is no exec_info() triple is given, use the exception beeing handled at the moment
     if exc_info is None:
         exc_info = sys.exc_info()
@@ -886,7 +889,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         limit = 0
         chain = False
 
-    if xsh.env.get("XONSH_SHOW_TRACEBACK", False):
+    if env.get("XONSH_SHOW_TRACEBACK", False):
         """
         This moved under ``XONSH_SHOW_TRACEBACK`` because it looks that python's
         internal machinery behind ``sys.last_*`` is not thread safe
@@ -936,9 +939,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
-        if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get(
-            "RAISE_SUBPROC_ERROR"
-        ):
+        if not env.get("XONSH_SHOW_TRACEBACK") and env.get("RAISE_SUBPROC_ERROR"):
             display_colored_error_message(exc_info, limit=1)
         else:
             display_error_message(exc_info)
@@ -1345,7 +1346,10 @@ def is_bool_or_int(x):
 def to_bool_or_int(x):
     """Converts a value to a boolean or an integer."""
     if isinstance(x, str):
-        return int(x) if x.isdigit() else to_bool(x)
+        try:
+            return int(x)
+        except ValueError:
+            return to_bool(x)
     elif is_int(x):  # bools are ints too!
         return x
     else:
@@ -1862,7 +1866,7 @@ def to_dynamic_cwd_tuple(x):
     """Convert to a canonical cwd_width tuple."""
     unit = "c"
     if isinstance(x, str):
-        if x[-1] == "%":
+        if x and x[-1] == "%":
             x = x[:-1]
             unit = "%"
         else:
@@ -2550,6 +2554,8 @@ def columnize(elems, width=80, newline="\n"):
     elements placed in columns. Each line will be at most *width* columns.
     The newline character will be appended to the end of each line.
     """
+    if not elems:
+        return []
     sizes = [len(e) + 1 for e in elems]
     total = sum(sizes)
     nelem = len(elems)
@@ -2571,6 +2577,8 @@ def columnize(elems, width=80, newline="\n"):
             # we might be able to fit another column.
             ncols += 1
             nrows = nelem // ncols
+            if nrows == 0:
+                break
             columns = [sizes[i * nrows : (i + 1) * nrows] for i in range(ncols)]
             last_longest_row = longest_row
         else:
@@ -2592,9 +2600,6 @@ def columnize(elems, width=80, newline="\n"):
     return lines
 
 
-ALIAS_KWARG_NAMES = frozenset(["args", "stdin", "stdout", "stderr", "spec", "stack"])
-
-
 def unthreadable(f):
     """Decorator that specifies that a callable alias should be run only
     on the main thread process. This is often needed for debuggers and
@@ -2604,12 +2609,28 @@ def unthreadable(f):
     return f
 
 
+def threadable(f):
+    """Decorator that specifies that a callable alias should be run
+    in a background thread. This is the default behavior.
+    """
+    f.__xonsh_threadable__ = True
+    return f
+
+
 def uncapturable(f):
     """Decorator that specifies that a callable alias should not be run with
     any capturing. This is often needed if the alias call interactive
     subprocess, like pagers and text editors.
     """
     f.__xonsh_capturable__ = False
+    return f
+
+
+def capturable(f):
+    """Decorator that specifies that a callable alias should be run with
+    capturing. This is the default behavior.
+    """
+    f.__xonsh_capturable__ = True
     return f
 
 

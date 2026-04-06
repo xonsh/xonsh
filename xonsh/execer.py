@@ -127,6 +127,7 @@ class Execer:
                 frame = frame.f_back
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
+            del frame  # Fix memory leak
         ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
         tree = self.parse(input, ctx, mode=mode, filename=filename, transform=transform)
         if tree is None:
@@ -139,7 +140,7 @@ class Execer:
             # Some syntax errors do not occur during parsing, but only later during compiling,
             # such as a "'return' outside function", or some validations regarding the match statement.
             # In such a case, the offending line of source code (e.text) is not attached to the exception.
-            if e.text is None:
+            if e.text is None and e.lineno is not None:
                 lines = input.splitlines()
                 i = max(
                     0, min(e.lineno - 1, len(lines) - 1)
