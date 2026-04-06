@@ -10,16 +10,24 @@ import argparse
 import collections.abc as cabc
 import os
 
-try:
-    import ujson as json
-except ImportError:
-    import json  # type: ignore
 import time
 import typing as tp
 from pathlib import Path
 
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS, pathbasename
+
+
+@lazyobject
+def json():
+    try:
+        import ujson
+
+        return ujson
+    except ImportError:
+        import json
+
+        return json
 from xonsh.procs.executables import (
     get_paths,
     get_possible_names,

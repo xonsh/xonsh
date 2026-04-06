@@ -51,3 +51,11 @@ def test_no_heavy_prompt_in_command_mode():
     assert heavy_prompt == set(), (
         f"Heavy prompt modules loaded in -c mode: {heavy_prompt}"
     )
+
+
+def test_no_json_in_command_mode():
+    """xonsh -c must not import ujson (only needed for commands cache persistence)."""
+    modules = _get_loaded_modules([])
+    assert "ujson" not in modules, (
+        "xonsh -c must not import ujson (only needed for commands cache persistence)"
+    )
