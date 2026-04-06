@@ -30,3 +30,11 @@ def test_no_history_in_command_mode():
     assert history_modules == set(), (
         f"Heavy history modules loaded in -c mode: {history_modules}"
     )
+
+
+def test_no_inspectors_in_command_mode():
+    """xonsh -c must not import xonsh.lib.inspectors (only needed for ?/??)."""
+    modules = _get_loaded_modules([])
+    assert "xonsh.lib.inspectors" not in modules, (
+        "xonsh -c must not import xonsh.lib.inspectors (only needed for ?/??)"
+    )

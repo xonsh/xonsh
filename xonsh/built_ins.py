@@ -23,7 +23,6 @@ import warnings
 from ast import AST
 from collections.abc import Iterator
 
-from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX
 from xonsh.tools import (
@@ -34,7 +33,7 @@ from xonsh.tools import (
     print_color,
 )
 
-INSPECTOR = Inspector()
+INSPECTOR = None
 
 warnings.filterwarnings("once", category=DeprecationWarning)
 
@@ -82,17 +81,26 @@ def resetting_signal_handle(sig, f):
     signal.signal(sig, new_signal_handler)
 
 
+def _get_inspector():
+    global INSPECTOR
+    if INSPECTOR is None:
+        from xonsh.lib.inspectors import Inspector
+
+        INSPECTOR = Inspector()
+    return INSPECTOR
+
+
 def helper(x, name=""):
     """Prints help about, and then returns that variable."""
     name = name or getattr(x, "__name__", "")
-    INSPECTOR.pinfo(x, oname=name, detail_level=0)
+    _get_inspector().pinfo(x, oname=name, detail_level=0)
     return x
 
 
 def superhelper(x, name=""):
     """Prints help about, and then returns that variable."""
     name = name or getattr(x, "__name__", "")
-    INSPECTOR.pinfo(x, oname=name, detail_level=1)
+    _get_inspector().pinfo(x, oname=name, detail_level=1)
     return x
 
 
