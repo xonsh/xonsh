@@ -161,7 +161,7 @@ to open automatically in xonsh. Here is a sample settings.json:
             },
             "list":
             [
-                            {
+                {
                     // Guid from https://guidgen.com
                     "guid": "{02639f1c-9437-4b34-a383-2df49b5ed5c5}",
                     "name": "Xonsh",
