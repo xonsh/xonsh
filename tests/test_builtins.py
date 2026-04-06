@@ -209,11 +209,21 @@ class TestRegexMatchSearch:
         results = regexmatchsearch(pattern)
         assert ("train", "images", "cat") in results
 
+    def test_single_group_returns_strings(self, tmp_path, xession):
+        (tmp_path / "main.py").touch()
+        (tmp_path / "utils.py").touch()
+        pattern = str(tmp_path / "(.*)\\.py")
+        results = regexmatchsearch(pattern)
+        assert "main" in results
+        assert "utils" in results
+        assert all(isinstance(r, str) for r in results)
+
     def test_no_groups_returns_paths(self, tmp_path, xession):
         (tmp_path / "hello.txt").touch()
         pattern = str(tmp_path / "hello\\.txt")
         results = regexmatchsearch(pattern)
         assert str(tmp_path / "hello.txt") in results
+        assert all(isinstance(r, str) for r in results)
 
     def test_respects_dotglob(self, tmp_path, xession):
         (tmp_path / ".hidden").touch()
@@ -221,12 +231,10 @@ class TestRegexMatchSearch:
         pattern = str(tmp_path / "(.*)")
         xession.env["DOTGLOB"] = False
         results = regexmatchsearch(pattern)
-        names = [r[0] for r in results]
-        assert ".hidden" not in names
+        assert ".hidden" not in results
         xession.env["DOTGLOB"] = True
         results = regexmatchsearch(pattern)
-        names = [r[0] for r in results]
-        assert ".hidden" in names
+        assert ".hidden" in results
 
 
 def test_helper_int(home_env):

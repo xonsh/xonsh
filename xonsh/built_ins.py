@@ -192,6 +192,43 @@ class XonshPathLiteral(BasePath):  # type: ignore
         return self
 
 
+class XonshList(list):
+    """List subclass returned by glob operations with convenience methods.
+
+    All methods return XonshList, enabling chaining::
+
+        g`**/(*.py)`.unique().sorted().paths()
+    """
+
+    def unique(self):
+        """Return a XonshList with duplicates removed, preserving order."""
+        return XonshList(dict.fromkeys(self))
+
+    def paths(self):
+        """Convert string elements to pathlib.Path objects."""
+        return XonshList(pathlib.Path(p) for p in self)
+
+    def sorted(self, key=None, reverse=False):
+        """Return a new sorted XonshList."""
+        return XonshList(builtins.sorted(self, key=key, reverse=reverse))
+
+    def filter(self, func):
+        """Return a XonshList with only elements where func(elem) is truthy."""
+        return XonshList(x for x in self if func(x))
+
+    def dirs(self):
+        """Keep only paths that are existing directories."""
+        return XonshList(p for p in self if os.path.isdir(p))
+
+    def files(self):
+        """Keep only paths that are existing files."""
+        return XonshList(p for p in self if os.path.isfile(p))
+
+    def exists(self):
+        """Keep only paths that exist on disk."""
+        return XonshList(p for p in self if os.path.exists(p))
+
+
 def path_literal(s):
     s = expand_path(s)
     return XonshPathLiteral(s)
@@ -200,7 +237,7 @@ def path_literal(s):
 def regexsearch(s):
     s = expand_path(s)
     dotglob = XSH.env.get("DOTGLOB")
-    return reglob(s, include_dotfiles=dotglob)
+    return XonshList(reglob(s, include_dotfiles=dotglob))
 
 
 def regexmatchsearch(s):
@@ -227,21 +264,26 @@ def regexmatchsearch(s):
             match = regex.fullmatch(path)
             if match:
                 groups = match.groups()
-                results.append(groups if groups else path)
+                if not groups:
+                    results.append(path)
+                elif len(groups) == 1:
+                    results.append(groups[0])
+                else:
+                    results.append(groups)
     results.sort()
-    return results
+    return XonshList(results)
 
 
 def globsearch(s):
     glob_sorted = XSH.env.get("GLOB_SORTED")
     dotglob = XSH.env.get("DOTGLOB")
-    return globpath(
+    return XonshList(globpath(
         s,
         ignore_case=True,
         return_empty=True,
         sort_result=glob_sorted,
         include_dotfiles=dotglob,
-    )
+    ))
 
 
 def pathsearch(func, s, pymode=False, pathobj=False):
@@ -255,8 +297,8 @@ def pathsearch(func, s, pymode=False, pathobj=False):
         raise XonshError(error % func)
     o = func(s)
     if pathobj and pymode:
-        o = list(map(pathlib.Path, o))
-    no_match = [] if pymode else [s]
+        o = XonshList(map(pathlib.Path, o))
+    no_match = XonshList() if pymode else [s]
     return o if len(o) != 0 else no_match
 
 
@@ -741,7 +783,7 @@ class XonshSession:
         self.globsearch = globsearch
         self.regexsearch = regexsearch
         self.regexmatchsearch = regexmatchsearch
-        self.glob = globpath
+        self.glob = lambda *a, **kw: XonshList(globpath(*a, **kw))
         self.expand_path = expand_path
 
         self.subproc_captured_stdout = subproc_captured_stdout
