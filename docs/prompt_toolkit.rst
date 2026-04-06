@@ -15,6 +15,166 @@ available in xonsh. For full prompt_toolkit documentation, see the
 `official docs <https://python-prompt-toolkit.readthedocs.io/>`_.
 
 
+.. _customprompt_ref:
+
+Customizing the Prompt
+======================
+
+Customizing the prompt by modifying ``$PROMPT``, ``$RIGHT_PROMPT`` or
+``$BOTTOM_TOOLBAR`` is probably the most common reason for altering an
+environment variable.
+
+The ``$PROMPT`` variable can be a string, or it can be a function (of no
+arguments) that returns a string.  The result can contain keyword arguments,
+which will be replaced automatically:
+
+.. code-block:: xonshcon
+
+    @ $PROMPT = '{user}@{hostname}:{cwd} @ '
+    snail@home:~ @ # it works!
+    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    snail@home:~ @> # so does that!
+
+By default, the following variables are available for use:
+
+* ``user``: The username of the current user
+* ``hostname``: The name of the host computer
+* ``cwd``: The current working directory. Use ``$DYNAMIC_CWD_WIDTH`` to
+  set a maximum width and ``$DYNAMIC_CWD_ELISION_CHAR`` for the elision character.
+* ``short_cwd``: A shortened form of the current working directory; e.g.,
+  ``/path/to/xonsh`` becomes ``/p/t/xonsh``
+* ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/``
+* ``cwd_base``: The basename of the current working directory, e.g. ``xonsh``
+* ``env_name``: The name of active virtual environment, if any.
+* ``env_prefix``: Prefix characters for active virtual environment (default ``"("``).
+* ``env_postfix``: Postfix characters for active virtual environment (default ``") "``).
+* ``curr_branch``: The name of the current git branch, if any.
+* ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
+  otherwise ``{BOLD_RED}``. Yellow if undetermined.
+* ``branch_bg_color``: Like ``{branch_color}``, but sets a background color.
+* ``prompt_end``: ``#`` if the user has root/admin permissions, ``@`` otherwise.
+* ``current_job``: The name of the command currently running in the foreground.
+* ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``.
+  See :py:mod:`xonsh.prompt.gitstatus` for customization options.
+* ``localtime``: The current local time, formatted with ``time_format``.
+* ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
+* ``last_return_code``: The return code of the last issued command.
+* ``last_return_code_if_nonzero``: The return code if non-zero, otherwise ``None``.
+
+Colors
+======
+
+Xonsh supports colored output in prompts, ``print_color``, and ``printx``.
+Color keywords such as ``{GREEN}`` or ``{BOLD_BLUE}`` can be used in prompt
+strings and with color printing functions.
+
+Color Names
+-----------
+
+* ``RESET``: Resets any previously used styling.
+* ``COLORNAME``: Inserts a color code for the following basic colors,
+  which come in regular (dark) and intense (light) forms:
+
+    - ``BLACK`` or ``INTENSE_BLACK``
+    - ``RED`` or ``INTENSE_RED``
+    - ``GREEN`` or ``INTENSE_GREEN``
+    - ``YELLOW`` or ``INTENSE_YELLOW``
+    - ``BLUE`` or ``INTENSE_BLUE``
+    - ``PURPLE`` or ``INTENSE_PURPLE``
+    - ``CYAN`` or ``INTENSE_CYAN``
+    - ``WHITE`` or ``INTENSE_WHITE``
+
+* ``DEFAULT``: The color code for the terminal's default foreground color.
+* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
+  hex color, or the nearest approximation that that is supported by
+  the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
+  both valid.
+* ``BACKGROUND_`` may be added to the beginning of a color name or hex
+  color to set a background color.  For example, ``BACKGROUND_INTENSE_RED``
+  and ``BACKGROUND_#123456`` can both be used.
+* ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
+  Thus you can set ``bg#0012ab`` or the uppercase version.
+
+Color Modifiers
+---------------
+
+* ``BOLD_`` — increases font intensity. E.g. ``BOLD_RED``, ``BOLD_#112233``.
+* ``FAINT_`` — decreases font intensity. E.g. ``FAINT_YELLOW``.
+* ``ITALIC_`` — switches to italic. E.g. ``ITALIC_BLUE``.
+* ``UNDERLINE_`` — adds underline. E.g. ``UNDERLINE_GREEN``.
+* ``SLOWBLINK_`` — slow blinking text. E.g. ``SLOWBLINK_PURPLE``.
+* ``FASTBLINK_`` — fast blinking text. E.g. ``FASTBLINK_CYAN``.
+* ``INVERT_`` — swaps foreground and background. E.g. ``INVERT_WHITE``.
+* ``CONCEAL_`` — hides text (may not be widely supported). E.g. ``CONCEAL_BLACK``.
+* ``STRIKETHROUGH_`` — draws a line through text. E.g. ``STRIKETHROUGH_RED``.
+
+Each modifier has an ``OFF`` variant to disable it: ``BOLDOFF_``, ``FAINTOFF_``,
+``ITALICOFF_``, ``UNDERLINEOFF_``, ``BLINKOFF_``, ``INVERTOFF_``, ``CONCEALOFF_``,
+``STRIKETHROUGHOFF_``.
+
+Modifiers can be combined: ``BOLD_UNDERLINE_INTENSE_BLACK``.
+
+
+Additional Prompt Variables
+===========================
+
+You can make use of additional variables beyond the defaults by adding them to
+the ``PROMPT_FIELDS`` environment variable. The values in this dictionary should
+be strings (which will be inserted into the prompt verbatim), or functions
+(which will be called each time the prompt is generated, and the results
+of those calls will be inserted into the prompt). For example:
+
+.. code-block:: console
+
+    snail@home ~ @ $PROMPT_FIELDS['test'] = "hey"
+    snail@home ~ @ $PROMPT = "{test} {cwd} @ "
+    hey ~ @
+    hey ~ @ import random
+    hey ~ @ $PROMPT_FIELDS['test'] = lambda: random.randint(1,9)
+    3 ~ @
+    5 ~ @
+    2 ~ @
+    8 ~ @
+
+Environment variables and functions are also available with the ``$``
+prefix.  For example:
+
+.. code-block:: console
+
+    snail@home ~ @ $PROMPT = "{$LANG} >"
+    en_US.utf8 >
+
+Note that some entries of the ``$PROMPT_FIELDS`` are not always applicable, for
+example, ``curr_branch`` returns ``None`` if the current directory is not in a
+repository. The ``None`` will be interpreted as an empty string.
+
+But let's consider a problem:
+
+.. code-block:: console
+
+    snail@home ~/xonsh @ $PROMPT = "{cwd_base} [{curr_branch}] @ "
+    xonsh [main] @ cd ..
+    ~ [] @
+
+We want the branch to be displayed in square brackets, but we also don't want
+the brackets (and the extra space) to be displayed when there is no branch. The
+solution is to add a nested format string (separated with a colon) that will be
+invoked only if the value is not ``None``:
+
+.. code-block:: console
+
+    snail@home ~/xonsh @ $PROMPT = "{cwd_base}{curr_branch: [{}]} @ "
+    xonsh [main] @ cd ..
+    ~ @
+
+The curly brackets act as a placeholder, because the additional part is an
+ordinary format string. What we're doing here is equivalent to this expression:
+
+.. code-block:: python
+
+    " [{}]".format(curr_branch()) if curr_branch() is not None else ""
+
+
 Custom Keybindings
 ==================
 
@@ -199,3 +359,37 @@ Unlike ``$XONSH_PROMPT_NEXT_CMD``, this does not pre-fill the input — it only
 shows a suggestion that the user can accept or ignore.
 
 Both variables are cleared automatically after being consumed by the prompt.
+
+
+
+
+Virtual Environment in Prompt
+-----------------------------
+
+xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
+`as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
+#envvar-VIRTUAL_ENV_DISABLE_PROMPT>`__. If this variable is truthy, xonsh
+will *always* substitute an empty string for ``{env_name}``. Note that unlike
+other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
+after being set --- it is not necessary to re-activate the environment.
+
+xonsh also allows for an explicit override of the rendering of ``{env_name}``,
+via the ``$VIRTUAL_ENV_PROMPT`` environment variable. If this variable is
+defined and has any value other than ``None``, ``{env_name}`` will *always*
+render as ``str($VIRTUAL_ENV_PROMPT)`` when an environment is activated.
+It will still render as an empty string when no environment is active.
+``$VIRTUAL_ENV_PROMPT`` is overridden by ``$VIRTUAL_ENV_DISABLE_PROMPT``.
+
+For example:
+
+.. code-block:: xonshcon
+
+    @ $PROMPT = '{env_name}@ '
+    @ source env/bin/activate.xsh
+    (env) @ $VIRTUAL_ENV_PROMPT = '~~ACTIVE~~ '
+    ~~ACTIVE~~ @ $VIRTUAL_ENV_DISABLE_PROMPT = 1
+    @ del $VIRTUAL_ENV_PROMPT
+    @ del $VIRTUAL_ENV_DISABLE_PROMPT
+    (env) @
+
+

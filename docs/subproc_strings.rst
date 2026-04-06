@@ -122,6 +122,38 @@ This is yet another major point of departure for xonsh from traditional
 shells. However, the xonsh subprocess string handling is
 consistent and predictable.
 
+String Literal Prefixes
+=======================
+
+For fine control of environment variable substitutions, brace substitutions,
+and backslash escapes, xonsh supports an extended set of string literal
+prefixes:
+
+- ``""`` — regular string: backslash escapes. Envvar substitutions in subprocess mode.
+- ``r""`` — raw string: unmodified.
+- ``f""`` — formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess mode.
+- ``fr""`` — raw formatted string: brace substitutions.
+- ``p""`` — path string: backslash escapes, envvar substitutions, returns Path.
+- ``pr""`` — raw path string: envvar substitutions, returns Path.
+- ``pf""`` — formatted path string: backslash escapes, brace and envvar substitutions, returns Path.
+
+To understand the differences, set ``$EVAR`` to ``1`` and ``var`` to ``2``:
+
+.. table::
+
+    ========================  ==========================  =======================  =====================
+         String literal            As python object       print(<String literal>)  echo <String literal>
+    ========================  ==========================  =======================  =====================
+    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
+    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
+    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
+    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
+    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
+    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
+    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
+    ========================  ==========================  =======================  =====================
+
+
 Further Reading
 ===============
 For deeper details on the great string debate, please feel free to read
