@@ -260,6 +260,9 @@ Available methods:
      - Remove duplicates, preserving order.
    * - ``.filter(func)``
      - Keep only elements where ``func(elem)`` is truthy.
+   * - ``.select(n)``
+     - Pick the n-th element from each tuple (for multi-group ``m`` globs).
+       Skips ``None`` values from optional groups.
    * - ``.paths()``
      - Convert elements to ``pathlib.Path`` objects.
    * - ``.files()``
@@ -276,6 +279,39 @@ objects, and extract just the filenames:
 
     @ g`tests/**/*.py`.files().paths().filter(lambda p: p.stem.startswith('test_'))
     [PosixPath('tests/test_main.py'), PosixPath('tests/test_utils.py')]
+
+Working with Tuples from Match Globs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When ``m`` glob has multiple capture groups, the result is a list of tuples.
+Path-based methods (``.files()``, ``.dirs()``, ``.exists()``, ``.paths()``)
+don't work on tuples — use ``.select(n)`` first to extract a specific element:
+
+.. code-block:: xonshcon
+
+    @ results = m`src/(.*)/(.*\.py)`
+    @ print(results[:2])
+    [('lib', 'utils.py'), ('lib', 'main.py')]
+
+    @ results.files()  # TypeError!
+    TypeError: .files() requires string paths, got tuples.
+    Use .select(n) to pick a tuple element first, e.g. .select(0).files()
+
+    @ # Extract directory names
+    @ results.select(0).unique().sorted()
+    ['lib', 'tests']
+
+    @ # Extract filenames
+    @ results.select(1).sorted()
+    ['main.py', 'utils.py']
+
+Methods that don't need paths — ``.unique()``, ``.sorted()``, ``.filter()``
+— work on tuples directly:
+
+.. code-block:: xonshcon
+
+    @ m`src/(.*)/(.*\.py)`.unique().sorted()[:3]
+    [('lib', 'main.py'), ('lib', 'utils.py'), ('tests', 'test_main.py')]
 
 ``XonshList`` is a regular ``list`` subclass, so it works everywhere a list
 does — iteration, indexing, ``len()``, passing to functions, etc.

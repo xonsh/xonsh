@@ -197,8 +197,24 @@ class XonshList(list):
 
     All methods return XonshList, enabling chaining::
 
-        g`**/(*.py)`.unique().sorted().paths()
+        g`**/*.py`.files().sorted().paths()
     """
+
+    def _check_paths(self, method):
+        """Raise if list contains tuples (e.g. from multi-group m``)."""
+        if self and isinstance(self[0], tuple):
+            raise TypeError(
+                f".{method}() requires string paths, got tuples. "
+                f"Use .select(n) to pick a tuple element first, e.g. .select(0).{method}()"
+            )
+
+    def select(self, n):
+        """Pick the n-th element from each tuple, skipping None values."""
+        return XonshList(
+            v for x in self
+            for v in [x[n] if isinstance(x, tuple) else x]
+            if v is not None
+        )
 
     def unique(self):
         """Return a XonshList with duplicates removed, preserving order."""
@@ -206,6 +222,7 @@ class XonshList(list):
 
     def paths(self):
         """Convert string elements to pathlib.Path objects."""
+        self._check_paths("paths")
         return XonshList(pathlib.Path(p) for p in self)
 
     def sorted(self, key=None, reverse=False):
@@ -218,14 +235,17 @@ class XonshList(list):
 
     def dirs(self):
         """Keep only paths that are existing directories."""
+        self._check_paths("dirs")
         return XonshList(p for p in self if os.path.isdir(p))
 
     def files(self):
         """Keep only paths that are existing files."""
+        self._check_paths("files")
         return XonshList(p for p in self if os.path.isfile(p))
 
     def exists(self):
         """Keep only paths that exist on disk."""
+        self._check_paths("exists")
         return XonshList(p for p in self if os.path.exists(p))
 
 
