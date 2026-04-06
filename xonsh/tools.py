@@ -939,9 +939,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
-        if not env.get("XONSH_SHOW_TRACEBACK") and env.get(
-            "RAISE_SUBPROC_ERROR"
-        ):
+        if not env.get("XONSH_SHOW_TRACEBACK") and env.get("RAISE_SUBPROC_ERROR"):
             display_colored_error_message(exc_info, limit=1)
         else:
             display_error_message(exc_info)
