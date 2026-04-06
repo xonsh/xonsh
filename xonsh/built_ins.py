@@ -856,6 +856,7 @@ class XonshSession:
             if self.history is not None:
                 self.history.flush(at_exit=True)
 
+        self._flush_on_exit = flush_on_exit
         atexit.register(flush_on_exit)
 
         # Add one-shot handler for exit
@@ -894,6 +895,9 @@ class XonshSession:
 
         if self.history is not None:
             self.history.flush(at_exit=True)
+
+        if hasattr(self, "_flush_on_exit"):
+            atexit.unregister(self._flush_on_exit)
 
         self.unlink_builtins()
         delattr(builtins, "__xonsh__")
