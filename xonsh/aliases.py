@@ -1134,7 +1134,11 @@ def _output_to_path_objects(lines):
 
 
 _completer_alias = LazyCallable(
-    lambda: __import__("xonsh.completers._aliases", fromlist=["completer_alias"]).completer_alias
+    lambda: (
+        __import__(
+            "xonsh.completers._aliases", fromlist=["completer_alias"]
+        ).completer_alias
+    )
 )
 
 
