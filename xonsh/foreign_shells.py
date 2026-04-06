@@ -63,7 +63,14 @@ def CANON_SHELL_NAMES():
 
 @lazyobject
 def DEFAULT_ENVCMDS():
-    return {"bash": "env", "zsh": "env", "cmd": "set"}
+    return {
+        # env -0 uses null bytes as separators, which correctly handles
+        # multi-line values (e.g. BASH_FUNC_* exported functions).
+        # Falls back to plain env if -0 is not supported.
+        "bash": "env -0 2>/dev/null || env",
+        "zsh": "env -0 2>/dev/null || env",
+        "cmd": "set",
+    }
 
 
 @lazyobject
@@ -289,8 +296,13 @@ def ENV_RE():
 
 
 @lazyobject
-def ENV_SPLIT_RE():
-    return re.compile("^([^=]+)=([^=]*|[^\n]*)$", flags=re.DOTALL | re.MULTILINE)
+def _ENV_LINE_KEY_RE():
+    """Matches the start of a KEY=VALUE line in env output.
+
+    A valid env var name starts with a letter or underscore, followed by
+    letters, digits, underscores, or percent signs (for BASH_FUNC_xxx%%).
+    """
+    return re.compile(r"^([A-Za-z_][A-Za-z0-9_%]*)=(.*)", re.DOTALL)
 
 
 def parse_env(s):
@@ -300,7 +312,33 @@ def parse_env(s):
         return {}
     g1 = m.group(1)
     g1 = g1[:-1] if g1.endswith("\n") else g1
-    env = dict(ENV_SPLIT_RE.findall(g1))
+    if "\0" in g1:
+        # Null-separated output from env -0.
+        # Correctly handles multi-line values (e.g. exported bash functions).
+        env = {}
+        for entry in g1.split("\0"):
+            if "=" in entry:
+                key, value = entry.split("=", 1)
+                env[key] = value
+        return env
+    # Fallback for systems where env -0 is not available.
+    # Detect new KEY=VALUE pairs by matching lines that start with a
+    # valid variable name followed by '='. Lines that don't match are
+    # treated as continuation of the previous value.
+    env = {}
+    key = None
+    value_lines: list[str] = []
+    for line in g1.split("\n"):
+        m = _ENV_LINE_KEY_RE.match(line)
+        if m:
+            if key is not None:
+                env[key] = "\n".join(value_lines)
+            key = m.group(1)
+            value_lines = [m.group(2)]
+        elif key is not None:
+            value_lines.append(line)
+    if key is not None:
+        env[key] = "\n".join(value_lines)
     return env
 
 
@@ -670,7 +708,7 @@ def load_foreign_aliases(shells):
         if not XSH.env.get("FOREIGN_ALIASES_OVERRIDE"):
             for alias in set(shaliases) & set(xonsh_aliases):
                 del shaliases[alias]
-                if XSH.env.get("XONSH_DEBUG") >= 1:
+                if XSH.env.get("XONSH_DEBUG", 0) >= 1:
                     print(
                         f"aliases: ignoring alias {alias!r} of shell {shell['shell']!r} "
                         "which tries to override xonsh alias.",

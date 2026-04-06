@@ -666,6 +666,9 @@ class BaseParser:
         elif "g" in searchfunc:
             func = "__xonsh__.globsearch"
             pathobj = "p" in searchfunc
+        elif "m" in searchfunc:
+            func = "__xonsh__.regexmatchsearch"
+            pathobj = False
         else:
             func = "__xonsh__.regexsearch"
             pathobj = "p" in searchfunc

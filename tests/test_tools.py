@@ -31,6 +31,7 @@ from xonsh.tools import (
     bool_to_str,
     check_for_partial_string,
     check_quotes,
+    columnize,
     deprecated,
     dynamic_cwd_tuple_to_str,
     ends_with_colon_token,
@@ -1276,6 +1277,8 @@ def test_is_bool_or_int(inp, exp):
         ("f", False),
         ("0", 0),
         ("10", 10),
+        ("-1", -1),
+        ("-42", -42),
     ],
 )
 def test_to_bool_or_int(inp, exp):
@@ -1522,6 +1525,19 @@ def test_logfile_opt_to_str(inp, exp):
 def test_to_dynamic_cwd_tuple(inp, exp):
     obs = to_dynamic_cwd_tuple(inp)
     assert exp == obs
+
+
+def test_to_dynamic_cwd_tuple_empty_string():
+    with pytest.raises(ValueError):
+        to_dynamic_cwd_tuple("")
+
+
+def test_columnize_nrows_zero():
+    """Width so large that nrows hits 0 — must not infinite-loop."""
+    result = columnize(["a", "b"], width=100000)
+    assert len(result) == 1
+    assert "a" in result[0]
+    assert "b" in result[0]
 
 
 @pytest.mark.parametrize(

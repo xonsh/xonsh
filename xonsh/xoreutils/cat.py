@@ -61,31 +61,37 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1, read_timeout=0.
         f = xpp.NonBlockingFDReader(fobj.fileno(), timeout=read_timeout)
     sep = os.linesep.encode(enc, enc_errors)
     last_was_blank = False
-    while file_size is None or read_size < file_size:
-        try:
-            last_was_blank, line_count, read_size, endnow = _cat_line(
-                f,
-                sep,
-                last_was_blank,
-                line_count,
-                opts,
-                out,
-                enc,
-                enc_errors,
-                read_size,
-            )
-            if endnow:
+    errors = 0
+    try:
+        while file_size is None or read_size < file_size:
+            try:
+                last_was_blank, line_count, read_size, endnow = _cat_line(
+                    f,
+                    sep,
+                    last_was_blank,
+                    line_count,
+                    opts,
+                    out,
+                    enc,
+                    enc_errors,
+                    read_size,
+                )
+                errors = 0
+                if endnow:
+                    break
+                if last_was_blank:
+                    time.sleep(1e-3)
+            except KeyboardInterrupt:
+                print("got except", flush=True, file=out)
                 break
-            if last_was_blank:
-                time.sleep(1e-3)
-        except KeyboardInterrupt:
-            print("got except", flush=True, file=out)
-            break
-        except Exception as e:
-            print("xonsh:", e, flush=True, file=out)
-            pass
-    if fobj is not None:
-        fobj.close()
+            except Exception as e:
+                errors += 1
+                print("xonsh:", e, flush=True, file=out)
+                if errors > 10:
+                    break
+    finally:
+        if fobj is not None:
+            fobj.close()
     return False, line_count
 
 

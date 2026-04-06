@@ -430,6 +430,13 @@ class PopenThread(threading.Thread):
         if frame is not None:
             self._disable_cbreak_stdin()
 
+    def _restore_sigwinch(self):
+        old = self.old_winch_handler
+        if old is not None:
+            if xt.on_main_thread():
+                signal.signal(signal.SIGWINCH, old)
+            self.old_winch_handler = None
+
     #
     # cbreak mode handlers
     #
@@ -483,9 +490,6 @@ class PopenThread(threading.Thread):
         rtn = self.proc.wait(timeout=timeout)
         self.join()
         # need to replace the old signal handlers somewhere...
-        if self.old_winch_handler is not None and xt.on_main_thread():
-            signal.signal(signal.SIGWINCH, self.old_winch_handler)
-            self.old_winch_handler = None
         self._clean_up()
         return rtn
 
@@ -493,6 +497,7 @@ class PopenThread(threading.Thread):
         self._restore_sigint()
         self._restore_sigtstp()
         self._restore_sigquit()
+        self._restore_sigwinch()
 
     @property
     def returncode(self):

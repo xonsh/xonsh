@@ -256,3 +256,51 @@ def test_run_alias_by_params():
         None,
         4,
     )
+
+
+def test_env_overlay_shadows_global(xession):
+    """env overlay has priority over global env for reads."""
+    xession.env["X"] = "global"
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        alias_env["X"] = "local"
+        assert xession.env["X"] == "local"
+    assert xession.env["X"] == "global"
+
+
+def test_env_overlay_global_write_persists(xession):
+    """Direct writes to env persist after overlay is removed."""
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        alias_env["LOCAL"] = 1
+        xession.env["GLOBAL"] = 2
+    assert "LOCAL" not in xession.env
+    assert xession.env["GLOBAL"] == 2
+
+
+def test_env_overlay_visible_in_detype(xession):
+    """Overlay values are included in detype() for subprocesses."""
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        alias_env["MY_VAR"] = "from_overlay"
+        detyped = xession.env.detype()
+        assert detyped["MY_VAR"] == "from_overlay"
+
+
+def test_env_overlay_thread_isolation(xession):
+    """Overlay in one thread is not visible in another."""
+    from threading import Thread
+
+    alias_env = {"THREAD_VAR": "yes"}
+    visible_in_other = []
+
+    def check():
+        visible_in_other.append("THREAD_VAR" in xession.env)
+
+    with xession.env.swap(overlay=alias_env):
+        t = Thread(target=check)
+        t.start()
+        t.join()
+        assert xession.env["THREAD_VAR"] == "yes"
+
+    assert visible_in_other == [False]
