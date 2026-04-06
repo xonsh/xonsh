@@ -139,7 +139,7 @@ class Execer:
             # Some syntax errors do not occur during parsing, but only later during compiling,
             # such as a "'return' outside function", or some validations regarding the match statement.
             # In such a case, the offending line of source code (e.text) is not attached to the exception.
-            if e.text is None:
+            if e.text is None and e.lineno is not None:
                 lines = input.splitlines()
                 i = max(
                     0, min(e.lineno - 1, len(lines) - 1)
