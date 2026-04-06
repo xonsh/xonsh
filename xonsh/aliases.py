@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Literal
 
 import xonsh.completers._aliases as xca
-import xonsh.history.main as xhm
 import xonsh.xoreutils.which as xxw
 import xonsh.xoreutils.xcontext as xxt
 from xonsh.built_ins import XSH
@@ -1139,6 +1138,15 @@ def _output_to_path_objects(lines):
         return None
 
 
+def _history_main(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
+    """Lazy wrapper that defers xonsh.history.main import until first use."""
+    import xonsh.history.main as xhm
+
+    return xhm.history_main(
+        args, stdin=stdin, stdout=stdout, stderr=stderr, spec=spec, stack=stack
+    )
+
+
 def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
@@ -1168,7 +1176,7 @@ def make_default_aliases():
         ),
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
-        "history": xhm.history_main,
+        "history": _history_main,
         "trace": trace,
         "timeit": timeit_alias,
         "xonfig": xonfig,

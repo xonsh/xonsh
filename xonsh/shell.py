@@ -5,10 +5,8 @@ import sys
 import time
 import warnings
 
-import xonsh.history.main as xhm
 from xonsh.built_ins import XSH
 from xonsh.events import events
-from xonsh.history.dummy import DummyHistory
 from xonsh.platform import (
     best_shell_type,
     has_prompt_toolkit,
@@ -294,6 +292,7 @@ class Shell:
 
         # build history backend before creating shell
         if env.get("XONSH_INTERACTIVE"):
+            import xonsh.history.main as xhm
             XSH.history = hist = xhm.construct_history(
                 env=env.detype(),
                 ts=[time.time(), None],
@@ -304,6 +303,8 @@ class Shell:
             )
             env["XONSH_HISTORY_FILE"] = hist.filename
         else:
+            from xonsh.history.dummy import DummyHistory
+
             XSH.history = hist = DummyHistory()
             env["XONSH_HISTORY_FILE"] = None
 
