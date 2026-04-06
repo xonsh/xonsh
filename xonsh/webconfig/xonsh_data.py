@@ -151,6 +151,13 @@ def get_initial(env, prompt_format, fields):
     }
 
 
+def _prompt_visual_width(rendered):
+    """Max line width of a rendered prompt, excluding color tokens."""
+    tokens = partial_color_tokenize(rendered)
+    lines = "".join(s for _, s in tokens).split("\n")
+    return max(len(line) for line in lines)
+
+
 def render_prompts(env):
     prompt_format = PromptFormatter()
     fields = dict(env.get("PROMPT_FIELDS") or {})
@@ -165,9 +172,12 @@ def render_prompts(env):
         branch_color="{BOLD_INTENSE_RED}",
         localtime="15:56:07",
     )
+    max_width = 0
     yield get_initial(env, prompt_format, fields)
     for name, template in get_named_prompts():
-        display = html_format(prompt_format(template, fields=fields))
+        rendered = prompt_format(template, fields=fields)
+        max_width = max(max_width, _prompt_visual_width(rendered))
+        display = html_format(rendered)
         yield (
             name,
             {
@@ -175,6 +185,7 @@ def render_prompts(env):
                 "display": escape(display),
             },
         )
+    yield "__max_width__", max_width
 
 
 def render_colors():
@@ -190,7 +201,6 @@ def render_colors():
     lexer = XonshLexer()
     lexer.add_filter("tokenmerge")
     token_stream = list(pygments.lex(source, lexer=lexer))
-    token_stream = [(t, s.replace("\n", "\\n")) for t, s in token_stream]
     styles = sorted(get_all_styles())
     styles.insert(0, styles.pop(styles.index("default")))
     for style in styles:
@@ -201,7 +211,7 @@ def render_colors():
                 f"Failed to format Xonsh code {ex!r}. {style!r}", exc_info=True
             )
             display = source
-        yield style, escape(display)
+        yield style, display
 
 
 def format_xontrib(xontrib: Xontrib):
