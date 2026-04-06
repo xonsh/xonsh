@@ -950,7 +950,7 @@ class DynamicAccessProxy:
         return getattr(self.obj, name)
 
     def __setattr__(self, name, value):
-        return super().__setattr__(name, value)
+        return setattr(self.obj, name, value)
 
     def __delattr__(self, name):
         return delattr(self.obj, name)
