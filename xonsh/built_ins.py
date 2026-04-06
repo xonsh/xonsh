@@ -96,7 +96,7 @@ def superhelper(x, name=""):
     return x
 
 
-def reglob(path, parts=None, i=None):
+def reglob(path, parts=None, i=None, include_dotfiles=False):
     """Regular expression-based globbing."""
     if parts is None:
         path = os.path.normpath(path)
@@ -104,7 +104,7 @@ def reglob(path, parts=None, i=None):
         parts = tail.split(os.sep)
         d = os.sep if os.path.isabs(path) else "."
         d = os.path.join(drive, d)
-        return reglob(d, parts, i=0)
+        return reglob(d, parts, i=0, include_dotfiles=include_dotfiles)
     base = subdir = path
     if i == 0:
         if not os.path.isabs(base):
@@ -113,13 +113,14 @@ def reglob(path, parts=None, i=None):
             i += 1
     try:
         regex = re.compile(parts[i])
-    except Exception as e:
-        if isinstance(e, re.error) and str(e) == "nothing to repeat at position 0":
-            raise XonshError(
-                "Consider adding a leading '.' to your glob regex pattern."
-            ) from e
-        else:
-            raise e
+    except re.error as e:
+        original = "/".join(parts)
+        raise XonshError(
+            f"Regex glob error in segment {parts[i]!r} of pattern {original!r}: {e}. "
+            f"Regex globs are split by '/' and each segment is compiled separately, "
+            f"so groups and backreferences cannot span across '/'. "
+            f"See https://xon.sh/globbing.html"
+        ) from e
 
     files = os.listdir(subdir)
     files.sort()
@@ -127,15 +128,19 @@ def reglob(path, parts=None, i=None):
     i1 = i + 1
     if i1 == len(parts):
         for f in files:
+            if not include_dotfiles and f.startswith("."):
+                continue
             p = os.path.join(base, f)
             if regex.fullmatch(f) is not None:
                 paths.append(p)
     else:
         for f in files:
+            if not include_dotfiles and f.startswith("."):
+                continue
             p = os.path.join(base, f)
             if regex.fullmatch(f) is None or not os.path.isdir(p):
                 continue
-            paths += reglob(p, parts=parts, i=i1)
+            paths += reglob(p, parts=parts, i=i1, include_dotfiles=include_dotfiles)
     return paths
 
 
@@ -194,7 +199,8 @@ def path_literal(s):
 
 def regexsearch(s):
     s = expand_path(s)
-    return reglob(s)
+    dotglob = XSH.env.get("DOTGLOB")
+    return reglob(s, include_dotfiles=dotglob)
 
 
 def globsearch(s):
