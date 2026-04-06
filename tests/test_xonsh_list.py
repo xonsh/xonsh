@@ -1,6 +1,5 @@
 """Tests for XonshList — extended list returned by glob operations."""
 
-import os
 import pathlib
 
 import pytest
@@ -152,13 +151,15 @@ class TestChaining:
         (tmp_path / "a.py").touch()
         (tmp_path / "b.py").touch()
         (tmp_path / "c.txt").touch()
-        xl = XonshList([
-            str(tmp_path / "b.py"),
-            str(tmp_path / "a.py"),
-            str(tmp_path / "a.py"),
-            str(tmp_path / "gone.py"),
-            str(tmp_path / "c.txt"),
-        ])
+        xl = XonshList(
+            [
+                str(tmp_path / "b.py"),
+                str(tmp_path / "a.py"),
+                str(tmp_path / "a.py"),
+                str(tmp_path / "gone.py"),
+                str(tmp_path / "c.txt"),
+            ]
+        )
         result = xl.exists().unique().sorted().paths()
         assert result == [
             pathlib.Path(tmp_path / "a.py"),
