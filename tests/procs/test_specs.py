@@ -378,6 +378,24 @@ def test_spec_decorator_alias_output_format(xession):
     assert p.output == ["1", "2", "3"]
 
 
+def test_resolve_stack_with_var_keyword(xession):
+    """resolve_stack must compute stack for aliases with **kwargs signature (e.g. LazyCallable)."""
+    from xonsh.lib.lazyasd import LazyCallable
+
+    received_stack = []
+
+    def real_alias(args, stack=None, **kwargs):
+        received_stack.append(stack)
+
+    lazy = LazyCallable(lambda: real_alias)
+    xession.aliases["tst"] = lazy
+
+    run_subproc([["tst"]])
+    assert received_stack[0] is not None, (
+        "stack must not be None for aliases with **kwargs (e.g. LazyCallable)"
+    )
+
+
 @pytest.mark.parametrize("thread_subprocs", [False, True])
 def test_callable_alias_cls(thread_subprocs, xession):
     class Cls:

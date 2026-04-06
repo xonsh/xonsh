@@ -900,7 +900,10 @@ class SubprocSpec:
             return
         # check that we actual need the stack
         sig = inspect.signature(getattr(self.alias, "func", self.alias))
-        if len(sig.parameters) <= 5 and "stack" not in sig.parameters:
+        has_var_keyword = any(
+            p.kind == p.VAR_KEYWORD for p in sig.parameters.values()
+        )
+        if not has_var_keyword and len(sig.parameters) <= 5 and "stack" not in sig.parameters:
             return
         # compute the stack, and filter out these build methods
         # run_subproc() is the 4th command in the stack
