@@ -16,6 +16,7 @@ from xonsh.built_ins import (
     ensure_list_of_strs,
     enter_macro,
     expand_path,
+    globsearch,
     helper,
     in_macro_call,
     list_of_list_of_strs_outer_product,
@@ -62,6 +63,52 @@ def test_reglob_tests(testfile):
     assert testfile.startswith("test_")
 
 
+@skip_if_on_windows
+class TestDotglob:
+    """Test that $DOTGLOB is respected uniformly by all globbing forms."""
+
+    @pytest.fixture(autouse=True)
+    def glob_tree(self, tmp_path, xession):
+        (tmp_path / "visible").touch()
+        (tmp_path / ".hidden").touch()
+        self.tmp = tmp_path
+        self.xession = xession
+
+    def _basenames(self, paths):
+        return {os.path.basename(p) for p in paths}
+
+    def _glob(self):
+        return self._basenames(globsearch(str(self.tmp / "*")))
+
+    def _reglob(self):
+        results = regexsearch(str(self.tmp / ".*"))
+        return self._basenames(results)
+
+    def test_glob_excludes_dotfiles_by_default(self):
+        self.xession.env["DOTGLOB"] = False
+        assert ".hidden" not in self._glob()
+
+    def test_glob_includes_dotfiles_when_enabled(self):
+        self.xession.env["DOTGLOB"] = True
+        assert ".hidden" in self._glob()
+
+    def test_reglob_excludes_dotfiles_by_default(self):
+        self.xession.env["DOTGLOB"] = False
+        assert ".hidden" not in self._reglob()
+
+    def test_reglob_includes_dotfiles_when_enabled(self):
+        self.xession.env["DOTGLOB"] = True
+        assert ".hidden" in self._reglob()
+
+    def test_all_forms_agree(self):
+        """Both glob and reglob must give the same answer for $DOTGLOB."""
+        for dotglob in (False, True):
+            self.xession.env["DOTGLOB"] = dotglob
+            glob_has_hidden = ".hidden" in self._glob()
+            reglob_has_hidden = ".hidden" in self._reglob()
+            assert glob_has_hidden == reglob_has_hidden == dotglob
+
+
 @pytest.fixture
 def home_env(xession):
     """Set `__xonsh__.env ` to a new Env instance on `xonsh_builtins`"""
@@ -93,6 +140,7 @@ def test_repath_HOME_PATH_itself(home_env):
 
 @skip_if_on_windows
 def test_repath_HOME_PATH_contents(home_env):
+    home_env.env["DOTGLOB"] = True
     exp = os.listdir(HOME_PATH)
     exp = {os.path.join(HOME_PATH, p) for p in exp}
     obs = set(pathsearch(regexsearch, "~/.*"))
