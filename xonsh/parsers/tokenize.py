@@ -1243,7 +1243,9 @@ def _tokenize(
 
                 continue  # re-enter the while pos < max loop
 
-            pseudomatch = (_pseudo_re_subproc if is_subproc else _pseudo_re).match(line, pos)
+            pseudomatch = (_pseudo_re_subproc if is_subproc else _pseudo_re).match(
+                line, pos
+            )
             if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
                 spos, epos, pos = (lnum, start), (lnum, end), end
