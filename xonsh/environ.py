@@ -2264,6 +2264,10 @@ class Env(cabc.MutableMapping):
         # sentinel value for non existing envvars
         self._no_value = object()
         self._orig_env = None
+        # Thread-local storage for overlay stacks. Used by callable aliases
+        # to provide scoped env variables that shadow the global env
+        # during alias execution. See push_overlay()/pop_overlay().
+        self._overlay_local = threading.local()
         self._vars = {k: v for k, v in DEFAULT_VARS.items()}
 
         if len(args) == 0 and len(kwargs) == 0:
@@ -2290,10 +2294,14 @@ class Env(cabc.MutableMapping):
         Note! If env variable wasn't explicitly set (e.g. the value has default value in ``Xettings``)
         it will be not in this list.
         """
-        if self._detyped is not None:
+        if self._detyped is not None and not self._overlay_stack:
             return self._detyped
         ctx = {}
-        for key, val in self._d.items():
+        items = dict(self._d)
+        # Apply overlay values on top (most recent overlay wins)
+        for overlay in self._overlay_stack:
+            items.update(overlay)
+        for key, val in items.items():
             if not isinstance(key, str):
                 key = str(key)
             detyper = self.get_detyper(key)
@@ -2308,7 +2316,8 @@ class Env(cabc.MutableMapping):
                 # cannot be detyped
                 continue
             ctx[key] = deval
-        self._detyped = ctx
+        if not self._overlay_stack:
+            self._detyped = ctx
         return ctx
 
     def detype_all(self):
@@ -2499,12 +2508,16 @@ class Env(cabc.MutableMapping):
         return varname in self._d
 
     @contextlib.contextmanager
-    def swap(self, other=None, **kwargs):
+    def swap(self, other=None, overlay=None, **kwargs):
         """Provides a context manager for temporarily swapping out certain
         environment variables with other values. On exit from the context
         manager, the original values are restored.
         The changes are only applied to the current thread, so that they don't leak between threads.
         To get the thread-local overrides use `get_swapped_values` and `set_swapped_values`.
+
+        If ``overlay`` is provided (a dict), it is pushed as a thread-local
+        overlay that shadows both swapped and global values on reads.
+        Callable aliases use this to provide scoped ``env`` variables.
         """
         old = {}
         # single positional argument should be a dict-like object
@@ -2517,12 +2530,16 @@ class Env(cabc.MutableMapping):
             old[k] = self.get(k, NotImplemented)
             self._set_item(k, v, thread_local=True)
 
+        if overlay is not None:
+            self._overlay_stack.append(overlay)
         exception = None
         try:
             yield self
         except Exception as e:
             exception = e
         finally:
+            if overlay is not None:
+                self._overlay_stack.pop()
             # restore the values
             for k, v in old.items():
                 if v is NotImplemented:
@@ -2542,10 +2559,21 @@ class Env(cabc.MutableMapping):
     # Mutable mapping interface
     #
 
+    @property
+    def _overlay_stack(self):
+        stacks = self._overlay_local.__dict__
+        if "stack" not in stacks:
+            stacks["stack"] = []
+        return stacks["stack"]
+
     def __getitem__(self, key):
         if key is Ellipsis:
             return self
-        elif key in self._d:
+        # Check overlay stack top-down (most recent first)
+        for overlay in reversed(self._overlay_stack):
+            if key in overlay:
+                return overlay[key]
+        if key in self._d:
             val = self._d[key]
         elif key in self._vars and self._vars[key].default is not DefaultNotGiven:
             val = self.get_default(key)
@@ -2693,6 +2721,9 @@ class Env(cabc.MutableMapping):
                 yield key
 
     def __contains__(self, item):
+        for overlay in reversed(self._overlay_stack):
+            if item in overlay:
+                return True
         return item in self._d or (
             item in self._vars and self._vars[item].default is not DefaultNotGiven
         )
@@ -3206,6 +3237,12 @@ class EnvPath(cabc.MutableSequence):
 
 def save_origin_env_to_file(env, session_id):
     data_dir = env.get("XONSH_DATA_DIR", None)
+    if data_dir is None:
+        print(
+            "xonsh: $XONSH_DATA_DIR is not set, skipping origin env save",
+            file=sys.stderr,
+        )
+        return
     env_file_name = Path(data_dir) / f"origin-env-{session_id}.json"
 
     if os.access(env_file_name.parent, os.W_OK):

@@ -267,14 +267,8 @@ def subsequence_match(ref, typed, csc):
 
 
 def _subsequence_match_iter(ref, typed):
-    if len(typed) == 0:
-        return True
-    elif len(ref) == 0:
-        return False
-    elif ref[0] == typed[0]:
-        return _subsequence_match_iter(ref[1:], typed[1:])
-    else:
-        return _subsequence_match_iter(ref[1:], typed)
+    it = iter(ref)
+    return all(c in it for c in typed)
 
 
 def _expand_one(sofar, nextone, csc):
