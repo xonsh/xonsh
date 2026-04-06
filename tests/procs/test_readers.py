@@ -86,7 +86,7 @@ class TestBufferedFDParallelReader:
 
 class TestSafeFdclose:
     def test_close_file_handle(self):
-        f = open(os.devnull, "r")
+        f = open(os.devnull)
         safe_fdclose(f)
         assert f.closed
 
@@ -109,7 +109,7 @@ class TestSafeFdclose:
         safe_fdclose(2)  # must not close fd 2 (stderr)
 
     def test_cache(self):
-        f = open(os.devnull, "r")
+        f = open(os.devnull)
         cache = {}
         safe_fdclose(f, cache=cache)
         assert cache[f] is True
