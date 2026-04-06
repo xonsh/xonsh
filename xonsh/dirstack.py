@@ -6,6 +6,7 @@ import contextlib
 import glob
 import os
 import subprocess
+import sys
 import typing as tp
 
 from xonsh.built_ins import XSH
@@ -176,11 +177,9 @@ def _change_working_directory(newdir, follow_symlinks=False):
 
     try:
         os.chdir(absnew)
-    except OSError:
-        if new.endswith(get_sep()):
-            new = new[:-1]
-        if os.path.basename(new) == "..":
-            env["PWD"] = new
+    except OSError as e:
+        print(f"cd: {e}", file=sys.stderr)
+        return
     else:
         if old is not None:
             env["OLDPWD"] = old
