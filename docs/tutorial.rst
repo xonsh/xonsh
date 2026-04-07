@@ -1694,17 +1694,85 @@ written in pure Python.
     <json help>
     <json.loads help>
 
-It works for subprocess commands as well:
+It works for subprocess commands as well. Behavior depends on whether
+the name is a **binary** on ``$PATH`` or an **alias**:
+
+For a binary, ``?`` prints just the resolved path; ``??`` additionally
+runs ``man``:
 
 .. code-block:: xonshcon
 
     @ whoami?
-    whoami - print effective user name
+    Resolved whoami: '/usr/bin/whoami'
+
+    @ whoami??
+    Resolved whoami: '/usr/bin/whoami'
+    Running man whoami
+    WHOAMI(1)                   General Commands Manual                  WHOAMI(1)
+    …
+
+When the name does not resolve to any binary, ``??`` no longer falls
+through to ``man`` — the failed resolution is printed on its own line:
+
+.. code-block:: xonshcon
+
+    @ nosuch?
+    Resolved nosuch: None
+
+For an alias, ``?`` gives a short summary and ``??`` adds the
+docstring, threadable/capturable flags (when set), the source file
+location and — the new bit — **the function source code** for
+callable aliases, fetched via ``inspect.getsource``:
+
+.. code-block:: xonshcon
+
     @ ls?
-    ['ls', '-G']
+    Alias: ['ls', '-G']
+
     @ xonfig?
-    <xonsh.xonfig.XonfigAlias>
-    Manage xonsh configuration.
+    Alias: <xonsh.xonfig.XonfigAlias>
+    Descr: Manage xonsh configuration.
+
+Define a callable alias and ask for the super-help form:
+
+.. code-block:: xonshcon
+
+    @ # ~/.xonshrc
+      @aliases.register
+      def _greet(args):
+          """Print a friendly greeting."""
+          print("hello,", *args)
+
+    @ greet?
+    Alias: FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
+    Descr: Print a friendly greeting.
+
+    @ greet??
+    Alias: FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
+    Descr: Print a friendly greeting.
+    Source: /home/snail/.xonshrc:1
+    Code:
+    @aliases.register
+    def _greet(args):
+        """Print a friendly greeting."""
+        print("hello,", *args)
+
+List-style aliases expand recursively through other aliases, and you
+can see where the leading token resolves on disk:
+
+.. code-block:: xonshcon
+
+    @ aliases['lst']  = ['ls', '-la']
+    @ aliases['lst2'] = ['lst', '/tmp']
+    @ lst2??
+    Alias: ['lst', '/tmp']
+    Expanded: ['ls', '-G', '-la', '/tmp']
+    Resolved ls: '/opt/homebrew/.../ls'
+
+For callable aliases defined interactively in the REPL, ``inspect``
+has no source file to read from (``co_filename`` is ``<stdin>``), so
+``Code:`` is replaced with a ``<source unavailable>`` placeholder
+while ``Source:`` still shows where the function was declared.
 
 That's All, Folks
 ======================
