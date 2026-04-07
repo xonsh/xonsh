@@ -2335,12 +2335,54 @@ def check_for_partial_string(x):
     quote : str (or None)
         A string containing the quote used to start the string (e.g., b", ",
         '''), or None if no string was found.
+
+    Notes
+    -----
+    This is a regex-based scanner, not a full Python tokenizer. It correctly
+    handles `#` comments at the top level (quotes inside `#...\n` are ignored)
+    and `#` inside string literals (which are part of the string, not a
+    comment). Known limitations / cases NOT covered:
+
+    * PEP 701 f-strings with nested quotes of the same kind, e.g.
+      ``f"{ "hi" }"`` (Python 3.12+). The scanner sees this as two separate
+      strings (``f"{ "`` and ``" }"``) instead of one f-string. Quotes of a
+      *different* kind nested inside f-string expressions work fine.
+    * Brace-balancing inside f-string expressions in general — anything that
+      relies on knowing where ``{ ... }`` starts and ends is out of scope.
+    * Comment characters that are not ``#`` (xonsh has no others, but other
+      shells' line-comment markers are not recognized).
+    * Line continuation inside ``#`` comments — irrelevant since Python
+      comments always end at the next newline regardless of any trailing
+      backslash.
+    * Arbitrary Python tokenization errors: malformed input (e.g. four
+      double-quotes in a row) may be reported as a partial triple-quoted
+      string rather than a syntax error; downstream code is responsible for
+      validating syntax.
+
+    Improvements are welcome!
     """
     string_indices = []
     starting_quote = []
     current_index = 0
-    match = re.search(RE_BEGIN_STRING, x)
-    while match is not None:
+    while True:
+        match = re.search(RE_BEGIN_STRING, x)
+        if match is None:
+            break
+        # If the match is inside a `#` comment (i.e. there is a `#` between
+        # the most recent newline and the match), skip the rest of that
+        # comment line and search again. This avoids treating quotes inside
+        # comments as string delimiters.
+        prefix = x[: match.start()]
+        line_prefix = prefix[prefix.rfind("\n") + 1 :]
+        if "#" in line_prefix:
+            nl_after = x.find("\n", match.start())
+            if nl_after < 0:
+                # rest of input is a comment; no more strings to find
+                break
+            offset = nl_after + 1
+            current_index += offset
+            x = x[offset:]
+            continue
         # add the start in
         start = match.start()
         quote = match.group(0)
@@ -2365,8 +2407,6 @@ def check_for_partial_string(x):
         if contents.end() < len(x):
             string_indices.append(current_index)
         x = x[leninside + len(ender) :]
-        # find the next match
-        match = re.search(RE_BEGIN_STRING, x)
     numquotes = len(string_indices)
     if numquotes == 0:
         return (None, None, None)
