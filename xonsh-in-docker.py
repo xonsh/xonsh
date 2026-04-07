@@ -7,7 +7,6 @@ import shutil
 import subprocess
 import sys
 
-
 PROGRAM_DESCRIPTION = (
     "Build and run Xonsh in a fresh, controlled environment "
     "using docker or podman."
