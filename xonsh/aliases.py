@@ -768,10 +768,10 @@ def source_alias_fn(
             fpath = locate_file(fname)
             if fpath is None:
                 if env.get("XONSH_DEBUG"):
-                    print(f"source: {fname}: No such file", file=sys.stderr)
+                    print(f"source: {fname!r}: No such file", file=sys.stderr)
                 if i == 0:
                     raise RuntimeError(
-                        "must source at least one file, " + fname + " does not exist."
+                        f"must source at least one file, {fname!r} does not exist."
                     )
                 break
         _, fext = os.path.splitext(fpath)
@@ -780,7 +780,7 @@ def source_alias_fn(
             fext = name  # hidden file with no extension
         if not ignore_ext and fext not in {".xsh", ".py", ".xonshrc"}:
             raise RuntimeError(
-                f"attempting to source file with non-xonsh extension {repr(name)}! "
+                f"attempting to source file with non-xonsh extension {name!r}! "
                 f"If you are trying to source a file in another language, "
                 "then please use the appropriate source command "
                 "e.g. `source-bash script.sh`. "
@@ -800,7 +800,7 @@ def source_alias_fn(
                 XSH.builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
                 print_color(
-                    "{RED}You may be attempting to source non-xonsh file! "
+                    f"{RED}You may be attempting to source non-xonsh file: {fpath!r}"
                     "{RESET}If you are trying to source a file in "
                     "another language, then please use the appropriate "
                     "source command. For example, {GREEN}`source-bash "
