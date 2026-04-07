@@ -16,23 +16,89 @@ develop xonsh.
 Making Your First Change
 -------------------------
 
-First, install xonsh from source and open a xonsh shell in your favorite
-terminal application. See installation instructions for details, but it
-is recommended to do an 'editable' install via ``pip``
+Terminal-based workflow
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The simplified terminal-based workflow to contribute to xonsh:
 
 .. code-block:: bash
 
-    pip install -U 'pip>=25.1'
-    pip install -e '.[dev]'
+    mkdir -p ~/git && cd ~/git
+    # For example your name is `snail` and you forked https://github.com/xonsh/xonsh on Github
+    git clone git@github.com:snail/xonsh.git
+    # You can setup IDE (see next section) to extremely speed up the work and test.
+    cd xonsh
 
-Next, make a trivial change (e.g. ``print("hello!")`` in ``main.py``).
+    # Set git user name. Without `--global` it will work in local repository.
+    git config user.name "Snail"
+    git config user.email "snail@email.com"
 
-Finally, run the following commands. You should see the effects of your change
-(e.g. ``hello!``):
+    # Create your feature or fix branch.
+    git checkout -b my_awesome_feature
 
-.. code-block:: bash
+    # Install dev packages.
+    # python -m ensurepip --upgrade  # install pip if you have python without pip
+    pip install -U pip
+    pip install '.[dev]' '.[doc]'
 
-    env XONSH_DEBUG=1 xonsh
+    # Make changes: add new environment variable.
+    vim xonsh/environ.py
+    git add xonsh/environ.py
+
+    # Create test.
+    vim tests/environ.py
+    python -m pytest
+
+    # Live test.
+    python -m xonsh --no-rc
+
+    # Push
+    git commit -m "My new environment variable!"
+    git push
+
+    # Open https://github.com/xonsh/xonsh/pulls
+    # Use green button to open Pull Request (PR)
+    # Use Conventional Commits naming e.g.
+    # "feat: New env variable $SNAIL"
+
+IDE-based workflow
+^^^^^^^^^^^^^^^^^^
+
+You can also use IDE like PyCharm:
+
+1. Install IDE e.g. `PyCharm <https://www.jetbrains.com/pycharm/>`_.
+2. Go to ``File -> Project from Version Control -> URL`` https://github.com/xonsh/xonsh
+3. Go to the terminal and update pip and install full dependencies:
+
+   .. code-block:: xonsh
+
+       # Run from PyCharm terminal with appropriate environment.
+       python -m pip install -U pip  # you need pip >= 24
+       python -m pip install '.[full]' '.[dev]' '.[doc]'
+
+4. Setup IDE e.g. PyCharm:
+
+   .. code-block:: text
+
+       Create project based on xonsh code directory.
+       Click "Run" - "Run..." - "Edit Configurations"
+       Click "+" and choose "Python". Set:
+           Name: "xonsh --no-rc".
+           Run: choose "module" and write "xonsh".
+           Script parameters: "--no-rc -DFROM=PYCHARM" (here "FROM" will help to identify process using `ps ax | grep PYCHARM`).
+           Working directory: "/tmp"  # to avoid corrupting the source code during experiments
+           Environment variables: add ";XONSH_SHOW_TRACEBACK=1"
+           Modify options: click "Emulate terminal in output console".
+       Save settings.
+
+       Open `xonsh/procs/specs.py` and `def run_subproc` function.
+       Put breakpoint to `specs = cmds_to_specs` code. See also: https://www.jetbrains.com/help/pycharm/using-breakpoints.html
+       Click "Run" - "Debug..." - "xonsh". Now you can see xonsh prompt.
+       Run `echo 1` and now you're in the debug mode on the breakpoint.
+       Press F8 to step forward. Good luck!
+
+5. Create git branch and solve `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_ or `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_.
+6. Create pull request to xonsh.
 
 
 Changelog
