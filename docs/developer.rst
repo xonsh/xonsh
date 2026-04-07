@@ -100,8 +100,8 @@ xonsh follows `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ for all Python
 How to Test
 ------------
 
-Docker
-^^^^^^^
+Container
+^^^^^^^^^
 
 If you want to run your "work in progress version" without installing
 and in a fresh environment you can use Docker. If Docker is installed
@@ -112,17 +112,13 @@ you just have to run this:
     python xonsh-in-docker.py
 
 This will build and run the current state of the repository in an isolated
-container (it may take a while the first time you run it). There are two
-additional arguments you can pass this script.
-
-* The version of python
-* the version of ``prompt_toolkit``
-
-Example:
+container (it may take a while the first time you run it). You can override
+the default Python and ``prompt_toolkit`` versions with ``--python`` and
+``--ptk``:
 
 .. code-block:: bash
 
-    python docker.py 3.4 0.57
+    python xonsh-in-docker.py --python 3.11 --ptk 3.0.47
 
 Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
@@ -336,19 +332,9 @@ created by unit testing by running:
 Performing the Release
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-This is done through the `rever <https://github.com/regro/rever>`_. To get a list of the
-valid options use:
-
-.. code-block:: bash
-
-    pip install re-ver
-
-You can perform a full release:
-
-.. code-block:: bash
-
-    rever check
-    rever <version-number>
+Releases are automated via `GitHub Actions <https://github.com/xonsh/xonsh/tree/main/.github/workflows>`_.
+All workflows for testing, building Python packages, and producing AppImage
+binaries live in the ``.github/workflows`` directory of the repository.
 
 Cross-platform testing
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -396,6 +382,7 @@ Chronicle
 .. toctree::
     :titlesonly:
     :maxdepth: 1
+    :hidden:
 
     changelog
     talks_and_articles

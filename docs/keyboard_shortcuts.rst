@@ -84,4 +84,4 @@ Similar to ``exit``.
 Links
 -----
 
- - `Add your own key bindings <prompt_toolkit.html>`_
+ - `Add your own key bindings <prompt.html>`_

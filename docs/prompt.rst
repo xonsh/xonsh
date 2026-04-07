@@ -1,18 +1,23 @@
-.. _prompt_toolkit:
+.. _prompt:
 
-**************
-Prompt Toolkit
-**************
+******
+Prompt
+******
 
-xonsh uses `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_ as
-its primary interactive shell (``$SHELL_TYPE='prompt_toolkit'``). It provides
-syntax highlighting, multi-line editing, completion menus, and more.
-It is included when installing the full package (``pip install 'xonsh[full]'``).
-If prompt_toolkit is not available, xonsh falls back to the readline shell.
+xonsh ships with two prompt engines:
 
-This page covers prompt_toolkit-specific features and customization options
-available in xonsh. For full prompt_toolkit documentation, see the
-`official docs <https://python-prompt-toolkit.readthedocs.io/>`_.
+* **ptk** (``$SHELL_TYPE='prompt_toolkit'``) — the recommended, full-featured
+  engine built on `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_.
+  It provides syntax highlighting, multi-line editing, completion menus, custom
+  key bindings, and more. It is included when installing the full package
+  (``pip install 'xonsh[full]'``).
+* **readline** (``$SHELL_TYPE='readline'``) — a minimal fallback used when
+  ptk cannot be started for some reason (for example, when ``prompt_toolkit``
+  is not installed).
+
+This page describes features and customization options of the
+**ptk** engine. For the underlying library reference, see the
+`prompt_toolkit official docs <https://python-prompt-toolkit.readthedocs.io/>`_.
 
 
 .. _customprompt_ref:
@@ -178,6 +183,9 @@ ordinary format string. What we're doing here is equivalent to this expression:
 Custom Keybindings
 ==================
 
+For the list of default key bindings shipped with xonsh, see
+:doc:`keyboard_shortcuts`.
+
 The ``prompt_toolkit`` shell has a registry for handling custom keybindings. You
 may not like the default keybindings in xonsh, or you may want to add a new key
 binding.
@@ -185,7 +193,7 @@ binding.
 This section walks you through how to do this using ``prompt_toolkit`` tools to
 define keybindings and warns you about potential pitfalls.
 
-All of the code below can be entered into your `xonshrc <xonshrc.html>`_.
+All of the code below can be entered into your :doc:`xonshrc`.
 
 .. warning:: This will let you hook directly into the ``prompt_toolkit``
              keybinding manager. It will not stop you from rendering your
@@ -250,7 +258,7 @@ We'll start with a toy example that just inserts the text "hi" into the current 
         def say_hi(event):
             event.current_buffer.insert_text('hi')
 
-Put that in your `xonshrc <xonshrc.html>`_, restart xonsh and then see if
+Put that in your :doc:`xonshrc`, restart xonsh and then see if
 pressing ``Ctrl-w`` does anything (it should!)
 
 .. note:: It is also possible to write ``Keys.ControlW`` like ``c-w``.

@@ -170,7 +170,7 @@ series of lines. However, it can also return a JSON formatted string.
 
     @ history info
     sessionid: ace97177-f8dd-4a8d-8a91-a98ffd0b3d17
-    filename: /home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json
+    filename: /home/snail/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json
     length: 6
     buffersize: 100
     bufferlength: 6
@@ -179,7 +179,7 @@ series of lines. However, it can also return a JSON formatted string.
 
     @ history info --json
     {"sessionid": "ace97177-f8dd-4a8d-8a91-a98ffd0b3d17",
-     "filename": "/home/scopatz/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json",
+     "filename": "/home/snail/.local/share/xonsh/xonsh-ace97177-f8dd-4a8d-8a91-a98ffd0b3d17.json",
      "length": 7, "buffersize": 100, "bufferlength": 7}
 
 
@@ -199,16 +199,16 @@ the new and next examples, we see the diff looks like:
 .. code-block:: xonshcon
 
     @ history diff ~/new.json ~/next.json
-    --- /home/scopatz/new.json (35712b6f-4b15-4ef9-8ce3-b4c781601bc2) [unlocked]
+    --- /home/snail/new.json (35712b6f-4b15-4ef9-8ce3-b4c781601bc2) [unlocked]
     started: 2015-08-27 15:13:44.873869 stopped: 2015-08-27 15:13:44.918903 runtime: 0:00:00.045034
-    +++ /home/scopatz/next.json (70d7186e-3eb9-4b1c-8f82-45bb8a1b7967) [unlocked]
+    +++ /home/snail/next.json (70d7186e-3eb9-4b1c-8f82-45bb8a1b7967) [unlocked]
     started: 2015-08-27 15:15:09.423932 stopped: 2015-08-27 15:15:09.619098 runtime: 0:00:00.195166
 
     Environment
     -----------
     'PATH' is in both, but differs
-    - /home/scopatz/.local/bin:/home/scopatz/sandbox/bin:/home/scopatz/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/scopatz/origen22/code/
-    + /home/scopatz/.local/bin:/home/scopatz/sandbox/bin:/home/scopatz/miniconda3/bin:/home/scopatz/.local/bin:/home/scopatz/sandbox/bin:/home/scopatz/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/scopatz/origen22/code/:/home/scopatz/origen22/code/
+    - /home/snail/.local/bin:/home/snail/sandbox/bin:/home/snail/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/snail/origen22/code/
+    + /home/snail/.local/bin:/home/snail/sandbox/bin:/home/snail/miniconda3/bin:/home/snail/.local/bin:/home/snail/sandbox/bin:/home/snail/miniconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/snail/origen22/code/:/home/snail/origen22/code/
 
     'SHLVL' is in both, but differs
     - 2
@@ -231,8 +231,8 @@ the new and next examples, we see the diff looks like:
     cmd #5 in 35712b6f-4b15-4ef9-8ce3-b4c781601bc2 input is the same as
     cmd #5 in 70d7186e-3eb9-4b1c-8f82-45bb8a1b7967, but output differs:
     Outputs differ
-    - /home/scopatz/new.json
-    + /home/scopatz/next.json
+    - /home/snail/new.json
+    + /home/snail/next.json
 
 As can be seen, the diff has three sections.
 

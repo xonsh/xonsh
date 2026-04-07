@@ -96,16 +96,11 @@ python xonsh-in-docker.py
 ```
 
 This will build and run the current state of the repository in an isolated
-container (it may take a while the first time you run it). There are two
-additional arguments you can pass this script.
-
-* The version of python
-* the version of `prompt_toolkit`
-
-Example:
+container (it may take a while the first time you run it). You can override
+the default Python and `prompt_toolkit` versions with `--python` and `--ptk`:
 
 ```{prompt} bash
-python docker.py 3.4 0.57
+python xonsh-in-docker.py --python 3.11 --ptk 3.0.47
 ```
 
 Ensure your cwd is the root directory of the project (i.e., the one containing the

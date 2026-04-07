@@ -1537,7 +1537,7 @@ Colors work in prompts too:
 
     @ $PROMPT = '{CYAN}{cwd}{RESET} @ '
 
-See :doc:`prompt_toolkit` for the full list of color names, hex colors,
+See :doc:`prompt` for the full list of color names, hex colors,
 and modifiers (bold, italic, underline, etc.).
 
 Executing Commands and Scripts
