@@ -167,9 +167,22 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
         arg0_path = locate_executable(arg0)
         lines.append(f"{_label('Resolved ' + arg0 + ':')} {repr(arg0_path)}")
 
+    func = getattr(alias, "func", None)
+
+    # Docstring is shown for both ``?`` and ``??``.
+    # Read from the underlying function — FuncAlias instance falls through
+    # to the class docstring when the function has no doc.
+    if func is not None:
+        doc = getattr(func, "__doc__", "") or ""
+    elif isinstance(alias, (list, str)):
+        doc = ""
+    else:
+        doc = getattr(alias, "__doc__", "") or ""
+    if doc:
+        lines.append(f"{_label('Descr:')} {doc}")
+
     if superhelp:
         # FuncAlias-only metadata.
-        func = getattr(alias, "func", None)
         if func is not None:
             threadable = getattr(alias, "__xonsh_threadable__", None)
             capturable = getattr(alias, "__xonsh_capturable__", None)
@@ -178,18 +191,6 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
             if capturable is not None:
                 lines.append(f"{_label('Capturable:')} {capturable}")
 
-        # Read docstring from the underlying function (FuncAlias instance
-        # falls through to the class docstring when the function has no doc).
-        if func is not None:
-            doc = getattr(func, "__doc__", "") or ""
-        elif isinstance(alias, (list, str)):
-            doc = ""
-        else:
-            doc = getattr(alias, "__doc__", "") or ""
-        if doc:
-            lines.append(f"{_label('Descr:')} {doc}")
-
-        if func is not None:
             co = getattr(func, "__code__", None)
             if co is not None:
                 lines.append(
