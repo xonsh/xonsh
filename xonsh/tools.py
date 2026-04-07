@@ -2339,8 +2339,25 @@ def check_for_partial_string(x):
     string_indices = []
     starting_quote = []
     current_index = 0
-    match = re.search(RE_BEGIN_STRING, x)
-    while match is not None:
+    while True:
+        match = re.search(RE_BEGIN_STRING, x)
+        if match is None:
+            break
+        # If the match is inside a `#` comment (i.e. there is a `#` between
+        # the most recent newline and the match), skip the rest of that
+        # comment line and search again. This avoids treating quotes inside
+        # comments as string delimiters.
+        prefix = x[: match.start()]
+        line_prefix = prefix[prefix.rfind("\n") + 1 :]
+        if "#" in line_prefix:
+            nl_after = x.find("\n", match.start())
+            if nl_after < 0:
+                # rest of input is a comment; no more strings to find
+                break
+            offset = nl_after + 1
+            current_index += offset
+            x = x[offset:]
+            continue
         # add the start in
         start = match.start()
         quote = match.group(0)
@@ -2365,8 +2382,6 @@ def check_for_partial_string(x):
         if contents.end() < len(x):
             string_indices.append(current_index)
         x = x[leninside + len(ender) :]
-        # find the next match
-        match = re.search(RE_BEGIN_STRING, x)
     numquotes = len(string_indices)
     if numquotes == 0:
         return (None, None, None)
