@@ -876,7 +876,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     # this is also done to be consistent with python
     is_syntax_error = issubclass(exc_info[0], SyntaxError)
 
-    # XonshErrors don't show where in the users code they occured
+    # XonshErrors don't show where in the users code they occurred
     # (most are reported deeper in the callstack, e.g. see procs/pipelines.py),
     # but only show non-helpful xonsh internals.
     # These are only relevent when developing/debugging xonsh itself.
