@@ -118,7 +118,7 @@ the default Python and ``prompt_toolkit`` versions with ``--python`` and
 
 .. code-block:: bash
 
-    python xonsh-in-docker.py --python 3.11 --ptk 3.0.47
+    python xonsh-in-docker.py --python 3.13 --ptk 3.0.52
 
 Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
