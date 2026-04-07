@@ -599,18 +599,14 @@ class SubprocSpec:
                     return self.cls(["true"], bufsize=bufsize, **kwargs)
                 else:
                     resolved = locate_executable(cmdq)
-                    label = (
-                        "{YELLOW}Resolved " + cmdq + ":{RESET} " + repr(resolved)
-                    )
+                    label = "{YELLOW}Resolved " + cmdq + ":{RESET} " + repr(resolved)
                     if not superhelp or resolved is None:
                         xt.print_color(label)
                         return self.cls(["true"], bufsize=bufsize, **kwargs)
                     xt.print_color(label)
                     xt.print_color("{YELLOW}Running man " + cmdq + "{RESET}")
                     with contextlib.suppress(OSError):
-                        return self.cls(
-                            ["man", cmdq], bufsize=bufsize, **kwargs
-                        )
+                        return self.cls(["man", cmdq], bufsize=bufsize, **kwargs)
             e = f"xonsh: subprocess mode: command not found: {repr(cmd0)}"
             env = XSH.env
             sug = xt.suggest_commands(cmd0, env)

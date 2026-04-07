@@ -193,8 +193,7 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
             co = getattr(func, "__code__", None)
             if co is not None:
                 lines.append(
-                    f"{_label('Source:')} "
-                    f"{co.co_filename}:{co.co_firstlineno}"
+                    f"{_label('Source:')} {co.co_filename}:{co.co_firstlineno}"
                 )
             try:
                 src = inspect.getsource(func)
