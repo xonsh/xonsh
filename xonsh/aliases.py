@@ -879,7 +879,8 @@ def source_alias_fn(
                 XSH.builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
                 print_color(
-                    f"{RED}You may be attempting to source non-xonsh file: {fpath!r}"
+                    "{RED}You may be attempting to source non-xonsh file: "
+                    f"{fpath!r}"
                     "{RESET}If you are trying to source a file in "
                     "another language, then please use the appropriate "
                     "source command. For example, {GREEN}`source-bash "
