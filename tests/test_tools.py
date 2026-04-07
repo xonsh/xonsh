@@ -1609,11 +1609,11 @@ def test_partial_string_none(inp):
 
 
 CLASS_BLOCK_TPL = (
-    'class qwe:\n'
+    "class qwe:\n"
     '    """Asd"""\n'
-    '    def __init__(self):\n'
-    '        # {comment}\n'
-    '        pass\n'
+    "    def __init__(self):\n"
+    "        # {comment}\n"
+    "        pass\n"
 )
 
 
