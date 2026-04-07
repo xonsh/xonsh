@@ -592,54 +592,21 @@ class SubprocSpec:
             if len(self.cmd) == 1 and cmd0.endswith("?"):
                 superhelp = cmd0.endswith("??")
                 cmdq = cmd0[:-2] if superhelp else cmd0[:-1]
-                # Yellow ANSI escape for labels.
-                y, r = "\x1b[33m", "\x1b[0m"
                 if cmdq in XSH.aliases:
-                    alias = XSH.aliases[cmdq]
-                    lines = [f"{y}Alias:{r} {repr(alias)}"]
-                    # Expanded form (skip if expansion stops at a callable —
-                    # then only the alias name was replaced by the function
-                    # object itself, so it adds no info).
-                    try:
-                        expanded = XSH.aliases.get([cmdq])
-                    except Exception:
-                        expanded = None
-                    if expanded is not None and not callable(expanded[0]):
-                        lines.append(f"{y}Expanded:{r} {repr(list(expanded))}")
-                    # Resolved arg0 of the expanded list (when it's a string).
-                    if expanded and isinstance(expanded[0], str):
-                        arg0 = expanded[0]
-                        arg0_path = locate_executable(arg0)
-                        lines.append(
-                            f"{y}Resolved {arg0}:{r} {repr(arg0_path)}"
-                        )
-                    # Docstring is only shown on super-help.
-                    if superhelp:
-                        doc = (
-                            ""
-                            if isinstance(alias, (list, str))
-                            else getattr(alias, "__doc__", "") or ""
-                        )
-                        if doc:
-                            lines.append(f"{y}Descr:{r} {doc}")
-                    return self.cls(
-                        ["echo", "\n".join(lines)], bufsize=bufsize, **kwargs
-                    )
+                    from xonsh.aliases import print_alias_help
+
+                    print_alias_help(cmdq, superhelp=superhelp)
+                    return self.cls(["true"], bufsize=bufsize, **kwargs)
                 else:
                     resolved = locate_executable(cmdq)
-                    if not superhelp:
-                        return self.cls(
-                            [
-                                "echo",
-                                f"{y}Resolved {cmdq}:{r} {repr(resolved)}",
-                            ],
-                            bufsize=bufsize,
-                            **kwargs,
-                        )
-                    print(
-                        f"{y}Resolved {cmdq}:{r} {repr(resolved)}", flush=True
+                    label = (
+                        "{YELLOW}Resolved " + cmdq + ":{RESET} " + repr(resolved)
                     )
-                    print(f"{y}Running man {cmdq}{r}", flush=True)
+                    if not superhelp or resolved is None:
+                        xt.print_color(label)
+                        return self.cls(["true"], bufsize=bufsize, **kwargs)
+                    xt.print_color(label)
+                    xt.print_color("{YELLOW}Running man " + cmdq + "{RESET}")
                     with contextlib.suppress(OSError):
                         return self.cls(
                             ["man", cmdq], bufsize=bufsize, **kwargs

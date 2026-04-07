@@ -128,6 +128,86 @@ class FuncAlias:
         )
 
 
+def print_alias_help(name: str, superhelp: bool = False) -> None:
+    """Print info about an alias to the active shell.
+
+    Used by the ``cmd?``/``cmd??`` subprocess-mode help syntax.
+    Output is colorized via xonsh color tokens.
+
+    Parameters
+    ----------
+    name
+        Alias name (must be present in ``XSH.aliases``).
+    superhelp
+        If True (``cmd??``), include docstring, threadable/capturable
+        flags, source location and source code for ``FuncAlias``.
+    """
+    import xonsh.tools as xt
+    from xonsh.procs.executables import locate_executable
+
+    def _label(text):
+        return "{YELLOW}" + text + "{RESET}"
+
+    alias = XSH.aliases[name]
+    lines = [f"{_label('Alias:')} {repr(alias)}"]
+
+    # Expanded form (skip if expansion stops at a callable — then only the
+    # alias name was replaced by the function object itself, no extra info).
+    try:
+        expanded = XSH.aliases.get([name])
+    except Exception:
+        expanded = None
+    if expanded is not None and not callable(expanded[0]):
+        lines.append(f"{_label('Expanded:')} {repr(list(expanded))}")
+
+    # Resolved arg0 of the expanded list (only when arg0 is a string —
+    # callables have no path).
+    if expanded and isinstance(expanded[0], str):
+        arg0 = expanded[0]
+        arg0_path = locate_executable(arg0)
+        lines.append(f"{_label('Resolved ' + arg0 + ':')} {repr(arg0_path)}")
+
+    if superhelp:
+        # FuncAlias-only metadata.
+        func = getattr(alias, "func", None)
+        if func is not None:
+            threadable = getattr(alias, "__xonsh_threadable__", None)
+            capturable = getattr(alias, "__xonsh_capturable__", None)
+            if threadable is not None:
+                lines.append(f"{_label('Threadable:')} {threadable}")
+            if capturable is not None:
+                lines.append(f"{_label('Capturable:')} {capturable}")
+
+        # Read docstring from the underlying function (FuncAlias instance
+        # falls through to the class docstring when the function has no doc).
+        if func is not None:
+            doc = getattr(func, "__doc__", "") or ""
+        elif isinstance(alias, (list, str)):
+            doc = ""
+        else:
+            doc = getattr(alias, "__doc__", "") or ""
+        if doc:
+            lines.append(f"{_label('Descr:')} {doc}")
+
+        if func is not None:
+            co = getattr(func, "__code__", None)
+            if co is not None:
+                lines.append(
+                    f"{_label('Source:')} "
+                    f"{co.co_filename}:{co.co_firstlineno}"
+                )
+            try:
+                src = inspect.getsource(func)
+            except (OSError, TypeError):
+                src = None
+            if src:
+                lines.append(f"{_label('Code:')}\n{src.rstrip()}")
+            else:
+                lines.append(f"{_label('Code:')} <source unavailable>")
+
+    xt.print_color("\n".join(lines))
+
+
 class Aliases(cabc.MutableMapping):
     """Represents a location to hold and look up aliases."""
 
