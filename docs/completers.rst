@@ -387,7 +387,7 @@ a ready-made helper is available:
 Emoji & Symbols
 ================
 
-Need a 🐱 in your commit message? xonsh has a built-in emoji completer.
+Need a 🐈 in your commit message? xonsh has a built-in emoji completer.
 It is disabled by default. To enable, set the trigger prefixes:
 
 .. code-block:: xonshcon
@@ -399,7 +399,7 @@ Then type ``::`` followed by a keyword and press TAB to search for colorful
 emoji::
 
     echo "great job ::fire<TAB>"   →  echo "great job 🔥"
-    echo "::cat<TAB>"              →  echo "🐱"
+    echo "::cat<TAB>"              →  echo "🐈"
 
 For classic unicode symbols (arrows, math, stars), use ``:::``::
 
