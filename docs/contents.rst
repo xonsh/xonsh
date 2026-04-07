@@ -53,6 +53,7 @@ and streamline your command-line experience.
     events
     globbing
     macros
+    xonsh_session
     Open technical issue <https://github.com/xonsh/xonsh>
 
 Creator
