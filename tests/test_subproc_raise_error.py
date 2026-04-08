@@ -377,3 +377,114 @@ def test_statement_after_raise_does_not_run(xonsh_execer, raise_env, capsys):
         xonsh_execer.exec("ls /__nope__\necho should_not_appear\n")
     out = capsys.readouterr().out
     assert "should_not_appear" not in out
+
+
+# ---------------------------------------------------------------------------
+# Interactive prompt display — ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR``
+#
+# These tests drive ``BaseShell.default()`` directly, which is the
+# interactive line handler.  Scripts (``-c`` / ``./foo.xsh`` / stdin
+# script mode) never reach ``default()``, so their error display is
+# unaffected by ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR``.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def base_shell(xonsh_execer, xonsh_session):
+    """A raw ``BaseShell`` attached to the current session's execer
+    and context.  Just enough to drive ``default()`` against a real
+    subprocess command.
+    """
+    from xonsh.shells.base_shell import BaseShell
+
+    shell = BaseShell(xonsh_execer, xonsh_session.ctx, completer=False)
+    return shell
+
+
+@skip_if_on_windows
+def test_prompt_suppresses_calledprocesserror_by_default(
+    base_shell, raise_env, capsys
+):
+    """With the default ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR=False`` the
+    interactive prompt does NOT print ``CalledProcessError: ...`` — the
+    command's own stderr is still shown (by the subprocess itself), but
+    xonsh stays quiet.
+    """
+    base_shell.default("ls /__nope_specific__\n")
+    err = capsys.readouterr().err
+    assert "CalledProcessError" not in err
+
+
+@skip_if_on_windows
+def test_prompt_shows_calledprocesserror_when_opted_in(
+    base_shell, raise_env, capsys, monkeypatch
+):
+    """``$XONSH_PROMPT_SHOW_SUBPROC_ERROR=True`` restores the historical
+    behavior of printing the ``CalledProcessError`` after a failing
+    command at the prompt.
+    """
+    monkeypatch.setitem(raise_env, "XONSH_PROMPT_SHOW_SUBPROC_ERROR", True)
+    base_shell.default("ls /__nope_specific__\n")
+    err = capsys.readouterr().err
+    assert "CalledProcessError" in err
+
+
+@skip_if_on_windows
+def test_prompt_always_shows_error_raise_decorator(
+    base_shell, raise_env, capsys
+):
+    """``@error_raise`` is an explicit per-command opt-in that *always*
+    shows the exception, regardless of
+    ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR``.
+    """
+    base_shell.default("@error_raise ls /__nope_specific__\n")
+    err = capsys.readouterr().err
+    assert "CalledProcessError" in err
+
+
+@skip_if_on_windows
+def test_prompt_chain_last_failing_also_suppressed(
+    base_shell, raise_env, capsys
+):
+    """``echo ok && ls /__nope__`` — chain ends on a failing pipeline.
+    Same suppression rule applies at the prompt.
+    """
+    base_shell.default("echo ok && ls /__nope_specific__\n")
+    err = capsys.readouterr().err
+    assert "CalledProcessError" not in err
+
+
+@skip_if_on_windows
+def test_prompt_chain_rescued_no_suppress_needed(
+    base_shell, raise_env, capsys
+):
+    """``ls /__nope__ || echo fb`` — chain rescued by ``||``, no
+    exception is raised to begin with, so nothing to suppress.
+    """
+    base_shell.default("ls /__nope_specific__ || echo fb\n")
+    err = capsys.readouterr().err
+    assert "CalledProcessError" not in err
+
+
+@skip_if_on_windows
+def test_prompt_success_does_not_touch_display(base_shell, raise_env, capsys):
+    """Sanity: a successful command at the prompt stays silent and
+    doesn't touch the error display path.
+    """
+    base_shell.default("echo ok\n")
+    err = capsys.readouterr().err
+    assert "CalledProcessError" not in err
+
+
+@skip_if_on_windows
+def test_prompt_last_return_code_set_even_when_suppressed(
+    base_shell, raise_env, xonsh_session
+):
+    """Even when the exception display is suppressed, the failing
+    pipeline's return code is still recorded so ``$LAST_RETURN_CODE``
+    works as expected.  ``_apply_to_history`` on the pipeline sets
+    ``hist.last_cmd_rtn`` to the real returncode before
+    ``_append_history`` propagates it into ``$LAST_RETURN_CODE``.
+    """
+    base_shell.default("ls /__nope_specific__\n")
+    assert xonsh_session.env["LAST_RETURN_CODE"] != 0

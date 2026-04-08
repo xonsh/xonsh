@@ -1623,6 +1623,26 @@ class PromptSetting(Xettings):
         "    ",
         "Indentation string for multiline input",
     )
+    XONSH_PROMPT_SHOW_SUBPROC_ERROR = Var.with_default(
+        False,
+        "Whether the interactive prompt should display the "
+        "``subprocess.CalledProcessError`` message when a command at the "
+        "prompt fails.  The failing command's own ``stderr`` is always "
+        "shown — this flag only controls xonsh's own exception printout "
+        "that follows it.\n\n"
+        "* ``False`` *(default)*: after a failing command the prompt "
+        "returns silently; the command's ``stderr`` is still visible and "
+        "``$LAST_RETURN_CODE`` is set.\n"
+        "* ``True``: xonsh additionally prints "
+        "``subprocess.CalledProcessError: Command '...' returned non-zero "
+        "exit status N.``.\n\n"
+        "Notes:\n\n"
+        "* Per-command ``@error_raise`` decorator always shows the "
+        "exception, regardless of this flag.\n"
+        "* Non-interactive scripts (run via ``./script.xsh`` or "
+        "``xonsh -c``) are unaffected — there the exception propagates "
+        "normally so the failure is visible.",
+    )
     LS_COLORS = Var(
         is_lscolors,
         LsColors.convert,
