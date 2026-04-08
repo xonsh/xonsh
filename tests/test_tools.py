@@ -2232,10 +2232,7 @@ def test_print_exception_error(xession, capsys):
         except subprocess.CalledProcessError:
             print_exception(msg="MSG")
     cap = capsys.readouterr()
-    # The ``subprocess.CalledProcessError:`` type prefix is replaced with a
-    # short ``Error:`` and the trailing newline is stripped so the next
-    # line of output (typically the prompt) is not preceded by a blank.
-    match = "Error: Command .* returned non-zero exit status .*MSG\n"
+    match = "subprocess.CalledProcessError: Command .* returned non-zero exit status .*\nMSG\n"
     assert re.match(
         match,
         cap.err,
@@ -2248,7 +2245,7 @@ def test_print_exception_error(xession, capsys):
         except subprocess.CalledProcessError:
             print_exception(msg="MSG")
     cap = capsys.readouterr()
-    match = ".*Traceback.*Error: Command .* returned non-zero exit status .*MSG\n"
+    match = ".*Traceback.*subprocess.CalledProcessError: Command .* returned non-zero exit status .*MSG\n"
     assert re.match(
         match,
         cap.err,

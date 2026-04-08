@@ -939,10 +939,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
-        if not env.get("XONSH_SHOW_TRACEBACK") and (
-            env.get("XONSH_SUBPROC_CMD_RAISE_ERROR")
-            or env.get("XONSH_SUBPROC_RAISE_ERROR")
-        ):
+        if not env.get("XONSH_SHOW_TRACEBACK") and env.get("RAISE_SUBPROC_ERROR"):
             display_colored_error_message(exc_info, limit=1)
         else:
             display_error_message(exc_info)
@@ -951,21 +948,10 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         sys.stderr.write(msg)
 
 
-def _strip_subproc_error_prefix(line):
-    """Replace the ``subprocess.CalledProcessError:`` type prefix on a
-    formatted traceback line with a simple ``Error:`` so the user sees
-    a shell-like message:
-
-        ``Error: Command '...' returned non-zero exit status N.``
-    """
-    return re.sub(r"^(?:[\w.]+\.)?CalledProcessError:", "Error:", line, count=1)
-
-
 def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=None):
-    no_trace_and_raise_subproc_error = not xsh.env.get("XONSH_SHOW_TRACEBACK") and (
-        xsh.env.get("XONSH_SUBPROC_CMD_RAISE_ERROR")
-        or xsh.env.get("XONSH_SUBPROC_RAISE_ERROR")
-    )
+    no_trace_and_raise_subproc_error = not xsh.env.get(
+        "XONSH_SHOW_TRACEBACK"
+    ) and xsh.env.get("RAISE_SUBPROC_ERROR")
 
     if no_trace_and_raise_subproc_error:
         limit = 1
@@ -975,18 +961,7 @@ def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=
     if no_trace_and_raise_subproc_error and "Error:" in content[-1]:
         content = [content[-1]]
 
-    is_called_process_error = isinstance(exc_info[1], subprocess.CalledProcessError)
-    if strip_xonsh_error_types and content and is_called_process_error:
-        content[-1] = _strip_subproc_error_prefix(content[-1])
-
     traceback_str = "".join([v for v in content])
-
-    # For ``CalledProcessError`` strip the trailing newline so the prompt
-    # (or whatever comes next on stderr) starts on its own line without a
-    # blank line in between.  Other exception types keep their trailing
-    # newline so subsequent output is properly separated.
-    if is_called_process_error:
-        traceback_str = traceback_str.rstrip("\n")
 
     # color the traceback if available
     _, interactive = _get_manual_env_var("XONSH_INTERACTIVE", 0)
@@ -1013,14 +988,6 @@ def display_error_message(exc_info, strip_xonsh_error_types=True):
     exception_only = traceback.format_exception_only(exc_type, exc_value)
     if exc_type is XonshError and strip_xonsh_error_types:
         exception_only[0] = exception_only[0].partition(": ")[-1]
-    elif strip_xonsh_error_types and issubclass(
-        exc_type, subprocess.CalledProcessError
-    ):
-        # Replace the ``subprocess.CalledProcessError:`` type prefix with a
-        # short ``Error:`` so the message looks shell-native, and drop any
-        # trailing newline so the next line of output (typically the
-        # prompt) is not preceded by a blank line.
-        exception_only[0] = _strip_subproc_error_prefix(exception_only[0]).rstrip("\n")
     sys.stderr.write("".join(exception_only))
 
 
