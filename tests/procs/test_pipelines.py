@@ -323,3 +323,127 @@ def test_pipeline_early_exit_callable_alias(xonsh_session):
     # both callable
     out = xonsh_session.execer.eval("$(manylines | take3)")
     assert out.strip() == "1\n2\n3"
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_pipe_into_callable_alias_no_bad_fd(xonsh_session, capsys):
+    """Piping into a callable alias that iterates over stdin must not raise
+    'Bad file descriptor'.
+
+    Regression test: when an upstream subprocess (e.g. ``echo``) finished
+    quickly, ``CommandPipeline._prev_procs_done`` called ``ch.close()`` on
+    the connecting pipe — which closed BOTH ends.  The downstream callable
+    alias was still actively iterating over its stdin TextIOWrapper around
+    the read end, so the very next ``read()`` failed with
+    ``OSError: [Errno 9] Bad file descriptor``.  The proxy thread caught
+    the exception, printed it via ``print_exception`` (to xonsh's main
+    stderr, not the captured pipeline stderr) and returned exit code 1.
+
+    The fix only closes the *write* end of the connecting pipe in
+    ``_prev_procs_done``; the read end is closed later in
+    ``_close_prev_procs`` once the downstream proc has actually finished.
+    """
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    def _add(args, stdin, stdout, stderr):
+        name = args[0] if args else ""
+        for line in stdin or []:
+            stdout.write(line.upper() + name)
+
+    xonsh_session.aliases["add"] = _add
+
+    # The original failing case from the bug report.
+    pipeline: CommandPipeline = xonsh_session.execer.eval(
+        "!(echo -n 'hello ' | add snail)"
+    )
+    pipeline.end()
+    captured = capsys.readouterr()
+    assert pipeline.out == "HELLO snail"
+    assert pipeline.returncode == 0, (
+        f"alias proxy returned {pipeline.returncode!r}; "
+        f"captured stderr: {captured.err!r}"
+    )
+    assert "Bad file descriptor" not in captured.err
+    assert "Exception in thread" not in captured.err
+
+    # Multiple input lines should also work.
+    pipeline = xonsh_session.execer.eval(r"!(printf 'a\nb\nc' | add X)")
+    pipeline.end()
+    captured = capsys.readouterr()
+    assert pipeline.out == "A\nXB\nXCX"
+    assert pipeline.returncode == 0
+    assert "Bad file descriptor" not in captured.err
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_pipe_into_callable_alias_user_exception(xonsh_session, capsys):
+    """A user exception inside a callable alias reading stdin must surface
+    as the *user's* exception (e.g. ZeroDivisionError), not as the spurious
+    "Bad file descriptor" caused by the race in _prev_procs_done.
+
+    Also verifies:
+    - output written before the exception is preserved (safe_flush);
+    - the pipeline returns non-zero;
+    - the user's traceback is what xonsh prints (not an OSError);
+    - upstream is properly torn down.
+    """
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    def _erradd(args, stdin, stdout, stderr):
+        i = 0
+        for line in stdin or []:
+            if i == 3:
+                1 / 0
+            stdout.write("GOT:" + line)
+            i += 1
+
+    xonsh_session.aliases["erradd"] = _erradd
+
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(seq 1 100 | erradd)")
+    pipeline.end()
+    captured = capsys.readouterr()
+
+    # Output produced *before* the user error is preserved.
+    assert pipeline.out == "GOT:1\nGOT:2\nGOT:3\n"
+    assert pipeline.returncode == 1
+    # The user's actual error is reported, not a spurious EBADF.
+    assert "ZeroDivisionError" in captured.err
+    assert "Bad file descriptor" not in captured.err
+
+
+@skip_if_on_windows
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_pipe_into_callable_alias_repeated(xonsh_session, capsys):
+    """Repeatedly piping a fast-exiting upstream into a callable alias.
+
+    The race condition fixed in ``_prev_procs_done`` is timing-sensitive:
+    it triggers when the upstream subprocess finishes between two reads on
+    the downstream alias's stdin.  Run the same pipeline many times to make
+    a regression unmissable on CI.
+    """
+    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+
+    def _upper(args, stdin, stdout, stderr):
+        for line in stdin or []:
+            stdout.write(line.upper())
+
+    xonsh_session.aliases["upperalias"] = _upper
+
+    failures = []
+    for i in range(20):
+        pipeline: CommandPipeline = xonsh_session.execer.eval(
+            "!(echo -n 'hello' | upperalias)"
+        )
+        pipeline.end()
+        if pipeline.out != "HELLO" or pipeline.returncode != 0:
+            failures.append(
+                (i, pipeline.out, pipeline.returncode)
+            )
+    captured = capsys.readouterr()
+    assert not failures, (
+        f"{len(failures)}/20 iterations failed: {failures!r}; "
+        f"captured stderr: {captured.err!r}"
+    )
+    assert "Bad file descriptor" not in captured.err
