@@ -1132,7 +1132,7 @@ def test_run_fail_not_on_path():
 ALIASES_THREADABLE_PRINT_CASES = [
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
@@ -1141,25 +1141,25 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in thread.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nException in thread.*\nZeroDivisionError: .*\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in thread.*\nTraceback.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nException in thread.*\nTraceback.*\nZeroDivisionError: .*\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
@@ -1168,7 +1168,7 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
@@ -1177,25 +1177,25 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nI failed\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nI failed.*\nTraceback.*\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
@@ -1207,7 +1207,7 @@ echo f1f1f1 ; f ; echo f2f2f2
 ALIASES_UNTHREADABLE_PRINT_CASES = [
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: 1/0
 aliases['f'].__xonsh_threadable__ = False
@@ -1217,27 +1217,27 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: 1/0
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nException in.*\nZeroDivisionError: .*\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: 1/0
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in.*\nTraceback.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nException in.*\nTraceback.*\nZeroDivisionError: .*\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: 1/0
 aliases['f'].__xonsh_threadable__ = False
@@ -1247,7 +1247,7 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: (None, "I failed", 2)
 aliases['f'].__xonsh_threadable__ = False
@@ -1257,27 +1257,27 @@ echo f1f1f1 ; f ; echo f2f2f2
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: (None, "I failed", 2)
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nI failed\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: (None, "I failed", 2)
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
+        "f1f1f1\nI failed.*\nTraceback.*\nError: Command.*$",
     ),
     (
         """
-$RAISE_SUBPROC_ERROR = False
+$XONSH_SUBPROC_CMD_RAISE_ERROR = False
 $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: (None, "I failed", 2)
 aliases['f'].__xonsh_threadable__ = False
@@ -1304,7 +1304,7 @@ def test_aliases_print(case):
 @pytest.mark.parametrize("interactive", [True, False])
 def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
     out, err, ret = run_xonsh(
-        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=False\n$XONSH_SHOW_TRACEBACK=False\nls nofile",
+        "$COLOR_RESULTS=False\n$XONSH_SUBPROC_CMD_RAISE_ERROR=False\n$XONSH_SHOW_TRACEBACK=False\nls nofile",
         interactive=interactive,
         single_command=True,
     )
@@ -1312,31 +1312,34 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
     assert re.match("ls.*No such file or directory\n", out)
 
     out, err, ret = run_xonsh(
-        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=True\n$XONSH_SHOW_TRACEBACK=False\nls nofile",
+        "$COLOR_RESULTS=False\n$XONSH_SUBPROC_CMD_RAISE_ERROR=True\n$XONSH_SHOW_TRACEBACK=False\nls nofile",
         interactive=interactive,
         single_command=True,
     )
     assert ret != 0
+    # The ``subprocess.CalledProcessError:`` type prefix is replaced with
+    # a short ``Error:`` so the message looks shell-native, and the
+    # trailing newline is dropped so the prompt is not preceded by a blank.
     assert re.match(
-        "ls:.*No such file or directory\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
+        "ls:.*No such file or directory\nError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
         out,
         re.MULTILINE | re.DOTALL,
     )
 
     out, err, ret = run_xonsh(
-        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=True\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
+        "$COLOR_RESULTS=False\n$XONSH_SUBPROC_CMD_RAISE_ERROR=True\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
         interactive=interactive,
         single_command=True,
     )
     assert ret != 0
     assert re.match(
-        "ls.*No such file or directory.*Traceback .*\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
+        "ls.*No such file or directory.*Traceback .*\nError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
         out,
         re.MULTILINE | re.DOTALL,
     )
 
     out, err, ret = run_xonsh(
-        "$COLOR_RESULTS=False\n$RAISE_SUBPROC_ERROR=False\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
+        "$COLOR_RESULTS=False\n$XONSH_SUBPROC_CMD_RAISE_ERROR=False\n$XONSH_SHOW_TRACEBACK=True\nls nofile",
         interactive=interactive,
         single_command=True,
     )

@@ -19,7 +19,7 @@ from xonsh.pygments_cache import get_all_styles
 from xonsh.style_tools import partial_color_tokenize
 from xonsh.xontribs import Xontrib, get_xontribs
 
-# $RAISE_SUBPROC_ERROR = True
+# $XONSH_SUBPROC_CMD_RAISE_ERROR = True
 # $XONSH_SHOW_TRACEBACK = False
 
 #

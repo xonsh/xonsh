@@ -182,7 +182,7 @@ def test_callias_captured_redirect(xonsh_session, tmpdir):
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_interrupted_process_returncode(xonsh_session, captured, interactive):
     xonsh_session.env["XONSH_INTERACTIVE"] = interactive
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
     cmd = [cmd_sig("SIGINT")]
     specs = cmds_to_specs(cmd, captured="stdout")
     (p := _run_command_pipeline(specs, cmd)).end()
@@ -192,7 +192,7 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_proc_raise_subproc_error(xonsh_session):
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     specs = cmds_to_specs(cmd := [["ls"]], captured="stdout")
     specs[-1].raise_subproc_error = True
@@ -224,7 +224,7 @@ def test_proc_raise_subproc_error(xonsh_session):
         exception = e
     assert isinstance(exception, CalledProcessError)
 
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = True
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = True
     specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
     exception = None
     try:

@@ -1262,6 +1262,7 @@ class SubprocessSetting(Xettings):
         "should cause an end to execution. This is less useful at a terminal. "
         "The error that is raised is a ``subprocess.CalledProcessError``. "
         "(Replaces the deprecated ``$RAISE_SUBPROC_ERROR``.)",
+        sync="RAISE_SUBPROC_ERROR",
     )
     XONSH_SUBPROC_RAISE_ERROR = Var.with_default(
         True,

@@ -6,6 +6,7 @@ import re
 import textwrap
 import threading
 import typing as tp
+from ast import iter_fields as _ast_iter_fields
 from ast import parse as pyparse
 from collections.abc import Iterable, Mapping, Sequence
 from threading import Thread
@@ -24,6 +25,218 @@ RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCH
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
+
+
+_SUBPROC_HELPER_NAMES = frozenset(
+    {
+        "subproc_captured_stdout",
+        "subproc_captured_inject",
+        "subproc_captured_object",
+        "subproc_captured_hiddenobject",
+        "subproc_uncaptured",
+    }
+)
+
+# Subset of subproc helpers whose *standalone* (statement-level) result is
+# subject to ``$XONSH_SUBPROC_RAISE_ERROR``.  Per spec only the explicit
+# "user takes full responsibility" form ``!(...)`` (``subproc_captured_object``)
+# is excluded — every other form raises on a non-zero return code by default:
+# bare commands, ``![...]``, ``$[...]``, ``$(...)``, ``@$(...)``.
+_RAISING_SUBPROC_HELPERS = frozenset(
+    {
+        "subproc_uncaptured",
+        "subproc_captured_hiddenobject",
+        "subproc_captured_stdout",
+        "subproc_captured_inject",
+    }
+)
+
+
+def _is_subproc_helper_call(node):
+    """True if `node` is an `ast.Call` to a `__xonsh__.subproc_*` helper."""
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    return (
+        isinstance(func, ast.Attribute)
+        and func.attr in _SUBPROC_HELPER_NAMES
+        and isinstance(func.value, ast.Name)
+        and func.value.id == "__xonsh__"
+    )
+
+
+def _is_raising_subproc_helper_call(node):
+    """True for direct calls to ``subproc_uncaptured`` /
+    ``subproc_captured_hiddenobject``.  These are the "uncaptured" forms
+    that should raise on non-zero rc when ``$XONSH_SUBPROC_RAISE_ERROR``
+    is True.
+    """
+    return (
+        _is_subproc_helper_call(node) and node.func.attr in _RAISING_SUBPROC_HELPERS
+    )
+
+
+def _is_subproc_check_boolop_call(node):
+    """True if `node` is already wrapped in ``subproc_check_boolop``."""
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "subproc_check_boolop"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "__xonsh__"
+    )
+
+
+def _mark_boolop_subproc_values(boolop):
+    """Tag subproc helper Calls that are direct ``values`` of a BoolOp.
+
+    For ``echo 1 && echo 2 ; echo 3`` the parser builds
+    ``BoolOp(And, [Call(subproc_*), Call(subproc_*)])`` plus a separate
+    standalone ``Call(subproc_*)`` for ``echo 3``.  We want the two calls
+    inside the BoolOp to know they participate in a logical chain (so the
+    runtime can let the chain short-circuit on returncode instead of
+    raising on the first failure), and leave the standalone call alone.
+
+    Nested BoolOps already mark their own values when they are constructed,
+    so this function does *not* recurse — it only injects the keyword on
+    direct subproc-helper children.
+    """
+    for value in boolop.values:
+        if not _is_subproc_helper_call(value):
+            continue
+        # Avoid duplicating the keyword if a parent BoolOp re-marks us.
+        if any(kw.arg == "in_boolop" for kw in value.keywords):
+            continue
+        lineno = getattr(value, "lineno", 1)
+        col = getattr(value, "col_offset", 0)
+        value.keywords.append(
+            ast.keyword(
+                arg="in_boolop",
+                value=ast.Constant(value=True, lineno=lineno, col_offset=col),
+                lineno=lineno,
+                col_offset=col,
+            )
+        )
+
+
+def _boolop_contains_subproc(node):
+    """True if the AST subtree rooted at ``node`` contains at least one
+    subproc helper Call.  Used to skip wrapping pure-Python BoolOps such
+    as ``if x and y:``.
+    """
+    for child in ast.walk(node):
+        if _is_subproc_helper_call(child):
+            return True
+    return False
+
+
+class _SubprocChainRaiseWrapper:
+    """AST post-pass that wraps two kinds of nodes in
+    ``__xonsh__.subproc_check_boolop(...)`` so the runtime can enforce
+    ``$XONSH_SUBPROC_RAISE_ERROR``:
+
+    1. The **outermost** ``BoolOp`` containing subproc helper calls
+       (i.e. ``cmd1 && cmd2`` chains).  Only the outermost is wrapped:
+       inner BoolOps must let their (possibly falsy) result propagate
+       up so an outer ``||`` fallback can still run.
+
+    2. **Standalone** statement-level Calls to "raising" subproc helpers
+       (``subproc_uncaptured`` / ``subproc_captured_hiddenobject`` —
+       i.e. bare commands and ``![...]``/``$[...]``).  This is what
+       makes ``ls nono`` raise by default.  Captured forms (``$()``,
+       ``!()``, ``@$()``) are intentionally NOT wrapped — per spec the
+       user takes full responsibility for their result.
+
+    Pure-Python BoolOps (no subproc helpers in any descendant) are left
+    untouched so user code like ``if x and y:`` is not affected.
+    """
+
+    # AST statement nodes whose ``.value`` is a candidate for
+    # standalone-Call wrapping.  ``Return`` is intentionally omitted —
+    # ``return ![cmd]`` is rare and the existing CMD_RAISE_ERROR path
+    # already covers callers that want it.
+    _VALUE_STMT_TYPES = (
+        ast.Expr,
+        ast.Assign,
+        ast.AugAssign,
+        ast.AnnAssign,
+    )
+
+    def __init__(self):
+        self._inside_boolop = False
+
+    def visit(self, node):
+        if isinstance(node, ast.BoolOp):
+            return self._visit_boolop(node)
+        if isinstance(node, self._VALUE_STMT_TYPES):
+            # Recurse first so that any nested BoolOps inside the value
+            # get the BoolOp wrapping treatment, then optionally wrap
+            # the (possibly already-wrapped) value with the standalone
+            # check.
+            self._recurse(node)
+            self._maybe_wrap_stmt_value(node)
+            return node
+        self._recurse(node)
+        return node
+
+    def _visit_boolop(self, node):
+        if self._inside_boolop:
+            # Nested — recurse into children but do NOT wrap.  An inner
+            # BoolOp must let its (possibly falsy) result propagate up
+            # to the outer short-circuit logic.
+            self._recurse(node)
+            return node
+        self._inside_boolop = True
+        try:
+            self._recurse(node)
+        finally:
+            self._inside_boolop = False
+        if _boolop_contains_subproc(node):
+            return self._wrap(node)
+        return node
+
+    def _maybe_wrap_stmt_value(self, stmt):
+        val = getattr(stmt, "value", None)
+        if val is None:
+            return
+        # If the BoolOp pass already wrapped this value, nothing to do.
+        if _is_subproc_check_boolop_call(val):
+            return
+        if not _is_raising_subproc_helper_call(val):
+            return
+        stmt.value = self._wrap(val)
+
+    def _recurse(self, parent):
+        for field, value in _ast_iter_fields(parent):
+            if isinstance(value, list):
+                for i, item in enumerate(value):
+                    if isinstance(item, ast.AST):
+                        value[i] = self.visit(item)
+            elif isinstance(value, ast.AST):
+                setattr(parent, field, self.visit(value))
+
+    @staticmethod
+    def _wrap(node):
+        lineno = node.lineno
+        col = node.col_offset
+        return ast.Call(
+            func=load_attribute_chain(
+                "__xonsh__.subproc_check_boolop", lineno=lineno, col=col
+            ),
+            args=[node],
+            keywords=[],
+            lineno=lineno,
+            col_offset=col,
+        )
+
+
+def wrap_subproc_raise_checks(tree):
+    """Public entry point — wraps outermost subproc-containing BoolOps
+    *and* standalone "uncaptured" subproc-helper Calls (bare commands,
+    ``![...]``, ``$[...]``) in ``__xonsh__.subproc_check_boolop`` so the
+    result is checked at runtime against ``$XONSH_SUBPROC_RAISE_ERROR``.
+    """
+    return _SubprocChainRaiseWrapper().visit(tree)
 
 
 class Location:
@@ -2046,11 +2259,13 @@ class BaseParser:
         elif len(p2) == 2:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]], lineno=lineno, col_offset=col)
+            _mark_boolop_subproc_values(p0)
         else:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(
                 op=p2[0], values=[p[1]] + p2[1::2], lineno=lineno, col_offset=col
             )
+            _mark_boolop_subproc_values(p0)
         p[0] = p0
 
     def p_or_and_test(self, p):
@@ -2065,11 +2280,13 @@ class BaseParser:
         elif len(p2) == 2:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]], lineno=lineno, col_offset=col)
+            _mark_boolop_subproc_values(p0)
         else:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(
                 op=p2[0], values=[p1] + p2[1::2], lineno=lineno, col_offset=col
             )
+            _mark_boolop_subproc_values(p0)
         p[0] = p0
 
     def p_and_not_test(self, p):
