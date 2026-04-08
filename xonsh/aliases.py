@@ -65,6 +65,24 @@ def EXEC_ALIAS_RE():
     return re.compile(r"@\(|\$\(|!\(|\$\[|!\[|\&\&|\|\||\s+and\s+|\s+or\s+|[>|<]")
 
 
+def get_alias_name(name_or_func, dash_case=True):
+    """Derive an alias name from a function or a string.
+
+    For functions, uses ``__name__`` with a single leading underscore stripped
+    (so ``_hello`` becomes ``hello``). Strings are used as-is. If ``dash_case``
+    is True, underscores are replaced with dashes.
+    """
+    if callable(name_or_func):
+        name = name_or_func.__name__
+        if name.startswith("_"):
+            name = name[1:]
+    else:
+        name = name_or_func
+    if dash_case:
+        name = name.replace("_", "-")
+    return name
+
+
 class AliasReturnCommandResult(list):
     """List subclass that can carry local_env from return_command aliases."""
 
@@ -215,21 +233,8 @@ class Aliases(cabc.MutableMapping):
         self._raw = {}
         self.update(*args, **kwargs)
 
-    @staticmethod
-    def _get_func_name(func):
-        name = func.__name__
-
-        # Strip leading underscore
-        if name.startswith("_"):
-            name = name[1:]
-        return name
-
     def _register(self, func, name="", dash_case=True):
-        name = name or self._get_func_name(func)
-
-        if dash_case:
-            name = name.replace("_", "-")
-
+        name = get_alias_name(name or func, dash_case=dash_case)
         func.__alias_name__ = name
         self[name] = func
         return func
