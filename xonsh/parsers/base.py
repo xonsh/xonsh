@@ -71,9 +71,7 @@ def _is_raising_subproc_helper_call(node):
     that should raise on non-zero rc when ``$XONSH_SUBPROC_RAISE_ERROR``
     is True.
     """
-    return (
-        _is_subproc_helper_call(node) and node.func.attr in _RAISING_SUBPROC_HELPERS
-    )
+    return _is_subproc_helper_call(node) and node.func.attr in _RAISING_SUBPROC_HELPERS
 
 
 def _is_subproc_check_boolop_call(node):
