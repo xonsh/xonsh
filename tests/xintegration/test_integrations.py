@@ -1146,7 +1146,7 @@ $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in thread.*\nZeroDivisionError: .*\nError: Command.*$",
+        "f1f1f1\nException in thread.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1155,7 +1155,7 @@ $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: 1/0
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in thread.*\nTraceback.*\nZeroDivisionError: .*\nError: Command.*$",
+        "f1f1f1\nException in thread.*\nTraceback.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1182,7 +1182,7 @@ $XONSH_SHOW_TRACEBACK = False
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed\nError: Command.*$",
+        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1191,7 +1191,7 @@ $XONSH_SHOW_TRACEBACK = True
 aliases['f'] = lambda: (None, "I failed", 2)
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed.*\nTraceback.*\nError: Command.*$",
+        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1223,7 +1223,7 @@ aliases['f'] = lambda: 1/0
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in.*\nZeroDivisionError: .*\nError: Command.*$",
+        "f1f1f1\nException in.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1233,7 +1233,7 @@ aliases['f'] = lambda: 1/0
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nException in.*\nTraceback.*\nZeroDivisionError: .*\nError: Command.*$",
+        "f1f1f1\nException in.*\nTraceback.*\nZeroDivisionError: .*\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1263,7 +1263,7 @@ aliases['f'] = lambda: (None, "I failed", 2)
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed\nError: Command.*$",
+        "f1f1f1\nI failed\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1273,7 +1273,7 @@ aliases['f'] = lambda: (None, "I failed", 2)
 aliases['f'].__xonsh_threadable__ = False
 echo f1f1f1 ; f ; echo f2f2f2
 """,
-        "f1f1f1\nI failed.*\nTraceback.*\nError: Command.*$",
+        "f1f1f1\nI failed.*\nTraceback.*\nsubprocess.CalledProcessError.*\n$",
     ),
     (
         """
@@ -1317,11 +1317,8 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
         single_command=True,
     )
     assert ret != 0
-    # The ``subprocess.CalledProcessError:`` type prefix is replaced with
-    # a short ``Error:`` so the message looks shell-native, and the
-    # trailing newline is dropped so the prompt is not preceded by a blank.
     assert re.match(
-        "ls:.*No such file or directory\nError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
+        "ls:.*No such file or directory\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
         out,
         re.MULTILINE | re.DOTALL,
     )
@@ -1333,7 +1330,7 @@ def test_raise_subproc_error_with_show_traceback(monkeypatch, interactive):
     )
     assert ret != 0
     assert re.match(
-        "ls.*No such file or directory.*Traceback .*\nError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
+        "ls.*No such file or directory.*Traceback .*\nsubprocess.CalledProcessError: Command '\\['ls', 'nofile'\\]' returned non-zero exit status .*",
         out,
         re.MULTILINE | re.DOTALL,
     )
