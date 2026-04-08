@@ -438,9 +438,7 @@ def test_pipe_into_callable_alias_repeated(xonsh_session, capsys):
         )
         pipeline.end()
         if pipeline.out != "HELLO" or pipeline.returncode != 0:
-            failures.append(
-                (i, pipeline.out, pipeline.returncode)
-            )
+            failures.append((i, pipeline.out, pipeline.returncode))
     captured = capsys.readouterr()
     assert not failures, (
         f"{len(failures)}/20 iterations failed: {failures!r}; "
