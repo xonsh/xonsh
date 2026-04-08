@@ -513,8 +513,8 @@ class CommandPipeline:
             else:
                 err_target.write(b.decode(encoding=enc, errors=err))
             err_target.flush()
-        # save the raw bytes
-        self._raw_error = b
+        # accumulate the raw bytes
+        self._raw_error += b
         # do some munging of the line before we save it to the attr
         b = b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         env = XSH.env
