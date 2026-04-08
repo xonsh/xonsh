@@ -2304,7 +2304,24 @@ class Env(cabc.MutableMapping):
 
         if len(args) == 0 and len(kwargs) == 0:
             args = (os_environ,)
-        for key, val in dict(*args, **kwargs).items():
+        initial = dict(*args, **kwargs)
+        # Avoid a spurious DeprecationWarning when both a deprecated
+        # alias (e.g. ``RAISE_SUBPROC_ERROR``) and its canonical name
+        # (``XONSH_SUBPROC_CMD_RAISE_ERROR``) are present in the source
+        # dict — which happens whenever a parent xonsh process set the
+        # canonical name and the sync mechanism mirrored the value into
+        # os.environ.  The canonical name alone will re-populate the
+        # alias via its forward ``sync=`` declaration, so we can skip
+        # the deprecated key silently here.
+        for key, val in initial.items():
+            var = self._vars.get(key)
+            if (
+                var is not None
+                and var.deprecated
+                and var.sync
+                and var.sync in initial
+            ):
+                continue
             self[key] = val
         if ON_WINDOWS:
             path_key = next((k for k in self._d if k.upper() == "PATH"), None)
