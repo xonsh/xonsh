@@ -1608,6 +1608,60 @@ def test_partial_string_none(inp):
     assert check_for_partial_string(inp) == (None, None, None)
 
 
+CLASS_BLOCK_TPL = (
+    "class qwe:\n"
+    '    """Asd"""\n'
+    "    def __init__(self):\n"
+    "        # {comment}\n"
+    "        pass\n"
+)
+
+
+@pytest.mark.parametrize(
+    "comment",
+    [
+        "single quote ' here",
+        'one double quote " here',
+        "three single quotes ''' here",
+        'three double quotes """ here',
+        'two double quotes "" here',
+        "mixed quotes ' \" here",
+    ],
+)
+def test_partial_string_ignores_hash_comments(comment):
+    """Quotes inside `#` comments must not be mistaken for string starts.
+    The block has a complete `\"\"\"Asd\"\"\"` docstring; the result should
+    always describe that closed string, regardless of comment contents.
+    """
+    src = CLASS_BLOCK_TPL.format(comment=comment)
+    startix, endix, quote = check_for_partial_string(src)
+    assert quote == '"""'
+    assert startix is not None
+    assert endix is not None  # i.e. NOT a partial/unterminated string
+
+
+@pytest.mark.parametrize(
+    "src",
+    [
+        "# foo ' bar\n'real string'",
+        "x = 1 # nope '\ny = 'real'",
+        "# a '\n# b \"\nreal = 'str'",
+    ],
+)
+def test_partial_string_finds_real_string_after_comment(src):
+    """A real string on a line after a comment with stray quotes is found."""
+    startix, endix, quote = check_for_partial_string(src)
+    assert startix is not None
+    assert endix is not None
+    assert src[startix:endix].endswith(quote)
+
+
+def test_partial_string_hash_inside_string_is_not_a_comment():
+    """`#` inside a string literal must not be treated as a comment start."""
+    assert check_for_partial_string('"foo # bar"') == (0, 11, '"')
+    assert check_for_partial_string('"foo # bar') == (0, None, '"')
+
+
 @pytest.mark.parametrize(
     "leaders", [(("", 0), ("not empty", 9)), (("not empty", 9), ("", 0))]
 )
