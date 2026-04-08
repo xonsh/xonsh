@@ -424,9 +424,7 @@ class BaseShell:
             # their failures keep propagating as before.
             lastcmd = XSH.lastcmd
             spec = getattr(lastcmd, "spec", None) if lastcmd is not None else None
-            is_error_raise = (
-                getattr(spec, "raise_subproc_error", None) is True
-            )
+            is_error_raise = getattr(spec, "raise_subproc_error", None) is True
             if is_error_raise or env.get("XONSH_PROMPT_SHOW_SUBPROC_ERROR"):
                 print_exception(exc_info=exc_info)
             if hist is not None and hist.last_cmd_rtn is None:
