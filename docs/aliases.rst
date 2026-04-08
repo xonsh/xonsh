@@ -159,13 +159,17 @@ Command Decorators (Decorator Aliases)
 
 ``@error_raise`` and ``@error_ignore``
 ----------------------------------------
-Use ``@error_raise`` to raise an exception if the command returns a non-zero exit code.
-The behavior is similar with ``$RAISE_SUBPROC_ERROR``. Use ``@error_ignore`` for explicit disable that.
+Use ``@error_raise`` to raise an exception if the command returns a non-zero exit code —
+similar to ``$XONSH_SUBPROC_CMD_RAISE_ERROR`` but scoped to a single command, and it
+raises unconditionally (even inside ``&&``/``||`` chains and even when
+``$XONSH_SUBPROC_RAISE_ERROR`` is disabled).  Use ``@error_ignore`` to explicitly suppress
+the raise — it also wins over the chain-result check performed by
+``$XONSH_SUBPROC_RAISE_ERROR``.
 
 .. code-block:: console
 
     @ r = !(@error_raise ls nonono)
-    subprocess.CalledProcessError: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
+    Error: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
 
     @ r = !(@error_ignore ls nonono)
 

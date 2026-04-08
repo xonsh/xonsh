@@ -1644,9 +1644,14 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     @ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
-Additionally, if the script should exit if a command fails, set the
-environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
-file. Errors in Python mode will already raise exceptions.
+By default xonsh scripts exit on a failing subprocess: the environment
+variable ``$XONSH_SUBPROC_RAISE_ERROR`` is ``True`` out of the box and
+raises a ``subprocess.CalledProcessError`` whenever the *final* command
+of a statement (or the result of an ``&&``/``||`` chain) returns a
+non-zero exit status.  Set it to ``False`` if you want the old "keep
+going on errors" behavior, or set ``$XONSH_SUBPROC_CMD_RAISE_ERROR =
+True`` to raise on *every* failing command (including intermediate ones
+inside chains).  Errors in Python mode already raise exceptions.
 
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivalent to
