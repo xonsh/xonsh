@@ -402,9 +402,7 @@ def base_shell(xonsh_execer, xonsh_session):
 
 
 @skip_if_on_windows
-def test_prompt_suppresses_calledprocesserror_by_default(
-    base_shell, raise_env, capsys
-):
+def test_prompt_suppresses_calledprocesserror_by_default(base_shell, raise_env, capsys):
     """With the default ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR=False`` the
     interactive prompt does NOT print ``CalledProcessError: ...`` — the
     command's own stderr is still shown (by the subprocess itself), but
@@ -430,9 +428,7 @@ def test_prompt_shows_calledprocesserror_when_opted_in(
 
 
 @skip_if_on_windows
-def test_prompt_always_shows_error_raise_decorator(
-    base_shell, raise_env, capsys
-):
+def test_prompt_always_shows_error_raise_decorator(base_shell, raise_env, capsys):
     """``@error_raise`` is an explicit per-command opt-in that *always*
     shows the exception, regardless of
     ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR``.
@@ -443,9 +439,7 @@ def test_prompt_always_shows_error_raise_decorator(
 
 
 @skip_if_on_windows
-def test_prompt_chain_last_failing_also_suppressed(
-    base_shell, raise_env, capsys
-):
+def test_prompt_chain_last_failing_also_suppressed(base_shell, raise_env, capsys):
     """``echo ok && ls /__nope__`` — chain ends on a failing pipeline.
     Same suppression rule applies at the prompt.
     """
@@ -455,9 +449,7 @@ def test_prompt_chain_last_failing_also_suppressed(
 
 
 @skip_if_on_windows
-def test_prompt_chain_rescued_no_suppress_needed(
-    base_shell, raise_env, capsys
-):
+def test_prompt_chain_rescued_no_suppress_needed(base_shell, raise_env, capsys):
     """``ls /__nope__ || echo fb`` — chain rescued by ``||``, no
     exception is raised to begin with, so nothing to suppress.
     """
