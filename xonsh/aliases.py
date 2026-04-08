@@ -209,13 +209,20 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
             if capturable is not None:
                 lines.append(f"{_label('Capturable:')} {capturable}")
 
-            co = getattr(func, "__code__", None)
+            # Unwrap ``functools.wraps``-style chains so the shown source
+            # reflects the user-visible function (e.g. a click command body)
+            # rather than the internal wrapper.
+            try:
+                src_func = inspect.unwrap(func)
+            except ValueError:
+                src_func = func
+            co = getattr(src_func, "__code__", None)
             if co is not None:
                 lines.append(
                     f"{_label('Source:')} {co.co_filename}:{co.co_firstlineno}"
                 )
             try:
-                src = inspect.getsource(func)
+                src = inspect.getsource(src_func)
             except (OSError, TypeError):
                 src = None
             if src:
@@ -232,6 +239,47 @@ class Aliases(cabc.MutableMapping):
     def __init__(self, *args, **kwargs):
         self._raw = {}
         self.update(*args, **kwargs)
+
+    def __getattr__(self, name):
+        # Lazy click integration: import is deferred until the first access
+        # to ``aliases.click`` or ``aliases.register_click_command``, so
+        # xonsh sessions that never use click don't pay the import cost.
+        # Once loaded, the attributes are cached on ``self.__dict__`` and
+        # future lookups skip this method entirely.
+        if name in ("click", "register_click_command"):
+            try:
+                self._add_click_command()
+            except ImportError:
+                raise AttributeError(
+                    f"{name!r} requires the 'click' package to be installed"
+                ) from None
+            return self.__dict__[name]
+        raise AttributeError(
+            f"{type(self).__name__!r} object has no attribute {name!r}"
+        )
+
+    def _add_click_command(self):
+        """Expose the click integration helpers on this Aliases instance.
+
+        Lazily invoked from :meth:`__getattr__` on first access to
+        ``self.click`` or ``self.register_click_command``. Imports the
+        ``click`` module and caches:
+
+        * ``self.click`` — the ``click`` module itself, for convenient
+          access from xonshrc / user scripts.
+        * ``self.register_click_command`` — decorator factory bound to this
+          Aliases instance via :func:`functools.partial`. See
+          :func:`_click_command_alias`.
+
+        Raises :class:`ImportError` if ``click`` is not installed; callers
+        (``__getattr__``) translate this to :class:`AttributeError`.
+        """
+        import click
+
+        self.click = click
+        self.register_click_command = functools.partial(
+            _click_command_alias, _aliases=self
+        )
 
     def _register(self, func, name="", dash_case=True):
         name = get_alias_name(name or func, dash_case=dash_case)
@@ -543,6 +591,95 @@ ALIAS_PARAMS_DEFAULT = {
     "env": None,
 }
 ALIAS_KWARG_NAMES = frozenset(ALIAS_PARAMS_DEFAULT)
+
+
+def _click_command_alias(func_or_name=None, *, _aliases):
+    """Decorator factory that registers a xonsh alias as a ``click`` command.
+
+    Mirrors the calling conventions of :meth:`Aliases.register`:
+
+    * ``@aliases.register_click_command`` — bare, derives alias name from
+      the function name (leading underscore stripped, dash-cased).
+    * ``@aliases.register_click_command()`` — empty parentheses, same as bare.
+    * ``@aliases.register_click_command("custom-name")`` — explicit alias name.
+
+    Inside the click callback, ``ctx`` is a :class:`click.Context` subclass
+    carrying the usual xonsh alias params (``alias_args``, ``stdin``, ``stdout``,
+    ``stderr``, etc from ALIAS_PARAMS_DEFAULT). The ``args`` alias param is exposed as
+    ``ctx.alias_args`` to avoid clashing with ``click.Context.args``.
+
+    Only available when the ``click`` package is installed; wired up by
+    :meth:`Aliases._add_click_command` from :meth:`Aliases.__init__`.
+    """
+    import click
+    import functools
+
+    def _make_alias(func, alias_name=None):
+        if isinstance(func, click.Command):
+            cmd = func
+            original_func = cmd.callback
+            name_source = original_func if original_func else cmd.name
+        else:
+            original_func = func
+            name_source = func
+            cmd = click.command()(click.pass_context(func))
+
+        class XonshContext(click.Context):
+            def __init__(self, *args, xsh=None, **kwargs):
+                super().__init__(*args, **kwargs)
+                xsh = xsh or {}
+                for key in ALIAS_PARAMS_DEFAULT:
+                    # 'args' clashes with click.Context.args — rename.
+                    attr = "alias_args" if key == "args" else key
+                    setattr(self, attr, xsh.get(key))
+
+        cmd.context_class = XonshContext
+
+        registered_name = get_alias_name(alias_name or name_source)
+
+        def _wrapper(**xsh_data):
+            try:
+                cmd.main(
+                    args=xsh_data.get("args"),
+                    prog_name=xsh_data.get("called_alias_name") or registered_name,
+                    standalone_mode=False,
+                    xsh=xsh_data,
+                )
+            except click.exceptions.ClickException as e:
+                e.show()
+                return e.exit_code
+            except click.exceptions.Abort:
+                return 1
+            return 0
+
+        # Make _wrapper look like the original function to inspect.getsource
+        # (so `cmd??` shows the user's click callback, not _wrapper).
+        if callable(original_func):
+            functools.update_wrapper(_wrapper, original_func)
+
+        # Override the signature AFTER update_wrapper so run_alias_by_params
+        # sees the ALIAS_PARAMS_DEFAULT params, not the original function's.
+        _wrapper.__signature__ = inspect.Signature(
+            parameters=[
+                inspect.Parameter(
+                    pname, inspect.Parameter.KEYWORD_ONLY, default=default
+                )
+                for pname, default in ALIAS_PARAMS_DEFAULT.items()
+            ]
+        )
+
+        _aliases.register(registered_name, dash_case=False)(_wrapper)
+        return _wrapper
+
+    # Direct use: @aliases.register_click_command (no parens)
+    if callable(func_or_name):
+        return _make_alias(func_or_name)
+
+    # Parameterized use: @aliases.register_click_command() / (...)("name")
+    def _decorator(func):
+        return _make_alias(func, alias_name=func_or_name)
+
+    return _decorator
 
 
 class PartialEvalAlias:
