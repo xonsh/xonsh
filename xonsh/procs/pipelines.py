@@ -861,7 +861,9 @@ class CommandPipeline:
         # @error_raise — always raise, even mid-chain.
         if raise_subproc_error is True:
             try:
-                raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
+                raise subprocess.CalledProcessError(
+                    rtn, spec.args, output=self.output
+                )
             finally:
                 # needed to get a working terminal in interactive mode
                 self._return_terminal()
@@ -876,7 +878,9 @@ class CommandPipeline:
         # the statement do it via $XONSH_SUBPROC_RAISE_ERROR.
         if XSH.env.get("XONSH_SUBPROC_CMD_RAISE_ERROR"):
             try:
-                raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
+                raise subprocess.CalledProcessError(
+                    rtn, spec.args, output=self.output
+                )
             finally:
                 # needed to get a working terminal in interactive mode
                 self._return_terminal()

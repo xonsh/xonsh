@@ -394,6 +394,7 @@ def _check_subproc_helper_raise(in_boolop):
         return
     if getattr(spec, "raise_subproc_error", None) is False:
         return
+
     import subprocess
 
     output = getattr(cp, "output", None)
@@ -514,8 +515,6 @@ def subproc_check_boolop(value):
     falls back to ``XSH.lastcmd`` — the most recently completed pipeline,
     which is the one this helper just ran.
     """
-    import subprocess
-
     if not XSH.env.get("XONSH_SUBPROC_RAISE_ERROR"):
         return value
     # Try to get the pipeline from the value first (BoolOp result, ![...]).
@@ -541,6 +540,8 @@ def subproc_check_boolop(value):
     # @error_ignore on the final pipeline of the chain opts out.
     if getattr(spec, "raise_subproc_error", None) is False:
         return value
+    import subprocess
+
     output = getattr(cp_for_output, "output", None)
     raise subprocess.CalledProcessError(rtn, spec.args, output=output)
 
