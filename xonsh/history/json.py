@@ -111,16 +111,30 @@ def _xhj_get_data_dir_files(data_dir, include_mtime=False):
     # list of (file, mtime) pairs
     data_dir = xt.expanduser_abs_path(data_dir)
     try:
-        for file in os.listdir(data_dir):
-            if file.startswith("xonsh-") and file.endswith(".json"):
-                fullpath = os.path.join(data_dir, file)
-                mtime = os.path.getmtime(fullpath) if include_mtime else None
-                yield fullpath, mtime
+        entries = os.listdir(data_dir)
     except OSError:
         if XSH.env.get("XONSH_DEBUG"):
             xt.print_exception(
                 f"Could not collect xonsh history json files from {data_dir}"
             )
+        return
+    for file in entries:
+        if not (file.startswith("xonsh-") and file.endswith(".json")):
+            continue
+        fullpath = os.path.join(data_dir, file)
+        if include_mtime:
+            try:
+                mtime = os.path.getmtime(fullpath)
+            except OSError as err:
+                if XSH.env.get("XONSH_DEBUG"):
+                    print(
+                        f"xonsh history: skipping unreadable file {fullpath!r}: {err}",
+                        file=sys.stderr,
+                    )
+                continue
+        else:
+            mtime = None
+        yield fullpath, mtime
 
 
 def _xhj_get_history_files(sort=True, newest_first=False, modified_since=None):
