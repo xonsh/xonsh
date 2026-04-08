@@ -197,3 +197,54 @@ def test_callable_alias_fd_leaking(test_code):
     assert out.count("3\\n4\\n") == 211 if ON_WINDOWS else 1111  # No fd leaking.
     assert "1" not in out  # No stdout leaking from alias `a`.
     assert "2" not in out  # No stdout leaking from alias `a`.
+
+
+@skip_if_on_windows
+@pytest.mark.timeout(120)
+def test_pipe_into_callable_alias_no_bad_fd_stress():
+    """Stress test for `<fast subprocess> | <callable alias reading stdin>`.
+
+    Regression test: ``CommandPipeline._prev_procs_done`` used to call
+    ``ch.close()`` on the connecting pipe between a fast-finishing
+    upstream subprocess and a callable alias still iterating over its
+    stdin TextIOWrapper.  Closing the read end mid-iteration surfaced as
+    ``OSError: [Errno 9] Bad file descriptor`` printed to stderr.
+
+    Run a heavy loop with several common patterns so that the race
+    triggers reliably and any future regression on CI is unmissable.
+    """
+    test_code = r"""
+$XONSH_SHOW_TRACEBACK = True
+
+@aliases.register
+def _addsuffix(args, stdin, stdout, stderr):
+    suffix = args[0] if args else ''
+    for line in stdin or []:
+        stdout.write(line.upper() + suffix)
+
+@aliases.register
+def _takeall(args, stdin, stdout, stderr):
+    for line in stdin or []:
+        stdout.write(line)
+
+# A: subprocess -> callable alias (the original failing case).
+for i in range(50):
+    echo -n 'hello ' | addsuffix snail
+
+# B: subprocess -> callable alias, captured forms.
+for i in range(50):
+    print($(echo -n 'hi' | addsuffix !), end='')
+    print(!(echo -n 'hi' | addsuffix !).out, end='')
+
+# C: multi-line input.
+for i in range(50):
+    printf 'a\nb\nc' | takeall
+"""
+    out, err, ret = run_xonsh(
+        test_code, interactive=False, single_command=True, timeout=120
+    )
+    assert ret == 0, f"non-zero exit; out={out!r} err={err!r}"
+    assert "Bad file descriptor" not in out
+    assert "Bad file descriptor" not in (err or "")
+    assert "Exception in thread" not in out
+    assert "Exception in thread" not in (err or "")
