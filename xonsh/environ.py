@@ -1254,13 +1254,29 @@ class GeneralSetting(Xettings):
 class SubprocessSetting(Xettings):
     """Subprocess Settings"""
 
-    RAISE_SUBPROC_ERROR = Var.with_default(
+    XONSH_SUBPROC_CMD_RAISE_ERROR = Var.with_default(
         False,
         "Whether or not to raise an error if a subprocess (captured or "
         "uncaptured) returns a non-zero exit status, which indicates failure. "
         "This is most useful in xonsh scripts or modules where failures "
         "should cause an end to execution. This is less useful at a terminal. "
-        "The error that is raised is a ``subprocess.CalledProcessError``.",
+        "The error that is raised is a ``subprocess.CalledProcessError``. "
+        "(Replaces the deprecated ``$RAISE_SUBPROC_ERROR``.)",
+    )
+    XONSH_SUBPROC_RAISE_ERROR = Var.with_default(
+        True,
+        "Whether or not to raise an error when the *final* command of a "
+        "logical chain (``cmd1 && cmd2`` / ``cmd1 || cmd2``) returns a "
+        "non-zero exit status.  Unlike ``$XONSH_SUBPROC_CMD_RAISE_ERROR`` "
+        "(which raises on every individual non-zero subprocess), commands "
+        "inside a logical chain do not raise on their own — only the "
+        "result of the whole short-circuit evaluation is checked. "
+        "Examples (with the default ``True``):\n\n"
+        "* ``echo 1 && echo 2`` — last executed is ``echo 2`` (rc=0): no raise.\n"
+        "* ``ls nono || echo 1`` — last executed is ``echo 1`` (rc=0): no raise.\n"
+        "* ``ls nono && echo 1`` — last executed is ``ls nono`` (rc≠0): raises.\n"
+        "* ``(echo 1 && ls /etc) || echo 1`` — last executed is ``ls /etc`` (rc=0): no raise.\n\n"
+        "The exception raised is a ``subprocess.CalledProcessError``.",
     )
     LAST_RETURN_CODE = Var.with_default(
         0,
@@ -2238,6 +2254,9 @@ class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
 
     AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs(
         {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
+    )
+    RAISE_SUBPROC_ERROR = SubprocessSetting.XONSH_SUBPROC_CMD_RAISE_ERROR.set_attrs(
+        {"sync": "XONSH_SUBPROC_CMD_RAISE_ERROR", "deprecated": True}
     )
 
 
