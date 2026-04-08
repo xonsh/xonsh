@@ -2315,12 +2315,7 @@ class Env(cabc.MutableMapping):
         # the deprecated key silently here.
         for key, val in initial.items():
             var = self._vars.get(key)
-            if (
-                var is not None
-                and var.deprecated
-                and var.sync
-                and var.sync in initial
-            ):
+            if var is not None and var.deprecated and var.sync and var.sync in initial:
                 continue
             self[key] = val
         if ON_WINDOWS:
