@@ -611,8 +611,9 @@ def _click_command_alias(func_or_name=None, *, _aliases):
     Only available when the ``click`` package is installed; wired up by
     :meth:`Aliases._add_click_command` from :meth:`Aliases.__init__`.
     """
-    import click
     import functools
+
+    import click
 
     def _make_alias(func, alias_name=None):
         if isinstance(func, click.Command):
