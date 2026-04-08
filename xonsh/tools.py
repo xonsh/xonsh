@@ -958,9 +958,7 @@ def _strip_subproc_error_prefix(line):
 
         ``Error: Command '...' returned non-zero exit status N.``
     """
-    return re.sub(
-        r"^(?:[\w.]+\.)?CalledProcessError:", "Error:", line, count=1
-    )
+    return re.sub(r"^(?:[\w.]+\.)?CalledProcessError:", "Error:", line, count=1)
 
 
 def display_colored_error_message(exc_info, strip_xonsh_error_types=True, limit=None):
@@ -1015,14 +1013,14 @@ def display_error_message(exc_info, strip_xonsh_error_types=True):
     exception_only = traceback.format_exception_only(exc_type, exc_value)
     if exc_type is XonshError and strip_xonsh_error_types:
         exception_only[0] = exception_only[0].partition(": ")[-1]
-    elif strip_xonsh_error_types and issubclass(exc_type, subprocess.CalledProcessError):
+    elif strip_xonsh_error_types and issubclass(
+        exc_type, subprocess.CalledProcessError
+    ):
         # Replace the ``subprocess.CalledProcessError:`` type prefix with a
         # short ``Error:`` so the message looks shell-native, and drop any
         # trailing newline so the next line of output (typically the
         # prompt) is not preceded by a blank line.
-        exception_only[0] = _strip_subproc_error_prefix(exception_only[0]).rstrip(
-            "\n"
-        )
+        exception_only[0] = _strip_subproc_error_prefix(exception_only[0]).rstrip("\n")
     sys.stderr.write("".join(exception_only))
 
 
