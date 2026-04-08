@@ -1412,6 +1412,35 @@ For example:
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
 
+Click Integration
+-----------------
+If the `click <https://click.palletsprojects.com/>`_ package is installed,
+you can register a click command as a xonsh alias with
+``@aliases.register_click_command``. The ``aliases.click`` attribute exposes
+the ``click`` module itself, so ``@aliases.click.option(...)`` works without
+a separate ``import click``. Both are loaded lazily on first access.
+
+.. code-block:: python
+
+    @ @aliases.register_click_command
+      @aliases.click.option('--name', help='The person to greet.')
+      @aliases.click.option('--count', default=1, help='Number of greetings.')
+      def _hello(ctx, count, name):
+          """Greets NAME for a total of COUNT times."""
+          for i in range(count):
+              print(name, file=ctx.stdout)
+
+    @ hello --count 3 --name World
+    World
+    World
+    World
+
+The call forms mirror ``@aliases.register`` — bare, ``()``, or with an
+explicit name. Inside the click callback, ``ctx`` is a ``click.Context``
+subclass carrying the usual xonsh alias parameters as attributes
+(``ctx.alias_args``, ``ctx.stdin``, ``ctx.stdout``, ``ctx.env``, and so on).
+See :doc:`callable_aliases` for the full reference.
+
 Command Decorators (Decorator Aliases)
 --------------------------------------
 In xonsh you can decorate the command to transform output into desired object:

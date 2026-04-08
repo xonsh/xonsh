@@ -633,6 +633,13 @@ def _click_command_alias(func_or_name=None, *, _aliases):
                     attr = "alias_args" if key == "args" else key
                     setattr(self, attr, xsh.get(key))
 
+        # Expose the click module itself so callbacks can use
+        # ``ctx.click.echo(...)`` etc. without a separate import.
+        # (Set after the class body — Python class-scope rules block
+        # ``click = click`` inside the body from resolving the enclosing
+        # function's name.)
+        XonshContext.click = click
+
         cmd.context_class = XonshContext
 
         registered_name = get_alias_name(alias_name or name_source)
