@@ -715,15 +715,25 @@ class CommandPipeline:
             self._safe_close(s.stdin)
             self._safe_close(s.stdout)
             self._safe_close(s.stderr)
+            # Close ONLY the writer end of any connecting pipe.  The reader
+            # end is in active use by the next proc in the pipeline (which
+            # may still be draining buffered data); closing it here would
+            # invalidate the fd mid-read and surface as
+            # `OSError: [Errno 9] Bad file descriptor` in the consumer
+            # (e.g. a callable alias iterating over `stdin`).
+            # The reader is closed later in `_close_prev_procs` /
+            # `_close_proc`, after the next proc has finished.
             for ch in s.pipe_channels:
-                ch.close()
+                ch.close_writer()
             if p is None:
                 continue
             self._safe_close(p.stdin)
             self._safe_close(p.stdout)
             self._safe_close(p.stderr)
+
+            # Close ONLY the writer. Described above.
             for ch in getattr(p, "pipe_channels", ()):
-                ch.close()
+                ch.close_writer()
         return False if any_running else (len(self) > 1)
 
     def _close_prev_procs(self):
