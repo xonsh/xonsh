@@ -25,7 +25,6 @@ import pytest
 from xonsh.parsers.base import wrap_subproc_raise_checks
 from xonsh.pytest.tools import skip_if_on_windows
 
-
 # ---------------------------------------------------------------------------
 # AST-level wrapping
 # ---------------------------------------------------------------------------
