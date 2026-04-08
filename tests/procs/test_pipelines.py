@@ -573,23 +573,17 @@ def test_callable_alias_in_middle_of_pipeline(xonsh_session, capsys):
         )
         pipeline.end()
         if pipeline.returncode != 0 or pipeline.out != "HIDONE":
-            failures.append(
-                ("sub|mid|sub", i, pipeline.out, pipeline.returncode)
-            )
+            failures.append(("sub|mid|sub", i, pipeline.out, pipeline.returncode))
 
         # subprocess | callable | callable
-        pipeline = xonsh_session.execer.eval(
-            "!(echo -n 'hi' | midupper | midupper)"
-        )
+        pipeline = xonsh_session.execer.eval("!(echo -n 'hi' | midupper | midupper)")
         pipeline.end()
         # First midupper writes "HI" + "DONE\n"; second midupper iterates
         # those two lines ("HI", "DONE\n"), uppercases them (still "HI",
         # "DONE\n"), then writes its own sentinel — final output is
         # "HIDONE\nDONE\n".
         if pipeline.returncode != 0 or pipeline.out != "HIDONE\nDONE\n":
-            failures.append(
-                ("sub|mid|mid", i, pipeline.out, pipeline.returncode)
-            )
+            failures.append(("sub|mid|mid", i, pipeline.out, pipeline.returncode))
 
     captured = capsys.readouterr()
     assert not failures, (
