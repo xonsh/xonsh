@@ -86,7 +86,7 @@ class Parser(ThreeSixParser):
         p[0] = p2
 
     def p_typedargslist_kwarg(self, p):
-        """typedargslist : POW tfpdef"""
+        """typedargslist : POW tfpdef comma_opt"""
         p[0] = ast.arguments(
             posonlyargs=[],
             args=[],
@@ -172,7 +172,7 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_typedargslist_t7(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef comma_opt"""
         # x, **kwargs
         p0 = ast.arguments(
             posonlyargs=[],
@@ -202,7 +202,7 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_typedargslist_t10(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             posonlyargs=[],
@@ -218,7 +218,7 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_typedargslist_t11(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             posonlyargs=[],
@@ -268,7 +268,7 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_varargslist_kwargs(self, p):
-        """varargslist : POW vfpdef"""
+        """varargslist : POW vfpdef comma_opt"""
         p[0] = ast.arguments(
             posonlyargs=[],
             args=[],
@@ -324,7 +324,7 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_varargslist_v7(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef comma_opt"""
         # x, **kwargs
         p0 = ast.arguments(
             posonlyargs=[],
@@ -355,7 +355,7 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_varargslist_v10(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             posonlyargs=[],
@@ -371,7 +371,7 @@ class Parser(ThreeSixParser):
         p[0] = p0
 
     def p_varargslist_v11(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef comma_opt"""
         p0 = ast.arguments(
             posonlyargs=[],
             args=[],
