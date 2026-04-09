@@ -145,6 +145,16 @@ Xonsh also supports `.xsh` test files — collected via custom `XshFile`/`XshFun
 
 **Test dependencies**: pytest-mock, pytest-timeout, pytest-subprocess, pytest-rerunfailures, pytest-cov, pyte (terminal emulation), virtualenv
 
+## Development Discipline
+
+Before making changes, research the surrounding code thoroughly — understand how the module works, what calls it, and what it depends on. Xonsh is a concurrent, multi-process environment, so pay close attention to:
+
+- **Thread safety** — many subsystems run on background threads (syntax highlighting, completion, parser loading). Shared state must be protected
+- **File descriptor leaks** — subprocess pipelines, redirects, and process proxies open fds that must be closed on every code path, including errors
+- **Race conditions** — prompt rendering, command caching, and lazy initialization can overlap. Verify that concurrent access is handled correctly
+
+Every change must be accompanied by tests.
+
 ## Code Style
 
 - **Formatter/linter**: ruff (line length 88, rules: B, D, E, F, I, T10, TID, YTT, W, UP)
