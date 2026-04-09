@@ -212,3 +212,48 @@ def test_complete_python_simple_function():
     assert "obj.simple_method" not in comps, (
         "Should NOT have plain 'simple_method' to avoid duplicates"
     )
+
+
+class TestAtSignCompletion:
+    """Test @ prefix completion: bare @. (xonsh object), @name. and @name (decorator)."""
+
+    def test_at_dot_completes_xonsh_object(self):
+        """@.<TAB> completes attributes of the xonsh session interface (@)."""
+        res = complete_python(
+            CompletionContext(python=PythonContext("@.", 2, ctx={}))
+        )
+        assert res is not None
+        comps, _ = res
+        assert "@.env[" in comps
+
+    def test_at_name_dot_completes_attrs(self):
+        """@obj.<TAB> completes attributes of obj (decorator prefix)."""
+
+        class Obj:
+            some_attr = 1
+
+        res = complete_python(
+            CompletionContext(
+                python=PythonContext("@obj.", 5, ctx={"obj": Obj})
+            )
+        )
+        assert res is not None
+        comps, _ = res
+        assert "@obj.some_attr" in comps
+
+    def test_at_name_completes_decorator(self):
+        """@na<TAB> completes names from ctx with @ prefix."""
+
+        class MyDecorator:
+            pass
+
+        res = complete_python(
+            CompletionContext(
+                python=PythonContext(
+                    "@My", 3, ctx={"MyDecorator": MyDecorator}
+                )
+            )
+        )
+        assert res is not None
+        comps, _ = res
+        assert "@MyDecorator" in comps

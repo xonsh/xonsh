@@ -245,6 +245,11 @@ def _complete_python(prefix, context: PythonContext):
     else:
         rtn |= {s for s in XONSH_EXPR_TOKENS if filt(s, prefix)}
     rtn |= {s for s in dir(builtins) if filt(s, prefix)}
+    if prefix.startswith("@"):
+        dp = prefix[1:]
+        if ctx is not None:
+            rtn |= {"@" + s for s in ctx if filt(s, dp)}
+        rtn |= {"@" + s for s in dir(builtins) if filt(s, dp)}
     return rtn
 
 
@@ -289,6 +294,8 @@ def attr_complete(prefix, ctx, filter_func):
     expr = xt.subexpr_from_unbalanced(expr, "(", ")")
     expr = xt.subexpr_from_unbalanced(expr, "[", "]")
     expr = xt.subexpr_from_unbalanced(expr, "{", "}")
+    if expr.startswith("@") and len(expr) > 1:
+        expr = expr[1:]
     val, _ctx = _safe_eval(expr, ctx)
     if val is None and _ctx is None:
         return attrs
