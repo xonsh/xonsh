@@ -28,6 +28,10 @@ def still_writable(fd):
     """Determines whether a file descriptor is still writable by trying to
     write an empty string and seeing if it fails.
     """
+    if fd < 0:
+        # No pipe was set up (e.g. stdout=None); treat as "not broken by
+        # downstream", so the caller attributes the OSError to the alias.
+        return True
     try:
         os.write(fd, b"")
         status = True

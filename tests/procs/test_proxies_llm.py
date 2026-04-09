@@ -5,7 +5,7 @@ from unittest.mock import patch, call
 
 import pytest
 
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread
+from xonsh.procs.proxies import ProcProxy, ProcProxyThread, still_writable
 from xonsh.procs.readers import safe_fdclose
 
 
@@ -36,6 +36,52 @@ def _fd_is_open(fd):
         return True
     except OSError:
         return False
+
+
+# ── still_writable: fd=-1 must not mask real errors ──────────────────────
+
+def test_still_writable_negative_fd_returns_true():
+    """fd=-1 means no pipe — treat as writable so OSError is not masked."""
+    assert still_writable(-1) is True
+
+
+def test_still_writable_closed_fd_returns_false():
+    """A closed fd should return False (pipe broken by downstream)."""
+    r, w = os.pipe()
+    os.close(w)
+    assert still_writable(w) is False
+    os.close(r)
+
+
+def test_still_writable_open_fd_returns_true():
+    """An open writable fd should return True."""
+    r, w = os.pipe()
+    assert still_writable(w) is True
+    os.close(r)
+    os.close(w)
+
+
+def test_proc_proxy_thread_oserror_not_masked_without_pipe(xession):
+    """Alias raising OSError without piped stdout must return 1, not 0."""
+    with patch.object(ProcProxyThread, "start"):
+        p = ProcProxyThread(
+            f=lambda: (_ for _ in ()).throw(OSError("real error")),
+            args=[],
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            env={},
+        )
+    p.spec = _make_fake_spec()
+    # c2pwrite and errwrite are -1 (no pipe)
+    assert p.c2pwrite == -1
+    assert p.errwrite == -1
+
+    p.run()
+
+    assert p.returncode == 1, (
+        f"expected returncode=1 for real OSError, got {p.returncode}"
+    )
 
 
 # ── ProcProxyThread: devnull leak on f=None ──────────────────────────────
