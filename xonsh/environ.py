@@ -2794,6 +2794,9 @@ class Env(cabc.MutableMapping):
         )
 
     def __len__(self):
+        # Counts only explicitly-set vars (not defaults from self._vars).
+        # Note: __iter__ yields defaults too, so len(env) != len(list(env)).
+        # Use sum(1 for _ in self) if Mapping-protocol consistency is needed.
         return len(self._d)
 
     def __str__(self):
