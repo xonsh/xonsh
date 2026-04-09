@@ -883,7 +883,7 @@ def source_alias_fn(
         ):
             try:
                 XSH.builtins.execx(src, "exec", ctx, filename=fpath)
-            except Exception:
+            except SyntaxError:
                 print_color(
                     "You may be attempting to source non-xonsh file: "
                     f"{fpath!r}. "
