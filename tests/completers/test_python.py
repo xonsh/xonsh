@@ -219,9 +219,7 @@ class TestAtSignCompletion:
 
     def test_at_dot_completes_xonsh_object(self):
         """@.<TAB> completes attributes of the xonsh session interface (@)."""
-        res = complete_python(
-            CompletionContext(python=PythonContext("@.", 2, ctx={}))
-        )
+        res = complete_python(CompletionContext(python=PythonContext("@.", 2, ctx={})))
         assert res is not None
         comps, _ = res
         assert "@.env[" in comps
@@ -233,9 +231,7 @@ class TestAtSignCompletion:
             some_attr = 1
 
         res = complete_python(
-            CompletionContext(
-                python=PythonContext("@obj.", 5, ctx={"obj": Obj})
-            )
+            CompletionContext(python=PythonContext("@obj.", 5, ctx={"obj": Obj}))
         )
         assert res is not None
         comps, _ = res
@@ -249,9 +245,7 @@ class TestAtSignCompletion:
 
         res = complete_python(
             CompletionContext(
-                python=PythonContext(
-                    "@My", 3, ctx={"MyDecorator": MyDecorator}
-                )
+                python=PythonContext("@My", 3, ctx={"MyDecorator": MyDecorator})
             )
         )
         assert res is not None
