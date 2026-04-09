@@ -526,6 +526,8 @@ class PopenThread(threading.Thread):
 
     def send_signal(self, signal):
         """Dispatches to Popen.send_signal()."""
+        # NOTE: dt tracks virtual time (100ns/iter) but real sleep is
+        # ~100us-1ms minimum, so actual wait is ~1000x longer than self.timeout.
         dt = 0.0
         while self.proc is None and dt < self.timeout:
             time.sleep(1e-7)
