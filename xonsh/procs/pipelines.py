@@ -1,5 +1,6 @@
 """Command pipeline tools."""
 
+import errno
 import io
 import os
 import re
@@ -467,12 +468,15 @@ class CommandPipeline:
                     else:
                         out_target.write(line.decode(encoding=enc, errors=err))
                     out_target.flush()
-                except OSError:
-                    # Downstream process closed the pipe. Stop streaming
-                    # but keep collecting raw output for captured result.
-                    # Linux: BrokenPipeError (errno 32)
-                    # Windows: OSError "Invalid argument" (errno 22)
-                    stream = False
+                except OSError as e:
+                    if e.errno in (errno.EPIPE, errno.EINVAL):
+                        # Downstream process closed the pipe. Stop streaming
+                        # but keep collecting raw output for captured result.
+                        # Linux: errno.EPIPE (32, BrokenPipeError)
+                        # Windows: errno.EINVAL (22, "Invalid argument")
+                        stream = False
+                    else:
+                        raise
             # save the raw bytes
             raw_out_lines.append(line)
             # do some munging of the line before we return it
@@ -521,11 +525,12 @@ class CommandPipeline:
                 else:
                     err_target.write(b.decode(encoding=enc, errors=err))
                 err_target.flush()
-            except OSError:
+            except OSError as e:
+                if e.errno not in (errno.EPIPE, errno.EINVAL):
+                    raise
                 # Downstream process closed the pipe.
-                # Linux: BrokenPipeError (errno 32)
-                # Windows: OSError "Invalid argument" (errno 22)
-                pass
+                # Linux: errno.EPIPE (32, BrokenPipeError)
+                # Windows: errno.EINVAL (22, "Invalid argument")
         # accumulate the raw bytes
         self._raw_error += b
         # do some munging of the line before we save it to the attr
