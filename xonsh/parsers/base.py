@@ -1177,7 +1177,7 @@ class BaseParser:
         p[0] = p[2]
 
     def p_typedargslist_kwarg(self, p):
-        """typedargslist : POW tfpdef"""
+        """typedargslist : POW tfpdef comma_opt"""
         p[0] = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[2], defaults=[]
         )
@@ -1227,7 +1227,7 @@ class BaseParser:
         p[0] = p0
 
     def p_typedargslist_t7(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef comma_opt"""
         # x, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[6], defaults=[]
@@ -1245,7 +1245,7 @@ class BaseParser:
         p[0] = p0
 
     def p_typedargslist_t10(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[9], defaults=[]
@@ -1255,7 +1255,7 @@ class BaseParser:
         p[0] = p0
 
     def p_typedargslist_t11(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             args=[],
@@ -1293,7 +1293,7 @@ class BaseParser:
         p[0] = [{"arg": p[2], "default": p[3]}]
 
     def p_comma_pow_tfpdef(self, p):
-        """comma_pow_tfpdef : COMMA POW tfpdef"""
+        """comma_pow_tfpdef : COMMA POW tfpdef comma_opt"""
         p[0] = p[3]
 
     def _set_args_def(self, argmts, vals, kwargs=False):
@@ -1345,7 +1345,7 @@ class BaseParser:
             raise AssertionError()
 
     def p_varargslist_kwargs(self, p):
-        """varargslist : POW vfpdef"""
+        """varargslist : POW vfpdef comma_opt"""
         p[0] = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[2], defaults=[]
         )
@@ -1377,7 +1377,7 @@ class BaseParser:
         p[0] = p0
 
     def p_varargslist_v7(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef comma_opt"""
         # x, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[6], defaults=[]
@@ -1396,7 +1396,7 @@ class BaseParser:
         p[0] = p0
 
     def p_varargslist_v10(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[9], defaults=[]
@@ -1406,7 +1406,7 @@ class BaseParser:
         p[0] = p0
 
     def p_varargslist_v11(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef comma_opt"""
         p0 = ast.arguments(
             args=[],
             vararg=None,
@@ -1439,7 +1439,7 @@ class BaseParser:
         p[0] = [{"arg": p[2], "default": p[3]}]
 
     def p_comma_pow_vfpdef(self, p):
-        """comma_pow_vfpdef : COMMA POW vfpdef"""
+        """comma_pow_vfpdef : COMMA POW vfpdef comma_opt"""
         p[0] = p[3]
 
     def p_stmt(self, p):
@@ -3184,8 +3184,14 @@ class BaseParser:
         p[0] = p[2]
 
     def p_subscriptlist(self, p):
-        """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
-        p1, p2 = p[1], p[2]
+        """
+        subscriptlist : subscript
+                      | subscript COMMA
+                      | subscript comma_subscript_list
+                      | subscript comma_subscript_list COMMA
+        """
+        p1 = p[1]
+        p2 = p[2] if len(p) > 2 and isinstance(p[2], list) else None
         if p2 is None:
             pass
         elif isinstance(p1, ast.Slice) or any([isinstance(x, ast.Slice) for x in p2]):
@@ -3320,6 +3326,8 @@ class BaseParser:
         """dictorsetmaker : test COLON testlist"""
         keys = [p[1]]
         vals = self._list_or_elts_if_not_real_tuple(p[3])
+        if len(vals) != len(keys):
+            self._set_error("invalid syntax")
         lineno, col = lopen_loc(p[1])
         p[0] = ast.Dict(
             keys=keys, values=vals, ctx=ast.Load(), lineno=lineno, col_offset=col
