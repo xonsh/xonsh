@@ -169,7 +169,7 @@ the raise — it also wins over the chain-result check performed by
 .. code-block:: console
 
     @ r = !(@error_raise ls nonono)
-    Error: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
+    subprocess.CalledProcessError: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
 
     @ r = !(@error_ignore ls nonono)
 
