@@ -692,6 +692,7 @@ class ProcProxy:
         err = env.get("XONSH_ENCODING_ERRORS")
         spec = self._wait_and_getattr("spec")
         # set file handles
+        owned_handles = []  # handles opened here that we must close
         if self.stdin is None:
             stdin = None
         else:
@@ -700,8 +701,14 @@ class ProcProxy:
             else:
                 inbuf = self.stdin
             stdin = io.TextIOWrapper(inbuf, encoding=enc, errors=err)
+            if isinstance(self.stdin, int):
+                owned_handles.append(stdin)
         stdout = self._pick_buf(self.stdout, sys.stdout, enc, err)
+        if stdout is not self.stdout and stdout is not sys.stdout:
+            owned_handles.append(stdout)
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
+        if stderr is not self.stderr and stderr is not sys.stderr:
+            owned_handles.append(stderr)
         # run the actual function
         try:
             alias_env = {}
@@ -732,6 +739,8 @@ class ProcProxy:
         self.returncode = parse_proxy_return(r, stdout, stderr)
         safe_flush(stdout)
         safe_flush(stderr)
+        for h in owned_handles:
+            safe_fdclose(h)
         return self.returncode
 
     @staticmethod
