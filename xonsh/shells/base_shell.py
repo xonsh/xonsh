@@ -2,6 +2,7 @@
 
 import io
 import os
+import subprocess
 import sys
 import time
 
@@ -405,6 +406,27 @@ class BaseShell:
                 hist.last_cmd_rtn = 0  # returncode for success
         except XonshError as e:
             print(e.args[0], file=sys.stderr)
+            if hist is not None and hist.last_cmd_rtn is None:
+                hist.last_cmd_rtn = 1  # return code for failure
+        except subprocess.CalledProcessError:
+            # A subproc command at the prompt failed.  The command's own
+            # ``stderr`` is already on screen; whether we *additionally*
+            # print xonsh's ``CalledProcessError: ...`` line is governed
+            # by ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR``.
+            #
+            # ``@error_raise`` is a per-command opt-in that *always*
+            # shows the exception, regardless of the env var — detected
+            # by checking whether the last completed pipeline's spec
+            # has ``raise_subproc_error is True``.
+            #
+            # Scripts (``./script.xsh`` / ``xonsh -c``) never reach this
+            # handler because they don't go through ``default()``, so
+            # their failures keep propagating as before.
+            lastcmd = XSH.lastcmd
+            spec = getattr(lastcmd, "spec", None) if lastcmd is not None else None
+            is_error_raise = getattr(spec, "raise_subproc_error", None) is True
+            if is_error_raise or env.get("XONSH_PROMPT_SHOW_SUBPROC_ERROR"):
+                print_exception(exc_info=exc_info)
             if hist is not None and hist.last_cmd_rtn is None:
                 hist.last_cmd_rtn = 1  # return code for failure
         except (SystemExit, KeyboardInterrupt) as err:

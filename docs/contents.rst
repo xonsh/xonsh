@@ -52,6 +52,7 @@ and streamline your command-line experience.
     prompt
     events
     globbing
+    error_handling
     macros
     xonsh_session
     Open technical issue <https://github.com/xonsh/xonsh>
