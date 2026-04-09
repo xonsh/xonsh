@@ -2611,7 +2611,7 @@ class Env(cabc.MutableMapping):
                 else:
                     self._set_item(k, v, thread_local=True)
             if exception is not None:
-                raise exception from None
+                raise exception
 
     def get_swapped_values(self):
         return self._d.get_local_overrides()
