@@ -15,6 +15,7 @@ import pytest
 from xonsh.environ import (
     DeprecatedSetting,
     Env,
+    EnvPath,
     InternalEnvironDict,
     LsColors,
     PTKSetting,
@@ -802,6 +803,17 @@ def test_envpath_in_env_object():
     assert hasattr(env["PATH"], "paths")
     assert "/usr/bin" in env["PATH"].paths
     assert "/bin" in env["PATH"].paths
+
+
+def test_envpath_eq_expands_both_sides(xession):
+    """EnvPath.__eq__ should expand both sides, so ~/bin matches the absolute path."""
+    xession.env["EXPAND_ENV_VARS"] = True
+    home = os.path.expanduser("~")
+    p = EnvPath(["~/bin", "/usr/local/bin"])
+    # raw form
+    assert p == ["~/bin", "/usr/local/bin"]
+    # expanded form
+    assert p == [f"{home}/bin", "/usr/local/bin"]
 
 
 def test_env_deprecated():
