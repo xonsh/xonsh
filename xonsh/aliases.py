@@ -240,6 +240,11 @@ class Aliases(cabc.MutableMapping):
         self._raw = {}
         self.update(*args, **kwargs)
 
+    def __dir__(self):
+        d = set(super().__dir__())
+        d.update(("click", "register_click_command"))
+        return list(d)
+
     def __getattr__(self, name):
         # Lazy click integration: import is deferred until the first access
         # to ``aliases.click`` or ``aliases.register_click_command``, so
@@ -623,6 +628,12 @@ def _click_command_alias(func_or_name=None, *, _aliases):
         else:
             original_func = func
             name_source = func
+            params = list(inspect.signature(func).parameters)
+            if not params or params[0] != "ctx":
+                raise TypeError(
+                    f"Click alias {func.__name__!r} must have 'ctx' as the "
+                    f"first parameter."
+                )
             cmd = click.command()(click.pass_context(func))
 
         class XonshContext(click.Context):
