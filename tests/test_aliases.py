@@ -238,6 +238,30 @@ def test_register_decorator(xession):
     assert set(aliases) == {"debug", "name", "private"}
 
 
+def test_register_click_command(xession):
+    """Basic smoke test for the click integration."""
+    import io
+
+    click = pytest.importorskip("click")
+
+    aliases = Aliases()
+
+    @aliases.register_click_command
+    @aliases.click.option("--name", default="World")
+    def _greet(ctx, name):
+        ctx.click.echo(f"hello {name}", file=ctx.stdout)
+
+    # Decorator derives the alias name from the function (leading underscore
+    # stripped) and exposes the click module both on ``aliases`` and ``ctx``.
+    assert "greet" in aliases
+    assert aliases.click is click
+
+    # Invoking the alias runs the click command, which writes to ctx.stdout.
+    stdout = io.StringIO()
+    aliases["greet"](args=["--name", "Xonsh"], stdout=stdout)
+    assert stdout.getvalue() == "hello Xonsh\n"
+
+
 def test_run_alias_by_params():
     def alias_named_params(args, stdout):
         return (args, stdout)
