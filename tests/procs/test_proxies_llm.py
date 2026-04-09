@@ -3,7 +3,7 @@ import os
 import sys
 from unittest.mock import patch
 
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread
+from xonsh.procs.proxies import ProcProxy, ProcProxyThread, still_writable
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
