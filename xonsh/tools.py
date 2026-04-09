@@ -2581,13 +2581,23 @@ def ensure_timestamp(t, datetime_format=None):
         return float(t)
     except (ValueError, TypeError):
         pass
+    if isinstance(t, datetime.datetime):
+        return t.timestamp()
     if datetime_format is None:
         datetime_format = xsh.env["XONSH_DATETIME_FORMAT"]
-    if isinstance(t, datetime.datetime):
-        t = t.timestamp()
-    else:
-        t = datetime.datetime.strptime(t, datetime_format).timestamp()
-    return t
+    # Try the configured format first, then fall back to ISO-8601 parsing
+    # so that e.g. "2023-07-17" works without requiring "2023-07-17 00:00".
+    try:
+        return datetime.datetime.strptime(t, datetime_format).timestamp()
+    except ValueError:
+        pass
+    try:
+        return datetime.datetime.fromisoformat(t).timestamp()
+    except ValueError as err:
+        raise ValueError(
+            f"time data {t!r} does not match format {datetime_format!r} "
+            f"and is not a valid ISO-8601 date"
+        ) from err
 
 
 def format_datetime(dt):

@@ -260,9 +260,11 @@ class HistoryAlias(xcli.ArgParserAlias):
         datetime_format : -f
             the datetime format to be used for filtering and printing
         start_time: --start-time, +T
-            show only commands after timestamp
+            show only commands after timestamp.
+            Accepts $XONSH_DATETIME_FORMAT or ISO-8601 (e.g. 2023-07-17)
         end_time: -T, --end-time
-            show only commands before timestamp
+            show only commands before timestamp.
+            Accepts $XONSH_DATETIME_FORMAT or ISO-8601 (e.g. 2023-07-17)
         location: -l, --location
             The history file location (bash or zsh)
         reverse: -r, --reverse
