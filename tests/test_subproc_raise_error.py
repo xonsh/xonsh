@@ -380,6 +380,251 @@ def test_statement_after_raise_does_not_run(xonsh_execer, raise_env, capsys):
 
 
 # ---------------------------------------------------------------------------
+# Exhaustive chain combinations — every 2/3-element chain with &&, ||,
+# pipes, decorators, and both env vars.
+# ---------------------------------------------------------------------------
+
+
+@skip_if_on_windows
+def test_three_cmd_or_chain_all_fail(xonsh_execer, raise_env):
+    """``fail || fail || fail`` — all fail, chain result is falsy → raise."""
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("ls /__n1__ || ls /__n2__ || ls /__n3__\n")
+
+
+@skip_if_on_windows
+def test_three_cmd_or_chain_last_succeeds(xonsh_execer, raise_env):
+    """``fail || fail || echo ok`` — last succeeds, chain result is truthy."""
+    xonsh_execer.exec("ls /__n1__ || ls /__n2__ || echo ok\n")
+
+
+@skip_if_on_windows
+def test_three_cmd_or_chain_middle_succeeds(xonsh_execer, raise_env):
+    """``fail || echo ok || fail`` — middle succeeds, ``or`` short-circuits."""
+    xonsh_execer.exec("ls /__n1__ || echo ok || ls /__n3__\n")
+
+
+@skip_if_on_windows
+def test_three_cmd_or_chain_first_succeeds(xonsh_execer, raise_env):
+    """``echo ok || fail || fail`` — first succeeds, rest never evaluated."""
+    xonsh_execer.exec("echo ok || ls /__n2__ || ls /__n3__\n")
+
+
+@skip_if_on_windows
+def test_or_then_and_chain_rescued(xonsh_execer, raise_env):
+    """``fail || echo ok && echo yes`` — Python precedence:
+    ``fail or (echo_ok and echo_yes)``.  ``fail`` is falsy → evaluate
+    ``echo ok and echo yes`` → both truthy → no raise.
+    """
+    xonsh_execer.exec("ls /__nope__ || echo ok && echo yes\n")
+
+
+@skip_if_on_windows
+def test_or_then_and_chain_second_part_fails(xonsh_execer, raise_env):
+    """``fail || echo ok && fail`` — ``fail or (ok and fail)`` →
+    inner ``and`` returns ``fail`` → that's the chain result → raise.
+    """
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("ls /__nope__ || echo ok && ls /__n2__\n")
+
+
+@skip_if_on_windows
+def test_and_then_or_all_fail(xonsh_execer, raise_env):
+    """``fail && echo n || fail`` — ``(fail and echo_n) or fail2``.
+    Inner ``and`` short-circuits to ``fail`` (falsy), outer ``or``
+    evaluates ``fail2`` (also falsy) → raise.
+    """
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("ls /__n1__ && echo n || ls /__n2__\n")
+
+
+@skip_if_on_windows
+def test_pipe_in_and_chain_pipe_fails(xonsh_execer, raise_env):
+    """``echo ok | grep x && echo n`` — pipe exits non-zero (grep no match),
+    ``and`` short-circuits → chain result is the failing pipe → raise.
+    """
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("echo ok | grep x && echo n\n")
+
+
+@skip_if_on_windows
+def test_pipe_in_or_chain_pipe_fails_rescued(xonsh_execer, raise_env):
+    """``echo ok | grep x || echo fb`` — pipe fails, ``or`` evaluates
+    ``echo fb`` (success) → no raise.
+    """
+    xonsh_execer.exec("echo ok | grep x || echo fb\n")
+
+
+@skip_if_on_windows
+def test_pipe_in_and_chain_pipe_succeeds(xonsh_execer, raise_env):
+    """``echo ok | grep ok && echo yes`` — pipe succeeds, ``and`` continues,
+    ``echo yes`` succeeds → no raise.
+    """
+    xonsh_execer.exec("echo ok | grep ok && echo yes\n")
+
+
+@skip_if_on_windows
+def test_error_ignore_mid_and_chain(xonsh_execer, raise_env):
+    """``echo 1 && @error_ignore ls /__nope__ && echo 2`` —
+    ``@error_ignore`` suppresses the mid-chain failure, but Python
+    ``and`` still sees the falsy HiddenCommandPipeline and short-circuits,
+    so ``echo 2`` never runs.  The chain result is the failing pipeline
+    with ``@error_ignore`` → no raise.
+    """
+    xonsh_execer.exec(
+        "echo 1 && @error_ignore ls /__nope__\n"
+    )
+
+
+@skip_if_on_windows
+def test_error_raise_first_in_or_chain(xonsh_execer, raise_env):
+    """``@error_raise fail || echo fb`` — ``@error_raise`` raises immediately
+    at the pipeline level, before ``||`` gets a chance to rescue.
+    """
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("@error_raise ls /__nope__ || echo fb\n")
+
+
+@skip_if_on_windows
+def test_error_raise_second_in_and_chain(xonsh_execer, raise_env):
+    """``echo ok && @error_raise fail`` — first succeeds, ``and`` continues,
+    ``@error_raise`` on the second raises immediately.
+    """
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("echo ok && @error_raise ls /__nope__\n")
+
+
+@skip_if_on_windows
+def test_error_raise_on_success_does_not_raise(xonsh_execer, raise_env):
+    """``@error_raise echo ok`` — command succeeds, no raise despite decorator."""
+    xonsh_execer.exec("@error_raise echo ok\n")
+
+
+@skip_if_on_windows
+def test_both_env_vars_true_standalone_fail(xonsh_execer, raise_env, monkeypatch):
+    """Both ``$XONSH_SUBPROC_RAISE_ERROR`` and ``$XONSH_SUBPROC_CMD_RAISE_ERROR``
+    are True — standalone failure raises (via CMD level).
+    """
+    monkeypatch.setitem(raise_env, "XONSH_SUBPROC_CMD_RAISE_ERROR", True)
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("ls /__nope__\n")
+
+
+@skip_if_on_windows
+def test_both_env_vars_true_chain_first_fail(xonsh_execer, raise_env, monkeypatch):
+    """Both env vars True — ``fail || echo fb``: CMD_RAISE_ERROR fires on the
+    first pipeline before ``||`` can rescue.
+    """
+    monkeypatch.setitem(raise_env, "XONSH_SUBPROC_CMD_RAISE_ERROR", True)
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("ls /__nope__ || echo fb\n")
+
+
+@skip_if_on_windows
+def test_both_env_vars_false_no_raise(xonsh_execer, raise_env, monkeypatch):
+    """Both env vars False — nothing raises."""
+    monkeypatch.setitem(raise_env, "XONSH_SUBPROC_RAISE_ERROR", False)
+    monkeypatch.setitem(raise_env, "XONSH_SUBPROC_CMD_RAISE_ERROR", False)
+    xonsh_execer.exec("ls /__nope__\n")
+    xonsh_execer.exec("ls /__n1__ && echo n\n")
+    xonsh_execer.exec("ls /__n1__ || ls /__n2__\n")
+
+
+@skip_if_on_windows
+def test_error_ignore_overrides_both_env_vars(xonsh_execer, raise_env, monkeypatch):
+    """``@error_ignore`` suppresses even when both env vars are True."""
+    monkeypatch.setitem(raise_env, "XONSH_SUBPROC_CMD_RAISE_ERROR", True)
+    xonsh_execer.exec("@error_ignore ls /__nope__\n")
+
+
+@skip_if_on_windows
+def test_captured_object_in_chain_does_not_raise(xonsh_execer, raise_env):
+    """``p = !(fail) && echo yes`` — ``!(...)`` is exempt, so ``p`` is
+    assigned the falsy pipeline. ``and`` short-circuits; no raise because
+    the final value is the ``!(...)`` exempt pipeline.
+    """
+    xonsh_execer.exec("p = !(ls /__nope__)\n")
+
+
+@skip_if_on_windows
+def test_semicolon_first_fails_second_succeeds(xonsh_execer, raise_env):
+    """``fail; echo ok`` — first statement raises before the second runs."""
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("ls /__nope__; echo ok\n")
+
+
+@skip_if_on_windows
+def test_semicolon_first_succeeds_second_fails(xonsh_execer, raise_env):
+    """``echo ok; fail`` — first statement succeeds, second raises."""
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("echo ok; ls /__nope__\n")
+
+
+@skip_if_on_windows
+def test_four_cmd_and_chain_all_succeed(xonsh_execer, raise_env):
+    """``a && b && c && d`` — all succeed → no raise."""
+    xonsh_execer.exec("echo a && echo b && echo c && echo d\n")
+
+
+@skip_if_on_windows
+def test_four_cmd_or_chain_all_fail(xonsh_execer, raise_env):
+    """``f || f || f || f`` — all fail → raise."""
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec(
+            "ls /__n1__ || ls /__n2__ || ls /__n3__ || ls /__n4__\n"
+        )
+
+
+@skip_if_on_windows
+def test_four_cmd_or_chain_last_succeeds(xonsh_execer, raise_env):
+    """``f || f || f || echo ok`` — last succeeds → no raise."""
+    xonsh_execer.exec("ls /__n1__ || ls /__n2__ || ls /__n3__ || echo ok\n")
+
+
+@skip_if_on_windows
+def test_pipe_success_standalone(xonsh_execer, raise_env):
+    """``echo hello | grep hello`` — pipe succeeds → no raise."""
+    xonsh_execer.exec("echo hello | grep hello\n")
+
+
+@skip_if_on_windows
+def test_pipe_failure_standalone(xonsh_execer, raise_env):
+    """``echo hello | grep nope`` — pipe fails → raise."""
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("echo hello | grep nope\n")
+
+
+@skip_if_on_windows
+def test_error_raise_with_cmd_raise_error_false(xonsh_execer, raise_env, monkeypatch):
+    """``@error_raise`` still raises when ``CMD_RAISE_ERROR=False`` and
+    ``RAISE_ERROR=False`` — decorator is the ultimate override.
+    """
+    monkeypatch.setitem(raise_env, "XONSH_SUBPROC_RAISE_ERROR", False)
+    monkeypatch.setitem(raise_env, "XONSH_SUBPROC_CMD_RAISE_ERROR", False)
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("@error_raise ls /__nope__\n")
+
+
+@skip_if_on_windows
+def test_error_ignore_in_or_chain_all_fail(xonsh_execer, raise_env):
+    """``@error_ignore fail || fail`` — first has ignore, but ``or`` sees
+    falsy and evaluates the second (no decorator) which also fails.
+    Chain result is the second pipeline (no ignore) → raise.
+    """
+    with pytest.raises(CalledProcessError):
+        xonsh_execer.exec("@error_ignore ls /__n1__ || ls /__n2__\n")
+
+
+@skip_if_on_windows
+def test_error_ignore_last_in_or_chain(xonsh_execer, raise_env):
+    """``fail || @error_ignore fail`` — first fails, ``or`` evaluates
+    second (also fails but has ``@error_ignore``).  Chain result is
+    the ``@error_ignore`` pipeline → no raise.
+    """
+    xonsh_execer.exec("ls /__n1__ || @error_ignore ls /__n2__\n")
+
+
+# ---------------------------------------------------------------------------
 # Interactive prompt display — ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR``
 #
 # These tests drive ``BaseShell.default()`` directly, which is the
