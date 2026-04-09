@@ -1134,7 +1134,7 @@ def register_custom_ansi_style(name, styles, base="default"):
     base : str, optional
         Base style to use as default.
     """
-    base_style = ANSI_STYLES[base].copy()
+    base_style = ansi_style_by_name(base).copy()
 
     base_style.update(_style_dict_to_ansi(styles))
 
