@@ -471,9 +471,7 @@ def test_error_ignore_mid_and_chain(xonsh_execer, raise_env):
     so ``echo 2`` never runs.  The chain result is the failing pipeline
     with ``@error_ignore`` → no raise.
     """
-    xonsh_execer.exec(
-        "echo 1 && @error_ignore ls /__nope__\n"
-    )
+    xonsh_execer.exec("echo 1 && @error_ignore ls /__nope__\n")
 
 
 @skip_if_on_windows
@@ -570,9 +568,7 @@ def test_four_cmd_and_chain_all_succeed(xonsh_execer, raise_env):
 def test_four_cmd_or_chain_all_fail(xonsh_execer, raise_env):
     """``f || f || f || f`` — all fail → raise."""
     with pytest.raises(CalledProcessError):
-        xonsh_execer.exec(
-            "ls /__n1__ || ls /__n2__ || ls /__n3__ || ls /__n4__\n"
-        )
+        xonsh_execer.exec("ls /__n1__ || ls /__n2__ || ls /__n3__ || ls /__n4__\n")
 
 
 @skip_if_on_windows
