@@ -635,6 +635,16 @@ def main_xonsh(args):
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
             code = sys.stdin.read()
+            # Reopen stdin from /dev/tty so that child processes
+            # (e.g. fzf, vim) can interact with the terminal instead
+            # of inheriting the exhausted pipe.
+            try:
+                tty_fd = os.open("/dev/tty", os.O_RDONLY)
+                os.dup2(tty_fd, 0)
+                os.close(tty_fd)
+                sys.stdin = open(0, closefd=False)
+            except OSError:
+                pass  # no controlling terminal (cron, CI, etc.)
             exc_info = run_code_with_cache(
                 code, "<stdin>", shell.execer, glb=shell.ctx, loc=None, mode="exec"
             )
