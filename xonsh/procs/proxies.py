@@ -395,6 +395,7 @@ class ProcProxyThread(threading.Thread):
         not be called directly.
         """
         if self.f is None:
+            self._close_devnull()
             return
         # Set the thread-local swapped values.
         XSH.env.set_swapped_values(self.original_swapped_values)
