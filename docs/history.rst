@@ -133,6 +133,27 @@ the ``-n`` option is used to enumerate the commands,
 the ``-t`` option is used to show the timestamps,
 and more, try out ``history show --help`` for a list of options.
 
+Filtering by date and time
+---------------------------
+
+Use ``--start-time`` and ``--end-time`` to filter history by timestamp.
+Both accept the format set in ``$XONSH_DATETIME_FORMAT`` (default
+``%Y-%m-%d %H:%M``) as well as any ISO-8601 date or datetime:
+
+.. code-block:: xonshcon
+
+    @ # all commands from a specific day (across all sessions)
+    @ history show all --start-time 2025-07-17 --end-time 2025-07-18
+
+    @ # with time (quote the space, or use T as separator)
+    @ history show all --start-time "2025-07-17 14:00" --end-time "2025-07-17 18:00"
+    @ history show all --start-time 2025-07-17T14:00 --end-time 2025-07-17T18:00
+
+    @ # combine with other options
+    @ history show all --start-time 2025-07-17 --end-time 2025-07-18 -n -t
+
+Times are interpreted in your local timezone.
+
 
 ``id`` action
 ================
