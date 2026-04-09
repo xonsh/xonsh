@@ -2265,7 +2265,7 @@ def test_atbang_macro_simple(check_xonsh_ast):
 
 
 def test_atbang_macro_complex_expr(check_xonsh_ast):
-    check_xonsh_ast({}, '$(echo @!(x if x > 0 else -x))', False)
+    check_xonsh_ast({}, "$(echo @!(x if x > 0 else -x))", False)
 
 
 def test_atbang_macro_nested_parens(check_xonsh_ast):
@@ -2301,7 +2301,7 @@ def test_atbang_macro_source_text_fstring(parser):
         if isinstance(node, ast.Constant) and node.value == 'f"{x}"':
             break
     else:
-        pytest.fail("Expected Constant(value='f\"{x}\"') in AST for @!(f\"{x}\")")
+        pytest.fail('Expected Constant(value=\'f"{x}"\') in AST for @!(f"{x}")')
 
 
 def test_atparens_intoken(check_xonsh_ast):
