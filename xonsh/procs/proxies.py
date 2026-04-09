@@ -231,7 +231,7 @@ def parse_proxy_return(r, stdout, stderr):
         Return from proxy function
     stdout : file-like
         Current stdout stream
-    stdout : file-like
+    stderr : file-like
         Current stderr stream
 
     Returns
