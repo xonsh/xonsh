@@ -18,9 +18,15 @@ class Parser(ThreeEightParser):
         p[0] = Index(value=p1)
 
     def p_subscriptlist(self, p):
-        """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
+        """
+        subscriptlist : subscript
+                      | subscript COMMA
+                      | subscript comma_subscript_list
+                      | subscript comma_subscript_list COMMA
+        """
 
-        p1, p2 = p[1], p[2]
+        p1 = p[1]
+        p2 = p[2] if len(p) > 2 and isinstance(p[2], list) else None
         is_subscript = False
 
         if p2 is not None:

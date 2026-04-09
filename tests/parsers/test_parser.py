@@ -2004,6 +2004,38 @@ def test_func_x_divide_y_star_z_kwargs(check_stmts):
     check_stmts("def f(x, /, y, *, z, **kwargs):\n  return 42")
 
 
+def test_func_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(**kw,):\n  return kw")
+
+
+def test_func_x_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(x, **kw,):\n  return kw")
+
+
+def test_func_star_x_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(*, x, **kw,):\n  return kw")
+
+
+def test_func_x_star_y_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(x, *, y, **kw,):\n  return kw")
+
+
+def test_func_return_annotation_trailing_comma(check_stmts):
+    check_stmts("def f(**kw,) -> dict:\n  return kw")
+
+
+def test_subscript_trailing_comma(parser):
+    parser.parse("x = d[0,]\n")
+
+
+def test_subscript_multi_trailing_comma(parser):
+    parser.parse("x = d[0, 1,]\n")
+
+
+def test_func_annotation_subscript_trailing_comma(parser):
+    parser.parse("def f(x: tuple[int,]) -> tuple[str,]:\n  pass\n")
+
+
 def test_func_tx(check_stmts):
     check_stmts("def f(x:int):\n  return x")
 
