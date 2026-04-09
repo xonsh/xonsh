@@ -147,14 +147,10 @@ def const_str(
     col_offset: int | None = None,
     is_raw: bool = True,
 ):
-    if PYTHON_VERSION_INFO >= (3, 13):
-        # looks like this attribute is no longer needed to be set explicitly
-        constant = Constant(value=s, kind="str")
-    else:
-        constant = Constant(value=s, kind="str")
-        if is_raw:
-            # this attribute is not documented within the ast object
-            constant.is_raw = is_raw  # type: ignore
+    constant = Constant(value=s)
+    constant.kind = "str"  # type: ignore
+    if is_raw:
+        constant.is_raw = is_raw  # type: ignore
     if lineno is not None:
         constant.lineno = lineno
     if col_offset is not None:
@@ -167,7 +163,9 @@ def is_const_str(node):
 
 
 def const_bytes(s: str, **kwargs):
-    return Constant(value=s, kind="bytes", **kwargs)
+    c = Constant(value=s, **kwargs)
+    c.kind = "bytes"  # type: ignore
+    return c
 
 
 def is_const_bytes(node):
@@ -175,7 +173,9 @@ def is_const_bytes(node):
 
 
 def const_num(n, **kwargs):
-    return Constant(value=n, kind="num", **kwargs)
+    c = Constant(value=n, **kwargs)
+    c.kind = "num"  # type: ignore
+    return c
 
 
 def is_const_num(node):
@@ -183,7 +183,9 @@ def is_const_num(node):
 
 
 def const_name(value, **kwargs):
-    return Constant(value=value, kind="name", **kwargs)
+    c = Constant(value=value, **kwargs)
+    c.kind = "name"  # type: ignore
+    return c
 
 
 def is_const_name(node):

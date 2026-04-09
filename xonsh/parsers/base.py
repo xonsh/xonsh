@@ -1448,7 +1448,7 @@ class BaseParser:
         for targ in p2:
             del_ctx(targ)
         p0 = ast.Delete(
-            targets=p2, ctx=ast.Del(), lineno=p1.lineno, col_offset=p1.lexpos
+            targets=p2, lineno=p1.lineno, col_offset=p1.lexpos
         )
         p[0] = p0
 
