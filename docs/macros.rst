@@ -535,6 +535,63 @@ part of the xonsh language itself.
 
 The power is there; use it without reservation!
 
+Subprocess Expression Macro ``@!()``
+=====================================
+The ``@!()`` operator captures its content as a **literal string** and passes
+it as a single argument in subprocess mode. Unlike ``@()`` which evaluates
+the expression at runtime, ``@!()`` preserves the source text as-is.
+
+.. code-block:: xonshcon
+
+    @ echo @!(2+2)
+    2+2
+
+    @ echo @(2+2)
+    4
+
+The content can be any text -- Python expressions, shell commands, or
+arbitrary strings:
+
+.. code-block:: xonshcon
+
+    @ echo @!(x if x > 0 else -x)
+    x if x > 0 else -x
+
+    @ echo @!(ls -la /tmp)
+    ls -la /tmp
+
+    @ echo @!(f"{name}: {value}")
+    f"{name}: {value}"
+
+Syntax highlighting and autocompletion work inside ``@!()``.
+
+**Example: xontrib-pipeliner**
+
+The `xontrib-pipeliner <https://github.com/anki-code/xontrib-pipeliner>`_
+``pl`` command takes a Python expression as a string argument and applies it
+to each line of input. ``@!()`` is a natural fit:
+
+.. code-block:: xonshcon
+
+    @ echo 123 | pl @!(line + '!!!')
+    123!!!
+
+    @ ls | pl @!(line.upper())
+
+    @ cat data.json | pl @!(json.loads(line))
+
+Without ``@!()``, you would need to quote the expression manually, which
+is error-prone when the expression itself contains quotes:
+
+.. code-block:: xonshcon
+
+    # quoting gets messy:
+    @ echo 123 | pl "line + '!!!'"
+
+    # @!() just works:
+    @ echo 123 | pl @!(line + '!!!')
+
+
 Take Away
 =========
 Hopefully, at this point, you see that a few well placed macros can be extremely

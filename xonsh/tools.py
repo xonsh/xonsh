@@ -239,7 +239,14 @@ RE_END_TOKS = LazyObject(
 )
 LPARENS = LazyObject(
     lambda: frozenset(
-        ["LPAREN", "AT_LPAREN", "BANG_LPAREN", "DOLLAR_LPAREN", "ATDOLLAR_LPAREN"]
+        [
+            "LPAREN",
+            "AT_LPAREN",
+            "ATBANG_LPAREN",
+            "BANG_LPAREN",
+            "DOLLAR_LPAREN",
+            "ATDOLLAR_LPAREN",
+        ]
     ),
     globals(),
     "LPARENS",

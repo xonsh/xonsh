@@ -317,6 +317,7 @@ class CompletionContextParser:
         ("BANG_LBRACKET", "RBRACKET"),  # ![]
         # python sub-expression:
         ("AT_LPAREN", "RPAREN"),  # @()
+        ("ATBANG_LPAREN", "RPAREN"),  # @!()
     )
     r_parens = {right for _, right in paren_pairs}
     l_to_r_parens = {left: right for left, right in paren_pairs}
@@ -656,7 +657,7 @@ class CompletionContextParser:
 
             commands.value[0] = single_command.replace(value=new_value)
 
-        if sub_expr_opening == "@(":
+        if sub_expr_opening in ("@(", "@!("):
             # python sub-expression
             python_context = PythonContext(
                 self.current_input[inner_span],
