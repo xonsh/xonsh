@@ -825,3 +825,12 @@ def test_env_deprecated():
     with warnings.catch_warnings(record=True) as wrngs:
         env["XONSH_PROMPT_AUTO_SUGGEST"] = False
     assert len(wrngs) == 0
+
+
+def test_swap_preserves_exception_chain(env):
+    """env.swap() must not suppress __cause__ on re-raised exceptions."""
+    orig = ValueError("root cause")
+    with pytest.raises(RuntimeError) as exc_info:
+        with env.swap(FOO="bar"):
+            raise RuntimeError("wrapped") from orig
+    assert exc_info.value.__cause__ is orig

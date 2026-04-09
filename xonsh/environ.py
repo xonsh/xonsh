@@ -2611,6 +2611,7 @@ class Env(cabc.MutableMapping):
                 else:
                     self._set_item(k, v, thread_local=True)
             if exception is not None:
+                # plain re-raise to preserve __cause__/__context__ chains
                 raise exception
 
     def get_swapped_values(self):
