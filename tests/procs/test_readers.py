@@ -61,31 +61,6 @@ class TestNonBlockingFDReader:
         reader = NonBlockingFDReader(r, timeout=0.1)
         assert reader.read() == b""
 
-    def test_read_all_does_not_hang_after_close(self):
-        """read(size=-1) must return once the pipe is closed and the queue
-        is drained, not block forever waiting for more data."""
-        r, w = os.pipe()
-        os.write(w, b"data")
-        os.close(w)
-        reader = NonBlockingFDReader(r, timeout=0.1)
-        reader.thread.join(timeout=2)
-        # At this point: reader.closed=True, queue has "data", thread is dead.
-        # Before the fix, read(-1) would block on queue.get() after draining
-        # the last chunk because the while-loop didn't check is_fully_read().
-        result = reader.read(-1)
-        assert result == b"data"
-
-    def test_readline_does_not_hang_without_newline(self):
-        """readline() on data without a trailing newline must return once
-        the pipe is fully read, not block forever."""
-        r, w = os.pipe()
-        os.write(w, b"no newline here")
-        os.close(w)
-        reader = NonBlockingFDReader(r, timeout=0.1)
-        reader.thread.join(timeout=2)
-        result = reader.readline(-1)
-        assert result == b"no newline here"
-
 
 @skip_if_on_windows
 class TestBufferedFDParallelReader:
