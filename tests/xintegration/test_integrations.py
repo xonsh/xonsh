@@ -807,8 +807,7 @@ def test_stdin_script_reopens_tty_for_children():
     probe = sp.run(
         ["python", "-c", "import os; os.open('/dev/tty', os.O_RDONLY)"],
         stdin=sp.PIPE,
-        stdout=sp.PIPE,
-        stderr=sp.PIPE,
+        capture_output=True,
     )
     if probe.returncode != 0:
         pytest.skip("/dev/tty not available in this environment")
