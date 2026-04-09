@@ -1671,9 +1671,7 @@ class BaseParser:
         p2 = p[2]
         for targ in p2:
             del_ctx(targ)
-        p0 = ast.Delete(
-            targets=p2, lineno=p1.lineno, col_offset=p1.lexpos
-        )
+        p0 = ast.Delete(targets=p2, lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = p0
 
     def p_pass_stmt(self, p):
