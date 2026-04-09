@@ -3575,15 +3575,16 @@ class BaseParser:
 
     def p_subproc_atom_pyeval_macro(self, p):
         """
-        subproc_atom : atbang_lparen_tok any_raw_toks_opt RPAREN
-        subproc_arg_part : atbang_lparen_tok any_raw_toks_opt RPAREN
+        subproc_atom : ATBANG_LPAREN any_raw_toks_opt RPAREN
+        subproc_arg_part : ATBANG_LPAREN any_raw_toks_opt RPAREN
         """
-        p1 = p[1]
-        source_text = self._source[p1.lexpos + 3 : p.lexpos(3)]
+        start = (p.slice[1].lineno, p.lexpos(1) + 3)  # after "@!("
+        stop = (p.slice[3].lineno, p.lexpos(3))       # at ")"
+        source_text = self._source_slice(start, stop).strip()
         p0 = ast.Constant(
-            value=source_text.strip(),
-            lineno=p1.lineno,
-            col_offset=p1.lexpos,
+            value=source_text,
+            lineno=p.slice[1].lineno,
+            col_offset=p.lexpos(1),
         )
         p0._cliarg_action = "append"
         p[0] = p0

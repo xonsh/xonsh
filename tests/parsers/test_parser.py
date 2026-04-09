@@ -2292,6 +2292,22 @@ def test_atbang_macro_source_text(parser):
         pytest.fail("Expected Constant(value='2+2') in AST for @!(2+2)")
 
 
+def test_atbang_macro_multiline_source_text(xsh, parser):
+    """@!(expr) should capture correct source text in multi-line input."""
+    import ast
+
+    code = "$(echo @!(aaa))\n$(echo @!(bbb))\n"
+    tree = parser.parse(code)
+    consts = [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value not in ("echo", "")
+    ]
+    assert consts == ["aaa", "bbb"]
+
+
 def test_atbang_macro_source_text_fstring(parser):
     """@!(f-string) should capture f-string source text."""
     import ast
