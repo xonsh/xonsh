@@ -95,6 +95,11 @@ def test_multilline_no_transform(xonsh_execer_parse):
     if not kw and b:
         pass
 """,
+        """def f(x, /):
+    if not x:
+        return 0
+    return x + 1
+""",
         """import os
 path = '/path/to/wakka'
 paths = []
