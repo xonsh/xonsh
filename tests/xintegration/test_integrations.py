@@ -793,6 +793,32 @@ def test_single_command_no_windows(cmd, fmt, exp):
 
 
 @skip_if_no_xonsh
+@skip_if_on_windows
+def test_stdin_script_reopens_tty_for_children():
+    """When xonsh reads a script from stdin and /dev/tty is available,
+    it should reopen fd 0 on /dev/tty so child processes see a real
+    terminal instead of the exhausted pipe.
+
+    The test first checks whether /dev/tty is reachable from a piped
+    subprocess — in CI / headless environments it is not, so the test
+    skips gracefully.
+    """
+    # Guard: can a piped child open /dev/tty at all?
+    probe = sp.run(
+        ["python", "-c", "import os; os.open('/dev/tty', os.O_RDONLY)"],
+        stdin=sp.PIPE,
+        capture_output=True,
+    )
+    if probe.returncode != 0:
+        pytest.skip("/dev/tty not available in this environment")
+
+    script = "python -c 'import os; print(os.isatty(0))'\n"
+    out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
+    assert out.strip() == "True", f"expected child stdin to be a TTY, got: {out!r}"
+    assert rtn == 0
+
+
+@skip_if_no_xonsh
 def test_script_local_import(tmp_path):
     """xonsh script-file should add script dir to sys.path like CPython does."""
     pkg_dir = tmp_path / "pkg"
