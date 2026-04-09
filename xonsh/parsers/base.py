@@ -3585,7 +3585,7 @@ class BaseParser:
         subproc_arg_part : ATBANG_LPAREN any_raw_toks_opt RPAREN
         """
         start = (p.slice[1].lineno, p.lexpos(1) + 3)  # after "@!("
-        stop = (p.slice[3].lineno, p.lexpos(3))       # at ")"
+        stop = (p.slice[3].lineno, p.lexpos(3))  # at ")"
         source_text = self._source_slice(start, stop).strip()
         p0 = ast.Constant(
             value=source_text,
