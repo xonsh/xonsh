@@ -3319,6 +3319,11 @@ def test_syntax_error_literal_concat_different(first_prefix, second_prefix, pars
         parser.parse(f"{first_prefix}'hello' {second_prefix}'world'")
 
 
+def test_syntax_error_dict_mixed_kv_and_bare(parser):
+    with pytest.raises(SyntaxError):
+        parser.parse("{'A': 5,6}\n", mode="exec")
+
+
 def test_get_repo_url(parser):
     parser.parse(
         "def get_repo_url():\n"
