@@ -126,22 +126,29 @@ def _xh_zsh_hist_parser(location=None, **kwargs):
             os.path.join("~", ".zsh_history"),
         )
     if location:
-        with open(location, errors="backslashreplace") as zsh_hist:
-            for ind, line in enumerate(zsh_hist):
-                if line.startswith(":"):
-                    try:
-                        start_time, command = line.split(";", 1)
-                    except ValueError:
-                        # Invalid history entry
-                        continue
-                    try:
-                        start_time = float(start_time.split(":")[1])
-                    except ValueError:
-                        start_time = 0.0
-                    yield {"inp": command.rstrip(), "ts": start_time, "ind": ind}
-                else:
-                    yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
-
+        try:
+            with open(location, errors="backslashreplace") as zsh_hist:
+                for ind, line in enumerate(zsh_hist):
+                    if line.startswith(":"):
+                        try:
+                            start_time, command = line.split(";", 1)
+                        except ValueError:
+                            # Invalid history entry
+                            continue
+                        try:
+                            start_time = float(start_time.split(":")[1])
+                        except ValueError:
+                            start_time = 0.0
+                        yield {"inp": command.rstrip(), "ts": start_time, "ind": ind}
+                    else:
+                        yield {"inp": line.rstrip(), "ts": 0.0, "ind": ind}
+        except PermissionError:
+            print(f"Zsh history permission error in {location!r}", file=sys.stderr)
+            yield {
+                "inp": f"# Zsh history permission error in {location!r}",
+                "ts": 0.0,
+                "ind": 0,
+            }
     else:
         print("No zsh history file found", file=sys.stderr)
 
