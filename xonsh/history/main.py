@@ -188,7 +188,7 @@ def _xh_get_history(
         # transform/check all slices
         slices = [xt.ensure_slice(s) for s in slices]
         cmds = xt.get_portions(cmds, slices)
-    if start_time or end_time:
+    if start_time is not None or end_time is not None:
         if start_time is None:
             start_time = 0.0
         else:
