@@ -705,7 +705,7 @@ class CommandPipeline:
         """
         any_running = False
         for s, p in zip(self.specs[:-1], self.procs[:-1], strict=False):
-            if p.poll() is None:
+            if p is None or p.poll() is None:
                 any_running = True
                 continue
             # Ensure thread is fully done - poll() returns non-None
@@ -725,8 +725,6 @@ class CommandPipeline:
             # `_close_proc`, after the next proc has finished.
             for ch in s.pipe_channels:
                 ch.close_writer()
-            if p is None:
-                continue
             self._safe_close(p.stdin)
             self._safe_close(p.stdout)
             self._safe_close(p.stderr)
