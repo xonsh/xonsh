@@ -424,7 +424,7 @@ class LsColors(cabc.MutableMapping):
     target_value = "target"  # special value to set for ln=target
     target_color = ("RESET",)  # repres in color space
 
-    def __init__(self, ini_dict: dict = None):
+    def __init__(self, ini_dict: dict | None = None):
         self._style = self._style_name = None
         self._detyped = None
         self._d = dict()
