@@ -631,7 +631,7 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
 
     """
     if instr is None:
-        return
+        return ""
     ind = "\t" * ntabs + " " * nspaces
     if flatten:
         pat = re.compile(r"^\s*", re.MULTILINE)
