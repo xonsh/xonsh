@@ -356,17 +356,71 @@ def pathsearch(func, s, pymode=False, pathobj=False):
     return o if len(o) != 0 else no_match
 
 
-def subproc_captured_stdout(*cmds, envs=None):
+def _check_subproc_helper_raise(in_boolop):
+    """Raise ``CalledProcessError`` if the most recently completed
+    pipeline (``XSH.lastcmd``) failed and the active settings say we
+    should raise.
+
+    Called by the ``subproc_*`` helpers right after they finish, so
+    that nested calls like ``echo @$(ls nono)`` raise on the inner
+    failure even though the *outer* helper would have succeeded with
+    an empty injection.
+
+    Skip conditions:
+
+    * ``in_boolop=True`` — the helper is a direct operand of a
+      ``&&``/``||`` chain; let the chain wrapper see the result.
+    * ``$XONSH_SUBPROC_RAISE_ERROR`` is False.
+    * No completed pipeline (e.g. background job).
+    * The pipeline succeeded.
+    * ``spec.captured == 'object'`` — ``!(...)`` is the explicit
+      "user takes responsibility" form per spec.
+    * ``@error_ignore`` was applied (``spec.raise_subproc_error is False``).
+    """
+    if in_boolop:
+        return
+    if not XSH.env.get("XONSH_SUBPROC_RAISE_ERROR"):
+        return
+    cp = XSH.lastcmd
+    if cp is None:
+        return
+    rtn = getattr(cp, "returncode", None)
+    if rtn is None or rtn == 0:
+        return
+    spec = getattr(cp, "spec", None)
+    if spec is None:
+        return
+    if getattr(spec, "captured", None) == "object":
+        return
+    if getattr(spec, "raise_subproc_error", None) is False:
+        return
+
+    import subprocess
+
+    output = getattr(cp, "output", None)
+    raise subprocess.CalledProcessError(rtn, spec.args, output=output)
+
+
+def subproc_captured_stdout(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str or list based on ``$XONSH_SUBPROC_OUTPUT_FORMAT``.
+
+    ``in_boolop`` is set by the parser to True when this call is a direct
+    operand of a ``&&``/``||`` chain, so the runtime can adjust behavior
+    (e.g. suppress ``$XONSH_SUBPROC_CMD_RAISE_ERROR`` to let the chain
+    short-circuit on returncode).
     """
 
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
+    r = xonsh.procs.specs.run_subproc(
+        cmds, captured="stdout", envs=envs, in_boolop=in_boolop
+    )
+    _check_subproc_helper_raise(in_boolop)
+    return r
 
 
-def subproc_captured_inject(*cmds, envs=None):
+def subproc_captured_inject(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, capturing the output. Returns a list of
     whitespace-separated strings of the stdout that was produced.
     The string is split using xonsh's lexer, rather than Python's str.split()
@@ -374,7 +428,10 @@ def subproc_captured_inject(*cmds, envs=None):
     """
     import xonsh.procs.specs
 
-    o = xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
+    o = xonsh.procs.specs.run_subproc(
+        cmds, captured="stdout", envs=envs, in_boolop=in_boolop
+    )
+    _check_subproc_helper_raise(in_boolop)
     o = o if isinstance(o, list) else o.splitlines()
     toks = []
     for line in o:
@@ -383,32 +440,110 @@ def subproc_captured_inject(*cmds, envs=None):
     return toks
 
 
-def subproc_captured_object(*cmds, envs=None):
+def subproc_captured_object(*cmds, envs=None, in_boolop=False):
     """
     Runs a subprocess, capturing the output. Returns an instance of
     CommandPipeline representing the completed command.
     """
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured="object", envs=envs)
+    return xonsh.procs.specs.run_subproc(
+        cmds, captured="object", envs=envs, in_boolop=in_boolop
+    )
 
 
-def subproc_captured_hiddenobject(*cmds, envs=None):
+def subproc_captured_hiddenobject(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, capturing the output. Returns an instance of
     HiddenCommandPipeline representing the completed command.
     """
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured="hiddenobject", envs=envs)
+    return xonsh.procs.specs.run_subproc(
+        cmds, captured="hiddenobject", envs=envs, in_boolop=in_boolop
+    )
 
 
-def subproc_uncaptured(*cmds, envs=None):
+def subproc_uncaptured(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, without capturing the output. Returns the stdout
     that was produced as a str.
     """
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured=False, envs=envs)
+    r = xonsh.procs.specs.run_subproc(
+        cmds, captured=False, envs=envs, in_boolop=in_boolop
+    )
+    _check_subproc_helper_raise(in_boolop)
+    return r
+
+
+def subproc_check_boolop(value):
+    """Raise ``CalledProcessError`` if *value* is the (final) result of
+    a subproc statement that ended in failure.
+
+    Used as the AST wrapper around two kinds of nodes:
+
+    * The outermost ``BoolOp`` of a logical chain (``cmd1 && cmd2`` /
+      ``cmd1 || cmd2``).  Python ``and``/``or`` short-circuits to the
+      pipeline that determined the chain result, so the wrapper sees
+      the *final* pipeline.
+    * A standalone subproc-helper call at statement level — bare
+      commands, ``![...]``, ``$[...]``, ``$(...)``, ``@$(...)``.  The
+      explicit-capture form ``!(...)`` is *intentionally* not wrapped:
+      per spec it is the user's full responsibility.
+
+    When ``$XONSH_SUBPROC_RAISE_ERROR`` is True (default), this enforces
+    "raise on the last executed pipeline's non-zero exit code" semantics:
+
+    * ``ls nono`` (standalone) — rc≠0: raises.
+    * ``$(ls nono)`` (standalone) — rc≠0: raises.
+    * ``$[ls nono]`` (standalone) — rc≠0: raises.
+    * ``echo 1 && echo 2`` — last is ``echo 2`` (rc=0): no raise.
+    * ``ls nono || echo 1`` — last is ``echo 1`` (rc=0): no raise.
+    * ``ls nono && echo 1`` — last is ``ls nono`` (rc≠0): raises.
+
+    Per-command overrides:
+
+    * ``@error_ignore`` (``spec.raise_subproc_error is False``) on the
+      final pipeline suppresses the raise — used e.g. for
+      ``echo 1 && @error_ignore ls nono``.
+    * ``@error_raise`` raises directly at the pipeline level, so the
+      wrapper never sees a failed value.
+
+    Some subproc helpers (``$()``, ``$[]``, ``@$()``) return a *string*
+    / *None* / *list* rather than a ``CommandPipeline``, so the wrapper
+    can't read ``returncode`` directly off ``value``.  In that case it
+    falls back to ``XSH.lastcmd`` — the most recently completed pipeline,
+    which is the one this helper just ran.
+    """
+    if not XSH.env.get("XONSH_SUBPROC_RAISE_ERROR"):
+        return value
+    # Try to get the pipeline from the value first (BoolOp result, ![...]).
+    spec = getattr(value, "spec", None)
+    rtn = getattr(value, "returncode", None)
+    cp_for_output = value
+    if spec is None or rtn is None:
+        # Value isn't a CommandPipeline (e.g. string from $(), None from
+        # $[], list from @$()).  Fall back to the most recently
+        # completed pipeline so we can still inspect its returncode.
+        last = XSH.lastcmd
+        if last is None:
+            return value
+        spec = getattr(last, "spec", None)
+        rtn = getattr(last, "returncode", None)
+        cp_for_output = last
+    if spec is None or rtn is None or rtn == 0:
+        return value
+    # ``!(...)`` is the "user takes full responsibility" form — never
+    # raise even if it ends up here via a chain like ``cmd && !(cmd)``.
+    if getattr(spec, "captured", None) == "object":
+        return value
+    # @error_ignore on the final pipeline of the chain opts out.
+    if getattr(spec, "raise_subproc_error", None) is False:
+        return value
+    import subprocess
+
+    output = getattr(cp_for_output, "output", None)
+    raise subprocess.CalledProcessError(rtn, spec.args, output=output)
 
 
 _SPECIAL_BUILTINS = {"...": ...}
@@ -865,6 +1000,7 @@ class XonshSession:
         self.subproc_captured_object = subproc_captured_object
         self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
         self.subproc_uncaptured = subproc_uncaptured
+        self.subproc_check_boolop = subproc_check_boolop
         self.call_macro = call_macro
         self.enter_macro = enter_macro
         self.path_literal = path_literal

@@ -87,9 +87,13 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``p'/path/to/file'.exists()`` or ``pf'{file}'.exists()`` or ``if !(test -f $FILE):``
       - Path objects can be instantiated and checked directly using p-string syntax.
     * - ``set -e``
-      - ``$RAISE_SUBPROC_ERROR = True``
-      - Cause a failure after a non-zero return code. Xonsh will raise a
-        ``supbrocess.CalledProcessError``.
+      - ``$XONSH_SUBPROC_RAISE_ERROR = True`` *(default)*
+      - Cause a failure after a non-zero return code of the *final* command
+        in a statement — this matches bash's ``set -e`` semantics where
+        intermediate failures inside ``&&``/``||`` chains are allowed.
+        Xonsh will raise a ``subprocess.CalledProcessError``. Use
+        ``$XONSH_SUBPROC_CMD_RAISE_ERROR = True`` to additionally raise on
+        *every* failing individual command.
     * - ``set -x``
       - ``trace on`` and ``$XONSH_TRACE_SUBPROC = True``
       - Turns on tracing of source code lines during execution.

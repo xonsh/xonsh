@@ -513,8 +513,8 @@ class CommandPipeline:
             else:
                 err_target.write(b.decode(encoding=enc, errors=err))
             err_target.flush()
-        # save the raw bytes
-        self._raw_error = b
+        # accumulate the raw bytes
+        self._raw_error += b
         # do some munging of the line before we save it to the attr
         b = b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         env = XSH.env
@@ -853,14 +853,32 @@ class CommandPipeline:
         raise_subproc_error = spec.raise_subproc_error
         if callable(raise_subproc_error):
             raise_subproc_error = raise_subproc_error(spec, self)
+
+        # @error_ignore — never raise.
         if raise_subproc_error is False:
             return
 
-        if raise_subproc_error or XSH.env.get("RAISE_SUBPROC_ERROR", True):
+        # @error_raise — always raise, even mid-chain.
+        if raise_subproc_error is True:
             try:
                 raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
             finally:
-                # this is need to get a working terminal in interactive mode
+                # needed to get a working terminal in interactive mode
+                self._return_terminal()
+            return
+
+        # Default: defer chain operands to the BoolOp wrapper.
+        if getattr(spec, "in_boolop", False):
+            return
+
+        # Standalone — only raise here if the user explicitly opted in
+        # to per-command raising.  Otherwise let the AST wrapper around
+        # the statement do it via $XONSH_SUBPROC_RAISE_ERROR.
+        if XSH.env.get("XONSH_SUBPROC_CMD_RAISE_ERROR"):
+            try:
+                raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
+            finally:
+                # needed to get a working terminal in interactive mode
                 self._return_terminal()
 
     #

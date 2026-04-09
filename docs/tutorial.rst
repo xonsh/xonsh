@@ -1644,13 +1644,53 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     @ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
-Additionally, if the script should exit if a command fails, set the
-environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
-file. Errors in Python mode will already raise exceptions.
-
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivalent to
 Python's ``python -m trace``.
+
+Error Handling
+==============
+
+Xonsh treats shell commands as first-class code.  When a command fails,
+you usually want your script to **stop** instead of silently marching
+past the failure — the way a Python exception would — but you also want
+the flexibility of ``&&``/``||`` short-circuit logic that the shell is
+built around.
+
+By default, execution stops as soon as a command **chain** ends in a
+failing command.  A chain is any group of commands whose result is
+determined together — a pipe, a logical ``&&``/``||`` expression, or a
+bare single command.  It is the *final* result of the chain that
+decides whether execution continues; individual commands that are
+explicitly rescued by ``||`` are not fatal.
+
+A couple of examples:
+
+.. code-block:: xonshcon
+
+    @ echo hi | grep x                  # pipe chain — grep didn't match → raise
+    @ ls nofile && echo never           # && chain — ls failed → raise, echo skipped
+    @ ls nofile || echo rescued         # || chain — rescued by echo, no raise
+    rescued
+    @ (echo 1 && ls /etc) || echo fb    # nested — inner chain succeeded, no raise
+
+The **only** subprocess form that does not stop execution on failure
+is the full-capture operator ``!(...)``: it returns a
+``CommandPipeline`` object and leaves error handling entirely up to
+you.  This is the idiomatic way to inspect a command's result without
+triggering an exception:
+
+.. code-block:: xonshcon
+
+    @ if !(ls nofile):
+          print("found")
+      else:
+          print("absent")
+
+See :ref:`error_handling` for the full rules, including
+``@error_raise``/``@error_ignore`` decorators, the environment
+variables that tune this behavior, and how the interactive prompt
+displays (or hides) the resulting exception.
 
 Importing Xonsh (``*.xsh``)
 ==============================

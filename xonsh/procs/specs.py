@@ -468,7 +468,10 @@ class SubprocSpec:
         self.decorators = []  # List of DecoratorAlias objects that applied to spec.
         self.pipe_channels = []  # PipeChannel objects owned by this spec
         self.output_format = XSH.env.get("XONSH_SUBPROC_OUTPUT_FORMAT", "stream_lines")
-        self.raise_subproc_error = None  # Spec-based $RAISE_SUBPROC_ERROR.
+        self.raise_subproc_error = None  # Spec-based $XONSH_SUBPROC_CMD_RAISE_ERROR.
+        # True when this pipeline is a direct operand of an `&&`/`||` chain
+        # (set by `cmds_to_specs` from the parser-injected `in_boolop` kwarg).
+        self.in_boolop = False
 
     def __str__(self):
         s = self.__class__.__name__ + "(" + str(self.cmd) + ", "
@@ -1134,9 +1137,15 @@ def _trace_specs(trace_mode, specs, cmds, captured):
                 print(f"{i}: {repr(p)}", file=sys.stderr)
 
 
-def cmds_to_specs(cmds, captured=False, envs=None):
+def cmds_to_specs(cmds, captured=False, envs=None, in_boolop=False):
     """Converts a list of cmds to a list of SubprocSpec objects that are
     ready to be executed.
+
+    ``in_boolop`` is propagated from the parser; it is True when the whole
+    pipeline is a direct operand of a ``&&``/``||`` chain.  Each spec gets
+    the flag stored on it so downstream code (e.g. ``CommandPipeline``,
+    ``_raise_subproc_error``) can decide whether to short-circuit on
+    returncode or raise.
     """
     # first build the subprocs independently and separate from the redirects
     specs = []
@@ -1148,6 +1157,7 @@ def cmds_to_specs(cmds, captured=False, envs=None):
             env = envs[i] if envs is not None else None
             spec = SubprocSpec.build(cmd, captured=captured, env=env)
             spec.pipeline_index = len(specs)
+            spec.in_boolop = in_boolop
             specs.append(spec)
     # now modify the subprocs based on the redirects.
     for i, redirect in enumerate(redirects):
@@ -1211,7 +1221,7 @@ def _shell_set_title(cmds):
             XSH.shell.settitle()
 
 
-def run_subproc(cmds, captured=False, envs=None):
+def run_subproc(cmds, captured=False, envs=None, in_boolop=False):
     """Runs a subprocess, in its many forms. This takes a list of 'commands,'
     which may be a list of command line arguments or a string, representing
     a special connecting character.  For example::
@@ -1223,9 +1233,14 @@ def run_subproc(cmds, captured=False, envs=None):
         [['ls'], '|', ['grep', 'wakka']]
 
     Lastly, the captured argument affects only the last real command.
+
+    ``in_boolop`` is forwarded from the parser; True when this whole
+    pipeline is a direct operand of a ``&&``/``||`` chain.  Each spec
+    receives ``spec.in_boolop`` so downstream consumers can act on it
+    (e.g. let a non-zero return short-circuit instead of raising).
     """
 
-    specs = cmds_to_specs(cmds, captured=captured, envs=envs)
+    specs = cmds_to_specs(cmds, captured=captured, envs=envs, in_boolop=in_boolop)
 
     if trace_mode := XSH.env.get("XONSH_TRACE_SUBPROC", False):
         _trace_specs(trace_mode, specs, cmds, captured)
