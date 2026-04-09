@@ -3226,7 +3226,10 @@ class EnvPath(cabc.MutableSequence):
         if len(self) != len(other):
             return False
         # Expand both sides so that "~/bin" and "/Users/x/bin" compare equal.
-        return all(_expandpath(a) == _expandpath(b) for a, b in zip(self._l, other))
+        return all(
+            _expandpath(a) == _expandpath(b)
+            for a, b in zip(self._l, other, strict=True)
+        )
 
     def _repr_pretty_(self, p, cycle):
         """Pretty print path list"""
