@@ -406,6 +406,7 @@ class BaseParser:
             "rparen",
             "rbracket",
             "at_lparen",
+            "atbang_lparen",
             "atdollar_lparen",
             "indent",
             "dedent",
@@ -1971,6 +1972,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",
@@ -2622,6 +2624,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",
@@ -2883,6 +2886,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",
@@ -2934,13 +2938,19 @@ class BaseParser:
                        | LBRACE any_raw_toks_opt RBRACE
                        | LBRACKET any_raw_toks_opt RBRACKET
                        | AT_LPAREN any_raw_toks_opt RPAREN
+                       | ATBANG_LPAREN any_raw_toks_opt RPAREN
                        | BANG_LPAREN any_raw_toks_opt RPAREN
                        | BANG_LBRACKET any_raw_toks_opt RBRACKET
                        | DOLLAR_LPAREN any_raw_toks_opt RPAREN
                        | DOLLAR_LBRACE any_raw_toks_opt RBRACE
                        | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
                        | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
+                       | FSTRING_START any_raw_toks_opt FSTRING_END
         """
+        pass
+
+    def p_nocomma_part_fstring_middle(self, p):
+        """nocomma_part : FSTRING_MIDDLE"""
         pass
 
     def p_nocomma_part_any(self, p):
@@ -3563,6 +3573,21 @@ class BaseParser:
         p0._cliarg_action = "append"
         p[0] = p0
 
+    def p_subproc_atom_pyeval_macro(self, p):
+        """
+        subproc_atom : atbang_lparen_tok any_raw_toks_opt RPAREN
+        subproc_arg_part : atbang_lparen_tok any_raw_toks_opt RPAREN
+        """
+        p1 = p[1]
+        source_text = self._source[p1.lexpos + 3 : p.lexpos(3)]
+        p0 = ast.Constant(
+            value=source_text.strip(),
+            lineno=p1.lineno,
+            col_offset=p1.lexpos,
+        )
+        p0._cliarg_action = "append"
+        p[0] = p0
+
     def p_subproc_atom_pyeval(self, p):
         """
         subproc_atom : at_lparen_tok testlist_comp RPAREN
@@ -3738,6 +3763,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",
