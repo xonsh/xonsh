@@ -272,14 +272,31 @@ started up, we can create keybinding events that run subprocess commands with
 hardly any effort at all. If we wanted to, say, have a command that runs ``ls
 -l`` in the current directory::
 
+    from prompt_toolkit.application import run_in_terminal
+
     @handler(Keys.ControlP)
     def run_ls(event):
-        ls -l
-        event.cli.renderer.erase()
+        def _task():
+            ls -l
+        run_in_terminal(_task)
 
 
-.. note:: The ``event.cli.renderer.erase()`` is required to redraw the prompt
-          after asking for a separate command to send information to ``STDOUT``
+.. note:: ``run_in_terminal(func)`` (imported from
+          ``prompt_toolkit.application``) is the canonical
+          ``prompt_toolkit`` idiom for running code that writes to
+          ``STDOUT`` from a keybinding.  It temporarily hides the
+          prompt, runs your function (which can freely ``print`` or
+          launch subprocesses), then redraws the prompt — including
+          ``$RIGHT_PROMPT`` and ``$BOTTOM_TOOLBAR`` — above the
+          captured output.
+
+          Do **not** use ``event.cli.renderer.erase()`` for this
+          purpose: it resets the renderer's height bookkeeping and
+          ``$BOTTOM_TOOLBAR`` (and sometimes ``$RIGHT_PROMPT``) will
+          disappear until the next keypress.  See
+          `xonsh/xonsh#5084
+          <https://github.com/xonsh/xonsh/issues/5084>`_ for the
+          underlying ``prompt_toolkit`` quirk.
 
 Restrict actions with filters
 -----------------------------
@@ -308,8 +325,9 @@ Now that the condition is defined, we can pass it as a ``filter`` keyword to a k
 
     @handler(Keys.ControlL, filter=lt_ten_files)
     def ls_if_lt_ten(event):
-        ls -l
-        event.cli.renderer.erase()
+        def _task():
+            ls -l
+        run_in_terminal(_task)
 
 With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
 contents of your current directory if there are fewer than 10 items in it.
