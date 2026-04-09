@@ -5,7 +5,7 @@ from unittest.mock import patch, call
 
 import pytest
 
-from xonsh.procs.proxies import ProcProxy, ProcProxyThread, still_writable
+from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import safe_fdclose
 
 
