@@ -2593,11 +2593,11 @@ def ensure_timestamp(t, datetime_format=None):
         pass
     try:
         return datetime.datetime.fromisoformat(t).timestamp()
-    except ValueError:
+    except ValueError as err:
         raise ValueError(
             f"time data {t!r} does not match format {datetime_format!r} "
             f"and is not a valid ISO-8601 date"
-        )
+        ) from err
 
 
 def format_datetime(dt):
