@@ -1,11 +1,12 @@
 """(A down payment on) Testing for ``xonsh.shells.base_shell.BaseShell`` and associated classes"""
 
+import io
 import os
 
 import pytest
 
 from xonsh.shell import transform_command
-from xonsh.shells.base_shell import BaseShell
+from xonsh.shells.base_shell import BaseShell, _TeeStdBuf
 
 
 def test_pwd_tracks_cwd(xession, xonsh_execer, tmpdir_factory, monkeypatch):
@@ -87,3 +88,31 @@ def test_default_append_history(cmd, exp_append_history, xonsh_session, monkeypa
         assert len(append_history_calls) == 1
     else:
         assert len(append_history_calls) == 0
+
+
+class TestTeeStdBuf:
+    def test_readinto_binary_preserves_stdbuf_data(self, xession):
+        """readinto() must fill the buffer from stdbuf (the real stdout)
+        and mirror the bytes into membuf, not the other way around."""
+        stdbuf = io.BytesIO(b"real stdout data")
+        membuf = io.BytesIO()
+        tee = _TeeStdBuf(stdbuf, membuf)
+
+        dest = bytearray(16)
+        n = tee.readinto(dest)
+        assert n == 16
+        assert bytes(dest[:n]) == b"real stdout data"
+        # membuf should have received the same bytes
+        assert membuf.getvalue() == b"real stdout data"
+
+    def test_readinto_binary_partial_read(self, xession):
+        """readinto() with a buffer larger than available data."""
+        stdbuf = io.BytesIO(b"short")
+        membuf = io.BytesIO()
+        tee = _TeeStdBuf(stdbuf, membuf)
+
+        dest = bytearray(100)
+        n = tee.readinto(dest)
+        assert n == 5
+        assert bytes(dest[:n]) == b"short"
+        assert membuf.getvalue() == b"short"
