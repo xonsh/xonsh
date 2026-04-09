@@ -371,6 +371,61 @@ Summary of default behavior:
      - ``@uncapturable`` — output goes to terminal only
 
 
+Click Integration
+-----------------
+
+If the `click <https://click.palletsprojects.com/>`_ package is installed,
+xonsh exposes two helpers on the ``aliases`` object:
+
+* ``aliases.click`` — the ``click`` module itself, for decorating functions
+  with ``@aliases.click.option(...)``, ``@aliases.click.argument(...)``, etc.
+* ``aliases.register_click_command`` — a decorator that registers a click
+  command as a xonsh alias.
+
+Both are loaded lazily on first access — sessions that never touch click
+don't pay the import cost, and nothing breaks on systems where click is
+not installed.
+
+.. code-block:: python
+
+    @ @aliases.register_click_command
+      @aliases.click.option('--count', default=1, help='Number of greetings.')
+      @aliases.click.option('--name', help='The person to greet.')
+      def _hello(ctx, count, name):
+          """Simple program that greets NAME for a total of COUNT times."""
+          for i in range(count):
+              print(name, file=ctx.stdout)
+
+    @ hello --count 3 --name World
+    World
+    World
+    World
+
+The decorator mirrors the calling conventions of ``@aliases.register``:
+
+.. code-block:: python
+
+    @aliases.register_click_command              # bare, name from function
+    @aliases.register_click_command()            # empty parentheses, same thing
+    @aliases.register_click_command("my-name")   # explicit alias name
+
+The function's first argument is a ``click.Context`` subclass that carries
+every standard xonsh alias parameter from `Signature Parameters`_ as an
+attribute of the same name — ``ctx.stdin``, ``ctx.stdout``, ``ctx.stderr``,
+``ctx.spec``, ``ctx.stack``, ``ctx.decorators``, ``ctx.alias_name``,
+``ctx.called_alias_name``, ``ctx.env``. The only exception is ``args``,
+which is exposed as ``ctx.alias_args`` to avoid clashing with the built-in
+``click.Context.args`` that ``click`` uses for option parsing.
+
+The ``click`` module itself is also attached as ``ctx.click``, so
+callbacks can call ``ctx.click.echo(...)``, ``ctx.click.secho(...)``, etc.
+without a separate ``import click``.
+
+Use these when a click command needs the underlying xonsh streams or
+environment overlay — for example, ``print(text, file=ctx.stdout)`` writes
+to the alias's captured output the same way a regular callable alias does.
+
+
 String Aliases and ExecAlias
 ----------------------------
 
