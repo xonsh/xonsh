@@ -31,18 +31,18 @@ class ChainDB(ChainMap):
         for mapping in self.maps:
             results.append(mapping.get(key, ChainDBDefault))
         # if all the results are mapping create a ChainDB
-        if all([isinstance(result, MutableMapping) for result in results]):
+        if all(isinstance(result, MutableMapping) for result in results):
             for result in results:
                 if res is None:
                     res = ChainDB(result)
                 else:
                     res.maps.append(result)
         elif all(
-            [isinstance(result, MutableSequence | MutableSet) for result in results]
+            isinstance(result, MutableSequence | MutableSet) for result in results
         ):
             results_chain = itertools.chain(*results)
             # if all reults have the same type, cast into that type
-            if all([isinstance(result, type(results[0])) for result in results]):
+            if all(isinstance(result, type(results[0])) for result in results):
                 return type(results[0])(results_chain)
             else:
                 return list(results_chain)
