@@ -3,6 +3,7 @@ from collections.abc import Iterable
 
 def commonprefix(m: Iterable[str]) -> str:
     """Given an iterable of strings, returns the longest common leading substring"""
+    m = list(m)
     if not m:
         return ""
     s1 = min(m)
