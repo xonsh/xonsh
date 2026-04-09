@@ -158,6 +158,8 @@ class Parser(ThreeTenParser):
         """dictorsetmaker : test COLON testlist"""
         keys = [p[1]]
         vals = self._list_or_elts_if_not_real_tuple(p[3])
+        if len(vals) != len(keys):
+            self._set_error("invalid syntax")
         lineno, col = lopen_loc(p[1])
         p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
         p[0].ctx = ast.Load()
