@@ -2292,6 +2292,66 @@ def test_nested_madness(check_xonsh_ast):
     )
 
 
+def test_atbang_macro_simple(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!(2+2))", False)
+
+
+def test_atbang_macro_complex_expr(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!(x if x > 0 else -x))", False)
+
+
+def test_atbang_macro_nested_parens(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!(dict(a=1)))", False)
+
+
+def test_atbang_macro_fstring(check_xonsh_ast):
+    check_xonsh_ast({}, '$(echo @!(f"{x} = {y}"))', False)
+
+
+def test_atbang_macro_quotes(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!('hello world'))", False)
+
+
+def test_atbang_macro_source_text(parser):
+    """@!(expr) should capture the expression source text, not evaluate it."""
+    import ast
+
+    tree = parser.parse("$(echo @!(2+2))\n")
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and node.value == "2+2":
+            break
+    else:
+        pytest.fail("Expected Constant(value='2+2') in AST for @!(2+2)")
+
+
+def test_atbang_macro_multiline_source_text(xsh, parser):
+    """@!(expr) should capture correct source text in multi-line input."""
+    import ast
+
+    code = "$(echo @!(aaa))\n$(echo @!(bbb))\n"
+    tree = parser.parse(code)
+    consts = [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value not in ("echo", "")
+    ]
+    assert consts == ["aaa", "bbb"]
+
+
+def test_atbang_macro_source_text_fstring(parser):
+    """@!(f-string) should capture f-string source text."""
+    import ast
+
+    tree = parser.parse('$(echo @!(f"{x}"))\n')
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and node.value == 'f"{x}"':
+            break
+    else:
+        pytest.fail('Expected Constant(value=\'f"{x}"\') in AST for @!(f"{x}")')
+
+
 def test_atparens_intoken(check_xonsh_ast):
     check_xonsh_ast({}, "![echo /x/@(y)/z]", False)
 

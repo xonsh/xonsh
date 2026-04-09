@@ -694,7 +694,7 @@ def main_context(argv=None):
 def setup(
     ctx=None,
     shell_type="none",
-    env=(("RAISE_SUBPROC_ERROR", True),),
+    env=(("XONSH_SUBPROC_CMD_RAISE_ERROR", True),),
     aliases=(),
     xontribs=(),
     threadable_predictors=(),

@@ -239,7 +239,14 @@ RE_END_TOKS = LazyObject(
 )
 LPARENS = LazyObject(
     lambda: frozenset(
-        ["LPAREN", "AT_LPAREN", "BANG_LPAREN", "DOLLAR_LPAREN", "ATDOLLAR_LPAREN"]
+        [
+            "LPAREN",
+            "AT_LPAREN",
+            "ATBANG_LPAREN",
+            "BANG_LPAREN",
+            "DOLLAR_LPAREN",
+            "ATDOLLAR_LPAREN",
+        ]
     ),
     globals(),
     "LPARENS",
@@ -840,7 +847,7 @@ def print_warning(msg):
         if not manually_set_logfile:
             sys.stderr.write(
                 "xonsh: To log full traceback to a file set: "
-                "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
+                "$XONSH_TRACEBACK_LOGFILE = 'error.log'\n"
             )
         traceback.print_stack()
     # additionally, check if a file for traceback logging has been
@@ -922,7 +929,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         if not manually_set_logfile:
             sys.stderr.write(
                 "xonsh: To log full traceback to a file set: "
-                "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
+                "$XONSH_TRACEBACK_LOGFILE = 'error.log'\n"
             )
 
         display_colored_error_message(exc_info)

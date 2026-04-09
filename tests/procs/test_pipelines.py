@@ -31,7 +31,7 @@ def patched_events(monkeypatch, xonsh_events, xonsh_session):
     get_tasks().clear()
     # needed for ci tests
     monkeypatch.setitem(
-        xonsh_session.env, "RAISE_SUBPROC_ERROR", False
+        xonsh_session.env, "XONSH_SUBPROC_CMD_RAISE_ERROR", False
     )  # for the failing `grep` commands
     monkeypatch.setitem(
         xonsh_session.env, "XONSH_CAPTURE_ALWAYS", True
@@ -107,7 +107,11 @@ def test_command_pipeline_capture(cmdline, stdout, stderr, raw_stdout, xonsh_exe
         pytest.param("echo -n hi", "hi", marks=skip_if_on_windows),
     ),
 )
-def test_simple_capture(cmdline, output, xonsh_execer):
+def test_simple_capture(cmdline, output, xonsh_execer, xonsh_session, monkeypatch):
+    # ``echo hi | grep x`` returns empty stdout with rc=1; the new
+    # XONSH_SUBPROC_RAISE_ERROR semantics would raise on it, but this
+    # test specifically checks that $() captures the empty string.
+    monkeypatch.setitem(xonsh_session.env, "XONSH_SUBPROC_RAISE_ERROR", False)
     assert xonsh_execer.eval(f"$({cmdline})") == output
 
 
@@ -282,7 +286,7 @@ def test_pipeline_early_exit_no_hang(xonsh_session):
     blocked on write() with a full buffer, and iterraw() waited for it
     via _any_proc_running() — deadlock.
     """
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     # $() — captured stdout
     out = xonsh_session.execer.eval("$(seq 1000000 | head -n 3)")
@@ -297,7 +301,7 @@ def test_pipeline_early_exit_no_hang(xonsh_session):
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_pipeline_early_exit_callable_alias(xonsh_session):
     """Same early-exit scenario but with callable aliases in the pipeline."""
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     def _many_lines(args, stdin, stdout, stderr):
         for i in range(1, 1000001):
@@ -344,7 +348,7 @@ def test_pipe_into_callable_alias_no_bad_fd(xonsh_session, capsys):
     ``_prev_procs_done``; the read end is closed later in
     ``_close_prev_procs`` once the downstream proc has actually finished.
     """
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     def _add(args, stdin, stdout, stderr):
         name = args[0] if args else ""
@@ -389,7 +393,7 @@ def test_pipe_into_callable_alias_user_exception(xonsh_session, capsys):
     - the user's traceback is what xonsh prints (not an OSError);
     - upstream is properly torn down.
     """
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     def _erradd(args, stdin, stdout, stderr):
         i = 0
@@ -423,7 +427,7 @@ def test_pipe_into_callable_alias_repeated(xonsh_session, capsys):
     the downstream alias's stdin.  Run the same pipeline many times to make
     a regression unmissable on CI.
     """
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     def _upper(args, stdin, stdout, stderr):
         for line in stdin or []:
@@ -460,7 +464,7 @@ def test_pipe_into_silent_callable_alias(xonsh_session, capsys):
     closed almost immediately after the upstream subprocess exits, while
     the alias is still draining stdin.
     """
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     received: list[str] = []
 
@@ -505,7 +509,7 @@ def test_pipe_into_callable_alias_readline_loop(xonsh_session, capsys):
     the pipe internally; the kernel returns EOF (not EBADF) if the fd is
     closed while a blocking ``os.read`` is in progress on macOS/Linux.
     """
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     def _rl(args, stdin, stdout, stderr):
         n = 0
@@ -556,7 +560,7 @@ def test_callable_alias_in_middle_of_pipeline(xonsh_session, capsys):
     presence of the sentinel reliably distinguishes "buggy completion"
     from "correct completion".
     """
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     def _midupper(args, stdin, stdout, stderr):
         for line in stdin or []:

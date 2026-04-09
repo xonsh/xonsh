@@ -1010,7 +1010,7 @@ def source_alias_fn(
             fext = name  # hidden file with no extension
         if not ignore_ext and fext not in {".xsh", ".py", ".xonshrc"}:
             raise RuntimeError(
-                f"attempting to source file with non-xonsh extension {name!r}! "
+                f"Attempting to source file with non-xonsh extension {name!r}! "
                 f"If you are trying to source a file in another language, "
                 "then please use the appropriate source command "
                 "e.g. `source-bash script.sh`. "
@@ -1030,12 +1030,12 @@ def source_alias_fn(
                 XSH.builtins.execx(src, "exec", ctx, filename=fpath)
             except Exception:
                 print_color(
-                    "{RED}You may be attempting to source non-xonsh file: "
-                    f"{fpath!r}"
-                    "{RESET}If you are trying to source a file in "
+                    "You may be attempting to source non-xonsh file: "
+                    f"{fpath!r}. "
+                    "If you are trying to source a file in "
                     "another language, then please use the appropriate "
-                    "source command. For example, {GREEN}`source-bash "
-                    "script.sh`{RESET}",
+                    "source command. For example, `source-bash "
+                    "script.sh`.",
                     file=sys.stderr,
                 )
                 raise

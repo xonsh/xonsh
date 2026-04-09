@@ -9,7 +9,7 @@ from xonsh.tools import print_color
 import itertools
 
 
-$RAISE_SUBPROC_ERROR = True
+$XONSH_SUBPROC_CMD_RAISE_ERROR = True
 # $XONSH_TRACE_SUBPROC = True
 
 

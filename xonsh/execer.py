@@ -8,6 +8,7 @@ import types
 
 from xonsh.parser import Parser
 from xonsh.parsers.ast import CtxAwareTransformer
+from xonsh.parsers.base import wrap_subproc_raise_checks
 from xonsh.tools import (
     balanced_parens,
     ends_with_colon_token,
@@ -109,6 +110,12 @@ class Execer:
             debug_level=self.debug_level,
             user_names=user_names,
         )
+        # [Phase 3]
+        # Wrap outermost subproc-containing BoolOps and standalone
+        # "uncaptured" subproc helper Calls (bare commands, ![...],
+        # $[...]) so their final returncode is checked at runtime
+        # against $XONSH_SUBPROC_RAISE_ERROR.
+        tree = wrap_subproc_raise_checks(tree)
         return tree
 
     def compile(
