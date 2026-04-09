@@ -4,7 +4,6 @@ import contextlib
 import inspect
 import json
 import locale
-import operator
 import os
 import pathlib
 import platform
