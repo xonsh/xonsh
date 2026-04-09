@@ -665,7 +665,7 @@ class CtxAwareTransformer(NodeTransformer):
         self.ctxadd(node.name)
         self.contexts.append(set())
         args = node.args
-        argchain = [args.args, args.kwonlyargs]
+        argchain = [args.posonlyargs, args.args, args.kwonlyargs]
         if args.vararg is not None:
             argchain.append((args.vararg,))
         if args.kwarg is not None:
