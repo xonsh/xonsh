@@ -1,15 +1,12 @@
 import io
 import os
 import sys
-from unittest.mock import patch, call
-
-import pytest
+from unittest.mock import patch
 
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
-from xonsh.procs.readers import safe_fdclose
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────
+
 
 def _make_fake_spec(**overrides):
     defaults = dict(
@@ -40,11 +37,16 @@ def _fd_is_open(fd):
 
 # ── ProcProxyThread: devnull leak on f=None ──────────────────────────────
 
+
 def test_close_devnull_called_when_f_is_none(xession):
     """_close_devnull must be called even when f is None (early return)."""
     with patch.object(ProcProxyThread, "start"):
         p = ProcProxyThread(
-            f=None, args=[], stdin=None, stdout=None, stderr=None,
+            f=None,
+            args=[],
+            stdin=None,
+            stdout=None,
+            stderr=None,
         )
 
     p._devnull = os.open(os.devnull, os.O_RDWR)
@@ -57,6 +59,7 @@ def test_close_devnull_called_when_f_is_none(xession):
 
 
 # ── ProcProxy.wait(): explicit fd cleanup ────────────────────────────────
+
 
 class TestProcProxyWaitFdCleanup:
     """ProcProxy.wait() must explicitly close file handles it creates."""
@@ -75,9 +78,9 @@ class TestProcProxyWaitFdCleanup:
             p.wait()
             # At least one call should be a TextIOWrapper wrapping our fd
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
-            assert any(
-                isinstance(h, io.TextIOWrapper) for h in closed_handles
-            ), f"expected TextIOWrapper in closed handles, got {closed_handles}"
+            assert any(isinstance(h, io.TextIOWrapper) for h in closed_handles), (
+                f"expected TextIOWrapper in closed handles, got {closed_handles}"
+            )
 
     def test_stdout_int_fd_explicitly_closed(self, xession):
         """stdout as int fd >= 3 → safe_fdclose called on the wrapper."""
@@ -90,9 +93,9 @@ class TestProcProxyWaitFdCleanup:
         with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
             p.wait()
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
-            assert any(
-                isinstance(h, io.TextIOWrapper) for h in closed_handles
-            ), f"expected TextIOWrapper in closed handles, got {closed_handles}"
+            assert any(isinstance(h, io.TextIOWrapper) for h in closed_handles), (
+                f"expected TextIOWrapper in closed handles, got {closed_handles}"
+            )
         os.close(r)
 
     def test_stderr_int_fd_explicitly_closed(self, xession):
@@ -106,13 +109,14 @@ class TestProcProxyWaitFdCleanup:
         with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
             p.wait()
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
-            assert any(
-                isinstance(h, io.TextIOWrapper) for h in closed_handles
-            ), f"expected TextIOWrapper in closed handles, got {closed_handles}"
+            assert any(isinstance(h, io.TextIOWrapper) for h in closed_handles), (
+                f"expected TextIOWrapper in closed handles, got {closed_handles}"
+            )
         os.close(r)
 
     def test_sys_stdout_not_in_owned(self, xession):
         """stdout=None uses sys.stdout — must NOT be passed to safe_fdclose."""
+
         def alias():
             pass
 
@@ -148,9 +152,9 @@ class TestProcProxyWaitFdCleanup:
             p.wait()
             assert p.returncode == 1
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
-            assert any(
-                isinstance(h, io.TextIOWrapper) for h in closed_handles
-            ), "owned stdout must be closed despite exception"
+            assert any(isinstance(h, io.TextIOWrapper) for h in closed_handles), (
+                "owned stdout must be closed despite exception"
+            )
         os.close(r)
 
     def test_all_three_fds_explicitly_closed(self, xession):
