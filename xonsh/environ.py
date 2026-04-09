@@ -2562,6 +2562,7 @@ class Env(cabc.MutableMapping):
                 default=vardocs.doc_default,
                 configurable=vardocs.is_configurable,
             )
+            template = _rst_inline_to_color(template)
         print_color(template)
 
     def is_manually_set(self, varname):
