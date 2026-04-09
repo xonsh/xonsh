@@ -1091,7 +1091,7 @@ def argvquote(arg, force=False):
         # Escape all backslashes, but let the terminating
         # double quotation mark we add below be interpreted
         # as a metacharacter
-        cmdline += +n_backslashes * 2 * "\\" + '"'
+        cmdline += n_backslashes * 2 * "\\" + '"'
         return cmdline
 
 
