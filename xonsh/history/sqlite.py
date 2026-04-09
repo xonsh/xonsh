@@ -289,9 +289,13 @@ class SqliteHistoryGC(threading.Thread):
             envs = XSH.env
             hsize, units = envs.get("XONSH_HISTORY_SIZE")
         if units != "commands":
-            print(
-                'sqlite backed history gc currently only supports "commands" as units',
-                file=sys.stderr,
+            import warnings
+
+            warnings.warn(
+                f"$XONSH_HISTORY_SIZE unit {units!r} is not supported "
+                f'by the sqlite history backend (only "commands" is supported). '
+                f"History GC is disabled — the history file will keep growing.",
+                stacklevel=1,
             )
             return
         if hsize < 0:
