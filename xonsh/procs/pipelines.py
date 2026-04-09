@@ -467,7 +467,11 @@ class CommandPipeline:
                     else:
                         out_target.write(line.decode(encoding=enc, errors=err))
                     out_target.flush()
-                except BrokenPipeError:
+                except OSError:
+                    # Downstream process closed the pipe. Stop streaming
+                    # but keep collecting raw output for captured result.
+                    # Linux: BrokenPipeError (errno 32)
+                    # Windows: OSError "Invalid argument" (errno 22)
                     stream = False
             # save the raw bytes
             raw_out_lines.append(line)
@@ -517,7 +521,10 @@ class CommandPipeline:
                 else:
                     err_target.write(b.decode(encoding=enc, errors=err))
                 err_target.flush()
-            except BrokenPipeError:
+            except OSError:
+                # Downstream process closed the pipe.
+                # Linux: BrokenPipeError (errno 32)
+                # Windows: OSError "Invalid argument" (errno 22)
                 pass
         # accumulate the raw bytes
         self._raw_error += b
