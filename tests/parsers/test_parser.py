@@ -2441,6 +2441,7 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
 def test_walrus_in_assign_ctx(parser, xsh):
     """Walrus operator variable in RHS should be tracked in context."""
     import ast as stdlib_ast
+
     from xonsh.parsers.ast import CtxAwareTransformer
 
     code = "x = (y := 5)\ny\n"
