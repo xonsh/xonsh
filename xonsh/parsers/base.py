@@ -423,7 +423,7 @@ def raise_parse_error(
         err.msg = str(msg) if msg else ""
         err.filename = loc.fname
         err.lineno = loc.lineno
-        err.offset = loc.column
+        err.offset = loc.column + 1
         err.text = err_line
 
     raise err

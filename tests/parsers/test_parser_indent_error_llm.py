@@ -1,4 +1,4 @@
-"""Tests for sane error messages on indent/dedent/newline parse errors."""
+"""Tests for sane error messages and SyntaxError fields in parse errors."""
 
 import pytest
 
@@ -45,3 +45,13 @@ def test_unexpected_newline_preserves_lineno(parser):
     with pytest.raises(SyntaxError, match="unexpected newline") as exc_info:
         parser.parse("x =\n  1\n")
     assert exc_info.value.lineno == 1
+
+
+def test_syntax_error_offset_matches_cpython(parser):
+    """SyntaxError.offset should be 1-indexed, matching CPython."""
+    code = "def f(:\n"
+    with pytest.raises(SyntaxError) as xonsh_exc:
+        parser.parse(code)
+    with pytest.raises(SyntaxError) as cpython_exc:
+        compile(code, "<test>", "exec")
+    assert xonsh_exc.value.offset == cpython_exc.value.offset
