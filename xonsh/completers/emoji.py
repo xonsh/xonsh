@@ -2,8 +2,8 @@
 
 Trigger prefixes are configurable via environment variables:
 
-- ``$XONSH_EMOJI_TRIGGER`` (default ``"::"``) — colorful emoji (faces, animals, objects).
-- ``$XONSH_EMOJI_SYMBOL_TRIGGER`` (default ``":::"``) — simple unicode symbols (arrows, math, dingbats).
+- ``$XONSH_COMPLETER_EMOJI_PREFIX`` (default ``"::"``) — colorful emoji (faces, animals, objects).
+- ``$XONSH_COMPLETER_SYMBOLS_PREFIX`` (default ``":::"``) — simple unicode symbols (arrows, math, dingbats).
 
 Set to empty string to disable.
 """
