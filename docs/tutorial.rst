@@ -207,80 +207,43 @@ Not bad, xonsh, not bad.
 Environment Types
 -----------------
 
-Like other variables in Python, environment variables have a type. Sometimes
-this type is imposed based on the variable name. The current rules are pretty
-simple:
+Environment variables in xonsh are not limited to strings -- they can hold
+any Python type: strings, numbers, lists, and arbitrary objects.  When a
+variable is used as a subprocess argument, xonsh converts it to a string
+automatically:
 
-* ``\w*PATH``: any variable whose name ends in PATH is a list of strings.
-* ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
+.. code-block:: xonshcon
 
-Futhermore, a number of predefined environment variables listed `here <envvars.html>`_ have a static type.
-For example ``XONSH_HISTORY_SIZE`` is an ``(int | float, str)`` tuple, such as ``(8128, "commands")``.
+    @ $MY_STR = 'hello'
+    @ $MY_NUM = 42
+    @ $MY_LIST = [1, 2, 3]
+    @ showcmd echo $MY_STR $MY_NUM $MY_LIST
+    ['echo', 'hello', '42', '[1, 2, 3]']
 
-xonsh will automatically convert back and forth to untyped (string-only)
-representations of the environment as needed (mostly by subprocess commands).
-When in xonsh, you'll always have the typed version.
-
-Variables that do not match the rules above are converted to strings using ``str``,
-except they are ``None``. In this case the empty string is used.
-
-Here are a couple of
-PATH examples:
+``$PATH`` is an :class:`~xonsh.environ.EnvPath` object -- a special list that makes it easy
+to add and remove directories:
 
 .. code-block:: xonshcon
 
     @ $PATH
-    ['/home/snail/.local/bin', '/home/snail/sandbox/bin',
-    '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin',
-    '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
-    @ $LD_LIBRARY_PATH
-    ['/home/snail/.local/lib', '']
+    ['/usr/local/bin', '/usr/bin', '/bin']
+    @ $PATH.append('/opt/mytools/bin')
+    @ $PATH.insert(0, '$HOME/.local/bin')
+    @ $PATH
+    ['/home/snail/.local/bin', '/usr/local/bin', '/usr/bin', '/bin',
+    '/opt/mytools/bin']
 
-Also note that *any* Python object can go into the environment. It is sometimes
-useful to have more sophisticated types, like functions, in the environment.
-There are handful of environment variables that xonsh considers special.
-They can be seen on the `Environment Variables page <envvars.html>`_.
+Any variable whose name ends in ``PATH`` or ``DIRS`` is automatically
+treated as an ``EnvPath``.
 
 .. note:: In subprocess mode, referencing an undefined environment variable
           will produce an empty string.  In Python mode, however, a
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
 
-Callable Environment Variables
-------------------------------
-
-In some cases you may want to have environment variable with dynamically created value.
-Here is the example of callable environment variable:
-
-.. code-block:: python
-
-    @ class Stamp:
-         """Return current date as string representation."""
-         def __repr__(self):
-            return @.imp.datetime.datetime.now().isoformat()
-
-
-    @ $DT = Stamp()
-    @ $DT
-    2024-11-11T11:11:22
-    @ echo $DT
-    2024-11-11T11:11:33
-    @ env | grep DT
-    DT=2024-11-11T11:11:44
-
-Registering Environment Variables
----------------------------------
-
-You can manually register environment variables to define their type and documentation.
-This is particularly useful for extensions or complex configurations. The documentation provided
-will be shown during tab-completion.
-
-.. code-block:: xonsh
-
-    @.env.register('MY_VAR1', type='int', default=1, doc='Demo variable 1.')
-    @.env.register('MY_VAR2', type='int', default=2, doc='Demo variable 2.')
-
-Now, when you type ``$MY_<Tab>``, you will see the description.
+You can also register custom variables with types and documentation,
+create callable variables with dynamic values, and more -- see
+:doc:`env` for the full details.
 
 Python-mode vs Subprocess-mode
 ================================
