@@ -1,7 +1,7 @@
 """Implements the xonsh parser for Python v3.6."""
 
 import xonsh.parsers.ast as ast
-from xonsh.parsers.base import BaseParser, lopen_loc, store_ctx
+from xonsh.parsers.base import BaseParser, ensure_has_elts, lopen_loc, store_ctx
 
 
 class Parser(BaseParser):
@@ -69,7 +69,7 @@ class Parser(BaseParser):
         """atom_expr : await_tok atom trailer_list_opt"""
         p0 = self.apply_trailers(p[2], p[3])
         p1 = p[1]
-        p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos)
+        p0 = ast.Await(value=p0, lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = p0
 
     def p_async_stmt(self, p):
@@ -124,9 +124,8 @@ class Parser(BaseParser):
 
     def p_argument_kwargs(self, p):
         """argument : POW test"""
-        p2 = p[2]
         p[0] = ast.keyword(
-            arg=None, value=p2, lineno=p2.lineno, col_offset=p2.col_offset
+            arg=None, value=p[2], lineno=p.lineno(1), col_offset=p.lexpos(1)
         )
 
     def p_argument_args(self, p):
@@ -142,16 +141,32 @@ class Parser(BaseParser):
 
     def p_argument_eq(self, p):
         """argument : test EQUALS test"""
-        p3 = p[3]
+        p1 = p[1]
         p[0] = ast.keyword(
-            arg=p[1].id, value=p3, lineno=p3.lineno, col_offset=p3.col_offset
+            arg=p1.id, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
         )
 
     def p_comp_for(self, p):
-        """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        super().p_comp_for(p)
-        # only difference with base should be the is_async=0
-        p[0]["comps"][0].is_async = 0
+        """comp_for : FOR exprlist IN or_test comp_iter_opt
+        | ASYNC FOR exprlist IN or_test comp_iter_opt
+        """
+        is_async = p[1] == "async"
+        if is_async:
+            targs, it, p_last = p[3], p[5], p[6]
+        else:
+            targs, it, p_last = p[2], p[4], p[5]
+        if len(targs) == 1:
+            targ = targs[0]
+        else:
+            targ = ensure_has_elts(targs)
+        store_ctx(targ)
+        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=int(is_async))
+        comps = [comp]
+        p0 = {"comps": comps}
+        if p_last is not None:
+            comps += p_last.get("comps", [])
+            comp.ifs += p_last.get("if", [])
+        p[0] = p0
 
     def p_expr_stmt_annassign(self, p):
         """expr_stmt : testlist_star_expr COLON test EQUALS test

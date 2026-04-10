@@ -36,6 +36,7 @@ from xonsh.parsers.tokenize import (
     RIGHTSHIFT,
     SEARCHPATH,
     STRING,
+    TYPE,
     TokenError,
     tokenize,
 )
@@ -119,6 +120,8 @@ def token_map():
     # python 3.10 (backwards and name token compatible) tokens
     tm[MATCH] = "MATCH"
     tm[CASE] = "CASE"
+    # python 3.12 (PEP 695) soft keyword
+    tm[TYPE] = "TYPE"
     return tm
 
 
@@ -142,7 +145,7 @@ def handle_name(state, token):
     if state["pymode"][-1][0]:
         if needs_whitespace and not has_whitespace:
             pass
-        elif token.string in kwmod.kwlist + ["match", "case"]:
+        elif token.string in kwmod.kwlist + ["match", "case", "type"]:
             typ = token.string.upper()
         yield _new_token(typ, token.string, token.start)
     else:
@@ -503,12 +506,19 @@ class Lexer:
         l = c = -1
         ws = "WS"
         nl = "\n"
+        newline_types = frozenset({"NEWLINE", "NL", "COMMENT"})
         for token in self:
             if token.type == ws:
                 continue
+            elif token.type in newline_types:
+                # After a newline token, force the next token to start a
+                # new element by setting c to an impossible value.
+                l = token.lineno + token.value.count(nl)
+                c = -1
+                continue
             elif l < token.lineno:
                 elements.append(token.value)
-            elif len(elements) > 0 and c == token.lexpos:
+            elif len(elements) > 0 and c == token.lexpos and c >= 0:
                 elements[-1] = elements[-1] + token.value
             else:
                 elements.append(token.value)

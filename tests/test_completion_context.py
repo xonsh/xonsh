@@ -287,6 +287,21 @@ def test_partial_string_arg(commandline, context):
     assert_match(partial_commandline, partial_context, is_main_command=True)
 
 
+def test_triple_quote_closing_cursor():
+    """Cursor inside closing triple quote should not misclassify as inside string value."""
+    # '''hello''' with cursor between 1st and 2nd closing quote
+    commandline = f"'''hello'{X}''"
+    context = CommandContext(
+        args=(),
+        arg_index=0,
+        prefix="hello",
+        suffix="",
+        opening_quote="'''",
+        closing_quote="'''",
+    )
+    assert_match(commandline, context, is_main_command=True)
+
+
 CONT = "\\\n"
 
 

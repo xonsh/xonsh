@@ -159,6 +159,9 @@ N_TOKENS += 1  # type: ignore
 CASE = N_TOKENS
 tok_name[N_TOKENS] = "CASE"
 N_TOKENS += 1  # type: ignore
+TYPE = N_TOKENS
+tok_name[N_TOKENS] = "TYPE"
+N_TOKENS += 1  # type: ignore
 FSTRING_START = N_TOKENS
 tok_name[N_TOKENS] = "FSTRING_START"
 N_TOKENS += 1  # type: ignore
@@ -185,6 +188,7 @@ _xonsh_tokens = {
     "@!(": "ATBANGLPAREN",
     "match": "MATCH",
     "case": "CASE",
+    "type": "TYPE",
 }
 
 additional_parenlevs = frozenset({"@(", "!(", "![", "$(", "$[", "${", "@$(", "@!("})
