@@ -68,6 +68,14 @@ class TestPEP701FStrings:
     def test_format_spec_fill_align(self, check_ast):
         check_ast('f"{42:0>10}"', run=False)
 
+    def test_format_spec_nested_expr(self, check_ast):
+        """f"{x:.{n}f}" — sub-expression inside format spec."""
+        check_ast('f"{3.14159:.{3}f}"', run=False)
+
+    def test_format_spec_multiple_nested_exprs(self, check_ast):
+        """f"{x:{w}.{d}f}" — multiple sub-expressions in format spec."""
+        check_ast('f"{3.14159:{10}.{3}f}"', run=False)
+
     # -- conversions --
 
     def test_conversion_r(self, check_ast):

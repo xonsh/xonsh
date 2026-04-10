@@ -21,12 +21,15 @@ def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
 @lazyobject
 def RE_XONSH_EXPR():
     """Matches xonsh-specific expressions: $NAME, $(...), ${...}, $[...],
-    @(...), !(...), ![...]."""
+    @(...), @$(...), @!(...), !(...), ![...]."""
+    # Order matters: @$(...) and @!(...) must be tried before @(...).
     return re.compile(
         r"\$\w+"  # $NAME
         r"|\$\([^)]*\)"  # $(...)
         r"|\$\{[^}]*\}"  # ${...}
         r"|\$\[[^\]]*\]"  # $[...]
+        r"|@\$\([^)]*\)"  # @$(...)
+        r"|@!\([^)]*\)"  # @!(...)
         r"|@\([^)]*\)"  # @(...)
         r"|!\([^)]*\)"  # !(...)
         r"|!\[[^\]]*\]"  # ![...]
@@ -191,6 +194,8 @@ class FStringAdaptor:
         for node in ast.walk(self.res):
             if not (
                 isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
                 and node.func.value.id == "__xonsh__"
                 and node.func.attr == "eval_fstring_field"
                 and len(node.args) > 0

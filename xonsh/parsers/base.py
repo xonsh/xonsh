@@ -423,7 +423,7 @@ def raise_parse_error(
         err.msg = str(msg) if msg else ""
         err.filename = loc.fname
         err.lineno = loc.lineno
-        err.offset = loc.column
+        err.offset = loc.column + 1
         err.text = err_line
 
     raise err
@@ -1049,6 +1049,11 @@ class BaseParser:
         """
         name_str : name
         """
+        # p[1] is a LexToken with lineno/lexpos from the lexer.
+        # Propagate position to the reduced symbol so that downstream
+        # rules (e.g. import alias) can retrieve it.
+        p.slice[0].lineno = p[1].lineno
+        p.slice[0].lexpos = p[1].lexpos
         p[0] = p[1].value
 
     def p_name(self, p):
@@ -1827,6 +1832,9 @@ class BaseParser:
                     | name_str period_name_list
         """
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        # Propagate position from the first name_str.
+        p.slice[0].lineno = p.slice[1].lineno
+        p.slice[0].lexpos = p.slice[1].lexpos
 
     def p_comma_name(self, p):
         """comma_name : COMMA name_str"""
@@ -2722,7 +2730,6 @@ class BaseParser:
             p0 = ast.Dict(
                 keys=[],
                 values=[],
-                ctx=ast.Load(),
                 lineno=p1_tok.lineno,
                 col_offset=p1_tok.lexpos,
             )
@@ -3313,9 +3320,7 @@ class BaseParser:
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1)
-        p[0] = ast.Dict(
-            keys=keys, values=vals, ctx=ast.Load(), lineno=lineno, col_offset=col
-        )
+        p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
 
     def p_dictorsetmaker_i4(self, p):
         """dictorsetmaker : item comma_item_list comma_opt"""
@@ -3326,9 +3331,7 @@ class BaseParser:
             keys.append(k)
             vals.append(v)
         lineno, col = lopen_loc(p1[0] or p1[1])
-        p[0] = ast.Dict(
-            keys=keys, values=vals, ctx=ast.Load(), lineno=lineno, col_offset=col
-        )
+        p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
 
     def p_dictorsetmaker_t4_dict(self, p):
         """dictorsetmaker : test COLON testlist"""
@@ -3337,9 +3340,7 @@ class BaseParser:
         if len(vals) != len(keys):
             self._set_error("invalid syntax")
         lineno, col = lopen_loc(p[1])
-        p[0] = ast.Dict(
-            keys=keys, values=vals, ctx=ast.Load(), lineno=lineno, col_offset=col
-        )
+        p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
 
     def p_dictorsetmaker_item_comma(self, p):
         """dictorsetmaker : item comma_opt"""
@@ -3347,29 +3348,21 @@ class BaseParser:
         keys = [p1[0]]
         vals = [p1[1]]
         lineno, col = lopen_loc(p1[0] or p1[1])
-        p[0] = ast.Dict(
-            keys=keys, values=vals, ctx=ast.Load(), lineno=lineno, col_offset=col
-        )
+        p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
 
     def p_dictorsetmaker_t4_set(self, p):
         """dictorsetmaker : test_or_star_expr comma_test_or_star_expr_list comma_opt"""
-        p[0] = ast.Set(
-            elts=[p[1]] + p[2], ctx=ast.Load(), lineno=self.lineno, col_offset=self.col
-        )
+        p[0] = ast.Set(elts=[p[1]] + p[2], lineno=self.lineno, col_offset=self.col)
 
     def p_dictorsetmaker_test_comma(self, p):
         """dictorsetmaker : test_or_star_expr comma_opt"""
         elts = self._list_or_elts_if_not_real_tuple(p[1])
-        p[0] = ast.Set(
-            elts=elts, ctx=ast.Load(), lineno=self.lineno, col_offset=self.col
-        )
+        p[0] = ast.Set(elts=elts, lineno=self.lineno, col_offset=self.col)
 
     def p_dictorsetmaker_testlist(self, p):
         """dictorsetmaker : testlist"""
         elts = self._list_or_elts_if_not_real_tuple(p[1])
-        p[0] = ast.Set(
-            elts=elts, ctx=ast.Load(), lineno=self.lineno, col_offset=self.col
-        )
+        p[0] = ast.Set(elts=elts, lineno=self.lineno, col_offset=self.col)
 
     def p_dictorsetmaker_comp(self, p):
         """
