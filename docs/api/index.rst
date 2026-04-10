@@ -1,7 +1,7 @@
 .. _api:
 
 =================
-Xonsh API
+Xonsh Library
 =================
 For those of you who want the gritty details.
 
