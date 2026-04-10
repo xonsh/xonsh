@@ -177,6 +177,30 @@ def test_fstring_adaptor_captured_subproc(inp):
     assert isinstance(joined_str_node, ast.JoinedStr)
 
 
+@pytest.mark.parametrize(
+    "inp",
+    [
+        'f"{len(x)} {$HOME}"',
+        'f"{len([])} {$HOME}"',
+        'f"{foo()} {$HOME}"',
+        'f"{a.b.c()} {$HOME}"',
+    ],
+)
+def test_fstring_adaptor_func_call_with_xonsh_expr(inp):
+    """FStringAdaptor must not crash on f-strings mixing function calls
+    with xonsh expressions.
+
+    Regression test: ``_fix_eval_field_params`` previously unconditionally
+    accessed ``node.func.value.id``, assuming every ``ast.Call`` in the
+    patched AST is a ``__xonsh__.eval_fstring_field(...)`` call. For
+    user calls like ``len(x)``, ``node.func`` is an ``ast.Name`` (no
+    ``.value``), and for ``a.b.c()`` ``node.func.value`` is itself an
+    ``ast.Attribute`` (no ``.id``) — both raise ``AttributeError``.
+    """
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+
+
 fstring_adaptor_pathsearch_parameters = [
     ("f'''{$HOME}/*'''", "/foo/bar/*"),
     ("f'''{$HOME}/{$USER}'''", "/foo/bar/me"),

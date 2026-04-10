@@ -194,6 +194,8 @@ class FStringAdaptor:
         for node in ast.walk(self.res):
             if not (
                 isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
                 and node.func.value.id == "__xonsh__"
                 and node.func.attr == "eval_fstring_field"
                 and len(node.args) > 0
