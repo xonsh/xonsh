@@ -13,9 +13,185 @@ import ast
 from xonsh.parsers.fstring_rules_llm import FStringRules
 from xonsh.parsers.ply import yacc
 from xonsh.parsers.v39 import Parser as ThreeNineParser
+from xonsh.platform import PYTHON_VERSION_INFO
+
+_HAS_TYPE_PARAMS = PYTHON_VERSION_INFO >= (3, 12)
 
 
 class Parser(FStringRules, ThreeNineParser):
+    # ---- PEP 695: type parameter syntax (Python 3.12+) ----
+
+    def p_simple_stmt_type(self, p):
+        """simple_stmt : type_stmt"""
+        p[0] = p[1]
+
+    def p_type_stmt(self, p):
+        """type_stmt : TYPE name_str EQUALS test"""
+        if not _HAS_TYPE_PARAMS:
+            self._set_error(
+                "'type' statement requires Python 3.12+",
+                self.currloc(lineno=p.lineno(1), column=p.lexpos(1)),
+            )
+        name = ast.Name(
+            id=p[2], ctx=ast.Store(), lineno=p.lineno(1), col_offset=p.lexpos(1)
+        )
+        p[0] = [
+            ast.TypeAlias(
+                name=name,
+                type_params=[],
+                value=p[4],
+                lineno=p.lineno(1),
+                col_offset=p.lexpos(1),
+            )
+        ]
+
+    def p_type_stmt_params(self, p):
+        """type_stmt : TYPE name_str LBRACKET type_param_list comma_opt RBRACKET EQUALS test"""
+        if not _HAS_TYPE_PARAMS:
+            self._set_error(
+                "'type' statement requires Python 3.12+",
+                self.currloc(lineno=p.lineno(1), column=p.lexpos(1)),
+            )
+        name = ast.Name(
+            id=p[2], ctx=ast.Store(), lineno=p.lineno(1), col_offset=p.lexpos(1)
+        )
+        p[0] = [
+            ast.TypeAlias(
+                name=name,
+                type_params=p[4],
+                value=p[8],
+                lineno=p.lineno(1),
+                col_offset=p.lexpos(1),
+            )
+        ]
+
+    def _type_param_loc(self, p, start_idx, end_idx):
+        return dict(
+            lineno=p.lineno(start_idx),
+            col_offset=p.lexpos(start_idx),
+            end_lineno=p.lineno(end_idx),
+            end_col_offset=p.lexpos(end_idx) + len(str(p[end_idx])),
+        )
+
+    def p_type_param_typevar(self, p):
+        """type_param : NAME"""
+        p[0] = ast.TypeVar(name=p[1], **self._type_param_loc(p, 1, 1))
+
+    def p_type_param_typevar_bound(self, p):
+        """type_param : NAME COLON test"""
+        p[0] = ast.TypeVar(name=p[1], bound=p[3], **self._type_param_loc(p, 1, 3))
+
+    def p_type_param_typevartuple(self, p):
+        """type_param : TIMES NAME"""
+        p[0] = ast.TypeVarTuple(name=p[2], **self._type_param_loc(p, 1, 2))
+
+    def p_type_param_paramspec(self, p):
+        """type_param : POW NAME"""
+        p[0] = ast.ParamSpec(name=p[2], **self._type_param_loc(p, 1, 2))
+
+    def p_type_param_list_single(self, p):
+        """type_param_list : type_param"""
+        p[0] = [p[1]]
+
+    def p_type_param_list_many(self, p):
+        """type_param_list : type_param_list COMMA type_param"""
+        p[0] = p[1] + [p[3]]
+
+    def p_funcdef_type_params(self, p):
+        """funcdef : def_tok name_str LBRACKET type_param_list comma_opt RBRACKET parameters rarrow_test_opt COLON suite"""
+        if not _HAS_TYPE_PARAMS:
+            self._set_error(
+                "type parameters require Python 3.12+",
+                self.currloc(lineno=p[1].lineno, column=p[1].lexpos),
+            )
+        f = ast.FunctionDef(
+            name=p[2],
+            args=p[7],
+            returns=p[8],
+            body=p[10],
+            decorator_list=[],
+            type_params=p[4],
+            lineno=p[1].lineno,
+            col_offset=p[1].lexpos,
+        )
+        p[0] = [f]
+
+    def p_classdef_type_params(self, p):
+        """classdef : class_tok name_str LBRACKET type_param_list comma_opt RBRACKET func_call_opt COLON suite"""
+        if not _HAS_TYPE_PARAMS:
+            self._set_error(
+                "type parameters require Python 3.12+",
+                self.currloc(lineno=p[1].lineno, column=p[1].lexpos),
+            )
+        p1, p7 = p[1], p[7]
+        b, kw = ([], []) if p7 is None else (p7["args"], p7["keywords"])
+        c = ast.ClassDef(
+            name=p[2],
+            bases=b,
+            keywords=kw,
+            body=p[9],
+            decorator_list=[],
+            type_params=p[4],
+            lineno=p1.lineno,
+            col_offset=p1.lexpos,
+        )
+        p[0] = [c]
+
+    # ---- end PEP 695 ----
+
+    # ---- PEP 654: exception groups (Python 3.11+) ----
+
+    def p_except_star_clause(self, p):
+        """except_star_clause : except_tok TIMES test as_name_opt"""
+        p1 = p[1]
+        p[0] = ast.ExceptHandler(
+            type=p[3], name=p[4], lineno=p1.lineno, col_offset=p1.lexpos
+        )
+
+    def p_except_star_part(self, p):
+        """except_star_part : except_star_clause COLON suite"""
+        p0 = p[1]
+        p0.body = p[3]
+        p[0] = [p0]
+
+    def p_except_star_part_list_one(self, p):
+        """except_star_part_list : except_star_part"""
+        p[0] = p[1]
+
+    def p_except_star_part_list_many(self, p):
+        """except_star_part_list : except_star_part_list except_star_part"""
+        p[0] = p[1] + p[2]
+
+    def p_try_star_stmt(self, p):
+        """try_stmt : try_tok COLON suite except_star_part_list finally_part_opt"""
+        p1 = p[1]
+        p[0] = [
+            ast.TryStar(
+                body=p[3],
+                handlers=p[4],
+                orelse=[],
+                finalbody=([] if p[5] is None else p[5]),
+                lineno=p1.lineno,
+                col_offset=p1.lexpos,
+            )
+        ]
+
+    def p_try_star_stmt_else(self, p):
+        """try_stmt : try_tok COLON suite except_star_part_list else_part finally_part_opt"""
+        p1 = p[1]
+        p[0] = [
+            ast.TryStar(
+                body=p[3],
+                handlers=p[4],
+                orelse=([] if p[5] is None else p[5]),
+                finalbody=([] if p[6] is None else p[6]),
+                lineno=p1.lineno,
+                col_offset=p1.lexpos,
+            )
+        ]
+
+    # ---- end PEP 654 ----
+
     def p_import_from_post_times(self, p):
         """import_from_post : TIMES"""
         p[0] = [ast.alias(name=p[1], asname=None, **self.get_line_cols(p, 1))]
@@ -215,11 +391,10 @@ class Parser(FStringRules, ThreeNineParser):
 
         match p[1]:
             case ast.JoinedStr():
-                raise AssertionError("patterns may not match formatted string literals")
-                # TODO: raise SyntaxError instead
-                # (doing so currently somehow causes an IndexError in tools.py:get_logical_line)
-
-        # TODO: f"hi" "hi" does not parse in xonsh
+                self._set_error(
+                    "patterns may not match formatted string literals",
+                    self.currloc(lineno=p[1].lineno, column=p[1].col_offset + 1),
+                )
 
     def p_literal_expr_none_or_true_or_false(self, p):
         """

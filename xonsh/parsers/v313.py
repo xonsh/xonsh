@@ -49,8 +49,8 @@ class Parser(ThreeTenParser):
             p0 = ast.Dict(
                 keys=[],
                 values=[],
-                lineno=self.lineno,
-                col_offset=self.col,
+                lineno=p1_tok.lineno,
+                col_offset=p1_tok.lexpos,
             )
             p0.ctx = ast.Load()
         else:
@@ -111,7 +111,6 @@ class Parser(ThreeTenParser):
         p0 = self.apply_trailers(p[2], p[3])
         p1 = p[1]
         p0 = ast.Await(value=p0, lineno=p1.lineno, col_offset=p1.lexpos)
-        p0.ctx = ast.Load()
         p[0] = p0
 
     #
@@ -211,17 +210,23 @@ class Parser(ThreeTenParser):
         p[0] = [op, p[2]]
 
     def p_comp_for(self, p):
-        """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        targs, it, p5 = p[2], p[4], p[5]
+        """comp_for : FOR exprlist IN or_test comp_iter_opt
+        | ASYNC FOR exprlist IN or_test comp_iter_opt
+        """
+        is_async = p[1] == "async"
+        if is_async:
+            targs, it, p_last = p[3], p[5], p[6]
+        else:
+            targs, it, p_last = p[2], p[4], p[5]
         if len(targs) == 1:
             targ = targs[0]
         else:
             targ = ensure_has_elts(targs)
         store_ctx(targ)
-        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=0)
+        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=int(is_async))
         comps = [comp]
         p0 = {"comps": comps}
-        if p5 is not None:
-            comps += p5.get("comps", [])
-            comp.ifs += p5.get("if", [])
+        if p_last is not None:
+            comps += p_last.get("comps", [])
+            comp.ifs += p_last.get("if", [])
         p[0] = p0
