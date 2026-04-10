@@ -9,7 +9,6 @@ import pytest
 from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
-    VER_MAJOR_MINOR,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
     skip_if_pre_3_12,
@@ -2158,9 +2157,7 @@ def test_async_await(check_stmts):
 
 
 def test_async_comp_for(check_stmts):
-    check_stmts(
-        "async def f():\n    return [x async for x in aiter]\n", False
-    )
+    check_stmts("async def f():\n    return [x async for x in aiter]\n", False)
 
 
 def test_async_comp_for_with_if(check_stmts):
@@ -2171,21 +2168,15 @@ def test_async_comp_for_with_if(check_stmts):
 
 
 def test_async_genexpr(check_stmts):
-    check_stmts(
-        "async def f():\n    return (x async for x in aiter)\n", False
-    )
+    check_stmts("async def f():\n    return (x async for x in aiter)\n", False)
 
 
 def test_async_comp_for_set(check_stmts):
-    check_stmts(
-        "async def f():\n    return {x async for x in aiter}\n", False
-    )
+    check_stmts("async def f():\n    return {x async for x in aiter}\n", False)
 
 
 def test_async_comp_for_dict(check_stmts):
-    check_stmts(
-        "async def f():\n    return {k: v async for k, v in aiter}\n", False
-    )
+    check_stmts("async def f():\n    return {k: v async for k, v in aiter}\n", False)
 
 
 @skip_if_pre_3_12
@@ -2260,21 +2251,16 @@ def test_pep695_integration(xonsh_execer):
 
 
 def test_except_star_basic(check_stmts):
-    check_stmts(
-        "try:\n    pass\nexcept* ValueError:\n    pass\n", False
-    )
+    check_stmts("try:\n    pass\nexcept* ValueError:\n    pass\n", False)
 
 
 def test_except_star_as(check_stmts):
-    check_stmts(
-        "try:\n    pass\nexcept* ValueError as eg:\n    pass\n", False
-    )
+    check_stmts("try:\n    pass\nexcept* ValueError as eg:\n    pass\n", False)
 
 
 def test_except_star_multiple(check_stmts):
     check_stmts(
-        "try:\n    pass\nexcept* ValueError:\n    pass\n"
-        "except* TypeError:\n    pass\n",
+        "try:\n    pass\nexcept* ValueError:\n    pass\nexcept* TypeError:\n    pass\n",
         False,
     )
 

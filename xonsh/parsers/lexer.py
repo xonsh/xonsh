@@ -29,7 +29,6 @@ from xonsh.parsers.tokenize import (
     LESS,
     MATCH,
     NAME,
-    TYPE,
     NEWLINE,
     NL,
     NUMBER,
@@ -37,6 +36,7 @@ from xonsh.parsers.tokenize import (
     RIGHTSHIFT,
     SEARCHPATH,
     STRING,
+    TYPE,
     TokenError,
     tokenize,
 )
