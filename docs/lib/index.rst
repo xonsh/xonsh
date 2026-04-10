@@ -45,7 +45,6 @@ For those of you who want the gritty details.
     xonsh.lib.pretty
     xonsh.history.diff_history
     xonsh.xoreutils
-    xonsh.virtualenv
 
 
 **Helpers:**
