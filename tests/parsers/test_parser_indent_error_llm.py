@@ -77,3 +77,24 @@ def test_import_alias_location_matches_cpython(parser, code):
     ca = cpython_tree.body[0].names[0]
     assert xa.lineno == ca.lineno
     assert xa.col_offset == ca.col_offset
+
+
+@pytest.mark.parametrize(
+    "code, node_type",
+    [
+        ("{}", ast.Dict),
+        ("{1: 2}", ast.Dict),
+        ("{1: 2, 3: 4}", ast.Dict),
+        ("{1: 2,}", ast.Dict),
+        ('{**{"a": 1}}', ast.Dict),
+        ("{1, 2}", ast.Set),
+        ("{1,}", ast.Set),
+        ("{1, 2, 3}", ast.Set),
+    ],
+)
+def test_dict_set_no_ctx_field(parser, code, node_type):
+    """ast.Dict and ast.Set must not have a ctx attribute (breaks Python 3.15)."""
+    tree = parser.parse(code)
+    node = tree.body
+    assert isinstance(node, node_type)
+    assert not hasattr(node, "ctx")
