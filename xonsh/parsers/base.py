@@ -663,6 +663,7 @@ class BaseParser:
             "xorequal",
             "match",
             "case",
+            "type",
         ]
         for rule in tok_rules:
             self._tok_rule(rule)
@@ -1055,6 +1056,7 @@ class BaseParser:
         name : name_tok
              | match_tok
              | case_tok
+             | type_tok
         """
         p[0] = p[1]
 

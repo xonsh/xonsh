@@ -12,6 +12,7 @@ from xonsh.pytest.tools import (
     VER_MAJOR_MINOR,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
+    skip_if_pre_3_12,
 )
 
 
@@ -2185,6 +2186,77 @@ def test_async_comp_for_dict(check_stmts):
     check_stmts(
         "async def f():\n    return {k: v async for k, v in aiter}\n", False
     )
+
+
+@skip_if_pre_3_12
+def test_type_alias(check_stmts):
+    check_stmts("type Point = tuple[int, int]")
+
+
+@skip_if_pre_3_12
+def test_type_alias_with_params(check_stmts):
+    check_stmts("type Alias[T] = list[T]")
+
+
+@skip_if_pre_3_12
+def test_type_alias_complex_params(check_stmts):
+    check_stmts("type Handler[*Ts, **P] = Callable[P, int]")
+
+
+@skip_if_pre_3_12
+def test_funcdef_type_params(check_stmts):
+    check_stmts("def func[T](x: T) -> T: ...\n", False)
+
+
+@skip_if_pre_3_12
+def test_funcdef_type_params_bound(check_stmts):
+    check_stmts("def func[T: int](x: T) -> T: ...\n", False)
+
+
+@skip_if_pre_3_12
+def test_classdef_type_params(check_stmts):
+    check_stmts("class MyClass[T]: ...\n", False)
+
+
+@skip_if_pre_3_12
+def test_classdef_type_params_with_bases(check_stmts):
+    check_stmts("class MyList[T](list): ...\n", False)
+
+
+def test_type_as_name(check_stmts):
+    """type is a soft keyword — still works as a regular name."""
+    check_stmts("x = type(1)")
+
+
+@skip_if_pre_3_12
+def test_pep695_combined(check_stmts):
+    """Multiple PEP 695 features together: generic class with bounded type var,
+    generic method, and type alias using the class."""
+    check_stmts(
+        "type Num = int | float\n"
+        "class Stack[T: Num]:\n"
+        "    def push[U](self, item: U) -> None: ...\n"
+        "    def pop(self) -> T: ...\n",
+        False,
+    )
+
+
+@skip_if_pre_3_12
+def test_pep695_integration(xonsh_execer):
+    """Integration: compile and execute PEP 695 code through xonsh execer."""
+    glbs = {}
+    xonsh_execer.exec(
+        "type Vector[T] = list[T]\n"
+        "class Box[T]:\n"
+        "    def __init__(self, val: T) -> None:\n"
+        "        self.val = val\n"
+        "b = Box(42)\n",
+        glbs=glbs,
+    )
+    assert glbs["b"].val == 42
+    assert glbs["Box"].__name__ == "Box"
+    # Vector is a TypeAliasType (PEP 695 runtime object)
+    assert "Vector" in glbs
 
 
 @skip_if_pre_3_8

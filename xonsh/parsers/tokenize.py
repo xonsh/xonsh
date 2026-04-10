@@ -185,6 +185,7 @@ _xonsh_tokens = {
     "@!(": "ATBANGLPAREN",
     "match": "MATCH",
     "case": "CASE",
+    "type": "TYPE",
 }
 
 additional_parenlevs = frozenset({"@(", "!(", "![", "$(", "$[", "${", "@$(", "@!("})
