@@ -518,8 +518,8 @@ class Parser(ThreeSixParser):
 
     def p_while_stmt(self, p):
         """
-        while_stmt : WHILE namedexpr_test COLON suite
-                   | WHILE namedexpr_test COLON suite else_part
+        while_stmt : while_tok namedexpr_test COLON suite
+                   | while_tok namedexpr_test COLON suite else_part
         """
         super().p_while_stmt(p)
 

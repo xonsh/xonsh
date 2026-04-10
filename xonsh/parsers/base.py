@@ -1912,13 +1912,14 @@ class BaseParser:
 
     def p_while_stmt(self, p):
         """
-        while_stmt : WHILE test COLON suite
-                   | WHILE test COLON suite else_part
+        while_stmt : while_tok test COLON suite
+                   | while_tok test COLON suite else_part
         """
+        p1 = p[1]
         p5 = p[5] if len(p) > 5 else []
         p[0] = [
             ast.While(
-                test=p[2], body=p[4], orelse=p5, lineno=self.lineno, col_offset=self.col
+                test=p[2], body=p[4], orelse=p5, lineno=p1.lineno, col_offset=p1.lexpos
             )
         ]
 

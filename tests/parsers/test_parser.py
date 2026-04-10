@@ -1719,6 +1719,14 @@ def test_while_else(check_stmts):
     check_stmts("while False:\n  pass\nelse:\n  pass")
 
 
+def test_while_lineno(parser):
+    """While node must get the position of 'while', not the lookahead token."""
+    tree = parser.parse("while x:\n    pass\ny = 2\n")
+    w = tree.body[0]
+    assert w.lineno == 1
+    assert w.col_offset == 0
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 
