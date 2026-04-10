@@ -138,6 +138,7 @@ doc = [
     "myst-parser",
     "sphinx-autobuild",
     "sphinx-prompt",
+    "sphinx-reredirects",
 ]
 
 

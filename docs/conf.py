@@ -70,7 +70,23 @@ extensions = [
     "extensions.jinja_rst_ext",
     "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
     "sphinx_prompt",
+    "sphinx_reredirects",
 ]
+
+redirects = {
+    "tutorial_hist": "history.html",
+    "tutorial_subproc_strings": "subproc_strings.html",
+    "tutorial_ptk": "prompt.html",
+    "tutorial_macros": "macros.html",
+    "tutorial_xonsh_projects": "xonsh_projects.html",
+    "tutorial_xontrib": "xontrib.html",
+    "tutorial_events": "events_tutorial.html",
+    "tutorial_completers": "completers.html",
+    "tutorial_history_backend": "history_backend.html",
+    "devguide": "developer.html",
+    "platform-issues": "platforms.html",
+    "prompt_toolkit": "prompt.html",
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
