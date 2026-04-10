@@ -1,7 +1,7 @@
 """Implements the xonsh parser for Python v3.6."""
 
 import xonsh.parsers.ast as ast
-from xonsh.parsers.base import BaseParser, lopen_loc, store_ctx
+from xonsh.parsers.base import BaseParser, ensure_has_elts, lopen_loc, store_ctx
 
 
 class Parser(BaseParser):
@@ -148,10 +148,28 @@ class Parser(BaseParser):
         )
 
     def p_comp_for(self, p):
-        """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        super().p_comp_for(p)
-        # only difference with base should be the is_async=0
-        p[0]["comps"][0].is_async = 0
+        """comp_for : FOR exprlist IN or_test comp_iter_opt
+        | ASYNC FOR exprlist IN or_test comp_iter_opt
+        """
+        is_async = p[1] == "async"
+        if is_async:
+            targs, it, p_last = p[3], p[5], p[6]
+        else:
+            targs, it, p_last = p[2], p[4], p[5]
+        if len(targs) == 1:
+            targ = targs[0]
+        else:
+            targ = ensure_has_elts(targs)
+        store_ctx(targ)
+        comp = ast.comprehension(
+            target=targ, iter=it, ifs=[], is_async=int(is_async)
+        )
+        comps = [comp]
+        p0 = {"comps": comps}
+        if p_last is not None:
+            comps += p_last.get("comps", [])
+            comp.ifs += p_last.get("if", [])
+        p[0] = p0
 
     def p_expr_stmt_annassign(self, p):
         """expr_stmt : testlist_star_expr COLON test EQUALS test

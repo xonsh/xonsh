@@ -2156,6 +2156,37 @@ def test_async_await(check_stmts):
     check_stmts("async def f():\n    await fut\n", False)
 
 
+def test_async_comp_for(check_stmts):
+    check_stmts(
+        "async def f():\n    return [x async for x in aiter]\n", False
+    )
+
+
+def test_async_comp_for_with_if(check_stmts):
+    check_stmts(
+        "async def f():\n    return [x async for x in aiter if x > 0]\n",
+        False,
+    )
+
+
+def test_async_genexpr(check_stmts):
+    check_stmts(
+        "async def f():\n    return (x async for x in aiter)\n", False
+    )
+
+
+def test_async_comp_for_set(check_stmts):
+    check_stmts(
+        "async def f():\n    return {x async for x in aiter}\n", False
+    )
+
+
+def test_async_comp_for_dict(check_stmts):
+    check_stmts(
+        "async def f():\n    return {k: v async for k, v in aiter}\n", False
+    )
+
+
 @skip_if_pre_3_8
 def test_named_expr_args(check_stmts):
     check_stmts("id(x := 42)")
