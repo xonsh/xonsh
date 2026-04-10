@@ -1048,7 +1048,9 @@ class CompletionContextParser:
                     suffix = raw_value[relative_location:]
                 elif (
                     relative_location
-                    >= len(arg.value.opening_quote) + len(arg.value.value) + 1
+                    >= len(arg.value.opening_quote)
+                    + len(arg.value.value)
+                    + len(arg.value.closing_quote)
                 ):
                     # the cursor is inside the closing quote
                     prefix = raw_value[:relative_location]
