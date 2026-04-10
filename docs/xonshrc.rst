@@ -255,7 +255,7 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
 
 
 See also
-========
+--------
 
 * :doc:`env` -- environment variable types, patterns, and ``swap``
 * :doc:`aliases` -- defining aliases
