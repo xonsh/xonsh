@@ -63,7 +63,7 @@ The page has:
 xonfig wizard
 --------------
 
-This imports settings and tools you have defined in your existing (ordinary) shell such as ``bash``.
+This imports settings and tools you have defined in your existing (POSIX) shell.
 It also walks you through setting all known environment variables and xontribs
 in a question-and-answer format:
 

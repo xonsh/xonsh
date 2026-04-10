@@ -8,7 +8,7 @@ on ``history``.
 
 How is xonsh history different?
 ================================
-Most shells - bash foremost among them - think of history as a linear sequence of
+Most shells think of history as a linear sequence of
 past commands that have been entered into *the* terminal. This is saved when *the*
 shell exits, and loaded when *the* new shell starts. But this is no longer
 how the world works.
