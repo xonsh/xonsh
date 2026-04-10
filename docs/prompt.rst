@@ -143,8 +143,8 @@ of those calls will be inserted into the prompt). For example:
 
 Here is an example — a random emoji before the prompt character::
 
-    from xonsh.completers.emoji import _get_color_cache
-    $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(_get_color_cache())[0]
+    from xonsh.completers.emoji import _get_emoji_cache
+    $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(_get_emoji_cache())[0]
     $PROMPT = $PROMPT.replace("{prompt_end}", "{random_emoji}{prompt_end}")
 
     snail@home ~ 🥗 @  # It helps to visually
