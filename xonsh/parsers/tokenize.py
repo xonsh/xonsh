@@ -1461,6 +1461,19 @@ def _tokenize(
                                     stashed = None
                                 yield TokenInfo(OP, "}", spos, epos, line)
                                 continue
+                            elif (
+                                fs["brace_depth"] == 1
+                                and fs["in_format_spec"]
+                            ):
+                                # Closing a nested sub-expression inside
+                                # a format spec (e.g. {n} in f"{x:.{n}f}").
+                                # Resume format spec literal scanning.
+                                fs["in_expr"] = False
+                                if stashed:
+                                    yield stashed
+                                    stashed = None
+                                yield TokenInfo(OP, "}", spos, epos, line)
+                                continue
                         elif (
                             token == ":"
                             and fs["brace_depth"] == 1
