@@ -25,3 +25,11 @@ li > p:last-child {
 .sidebar-logo {
     height: 8em;
 }
+
+/* Disable red-on-white error highlighting from Pygments for unrecognized tokens
+   (e.g. xonsh $VAR syntax in python/xonshcon code blocks). */
+.highlight .err {
+    color: inherit !important;
+    background-color: inherit !important;
+    border: none !important;
+}
