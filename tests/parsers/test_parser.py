@@ -154,6 +154,53 @@ def test_fstring_adaptor(inp, exp, xsh, monkeypatch):
     assert exp == obs
 
 
+@skip_if_pre_3_12
+@pytest.mark.parametrize(
+    "inp",
+    [
+        'f"{@$(echo hi)}"',
+        'f"{@!(echo hi)}"',
+        'f"result: @$(ls)"',
+        'f"result: @!(ls)"',
+        'f"{@$(echo hi)} world"',
+        'f"{$HOME} and {@$(ls)}"',
+    ],
+)
+def test_fstring_adaptor_captured_subproc(inp):
+    """FStringAdaptor must recognize @$(...) and @!(...) xonsh expressions.
+
+    Regression test: previously RE_XONSH_EXPR only covered $(...), @(...),
+    !(...) and similar — but @$(...) (captured injection) and @!(...)
+    (captured object) were missing, causing SyntaxError in f-strings.
+    """
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+
+
+@pytest.mark.parametrize(
+    "inp",
+    [
+        'f"{len(x)} {$HOME}"',
+        'f"{len([])} {$HOME}"',
+        'f"{foo()} {$HOME}"',
+        'f"{a.b.c()} {$HOME}"',
+    ],
+)
+def test_fstring_adaptor_func_call_with_xonsh_expr(inp):
+    """FStringAdaptor must not crash on f-strings mixing function calls
+    with xonsh expressions.
+
+    Regression test: ``_fix_eval_field_params`` previously unconditionally
+    accessed ``node.func.value.id``, assuming every ``ast.Call`` in the
+    patched AST is a ``__xonsh__.eval_fstring_field(...)`` call. For
+    user calls like ``len(x)``, ``node.func`` is an ``ast.Name`` (no
+    ``.value``), and for ``a.b.c()`` ``node.func.value`` is itself an
+    ``ast.Attribute`` (no ``.id``) — both raise ``AttributeError``.
+    """
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+
+
 fstring_adaptor_pathsearch_parameters = [
     ("f'''{$HOME}/*'''", "/foo/bar/*"),
     ("f'''{$HOME}/{$USER}'''", "/foo/bar/me"),
@@ -3830,6 +3877,19 @@ def test_match_mapping_pattern(check_stmts):
         pass
 """,
         run=False,
+    )
+
+
+@skip_if_pre_3_10
+def test_match_mapping_pattern_none_true_false_keys(check_stmts):
+    """None/True/False as mapping pattern keys must be AST nodes, not raw values."""
+    check_stmts(
+        """
+x = {None: 1, True: 2, False: 3}
+match x:
+    case {None: a, True: b, False: c}:
+        assert (a, b, c) == (1, 2, 3)
+""",
     )
 
 

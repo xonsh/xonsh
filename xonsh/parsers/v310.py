@@ -202,10 +202,7 @@ class Parser(FStringRules, ThreeNineParser):
 
     def p_dotted_as_name(self, p: yacc.YaccProduction):
         """dotted_as_name : dotted_name as_name_opt"""
-        alias_idx = 2
-        p[0] = ast.alias(
-            name=p[1], asname=p[alias_idx], **self.get_line_cols(p, alias_idx)
-        )
+        p[0] = ast.alias(name=p[1], asname=p[2], **self.get_line_cols(p, 1))
 
     @staticmethod
     def get_line_cols(p: yacc.YaccProduction, idx: int):
@@ -733,4 +730,8 @@ class Parser(FStringRules, ThreeNineParser):
                           | attr_name_with COLON pattern
         """
         _, key, _, value = p
+        # literal_expr returns raw None/True/False for singleton literals,
+        # but MatchMapping(keys=...) requires AST nodes.
+        if key is None or key is True or key is False:
+            key = ast.Constant(value=key, **self.get_line_cols(p, 1))
         p[0] = key, value
