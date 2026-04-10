@@ -141,6 +141,16 @@ of those calls will be inserted into the prompt). For example:
     2 ~ @
     8 ~ @
 
+Here is an example — a random emoji before the prompt character::
+
+    from xonsh.completers.emoji import _get_color_cache
+    $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(_get_color_cache())[0]
+    $PROMPT = $PROMPT.replace("{prompt_end}", "{random_emoji}{prompt_end}")
+
+    snail@home ~ 🥗@  # It helps to visually
+    snail@home ~ 🍎@  # identify lines
+    snail@home ~ 🧀@  # in your scrollback history
+
 Environment variables and functions are also available with the ``$``
 prefix.  For example:
 

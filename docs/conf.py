@@ -86,6 +86,7 @@ redirects = {
     "devguide": "developer.html",
     "platform-issues": "platforms.html",
     "prompt_toolkit": "prompt.html",
+    "tryitnow": "contents.html",
 }
 
 # Add any paths that contain templates here, relative to this directory.
