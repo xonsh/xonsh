@@ -135,6 +135,59 @@ class Parser(FStringRules, ThreeNineParser):
 
     # ---- end PEP 695 ----
 
+    # ---- PEP 654: exception groups (Python 3.11+) ----
+
+    def p_except_star_clause(self, p):
+        """except_star_clause : except_tok TIMES test as_name_opt"""
+        p1 = p[1]
+        p[0] = ast.ExceptHandler(
+            type=p[3], name=p[4], lineno=p1.lineno, col_offset=p1.lexpos
+        )
+
+    def p_except_star_part(self, p):
+        """except_star_part : except_star_clause COLON suite"""
+        p0 = p[1]
+        p0.body = p[3]
+        p[0] = [p0]
+
+    def p_except_star_part_list_one(self, p):
+        """except_star_part_list : except_star_part"""
+        p[0] = p[1]
+
+    def p_except_star_part_list_many(self, p):
+        """except_star_part_list : except_star_part_list except_star_part"""
+        p[0] = p[1] + p[2]
+
+    def p_try_star_stmt(self, p):
+        """try_stmt : try_tok COLON suite except_star_part_list finally_part_opt"""
+        p1 = p[1]
+        p[0] = [
+            ast.TryStar(
+                body=p[3],
+                handlers=p[4],
+                orelse=[],
+                finalbody=([] if p[5] is None else p[5]),
+                lineno=p1.lineno,
+                col_offset=p1.lexpos,
+            )
+        ]
+
+    def p_try_star_stmt_else(self, p):
+        """try_stmt : try_tok COLON suite except_star_part_list else_part finally_part_opt"""
+        p1 = p[1]
+        p[0] = [
+            ast.TryStar(
+                body=p[3],
+                handlers=p[4],
+                orelse=([] if p[5] is None else p[5]),
+                finalbody=([] if p[6] is None else p[6]),
+                lineno=p1.lineno,
+                col_offset=p1.lexpos,
+            )
+        ]
+
+    # ---- end PEP 654 ----
+
     def p_import_from_post_times(self, p):
         """import_from_post : TIMES"""
         p[0] = [ast.alias(name=p[1], asname=None, **self.get_line_cols(p, 1))]

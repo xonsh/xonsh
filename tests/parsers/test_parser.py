@@ -2259,6 +2259,52 @@ def test_pep695_integration(xonsh_execer):
     assert "Vector" in glbs
 
 
+def test_except_star_basic(check_stmts):
+    check_stmts(
+        "try:\n    pass\nexcept* ValueError:\n    pass\n", False
+    )
+
+
+def test_except_star_as(check_stmts):
+    check_stmts(
+        "try:\n    pass\nexcept* ValueError as eg:\n    pass\n", False
+    )
+
+
+def test_except_star_multiple(check_stmts):
+    check_stmts(
+        "try:\n    pass\nexcept* ValueError:\n    pass\n"
+        "except* TypeError:\n    pass\n",
+        False,
+    )
+
+
+def test_except_star_else_finally(check_stmts):
+    check_stmts(
+        "try:\n    pass\nexcept* ValueError:\n    pass\n"
+        "else:\n    pass\nfinally:\n    pass\n",
+        False,
+    )
+
+
+def test_except_star_integration(xonsh_execer):
+    """Integration: except* catches ExceptionGroup members."""
+    glbs = {}
+    xonsh_execer.exec(
+        "result = []\n"
+        "try:\n"
+        "    raise ExceptionGroup('eg', [ValueError(1), TypeError(2)])\n"
+        "except* ValueError as eg:\n"
+        "    result.append(('val', eg.exceptions))\n"
+        "except* TypeError as eg:\n"
+        "    result.append(('type', eg.exceptions))\n",
+        glbs=glbs,
+    )
+    assert len(glbs["result"]) == 2
+    assert glbs["result"][0][0] == "val"
+    assert glbs["result"][1][0] == "type"
+
+
 @skip_if_pre_3_8
 def test_named_expr_args(check_stmts):
     check_stmts("id(x := 42)")
