@@ -202,9 +202,7 @@ class Parser(FStringRules, ThreeNineParser):
 
     def p_dotted_as_name(self, p: yacc.YaccProduction):
         """dotted_as_name : dotted_name as_name_opt"""
-        p[0] = ast.alias(
-            name=p[1], asname=p[2], **self.get_line_cols(p, 1)
-        )
+        p[0] = ast.alias(name=p[1], asname=p[2], **self.get_line_cols(p, 1))
 
     @staticmethod
     def get_line_cols(p: yacc.YaccProduction, idx: int):
