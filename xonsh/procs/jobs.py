@@ -160,50 +160,62 @@ def get_jobs() -> dict[int, dict]:
         return _jobs_thread_local.jobs
 
 
+def _kill_per_pid(job, signal):
+    """Send signal to each process in the job individually."""
+    for pid in job["pids"]:
+        if pid is None:  # the pid of an aliased proc is None
+            continue
+        try:
+            os.kill(pid, signal)
+        except ProcessLookupError:
+            pass  # process already exited
+        except PermissionError:
+            print_warning(
+                f"xonsh: permission denied sending {get_signal_name(signal)} to pid {pid}"
+            )
+
+
+# Platform-specific _send_signal implementations.
+#
+# macOS:  os.killpg() raises PermissionError on zombie children in
+#         the process group (github #1012), so we always signal per-pid.
+# Cygwin/MSYS: os.killpg() may fail for various OS-level reasons
+#         (github #514), so we try killpg first and fall back to per-pid.
+# Linux:  os.killpg() works correctly; per-pid fallback only when
+#         pgrp is None (callable aliases have no real process group).
+
 if ON_DARWIN:
 
     def _send_signal(job, signal):
-        # On OS X, os.killpg() may cause PermissionError when there are
-        # any zombie processes in the process group.
-        # See github issue #1012 for details
-        for pid in job["pids"]:
-            if pid is None:  # the pid of an aliased proc is None
-                continue
-            try:
-                os.kill(pid, signal)
-            except ProcessLookupError:
-                pass
+        _kill_per_pid(job, signal)
 
 elif ON_WINDOWS:
     pass
 elif ON_CYGWIN or ON_MSYS:
-    # Similar to what happened on OSX, more issues on Cygwin
-    # (see Github issue #514).
+
     def _send_signal(job, signal):
         try:
             os.killpg(job["pgrp"], signal)
-        except Exception:
-            for pid in job["pids"]:
-                try:
-                    os.kill(pid, signal)
-                except Exception:
-                    pass
+        except ProcessLookupError:
+            pass  # process group already exited
+        except PermissionError:
+            print_warning(
+                f"xonsh: permission denied sending {get_signal_name(signal)} to process group {job['pgrp']}"
+            )
+        except OSError:
+            _kill_per_pid(job, signal)  # killpg failed, try per-pid
 
 else:
 
     def _send_signal(job, signal):
         pgrp = job["pgrp"]
         if pgrp is None:
-            for pid in job["pids"]:
-                try:
-                    os.kill(pid, signal)
-                except Exception:
-                    pass
+            _kill_per_pid(job, signal)  # callable alias, no process group
         else:
             try:
-                os.killpg(job["pgrp"], signal)
+                os.killpg(pgrp, signal)
             except ProcessLookupError:
-                pass
+                pass  # process group already exited
             except PermissionError:
                 print_warning(
                     f"xonsh: permission denied sending {get_signal_name(signal)} to process group {pgrp}"
