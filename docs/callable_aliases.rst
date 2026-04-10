@@ -42,7 +42,8 @@ combination of the following parameters in any order:
    * - ``env``
      - A local environment overlay dict. Values set here shadow the global
        env during alias execution and are visible to subprocesses. Removed
-       automatically when the alias exits.
+       automatically when the alias exits. When you set `env['VAR']=1` it's
+       like `with @.env.swap(VAR=1)` for the rest of the callable alias code.
 
 You only need to declare the parameters you actually use:
 

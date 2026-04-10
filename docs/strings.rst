@@ -1,3 +1,4 @@
+.. _strings:
 .. _subproc_strings:
 
 ************************************
@@ -122,6 +123,33 @@ This is yet another major point of departure for xonsh from traditional
 shells. However, the xonsh subprocess string handling is
 consistent and predictable.
 
+Environment Variable Substitution
+==================================
+
+In subprocess mode, ``$NAME`` inside strings is replaced with the value
+of the environment variable. This happens automatically for regular and
+f-strings, but **not** for raw strings:
+
+.. code-block:: xonsh
+
+    echo $HOME
+    # /home/snail
+
+    echo "$HOME"
+    # /home/snail
+
+    echo r"$HOME"
+    # $HOME           -- raw strings suppress substitution
+
+    echo $HOME/docs    # subprocess mode -- substituted inline
+    # /home/snail/docs
+
+    del $MY_VAR
+
+See `String Literal Prefixes`_ below for a full comparison of which
+string types perform substitution.
+
+
 String Literal Prefixes
 =======================
 
@@ -154,10 +182,84 @@ To understand the differences, set ``$EVAR`` to ``1`` and ``var`` to ``2``:
     ========================  ==========================  =======================  =====================
 
 
-Further Reading
-===============
-For deeper details on the great string debate, please feel free to read
-and comment at:
+String Tricks
+=============
 
+Triple Quotes
+-------------
+
+To avoid escape characters (e.g. ``echo "\"hello\""``), use triple
+quotes:
+
+.. code-block:: xonsh
+
+    echo """{"hello":'world'}"""
+    # {"hello":'world'}
+
+Creating Files with Multiline Strings
+--------------------------------------
+
+Combine triple quotes with ``@()`` and a redirect to create files
+without heredoc syntax:
+
+.. code-block:: xonsh
+
+    echo @("""
+    line 1
+    line 2
+    line 3
+    """.strip()) > file.txt
+
+Multiline Arguments
+-------------------
+
+Use ``@()`` with triple quotes to pass a multiline string as a single
+argument:
+
+.. code-block:: xonsh
+
+    python -c @("""
+    import sys
+    for i in range(3):
+        print(i, sys.platform)
+    """)
+
+f-strings in Commands
+---------------------
+
+You can use ``@()`` to inject an f-string, but f-strings also work
+directly in subprocess mode:
+
+.. code-block:: xonsh
+
+    echo @(f'Hello {$HOME}')
+    # Hello /home/snail
+
+    # f-strings work by themselves too:
+    echo f'Hello {$HOME}'
+    # Hello /home/snail
+
+
+Splitting Strings Like the Shell
+---------------------------------
+
+Xonsh's :meth:`Lexer.split() <xonsh.parsers.lexer.Lexer.split>` can
+split a string into tokens the same way the shell does -- respecting
+quoting, escapes, and operators.  This is the function used internally
+by the ``@$()`` operator:
+
+.. code-block:: python
+
+    from xonsh.parsers.lexer import Lexer
+    Lexer().split('echo "hello world" file.txt')
+    # ['echo', '"hello world"', 'file.txt']
+
+
+See also
+========
+
+* :doc:`subprocess` -- subprocess operators and capturing modes
+* :doc:`env` -- environment variables and ``@.env.swap()``
+* :doc:`macros` -- subprocess macros for literal input
 * `To Quote or Not Quote <https://github.com/xonsh/xonsh/issues/1432>`_
 * `Quote removal in subprocess mode does not behave as expected <https://github.com/xonsh/xonsh/issues/621>`_

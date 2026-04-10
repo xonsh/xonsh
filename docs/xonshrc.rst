@@ -252,3 +252,13 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
     get_shelldate.fulldate = 0
 
     $PROMPT_FIELDS['shelldate'] = get_shelldate
+
+
+See also
+========
+
+* :doc:`env` -- environment variable types, patterns, and ``swap``
+* :doc:`aliases` -- defining aliases
+* :doc:`prompt` -- prompt customization
+* :doc:`launch` -- command-line options and ``--rc``
+* :doc:`events` -- event hooks for customization

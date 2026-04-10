@@ -447,3 +447,11 @@ implemented:
 * and many more!
 
 Let us know if you'd be interested in working on any of these, inside or outside of xonsh.
+
+
+See also
+========
+
+* :doc:`envvars` -- history-related environment variables (``$XONSH_HISTORY_*``)
+* :doc:`xonshrc` -- configuring history backend in RC files
+* :doc:`tutorial` -- introduction to xonsh

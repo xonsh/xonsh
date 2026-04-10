@@ -157,6 +157,7 @@ Every change must be accompanied by tests.
 
 ## Code Style
 
+- **Deprecated syntax**: The `${...}` syntax for dynamic environment variable lookup is deprecated. Never use it or mention it in code, docs, or examples. We use `@.env`.
 - **Formatter/linter**: ruff (line length 88, rules: B, D, E, F, I, T10, TID, YTT, W, UP)
 - **Type checking**: mypy
 - **Docstrings**: NumPy convention

@@ -75,7 +75,9 @@ extensions = [
 
 redirects = {
     "tutorial_hist": "history.html",
-    "tutorial_subproc_strings": "subproc_strings.html",
+    "tutorial_subproc_strings": "strings.html",
+    "subproc_strings": "strings.html",
+    "subproc_types": "subprocess.html",
     "tutorial_ptk": "prompt.html",
     "tutorial_macros": "macros.html",
     "tutorial_xonsh_projects": "xonsh_projects.html",

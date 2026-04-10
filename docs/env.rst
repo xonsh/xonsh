@@ -13,6 +13,28 @@ Python variables.
 For a full introduction see the :ref:`Environment Variables <tutorial>` section
 of the tutorial.
 
+Temporary Variables with ``swap``
+---------------------------------
+
+Use ``@.env.swap()`` to set environment variables for the duration of a
+``with`` block.  The original values are restored automatically when the
+block exits, even if an exception is raised:
+
+.. code-block:: xonsh
+
+    with @.env.swap(PGPASSWORD=@.imp.getpass.getpass('pgpass:')):
+        for db in ['db1', 'db2']:
+            psql postgresql://user@host:5439/@(db) -c 'select 1'
+
+    # $PGPASSWORD is unset here
+
+Multiple variables can be swapped at once:
+
+.. code-block:: xonsh
+
+    with @.env.swap(LANG='C', LC_ALL='C'):
+        sort data.txt
+
 Registering Environment Variables
 ---------------------------------
 
@@ -122,3 +144,12 @@ Set a pattern variable to ``None`` to disable it entirely:
 
     $XONSH_ENV_PATTERN_DIRS = None
     $XONSH_ENV_PATTERN_PATH = None
+
+
+See also
+========
+
+* :doc:`envvars` -- full list of environment variables
+* :doc:`strings` -- environment variable substitution in strings
+* :doc:`launch` -- passing variables via ``-D`` at startup
+* :doc:`xonshrc` -- setting variables in RC files

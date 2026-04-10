@@ -192,3 +192,11 @@ differently.
 
 To keep available packages independent from underlying environments, use the provided `xpip` alias in the same way as `pip` is installed.
 It will make sure that the installed packages are available to `xonsh`
+
+
+See also
+========
+
+* :doc:`tutorial` -- introduction to xonsh
+* :doc:`subprocess` -- subprocess operators and capturing modes
+* :doc:`python_virtual_environments` -- virtual environments in xonsh

@@ -24,8 +24,8 @@ step by step and helps you build a solid foundation for working in the shell.
     :maxdepth: 1
 
     tutorial
-    subproc_strings
-    subproc_types
+    strings
+    subprocess
     platforms
     Extensions (xontribs) on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
@@ -55,6 +55,7 @@ and streamline your command-line experience.
     error_handling
     macros
     xonsh_session
+    launch
     Open technical issue <https://github.com/xonsh/xonsh>
 
 Creator

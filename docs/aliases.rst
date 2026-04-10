@@ -371,3 +371,11 @@ On Windows, if no executables named ``sudo`` are found, Xonsh adds a ``sudo`` al
 that poly fills the "run as Admin" behavior with the help of ``ShellExecuteEx`` and
 ``ctypes``. It doesn't support any actual ``sudo`` parameters and just takes the
 command to run.
+
+
+See also
+========
+
+* :doc:`callable_aliases` -- writing callable aliases in depth
+* :doc:`subprocess` -- subprocess operators and capturing modes
+* :doc:`xonshrc` -- defining aliases in RC files

@@ -355,3 +355,12 @@ these directly, but it is useful to know they are there:
 When in doubt, prefer ``@.<x>`` (``XSH.interface``) for the four stable bits of the API,
 and treat everything on ``__xonsh__`` as power-user territory that
 should be guarded with try/except and feature checks.
+
+
+See also
+========
+
+* :doc:`env` -- environment variables and ``@.env``
+* :doc:`subprocess` -- subprocess operators backed by session attributes
+* :doc:`aliases` -- ``@.aliases`` and alias management
+* :doc:`events` -- event system and handler registration

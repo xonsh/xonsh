@@ -445,7 +445,7 @@ These can be combined (``fr""``, ``pf""``, ``pr""``). For example:
     @ pf"$HOME/{name}"
     PosixPath('/Users/snail/docs')
 
-See :doc:`subproc_strings` for the full reference table of how each prefix
+See :doc:`strings` for the full reference table of how each prefix
 affects environment variable substitution, brace formatting, and escapes.
 
 
@@ -1855,3 +1855,13 @@ On Windows, you can also type ``Ctrl-Z``.
 To exit from the xonsh script just call the ``exit(code)`` function.
 
 Now it is your turn.
+
+
+See also
+========
+
+* :doc:`strings` -- how strings and quoting work in subprocess mode
+* :doc:`subprocess` -- subprocess operators and capturing modes
+* :doc:`env` -- environment variable types and patterns
+* :doc:`aliases` -- built-in aliases and command decorators
+* :doc:`xonshrc` -- configuration snippets and tips

@@ -437,3 +437,9 @@ For example:
     (env) @
 
 
+See also
+========
+
+* :doc:`customization` -- colors, themes, and visual settings
+* :doc:`envvars` -- prompt-related environment variables
+* :doc:`events` -- prompt lifecycle events (``on_pre_prompt``, ``on_post_prompt``)
