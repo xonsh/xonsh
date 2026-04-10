@@ -81,6 +81,15 @@ For those of you who want the gritty details.
     xonsh.platforms
     xonsh.webconfig
 
+**Xompletions:**
+
+.. autosummary::
+    :toctree: _autosummary/xompletions
+    :template: api-summary-module.rst
+    :recursive:
+
+    xompletions
+
 
 **Xontribs:**
 
@@ -90,3 +99,4 @@ For those of you who want the gritty details.
     :recursive:
 
     xontrib
+

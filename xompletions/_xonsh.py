@@ -1,3 +1,5 @@
+"""Completer for ``xonsh`` command using its ``argparser``"""
+
 from xonsh.cli_utils import ArgparseCompleter
 from xonsh.parsers.completion_context import CommandContext
 
