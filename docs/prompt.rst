@@ -80,14 +80,14 @@ Color Names
 * ``COLORNAME``: Inserts a color code for the following basic colors,
   which come in regular (dark) and intense (light) forms:
 
-    - ``BLACK`` or ``INTENSE_BLACK``
-    - ``RED`` or ``INTENSE_RED``
-    - ``GREEN`` or ``INTENSE_GREEN``
-    - ``YELLOW`` or ``INTENSE_YELLOW``
-    - ``BLUE`` or ``INTENSE_BLUE``
-    - ``PURPLE`` or ``INTENSE_PURPLE``
-    - ``CYAN`` or ``INTENSE_CYAN``
-    - ``WHITE`` or ``INTENSE_WHITE``
+  - ``BLACK`` or ``INTENSE_BLACK``
+  - ``RED`` or ``INTENSE_RED``
+  - ``GREEN`` or ``INTENSE_GREEN``
+  - ``YELLOW`` or ``INTENSE_YELLOW``
+  - ``BLUE`` or ``INTENSE_BLUE``
+  - ``PURPLE`` or ``INTENSE_PURPLE``
+  - ``CYAN`` or ``INTENSE_CYAN``
+  - ``WHITE`` or ``INTENSE_WHITE``
 
 * ``DEFAULT``: The color code for the terminal's default foreground color.
 * ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
