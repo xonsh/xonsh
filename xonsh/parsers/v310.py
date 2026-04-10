@@ -393,7 +393,7 @@ class Parser(FStringRules, ThreeNineParser):
             case ast.JoinedStr():
                 self._set_error(
                     "patterns may not match formatted string literals",
-                    self.currloc(lineno=p[1].lineno, column=p[1].col_offset),
+                    self.currloc(lineno=p[1].lineno, column=p[1].col_offset + 1),
                 )
 
     def p_literal_expr_none_or_true_or_false(self, p):
