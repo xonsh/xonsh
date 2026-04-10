@@ -121,6 +121,41 @@ What each flag does:
 * ``-DXONTRIBS_AUTOLOAD_DISABLED=1`` -- skip loading xontribs.
 
 
+Save and Load Origin Environment
+================================
+
+When you launch a nested xonsh with ``--no-env``, all environment
+variables from the parent session are dropped. Sometimes you want a
+clean environment for a project but still need the original env with ``PATH``,
+``TERM``, and other OS-level variables.
+
+``--save-origin-env`` snapshots the current environment before running xonsh,
+and ``--load-origin-env`` restores that snapshot inside the
+new session. Together, they let you start a fresh xonsh from the current modified
+environment.
+
+For example, suppose you have a main xonsh session and you run
+``xonsh --save-origin-env``. You're working, doing things, and then you need
+to work with a project that has its own environment setup in ``project_rc.xsh``.
+You don't want to source this file to avoid collisions, and you can't run a
+xonsh instance with just ``--rc`` because the new session will inherit your current
+environment.
+
+In this case, you can run ``xonsh --load-origin-env --rc project_rc.xsh`` and
+get a new, clean environment with project-specific aliases, environment variables,
+and possibly a custom prompt as well.
+
+After finishing work on that project, you can exit and return to your main environment.
+
+
+Running from a Bash Script
+==========================
+
+If you want to run interactive xonsh from a bash script you need to have
+an interactive shebang (i.e. ``#!/bin/bash -i``) to avoid suspending by
+the OS.
+
+
 See also
 ========
 

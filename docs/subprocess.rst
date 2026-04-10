@@ -5,100 +5,10 @@
 Subprocess
 ************************************
 
-Every subprocess command in xonsh is executed through a
-:class:`~xonsh.procs.pipelines.CommandPipeline` -- the central object
-that manages process execution, piping, stdout/stderr capturing, and
-return codes.
-
 Xonsh provides several operators for launching subprocesses, each with
 different capturing and blocking behavior. Choosing the right one
 depends on whether you need the output, whether the process is
 interactive, and what return type you expect.
-
-Quick Reference
-===============
-
-.. list-table::
-    :header-rows: 1
-    :widths: 12 10 10 12 12 16 8 20
-
-    * - Operator
-      - Blocking
-      - Capture stdout
-      - Capture stderr
-      - TTY input
-      - TTY output
-      - Raise
-      - Returns
-    * - ``$(cmd)``
-      - yes
-      - yes
-      - no
-      - yes
-      - no (threadable)
-      - yes
-      - ``str`` (stdout)
-    * - ``!(cmd)``
-      - no
-      - yes (threadable)
-      - yes (threadable)
-      - no
-      - no (threadable)
-      - no
-      - ``CommandPipeline``
-    * - ``![cmd]``
-      - yes
-      - no
-      - no
-      - yes
-      - no (threadable)
-      - yes
-      - ``HiddenCommandPipeline``
-    * - ``$[cmd]``
-      - yes
-      - no
-      - no
-      - yes
-      - yes
-      - yes
-      - ``None``
-    * - ``@(expr)``
-      -
-      -
-      -
-      -
-      -
-      -
-      - argument injection
-    * - ``@$(cmd)``
-      - yes
-      - yes
-      - no
-      -
-      -
-      - yes
-      - whitespace-split ``list``
-
-What all this means:
-
-* **Blocking** -- whether xonsh waits for the process to finish before
-  continuing.
-* **Capture stdout** -- whether stdout is captured into a ``CommandPipeline`` object
-  instead of being streamed to the terminal.
-* **Capture stderr** -- whether stderr is captured into a ``CommandPipeline`` object.
-* **TTY input** -- whether the process receives terminal input (stdin).
-  Without it, interactive tools (e.g. ``fzf``, ``vim``) will
-  be suspended by the OS.
-* **TTY output** -- whether stdout is connected directly to the terminal.
-  "no (threadable)" means the stream is redirected for threadable
-  processes.
-* **Raise** -- whether a non-zero return code raises
-  ``CalledProcessError`` (when ``$RAISE_SUBPROC_ERROR`` is ``True``).
-* **Returns** -- the Python type of the value returned by the operator.
-
-A **threadable** (capturable) process is one that does not interact with
-the user. If an unthreadable process runs with a detached terminal it
-will be suspended by the OS automatically.
 
 
 ``$(cmd)`` -- captured stdout
@@ -136,9 +46,15 @@ for the full list (``@lines``, ``@json``, ``@jsonl``, etc.).
 ``!(cmd)`` -- captured object
 =============================
 
-Captures stdout and stderr and returns a
+In fact every subprocess command in xonsh is executed through a
+:class:`~xonsh.procs.pipelines.CommandPipeline` -- the central object
+that manages process execution, piping, stdout/stderr capturing, and
+return codes.
+
+``!(cmd)`` operator captures stdout and stderr and returns a
 :class:`~xonsh.procs.pipelines.CommandPipeline`. The object is truthy
 when the return code is 0, and iterates over lines of stdout.
+
 
 .. important::
 
@@ -167,7 +83,7 @@ Non-blocking pattern with a worker:
     if worker.rtn == 0:                   # .rtn blocks until done
         echo 'worker finished successfully'
 
-.. warning::
+.. note::
 
     Because the terminal is detached, this operator can only be used for
     **non-interactive** tools. Running ``!(ls | fzf)`` or
@@ -241,27 +157,6 @@ Use this for interactive or uncapturable processes (e.g. editors):
     configure
 
 
-
-``@(expr)`` -- Python expression as argument
-=============================================
-
-Evaluates a Python expression and splices the result into the command
-arguments. Strings are inserted as a single argument, lists are
-expanded:
-
-.. code-block:: xonsh
-
-    showcmd @('string') @(['list', 'of', 'args'])
-    # ['string', 'list', 'of', 'args']
-
-Can also be used to pass a callable alias via a pipe:
-
-.. code-block:: xonsh
-
-    echo -n '!' | @(lambda args, stdin: 'Callable' + stdin.read())
-    # Callable!
-
-
 ``@$(cmd)`` -- captured inject
 ==============================
 
@@ -282,6 +177,113 @@ You can use the same function directly to split any command string:
     from xonsh.parsers.lexer import Lexer
     Lexer().split('echo "hello world" file.txt')
     # ['echo', '"hello world"', 'file.txt']
+
+
+Threading
+=========
+
+Xonsh has a threading prediction mechanism that allows it to understand
+which commands can be captured. For example, ``echo`` has no interaction
+with the user and is capturable. However, some tools have mixed behavior
+-- they can be run for either interactive or non-interactive tasks. The
+best example is ``ssh``, which allows for remote terminal sessions *and*
+executing commands.
+
+To handle different types of tasks, xonsh has the ``@thread`` and
+``@unthread`` built-in decorator aliases. If you need to capture the
+output from an interactive tool that has a capturable mode, use
+``@thread``:
+
+.. code-block:: xonshcon
+
+    @ !(@thread ssh host -T 'echo remote')
+    CommandPipeline(output="remote")
+
+Without ``@thread``, ``ssh`` would be predicted as unthreadable (because
+it is normally interactive) and the captured operator would not be able
+to collect its output.
+
+Conversely, ``@unthread`` forces a command to run in the foreground
+without threading -- useful when a normally threadable command needs
+terminal access (e.g. entering a password prompt).
+
+
+Summary table
+=============
+
+.. list-table::
+    :header-rows: 1
+    :widths: 12 10 10 12 12 16 8 20
+
+    * - Operator
+      - Blocking
+      - Capture stdout
+      - Capture stderr
+      - TTY input
+      - TTY output
+      - Raise
+      - Returns
+    * - ``$(cmd)``
+      - yes
+      - yes
+      - no
+      - yes
+      - no for thread
+      - yes
+      - ``str`` (stdout)
+    * - ``!(cmd)``
+      - no
+      - yes for thread
+      - yes for thread
+      - no
+      - no for thread
+      - no
+      - :class:`~xonsh.procs.pipelines.CommandPipeline`
+    * - ``![cmd]``
+      - yes
+      - no
+      - no
+      - yes
+      - no for threadable
+      - yes
+      - :class:`~xonsh.procs.pipelines.HiddenCommandPipeline`
+    * - ``$[cmd]``
+      - yes
+      - no
+      - no
+      - yes
+      - yes
+      - yes
+      - ``None``
+    * - ``@$(cmd)``
+      - yes
+      - yes
+      - no
+      - yes
+      - no for thread
+      - yes
+      - ``list``
+
+What all this means:
+
+* **Blocking** -- whether xonsh waits for the process to finish before
+  continuing.
+* **Capture stdout** -- whether stdout is captured into a ``CommandPipeline`` object
+  instead of being streamed to the terminal.
+* **Capture stderr** -- whether stderr is captured into a ``CommandPipeline`` object.
+* **TTY input** -- whether the process receives terminal input (stdin).
+  Without it, interactive tools (e.g. ``fzf``, ``vim``) will
+  be suspended by the OS.
+* **TTY output** -- whether stdout is connected directly to the terminal.
+  "no (threadable)" means the stream is redirected for threadable
+  processes.
+* **Raise** -- whether a non-zero return code raises
+  ``CalledProcessError`` (when ``$RAISE_SUBPROC_ERROR`` is ``True``).
+* **Returns** -- the Python type of the value returned by the operator.
+
+A **thread** (threadable, capturable) process is one that does not interact with
+the user. If an unthreadable process runs with a detached terminal it
+will be suspended by the OS automatically.
 
 
 See also

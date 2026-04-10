@@ -260,6 +260,7 @@ See also
 
 * :doc:`subprocess` -- subprocess operators and capturing modes
 * :doc:`env` -- environment variables and ``@.env.swap()``
+* :doc:`globbing` -- glob and regex path expansion
 * :doc:`macros` -- subprocess macros for literal input
 * `To Quote or Not Quote <https://github.com/xonsh/xonsh/issues/1432>`_
 * `Quote removal in subprocess mode does not behave as expected <https://github.com/xonsh/xonsh/issues/621>`_
