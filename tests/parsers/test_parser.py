@@ -1769,6 +1769,20 @@ def test_elif_lineno(parser):
     assert elif_node.col_offset == 0
 
 
+@pytest.mark.parametrize(
+    "code",
+    ["x = a + b + c\n", "x = a * b * c\n", "x = a << b << c\n", "x = a | b | c\n"],
+)
+def test_binop_multi_lineno(parser, code):
+    """Chained BinOp must get position of leftmost operand, not last operator."""
+    import ast as stdlib_ast
+
+    outer = parser.parse(code).body[0].value
+    ref = stdlib_ast.parse(code).body[0].value
+    assert outer.lineno == ref.lineno
+    assert outer.col_offset == ref.col_offset
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 

@@ -2369,16 +2369,18 @@ class BaseParser:
             p0 = p1
         elif isinstance(p2, ast.BinOp):
             p2.left = p1
+            p2.lineno, p2.col_offset = lopen_loc(p1)
             p0 = p2
         elif isinstance(p2, Sequence) and isinstance(p2[0], ast.BinOp):
+            lineno, col = lopen_loc(p1)
             p0 = p2[0]
             p0.left = p1
-            p0.lineno, p0.col_offset = lopen_loc(p1)
+            p0.lineno, p0.col_offset = lineno, col
             for bop in p2[1:]:
-                locer = p1 if p0.left is p1 else p0
                 bop.left = p0
-                p0.lineno, p0.col_offset = lopen_loc(locer)
+                p0.lineno, p0.col_offset = lineno, col
                 p0 = bop
+            p0.lineno, p0.col_offset = lineno, col
         else:
             p0 = p1 + p2
         return p0
@@ -2461,16 +2463,14 @@ class BaseParser:
     def p_arith_expr_many(self, p):
         """arith_expr : term pm_term_list"""
         p1, p2 = p[1], p[2]
+        lineno, col = lopen_loc(p1)
         if len(p2) == 2:
-            lineno, col = lopen_loc(p1)
             p0 = ast.BinOp(
                 left=p1, op=p2[0], right=p2[1], lineno=lineno, col_offset=col
             )
         else:
             left = p1
             for op, right in zip(p2[::2], p2[1::2], strict=False):
-                locer = left if left is p1 else op
-                lineno, col = lopen_loc(locer)
                 left = ast.BinOp(
                     left=left, op=op, right=right, lineno=lineno, col_offset=col
                 )
@@ -2502,20 +2502,19 @@ class BaseParser:
         p1, p2 = p[1], p[2]
         if p2 is None:
             p0 = p1
-        elif len(p2) == 2:
-            lineno, col = lopen_loc(p1)
-            p0 = ast.BinOp(
-                left=p1, op=p2[0], right=p2[1], lineno=lineno, col_offset=col
-            )
         else:
-            left = p1
-            for op, right in zip(p2[::2], p2[1::2], strict=False):
-                locer = left if left is p1 else op
-                lineno, col = lopen_loc(locer)
-                left = ast.BinOp(
-                    left=left, op=op, right=right, lineno=lineno, col_offset=col
+            lineno, col = lopen_loc(p1)
+            if len(p2) == 2:
+                p0 = ast.BinOp(
+                    left=p1, op=p2[0], right=p2[1], lineno=lineno, col_offset=col
                 )
-            p0 = left
+            else:
+                left = p1
+                for op, right in zip(p2[::2], p2[1::2], strict=False):
+                    left = ast.BinOp(
+                        left=left, op=op, right=right, lineno=lineno, col_offset=col
+                    )
+                p0 = left
         p[0] = p0
 
     def p_op_factor(self, p):
