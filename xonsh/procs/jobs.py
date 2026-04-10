@@ -16,7 +16,7 @@ from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.completers.tools import RichCompletion
 from xonsh.lib.lazyasd import LazyObject
 from xonsh.platform import FD_STDERR, LIBC, ON_CYGWIN, ON_DARWIN, ON_MSYS, ON_WINDOWS
-from xonsh.tools import get_signal_name, on_main_thread, unthreadable
+from xonsh.tools import get_signal_name, on_main_thread, print_warning, unthreadable
 
 # Track time stamp of last exit command, so that two consecutive attempts to
 # exit can kill all jobs and exit.
@@ -202,8 +202,12 @@ else:
         else:
             try:
                 os.killpg(job["pgrp"], signal)
-            except (ProcessLookupError, PermissionError):
+            except ProcessLookupError:
                 pass
+            except PermissionError:
+                print_warning(
+                    f"xonsh: permission denied sending {get_signal_name(signal)} to process group {pgrp}"
+                )
 
 
 if ON_WINDOWS:
