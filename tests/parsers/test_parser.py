@@ -1734,6 +1734,14 @@ def test_ternary_lineno(parser):
     assert ie.col_offset == 4
 
 
+def test_not_lineno(parser):
+    """UnaryOp(Not) must get the position of 'not', not the lookahead."""
+    tree = parser.parse("x = not y\n")
+    u = tree.body[0].value
+    assert u.lineno == 1
+    assert u.col_offset == 4
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 

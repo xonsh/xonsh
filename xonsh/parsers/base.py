@@ -2298,7 +2298,7 @@ class BaseParser:
     def p_not_test_not(self, p):
         """not_test : NOT not_test"""
         p[0] = ast.UnaryOp(
-            op=ast.Not(), operand=p[2], lineno=self.lineno, col_offset=self.col
+            op=ast.Not(), operand=p[2], lineno=p.lineno(1), col_offset=p.lexpos(1)
         )
 
     def p_not_test(self, p):
