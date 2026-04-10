@@ -10,7 +10,6 @@ handle
 
 import ast
 
-from xonsh.parsers.base import store_ctx
 from xonsh.parsers.fstring_rules_llm import FStringRules
 from xonsh.parsers.ply import yacc
 from xonsh.parsers.v39 import Parser as ThreeNineParser
@@ -20,7 +19,6 @@ _HAS_TYPE_PARAMS = PYTHON_VERSION_INFO >= (3, 12)
 
 
 class Parser(FStringRules, ThreeNineParser):
-
     # ---- PEP 695: type parameter syntax (Python 3.12+) ----
 
     def p_simple_stmt_type(self, p):
@@ -34,14 +32,18 @@ class Parser(FStringRules, ThreeNineParser):
                 "'type' statement requires Python 3.12+",
                 self.currloc(lineno=p.lineno(1), column=p.lexpos(1)),
             )
-        name = ast.Name(id=p[2], ctx=ast.Store(), lineno=p.lineno(1), col_offset=p.lexpos(1))
-        p[0] = [ast.TypeAlias(
-            name=name,
-            type_params=[],
-            value=p[4],
-            lineno=p.lineno(1),
-            col_offset=p.lexpos(1),
-        )]
+        name = ast.Name(
+            id=p[2], ctx=ast.Store(), lineno=p.lineno(1), col_offset=p.lexpos(1)
+        )
+        p[0] = [
+            ast.TypeAlias(
+                name=name,
+                type_params=[],
+                value=p[4],
+                lineno=p.lineno(1),
+                col_offset=p.lexpos(1),
+            )
+        ]
 
     def p_type_stmt_params(self, p):
         """type_stmt : TYPE name_str LBRACKET type_param_list comma_opt RBRACKET EQUALS test"""
@@ -50,14 +52,18 @@ class Parser(FStringRules, ThreeNineParser):
                 "'type' statement requires Python 3.12+",
                 self.currloc(lineno=p.lineno(1), column=p.lexpos(1)),
             )
-        name = ast.Name(id=p[2], ctx=ast.Store(), lineno=p.lineno(1), col_offset=p.lexpos(1))
-        p[0] = [ast.TypeAlias(
-            name=name,
-            type_params=p[4],
-            value=p[8],
-            lineno=p.lineno(1),
-            col_offset=p.lexpos(1),
-        )]
+        name = ast.Name(
+            id=p[2], ctx=ast.Store(), lineno=p.lineno(1), col_offset=p.lexpos(1)
+        )
+        p[0] = [
+            ast.TypeAlias(
+                name=name,
+                type_params=p[4],
+                value=p[8],
+                lineno=p.lineno(1),
+                col_offset=p.lexpos(1),
+            )
+        ]
 
     def _type_param_loc(self, p, start_idx, end_idx):
         return dict(
@@ -73,9 +79,7 @@ class Parser(FStringRules, ThreeNineParser):
 
     def p_type_param_typevar_bound(self, p):
         """type_param : NAME COLON test"""
-        p[0] = ast.TypeVar(
-            name=p[1], bound=p[3], **self._type_param_loc(p, 1, 3)
-        )
+        p[0] = ast.TypeVar(name=p[1], bound=p[3], **self._type_param_loc(p, 1, 3))
 
     def p_type_param_typevartuple(self, p):
         """type_param : TIMES NAME"""

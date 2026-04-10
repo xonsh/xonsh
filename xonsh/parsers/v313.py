@@ -224,9 +224,7 @@ class Parser(ThreeTenParser):
         else:
             targ = ensure_has_elts(targs)
         store_ctx(targ)
-        comp = ast.comprehension(
-            target=targ, iter=it, ifs=[], is_async=int(is_async)
-        )
+        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=int(is_async))
         comps = [comp]
         p0 = {"comps": comps}
         if p_last is not None:
