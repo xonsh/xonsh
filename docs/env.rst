@@ -332,7 +332,7 @@ Set a pattern variable to ``None`` to disable it entirely:
 
 
 See also
-========
+--------
 
 * :doc:`envvars` -- full list of environment variables
 * :doc:`strings` -- environment variable substitution in strings
