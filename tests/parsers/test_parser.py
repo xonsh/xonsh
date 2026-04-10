@@ -1753,6 +1753,14 @@ def test_empty_container_lineno(parser, code):
     assert n.col_offset == 4
 
 
+def test_unary_op_lineno(parser):
+    """UnaryOp(-/+/~) must get the operator's line, not the lookahead's."""
+    tree = parser.parse("x = (-\n  y)\n")
+    u = tree.body[0].value
+    assert u.lineno == 1
+    assert u.col_offset == 5
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 
