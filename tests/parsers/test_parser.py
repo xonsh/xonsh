@@ -143,13 +143,32 @@ bar"""''',
 
 @pytest.mark.parametrize("inp, exp", fstring_adaptor_parameters)
 def test_fstring_adaptor(inp, exp, xsh, monkeypatch):
-    if VER_MAJOR_MINOR > (3, 11):
-        pytest.xfail("f-string with special syntax are not supported yet")
     joined_str_node = FStringAdaptor(inp, "f").run()
     assert isinstance(joined_str_node, ast.JoinedStr)
     node = ast.Expression(body=joined_str_node)
     code = compile(node, "<test_fstring_adaptor>", mode="eval")
     xenv = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
+    for key, val in xenv.items():
+        monkeypatch.setitem(xsh.env, key, val)
+    obs = eval(code)
+    assert exp == obs
+
+
+fstring_adaptor_pathsearch_parameters = [
+    ("f'''{$HOME}/*'''", "/foo/bar/*"),
+    ("f'''{$HOME}/{$USER}'''", "/foo/bar/me"),
+    ("f'''prefix_{$HOME}_suffix'''", "prefix_/foo/bar_suffix"),
+]
+
+
+@pytest.mark.parametrize("inp, exp", fstring_adaptor_pathsearch_parameters)
+def test_fstring_adaptor_pathsearch(inp, exp, xsh, monkeypatch):
+    """Test FStringAdaptor with triple-quoted strings used by pathsearch/glob."""
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+    node = ast.Expression(body=joined_str_node)
+    code = compile(node, "<test_fstring_adaptor_pathsearch>", mode="eval")
+    xenv = {"HOME": "/foo/bar", "USER": "me"}
     for key, val in xenv.items():
         monkeypatch.setitem(xsh.env, key, val)
     obs = eval(code)
