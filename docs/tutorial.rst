@@ -215,7 +215,7 @@ simple:
 * ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
 
 Futhermore, a number of predefined environment variables listed `here <envvars.html>`_ have a static type.
-For example ``XONSH_HISTORY_SIZE`` is an int.
+For example ``XONSH_HISTORY_SIZE`` is an ``(int | float, str)`` tuple, such as ``(8128, "commands")``.
 
 xonsh will automatically convert back and forth to untyped (string-only)
 representations of the environment as needed (mostly by subprocess commands).

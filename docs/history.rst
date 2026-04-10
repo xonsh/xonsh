@@ -389,7 +389,7 @@ only read in the parts of a file that we need. For garbage collecting based on t
 of commands, we can get this information from the index and don't need to read in any of the
 original data.
 
-The best part about this is that it is totally generic. Feel free to use ``xonsh.lazyjson``
+The best part about this is that it is totally generic. Feel free to use ``xonsh.lib.lazyjson``
 yourself for things other than xonsh history! Of course, if you want to read in xonsh history,
 you should probably use the module.
 
@@ -404,10 +404,7 @@ enabled by setting ``$XONSH_CAPTURE_ALWAYS=True``. Storing stdout to the history
 is disabled by default but can be enabled by setting ``$XONSH_STORE_STDOUT=True``.
 
 To be able to tee stdout and stderr and still have the terminal responsive, xonsh implements
-its own teeing pseudo-terminal on top of the Python standard library ``pty`` module. You
-can find this class in the ``xonsh.teepty`` module. Like with lazy JSON, this is independent
-from other parts of xonsh and can be used on its own.  If you find this useful in other areas,
-please let us know!
+its own teeing pseudo-terminal on top of the Python standard library ``pty`` module.
 
 
 Sqlite History Backend

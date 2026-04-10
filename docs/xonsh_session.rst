@@ -186,9 +186,9 @@ order you are likely to need them.
   delegates to ``commands_cache.aliases`` and is read-only on the
   session itself; mutate the mapping in place.
 
-* ``__xonsh__.completers`` — list of registered completer callables.
+* ``__xonsh__.completers`` — ``OrderedDict`` of registered completer callables.
   Lazily initialized on first access. Modify with the ``completer``
-  command or by mutating the list directly.
+  command or by mutating the dict directly.
 
 * ``__xonsh__.shell`` — the active shell wrapper
   (:class:`xonsh.shell.Shell`). The concrete implementation is in
@@ -336,8 +336,8 @@ rewrites special syntax into calls on them. You normally do not call
 these directly, but it is useful to know they are there:
 
 * ``pathsearch`` / ``globsearch`` / ``regexsearch`` /
-  ``regexmatchsearch`` — implement ``p"..."``, ``g"..."``, ``r"..."``
-  and ``$VAR`` glob expansion.
+  ``regexmatchsearch`` — implement backtick expressions (```regex```,
+  ``g`glob```, etc.) and ``$VAR`` glob expansion.
 * ``glob`` — wrapper used by glob expansion in subproc mode.
 * ``expand_path`` — applied to bare path arguments.
 * ``call_macro`` / ``enter_macro`` — power xonsh **macro** calls

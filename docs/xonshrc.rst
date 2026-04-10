@@ -226,7 +226,8 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
 Make JSON data directly pastable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``.
-Note that, though practical, this is rather hacky and might break other functionality. Use at your own risk.
+Note that this injects names into Python's ``builtins`` module, which is
+rather hacky and might break other functionality. Use at your own risk.
 
 .. code-block:: python
 

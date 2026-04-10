@@ -57,7 +57,7 @@ By default, the following variables are available for use:
 * ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
   otherwise ``{BOLD_RED}``. Yellow if undetermined.
 * ``branch_bg_color``: Like ``{branch_color}``, but sets a background color.
-* ``prompt_end``: ``#`` if the user has root/admin permissions, ``@`` otherwise.
+* ``prompt_end``: ``@#`` if the user has root/admin permissions, ``@`` otherwise.
 * ``current_job``: The name of the command currently running in the foreground.
 * ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``.
   See :py:mod:`xonsh.prompt.gitstatus` for customization options.

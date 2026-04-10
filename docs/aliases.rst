@@ -16,8 +16,9 @@ then this changes to the current user's home directory.
 
 ``ls``
 --------------------
-The ``ls`` command is aliased to ``['ls', '--color=auto', '-v']`` normally.  On Mac OSX
-it is instead aliased to ``['ls', '-G']``.
+The ``ls`` command is aliased to ``['ls', '--color=auto', '-v']`` on Linux.  On macOS,
+FreeBSD, and DragonFlyBSD it is instead aliased to ``['ls', '-G']``.
+On NetBSD and OpenBSD no ``ls`` alias is defined.
 
 
 ``grep``
@@ -359,7 +360,7 @@ The following aliases on Windows are expanded to ``['cmd', '/c', alias]``:
 ``activate``/``deactivate`` on Windows with Anaconda
 ------------------------------------------------------
 On Windows with an Anaconda Python distribution, ``activate`` and
-``deactivate`` are aliased to ``['source-bat activate']`` and ``['source-bat deactivate']``.
+``deactivate`` are aliased to ``['source-cmd', 'activate.bat']`` and ``['source-cmd', 'deactivate.bat']``.
 This makes it possible to use the same commands to activate/deactivate conda environments as
 in cmd.exe.
 
