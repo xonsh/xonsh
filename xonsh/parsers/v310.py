@@ -733,4 +733,8 @@ class Parser(FStringRules, ThreeNineParser):
                           | attr_name_with COLON pattern
         """
         _, key, _, value = p
+        # literal_expr returns raw None/True/False for singleton literals,
+        # but MatchMapping(keys=...) requires AST nodes.
+        if key is None or key is True or key is False:
+            key = ast.Constant(value=key, **self.get_line_cols(p, 1))
         p[0] = key, value

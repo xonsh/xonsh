@@ -3834,6 +3834,19 @@ def test_match_mapping_pattern(check_stmts):
 
 
 @skip_if_pre_3_10
+def test_match_mapping_pattern_none_true_false_keys(check_stmts):
+    """None/True/False as mapping pattern keys must be AST nodes, not raw values."""
+    check_stmts(
+        """
+x = {None: 1, True: 2, False: 3}
+match x:
+    case {None: a, True: b, False: c}:
+        assert (a, b, c) == (1, 2, 3)
+""",
+    )
+
+
+@skip_if_pre_3_10
 def test_match_class_pattern(check_stmts):
     check_stmts(
         """match _:
