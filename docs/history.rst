@@ -357,42 +357,23 @@ you could run the following command:
 
 History Indexing
 =======================
-History object (``@.history``, ``__xonsh__.history``) acts like a sequence that can be indexed in a special way
-that adds extra functionality. At the moment only history from the
+History object (``@.history``, ``__xonsh__.history``) acts like a sequence
+that can be indexed by int or slice. At the moment only history from the
 current session can be retrieved. Note that the most recent command
 is the last item in history.
 
-The index acts as a filter with two parts, command and argument,
-separated by comma. Based on the type of each part different
-filtering can be achieved,
-
-for the command part:
-    - an int returns the command in that position.
-    - a slice returns a list of commands.
-
-for the argument part:
-    - an int returns the argument of the command in that position.
-    - a slice returns a part of the command based on the argument
-      position.
-
-The argument part of the filter can be omitted but the command part is
-required.
-
-Command arguments are separated by white space.
-
-If the filtering produces only one result it is
-returned as a string else a list of strings is returned.
-
-examples:
+Indexing with an **int** returns a single ``HistoryEntry`` object with
+attributes ``cmd``, ``out``, ``rtn``, ``ts``, and ``cwd``. Indexing with a
+**slice** returns a list of ``HistoryEntry`` objects.
 
 .. code-block:: xonshcon
 
     @ echo mkdir with/a/huge/name/
-    mkdir with/a/huge/name
-    @ @.history[-1, -1]
-    'with/a/huge/name/'
-    @ @.history[0, 1:]
-    'mkdir with/a/huge/name'
+    mkdir with/a/huge/name/
+    @ @.history[-1].cmd
+    'echo mkdir with/a/huge/name/\n'
+    @ @.history[-1].rtn
+    0
 
 
 Exciting Technical Detail: Lazy JSON

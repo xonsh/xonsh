@@ -274,11 +274,14 @@ hardly any effort at all. If we wanted to, say, have a command that runs ``ls
 
     from prompt_toolkit.application import run_in_terminal
 
-    @handler(Keys.ControlP)
-    def run_ls(event):
-        def _task():
-            ls -l
-        run_in_terminal(_task)
+    @events.on_ptk_create
+    def custom_keybindings(bindings, **kw):
+
+        @bindings.add(Keys.ControlP)
+        def run_ls(event):
+            def _task():
+                ls -l
+            run_in_terminal(_task)
 
 
 .. note:: ``run_in_terminal(func)`` (imported from
@@ -314,8 +317,10 @@ But it's also easy to create our own filters that take advantage of xonsh's
 beautiful strangeness. Suppose we want a filter to restrict a given command to
 run only when there are fewer than ten files in a given directory. We just need a function that returns a Bool that matches that requirement and then we decorate it! And remember, those functions can be in xonsh-language, not just pure Python::
 
+    from prompt_toolkit.filters import Condition
+
     @Condition
-    def lt_ten_files(cli):
+    def lt_ten_files():
         return len(g`*`) < 10
 
 .. note:: See `the tutorial section on globbing
@@ -323,11 +328,14 @@ run only when there are fewer than ten files in a given directory. We just need 
 
 Now that the condition is defined, we can pass it as a ``filter`` keyword to a keybinding definition::
 
-    @handler(Keys.ControlL, filter=lt_ten_files)
-    def ls_if_lt_ten(event):
-        def _task():
-            ls -l
-        run_in_terminal(_task)
+    @events.on_ptk_create
+    def custom_keybindings(bindings, **kw):
+
+        @bindings.add(Keys.ControlL, filter=lt_ten_files)
+        def ls_if_lt_ten(event):
+            def _task():
+                ls -l
+            run_in_terminal(_task)
 
 With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
 contents of your current directory if there are fewer than 10 items in it.

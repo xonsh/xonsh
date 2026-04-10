@@ -172,7 +172,7 @@ Callable aliases can return values in several forms:
           return 0  # integer return code (0 = success)
 
     @ ret0
-    @ $XONSH_LAST_RETURN_CODE
+    @ $LAST_RETURN_CODE
     0
 
     @ @aliases.register

@@ -62,7 +62,7 @@ Use cases:
         $[git log --oneline -3]
 
     # Register a custom env variable with a validator and default
-    @.env.register('MY_TIMEOUT', type=int, default=30,
+    @.env.register('MY_TIMEOUT', type='int', default=30,
                    doc='Request timeout in seconds.')
 
 ``@.env`` shines when the variable name is **dynamic** (built from a
@@ -140,7 +140,7 @@ Use cases:
     print('exit:', @.lastcmd.rtn)        # exit code
     print('stdout:', @.lastcmd.output)   # captured stdout (if any)
     print('stderr:', @.lastcmd.errors)   # captured stderr (if any)
-    print('cmd:',    @.lastcmd.cmd)      # the parsed command list
+    print('args:',   @.lastcmd.args)     # the parsed command list
     print('alias:',  @.lastcmd.alias)    # alias resolved (if any)
 
     # Build a "fail fast" wrapper in a script
