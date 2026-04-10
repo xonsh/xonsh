@@ -78,6 +78,7 @@ developer tools.
     env
     completers
     xontrib
+    api/index
     Create an extension using template <https://github.com/xonsh/xontrib-template>
 
 Contributor
@@ -93,11 +94,12 @@ and collaborating with others
     :hidden:
 
     developer
-    api/index
+    lib/index
     history_backend
 
 * `Developer’s Guide <developer.html>`_
-* `Xonsh API Reference <api/index.html>`_
+* `Xonsh API <api/index.html>`_
+* `Xonsh Library Reference <lib/index.html>`_
 * `History Backend <history_backend.html>`_
 * `Contribute to documentation <https://github.com/xonsh/xonsh/tree/main/docs>`_
 * Write a note or an article about xonsh.

@@ -132,7 +132,7 @@ release = XONSH_VERSION
 
 # List of documents that shouldn't be included in the build.
 exclude_patterns = [
-    "api/blank.rst",
+    "lib/blank.rst",
     "_build",
     "_static",
     "_templates",

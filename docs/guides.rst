@@ -57,4 +57,4 @@ Xontributor
     :maxdepth: 1
 
     developer
-    api/index
+    lib/index
