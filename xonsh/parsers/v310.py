@@ -391,11 +391,10 @@ class Parser(FStringRules, ThreeNineParser):
 
         match p[1]:
             case ast.JoinedStr():
-                raise AssertionError("patterns may not match formatted string literals")
-                # TODO: raise SyntaxError instead
-                # (doing so currently somehow causes an IndexError in tools.py:get_logical_line)
-
-        # TODO: f"hi" "hi" does not parse in xonsh
+                self._set_error(
+                    "patterns may not match formatted string literals",
+                    self.currloc(lineno=p[1].lineno, column=p[1].col_offset),
+                )
 
     def p_literal_expr_none_or_true_or_false(self, p):
         """

@@ -3675,6 +3675,13 @@ def test_match_literal_pattern(check_stmts):
 
 
 @skip_if_pre_3_10
+def test_match_fstring_pattern_error(parser):
+    """f-string in match pattern must raise SyntaxError, not AssertionError."""
+    with pytest.raises(SyntaxError, match="formatted string literals"):
+        parser.parse('match x:\n    case f"hello":\n        pass\n')
+
+
+@skip_if_pre_3_10
 def test_match_or_pattern(check_stmts):
     check_stmts(
         """match 1:
