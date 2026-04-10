@@ -2429,6 +2429,21 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
     assert call.args[0].value == "zip"
 
 
+@skip_if_pre_3_8
+def test_walrus_in_assign_ctx(parser, xsh):
+    """Walrus operator variable in RHS should be tracked in context."""
+    import ast as stdlib_ast
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    code = "x = (y := 5)\ny\n"
+    tree = parser.parse(code, debug_level=0)
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, code, set())
+    y_stmt = tree.body[1]
+    assert isinstance(y_stmt.value, stdlib_ast.Name)
+    assert y_stmt.value.id == "y"
+
+
 def test_async_for_ctx(parser, xsh):
     """Variables from async for should be tracked in context."""
     from xonsh.parsers.ast import CtxAwareTransformer

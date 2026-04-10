@@ -620,11 +620,19 @@ class CtxAwareTransformer(NodeTransformer):
             else:
                 ups.add(leftmostname(targ))
         self.ctxupdate(ups)
+        self.generic_visit(node)
         return node
 
     def visit_AnnAssign(self, node):
         """Handle visiting an annotated assignment statement."""
         self.ctxadd(leftmostname(node.target))
+        self.generic_visit(node)
+        return node
+
+    def visit_NamedExpr(self, node):
+        """Handle visiting a walrus operator (:=) expression."""
+        self.ctxadd(node.target.id)
+        self.generic_visit(node)
         return node
 
     def visit_Import(self, node):
