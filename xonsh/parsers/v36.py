@@ -69,7 +69,7 @@ class Parser(BaseParser):
         """atom_expr : await_tok atom trailer_list_opt"""
         p0 = self.apply_trailers(p[2], p[3])
         p1 = p[1]
-        p0 = ast.Await(value=p0, ctx=ast.Load(), lineno=p1.lineno, col_offset=p1.lexpos)
+        p0 = ast.Await(value=p0, lineno=p1.lineno, col_offset=p1.lexpos)
         p[0] = p0
 
     def p_async_stmt(self, p):
