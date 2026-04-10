@@ -1761,6 +1761,14 @@ def test_unary_op_lineno(parser):
     assert u.col_offset == 5
 
 
+def test_elif_lineno(parser):
+    """elif If node must get position of 'elif', not the test expression."""
+    tree = parser.parse("if x:\n    pass\nelif y:\n    pass\n")
+    elif_node = tree.body[0].orelse[0]
+    assert elif_node.lineno == 3
+    assert elif_node.col_offset == 0
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 

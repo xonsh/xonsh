@@ -1876,14 +1876,13 @@ class BaseParser:
 
     def p_elif_part(self, p):
         """elif_part : ELIF test COLON suite"""
-        p2 = p[2]
         p[0] = [
             ast.If(
-                test=p2,
+                test=p[2],
                 body=p[4],
                 orelse=[],
-                lineno=p2.lineno,
-                col_offset=p2.col_offset,
+                lineno=p.lineno(1),
+                col_offset=p.lexpos(1),
             )
         ]
 
