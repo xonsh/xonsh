@@ -147,9 +147,9 @@ Here is an example — a random emoji before the prompt character::
     $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(_get_color_cache())[0]
     $PROMPT = $PROMPT.replace("{prompt_end}", "{random_emoji}{prompt_end}")
 
-    snail@home ~ 🥗@  # It helps to visually
-    snail@home ~ 🍎@  # identify lines
-    snail@home ~ 🧀@  # in your scrollback history
+    snail@home ~ 🥗 @  # It helps to visually
+    snail@home ~ 🍎 @  # identify lines
+    snail@home ~ 🧀 @  # in your scrollback history
 
 Environment variables and functions are also available with the ``$``
 prefix.  For example:
