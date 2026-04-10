@@ -2429,6 +2429,23 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
     assert call.args[0].value == "zip"
 
 
+def test_async_for_ctx(parser, xsh):
+    """Variables from async for should be tracked in context."""
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    code = "async def f():\n    async for x in items:\n        x\n"
+    tree = parser.parse(code, debug_level=0)
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, code, set())
+    # 'x' inside the async for body should be a Name load, not a subprocess call
+    func_body = tree.body[0].body[0]  # AsyncFor
+    x_stmt = func_body.body[0]  # Expr(x)
+    import ast as stdlib_ast
+
+    assert isinstance(x_stmt.value, stdlib_ast.Name)
+    assert x_stmt.value.id == "x"
+
+
 @skip_if_pre_3_8
 def test_dollar_name_walrus(check_xonsh):
     check_xonsh({}, "x = ($WAKKA := 42)\nassert x == 42\nassert $WAKKA == 42")

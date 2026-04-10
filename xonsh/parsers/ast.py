@@ -677,6 +677,10 @@ class CtxAwareTransformer(NodeTransformer):
         self.contexts.pop()
         return node
 
+    visit_AsyncWith = visit_With
+    visit_AsyncFor = visit_For
+    visit_AsyncFunctionDef = visit_FunctionDef
+
     def visit_ClassDef(self, node):
         """Handle visiting a class definition."""
         self.ctxadd(node.name)
