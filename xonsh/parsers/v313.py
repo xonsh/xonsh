@@ -49,8 +49,8 @@ class Parser(ThreeTenParser):
             p0 = ast.Dict(
                 keys=[],
                 values=[],
-                lineno=self.lineno,
-                col_offset=self.col,
+                lineno=p1_tok.lineno,
+                col_offset=p1_tok.lexpos,
             )
             p0.ctx = ast.Load()
         else:

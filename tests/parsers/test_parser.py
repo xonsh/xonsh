@@ -1742,6 +1742,17 @@ def test_not_lineno(parser):
     assert u.col_offset == 4
 
 
+@pytest.mark.parametrize(
+    "code",
+    ["x = ()\n", "x = []\n", "x = {}\n"],
+)
+def test_empty_container_lineno(parser, code):
+    """Empty (), [], {} must get the position of the opening bracket."""
+    n = parser.parse(code).body[0].value
+    assert n.lineno == 1
+    assert n.col_offset == 4
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 

@@ -2671,7 +2671,7 @@ class BaseParser:
         if p2 is None:
             # empty container atom
             p0 = ast.Tuple(
-                elts=[], ctx=ast.Load(), lineno=self.lineno, col_offset=self.col
+                elts=[], ctx=ast.Load(), lineno=p1_tok.lineno, col_offset=p1_tok.lexpos
             )
             p0._real_tuple = True
         elif isinstance(p2, ast.AST):
@@ -2692,7 +2692,7 @@ class BaseParser:
         p1, p1_tok = p1.value, p1
         if p2 is None:
             p0 = ast.List(
-                elts=[], ctx=ast.Load(), lineno=self.lineno, col_offset=self.col
+                elts=[], ctx=ast.Load(), lineno=p1_tok.lineno, col_offset=p1_tok.lexpos
             )
 
         elif isinstance(p2, ast.GeneratorExp):
@@ -2727,8 +2727,8 @@ class BaseParser:
                 keys=[],
                 values=[],
                 ctx=ast.Load(),
-                lineno=self.lineno,
-                col_offset=self.col,
+                lineno=p1_tok.lineno,
+                col_offset=p1_tok.lexpos,
             )
         else:
             p0 = p2
