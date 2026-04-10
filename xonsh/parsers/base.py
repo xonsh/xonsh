@@ -2552,9 +2552,7 @@ class BaseParser:
         """
         p1 = p[1]
         op = self._factor_ops[p1.value]()
-        p[0] = ast.UnaryOp(
-            op=op, operand=p[2], lineno=p1.lineno, col_offset=p1.lexpos
-        )
+        p[0] = ast.UnaryOp(op=op, operand=p[2], lineno=p1.lineno, col_offset=p1.lexpos)
 
     def p_power_atom(self, p):
         """power : atom_expr"""
