@@ -154,6 +154,29 @@ def test_fstring_adaptor(inp, exp, xsh, monkeypatch):
     assert exp == obs
 
 
+@skip_if_pre_3_12
+@pytest.mark.parametrize(
+    "inp",
+    [
+        'f"{@$(echo hi)}"',
+        'f"{@!(echo hi)}"',
+        'f"result: @$(ls)"',
+        'f"result: @!(ls)"',
+        'f"{@$(echo hi)} world"',
+        'f"{$HOME} and {@$(ls)}"',
+    ],
+)
+def test_fstring_adaptor_captured_subproc(inp):
+    """FStringAdaptor must recognize @$(...) and @!(...) xonsh expressions.
+
+    Regression test: previously RE_XONSH_EXPR only covered $(...), @(...),
+    !(...) and similar — but @$(...) (captured injection) and @!(...)
+    (captured object) were missing, causing SyntaxError in f-strings.
+    """
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+
+
 fstring_adaptor_pathsearch_parameters = [
     ("f'''{$HOME}/*'''", "/foo/bar/*"),
     ("f'''{$HOME}/{$USER}'''", "/foo/bar/me"),

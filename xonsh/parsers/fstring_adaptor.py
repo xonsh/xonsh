@@ -21,12 +21,15 @@ def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
 @lazyobject
 def RE_XONSH_EXPR():
     """Matches xonsh-specific expressions: $NAME, $(...), ${...}, $[...],
-    @(...), !(...), ![...]."""
+    @(...), @$(...), @!(...), !(...), ![...]."""
+    # Order matters: @$(...) and @!(...) must be tried before @(...).
     return re.compile(
         r"\$\w+"  # $NAME
         r"|\$\([^)]*\)"  # $(...)
         r"|\$\{[^}]*\}"  # ${...}
         r"|\$\[[^\]]*\]"  # $[...]
+        r"|@\$\([^)]*\)"  # @$(...)
+        r"|@!\([^)]*\)"  # @!(...)
         r"|@\([^)]*\)"  # @(...)
         r"|!\([^)]*\)"  # !(...)
         r"|!\[[^\]]*\]"  # ![...]
