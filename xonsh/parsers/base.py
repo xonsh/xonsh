@@ -2220,8 +2220,9 @@ class BaseParser:
 
     def p_test_o5(self, p):
         """test : or_test IF or_test ELSE test"""
+        p1 = p[1]
         p[0] = ast.IfExp(
-            test=p[3], body=p[1], orelse=p[5], lineno=self.lineno, col_offset=self.col
+            test=p[3], body=p1, orelse=p[5], lineno=p1.lineno, col_offset=p1.col_offset
         )
 
     def p_test_nocond(self, p):

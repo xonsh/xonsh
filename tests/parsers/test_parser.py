@@ -1726,6 +1726,14 @@ def test_while_lineno(parser):
     assert w.col_offset == 0
 
 
+def test_ternary_lineno(parser):
+    """IfExp node must get the position of the body expression."""
+    tree = parser.parse("x = a if b else c\n")
+    ie = tree.body[0].value
+    assert ie.lineno == 1
+    assert ie.col_offset == 4
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 
