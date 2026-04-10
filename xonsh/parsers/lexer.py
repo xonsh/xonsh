@@ -506,12 +506,19 @@ class Lexer:
         l = c = -1
         ws = "WS"
         nl = "\n"
+        newline_types = frozenset({"NEWLINE", "NL", "COMMENT"})
         for token in self:
             if token.type == ws:
                 continue
+            elif token.type in newline_types:
+                # After a newline token, force the next token to start a
+                # new element by setting c to an impossible value.
+                l = token.lineno + token.value.count(nl)
+                c = -1
+                continue
             elif l < token.lineno:
                 elements.append(token.value)
-            elif len(elements) > 0 and c == token.lexpos:
+            elif len(elements) > 0 and c == token.lexpos and c >= 0:
                 elements[-1] = elements[-1] + token.value
             else:
                 elements.append(token.value)

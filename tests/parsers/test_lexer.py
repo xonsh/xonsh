@@ -485,6 +485,20 @@ def test_redir_whitespace(case):
         ("echo a#b c # d", ["echo", "a#b", "c"]),
         ("echo a#b", ["echo", "a#b"]),
         ("echo # comment", ["echo"]),
+        # Multi-line string followed by code on next line
+        ('x = """\nline2"""\ny = 1', ["x", "=", '"""\nline2"""', "y", "=", "1"]),
+        ('"""\nfoo\n"""', ['"""\nfoo\n"""']),
+        ("x = '''hello'''\ny = 2", ["x", "=", "'''hello'''", "y", "=", "2"]),
+        ("x = '''\nfoo\n'''\ny = 2", ["x", "=", "'''\nfoo\n'''", "y", "=", "2"]),
+        # Multiple multi-line strings
+        (
+            'a = """\n1"""\nb = """\n2"""',
+            ["a", "=", '"""\n1"""', "b", "=", '"""\n2"""'],
+        ),
+        # String then newline then col 0 token
+        ('"a"\nb', ['"a"', "b"]),
+        # Comment then next line
+        ("echo hi # comment\necho bye", ["echo", "hi", "echo", "bye"]),
     ],
 )
 def test_lexer_split(s, exp):
