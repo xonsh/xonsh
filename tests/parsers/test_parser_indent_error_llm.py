@@ -1,4 +1,6 @@
-"""Tests for sane error messages and SyntaxError fields in parse errors."""
+"""Tests for sane error messages, SyntaxError fields, and AST locations."""
+
+import ast
 
 import pytest
 
@@ -55,3 +57,23 @@ def test_syntax_error_offset_matches_cpython(parser):
     with pytest.raises(SyntaxError) as cpython_exc:
         compile(code, "<test>", "exec")
     assert xonsh_exc.value.offset == cpython_exc.value.offset
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "import os\n",
+        "import os as o\n",
+        "from os import path\n",
+        "from os import path as p\n",
+        "import os.path\n",
+    ],
+)
+def test_import_alias_location_matches_cpython(parser, code):
+    """ast.alias lineno/col_offset should match CPython."""
+    xonsh_tree = parser.parse(code)
+    cpython_tree = ast.parse(code)
+    xa = xonsh_tree.body[0].names[0]
+    ca = cpython_tree.body[0].names[0]
+    assert xa.lineno == ca.lineno
+    assert xa.col_offset == ca.col_offset

@@ -1049,6 +1049,11 @@ class BaseParser:
         """
         name_str : name
         """
+        # p[1] is a LexToken with lineno/lexpos from the lexer.
+        # Propagate position to the reduced symbol so that downstream
+        # rules (e.g. import alias) can retrieve it.
+        p.slice[0].lineno = p[1].lineno
+        p.slice[0].lexpos = p[1].lexpos
         p[0] = p[1].value
 
     def p_name(self, p):
@@ -1827,6 +1832,9 @@ class BaseParser:
                     | name_str period_name_list
         """
         p[0] = p[1] if len(p) == 2 else p[1] + p[2]
+        # Propagate position from the first name_str.
+        p.slice[0].lineno = p.slice[1].lineno
+        p.slice[0].lexpos = p.slice[1].lexpos
 
     def p_comma_name(self, p):
         """comma_name : COMMA name_str"""
