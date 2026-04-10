@@ -98,7 +98,6 @@ and collaborating with others
     history_backend
 
 * `Developer’s Guide <developer.html>`_
-* `Xonsh API <api/index.html>`_
 * `Xonsh Library Reference <lib/index.html>`_
 * `History Backend <history_backend.html>`_
 * `Contribute to documentation <https://github.com/xonsh/xonsh/tree/main/docs>`_
