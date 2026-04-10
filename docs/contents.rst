@@ -30,7 +30,7 @@ step by step and helps you build a solid foundation for working in the shell.
     Extensions (xontribs) on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
 
-Everyday User
+Regular User
 -------------
 
 How to use Xonsh efficiently in daily workflows by configuring
