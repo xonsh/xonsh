@@ -28,6 +28,10 @@ def still_writable(fd):
     """Determines whether a file descriptor is still writable by trying to
     write an empty string and seeing if it fails.
     """
+    if fd < 0:
+        # No pipe was set up (e.g. stdout=None); treat as "not broken by
+        # downstream", so the caller attributes the OSError to the alias.
+        return True
     try:
         os.write(fd, b"")
         status = True
@@ -231,7 +235,7 @@ def parse_proxy_return(r, stdout, stderr):
         Return from proxy function
     stdout : file-like
         Current stdout stream
-    stdout : file-like
+    stderr : file-like
         Current stderr stream
 
     Returns
@@ -395,6 +399,7 @@ class ProcProxyThread(threading.Thread):
         not be called directly.
         """
         if self.f is None:
+            self._close_devnull()
             return
         # Set the thread-local swapped values.
         XSH.env.set_swapped_values(self.original_swapped_values)
@@ -691,6 +696,7 @@ class ProcProxy:
         err = env.get("XONSH_ENCODING_ERRORS")
         spec = self._wait_and_getattr("spec")
         # set file handles
+        owned_handles = []  # handles opened here that we must close
         if self.stdin is None:
             stdin = None
         else:
@@ -699,8 +705,14 @@ class ProcProxy:
             else:
                 inbuf = self.stdin
             stdin = io.TextIOWrapper(inbuf, encoding=enc, errors=err)
+            if isinstance(self.stdin, int):
+                owned_handles.append(stdin)
         stdout = self._pick_buf(self.stdout, sys.stdout, enc, err)
+        if stdout is not self.stdout and stdout is not sys.stdout:
+            owned_handles.append(stdout)
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
+        if stderr is not self.stderr and stderr is not sys.stderr:
+            owned_handles.append(stderr)
         # run the actual function
         try:
             alias_env = {}
@@ -731,6 +743,8 @@ class ProcProxy:
         self.returncode = parse_proxy_return(r, stdout, stderr)
         safe_flush(stdout)
         safe_flush(stderr)
+        for h in owned_handles:
+            safe_fdclose(h)
         return self.returncode
 
     @staticmethod

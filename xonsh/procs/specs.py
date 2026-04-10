@@ -1260,7 +1260,7 @@ def _run_command_pipeline(specs, cmds):
         cp = CommandPipeline(specs)
     proc = cp.proc
     background = cp.spec.background
-    if not all(x.is_proxy for x in specs):
+    if proc is not None and not all(x.is_proxy for x in specs):
         xj.add_job(
             {
                 "cmds": cmds,

@@ -631,7 +631,7 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
 
     """
     if instr is None:
-        return
+        return ""
     ind = "\t" * ntabs + " " * nspaces
     if flatten:
         pat = re.compile(r"^\s*", re.MULTILINE)
@@ -1091,7 +1091,7 @@ def argvquote(arg, force=False):
         # Escape all backslashes, but let the terminating
         # double quotation mark we add below be interpreted
         # as a metacharacter
-        cmdline += +n_backslashes * 2 * "\\" + '"'
+        cmdline += n_backslashes * 2 * "\\" + '"'
         return cmdline
 
 
@@ -1586,8 +1586,8 @@ def ptk2_color_depth_setter(x):
         "TRUE_COLOR",
     }:
         pass
-    elif x in {"", None}:
-        x = ""
+    elif x == "":
+        pass
     else:
         msg = f'"{x}" is not a valid value for $PROMPT_TOOLKIT_COLOR_DEPTH. '
         warnings.warn(msg, RuntimeWarning, stacklevel=2)

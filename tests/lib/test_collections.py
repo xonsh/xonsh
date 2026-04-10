@@ -174,3 +174,14 @@ def test_mixed_types():
     z.maps.append(m2)
     assert isinstance(z["a"]["b"], list)
     assert z["a"]["b"] == [1, 2, 3, 4]
+
+
+def test_lazy_all_with_mixed_mapping_and_scalar():
+    """all() uses generator expressions for lazy evaluation,
+    so it short-circuits on the first non-matching type."""
+    m1 = {"a": {"b": 1}}
+    m2 = {"a": {"b": {"nested": 2}}}
+    z = ChainDB(m1)
+    z.maps.append(m2)
+    # mixed types fall to else branch; reversed gives last mapping priority
+    assert z["a"]["b"] == {"nested": 2}

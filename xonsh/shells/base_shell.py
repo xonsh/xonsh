@@ -93,7 +93,9 @@ class _TeeStdBuf(io.RawIOBase):
     def readinto(self, b):
         """Read bytes into buffer from both streams."""
         if self._std_is_binary:
-            self.stdbuf.readinto(b)
+            n = self.stdbuf.readinto(b)
+            self.membuf.write(b[:n])
+            return n
         return self.membuf.readinto(b)
 
     def write(self, b):

@@ -439,7 +439,7 @@ def format_job_string(num: int, format="dict") -> str:
     if format == "posix":
         r["pos"] = (
             "+"
-            if tasks[0] == num
+            if tasks and tasks[0] == num
             else "-"
             if len(tasks) > 1 and tasks[1] == num
             else " "
@@ -485,7 +485,7 @@ def add_job(info):
 def update_job_attr(pid, name, value):
     """Update job attribute."""
     jobs = get_jobs()
-    for num, job in get_jobs().items():
+    for num, job in list(jobs.items()):
         if "pids" in job and pid in job["pids"]:
             jobs[num][name] = value
 

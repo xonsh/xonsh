@@ -110,26 +110,32 @@ functionality, which will be displayed by ``completer list``.
 Some simple examples follow.  For more examples, see the source code of the completers
 xonsh actually uses, in the ``xonsh.completers`` module.
 
+.. code-block:: xonshcon
+
+    @ from xonsh.completers.tools import *
+
+    @ @contextual_completer
+      def dummy_completer(context):
+          '''
+          Completes everything with options "lou" and "carcolh",
+          regardless of the value of prefix.
+          '''
+          return {"lou", "carcolh"}
+
+    @ completer add dummy dummy_completer
+    @ xzecze<TAB>   # → lou, carcolh
+
+    @ @non_exclusive_completer
+      @contextual_completer
+      def nx_dummy_completer(context):
+          '''
+          Like dummy_completer but its results are ADDED to the other completions.
+          '''
+          return {"lou", "carcolh"}
+
+    @ completer add nx_dummy nx_dummy_completer
+
 .. code-block:: python
-
-    # Helper decorators for completers:
-    from xonsh.completers.tools import *
-
-    @contextual_completer
-    def dummy_completer(context):
-        '''
-        Completes everything with options "lou" and "carcolh",
-        regardless of the value of prefix.
-        '''
-        return {"lou", "carcolh"}
-
-    @non_exclusive_completer
-    @contextual_completer
-    def nx_dummy_completer(context):
-        '''
-        Like dummy_completer but its results are ADDED to the other completions.
-        '''
-        return {"lou", "carcolh"}
 
     @contextual_completer
     def python_context_completer(context):

@@ -118,13 +118,28 @@ def generate_options_of(cmd: str):
     yield from get_options(get_option_section())
 
 
+def _man_page_path(cmd: str) -> "Path | None":
+    """Return the file path of cmd's man page, or None."""
+    try:
+        out = subprocess.check_output(
+            ["man", "-w", cmd], stderr=subprocess.DEVNULL, text=True
+        )
+        p = Path(out.strip())
+        return p if p.exists() else None
+    except (subprocess.CalledProcessError, OSError):
+        return None
+
+
 @functools.lru_cache(maxsize=10)
 def _parse_man_page_options(cmd: str) -> "dict[str, tuple[str, ...]]":
-    path = get_man_completions_path() / Path(cmd).with_suffix(".json").name
-    if path.exists():
-        return json.loads(path.read_text())
+    cache = get_man_completions_path() / Path(cmd).with_suffix(".json").name
+    if cache.exists():
+        # Invalidate if the man page is newer than the cached JSON.
+        man = _man_page_path(cmd)
+        if man is None or man.stat().st_mtime <= cache.stat().st_mtime:
+            return json.loads(cache.read_text())
     options = dict(generate_options_of(cmd))
-    path.write_text(json.dumps(options))
+    cache.write_text(json.dumps(options))
     return options
 
 
