@@ -1783,6 +1783,17 @@ def test_binop_multi_lineno(parser, code):
     assert outer.col_offset == ref.col_offset
 
 
+@pytest.mark.parametrize("code", ["f(a=1)\n", "f(**d)\n"])
+def test_keyword_arg_lineno(parser, code):
+    """Keyword arg node must get position of key/**, not value."""
+    import ast as stdlib_ast
+
+    kw = parser.parse(code).body[0].value.keywords[0]
+    ref = stdlib_ast.parse(code).body[0].value.keywords[0]
+    assert kw.lineno == ref.lineno
+    assert kw.col_offset == ref.col_offset
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 

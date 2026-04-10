@@ -124,9 +124,8 @@ class Parser(BaseParser):
 
     def p_argument_kwargs(self, p):
         """argument : POW test"""
-        p2 = p[2]
         p[0] = ast.keyword(
-            arg=None, value=p2, lineno=p2.lineno, col_offset=p2.col_offset
+            arg=None, value=p[2], lineno=p.lineno(1), col_offset=p.lexpos(1)
         )
 
     def p_argument_args(self, p):
@@ -142,9 +141,9 @@ class Parser(BaseParser):
 
     def p_argument_eq(self, p):
         """argument : test EQUALS test"""
-        p3 = p[3]
+        p1 = p[1]
         p[0] = ast.keyword(
-            arg=p[1].id, value=p3, lineno=p3.lineno, col_offset=p3.col_offset
+            arg=p1.id, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
         )
 
     def p_comp_for(self, p):
