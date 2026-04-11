@@ -668,7 +668,7 @@ feed them to a subprocess as needed.  For example:
 The ``@()`` syntax may also be used inside of subprocess
 arguments, not just as a stand-alone argument. For example:
 
-  .. code-block:: xonshcon
+.. code-block:: xonshcon
 
     @ x = 'hello'
     @ echo /path/to/@(x)
@@ -678,7 +678,7 @@ When used inside of a subprocess argument and ``<expr>`` evaluates to a
 non-string iterable, ``@()`` will expand to the outer product of all
 given values:
 
-  .. code-block:: sh
+.. code-block:: sh
 
     @ echo /path/to/@(['hello', 'world'])
     # /path/to/hello /path/to/world
@@ -1549,7 +1549,7 @@ Longer scripts can be run either by specifying a filename containing the script,
 or by feeding them to xonsh via stdin.  For example, consider the following
 script, stored in ``test.xsh``:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     #!/usr/bin/env xonsh
 
