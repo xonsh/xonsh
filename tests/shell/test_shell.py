@@ -53,7 +53,7 @@ def test_shell_with_sqlite_history(xession, xonsh_execer, tmpdir_factory):
     """
     tempdir = str(tmpdir_factory.mktemp("history"))
 
-    history_file = os.path.join(tempdir, "history.db")
+    history_file = os.path.join(tempdir, "history.sqlite")
     h = SqliteHistory(filename=history_file)
     h.append(
         {
