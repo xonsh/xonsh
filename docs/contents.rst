@@ -26,6 +26,7 @@ step by step and helps you build a solid foundation for working in the shell.
     tutorial
     strings
     subprocess
+    error_handling
     platforms
     Extensions (xontribs) on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
@@ -51,7 +52,6 @@ and streamline your command-line experience.
     prompt
     events
     globbing
-    error_handling
     macros
     xonsh_session
     launch
