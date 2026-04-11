@@ -315,28 +315,41 @@ The handshake itself (``_acquire_controlling_terminal``):
 * Restores the signal mask in a ``finally`` block so any error path
   leaves the process in a clean state.
 
-``_setup_controlling_terminal`` wraps the handshake with the signal
-policy decision and an idempotency flag. It only does anything if
-**stderr is a TTY** — script mode, piped input and test runners all
-skip the setup entirely and keep their default POSIX signal
-dispositions. This gate makes the whole feature transparent to
-non-interactive use.
+``_setup_controlling_terminal`` orchestrates the handshake with a
+three-step signal policy:
 
-On the success path (either the fast path or a full acquire),
-``_setup_controlling_terminal`` installs a Python-level no-op handler
-for ``SIGTTIN`` and ``SIGTTOU``. Once xonsh is foreground the kernel
-should not deliver those signals any more under normal operation, but
-a Python handler defends against races and, crucially, is **not**
-inherited across ``exec``, so child processes of xonsh see the normal
-``SIG_DFL`` disposition and their own job control keeps working.
+**Step 1 — always install Python no-op handlers.** On any POSIX
+invocation — interactive, script mode, piped input, redirected
+stderr, test runner — ``_setup_controlling_terminal`` installs a
+Python-level no-op handler for ``SIGTTIN`` and ``SIGTTOU``. This
+matches xonsh's historical behavior from before the handshake
+existed: script-mode xonsh must not be suspended by default
+``SIG_DFL`` when something indirectly touches the TTY, and a Python
+handler (rather than ``SIG_IGN``) is preferred because it is *not*
+inherited across ``exec``, so subprocess children keep their normal
+job control.
 
-On the failure path — as will happen in a sandbox where xonsh cannot
-become foreground — ``_setup_controlling_terminal`` installs
-``SIG_IGN`` for ``SIGTTIN`` and ``SIGTTOU`` instead. That discards the
-signals at the kernel level, so they never reach Python's wakeup pipe
-and the ``BlockingIOError`` storm cannot happen. ``SIG_IGN`` *is*
-inherited across ``exec``, but in a sandbox the children have the same
-TTY ownership problem anyway, so this is the right default.
+**Step 2 — run the handshake when stderr is a real TTY.** If
+``os.isatty(stderr)`` is true, ``_setup_controlling_terminal`` calls
+:func:`_acquire_controlling_terminal`. Non-TTY callers stop after
+step 1; pytest, script mode, and redirected-stderr invocations all
+bail out here and keep the step-1 handlers.
+
+**Step 3 — branch on handshake result.** If the handshake succeeded
+(either the fast path because we were already foreground, or a full
+acquire), the step-1 Python handlers stay in place and
+``_setup_controlling_terminal`` registers the ``atexit`` restorer —
+but only if we *actually* transferred foreground ownership, so the
+fast path leaves no atexit behind and we never race with the parent
+shell's own ``tcsetpgrp`` on exit. If the handshake failed — typical
+in sandboxes that cannot be made foreground —
+``_setup_controlling_terminal`` **replaces** the step-1 Python
+handlers with ``SIG_IGN``. That is the sandbox fallback: the kernel
+discards ``SIGTTIN`` / ``SIGTTOU`` outright, so they never reach
+Python's asyncio wakeup pipe and the ``BlockingIOError`` storm
+cannot happen. ``SIG_IGN`` *is* inherited across ``exec``, but in a
+sandbox the children have the same TTY ownership problem anyway, so
+this is the right default.
 
 ``_setup_controlling_terminal`` is idempotent. It is also called from
 the top of :func:`xonsh.main.main_xonsh`, so callers that enter the
@@ -362,22 +375,26 @@ failed), the restorer is a no-op.
 When the handshake is a no-op
 ------------------------------
 
-The setup does nothing in any of these situations:
+The *handshake itself* is skipped in these situations (step 1 still
+installs the historical Python no-op handlers):
 
-* **Windows.** POSIX controlling terminals do not apply.
+* **Windows.** POSIX controlling terminals do not apply, and
+  ``_setup_controlling_terminal`` returns immediately after the
+  ``ON_WINDOWS`` check without installing anything.
 * **Non-interactive invocations** where stderr is not a TTY:
   ``xonsh script.xsh``, piped input, redirected stderr, script-from-
   stdin mode, and tests under pytest (which captures stderr via a
-  pipe). In these modes ``_setup_controlling_terminal`` returns
-  before touching signal state — default POSIX dispositions are
-  kept intact.
+  pipe). ``_setup_controlling_terminal`` installs the step-1 Python
+  handlers and returns — no handshake, no atexit. This matches the
+  pre-handshake xonsh behavior for these modes.
 * **xonsh is a session leader** (``getsid(0) == getpid()``). A
   session leader cannot change its own process group id, and if it
   is session leader it almost always already owns the TTY. The
-  handshake declines and the ``SIG_IGN`` fallback takes over.
+  handshake declines and the ``SIG_IGN`` fallback replaces the
+  step-1 handlers.
 * **xonsh is already the foreground group** — the fast path returns
-  immediately, the Python no-op handler is still installed as a
-  safety net, but the atexit restorer is *not* registered (there is
+  immediately, the step-1 Python handlers stay in place as a safety
+  net, and the atexit restorer is *not* registered (there is
   nothing to restore).
 * **Missing** ``pthread_sigmask``, which is POSIX-only and absent on
   exotic builds.

@@ -391,21 +391,32 @@ def capture_atexit(monkeypatch):
 
 
 @skip_if_on_windows
-def test_setup_is_noop_when_stderr_not_a_tty(
+def test_setup_non_tty_installs_pyhandler_no_handshake(
     monkeypatch, reset_fg_state, capture_signal_signal, capture_atexit
 ):
-    """Non-TTY stderr keeps default POSIX signal dispositions.
+    """Non-TTY stderr skips the handshake but still installs the
+    historical Python no-op handlers for ``SIGTTIN`` / ``SIGTTOU``.
 
-    This is the gate that makes the whole feature safe under pytest
-    and in script/pipe mode: no handlers get installed at all.
+    This matches xonsh's pre-handshake behavior: script mode, piped
+    input, redirected stderr and test runners (pytest captures stderr
+    via a pipe) all land here, and scripts that indirectly touch TTY
+    must not be stopped by default ``SIG_DFL``. The handshake and
+    atexit restorer are *not* invoked.
     """
     monkeypatch.setattr(xonsh.main.os, "isatty", lambda fd: False)
     xonsh.main._setup_controlling_terminal()
-    assert capture_signal_signal == []
+    # Exactly two signal.signal calls — Python no-op handler for each
+    # signal, no SIG_IGN follow-up because the handshake never ran.
+    assert len(capture_signal_signal) == 2
+    installed = {sig for sig, _ in capture_signal_signal}
+    assert installed == {signal.SIGTTIN, signal.SIGTTOU}
+    for _, handler in capture_signal_signal:
+        assert handler is not signal.SIG_IGN
+        assert callable(handler)
     assert capture_atexit == []
-    # Flag stays unset so a later call (e.g. from main_xonsh in a real
-    # interactive run) can still do the setup.
-    assert xonsh.main._tty_setup_done is False
+    # Flag *is* set — we committed to signal handling for this
+    # process, and a second call should be a no-op.
+    assert xonsh.main._tty_setup_done is True
 
 
 @skip_if_on_windows
@@ -436,12 +447,14 @@ def test_setup_installs_pyhandler_on_acquire_success(
 def test_setup_installs_sigign_on_acquire_failure(
     monkeypatch, reset_fg_state, fake_tty, capture_signal_signal, capture_atexit
 ):
-    """Acquire failure → SIG_IGN fallback, no atexit registration.
+    """Acquire failure → SIG_IGN replaces the step-1 Python handlers.
 
-    This is the sandbox path. The handshake fails because e.g. the
-    handshake cannot tcsetpgrp, and we must prevent asyncio from
-    drowning in SIGTT* wakeups — SIG_IGN drops the signals at the
-    kernel boundary.
+    This is the sandbox path. ``_setup_controlling_terminal`` first
+    installs a Python no-op handler (step 1, unconditional) and then
+    *replaces* it with ``SIG_IGN`` when the handshake cannot make
+    xonsh foreground. The replacement is what prevents asyncio from
+    drowning in ``SIGTT*`` wakeups — ``SIG_IGN`` drops the signals at
+    the kernel boundary before they ever reach Python.
     """
     install, _, _ = fake_tty
     monkeypatch.delenv("XONSH_NO_FG_TAKEOVER", raising=False)
@@ -449,11 +462,28 @@ def test_setup_installs_sigign_on_acquire_failure(
     install(fake)
     xonsh.main._setup_controlling_terminal()
     assert xonsh.main._tty_setup_done is True
-    # Both signals are now SIG_IGN.
-    assert len(capture_signal_signal) == 2
-    for sig, handler in capture_signal_signal:
-        assert sig in (signal.SIGTTIN, signal.SIGTTOU)
+    # Four signal.signal calls total: two Python no-op handlers from
+    # step 1, then two SIG_IGN replacements from the failure path.
+    assert len(capture_signal_signal) == 4
+    # Step 1: Python no-op handler for each signal.
+    step1 = capture_signal_signal[:2]
+    step1_sigs = {sig for sig, _ in step1}
+    assert step1_sigs == {signal.SIGTTIN, signal.SIGTTOU}
+    for _, handler in step1:
+        assert handler is not signal.SIG_IGN
+        assert callable(handler)
+    # Step 2: SIG_IGN replacement.
+    step2 = capture_signal_signal[2:]
+    step2_sigs = {sig for sig, _ in step2}
+    assert step2_sigs == {signal.SIGTTIN, signal.SIGTTOU}
+    for _, handler in step2:
         assert handler is signal.SIG_IGN
+    # Final state per signal is SIG_IGN (last write wins).
+    last_per_sig = {}
+    for sig, handler in capture_signal_signal:
+        last_per_sig[sig] = handler
+    assert last_per_sig[signal.SIGTTIN] is signal.SIG_IGN
+    assert last_per_sig[signal.SIGTTOU] is signal.SIG_IGN
     # No atexit — nothing was acquired to release.
     assert capture_atexit == []
 

@@ -374,10 +374,10 @@ def _setup_controlling_terminal():
     """Run the TTY startup handshake and install matching signal handlers.
 
     This is the *orchestration* layer around
-    :func:`_acquire_controlling_terminal`: it calls the handshake, picks
-    a signal-handling policy based on whether the handshake succeeded,
-    and registers the ``atexit`` restorer when appropriate. It is
-    idempotent — a second call in the same process is a cheap no-op.
+    :func:`_acquire_controlling_terminal`: it installs the baseline
+    signal policy, optionally calls the handshake, and registers the
+    ``atexit`` restorer when appropriate. It is idempotent — a second
+    call in the same process is a cheap no-op.
 
     It is called from the top of :func:`main` so that the handshake
     happens *before* :func:`premain`. ``premain`` loads xontribs and
@@ -393,59 +393,87 @@ def _setup_controlling_terminal():
     backup for callers that enter the shell loop without going through
     :func:`main` (tests, programmatic invocation).
 
-    The setup is a no-op when stderr is not a TTY. That gate is crucial:
-    it means non-interactive callers (script mode, piped input, test
-    runners under pytest) keep their default POSIX signal dispositions
-    for ``SIGTTIN`` / ``SIGTTOU`` and are not affected by the startup
-    changes.
+    Signal policy
+    -------------
+    Step 1: **always** install a Python-level no-op handler for
+    ``SIGTTIN`` and ``SIGTTOU``, on any POSIX invocation. This matches
+    the historical xonsh behavior (before this function existed,
+    ``main_xonsh`` installed the same no-op handler unconditionally)
+    and protects script-mode xonsh from being suspended by
+    ``SIG_DFL`` when something indirectly touches the TTY. A Python
+    handler is preferred over ``SIG_IGN`` here because the latter is
+    inherited across ``exec`` and would subtly break job control in
+    subprocess children.
+
+    Step 2: if stderr is a real TTY, attempt the foreground handshake.
+    If it succeeds, the no-op handlers installed in step 1 already
+    cover the ``success`` case and no further action is needed. If
+    the handshake fails (typical in sandboxes that cannot be made
+    foreground), **replace** the no-op handlers with ``SIG_IGN`` —
+    the kernel will then discard ``SIGTTIN`` / ``SIGTTOU`` outright
+    and they will never reach Python's asyncio wakeup pipe, which
+    would otherwise overflow with ``BlockingIOError`` under a signal
+    storm.
+
+    Step 3: register ``atexit`` to restore the previous foreground
+    group on shutdown, but only when the handshake *actually*
+    transferred foreground ownership (``_fg_tty_state["acquired"]``
+    is True). Fast-path success — where we were already foreground —
+    leaves state unacquired so the restorer does nothing and we don't
+    race with the parent shell's own ``tcsetpgrp`` on exit.
+
+    Non-TTY callers (script mode, piped input, test runners under
+    pytest) stop after step 1 and keep the historical Python handlers.
     """
     global _tty_setup_done
     if _tty_setup_done:
         return
     if ON_WINDOWS:
         return
-    # Gate on a real TTY. Script mode, piped stdin/stdout, and test
-    # runners (pytest captures stderr via a pipe) all land here and
-    # return without touching signal state — that keeps the change
-    # transparent to non-interactive use.
+    _tty_setup_done = True
+
+    # Step 1: unconditional Python no-op handlers for SIGTTIN/SIGTTOU.
+    # This matches the pre-handshake xonsh behavior and is what
+    # script-mode / non-TTY callers rely on. The only reason to
+    # deviate from it is the sandbox-failure case below, which
+    # overrides with SIG_IGN to avoid the asyncio wakeup pipe storm.
+    def func_sig_ttin_ttou(n, f):
+        pass
+
+    signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
+    signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
+
+    # Step 2: only attempt the handshake when stderr is a real TTY.
+    # Script mode, piped stdin/stdout, and test runners (pytest
+    # captures stderr via a pipe) all bail out here and keep the
+    # Python handlers from step 1.
     try:
         if not os.isatty(sys.stderr.fileno()):
             return
     except (AttributeError, OSError, ValueError):
         return
-    _tty_setup_done = True
+
     fg_acquired = _acquire_controlling_terminal()
     if fg_acquired:
-        # Register the shutdown restorer only if the handshake actually
-        # changed the foreground group. The fast-path case (we were
-        # already foreground) deliberately leaves ``_fg_tty_state``
-        # unacquired so the restorer does nothing and we never race
-        # with the parent shell's own tcsetpgrp on exit.
+        # Step 3: register the shutdown restorer only if the handshake
+        # actually changed the foreground group. The fast-path case
+        # (we were already foreground) deliberately leaves
+        # ``_fg_tty_state`` unacquired so the restorer does nothing
+        # and we never race with the parent shell's own tcsetpgrp
+        # on exit.
         if _fg_tty_state.get("acquired"):
             atexit.register(_release_controlling_terminal)
-
-        # Python-level no-op as a safety net. Once we are foreground
-        # the kernel will not deliver SIGTTIN/SIGTTOU under normal
-        # operation, but races are possible (e.g. a child process in
-        # our group calling tcsetpgrp before we reinstall ourselves).
-        # A Python handler is preferred over SIG_IGN here because the
-        # latter is inherited across ``exec`` and would subtly break
-        # job control in subprocess children.
-        def func_sig_ttin_ttou(n, f):
-            pass
-
-        signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
-        signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
+        # Python handlers from step 1 remain in place as a safety net.
     else:
-        # We could not become foreground — typical inside Flatpak /
-        # Bubblewrap sandboxes, nested containers, some CI runners.
-        # The kernel *will* keep sending SIGTTIN/SIGTTOU every time
-        # xonsh touches the TTY, and a Python-level handler would
-        # overflow asyncio's signal wakeup pipe with ``BlockingIOError``.
-        # SIG_IGN makes the kernel discard the signals outright,
-        # bypassing Python entirely. It is inherited across ``exec``,
-        # but in a sandbox children have the same TTY ownership
-        # problem anyway, so this is the right default.
+        # Sandbox failure path: the kernel *will* keep sending
+        # SIGTTIN/SIGTTOU every time xonsh touches the TTY, and a
+        # Python-level handler would overflow asyncio's signal wakeup
+        # pipe with ``BlockingIOError`` during a signal storm. Replace
+        # the step-1 handlers with SIG_IGN so the kernel discards the
+        # signals outright and never routes them through Python.
+        # SIG_IGN is inherited across ``exec``, but in a sandbox
+        # children have the same TTY ownership problem anyway, so
+        # this is the right default.
         signal.signal(signal.SIGTTIN, signal.SIG_IGN)
         signal.signal(signal.SIGTTOU, signal.SIG_IGN)
 
