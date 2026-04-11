@@ -811,6 +811,42 @@ def test_return_command_alias_dict_wrong_return(xession, bad):
         cmds_to_specs([["rcwr"]], captured="object")[-1]
 
 
+def test_return_command_alias_dict_env_through_string_alias_chain(xession):
+    """Chain: a plain string alias points to a return_command alias that
+    dict-returns an env overlay. The overlay must still reach the returned
+    command's spec.env (propagated through eval_alias via env_out).
+
+    Also verifies that the chain's positional args are concatenated with
+    the user's call-site args when both reach the return_command function.
+    """
+    seen_args = []
+
+    @xession.aliases.register("rca")
+    @xession.aliases.return_command
+    def _rca(args):
+        seen_args.append(list(args))
+        return {
+            "cmd": ["echo", "ok"] + args,
+            "env": {"VIA_CHAIN": "yes", "EXTRA": "1"},
+        }
+
+    xession.aliases["hlp"] = "rca X1 X2"
+
+    spec = cmds_to_specs([["hlp", "Y1", "Y2"]], captured="object")[-1]
+
+    # args from the chain ("X1 X2") come first, then args from the user call.
+    assert seen_args == [["X1", "X2", "Y1", "Y2"]]
+    assert spec.cmd == ["echo", "ok", "X1", "X2", "Y1", "Y2"]
+
+    # Dict-return env survived the string-alias chain and lives on spec.env.
+    assert spec.env is not None
+    assert spec.env.get("VIA_CHAIN") == "yes"
+    assert spec.env.get("EXTRA") == "1"
+    # And did not leak into the global env.
+    assert "VIA_CHAIN" not in xession.env
+    assert "EXTRA" not in xession.env
+
+
 def test_auto_cd(xession, tmpdir):
     xession.aliases["cd"] = lambda: "some_cd_alias"
     dir = str(tmpdir)
