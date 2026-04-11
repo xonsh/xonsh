@@ -414,26 +414,3 @@ exactly the behaviour of the historical sandbox wrapper.
 
     # disable the takeover, e.g. when debugging unusual TTY setups
     XONSH_NO_FG_TAKEOVER=1 xonsh
-
-What this does not fix
------------------------
-
-The handshake addresses the *foreground group* part of the problem.
-It does not work around every possible issue that can arise from
-running xonsh in an unusual TTY environment:
-
-* If the TTY belongs to a different session than xonsh (for example
-  a sandbox that calls ``setsid``), ``tcsetpgrp`` fails with
-  ``EPERM`` and the handshake cleanly declines. You are still on
-  the ``SIG_IGN`` fallback in that case.
-* ``termios.tcsetattr`` calls can still be interrupted by signals
-  other than ``SIGTTIN`` / ``SIGTTOU``. In practice a foreground
-  xonsh sees far fewer interruptions — most of the signal volume
-  was the ``SIGTT*`` storm — so the ``EINTR`` race is dramatically
-  less likely, but it is not impossible. If you hit it, wrap your
-  launcher to retry ``tcsetattr`` / ``tcgetattr`` on ``EINTR``.
-* Stealing a controlling terminal from a different session requires
-  ``TIOCSCTTY`` with ``CAP_SYS_ADMIN`` in the init user namespace,
-  which is not available in Flatpak or rootless containers. If you
-  really need a fresh controlling TTY, run xonsh under a PTY proxy
-  such as ``script(1)`` or inside ``tmux``.
