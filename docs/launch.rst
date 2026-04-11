@@ -184,3 +184,209 @@ See also
 * :doc:`xonshrc` -- RC file loading and configuration snippets
 * :doc:`env` -- environment variables and type system
 * :doc:`envvars` -- full list of environment variables
+
+
+.. _launch-fg-takeover:
+
+Controlling Terminal and Foreground Process Group
+==================================================
+
+When xonsh starts interactively on a POSIX system it performs a small
+startup handshake to make itself the *foreground process group* of the
+terminal it's attached to. This section explains what that means, why
+xonsh bothers, and how to disable it if it conflicts with something in
+your environment.
+
+Background: foreground process group
+-------------------------------------
+
+Every POSIX terminal has exactly one **foreground process group**.
+Processes in that group are allowed to read from and write control
+operations to the terminal without being suspended. Processes in any
+other group are "in the background" — when they touch the TTY the
+kernel sends them ``SIGTTIN`` (background read) or ``SIGTTOU``
+(background control / write under ``TOSTOP``), and the default
+disposition of those signals is to stop the process, not to let the
+operation proceed.
+
+Interactive shells like bash and zsh install themselves as the
+foreground group at startup. They do it with a short sequence:
+
+1. Find the controlling TTY's file descriptor.
+2. Check whether the current foreground group is already ours.
+3. If not, block the signals that would disrupt step 4.
+4. Call ``setpgid(0, 0)`` to land in a process group of our own.
+5. Call ``tcsetpgrp(tty_fd, getpgrp())`` to install that group as
+   the TTY's foreground group.
+6. Restore the signal mask.
+
+After this, every TTY touch the shell makes is permitted by the
+kernel and the job-control primitives the shell uses to manage
+pipelines (``tcsetpgrp``, ``tcsetattr``, …) work as intended.
+
+Why xonsh needs to do the same
+------------------------------
+
+Historically xonsh skipped this handshake and relied on whatever
+launched it to have arranged things correctly. That assumption holds
+when xonsh is started from a typical terminal via a parent shell
+(bash, zsh, fish, another xonsh, …), because those shells
+``fork + exec + tcsetpgrp`` the child correctly. It breaks in several
+common non-typical environments:
+
+* **Flatpak / Bubblewrap** and similar sandbox launchers: ``bwrap``
+  does not reassign the TTY's foreground group to the sandboxed
+  child. xonsh ends up running as a background process of the TTY.
+* **Build systems, CI runners, IDE integrated terminals** and
+  service managers such as ``systemd --user`` that launch xonsh via
+  ``posix_spawn`` without wiring up job control.
+* **Nested containers** that reuse the outer PTY without reconfiguring
+  foreground ownership.
+
+In all of these, xonsh is technically a background process of the
+TTY. Every terminal operation — ``tcgetattr`` during
+``prompt_toolkit`` initialisation, ``tcsetpgrp`` when launching a
+pipeline, plain reads and writes when ``TOSTOP`` is set — fires
+``SIGTTIN`` or ``SIGTTOU``. There are two failure modes that follow:
+
+1. **asyncio wakeup pipe overflow.** Python routes signals to a
+   non-blocking self-pipe so the main event loop can wake up when
+   one arrives. If signals arrive faster than the loop drains the
+   pipe — which happens instantly under a startup storm — the C-level
+   signal handler's write to the pipe fails and raises::
+
+       BlockingIOError: [Errno 11] Resource temporarily unavailable
+
+   xonsh startup crashes.
+
+2. **termios EINTR.** Even when the storm is under control,
+   low-frequency signals (``SIGCHLD``, ``SIGWINCH``, …) still arrive
+   while ``prompt_toolkit`` calls ``termios.tcsetattr`` to switch the
+   terminal into raw mode. The C call returns ``EINTR``, which
+   ``tcsetattr`` surfaces as::
+
+       termios.error: (4, 'Interrupted system call')
+
+Users in the affected environments used to work around this by
+running xonsh under a wrapper that installed ``SIG_IGN`` for
+``SIGTTIN`` / ``SIGTTOU`` before importing xonsh. That works, but
+it is a workaround: the kernel still considers xonsh background, job
+control is still subtly wrong, ``SIG_IGN`` is inherited through
+``exec`` and affects child processes, and the wakeup-pipe race can
+still bite if a signal storm recurs after the fallback handler is
+re-installed.
+
+What xonsh does now
+-------------------
+
+On POSIX, during ``main_xonsh``, xonsh runs the bash-style handshake
+in :func:`xonsh.main._acquire_controlling_terminal`:
+
+* It uses **stderr** (file descriptor 2) as the TTY handle. This
+  matches :func:`xonsh.procs.jobs.give_terminal_to`, which also uses
+  FD 2 when xonsh later transfers the terminal between pipeline
+  groups.
+* It aborts cleanly — with no side effects — if any precondition
+  fails: Windows, non-TTY stderr, session leader (which cannot
+  ``setpgid`` itself), missing ``pthread_sigmask``, or the escape
+  hatch described below.
+* It blocks ``SIGTTOU``, ``SIGTTIN``, ``SIGTSTP`` and ``SIGCHLD`` in
+  the calling thread with ``pthread_sigmask``. ``SIGTTOU`` is the
+  critical one; without the block, ``tcsetpgrp`` below would send
+  ``SIGTTOU`` to xonsh itself and suspend it immediately.
+* It short-circuits to success if the TTY's foreground group is
+  already our process group — the handshake is not needed and the
+  restorer is *not* registered, so on shutdown we don't race with
+  the parent shell's own ``tcsetpgrp``.
+* Otherwise it calls ``setpgid(0, 0)`` followed by
+  ``tcsetpgrp(tty_fd, getpgrp())``, remembers the previous
+  foreground group, and records the fact that the handshake
+  succeeded.
+* It restores the signal mask in a ``finally`` block so any error
+  path leaves the process in a clean state.
+
+If the handshake succeeds, xonsh then installs a Python-level no-op
+handler for ``SIGTTIN`` and ``SIGTTOU`` — the kernel should not
+deliver those signals any more under normal operation, but a Python
+handler defends against races and, crucially, is **not** inherited
+across ``exec``, so child processes of xonsh see the normal
+``SIG_DFL`` disposition and their own job control keeps working.
+
+If the handshake fails — as it will in a sandbox where xonsh cannot
+become foreground — xonsh falls back to setting ``SIG_IGN`` for
+``SIGTTIN`` and ``SIGTTOU`` instead of the Python handler. That
+discards the signals at the kernel level, so they never reach
+Python's wakeup pipe and the ``BlockingIOError`` storm cannot happen.
+``SIG_IGN`` *is* inherited across ``exec``, but in a sandbox the
+children have the same TTY ownership problem anyway, so this is the
+right default.
+
+Shutdown: handing the TTY back
+-------------------------------
+
+When the handshake actually did change the foreground group, xonsh
+registers :func:`xonsh.main._release_controlling_terminal` with
+:mod:`atexit`. On shutdown this function calls ``tcsetpgrp`` to
+restore the previous foreground group — normally the parent shell —
+with ``SIGTTOU`` blocked during the call. If the parent has already
+reclaimed the TTY, or if the fd is no longer valid, the error is
+swallowed: this runs under ``atexit`` and raising would just make
+shutdown noisy. In every other case (handshake didn't run, handshake
+took the fast path because we were already foreground, handshake
+failed), the restorer is a no-op.
+
+When the handshake is a no-op
+------------------------------
+
+The handshake does nothing in any of these situations:
+
+* **Windows.** POSIX controlling terminals do not apply.
+* **Non-interactive invocations** where stderr is not a TTY:
+  ``xonsh script.xsh``, piped input, redirected stderr, and
+  script-from-stdin mode.
+* **xonsh is a session leader** (``getsid(0) == getpid()``). A
+  session leader cannot change its own process group id, and if it
+  is session leader it almost always already owns the TTY.
+* **xonsh is already the foreground group** — the fast path returns
+  immediately and does not register the atexit restorer.
+* **Missing** ``pthread_sigmask``, which is POSIX-only and absent on
+  exotic builds.
+
+Disabling the handshake
+------------------------
+
+Set ``XONSH_NO_FG_TAKEOVER=1`` in the parent environment (before
+launching xonsh) to skip the handshake entirely. This is an escape
+hatch for rare cases where taking over the foreground group
+conflicts with a parent process that expects xonsh to stay in its
+original process group. When the handshake is disabled, xonsh falls
+back to installing ``SIG_IGN`` for ``SIGTTIN`` / ``SIGTTOU`` —
+exactly the behaviour of the historical sandbox wrapper.
+
+.. code-block:: bash
+
+    # disable the takeover, e.g. when debugging unusual TTY setups
+    XONSH_NO_FG_TAKEOVER=1 xonsh
+
+What this does not fix
+-----------------------
+
+The handshake addresses the *foreground group* part of the problem.
+It does not work around every possible issue that can arise from
+running xonsh in an unusual TTY environment:
+
+* If the TTY belongs to a different session than xonsh (for example
+  a sandbox that calls ``setsid``), ``tcsetpgrp`` fails with
+  ``EPERM`` and the handshake cleanly declines. You are still on
+  the ``SIG_IGN`` fallback in that case.
+* ``termios.tcsetattr`` calls can still be interrupted by signals
+  other than ``SIGTTIN`` / ``SIGTTOU``. In practice a foreground
+  xonsh sees far fewer interruptions — most of the signal volume
+  was the ``SIGTT*`` storm — so the ``EINTR`` race is dramatically
+  less likely, but it is not impossible. If you hit it, wrap your
+  launcher to retry ``tcsetattr`` / ``tcgetattr`` on ``EINTR``.
+* Stealing a controlling terminal from a different session requires
+  ``TIOCSCTTY`` with ``CAP_SYS_ADMIN`` in the init user namespace,
+  which is not available in Flatpak or rootless containers. If you
+  really need a fresh controlling TTY, run xonsh under a PTY proxy
+  such as ``script(1)`` or inside ``tmux``.
