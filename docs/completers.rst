@@ -402,12 +402,16 @@ It is disabled by default. To enable, set the trigger prefixes:
     @ $XONSH_COMPLETER_SYMBOLS_PREFIX = ':::'
 
 Then type ``::`` followed by a keyword and press TAB to search for colorful
-emoji::
+emoji:
+
+.. code-block:: python
 
     echo "great job ::fire<TAB>"   →  echo "great job 🔥"
     echo "::cat<TAB>"              →  echo "🐈"
 
-For classic unicode symbols (arrows, math, stars), use ``:::``::
+For classic unicode symbols (arrows, math, stars), use ``:::``:
+
+.. code-block:: python
 
     echo ":::arrow<TAB>"  →  echo "→"
     echo ":::star<TAB>"   →  echo "★"
