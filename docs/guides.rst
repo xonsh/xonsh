@@ -1,3 +1,5 @@
+:orphan:
+
 
 Guides
 ======
@@ -29,7 +31,7 @@ Everyday User
     history
     customization
     keyboard_shortcuts
-    prompt_toolkit
+    prompt
     macros
 
 Creator

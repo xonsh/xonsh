@@ -77,7 +77,7 @@ particular, each argument in the macro call is matched up with the corresponding
 parameter annotation in the callable's signature.  For example, say we have
 an ``identity()`` function that annotates its sole argument as a string:
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def identity(x : str):
         return x
@@ -158,7 +158,7 @@ The top-level commas are not included in any argument.
 This behaves analogously to normal Python function calls. For instance,
 say we have the following ``g()`` function that accepts two arguments:
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def g(x : str, y : str):
         print('x = ' + repr(x))
@@ -271,7 +271,7 @@ If an argument does not have an annotation, ``str`` is selected.
 This makes the macro function call behave like the subprocess macros and
 context manager macros below. For example,
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def func(a, b : 'AST', c : compile):
         pass
@@ -290,7 +290,7 @@ done by annotating with a (kind, mode) tuple.  The first element can
 be any valid object or flag. The second element must be a corresponding
 mode as a string.  For instance,
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def gunc(d : (exec, 'single'), e : ('c', 'exec')):
         pass
@@ -316,7 +316,7 @@ For example, consider a macro which replaces all literal ``1`` digits
 with the literal ``2``, evaluates the modification, and returns the results.
 To eval, the macro will need to pull off its globals and locals:
 
-.. code-block:: xonsh
+.. code-block:: python
 
     def one_to_two(x : str):
         s = x.replace('1', '2')
@@ -534,6 +534,63 @@ that they allow you to select when, where, and what code is executed as a
 part of the xonsh language itself.
 
 The power is there; use it without reservation!
+
+Subprocess Expression Macro ``@!()``
+=====================================
+The ``@!()`` operator captures its content as a **literal string** and passes
+it as a single argument in subprocess mode. Unlike ``@()`` which evaluates
+the expression at runtime, ``@!()`` preserves the source text as-is.
+
+.. code-block:: xonshcon
+
+    @ echo @!(2+2)
+    2+2
+
+    @ echo @(2+2)
+    4
+
+The content can be any text -- Python expressions, shell commands, or
+arbitrary strings:
+
+.. code-block:: xonshcon
+
+    @ echo @!(x if x > 0 else -x)
+    x if x > 0 else -x
+
+    @ echo @!(ls -la /tmp)
+    ls -la /tmp
+
+    @ echo @!(f"{name}: {value}")
+    f"{name}: {value}"
+
+Syntax highlighting and autocompletion work inside ``@!()``.
+
+**Example: xontrib-pipeliner**
+
+The `xontrib-pipeliner <https://github.com/anki-code/xontrib-pipeliner>`_
+``pl`` command takes a Python expression as a string argument and applies it
+to each line of input. ``@!()`` is a natural fit:
+
+.. code-block:: xonshcon
+
+    @ echo 123 | pl @!(line + '!!!')
+    123!!!
+
+    @ ls | pl @!(line.upper())
+
+    @ cat data.json | pl @!(json.loads(line))
+
+Without ``@!()``, you would need to quote the expression manually, which
+is error-prone when the expression itself contains quotes:
+
+.. code-block:: xonshcon
+
+    # quoting gets messy:
+    @ echo 123 | pl "line + '!!!'"
+
+    # @!() just works:
+    @ echo 123 | pl @!(line + '!!!')
+
 
 Take Away
 =========

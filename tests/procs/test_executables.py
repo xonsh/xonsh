@@ -174,3 +174,33 @@ def test_stable_dir_cache(tmpdir, xession):
         cached_miss = _cached_dir_contains(stable_str, "nope.EXE")
         assert cached_miss is not None
         assert cached_miss[0] is False
+
+
+def test_stable_dir_cache_skips_directories(tmpdir, xession):
+    """A directory inside a cached $PATH entry must not be returned
+    by locate_executable — even when the directory has +x permission."""
+    stable = tmpdir.mkdir("stable")
+    # Create a subdirectory named "man" (like coreutils gnubin/man)
+    stable.mkdir("man")
+    # Create a real executable so the dir is not empty
+    exe_name = "ls.EXE" if ON_WINDOWS else "ls"
+    (f := stable / exe_name).write_text("binary", encoding="utf8")
+    os.chmod(f, 0o777)
+
+    stable_str = str(stable)
+    pathext = [".EXE"] if ON_WINDOWS else []
+
+    executables_mod._stable_prefixes_source = None
+    executables_mod._stable_prefixes = ()
+    _stable_dir_cache.clear()
+    executables_mod._stable_dir_reported.clear()
+
+    with xession.env.swap(
+        PATH=[stable_str],
+        PATHEXT=pathext,
+        XONSH_COMMANDS_CACHE_READ_DIR_ONCE=[stable_str],
+    ):
+        # "man" is a directory — must not be found
+        assert locate_executable("man") is None
+        # executable file must be found
+        assert locate_executable(exe_name) is not None

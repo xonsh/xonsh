@@ -2,8 +2,8 @@ from xonsh.built_ins import XSH
 
 env = XSH.env
 # adjust some paths
-env["PATH"].append("/home/scopatz/sandbox/bin")
-env["LD_LIBRARY_PATH"] = ["/home/scopatz/.local/lib", "/home/scopatz/miniconda3/lib"]
+env["PATH"].append("/home/snail/sandbox/bin")
+env["LD_LIBRARY_PATH"] = ["/home/snail/.local/lib", "/home/snail/miniconda3/lib"]
 
 # alias to quit AwesomeWM from the terminal
 def _quit_awesome(args, stdin=None):

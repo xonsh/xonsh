@@ -31,6 +31,7 @@ from xonsh.tools import (
     bool_to_str,
     check_for_partial_string,
     check_quotes,
+    columnize,
     deprecated,
     dynamic_cwd_tuple_to_str,
     ends_with_colon_token,
@@ -1276,6 +1277,8 @@ def test_is_bool_or_int(inp, exp):
         ("f", False),
         ("0", 0),
         ("10", 10),
+        ("-1", -1),
+        ("-42", -42),
     ],
 )
 def test_to_bool_or_int(inp, exp):
@@ -1524,6 +1527,19 @@ def test_to_dynamic_cwd_tuple(inp, exp):
     assert exp == obs
 
 
+def test_to_dynamic_cwd_tuple_empty_string():
+    with pytest.raises(ValueError):
+        to_dynamic_cwd_tuple("")
+
+
+def test_columnize_nrows_zero():
+    """Width so large that nrows hits 0 — must not infinite-loop."""
+    result = columnize(["a", "b"], width=100000)
+    assert len(result) == 1
+    assert "a" in result[0]
+    assert "b" in result[0]
+
+
 @pytest.mark.parametrize(
     "inp, exp",
     [((20.0, "c"), "20.0"), ((20.0, "%"), "20.0%"), ((float("inf"), "c"), "inf")],
@@ -1590,6 +1606,60 @@ def test_argvquote(st, esc, forced):
 @pytest.mark.parametrize("inp", ["no string here", ""])
 def test_partial_string_none(inp):
     assert check_for_partial_string(inp) == (None, None, None)
+
+
+CLASS_BLOCK_TPL = (
+    "class qwe:\n"
+    '    """Asd"""\n'
+    "    def __init__(self):\n"
+    "        # {comment}\n"
+    "        pass\n"
+)
+
+
+@pytest.mark.parametrize(
+    "comment",
+    [
+        "single quote ' here",
+        'one double quote " here',
+        "three single quotes ''' here",
+        'three double quotes """ here',
+        'two double quotes "" here',
+        "mixed quotes ' \" here",
+    ],
+)
+def test_partial_string_ignores_hash_comments(comment):
+    """Quotes inside `#` comments must not be mistaken for string starts.
+    The block has a complete `\"\"\"Asd\"\"\"` docstring; the result should
+    always describe that closed string, regardless of comment contents.
+    """
+    src = CLASS_BLOCK_TPL.format(comment=comment)
+    startix, endix, quote = check_for_partial_string(src)
+    assert quote == '"""'
+    assert startix is not None
+    assert endix is not None  # i.e. NOT a partial/unterminated string
+
+
+@pytest.mark.parametrize(
+    "src",
+    [
+        "# foo ' bar\n'real string'",
+        "x = 1 # nope '\ny = 'real'",
+        "# a '\n# b \"\nreal = 'str'",
+    ],
+)
+def test_partial_string_finds_real_string_after_comment(src):
+    """A real string on a line after a comment with stray quotes is found."""
+    startix, endix, quote = check_for_partial_string(src)
+    assert startix is not None
+    assert endix is not None
+    assert src[startix:endix].endswith(quote)
+
+
+def test_partial_string_hash_inside_string_is_not_a_comment():
+    """`#` inside a string literal must not be treated as a comment start."""
+    assert check_for_partial_string('"foo # bar"') == (0, 11, '"')
+    assert check_for_partial_string('"foo # bar') == (0, None, '"')
 
 
 @pytest.mark.parametrize(
@@ -1733,6 +1803,24 @@ def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xession):
         assert path == "~" + exp_end
 
 
+@pytest.mark.parametrize(
+    "inp, exp_expanded, exp_literal",
+    [
+        ("~/docs", os.path.expanduser("~") + "/docs", "~/docs"),
+        ("~", os.path.expanduser("~"), "~"),
+        ("x=~/path", "x=" + os.path.expanduser("~") + "/path", "x=~/path"),
+        ("no-tilde", "no-tilde", "no-tilde"),
+    ],
+)
+def test_expand_path_expanduser_toggle(inp, exp_expanded, exp_literal, xession):
+    """$XONSH_SUBPROC_ARG_EXPANDUSER controls ~ expansion in subprocess args."""
+    xession.env["XONSH_SUBPROC_ARG_EXPANDUSER"] = True
+    assert expand_path(inp) == exp_expanded
+
+    xession.env["XONSH_SUBPROC_ARG_EXPANDUSER"] = False
+    assert expand_path(inp) == exp_literal
+
+
 def test_swap_values():
     orig = {"x": 1}
     updates = {"x": 42, "y": 43}
@@ -1865,6 +1953,63 @@ def test_iglobpath_dotfiles_recursive(xession):
     g = d + "/**"
     files = list(iglobpath(g, include_dotfiles=True))
     assert d + "/bin/.someotherdotfile" in files
+
+
+@pytest.fixture
+def glob_tree(tmp_path):
+    """Create a directory tree for glob tests.
+
+    Structure:
+        tmp/f.ile
+        tmp/.hidden
+        tmp/a/f.ile
+        tmp/a/.hidden
+        tmp/a/b/f.ile
+    """
+    (tmp_path / "a" / "b").mkdir(parents=True)
+    (tmp_path / "f.ile").touch()
+    (tmp_path / ".hidden").touch()
+    (tmp_path / "a" / "f.ile").touch()
+    (tmp_path / "a" / ".hidden").touch()
+    (tmp_path / "a" / "b" / "f.ile").touch()
+    return tmp_path
+
+
+def _glob(glob_tree, pattern, **kwargs):
+    return sorted(iglobpath(str(glob_tree / pattern), **kwargs))
+
+
+def _paths(glob_tree, *relative):
+    return sorted(str(glob_tree / r) for r in relative)
+
+
+class TestIglobpathRecursive:
+    """Tests for ** recursive globbing (issue #4538)."""
+
+    def test_zero_intermediate_dirs(self, glob_tree, xession):
+        """**/f.ile must match f.ile at root (zero intermediate dirs)."""
+        assert _glob(glob_tree, "**/f.ile") == _paths(
+            glob_tree, "a/b/f.ile", "a/f.ile", "f.ile"
+        )
+
+    def test_trailing_doublestar(self, glob_tree, xession):
+        """/** must match all entries recursively."""
+        files = _glob(glob_tree, "**")
+        for expected in ["a", "a/b", "a/b/f.ile", "a/f.ile", "f.ile"]:
+            assert str(glob_tree / expected) in files
+
+    def test_doublestar_with_wildcard(self, glob_tree, xession):
+        """/**/*.ile must also match at root level."""
+        assert _glob(glob_tree, "**/*.ile") == _paths(
+            glob_tree, "a/b/f.ile", "a/f.ile", "f.ile"
+        )
+
+    @skip_if_on_windows
+    def test_dotfiles_zero_intermediate_dirs(self, glob_tree, xession):
+        """**/. pattern with include_dotfiles must match dotfiles at root."""
+        files = _glob(glob_tree, "**/.*", include_dotfiles=True)
+        assert str(glob_tree / ".hidden") in files
+        assert str(glob_tree / "a/.hidden") in files
 
 
 def test_iglobpath_empty_str(monkeypatch, xession):

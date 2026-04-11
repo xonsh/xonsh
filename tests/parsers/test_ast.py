@@ -95,6 +95,11 @@ def test_multilline_no_transform(xonsh_execer_parse):
     if not kw and b:
         pass
 """,
+        """def f(x, /):
+    if not x:
+        return 0
+    return x + 1
+""",
         """import os
 path = '/path/to/wakka'
 paths = []
@@ -123,6 +128,25 @@ def test_unmodified(inp, xonsh_execer_parse):
 )
 def test_whitespace_subproc(test_input, xonsh_execer_parse):
     assert xonsh_execer_parse(test_input)
+
+
+def test_paren_boolop_no_subshell(xonsh_execer):
+    """``(cd subdir && ls)`` must not create a subshell that duplicates ``cd``.
+
+    Regression: the non-greedy ``subproc_toks`` result for ``ls`` was falsely
+    rejected by the consistency check because ``maxcol`` captured the closing
+    ``)``. This caused a greedy fallback that wrapped the entire line into
+    ``xonsh -c`` subshell, executing ``cd`` twice.
+    """
+    import builtins
+
+    ctx = set(dir(builtins))
+    tree = xonsh_execer.parse("(cd subdir && ls)\n", ctx=ctx)
+    assert tree is not None
+    # The AST should not contain 'xonsh' or '-c' strings (no subshell)
+    for node in pyast.walk(tree):
+        if isinstance(node, pyast.Constant) and node.value == "xonsh":
+            pytest.fail("Found subshell 'xonsh -c' in AST — cd would run twice")
 
 
 @pytest.mark.parametrize(

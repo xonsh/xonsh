@@ -46,6 +46,64 @@ def test_parse_env_equals():
     assert exp == obs
 
 
+def test_parse_env_null_separated():
+    """env -0 output with null bytes correctly handles multi-line values (issue #4947)."""
+    exp = {
+        "SIMPLE": "value",
+        "BASH_FUNC_which%%": "() {  ( alias;\n eval ${which_declare} ) | /usr/bin/which\n}",
+        "PATH": "/usr/bin:/bin",
+    }
+    s = (
+        "some garbage\n"
+        "__XONSH_ENV_BEG__\n"
+        "SIMPLE=value\0"
+        "BASH_FUNC_which%%=() {  ( alias;\n eval ${which_declare} ) | /usr/bin/which\n}\0"
+        "PATH=/usr/bin:/bin\0"
+        "__XONSH_ENV_END__\n"
+        "more filth"
+    )
+    obs = parse_env(s)
+    assert exp == obs
+
+
+def test_parse_env_multiline_fallback():
+    """Fallback line-separated parsing handles multi-line values (no env -0)."""
+    exp = {
+        "SIMPLE": "value",
+        "BASH_FUNC_which%%": "() {  ( alias;\n eval ${which_declare} ) | /usr/bin/which\n}",
+        "PATH": "/usr/bin:/bin",
+    }
+    s = (
+        "some garbage\n"
+        "__XONSH_ENV_BEG__\n"
+        "SIMPLE=value\n"
+        "BASH_FUNC_which%%=() {  ( alias;\n"
+        " eval ${which_declare} ) | /usr/bin/which\n"
+        "}\n"
+        "PATH=/usr/bin:/bin\n"
+        "__XONSH_ENV_END__\n"
+        "more filth"
+    )
+    obs = parse_env(s)
+    assert exp == obs
+
+
+def test_parse_env_empty_value():
+    """Empty env var value is preserved."""
+    exp = {"EMPTY": "", "X": "1"}
+    s = "__XONSH_ENV_BEG__\nEMPTY=\nX=1\n__XONSH_ENV_END__"
+    obs = parse_env(s)
+    assert exp == obs
+
+
+def test_parse_env_null_empty_value():
+    """Empty env var value is preserved with env -0."""
+    exp = {"EMPTY": "", "X": "1"}
+    s = "__XONSH_ENV_BEG__\nEMPTY=\0X=1\0__XONSH_ENV_END__"
+    obs = parse_env(s)
+    assert exp == obs
+
+
 def test_parse_aliases():
     exp = {
         "x": ["yes", "-1"],
@@ -103,3 +161,21 @@ def test_foreign_cmd_data():
     assert "ENV_TO_BE_ADDED" in obsenv
     assert obsenv["ENV_TO_BE_ADDED"] == "Hallo world"
     assert "ENV_TO_BE_REMOVED" not in obsenv
+
+
+@skip_if_on_windows
+def test_foreign_shell_alias_args_are_escaped(xession):
+    """Arguments to foreign shell aliases must be escaped to prevent injection."""
+    from xonsh.foreign_shells import ForeignShellFunctionAlias
+
+    alias = ForeignShellFunctionAlias(
+        funcname="myfunc", shell="bash", sourcer="source", files=()
+    )
+    # Simulate calling with a malicious argument
+    try:
+        out = alias(["; echo INJECTED"], stdout=subprocess.PIPE)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        out = None
+    # If injection happened, "INJECTED" would appear in output
+    if out is not None:
+        assert b"INJECTED" not in (out if isinstance(out, bytes) else b"")

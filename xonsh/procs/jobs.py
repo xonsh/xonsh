@@ -200,7 +200,10 @@ else:
                 except Exception:
                     pass
         else:
-            os.killpg(job["pgrp"], signal)
+            try:
+                os.killpg(job["pgrp"], signal)
+            except (ProcessLookupError, PermissionError):
+                pass
 
 
 if ON_WINDOWS:
@@ -394,13 +397,28 @@ def get_task(tid):
 def _clear_dead_jobs():
     to_remove = set()
     tasks = get_tasks()
-    for tid in tasks:
-        proc = get_task(tid)["obj"]
+    # list() creates a copy so we iterate over a static snapshot, not the
+    # live deque. This function may be called from the SIGHUP signal
+    # handler which runs between bytecodes on the main thread. Without
+    # the copy, modifying the deque/dict while the main thread iterates
+    # them causes RuntimeError.
+    for tid in list(tasks):
+        try:
+            proc = get_task(tid)["obj"]
+        except KeyError:
+            to_remove.add(tid)
+            continue
         if proc is None or proc.poll() is not None:
             to_remove.add(tid)
-    for job in to_remove:
-        tasks.remove(job)
-        del get_jobs()[job]
+    if to_remove:
+        # Replace the deque contents atomically to avoid racing with
+        # the main thread's iteration over the same deque.
+        alive = collections.deque(tid for tid in tasks if tid not in to_remove)
+        tasks.clear()
+        tasks.extend(alive)
+        jobs = get_jobs()
+        for job in to_remove:
+            jobs.pop(job, None)
 
 
 def format_job_string(num: int, format="dict") -> str:
@@ -529,7 +547,12 @@ def hup_all_jobs():
     Send SIGHUP to all child processes (called when exiting xonsh).
     """
     _clear_dead_jobs()
-    for job in get_jobs().values():
+    # list() creates a copy so we iterate over a static list, not the
+    # live dict. This is called from the SIGHUP signal handler which
+    # runs between bytecodes on the main thread. If the main thread is
+    # iterating get_jobs() at that moment, modifying the live dict would
+    # cause RuntimeError.
+    for job in list(get_jobs().values()):
         _hup(job)
 
 

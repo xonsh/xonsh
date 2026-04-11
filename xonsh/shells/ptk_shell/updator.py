@@ -88,18 +88,21 @@ class AsyncPrompt:
         if not self.tokens:
             print(f"Warn: AsyncPrompt is created without tokens - {self.name}")
             return
-        for fut in concurrent.futures.as_completed(self.futures):
+        # Snapshot to avoid RuntimeError if stop() clears self.futures
+        # from the main thread while we iterate here.
+        futures = dict(self.futures)
+        for fut in concurrent.futures.as_completed(futures):
             try:
                 val = fut.result()
             except concurrent.futures.CancelledError:
                 continue
+            except Exception:
+                from xonsh.tools import print_exception
 
-            if fut not in self.futures:
-                # rare case where the future is completed but the container is already cleared
-                # because new prompt is called
+                print_exception("Exception in async prompt field callback; ignored.")
                 continue
 
-            placeholder, idx, spec, conv = self.futures[fut]
+            placeholder, idx, spec, conv = futures[fut]
             # example: placeholder="{field}", idx=10, spec="env: {}"
 
             if isinstance(idx, int):
@@ -129,14 +132,24 @@ class AsyncPrompt:
             formatted_tokens = tokenize_ansi(
                 PygmentsTokens(partial_color_tokenize(new_prompt))
             )
-            setattr(self.session, self.name, formatted_tokens)
-            self.session.app.invalidate()
+            app = self.session.app
+
+            def _update_in_main():
+                setattr(self.session, self.name, formatted_tokens)
+                app.invalidate()
+
+            if app.loop is not None:
+                app.loop.call_soon_threadsafe(_update_in_main)
+            else:
+                _update_in_main()
 
         self.timer = threading.Timer(XSH.env["ASYNC_INVALIDATE_INTERVAL"], _invalidate)
         self.timer.start()
 
     def stop(self):
         """Stop any running threads"""
+        if self.timer:
+            self.timer.cancel()
         for fut in self.futures:
             fut.cancel()
         self.futures.clear()
@@ -179,9 +192,18 @@ class PromptUpdator:
         return self.prompts[prompt_name]
 
     def add_attrs(self):
-        for attr, val in self.shell.get_lazy_ptk_kwargs():
-            setattr(self.shell.prompter, attr, val)
-        self.shell.prompter.app.invalidate()
+        attrs = list(self.shell.get_lazy_ptk_kwargs())
+        app = self.shell.prompter.app
+
+        def _update_in_main():
+            for attr, val in attrs:
+                setattr(self.shell.prompter, attr, val)
+            app.invalidate()
+
+        if app.loop is not None:
+            app.loop.call_soon_threadsafe(_update_in_main)
+        else:
+            _update_in_main()
 
     def start(self):
         """after ptk prompt is created, update it in background."""

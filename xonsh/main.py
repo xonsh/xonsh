@@ -621,17 +621,30 @@ def main_xonsh(args):
                 # Add script directory to sys.path[0], matching CPython behavior.
                 # See https://docs.python.org/3/library/sys_path_init.html
                 script_dir = os.path.dirname(path)
+                old_sys_path = sys.path.copy()
                 sys.path.insert(0, script_dir)
-                exc_info = run_script_with_cache(
-                    args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
-                )
-                sys.path.remove(script_dir)
+                try:
+                    exc_info = run_script_with_cache(
+                        args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
+                    )
+                finally:
+                    sys.path[:] = old_sys_path
             else:
                 print(f"xonsh: {args.file}: No such file.")
                 exit_code = 1
         elif args.mode == XonshMode.script_from_stdin:
             # run a script given on stdin
             code = sys.stdin.read()
+            # Reopen stdin from /dev/tty so that child processes
+            # (e.g. fzf, vim) can interact with the terminal instead
+            # of inheriting the exhausted pipe.
+            try:
+                tty_fd = os.open("/dev/tty", os.O_RDONLY)
+                os.dup2(tty_fd, 0)
+                os.close(tty_fd)
+                sys.stdin = open(0, closefd=False)
+            except OSError:
+                pass  # no controlling terminal (cron, CI, etc.)
             exc_info = run_code_with_cache(
                 code, "<stdin>", shell.execer, glb=shell.ctx, loc=None, mode="exec"
             )
@@ -691,7 +704,7 @@ def main_context(argv=None):
 def setup(
     ctx=None,
     shell_type="none",
-    env=(("RAISE_SUBPROC_ERROR", True),),
+    env=(("XONSH_SUBPROC_CMD_RAISE_ERROR", True),),
     aliases=(),
     xontribs=(),
     threadable_predictors=(),

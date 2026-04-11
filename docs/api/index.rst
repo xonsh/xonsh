@@ -57,8 +57,8 @@ For those of you who want the gritty details.
     xonsh.lib
     xonsh.tools
     xonsh.platform
-    xonsh.lazyjson
-    xonsh.lazyasd
+    xonsh.lib.lazyjson
+    xonsh.lib.lazyasd
     xonsh.lib.openpy
     xonsh.foreign_shells
     xonsh.commands_cache

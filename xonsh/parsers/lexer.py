@@ -344,6 +344,7 @@ def special_handlers():
     _make_matcher_handler("!(", "BANG_LPAREN", False, ")", sh)
     _make_matcher_handler("![", "BANG_LBRACKET", False, "]", sh)
     _make_matcher_handler("@(", "AT_LPAREN", True, ")", sh)
+    _make_matcher_handler("@!(", "ATBANG_LPAREN", False, ")", sh)
     _make_matcher_handler("@$(", "ATDOLLAR_LPAREN", False, ")", sh)
     return sh
 
@@ -497,7 +498,7 @@ class Lexer:
         """Splits a string into a list of strings which are whitespace-separated
         tokens.
         """
-        self.input(s)
+        self.input(s, is_subproc=True)
         elements = []
         l = c = -1
         ws = "WS"
@@ -542,6 +543,7 @@ class Lexer:
                     "LBRACE",
                     "RBRACE",  # { }
                     "AT_LPAREN",  # @(
+                    "ATBANG_LPAREN",  # @!(
                     "BANG_LPAREN",  # !(
                     "BANG_LBRACKET",  # ![
                     "DOLLAR_LPAREN",  # $(

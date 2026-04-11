@@ -8,6 +8,7 @@ import types
 
 from xonsh.parser import Parser
 from xonsh.parsers.ast import CtxAwareTransformer
+from xonsh.parsers.base import wrap_subproc_raise_checks
 from xonsh.tools import (
     balanced_parens,
     ends_with_colon_token,
@@ -54,7 +55,9 @@ class Execer:
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
 
-    def parse(self, input, ctx, mode="exec", filename=None, transform=True):
+    def parse(
+        self, input, ctx, mode="exec", filename=None, transform=True, user_names=None
+    ):
         """Parses xonsh code in a context-aware fashion. For context-free
         parsing, please use the Parser class directly or pass in
         transform=False.
@@ -100,8 +103,19 @@ class Execer:
         elif isinstance(ctx, cabc.Mapping):
             ctx = set(ctx.keys())
         tree = self.ctxtransformer.ctxvisit(
-            tree, input, ctx, mode=mode, debug_level=self.debug_level
+            tree,
+            input,
+            ctx,
+            mode=mode,
+            debug_level=self.debug_level,
+            user_names=user_names,
         )
+        # [Phase 3]
+        # Wrap outermost subproc-containing BoolOps and standalone
+        # "uncaptured" subproc helper Calls (bare commands, ![...],
+        # $[...]) so their final returncode is checked at runtime
+        # against $XONSH_SUBPROC_RAISE_ERROR.
+        tree = wrap_subproc_raise_checks(tree)
         return tree
 
     def compile(
@@ -127,8 +141,17 @@ class Execer:
                 frame = frame.f_back
             glbs = frame.f_globals if glbs is None else glbs
             locs = frame.f_locals if locs is None else locs
-        ctx = set(dir(builtins)) | set(glbs.keys()) | set(locs.keys())
-        tree = self.parse(input, ctx, mode=mode, filename=filename, transform=transform)
+            del frame  # Fix memory leak
+        user_names = set(glbs.keys()) | set(locs.keys())
+        ctx = set(dir(builtins)) | user_names
+        tree = self.parse(
+            input,
+            ctx,
+            mode=mode,
+            filename=filename,
+            transform=transform,
+            user_names=user_names,
+        )
         if tree is None:
             return (
                 compile("pass", filename, mode) if compile_empty_tree else None
@@ -139,7 +162,7 @@ class Execer:
             # Some syntax errors do not occur during parsing, but only later during compiling,
             # such as a "'return' outside function", or some validations regarding the match statement.
             # In such a case, the offending line of source code (e.text) is not attached to the exception.
-            if e.text is None:
+            if e.text is None and e.lineno is not None:
                 lines = input.splitlines()
                 i = max(
                     0, min(e.lineno - 1, len(lines) - 1)

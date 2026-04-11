@@ -437,12 +437,13 @@ class ProcProxyThread(threading.Thread):
             if self.env and self.env.get("__ALIAS_NAME"):
                 alias_stack += ":" + self.env["__ALIAS_NAME"]
 
+            alias_env = {}
             with (
                 STDOUT_DISPATCHER.register(sp_stdout),
                 STDERR_DISPATCHER.register(sp_stderr),
                 xt.redirect_stdout(STDOUT_DISPATCHER),
                 xt.redirect_stderr(STDERR_DISPATCHER),
-                XSH.env.swap(self.env, __ALIAS_STACK=alias_stack),
+                XSH.env.swap(self.env, overlay=alias_env, __ALIAS_STACK=alias_stack),
             ):
                 r = run_with_partial_args(
                     self.f,
@@ -453,6 +454,11 @@ class ProcProxyThread(threading.Thread):
                         "stderr": sp_stderr,
                         "spec": spec,
                         "stack": spec.stack,
+                        "alias_name": getattr(self.f, "__alias_name__", None),
+                        "called_alias_name": self.env.get("__ALIAS_NAME")
+                        if self.env
+                        else None,
+                        "env": alias_env,
                     },
                 )
         except SystemExit as e:
@@ -481,29 +487,32 @@ class ProcProxyThread(threading.Thread):
         safe_flush(sp_stdout)
         safe_flush(sp_stderr)
         self.returncode = parse_proxy_return(r, sp_stdout, sp_stderr)
-        if not last_in_pipeline:
-            # Close wrappers before closing raw fds to avoid
-            # "Bad file descriptor" on finalization in Python 3.14+.
-            safe_fdclose(sp_stdout)
-            safe_fdclose(sp_stderr)
-            # Close write ends via PipeChannel to signal EOF to downstream
+        try:
+            if not last_in_pipeline:
+                # Close wrappers before closing raw fds to avoid
+                # "Bad file descriptor" on finalization in Python 3.14+.
+                safe_fdclose(sp_stdout)
+                safe_fdclose(sp_stderr)
+                # Close write ends via PipeChannel to signal EOF to downstream
+                for ch in spec.pipe_channels:
+                    ch.close_writer()
+                if self._stdout_pipe:
+                    self._stdout_pipe.close_writer()
+                if self._stderr_pipe:
+                    self._stderr_pipe.close_writer()
+                return
+            # clean up
+            for handle in (sp_stdout, sp_stderr):
+                safe_fdclose(handle, cache=self._closed_handle_cache)
+            # Close write ends via PipeChannel to signal EOF to readers
             for ch in spec.pipe_channels:
                 ch.close_writer()
             if self._stdout_pipe:
                 self._stdout_pipe.close_writer()
             if self._stderr_pipe:
                 self._stderr_pipe.close_writer()
-            return
-        # clean up
-        for handle in (sp_stdout, sp_stderr):
-            safe_fdclose(handle, cache=self._closed_handle_cache)
-        # Close write ends via PipeChannel to signal EOF to readers
-        for ch in spec.pipe_channels:
-            ch.close_writer()
-        if self._stdout_pipe:
-            self._stdout_pipe.close_writer()
-        if self._stderr_pipe:
-            self._stderr_pipe.close_writer()
+        finally:
+            self._close_devnull()
 
     def _wait_and_getattr(self, name):
         """make sure the instance has a certain attr, and return it."""
@@ -568,6 +577,11 @@ class ProcProxyThread(threading.Thread):
         if not hasattr(self, "_devnull"):
             self._devnull = os.open(os.devnull, os.O_RDWR)
         return self._devnull
+
+    def _close_devnull(self):
+        if hasattr(self, "_devnull"):
+            os.close(self._devnull)
+            del self._devnull
 
     def _get_handles(self, stdin, stdout, stderr):
         """Construct and return tuple with IO objects:
@@ -689,7 +703,8 @@ class ProcProxy:
         stderr = self._pick_buf(self.stderr, sys.stderr, enc, err)
         # run the actual function
         try:
-            with XSH.env.swap(self.env):
+            alias_env = {}
+            with XSH.env.swap(self.env, overlay=alias_env):
                 r = run_with_partial_args(
                     self.f,
                     {
@@ -699,6 +714,11 @@ class ProcProxy:
                         "stderr": stderr,
                         "spec": spec,
                         "stack": spec.stack,
+                        "alias_name": getattr(self.f, "__alias_name__", None),
+                        "called_alias_name": self.env.get("__ALIAS_NAME")
+                        if self.env
+                        else None,
+                        "env": alias_env,
                     },
                 )
         except SystemExit as e:

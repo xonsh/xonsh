@@ -1,3 +1,5 @@
+:orphan:
+
 Try It Now!
 ===========
 Try out xonsh right here in the browser. Just press the "Run This"

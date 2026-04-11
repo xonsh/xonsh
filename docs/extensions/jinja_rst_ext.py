@@ -61,7 +61,7 @@ class FixEnvVarSectionIds(SphinxTransform):
     default_priority = 600
 
     def apply(self):
-        for section in self.document.traverse(nodes.section):
+        for section in self.document.findall(nodes.section):
             if not section.children:
                 continue
             title_node = section.children[0]

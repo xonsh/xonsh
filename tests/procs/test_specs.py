@@ -182,7 +182,7 @@ def test_callias_captured_redirect(xonsh_session, tmpdir):
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_interrupted_process_returncode(xonsh_session, captured, interactive):
     xonsh_session.env["XONSH_INTERACTIVE"] = interactive
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
     cmd = [cmd_sig("SIGINT")]
     specs = cmds_to_specs(cmd, captured="stdout")
     (p := _run_command_pipeline(specs, cmd)).end()
@@ -192,7 +192,7 @@ def test_interrupted_process_returncode(xonsh_session, captured, interactive):
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
 def test_proc_raise_subproc_error(xonsh_session):
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = False
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
 
     specs = cmds_to_specs(cmd := [["ls"]], captured="stdout")
     specs[-1].raise_subproc_error = True
@@ -224,7 +224,7 @@ def test_proc_raise_subproc_error(xonsh_session):
         exception = e
     assert isinstance(exception, CalledProcessError)
 
-    xonsh_session.env["RAISE_SUBPROC_ERROR"] = True
+    xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = True
     specs = cmds_to_specs(cmd := [["ls", "nofile"]], captured="stdout")
     exception = None
     try:
@@ -683,6 +683,34 @@ def test_alias_return_command_eval_inside(xession):
     assert spec.cmd == ["sudo", "echo", "1"]
     assert spec.alias_name == "xsudo"
     assert spec.threadable is True
+
+
+def test_alias_env_overlay(xession):
+    """env overlay shadows global env during alias, global writes persist."""
+    xession.env["GLOBAL"] = "before"
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        xession.env["GLOBAL"] = "global_write"
+        alias_env["GLOBAL"] = "overlay"
+        assert xession.env["GLOBAL"] == "overlay"
+    assert xession.env["GLOBAL"] == "global_write"
+
+
+def test_return_command_alias_env(xession):
+    """return_command alias passes env overlay to the returned command."""
+
+    @xession.aliases.register("rca")
+    @xession.aliases.return_command
+    def _rca(args, env=None):
+        env["LOCAL"] = "123"
+        xession.env["GLOBAL"] = "321"
+        return ["echo", "ok"]
+
+    spec = cmds_to_specs([["rca"]], captured="object")[-1]
+    assert spec.env is not None
+    assert spec.env.get("LOCAL") == "123"
+    assert xession.env["GLOBAL"] == "321"
+    assert "LOCAL" not in xession.env
 
 
 def test_auto_cd(xession, tmpdir):

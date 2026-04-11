@@ -37,6 +37,13 @@ class Routes:
         tree = t.etree.fromstring(html)
         self.err_msgs.append(tree)
 
+    _external_links = [
+        ("Docs", "https://xon.sh/dev/contents.html"),
+        ("Xontribs", "https://github.com/topics/xontrib"),
+        ("Github", "https://github.com/xonsh/xonsh"),
+        ("Sponsor", "https://github.com/sponsors/xonsh"),
+    ]
+
     def get_nav_links(self):
         for page in self.registry.values():
             klass = []
@@ -46,6 +53,8 @@ class Routes:
             title = page.nav_title() if callable(page.nav_title) else page.nav_title
             if title:
                 yield t.nav_item(*klass)[t.nav_link(href=page.path)[title],]
+        for title, url in self._external_links:
+            yield t.nav_item()[t.nav_link(href=url, target="_blank")[title],]
 
     def get_err_msgs(self):
         if not self.err_msgs:
@@ -61,7 +70,7 @@ class Routes:
     @staticmethod
     def get_display(display):
         try:
-            display = t.etree.fromstring(display)
+            display = t.etree.fromstring(f"<div>{display}</div>")
         except Exception as ex:
             logging.error(f"Failed to parse color-display {ex!r}. {display!r}")
             display = t.pre()[display]
@@ -147,6 +156,7 @@ class PromptsPage(Routes):
         prompts = xonsh_data.render_prompts(self.env)
         self.current = next(prompts)
         self.prompts = dict(prompts)
+        self.card_width = self.prompts.pop("__max_width__", 40)
         self.var_name = "PROMPT"
         # todo: support updating RIGHT_PROMPT, BOTTOM_TOOLBAR
 
@@ -201,8 +211,9 @@ class PromptsPage(Routes):
         return t.row()[t.col()[t.form(method="post")[card]],]
 
     def get_cols(self):
+        style = f"min-width: {self.card_width}ch"
         for name, prompt in self.prompts.items():
-            yield t.row()[t.col()[self.to_card(name, prompt["display"]),]]
+            yield t.div("col-auto", style=style)[self.to_card(name, prompt["display"]),]
 
     def get(self):
         # banner
@@ -211,7 +222,8 @@ class PromptsPage(Routes):
         yield t.br()
         yield t.br()
         # rest
-        yield from self.get_cols()
+        cols = list(self.get_cols())
+        yield t.row()[cols]
 
     def post(self, data: dict[str, str]):
         if prompt := data.get(self.var_name):
@@ -375,4 +387,18 @@ class AliasesPage(Routes):
         ]
 
     def get(self):
+        yield t.card()[
+            t.card_body()[
+                t.card_title()["Docs"],
+                t.card_body()[
+                    t.li()[t.a(href="https://xon.sh/tutorial.html")["Tutorial"]],
+                    t.li()[
+                        t.a(href="https://xon.sh/callable_aliases.html")[
+                            "Callable Aliases"
+                        ]
+                    ],
+                ],
+            ]
+        ]
+        yield t.br()
         yield t.div("table-responsive")[self.get_table()]

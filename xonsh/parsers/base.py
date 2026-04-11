@@ -4,8 +4,9 @@ import itertools
 import os
 import re
 import textwrap
-import time
+import threading
 import typing as tp
+from ast import iter_fields as _ast_iter_fields
 from ast import parse as pyparse
 from collections.abc import Iterable, Mapping, Sequence
 from threading import Thread
@@ -24,6 +25,216 @@ RE_SEARCHPATH = LazyObject(lambda: re.compile(SearchPath), globals(), "RE_SEARCH
 RE_STRINGPREFIX = LazyObject(
     lambda: re.compile(StringPrefix), globals(), "RE_STRINGPREFIX"
 )
+
+
+_SUBPROC_HELPER_NAMES = frozenset(
+    {
+        "subproc_captured_stdout",
+        "subproc_captured_inject",
+        "subproc_captured_object",
+        "subproc_captured_hiddenobject",
+        "subproc_uncaptured",
+    }
+)
+
+# Subset of subproc helpers whose *standalone* (statement-level) result is
+# subject to ``$XONSH_SUBPROC_RAISE_ERROR``.  Per spec only the explicit
+# "user takes full responsibility" form ``!(...)`` (``subproc_captured_object``)
+# is excluded — every other form raises on a non-zero return code by default:
+# bare commands, ``![...]``, ``$[...]``, ``$(...)``, ``@$(...)``.
+_RAISING_SUBPROC_HELPERS = frozenset(
+    {
+        "subproc_uncaptured",
+        "subproc_captured_hiddenobject",
+        "subproc_captured_stdout",
+        "subproc_captured_inject",
+    }
+)
+
+
+def _is_subproc_helper_call(node):
+    """True if `node` is an `ast.Call` to a `__xonsh__.subproc_*` helper."""
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    return (
+        isinstance(func, ast.Attribute)
+        and func.attr in _SUBPROC_HELPER_NAMES
+        and isinstance(func.value, ast.Name)
+        and func.value.id == "__xonsh__"
+    )
+
+
+def _is_raising_subproc_helper_call(node):
+    """True for direct calls to ``subproc_uncaptured`` /
+    ``subproc_captured_hiddenobject``.  These are the "uncaptured" forms
+    that should raise on non-zero rc when ``$XONSH_SUBPROC_RAISE_ERROR``
+    is True.
+    """
+    return _is_subproc_helper_call(node) and node.func.attr in _RAISING_SUBPROC_HELPERS
+
+
+def _is_subproc_check_boolop_call(node):
+    """True if `node` is already wrapped in ``subproc_check_boolop``."""
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "subproc_check_boolop"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "__xonsh__"
+    )
+
+
+def _mark_boolop_subproc_values(boolop):
+    """Tag subproc helper Calls that are direct ``values`` of a BoolOp.
+
+    For ``echo 1 && echo 2 ; echo 3`` the parser builds
+    ``BoolOp(And, [Call(subproc_*), Call(subproc_*)])`` plus a separate
+    standalone ``Call(subproc_*)`` for ``echo 3``.  We want the two calls
+    inside the BoolOp to know they participate in a logical chain (so the
+    runtime can let the chain short-circuit on returncode instead of
+    raising on the first failure), and leave the standalone call alone.
+
+    Nested BoolOps already mark their own values when they are constructed,
+    so this function does *not* recurse — it only injects the keyword on
+    direct subproc-helper children.
+    """
+    for value in boolop.values:
+        if not _is_subproc_helper_call(value):
+            continue
+        # Avoid duplicating the keyword if a parent BoolOp re-marks us.
+        if any(kw.arg == "in_boolop" for kw in value.keywords):
+            continue
+        lineno = getattr(value, "lineno", 1)
+        col = getattr(value, "col_offset", 0)
+        value.keywords.append(
+            ast.keyword(
+                arg="in_boolop",
+                value=ast.Constant(value=True, lineno=lineno, col_offset=col),
+                lineno=lineno,
+                col_offset=col,
+            )
+        )
+
+
+def _boolop_contains_subproc(node):
+    """True if the AST subtree rooted at ``node`` contains at least one
+    subproc helper Call.  Used to skip wrapping pure-Python BoolOps such
+    as ``if x and y:``.
+    """
+    for child in ast.walk(node):
+        if _is_subproc_helper_call(child):
+            return True
+    return False
+
+
+class _SubprocChainRaiseWrapper:
+    """AST post-pass that wraps two kinds of nodes in
+    ``__xonsh__.subproc_check_boolop(...)`` so the runtime can enforce
+    ``$XONSH_SUBPROC_RAISE_ERROR``:
+
+    1. The **outermost** ``BoolOp`` containing subproc helper calls
+       (i.e. ``cmd1 && cmd2`` chains).  Only the outermost is wrapped:
+       inner BoolOps must let their (possibly falsy) result propagate
+       up so an outer ``||`` fallback can still run.
+
+    2. **Standalone** statement-level Calls to "raising" subproc helpers
+       (``subproc_uncaptured`` / ``subproc_captured_hiddenobject`` —
+       i.e. bare commands and ``![...]``/``$[...]``).  This is what
+       makes ``ls nono`` raise by default.  Captured forms (``$()``,
+       ``!()``, ``@$()``) are intentionally NOT wrapped — per spec the
+       user takes full responsibility for their result.
+
+    Pure-Python BoolOps (no subproc helpers in any descendant) are left
+    untouched so user code like ``if x and y:`` is not affected.
+    """
+
+    # AST statement nodes whose ``.value`` is a candidate for
+    # standalone-Call wrapping.  ``Return`` is intentionally omitted —
+    # ``return ![cmd]`` is rare and the existing CMD_RAISE_ERROR path
+    # already covers callers that want it.
+    _VALUE_STMT_TYPES = (
+        ast.Expr,
+        ast.Assign,
+        ast.AugAssign,
+        ast.AnnAssign,
+    )
+
+    def __init__(self):
+        self._inside_boolop = False
+
+    def visit(self, node):
+        if isinstance(node, ast.BoolOp):
+            return self._visit_boolop(node)
+        if isinstance(node, self._VALUE_STMT_TYPES):
+            # Recurse first so that any nested BoolOps inside the value
+            # get the BoolOp wrapping treatment, then optionally wrap
+            # the (possibly already-wrapped) value with the standalone
+            # check.
+            self._recurse(node)
+            self._maybe_wrap_stmt_value(node)
+            return node
+        self._recurse(node)
+        return node
+
+    def _visit_boolop(self, node):
+        if self._inside_boolop:
+            # Nested — recurse into children but do NOT wrap.  An inner
+            # BoolOp must let its (possibly falsy) result propagate up
+            # to the outer short-circuit logic.
+            self._recurse(node)
+            return node
+        self._inside_boolop = True
+        try:
+            self._recurse(node)
+        finally:
+            self._inside_boolop = False
+        if _boolop_contains_subproc(node):
+            return self._wrap(node)
+        return node
+
+    def _maybe_wrap_stmt_value(self, stmt):
+        val = getattr(stmt, "value", None)
+        if val is None:
+            return
+        # If the BoolOp pass already wrapped this value, nothing to do.
+        if _is_subproc_check_boolop_call(val):
+            return
+        if not _is_raising_subproc_helper_call(val):
+            return
+        stmt.value = self._wrap(val)
+
+    def _recurse(self, parent):
+        for field, value in _ast_iter_fields(parent):
+            if isinstance(value, list):
+                for i, item in enumerate(value):
+                    if isinstance(item, ast.AST):
+                        value[i] = self.visit(item)
+            elif isinstance(value, ast.AST):
+                setattr(parent, field, self.visit(value))
+
+    @staticmethod
+    def _wrap(node):
+        lineno = node.lineno
+        col = node.col_offset
+        return ast.Call(
+            func=load_attribute_chain(
+                "__xonsh__.subproc_check_boolop", lineno=lineno, col=col
+            ),
+            args=[node],
+            keywords=[],
+            lineno=lineno,
+            col_offset=col,
+        )
+
+
+def wrap_subproc_raise_checks(tree):
+    """Public entry point — wraps outermost subproc-containing BoolOps
+    *and* standalone "uncaptured" subproc-helper Calls (bare commands,
+    ``![...]``, ``$[...]``) in ``__xonsh__.subproc_check_boolop`` so the
+    result is checked at runtime against ``$XONSH_SUBPROC_RAISE_ERROR``.
+    """
+    return _SubprocChainRaiseWrapper().visit(tree)
 
 
 class Location:
@@ -226,10 +437,17 @@ class YaccLoader(Thread):
         self.daemon = True
         self.parser = parser
         self.yacc_kwargs = yacc_kwargs
+        self.ready = threading.Event()
+        self.error = None
         self.start()
 
     def run(self):
-        self.parser.parser = yacc.yacc(**self.yacc_kwargs)
+        try:
+            self.parser.parser = yacc.yacc(**self.yacc_kwargs)
+        except Exception as e:
+            self.error = e
+        finally:
+            self.ready.set()
 
 
 class BaseParser:
@@ -399,6 +617,7 @@ class BaseParser:
             "rparen",
             "rbracket",
             "at_lparen",
+            "atbang_lparen",
             "atdollar_lparen",
             "indent",
             "dedent",
@@ -465,7 +684,7 @@ class BaseParser:
             self.parser = yacc.yacc(**yacc_kwargs)
         else:
             self.parser = None
-            YaccLoader(self, yacc_kwargs)
+            self._yacc_loader = YaccLoader(self, yacc_kwargs)
 
         # Keeps track of the last token given to yacc (the lookahead token)
         self._last_yielded_token = None
@@ -500,8 +719,10 @@ class BaseParser:
         self.reset()
         self._source = s
         self.lexer.fname = filename
-        while self.parser is None:
-            time.sleep(0.01)  # block until the parser is ready
+        if self.parser is None:
+            self._yacc_loader.ready.wait()
+            if self._yacc_loader.error is not None:
+                raise self._yacc_loader.error
         tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
         if self._error is not None:
             self._parse_error(self._error[0], self._error[1])
@@ -657,6 +878,9 @@ class BaseParser:
         elif "g" in searchfunc:
             func = "__xonsh__.globsearch"
             pathobj = "p" in searchfunc
+        elif "m" in searchfunc:
+            func = "__xonsh__.regexmatchsearch"
+            pathobj = False
         else:
             func = "__xonsh__.regexsearch"
             pathobj = "p" in searchfunc
@@ -954,7 +1178,7 @@ class BaseParser:
         p[0] = p[2]
 
     def p_typedargslist_kwarg(self, p):
-        """typedargslist : POW tfpdef"""
+        """typedargslist : POW tfpdef comma_opt"""
         p[0] = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[2], defaults=[]
         )
@@ -1004,7 +1228,7 @@ class BaseParser:
         p[0] = p0
 
     def p_typedargslist_t7(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt POW tfpdef comma_opt"""
         # x, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[6], defaults=[]
@@ -1022,7 +1246,7 @@ class BaseParser:
         p[0] = p0
 
     def p_typedargslist_t10(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt COMMA POW vfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[9], defaults=[]
@@ -1032,7 +1256,7 @@ class BaseParser:
         p[0] = p0
 
     def p_typedargslist_t11(self, p):
-        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef"""
+        """typedargslist : tfpdef equals_test_opt comma_tfpdef_list_opt comma_opt TIMES tfpdef_opt comma_tfpdef_list COMMA POW tfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             args=[],
@@ -1070,7 +1294,7 @@ class BaseParser:
         p[0] = [{"arg": p[2], "default": p[3]}]
 
     def p_comma_pow_tfpdef(self, p):
-        """comma_pow_tfpdef : COMMA POW tfpdef"""
+        """comma_pow_tfpdef : COMMA POW tfpdef comma_opt"""
         p[0] = p[3]
 
     def _set_args_def(self, argmts, vals, kwargs=False):
@@ -1122,7 +1346,7 @@ class BaseParser:
             raise AssertionError()
 
     def p_varargslist_kwargs(self, p):
-        """varargslist : POW vfpdef"""
+        """varargslist : POW vfpdef comma_opt"""
         p[0] = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[2], defaults=[]
         )
@@ -1154,7 +1378,7 @@ class BaseParser:
         p[0] = p0
 
     def p_varargslist_v7(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt POW vfpdef comma_opt"""
         # x, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[6], defaults=[]
@@ -1173,7 +1397,7 @@ class BaseParser:
         p[0] = p0
 
     def p_varargslist_v10(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt COMMA POW vfpdef comma_opt"""
         # x, *args, **kwargs
         p0 = ast.arguments(
             args=[], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=p[9], defaults=[]
@@ -1183,7 +1407,7 @@ class BaseParser:
         p[0] = p0
 
     def p_varargslist_v11(self, p):
-        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef"""
+        """varargslist : vfpdef equals_test_opt comma_vfpdef_list_opt comma_opt TIMES vfpdef_opt comma_vfpdef_list COMMA POW vfpdef comma_opt"""
         p0 = ast.arguments(
             args=[],
             vararg=None,
@@ -1216,7 +1440,7 @@ class BaseParser:
         p[0] = [{"arg": p[2], "default": p[3]}]
 
     def p_comma_pow_vfpdef(self, p):
-        """comma_pow_vfpdef : COMMA POW vfpdef"""
+        """comma_pow_vfpdef : COMMA POW vfpdef comma_opt"""
         p[0] = p[3]
 
     def p_stmt(self, p):
@@ -1868,9 +2092,39 @@ class BaseParser:
     def p_rawsuite_indent(self, p):
         """rawsuite : COLON NEWLINE indent_tok nodedent dedent_tok"""
         p3, p5 = p[3], p[5]
-        beg = (p3.lineno, p3.lexpos)
+        # Include leading comments: INDENT skips them, so scan backwards
+        # to the first non-comment, non-blank line (the with! line itself).
+        beg_line = p3.lineno
+        while beg_line > 1:
+            prev = self.lines[beg_line - 2]
+            stripped = prev.strip()
+            if stripped == "" or stripped.startswith("#"):
+                beg_line -= 1
+            else:
+                break
+        beg = (beg_line, 0)
         end = (p5.lineno, p5.lexpos)
         s = self._source_slice(beg, end)
+        # Exclude trailing unindented comments (and surrounding blank
+        # lines) that belong to subsequent code, not to this block.
+        # Only strip if there are actual unindented comments at the tail;
+        # trailing blank lines alone are kept (they may be part of the block).
+        slines = s.splitlines(keepends=True)
+        has_unindented_comment = any(
+            ln.strip().startswith("#") and not ln[0].isspace()
+            for ln in reversed(slines)
+            if ln.strip()
+        )
+        if has_unindented_comment:
+            while slines:
+                stripped = slines[-1].strip()
+                if stripped == "" or (
+                    stripped.startswith("#") and not slines[-1][0].isspace()
+                ):
+                    slines.pop()
+                else:
+                    break
+            s = "".join(slines)
         s = textwrap.dedent(s)
         p[0] = ast.const_str(s=s, lineno=beg[0], col_offset=beg[1])
 
@@ -1929,6 +2183,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",
@@ -2004,11 +2259,13 @@ class BaseParser:
         elif len(p2) == 2:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]], lineno=lineno, col_offset=col)
+            _mark_boolop_subproc_values(p0)
         else:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(
                 op=p2[0], values=[p[1]] + p2[1::2], lineno=lineno, col_offset=col
             )
+            _mark_boolop_subproc_values(p0)
         p[0] = p0
 
     def p_or_and_test(self, p):
@@ -2023,11 +2280,13 @@ class BaseParser:
         elif len(p2) == 2:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(op=p2[0], values=[p1, p2[1]], lineno=lineno, col_offset=col)
+            _mark_boolop_subproc_values(p0)
         else:
             lineno, col = lopen_loc(p1)
             p0 = ast.BoolOp(
                 op=p2[0], values=[p1] + p2[1::2], lineno=lineno, col_offset=col
             )
+            _mark_boolop_subproc_values(p0)
         p[0] = p0
 
     def p_and_not_test(self, p):
@@ -2580,6 +2839,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",
@@ -2841,6 +3101,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",
@@ -2892,13 +3153,19 @@ class BaseParser:
                        | LBRACE any_raw_toks_opt RBRACE
                        | LBRACKET any_raw_toks_opt RBRACKET
                        | AT_LPAREN any_raw_toks_opt RPAREN
+                       | ATBANG_LPAREN any_raw_toks_opt RPAREN
                        | BANG_LPAREN any_raw_toks_opt RPAREN
                        | BANG_LBRACKET any_raw_toks_opt RBRACKET
                        | DOLLAR_LPAREN any_raw_toks_opt RPAREN
                        | DOLLAR_LBRACE any_raw_toks_opt RBRACE
                        | DOLLAR_LBRACKET any_raw_toks_opt RBRACKET
                        | ATDOLLAR_LPAREN any_raw_toks_opt RPAREN
+                       | FSTRING_START any_raw_toks_opt FSTRING_END
         """
+        pass
+
+    def p_nocomma_part_fstring_middle(self, p):
+        """nocomma_part : FSTRING_MIDDLE"""
         pass
 
     def p_nocomma_part_any(self, p):
@@ -2927,8 +3194,14 @@ class BaseParser:
         p[0] = p[2]
 
     def p_subscriptlist(self, p):
-        """subscriptlist : subscript comma_subscript_list_opt comma_opt"""
-        p1, p2 = p[1], p[2]
+        """
+        subscriptlist : subscript
+                      | subscript COMMA
+                      | subscript comma_subscript_list
+                      | subscript comma_subscript_list COMMA
+        """
+        p1 = p[1]
+        p2 = p[2] if len(p) > 2 and isinstance(p[2], list) else None
         if p2 is None:
             pass
         elif isinstance(p1, ast.Slice) or any([isinstance(x, ast.Slice) for x in p2]):
@@ -3063,6 +3336,8 @@ class BaseParser:
         """dictorsetmaker : test COLON testlist"""
         keys = [p[1]]
         vals = self._list_or_elts_if_not_real_tuple(p[3])
+        if len(vals) != len(keys):
+            self._set_error("invalid syntax")
         lineno, col = lopen_loc(p[1])
         p[0] = ast.Dict(
             keys=keys, values=vals, ctx=ast.Load(), lineno=lineno, col_offset=col
@@ -3278,6 +3553,19 @@ class BaseParser:
         idx = ast.Index(value=ast.const_str(s=var, lineno=lineno, col_offset=col))
         return ast.Subscript(
             value=xenv, slice=idx, ctx=ast.Load(), lineno=lineno, col_offset=col
+        )
+
+    def _envvar_set_call(self, node, value):
+        """Creates __xonsh__.env.set(key, value) AST from an envvar Subscript node."""
+        key = self._envvar_node_key(node)
+        return ast.Call(
+            func=load_attribute_chain(
+                "__xonsh__.env.set", lineno=node.lineno, col=node.col_offset
+            ),
+            args=[key, value],
+            keywords=[],
+            lineno=node.lineno,
+            col_offset=node.col_offset,
         )
 
     @staticmethod
@@ -3506,6 +3794,22 @@ class BaseParser:
         p0._cliarg_action = "append"
         p[0] = p0
 
+    def p_subproc_atom_pyeval_macro(self, p):
+        """
+        subproc_atom : ATBANG_LPAREN any_raw_toks_opt RPAREN
+        subproc_arg_part : ATBANG_LPAREN any_raw_toks_opt RPAREN
+        """
+        start = (p.slice[1].lineno, p.lexpos(1) + 3)  # after "@!("
+        stop = (p.slice[3].lineno, p.lexpos(3))  # at ")"
+        source_text = self._source_slice(start, stop).strip()
+        p0 = ast.Constant(
+            value=source_text,
+            lineno=p.slice[1].lineno,
+            col_offset=p.lexpos(1),
+        )
+        p0._cliarg_action = "append"
+        p[0] = p0
+
     def p_subproc_atom_pyeval(self, p):
         """
         subproc_atom : at_lparen_tok testlist_comp RPAREN
@@ -3681,6 +3985,7 @@ class BaseParser:
             "LBRACKET",
             "RBRACKET",
             "AT_LPAREN",
+            "ATBANG_LPAREN",
             "BANG_LPAREN",
             "BANG_LBRACKET",
             "DOLLAR_LPAREN",

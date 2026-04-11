@@ -2,6 +2,7 @@
 
 import collections.abc as cabc
 import functools
+import locale
 import os
 import re
 import shlex
@@ -62,7 +63,14 @@ def CANON_SHELL_NAMES():
 
 @lazyobject
 def DEFAULT_ENVCMDS():
-    return {"bash": "env", "zsh": "env", "cmd": "set"}
+    return {
+        # env -0 uses null bytes as separators, which correctly handles
+        # multi-line values (e.g. BASH_FUNC_* exported functions).
+        # Falls back to plain env if -0 is not supported.
+        "bash": "env -0 2>/dev/null || env",
+        "zsh": "env -0 2>/dev/null || env",
+        "cmd": "set",
+    }
 
 
 @lazyobject
@@ -200,7 +208,14 @@ def foreign_shell_data(
         cmd.append("-i")
     if login:
         cmd.append("-l")
-    shkey = CANON_SHELL_NAMES[shell]
+    shkey = CANON_SHELL_NAMES.get(shell) or CANON_SHELL_NAMES.get(
+        os.path.basename(shell)
+    )
+    if shkey is None:
+        raise KeyError(
+            f"Unknown foreign shell {shell!r}. "
+            f"Supported: {', '.join(sorted(set(CANON_SHELL_NAMES.values())))}"
+        )
     envcmd = DEFAULT_ENVCMDS.get(shkey, "env") if envcmd is None else envcmd
     aliascmd = DEFAULT_ALIASCMDS.get(shkey, "alias") if aliascmd is None else aliascmd
     funcscmd = DEFAULT_FUNCSCMDS.get(shkey, "echo {}") if funcscmd is None else funcscmd
@@ -247,7 +262,7 @@ def foreign_shell_data(
             # start new session to avoid hangs
             # (doesn't work on Cygwin though)
             start_new_session=((not ON_CYGWIN) and (not ON_MSYS)),
-            text=True,
+            encoding=locale.getpreferredencoding(False),
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
         if not safe:
@@ -281,8 +296,13 @@ def ENV_RE():
 
 
 @lazyobject
-def ENV_SPLIT_RE():
-    return re.compile("^([^=]+)=([^=]*|[^\n]*)$", flags=re.DOTALL | re.MULTILINE)
+def _ENV_LINE_KEY_RE():
+    """Matches the start of a KEY=VALUE line in env output.
+
+    A valid env var name starts with a letter or underscore, followed by
+    letters, digits, underscores, or percent signs (for BASH_FUNC_xxx%%).
+    """
+    return re.compile(r"^([A-Za-z_][A-Za-z0-9_%]*)=(.*)", re.DOTALL)
 
 
 def parse_env(s):
@@ -292,7 +312,33 @@ def parse_env(s):
         return {}
     g1 = m.group(1)
     g1 = g1[:-1] if g1.endswith("\n") else g1
-    env = dict(ENV_SPLIT_RE.findall(g1))
+    if "\0" in g1:
+        # Null-separated output from env -0.
+        # Correctly handles multi-line values (e.g. exported bash functions).
+        env = {}
+        for entry in g1.split("\0"):
+            if "=" in entry:
+                key, value = entry.split("=", 1)
+                env[key] = value
+        return env
+    # Fallback for systems where env -0 is not available.
+    # Detect new KEY=VALUE pairs by matching lines that start with a
+    # valid variable name followed by '='. Lines that don't match are
+    # treated as continuation of the previous value.
+    env = {}
+    key = None
+    value_lines: list[str] = []
+    for line in g1.split("\n"):
+        m = _ENV_LINE_KEY_RE.match(line)
+        if m:
+            if key is not None:
+                env[key] = "\n".join(value_lines)
+            key = m.group(1)
+            value_lines = [m.group(2)]
+        elif key is not None:
+            value_lines.append(line)
+    if key is not None:
+        env[key] = "\n".join(value_lines)
     return env
 
 
@@ -325,7 +371,7 @@ def parse_aliases(s, shell, sourcer=None, files=(), extra_args=()):
             # undo bash's weird quoting of single quotes (sh_single_quote)
             value = value.replace("'\\''", "'")
             # strip one single quote at the start and end of value
-            if value[0] == "'" and value[-1] == "'":
+            if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
                 value = value[1:-1]
             # now compute actual alias
             if FS_EXEC_ALIAS_RE.search(value) is None:
@@ -423,9 +469,14 @@ class ForeignShellBaseAlias:
         self, args, stdin=None, stdout=None, stderr=None, spec=None, stack=None
     ):
         args, streaming = self._is_streaming(args)
-        input = self.INPUT.format(args=" ".join(args), **self._input_kwargs())
+        input = self.INPUT.format(
+            args=" ".join(shlex.quote(a) for a in args), **self._input_kwargs()
+        )
         if len(self.files) > 0:
-            input = "".join([f'{self.sourcer} "{f}"\n' for f in self.files]) + input
+            input = (
+                "".join([f"{self.sourcer} {shlex.quote(f)}\n" for f in self.files])
+                + input
+            )
         cmd = [self.shell] + list(self.extra_args) + ["-ic", input]
         env = XSH.env
         denv = env.detype()
@@ -657,7 +708,7 @@ def load_foreign_aliases(shells):
         if not XSH.env.get("FOREIGN_ALIASES_OVERRIDE"):
             for alias in set(shaliases) & set(xonsh_aliases):
                 del shaliases[alias]
-                if XSH.env.get("XONSH_DEBUG") >= 1:
+                if XSH.env.get("XONSH_DEBUG", 0) >= 1:
                     print(
                         f"aliases: ignoring alias {alias!r} of shell {shell['shell']!r} "
                         "which tries to override xonsh alias.",

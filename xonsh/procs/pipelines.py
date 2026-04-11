@@ -103,6 +103,10 @@ def _drain_stdout(stdout):
     return _read_all(stdout).splitlines(keepends=True)
 
 
+class blocking_property(property):
+    """Property that may block waiting for process completion."""
+
+
 class CommandPipeline:
     """Represents a subprocess-mode command pipeline."""
 
@@ -155,6 +159,10 @@ class CommandPipeline:
             The output lines
         starttime : floats or None
             Pipeline start timestamp.
+        pipestatus : list of int or None
+            Current return codes of all commands in the pipeline.
+        pipecode : int
+            Current pipeline status: 1 if any command returned non-zero or is still running, 0 if all succeeded.
         """
         self.starttime = None
         self.ended = False
@@ -505,8 +513,8 @@ class CommandPipeline:
             else:
                 err_target.write(b.decode(encoding=enc, errors=err))
             err_target.flush()
-        # save the raw bytes
-        self._raw_error = b
+        # accumulate the raw bytes
+        self._raw_error += b
         # do some munging of the line before we save it to the attr
         b = b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         env = XSH.env
@@ -576,6 +584,7 @@ class CommandPipeline:
             self.ended = True
         self._check_signal()
         self._apply_to_history()
+        self._apply_to_thread_local()
         self._raise_subproc_error()
 
     def _save_term_state(self):
@@ -706,15 +715,25 @@ class CommandPipeline:
             self._safe_close(s.stdin)
             self._safe_close(s.stdout)
             self._safe_close(s.stderr)
+            # Close ONLY the writer end of any connecting pipe.  The reader
+            # end is in active use by the next proc in the pipeline (which
+            # may still be draining buffered data); closing it here would
+            # invalidate the fd mid-read and surface as
+            # `OSError: [Errno 9] Bad file descriptor` in the consumer
+            # (e.g. a callable alias iterating over `stdin`).
+            # The reader is closed later in `_close_prev_procs` /
+            # `_close_proc`, after the next proc has finished.
             for ch in s.pipe_channels:
-                ch.close()
+                ch.close_writer()
             if p is None:
                 continue
             self._safe_close(p.stdin)
             self._safe_close(p.stdout)
             self._safe_close(p.stderr)
+
+            # Close ONLY the writer. Described above.
             for ch in getattr(p, "pipe_channels", ()):
-                ch.close()
+                ch.close_writer()
         return False if any_running else (len(self) > 1)
 
     def _close_prev_procs(self):
@@ -817,6 +836,12 @@ class CommandPipeline:
         if hist is not None:
             hist.last_cmd_rtn = 1 if self.proc is None else self.proc.returncode
 
+    def _apply_to_thread_local(self):
+        """Store the return code in the thread-local dict if present."""
+        tl = XSH.env.get("__THREAD_LOCAL__")
+        if tl is not None:
+            tl["returncode"] = 1 if self.proc is None else self.proc.returncode
+
     def _raise_subproc_error(self):
         """Raises a subprocess error, if we are supposed to."""
         spec = self.spec
@@ -828,14 +853,32 @@ class CommandPipeline:
         raise_subproc_error = spec.raise_subproc_error
         if callable(raise_subproc_error):
             raise_subproc_error = raise_subproc_error(spec, self)
+
+        # @error_ignore — never raise.
         if raise_subproc_error is False:
             return
 
-        if raise_subproc_error or XSH.env.get("RAISE_SUBPROC_ERROR", True):
+        # @error_raise — always raise, even mid-chain.
+        if raise_subproc_error is True:
             try:
                 raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
             finally:
-                # this is need to get a working terminal in interactive mode
+                # needed to get a working terminal in interactive mode
+                self._return_terminal()
+            return
+
+        # Default: defer chain operands to the BoolOp wrapper.
+        if getattr(spec, "in_boolop", False):
+            return
+
+        # Standalone — only raise here if the user explicitly opted in
+        # to per-command raising.  Otherwise let the AST wrapper around
+        # the statement do it via $XONSH_SUBPROC_RAISE_ERROR.
+        if XSH.env.get("XONSH_SUBPROC_CMD_RAISE_ERROR"):
+            try:
+                raise subprocess.CalledProcessError(rtn, spec.args, output=self.output)
+            finally:
+                # needed to get a working terminal in interactive mode
                 self._return_terminal()
 
     #
@@ -890,25 +933,25 @@ class CommandPipeline:
         else:
             return self.get_formatted_lines(self.lines)
 
-    @property
+    @blocking_property
     def out(self):
         """Output value as a str."""
         self.end()
         return self.output
 
-    @property
+    @blocking_property
     def err(self):
         """Error messages as a string."""
         self.end()
         return self.errors
 
-    @property
+    @blocking_property
     def raw_out(self):
         """Output as raw bytes."""
         self.end()
         return self._raw_output
 
-    @property
+    @blocking_property
     def raw_err(self):
         """Errors as raw bytes."""
         self.end()
@@ -920,6 +963,16 @@ class CommandPipeline:
         return self.proc.pid if self.proc else None
 
     @property
+    def pipestatus(self):
+        """Current status. Return codes of all commands in the pipeline."""
+        return [None if p is None else p.returncode for p in self.procs]
+
+    @property
+    def pipecode(self):
+        """Current status. 1 if any command in the pipeline returned non-zero or is still running, 0 if all succeeded."""
+        return 0 if all(r == 0 for r in self.pipestatus) else 1
+
+    @blocking_property
     def returncode(self):
         """Process return code, waits until command is completed."""
         self.end()
@@ -932,7 +985,7 @@ class CommandPipeline:
         """Arguments to the process."""
         return self.spec.args
 
-    @property
+    @blocking_property
     def rtn(self):
         """Alias to return code."""
         return self.returncode

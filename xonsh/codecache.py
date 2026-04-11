@@ -159,7 +159,12 @@ def script_cache_check(filename, cachefname):
             with open(cachefname, "rb") as cfile:
                 if not _check_cache_versions(cfile):
                     return False, None
-                ccode = marshal.load(cfile)
+                try:
+                    ccode = marshal.load(cfile)
+                except Exception:
+                    # Cache file is corrupted (e.g. truncated by a crash).
+                    # Ignore it — the script will be recompiled and cached again.
+                    return False, None
                 run_cached = True
     return run_cached, ccode
 
@@ -190,7 +195,8 @@ def code_cache_name(code):
     """
     if isinstance(code, str):
         code = code.encode()
-    return hashlib.md5(code).hexdigest()
+    # usedforsecurity=False: allow md5 on FIPS-enabled systems
+    return hashlib.md5(code, usedforsecurity=False).hexdigest()
 
 
 def code_cache_check(cachefname):
@@ -207,7 +213,12 @@ def code_cache_check(cachefname):
         with open(cachefname, "rb") as cfile:
             if not _check_cache_versions(cfile):
                 return False, None
-            ccode = marshal.load(cfile)
+            try:
+                ccode = marshal.load(cfile)
+            except Exception:
+                # Cache file is corrupted (e.g. truncated by a crash).
+                # Ignore it — the code will be recompiled and cached again.
+                return False, None
             run_cached = True
     return run_cached, ccode
 

@@ -2004,6 +2004,38 @@ def test_func_x_divide_y_star_z_kwargs(check_stmts):
     check_stmts("def f(x, /, y, *, z, **kwargs):\n  return 42")
 
 
+def test_func_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(**kw,):\n  return kw")
+
+
+def test_func_x_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(x, **kw,):\n  return kw")
+
+
+def test_func_star_x_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(*, x, **kw,):\n  return kw")
+
+
+def test_func_x_star_y_kwargs_trailing_comma(check_stmts):
+    check_stmts("def f(x, *, y, **kw,):\n  return kw")
+
+
+def test_func_return_annotation_trailing_comma(check_stmts):
+    check_stmts("def f(**kw,) -> dict:\n  return kw")
+
+
+def test_subscript_trailing_comma(parser):
+    parser.parse("x = d[0,]\n")
+
+
+def test_subscript_multi_trailing_comma(parser):
+    parser.parse("x = d[0, 1,]\n")
+
+
+def test_func_annotation_subscript_trailing_comma(parser):
+    parser.parse("def f(x: tuple[int,]) -> tuple[str,]:\n  pass\n")
+
+
 def test_func_tx(check_stmts):
     check_stmts("def f(x:int):\n  return x")
 
@@ -2191,6 +2223,33 @@ def test_dollar_py_set(check_xonsh):
     check_xonsh({"WAKKA": 42}, 'x = "WAKKA"; ${x} = 65')
 
 
+def test_bare_builtin_becomes_cmd_call(parser, xsh):
+    """Bare builtin name as statement should become __xonsh__.builtin_cmd() call."""
+    import ast as stdlib_ast
+
+    tree = parser.parse("zip\n", debug_level=0)
+    xsh.env.update({})
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, "zip\n", set(dir(__builtins__)))
+    expr_node = tree.body[0]
+    assert isinstance(expr_node, stdlib_ast.Expr)
+    call = expr_node.value
+    assert isinstance(call, stdlib_ast.Call)
+    assert call.args[0].value == "zip"
+
+
+@skip_if_pre_3_8
+def test_dollar_name_walrus(check_xonsh):
+    check_xonsh({}, "x = ($WAKKA := 42)\nassert x == 42\nassert $WAKKA == 42")
+
+
+@skip_if_pre_3_8
+def test_dollar_name_walrus_subprocess(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @($WAKKA := 'hello'))", False)
+
+
 def test_dollar_sub(check_xonsh_ast):
     check_xonsh_ast({}, "$(ls)", False)
 
@@ -2231,6 +2290,66 @@ def test_nested_madness(check_xonsh_ast):
         "$(@$(which echo) ls | @(lambda a, s=None: $(@(s.strip()) @(a[1]))) foo -la baz)",
         False,
     )
+
+
+def test_atbang_macro_simple(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!(2+2))", False)
+
+
+def test_atbang_macro_complex_expr(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!(x if x > 0 else -x))", False)
+
+
+def test_atbang_macro_nested_parens(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!(dict(a=1)))", False)
+
+
+def test_atbang_macro_fstring(check_xonsh_ast):
+    check_xonsh_ast({}, '$(echo @!(f"{x} = {y}"))', False)
+
+
+def test_atbang_macro_quotes(check_xonsh_ast):
+    check_xonsh_ast({}, "$(echo @!('hello world'))", False)
+
+
+def test_atbang_macro_source_text(parser):
+    """@!(expr) should capture the expression source text, not evaluate it."""
+    import ast
+
+    tree = parser.parse("$(echo @!(2+2))\n")
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and node.value == "2+2":
+            break
+    else:
+        pytest.fail("Expected Constant(value='2+2') in AST for @!(2+2)")
+
+
+def test_atbang_macro_multiline_source_text(xsh, parser):
+    """@!(expr) should capture correct source text in multi-line input."""
+    import ast
+
+    code = "$(echo @!(aaa))\n$(echo @!(bbb))\n"
+    tree = parser.parse(code)
+    consts = [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value not in ("echo", "")
+    ]
+    assert consts == ["aaa", "bbb"]
+
+
+def test_atbang_macro_source_text_fstring(parser):
+    """@!(f-string) should capture f-string source text."""
+    import ast
+
+    tree = parser.parse('$(echo @!(f"{x}"))\n')
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and node.value == 'f"{x}"':
+            break
+    else:
+        pytest.fail('Expected Constant(value=\'f"{x}"\') in AST for @!(f"{x}")')
 
 
 def test_atparens_intoken(check_xonsh_ast):
@@ -3292,6 +3411,11 @@ def test_syntax_error_literal_concat_different(first_prefix, second_prefix, pars
         parser.parse(f"{first_prefix}'hello' {second_prefix}'world'")
 
 
+def test_syntax_error_dict_mixed_kv_and_bare(parser):
+    with pytest.raises(SyntaxError):
+        parser.parse("{'A': 5,6}\n", mode="exec")
+
+
 def test_get_repo_url(parser):
     parser.parse(
         "def get_repo_url():\n"
@@ -3592,3 +3716,22 @@ def test_decorator_atat_call(parser):
     assert dec.func.value.attr == "interface"
     assert dec.args == []
     assert dec.keywords == []
+
+
+def test_yacc_loader_failure_does_not_hang():
+    """If yacc.yacc() fails, parse() should raise instead of hanging."""
+    from unittest.mock import patch
+
+    from xonsh.parsers.base import YaccLoader
+
+    class FakeParser:
+        parser = None
+
+    fp = FakeParser()
+    with patch("xonsh.parsers.base.yacc") as mock_yacc:
+        mock_yacc.yacc.side_effect = RuntimeError("grammar broken")
+        loader = YaccLoader(fp, {})
+        loader.ready.wait(timeout=2)
+
+    assert loader.error is not None
+    assert fp.parser is None

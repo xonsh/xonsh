@@ -252,7 +252,7 @@ Callable Environment Variables
 In some cases you may want to have environment variable with dynamically created value.
 Here is the example of callable environment variable:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ class Stamp:
          """Return current date as string representation."""
@@ -425,33 +425,28 @@ to be evaluated in Python mode using the ``@()`` syntax:
     ``$EXPAND_ENV_VARS`` to ``False``.
 
 
-For the fine control of environment variables (envvar) substitutions, brace substitutions and backslash escapes
-there are extended list of literals:
+Xonsh supports Python string prefixes in subprocess arguments:
 
-- ``""`` - regular string: backslash escapes. Envvar substitutions in subprocess-mode.
-- ``r""`` - raw string: unmodified.
-- ``f""`` - formatted string: brace substitutions, backslash escapes. Envvar substitutions in subprocess-mode.
-- ``fr""`` - raw formatted string: brace substitutions.
-- ``p""`` - path string: backslash escapes, envvar substitutions, returns Path.
-- ``pr""`` - raw Path string: envvar substitutions, returns Path.
-- ``pf""`` - formatted Path string: backslash escapes, brace and envvar substitutions, returns Path.
+- ``r""`` — raw, no escapes (``r'\n'`` stays as ``\n``)
+- ``f""`` — formatted, with ``{expr}`` substitution
+- ``p""`` — path, returns ``pathlib.Path`` with ``$ENV`` expansion
 
-To complete understanding let's set environment variable ``$EVAR`` to ``1`` and local variable ``var`` to ``2``
-and make a table that shows how literal changes the string in Python- and subprocess-mode:
+These can be combined (``fr""``, ``pf""``, ``pr""``). For example:
 
-.. table::
+.. code-block:: xonshcon
 
-    ========================  ==========================  =======================  =====================
-         String literal            As python object       print(<String literal>)  echo <String literal>
-    ========================  ==========================  =======================  =====================
-    ``"/$EVAR/\'{var}\'"``    ``"/$EVAR/'{var}'"``        ``/$EVAR/'{var}'``       ``/1/'{var}'``
-    ``r"/$EVAR/\'{var}\'"``   ``"/$EVAR/\\'{var}\\'"``    ``/$EVAR/\'{var}\'``     ``/$EVAR/\'{var}\'``
-    ``f"/$EVAR/\'{var}\'"``   ``"/$EVAR/'2'"``            ``/$EVAR/'2'``           ``/1/'2'``
-    ``fr"/$EVAR/\'{var}\'"``  ``"/$EVAR/\\'2\\'"``        ``/$EVAR/\'2\'``         ``/$EVAR/\'2\'``
-    ``p"/$EVAR/\'{var}\'"``   ``Path("/1/'{var}'")``      ``/1/'{var}'``           ``/1/'{var}'``
-    ``pr"/$EVAR/\'{var}\'"``  ``Path("/1/\\'{var}\\'")``  ``/1/\'{var}\'``         ``/1/\'{var}\'``
-    ``pf"/$EVAR/\'{var}\'"``  ``Path("/1/'2'")``          ``/1/'2'``               ``/1/'2'``
-    ========================  ==========================  =======================  =====================
+    @ echo r'no\escape'
+    no\escape
+    @ echo f"{'hello':>10}"
+         hello
+    @ p"/tmp" / "file.txt"
+    PosixPath('/tmp/file.txt')
+    @ name = "docs"
+    @ pf"$HOME/{name}"
+    PosixPath('/Users/snail/docs')
+
+See :doc:`subproc_strings` for the full reference table of how each prefix
+affects environment variable substitution, brace formatting, and escapes.
 
 
 
@@ -529,7 +524,7 @@ This object will be "truthy" if its return code was 0, and it is equal (via
 to the string will return the output. This allows for some interesting new
 kinds of interactions with subprocess commands, for example:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     def check_file(file):
         if !(test -e @(file)):
@@ -551,7 +546,7 @@ Additionally, these objects expose a method ``itercheck``, which behaves the sam
 as the built-in iterator but raises ``XonshCalledProcessError`` if the process
 had a nonzero return code.
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     def get_wireless_interface():
         """Returns devicename of first connected wifi, None otherwise"""
@@ -1110,6 +1105,32 @@ substitute variables and other expressions into the glob pattern:
     ['aba', 'abba', 'abcba']
 
 
+Match Globbing
+--------------
+
+The ``m`` modifier enables match globbing — a regex glob that returns capture
+groups instead of full paths. This is useful for extracting parts of matched
+paths directly:
+
+.. code-block:: xonshcon
+
+    @ for parent, name in m`tests/(.*)/(test_.*\.py)`:
+          print(parent, name)
+    completers test_python.py
+    completers test_path_completers.py
+    procs test_specs.py
+    procs test_pipes.py
+
+With a single capture group, a flat list of strings is returned:
+
+.. code-block:: xonshcon
+
+    @ m`xonsh/(.*\.py)`.sorted().files()
+    ['__init__.py', '__main__.py', 'aliases.py']
+
+See :doc:`globbing` for the full ``m`` glob reference and ``XonshList`` methods.
+
+
 Custom Path Searches
 --------------------
 
@@ -1122,7 +1143,7 @@ be used with backticks with the following syntax: ``@<name>`test```
 
 The following example shows the form of these functions:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ def foo(s):
           return [i for i in os.listdir('.') if i.startswith(s)]
@@ -1232,7 +1253,7 @@ Alias to Modify Command
 The best way to modify command on the fly is to use alias that returns modified command.
 One of the most interesting application is expanding an alias:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       @aliases.return_command
@@ -1247,7 +1268,7 @@ One of the most interesting application is expanding an alias:
 
 Or implement logic to run the right command:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       @aliases.return_command
@@ -1271,7 +1292,7 @@ A callable alias is a function (or callable object) with a specific signature th
 
 Using directly with Python evaluation via ``@()``:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ def mybox():
          print('apple')
@@ -1327,7 +1348,7 @@ You need to add ``@($args)`` manually if you need arguments in ExecAlias:
 
 These three definitions are equal:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ @aliases.register
       def _answer():
@@ -1337,188 +1358,6 @@ These three definitions are equal:
 
     @ aliases['answer'] = 'echo @(21+21)'
 
-
-Callable Aliases Signature
---------------------------
-
-A callable alias function can accept a list of arguments for any purpose:
-
-.. code-block:: python
-
-    @aliases.register
-    def _mycmd0():
-        """This form takes no arguments but may return output or a return code.
-        """
-        # The return value of the function can either be None,
-        return
-
-        # a return code,
-        return 0
-
-        # a single string representing stdout,
-        return  'I am out of here'
-
-        # or you can build up strings for stdout and stderr and then
-        # return a (stdout, stderr) tuple. Both of these may be
-        # either a str or None. Any results returned like this will be
-        # concatenated with the strings printed elsewhere in the function.
-        stdout = 'I commanded'
-        stderr = None
-        return stdout, stderr
-
-        # Lastly, a 3-tuple return value can be used to include an integer
-        # return code indicating failure (> 0 return code). In the previous
-        # examples the return code would be 0/success.
-        return (None, "I failed", 2)
-
-        # Anything you print to stdout or stderr
-        # will be captured for you automatically. This allows callable
-        # aliases to support piping.
-        print('I go to stdout and will be printed or piped')
-
-
-    @aliases.register
-    def _mycmd1(args):
-        """This form takes a single argument, args. This is a list of strings
-        representing the arguments to this command. Feel free to parse them
-        however you wish!
-        """
-        # perform some action.
-        print(f"args: {args!r}")
-        return 0
-
-    @aliases.register
-    def _mycmd2(args, stdin=None):
-        """This form takes two arguments. The args list like above, as a well
-        as standard input. stdin will be a file like object that the command
-        can read from, if the user piped input to this command. If no input
-        was provided this will be None.
-        """
-        # Read input either from piped input or the terminal
-        stdin = stdin or sys.stdin
-        for line in stdin.readlines():
-            print(line.strip().upper() + '!')
-
-    @aliases.register
-    def _mycmd3(args, stdin=None, stdout=None):
-        """This form has three parameters.  The first two are the same as above.
-        The last argument represents the standard output.  This is a file-like
-        object that the command may write too.
-        """
-        # you can either use stdout
-        stdout.write("Hello ")
-        # or print()!
-        print("world!")
-        return
-
-    @aliases.register
-    def _mycmd4(args, stdin=None, stdout=None, stderr=None):
-        """The next form of subprocess callables takes all of the
-        arguments shown above as well as the standard error stream.
-        As with stdout, this is a write-only file-like object.
-        """
-        # This form allows "streaming" data to stdout and stderr
-        import time
-        for i in range(5):
-            time.sleep(i)
-            print(i, file=stdout)
-            stdout.flush() # flush output to terminal immediately
-
-        return 0
-
-    @aliases.register
-    def _mycmd5(args, stdin=None, stdout=None, stderr=None, spec=None):
-        """This form of subprocess callables takes all of the
-        arguments shown above as well as a subprocess specification
-        SubprocSpec object. This holds many attributes that dictate how
-        the command is being run.  For instance this can be useful for
-        knowing if the process is captured by $() or !().
-        """
-        import xonsh.proc
-        if spec.captured in xonsh.proc.STDOUT_CAPTURE_KINDS:
-            print("I'm being captured!")
-        elif not spec.last_in_pipeline:
-            print("Going through a pipe!")
-        else:
-            print("Hello terminal!")
-        return 0
-
-    @aliases.register
-    def _mycmd6(args, stdin=None, stdout=None, stderr=None, spec=None, stack=None):
-        """Lastly, the final form of subprocess callables takes a stack argument
-        in addition to the arguments shown above. The stack is a list of
-        FrameInfo namedtuple objects, as described in the standard library
-        inspect module. The stack is computed such the the call site is the
-        first and innermost entry, while the outer frame is the last entry.
-
-        The stack is only computed if the alias has a "stack" argument.
-        However, the stack is also accessible as "spec.stack".
-        """
-        for frame_info in stack:
-            frame = frame_info[0]
-            print('In function ' + frame_info[3])
-            print('  locals', frame.f_locals)
-            print('  globals', frame.f_globals)
-            print('\n')
-        return 0
-
-
-Callable Alias and Capturing
-----------------------------
-
-Callable aliases tend to be capturable. Only the error stream and explicitly denoted uncaptured subprocess
-operator ``$[]`` are uncapturable, and the subprocess's stdout passes directly through Xonsh to the screen.
-
-.. code-block:: xonshcon
-
-    @ @aliases.register
-      def _printer(args, stdin, stdout, stderr):
-          """Ultimate printer."""
-
-          print("print out")
-          print("print err", file=@.imp.sys.stderr)
-
-          print("print out alias stdout", file=stdout)
-          print("print err alias stderr", file=stderr)
-
-          echo @("echo out")
-          echo @("echo err") o>e
-
-          $(echo @("$() echo out"))
-          $(echo @("$() echo err") o>e)
-
-          !(echo @("!() echo out"))
-          !(echo @("!() echo err") o>e)
-
-          ![echo @("![] echo out")]
-          ![echo @("![] echo err") o>e]
-
-          $[echo @("$[] echo out")]
-          $[echo @("$[] echo err") o>e]
-
-          execx('echo "execx echo out"')
-          execx('echo "execx echo err" o>e')
-
-    @ $(printer)
-    print err
-    print err alias stderr
-    echo err
-    $() echo err
-    ![] echo err
-    $[] echo out
-    $[] echo err
-    execx echo err
-    'print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n'
-
-    @ !(printer)
-    $() echo err
-    $[] echo out
-    $[] echo err
-    CommandPipeline(
-      returncode=0,
-      output='print out\necho out\nprint out alias stdout\n![] echo out\nexecx echo out\n',
-      errors='print err\necho err\nprint err alias stderr\n![] echo err\nexecx echo err\n'
-    )
 
 Anonymous Aliases
 -----------------
@@ -1538,15 +1377,14 @@ Unthreadable Aliases
 Usually, callable alias commands will be run in a separate thread so that
 they may be run in the background.  However, some aliases may need to be
 executed on the thread that they were called from. This is mostly useful for
-debuggers and profilers. To make an alias run in the foreground, decorate its
-function with the ``xonsh.tools.unthreadable`` decorator.
+interactive tools (vim, less, htop), debuggers and profilers.
+To make an alias run in the foreground, use the ``@aliases.unthreadable``
+decorator:
 
 .. code-block:: python
 
-    from xonsh.tools import unthreadable
-
     @aliases.register
-    @unthreadable
+    @aliases.unthreadable
     def _mycmd(args, stdin=None):
         return 'In your face!'
 
@@ -1559,22 +1397,49 @@ However, some aliases may want to run alternate-mode commands themselves.
 Thus the callable alias can't be captured without dire consequences (tm).
 To prevent this, you can declare a callable alias uncapturable. This is mostly
 useful for aliases that then open up text editors, pagers, or the like.
-To make an alias uncapturable, decorate its
-function with the ``xonsh.tools.uncapturable`` decorator. This is probably
-best used in conjunction with the ``unthreadable`` decorator.  For example:
+To make an alias uncapturable, use the ``@aliases.uncapturable`` decorator.
+This is probably best used in conjunction with ``@aliases.unthreadable``.
+For example:
 
-.. code-block:: xonshcon
-
-    from xonsh.tools import unthreadable, uncapturable
+.. code-block:: python
 
     @aliases.register
-    @uncapturable
-    @unthreadable
+    @aliases.uncapturable
+    @aliases.unthreadable
     def _binvi(args, stdin=None):
         vi -b @(args)  # Edit binary files
 
 Note that ``@()`` is required to pass the python list ``args`` to a subprocess
 command.
+
+Click Integration
+-----------------
+If the `click <https://click.palletsprojects.com/>`_ package is installed,
+you can register a click command as a xonsh alias with
+``@aliases.register_click_command``. The ``aliases.click`` attribute exposes
+the ``click`` module itself, so ``@aliases.click.option(...)`` works without
+a separate ``import click``. Both are loaded lazily on first access.
+
+.. code-block:: python
+
+    @ @aliases.register_click_command
+      @aliases.click.option('--name', help='The person to greet.')
+      @aliases.click.option('--count', default=1, help='Number of greetings.')
+      def _hello(ctx, count, name):
+          """Greets NAME for a total of COUNT times."""
+          for i in range(count):
+              print(name, file=ctx.stdout)
+
+    @ hello --count 3 --name World
+    World
+    World
+    World
+
+The call forms mirror ``@aliases.register`` — bare, ``()``, or with an
+explicit name. Inside the click callback, ``ctx`` is a ``click.Context``
+subclass carrying the usual xonsh alias parameters as attributes
+(``ctx.alias_args``, ``ctx.stdin``, ``ctx.stdout``, ``ctx.env``, and so on).
+See :doc:`callable_aliases` for the full reference.
 
 Command Decorators (Decorator Aliases)
 --------------------------------------
@@ -1608,7 +1473,7 @@ See the full list of command decorators in Aliases article or build the new one.
 Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
 convert subprocess command output into Python object with your own logic:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     from xonsh.procs.specs import SpecAttrDecoratorAlias
 
@@ -1628,7 +1493,9 @@ Now you can run:
 -------------
 
 Aliasing is a powerful way that xonsh allows you to seamlessly interact to
-with Python and subprocess.
+with Python and subprocess. See :doc:`callable_aliases` for the full callable
+aliases reference including stream capturing, ``env`` overlay, and return
+values.
 
 .. warning:: If ``FOREIGN_ALIASES_OVERRIDE`` environment variable is False
              (the default), then foreign shell aliases that try to override
@@ -1677,206 +1544,30 @@ which will be replaced automatically:
     snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
     snail@home:~ @> # so does that!
 
--- todo: convert this to jinja template and generate these contents dynamically and mention about $PROMPT_FIELDS
-
-By default, the following variables are available for use:
-
-  -- remove these extra variables and set the attribute on the field itself
-
-* ``user``: The username of the current user
-* ``hostname``: The name of the host computer
-* ``cwd``: The current working directory, you may use ``$DYNAMIC_CWD_WIDTH`` to
-  set a maximum width for this variable and ``$DYNAMIC_CWD_ELISION_CHAR`` to
-  set the character used in shortened path.
-* ``short_cwd``: A shortened form of the current working directory; e.g.,
-  ``/path/to/xonsh`` becomes ``/p/t/xonsh``
-* ``cwd_dir``: The dirname of the current working directory, e.g. ``/path/to/`` in
-  ``/path/to/xonsh``.
-* ``cwd_base``: The basename of the current working directory, e.g. ``xonsh`` in
-  ``/path/to/xonsh``.
-* ``env_name``: The name of active virtual environment, if any. The rendering
-  of this variable is affected by the ``$VIRTUAL_ENV_PROMPT`` and
-  ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variables; see below.
-* ``env_prefix``: The prefix characters if there is an active virtual environment,
-  defaults to ``"("``.
-* ``env_postfix``: The postfix characters if there is an active virtual environment,
-  defaults to ``") "``.
-* ``curr_branch``: The name of the current git branch, if any.
-* ``branch_color``: ``{BOLD_GREEN}`` if the current git branch is clean,
-  otherwise ``{BOLD_RED}``. This is yellow if the branch color could not be
-  determined.
-* ``branch_bg_color``: Like, ``{branch_color}``, but sets a background color
-  instead.
-* ``prompt_end``: ``#`` if the user has root/admin permissions ``@`` otherwise
-* ``current_job``: The name of the command currently running in the
-  foreground, if any.
-* ``vte_new_tab_cwd``: Issues VTE escape sequence for opening new tabs in the
-  current working directory on some linux terminals. This is not usually needed.
-* ``gitstatus``: Informative git status, like ``[main|MERGING|+1…2]``, you
-  may refer :py:mod:`xonsh.prompt.gitstatus` for customization options.
-* ``localtime``: The current, local time as given by ``time.localtime()``.
-  This is formatted with the time format string found in ``time_format``.
-* ``time_format``: A time format string, defaulting to ``"%H:%M:%S"``.
-* ``last_return_code``: The return code of the last issued command.
-* ``last_return_code_if_nonzero``: The return code of the last issued command if it is non-zero, otherwise ``None``. This is useful for only printing the code in case of errors.
-
-.. note:: See the section below on ``PROMPT_FIELDS`` for more information on changing.
-
-xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
-`as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
-#envvar-VIRTUAL_ENV_DISABLE_PROMPT>`__. If this variable is truthy, xonsh
-will *always* substitute an empty string for ``{env_name}``. Note that unlike
-other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
-after being set---it is not necessary to re-activate the environment.
-
-xonsh also allows for an explicit override of the rendering of ``{env_name}``,
-via the ``$VIRTUAL_ENV_PROMPT`` environment variable. If this variable is
-defined and has any value other than ``None``, ``{env_name}`` will *always*
-render as ``str($VIRTUAL_ENV_PROMPT)`` when an environment is activated.
-It will still render as an empty string when no environment is active.
-``$VIRTUAL_ENV_PROMPT`` is overridden by ``$VIRTUAL_ENV_DISABLE_PROMPT``.
-
-For example:
-
-.. code-block:: xonshcon
-
-    @ $PROMPT = '{env_name}@ '
-    @ source env/bin/activate.xsh
-    (env) @ $VIRTUAL_ENV_PROMPT = '~~ACTIVE~~ '
-    ~~ACTIVE~~ @ $VIRTUAL_ENV_DISABLE_PROMPT = 1
-    @ del $VIRTUAL_ENV_PROMPT
-    @ del $VIRTUAL_ENV_DISABLE_PROMPT
-    (env) @
+See :ref:`customprompt_ref` in the Prompt Toolkit page for the full list of
+available prompt variables, custom ``PROMPT_FIELDS``, conditional formatting,
+and virtual environment settings.
 
 
 Colors
 ------
 
-You can also color your prompt (or print colored messages using ``print_color`` function) easily by inserting
-keywords such as ``{GREEN}`` or ``{BOLD_BLUE}``.  Colors have the form shown below:
+Xonsh supports colored output in prompts and print functions. Use color
+keywords like ``{GREEN}`` or ``{BOLD_BLUE}`` and ``{RESET}`` to clear:
 
-* ``RESET``: Resets any previously used styling.
-* ``COLORNAME``: Inserts a color code for the following basic colors,
-  which come in regular (dark) and intense (light) forms:
+.. code-block:: xonshcon
 
-    - ``BLACK`` or ``INTENSE_BLACK``
-    - ``RED`` or ``INTENSE_RED``
-    - ``GREEN`` or ``INTENSE_GREEN``
-    - ``YELLOW`` or ``INTENSE_YELLOW``
-    - ``BLUE`` or ``INTENSE_BLUE``
-    - ``PURPLE`` or ``INTENSE_PURPLE``
-    - ``CYAN`` or ``INTENSE_CYAN``
-    - ``WHITE`` or ``INTENSE_WHITE``
+    @ print_color('{RED}Error:{RESET} something went wrong')
+    @ printx('Success!', 'BOLD_GREEN')
 
-* ``DEFAULT``: The color code for the terminal's default foreground color.
-* ``#HEX``: A ``#`` before a len-3 or len-6 hex code will use that
-  hex color, or the nearest approximation that that is supported by
-  the shell and terminal.  For example, ``#fff`` and ``#fafad2`` are
-  both valid.
-* ``BACKGROUND_`` may be added to the beginning of a color name or hex
-  color to set a background color.  For example, ``BACKGROUND_INTENSE_RED``
-  and ``BACKGROUND_#123456`` can both be used.
-* ``bg#HEX`` or ``BG#HEX`` are shortcuts for setting a background hex color.
-  Thus you can set ``bg#0012ab`` or the uppercase version.
-* ``BOLD_`` is a prefix modifier that increases the intensity of the font.
-  It may be used with any foreground color.
-  For example, ``BOLD_RED`` and ``BOLD_#112233`` are OK!
-* ``FAINT_`` is a prefix modifier that decreases the intensity of the font.
-  For example, ``FAINT_YELLOW``.
-* ``ITALIC_`` is a prefix modifier that switches to an italic font.
-  For example, ``ITALIC_BLUE``.
-* ``UNDERLINE_`` is a prefix qualifier that also may be used with any
-  foreground color. For example, ``UNDERLINE_GREEN``.
-* ``SLOWBLINK_`` is a prefix modifier makes the text blink, slowly.
-  For example, ``SLOWBLINK_PURPLE``.
-* ``FASTBLINK_`` is a prefix modifier makes the text blink, quickly.
-  For example, ``FASTBLINK_CYAN``.
-* ``INVERT_`` is a prefix modifier swaps the foreground and background colors.
-  For example, ``INVERT_WHITE``.
-* ``CONCEAL_`` is a prefix modifier which hides the text. This may not be
-  widely supported. For example, ``CONCEAL_BLACK``.
-* ``STRIKETHROUGH_`` is a prefix modifier which draws a line through the text.
-  For example, ``STRIKETHROUGH_RED``.
-* ``BOLDOFF_`` is a prefix modifier for removing the intensity of the font.
-  It may be used with any foreground color.
-  For example, ``BOLDOFF_RED`` and ``BOLDOFF_#112233`` are OK!
-* ``FAINTOFF_`` is a prefix modifier for removing the faintness of the font.
-  For example, ``FAINTOFF_YELLOW``.
-* ``ITALICOFF_`` is a prefix modifier that removes an italic font.
-  For example, ``ITALICOFF_BLUE``.
-* ``UNDERLINEOFF_`` is a prefix qualifier for removing the underline of a
-  foreground color. For example, ``UNDERLINEOFF_GREEN``.
-* ``BLINKOFF_`` is a prefix modifier removing the text blinking,
-  whether that is slow or fast. For example, ``BLINKOFF_PURPLE``.
-* ``INVERTOFF_`` is a prefix modifier restoring the foreground and background colors.
-  For example, ``INVERTOFF_WHITE``.
-* ``CONCEALOFF_`` is a prefix modifier which shows the text. This may not be
-  widely supported. For example, ``CONCEALOFF_BLACK``.
-* ``STRIKETHROUGHOFF_`` is a prefix modifier removing lines through the text.
-  For example, ``STRIKETHROUGHOFF_RED``.
-* Or any other combination of modifiers, such as
-  ``BOLD_UNDERLINE_INTENSE_BLACK``,   which is the most metal color you
-  can use!
+Colors work in prompts too:
 
-Additional Prompt Variables
----------------------------
+.. code-block:: xonshcon
 
-You can make use of additional variables beyond these by adding them to the
-``PROMPT_FIELDS`` environment variable. The values in this dictionary should
-be strings (which will be inserted into the prompt verbatim), or functions of
-arguments (which will be called each time the prompt is generated, and the results
-of those calls will be inserted into the prompt). For example:
+    @ $PROMPT = '{CYAN}{cwd}{RESET} @ '
 
-.. code-block:: console
-
-    snail@home ~ @ $PROMPT_FIELDS['test'] = "hey"
-    snail@home ~ @ $PROMPT = "{test} {cwd} @ "
-    hey ~ @
-    hey ~ @ import random
-    hey ~ @ $PROMPT_FIELDS['test'] = lambda: random.randint(1,9)
-    3 ~ @
-    5 ~ @
-    2 ~ @
-    8 ~ @
-
-Environment variables and functions are also available with the ``$``
-prefix.  For example:
-
-.. code-block:: console
-
-    snail@home ~ @ $PROMPT = "{$LANG} >"
-    en_US.utf8 >
-
-Note that some entries of the ``$PROMPT_FIELDS`` are not always applicable, for
-example, ``curr_branch`` returns ``None`` if the current directory is not in a
-repository. The ``None`` will be interpreted as an empty string.
-
-But let's consider a problem:
-
-.. code-block:: console
-
-    snail@home ~/xonsh @ $PROMPT = "{cwd_base} [{curr_branch}] @ "
-    xonsh [main] @ cd ..
-    ~ [] @
-
-We want the branch to be displayed in square brackets, but we also don't want
-the brackets (and the extra space) to be displayed when there is no branch. The
-solution is to add a nested format string (separated with a colon) that will be
-invoked only if the value is not ``None``:
-
-.. code-block:: console
-
-    snail@home ~/xonsh @ $PROMPT = "{cwd_base}{curr_branch: [{}]} @ "
-    xonsh [main] @ cd ..
-    ~ @
-
-The curly brackets act as a placeholder, because the additional part is an
-ordinary format string. What we're doing here is equivalent to this expression:
-
-.. code-block:: python
-
-    " [{}]".format(curr_branch()) if curr_branch() is not None else ""
-
+See :doc:`prompt` for the full list of color names, hex colors,
+and modifiers (bold, italic, underline, etc.).
 
 Executing Commands and Scripts
 ==============================
@@ -1982,20 +1673,60 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     @ echo @(' '.join($(cat @('file%d.txt' % i)).strip() for i in range(6)))
     s n a i l s
 
-Additionally, if the script should exit if a command fails, set the
-environment variable ``$RAISE_SUBPROC_ERROR = True`` at the top of the
-file. Errors in Python mode will already raise exceptions.
-
 Furthermore, you can also toggle the ability to print source code lines with the
 ``trace on`` and ``trace off`` commands.  This is roughly equivalent to
 Python's ``python -m trace``.
+
+Error Handling
+==============
+
+Xonsh treats shell commands as first-class code.  When a command fails,
+you usually want your script to **stop** instead of silently marching
+past the failure — the way a Python exception would — but you also want
+the flexibility of ``&&``/``||`` short-circuit logic that the shell is
+built around.
+
+By default, execution stops as soon as a command **chain** ends in a
+failing command.  A chain is any group of commands whose result is
+determined together — a pipe, a logical ``&&``/``||`` expression, or a
+bare single command.  It is the *final* result of the chain that
+decides whether execution continues; individual commands that are
+explicitly rescued by ``||`` are not fatal.
+
+A couple of examples:
+
+.. code-block:: xonshcon
+
+    @ echo hi | grep x                  # pipe chain — grep didn't match → raise
+    @ ls nofile && echo never           # && chain — ls failed → raise, echo skipped
+    @ ls nofile || echo rescued         # || chain — rescued by echo, no raise
+    rescued
+    @ (echo 1 && ls /etc) || echo fb    # nested — inner chain succeeded, no raise
+
+The **only** subprocess form that does not stop execution on failure
+is the full-capture operator ``!(...)``: it returns a
+``CommandPipeline`` object and leaves error handling entirely up to
+you.  This is the idiomatic way to inspect a command's result without
+triggering an exception:
+
+.. code-block:: xonshcon
+
+    @ if !(ls nofile):
+          print("found")
+      else:
+          print("absent")
+
+See :ref:`error_handling` for the full rules, including
+``@error_raise``/``@error_ignore`` decorators, the environment
+variables that tune this behavior, and how the interactive prompt
+displays (or hides) the resulting exception.
 
 Importing Xonsh (``*.xsh``)
 ==============================
 You can import xonsh source files with the ``*.xsh`` file extension using
 the normal Python syntax:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     from mine import *
 
@@ -2032,17 +1763,85 @@ written in pure Python.
     <json help>
     <json.loads help>
 
-It works for subprocess commands as well:
+It works for subprocess commands as well. Behavior depends on whether
+the name is a **binary** on ``$PATH`` or an **alias**:
+
+For a binary, ``?`` prints just the resolved path; ``??`` additionally
+runs ``man``:
 
 .. code-block:: xonshcon
 
     @ whoami?
-    whoami - print effective user name
+    Resolved whoami: '/usr/bin/whoami'
+
+    @ whoami??
+    Resolved whoami: '/usr/bin/whoami'
+    Running man whoami
+    WHOAMI(1)                   General Commands Manual                  WHOAMI(1)
+    …
+
+When the name does not resolve to any binary, ``??`` no longer falls
+through to ``man`` — the failed resolution is printed on its own line:
+
+.. code-block:: xonshcon
+
+    @ nosuch?
+    Resolved nosuch: None
+
+For an alias, ``?`` gives a short summary and ``??`` adds the
+docstring, threadable/capturable flags (when set), the source file
+location and — the new bit — **the function source code** for
+callable aliases, fetched via ``inspect.getsource``:
+
+.. code-block:: xonshcon
+
     @ ls?
-    ['ls', '-G']
+    Alias: ['ls', '-G']
+
     @ xonfig?
-    <xonsh.xonfig.XonfigAlias>
-    Manage xonsh configuration.
+    Alias: <xonsh.xonfig.XonfigAlias>
+    Descr: Manage xonsh configuration.
+
+Define a callable alias and ask for the super-help form:
+
+.. code-block:: xonshcon
+
+    @ # ~/.xonshrc
+      @aliases.register
+      def _greet(args):
+          """Print a friendly greeting."""
+          print("hello,", *args)
+
+    @ greet?
+    Alias: FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
+    Descr: Print a friendly greeting.
+
+    @ greet??
+    Alias: FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
+    Descr: Print a friendly greeting.
+    Source: /home/snail/.xonshrc:1
+    Code:
+    @aliases.register
+    def _greet(args):
+        """Print a friendly greeting."""
+        print("hello,", *args)
+
+List-style aliases expand recursively through other aliases, and you
+can see where the leading token resolves on disk:
+
+.. code-block:: xonshcon
+
+    @ aliases['lst']  = ['ls', '-la']
+    @ aliases['lst2'] = ['lst', '/tmp']
+    @ lst2??
+    Alias: ['lst', '/tmp']
+    Expanded: ['ls', '-G', '-la', '/tmp']
+    Resolved ls: '/opt/homebrew/.../ls'
+
+For callable aliases defined interactively in the REPL, ``inspect``
+has no source file to read from (``co_filename`` is ``<stdin>``), so
+``Code:`` is replaced with a ``<source unavailable>`` placeholder
+while ``Source:`` still shows where the function was declared.
 
 That's All, Folks
 ======================

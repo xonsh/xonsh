@@ -202,3 +202,23 @@ def test_path_in_python_code(num_args, completion_context_parse):
         line = "@(" + inner_line
         out = xcp.complete_path(completion_context_parse(line, len(line)))
         assert out == exp
+
+
+@pytest.mark.parametrize(
+    "ref, typed, expected",
+    [
+        ("abcdef", "ace", True),
+        ("abcdef", "afc", False),
+        ("abcdef", "", True),
+        ("", "a", False),
+        ("abc", "abc", True),
+        ("abc", "abcd", False),
+    ],
+)
+def test_subsequence_match_iter(ref, typed, expected):
+    assert xcp._subsequence_match_iter(ref, typed) == expected
+
+
+def test_subsequence_match_iter_long_string():
+    """Must not hit recursion limit on long inputs."""
+    assert xcp._subsequence_match_iter("a" * 5000, "a" * 2500)

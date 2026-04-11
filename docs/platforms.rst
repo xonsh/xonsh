@@ -7,8 +7,8 @@ Linux
 Possible conflicts with Bash
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Depending on how your installation of Bash is configured, Xonsh may have trouble
-loading certain shell modules. If you see errors similar to this
+Depending on how your installation of Bash is configured, Xonsh may show
+warnings when loading certain shell modules. If you see errors similar to this
 when launching Xonsh:
 
 .. code-block:: console
@@ -54,6 +54,39 @@ To incorporate the whole functionality of ``/etc/profile``:
 
     source-bash --seterrprevcmd "" /etc/profile
 
+
+
+GNU Coreutils
+^^^^^^^^^^^^^
+
+macOS ships with BSD versions of common utilities (``ls``, ``grep``, ``sed``,
+etc.) which have different flags and behaviour compared to the GNU versions
+found on Linux. If you work across both platforms or prefer GNU behaviour,
+install GNU coreutils and grep via Homebrew:
+
+.. code-block:: console
+
+    @ brew install coreutils grep findutils gnu-sed gnu-tar gawk
+
+Homebrew installs GNU tools with a ``g`` prefix (e.g. ``gls``, ``ggrep``).
+To use them without the prefix, add the GNU paths to your ``$PATH`` in
+``~/.xonshrc``:
+
+.. code-block:: python
+
+    brew_prefix = $(brew --prefix).strip()
+    gnu_paths = [
+        f"{brew_prefix}/opt/coreutils/libexec/gnubin",
+        f"{brew_prefix}/opt/grep/libexec/gnubin",
+        f"{brew_prefix}/opt/findutils/libexec/gnubin",
+        f"{brew_prefix}/opt/gnu-sed/libexec/gnubin",
+        f"{brew_prefix}/opt/gnu-tar/libexec/gnubin",
+    ]
+    for p in gnu_paths:
+        if @.imp.os.path.isdir(p):
+            $PATH.insert(0, p)
+
+After this, ``ls``, ``grep``, ``sed``, etc. will be the GNU versions.
 
 
 Tab completion
@@ -128,7 +161,7 @@ to open automatically in xonsh. Here is a sample settings.json:
             },
             "list":
             [
-                            {
+                {
                     // Guid from https://guidgen.com
                     "guid": "{02639f1c-9437-4b34-a383-2df49b5ed5c5}",
                     "name": "Xonsh",
@@ -222,23 +255,7 @@ Name space conflicts
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Due to ambiguity with the Python ``dir`` builtin, to list the current directory
-you must explicitly request the ``.``, like this:
-
-.. code-block:: xonshcon
-
-   @ dir .
-    Volume in drive C is Windows
-    Volume Serial Number is 30E8-8B86
-
-    Directory of C:\Users\snail\xonsh
-
-   2015-05-12  03:04    <DIR>          .
-   2015-05-12  03:04    <DIR>          ..
-   2015-05-01  01:31    <DIR>          xonsh
-                  0 File(s)              0 bytes
-                  3 Dir(s)  11,008,000,000 bytes free
-
-
+you must explicitly request the ``.`` or set ``$XONSH_BUILTINS_TO_CMD``.
 
 Many people create a ``d`` alias for the ``dir`` command to save
 typing and avoid the ambiguity altogether:
@@ -249,6 +266,17 @@ typing and avoid the ambiguity altogether:
 
 You can add aliases to your `xonshrc <xonshrc.rst>`_ to have it always
 available when xonsh starts.
+
+Alternatively, the experimental ``$XONSH_BUILTINS_TO_CMD`` setting makes bare
+Python builtin names (``dir``, ``zip``, ``type``, etc.) run as subprocess
+commands when a matching alias or executable exists:
+
+.. code-block:: xonshcon
+
+    @ $XONSH_BUILTINS_TO_CMD = True
+    @ dir
+     Volume in drive C is Windows
+     ...
 
 
 Working Directory on PATH
@@ -276,6 +304,34 @@ Although not recommended, to restore the behavior found in the
     @ $PATH.append('.')
 
 Add that to ``~/.xonshrc`` to enable that as the default behavior.
+
+
+Commands Cache
+^^^^^^^^^^^^^^
+
+Windows filesystem access can be slow, especially on network drives or
+directories like ``C:\Windows\System32`` with thousands of executables. Xonsh
+scans ``$PATH`` directories to resolve commands, which may cause noticeable
+lag.
+
+The ``$XONSH_COMMANDS_CACHE_READ_DIR_ONCE`` variable tells xonsh to cache
+directory listings on first access and never re-read them within the session.
+On Windows it defaults to ``C:\Windows`` (via ``%WINDIR%``), meaning
+``C:\Windows\System32`` and all other subdirectories are scanned once and
+cached for the rest of the session. You can extend it with additional slow
+directories:
+
+.. code-block:: xonshcon
+
+    @ $XONSH_COMMANDS_CACHE_READ_DIR_ONCE += ['C:\\Program Files', 'C:\\Program Files (x86)']
+
+On WSL, xonsh auto-detects ``/mnt/*/Windows`` directories.
+
+To debug command resolution, enable:
+
+.. code-block:: xonshcon
+
+    @ $XONSH_COMMANDS_CACHE_DEBUG = True
 
 
 

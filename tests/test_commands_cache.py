@@ -1,5 +1,5 @@
+import json
 import os
-import pickle
 import stat
 import time
 from pathlib import Path
@@ -50,7 +50,7 @@ class TestCommandsCacheSaveIntermediate:
             "bin2",
         ]
 
-        files = tmp_path.glob("*.pickle")
+        files = tmp_path.glob("*.json")
         assert len(list(files)) == 1
         exin_mock.assert_called_once()
 
@@ -64,7 +64,8 @@ class TestCommandsCacheSaveIntermediate:
             )
         }
 
-        file.write_bytes(pickle.dumps(cached))
+        raw = {k: [v.mtime, list(v.cmds)] for k, v in cached.items()}
+        file.write_text(json.dumps(raw))
         assert str(cc.cache_file) == str(file)
         assert [b.lower() for b in cc.all_commands.keys()] == ["bin1", "bin2"]
         exin_mock.assert_not_called()
@@ -374,12 +375,18 @@ def test_caseinsdict_update():
 
 def test_caseinsdict_keys():
     actual = CaseInsensitiveDict({"Key1": "Val1"})
-    assert next(actual.keys()) == "Key1"
+    keys = actual.keys()
+    assert keys == ["Key1"]
+    assert len(keys) == 1
+    assert list(keys) == list(keys)  # can iterate twice
 
 
 def test_caseinsdict_items():
     actual = CaseInsensitiveDict({"Key1": "Val1"})
-    assert next(actual.items()) == ("Key1", "Val1")
+    items = actual.items()
+    assert items == [("Key1", "Val1")]
+    assert len(items) == 1
+    assert list(items) == list(items)  # can iterate twice
 
 
 def test_caseinsdict_repr():

@@ -67,8 +67,10 @@ def carriage_return(b, cli, *, autoindent=True):
         and doc.current_line.split(maxsplit=1)[0] in DEDENT_TOKENS
         and doc.line_count > 1
     ):
+        margin = len(doc.current_line) - len(doc.current_line.lstrip())
         b.newline(copy_margin=autoindent)
-        b.delete_before_cursor(count=len(indent))
+        if margin >= len(indent):
+            b.delete_before_cursor(count=len(indent))
     elif not doc.on_first_line and not current_line_blank:
         b.newline(copy_margin=autoindent)
     elif doc.current_line.endswith(get_line_continuation()):
@@ -488,6 +490,12 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     @handle(Keys.ControlX, Keys.ControlC, filter=has_selection)
     def _copy(event):
         """Copy selected text."""
+        data = event.current_buffer.copy_selection()
+        event.app.clipboard.set_data(data)
+
+    @handle(Keys.ControlC, filter=has_selection)
+    def _copy_or_sigint(event):
+        """Copy selected text on Ctrl+C if there is a selection."""
         data = event.current_buffer.copy_selection()
         event.app.clipboard.set_data(data)
 

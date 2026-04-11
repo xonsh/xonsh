@@ -214,7 +214,10 @@ def test_exec_alias_args(xession):
     [0, 1, 2],
 )
 def test_exec_alias_return_value(exp_rtn, xonsh_session, monkeypatch):
-    monkeypatch.setitem(xonsh_session.env, "RAISE_SUBPROC_ERROR", False)
+    monkeypatch.setitem(xonsh_session.env, "XONSH_SUBPROC_CMD_RAISE_ERROR", False)
+    # Also disable the chain-result raise so a non-zero `python -c "exit(N)"`
+    # surfaces as the alias's return value instead of an exception.
+    monkeypatch.setitem(xonsh_session.env, "XONSH_SUBPROC_RAISE_ERROR", False)
     stack = inspect.stack()
     rtn = ExecAlias(f"{sys.executable} -c 'exit({exp_rtn})'")([], stack=stack)
     assert rtn == exp_rtn
@@ -233,6 +236,30 @@ def test_register_decorator(xession):
     def _private(): ...
 
     assert set(aliases) == {"debug", "name", "private"}
+
+
+def test_register_click_command(xession):
+    """Basic smoke test for the click integration."""
+    import io
+
+    click = pytest.importorskip("click")
+
+    aliases = Aliases()
+
+    @aliases.register_click_command
+    @aliases.click.option("--name", default="World")
+    def _greet(ctx, name):
+        ctx.click.echo(f"hello {name}", file=ctx.stdout)
+
+    # Decorator derives the alias name from the function (leading underscore
+    # stripped) and exposes the click module both on ``aliases`` and ``ctx``.
+    assert "greet" in aliases
+    assert aliases.click is click
+
+    # Invoking the alias runs the click command, which writes to ctx.stdout.
+    stdout = io.StringIO()
+    aliases["greet"](args=["--name", "Xonsh"], stdout=stdout)
+    assert stdout.getvalue() == "hello Xonsh\n"
 
 
 def test_run_alias_by_params():
@@ -256,3 +283,51 @@ def test_run_alias_by_params():
         None,
         4,
     )
+
+
+def test_env_overlay_shadows_global(xession):
+    """env overlay has priority over global env for reads."""
+    xession.env["X"] = "global"
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        alias_env["X"] = "local"
+        assert xession.env["X"] == "local"
+    assert xession.env["X"] == "global"
+
+
+def test_env_overlay_global_write_persists(xession):
+    """Direct writes to env persist after overlay is removed."""
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        alias_env["LOCAL"] = 1
+        xession.env["GLOBAL"] = 2
+    assert "LOCAL" not in xession.env
+    assert xession.env["GLOBAL"] == 2
+
+
+def test_env_overlay_visible_in_detype(xession):
+    """Overlay values are included in detype() for subprocesses."""
+    alias_env = {}
+    with xession.env.swap(overlay=alias_env):
+        alias_env["MY_VAR"] = "from_overlay"
+        detyped = xession.env.detype()
+        assert detyped["MY_VAR"] == "from_overlay"
+
+
+def test_env_overlay_thread_isolation(xession):
+    """Overlay in one thread is not visible in another."""
+    from threading import Thread
+
+    alias_env = {"THREAD_VAR": "yes"}
+    visible_in_other = []
+
+    def check():
+        visible_in_other.append("THREAD_VAR" in xession.env)
+
+    with xession.env.swap(overlay=alias_env):
+        t = Thread(target=check)
+        t.start()
+        t.join()
+        assert xession.env["THREAD_VAR"] == "yes"
+
+    assert visible_in_other == [False]

@@ -49,9 +49,12 @@ and streamline your command-line experience.
     history
     customization
     keyboard_shortcuts
-    prompt_toolkit
+    prompt
     events
+    globbing
+    error_handling
     macros
+    xonsh_session
     Open technical issue <https://github.com/xonsh/xonsh>
 
 Creator
@@ -69,7 +72,9 @@ developer tools.
     editors
     python_virtual_environments
     xonsh_projects
+    callable_aliases
     events_tutorial
+    env
     completers
     xontrib
     Create an extension using template <https://github.com/xonsh/xontrib-template>

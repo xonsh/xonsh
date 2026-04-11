@@ -85,13 +85,20 @@ def _ensure_newline():
         sys.stdout.write("\033[6n")
         sys.stdout.flush()
         # Read response: ESC [ row ; col R
+        import select
+
         resp = ""
         while True:
+            ready, _, _ = select.select([sys.stdin], [], [], 0.5)
+            if not ready:
+                break
             ch = sys.stdin.read(1)
             resp += ch
             if ch == "R":
                 break
         # Parse ";col" from the response  e.g. "\033[42;1R"
+        if ";" not in resp or not resp.endswith("R"):
+            return
         semi = resp.index(";")
         col = int(resp[semi + 1 : -1])  # between ";" and "R"
         if col > 1:
@@ -509,6 +516,18 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             cursor_index=len(prev_text) + endidx,
         )
         rtn_completions = _render_completions(completions, prefix, plen)
+        # Filter out completions that don't start with the readline prefix.
+        # Substring matches (e.g. _json for prefix "jso") would cause readline's
+        # Greatest Common Prefix to shrink below what was typed.
+        filtered = [
+            (r, c)
+            for r, c in zip(rtn_completions, completions, strict=True)
+            if r.startswith(prefix)
+        ]
+        if filtered:
+            rtn_completions, completions = zip(*filtered, strict=True)
+        else:
+            return []
 
         rtn = []
         prefix_begs_quote = prefix.startswith("'") or prefix.startswith('"')
@@ -533,7 +552,7 @@ class ReadlineShell(BaseShell, cmd.Cmd):
         elif show_completions == 1:
             return rtn
         elif show_completions == 2:
-            return completions
+            return rtn
         else:
             raise ValueError("query completions flag not understood.")
 

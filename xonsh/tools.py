@@ -139,7 +139,7 @@ def expand_path(s, expand_user=True):
     env = xsh.env or os_environ
     if env.get("EXPAND_ENV_VARS", False):
         s = expandvars(s)
-    if expand_user:
+    if expand_user and env.get("XONSH_SUBPROC_ARG_EXPANDUSER", True):
         # expand ~ according to Bash unquoted rules "Each variable assignment is
         # checked for unquoted tilde-prefixes immediately following a ':' or the
         # first '='". See the following for more details.
@@ -239,7 +239,14 @@ RE_END_TOKS = LazyObject(
 )
 LPARENS = LazyObject(
     lambda: frozenset(
-        ["LPAREN", "AT_LPAREN", "BANG_LPAREN", "DOLLAR_LPAREN", "ATDOLLAR_LPAREN"]
+        [
+            "LPAREN",
+            "AT_LPAREN",
+            "ATBANG_LPAREN",
+            "BANG_LPAREN",
+            "DOLLAR_LPAREN",
+            "ATDOLLAR_LPAREN",
+        ]
     ),
     globals(),
     "LPARENS",
@@ -641,7 +648,8 @@ def get_sep():
     """Returns the appropriate filepath separator char depending on OS and
     xonsh options set
     """
-    if ON_WINDOWS and xsh.env.get("FORCE_POSIX_PATHS"):
+    env = xsh.env or os_environ
+    if ON_WINDOWS and env.get("FORCE_POSIX_PATHS"):
         return os.altsep
     else:
         return os.sep
@@ -839,7 +847,7 @@ def print_warning(msg):
         if not manually_set_logfile:
             sys.stderr.write(
                 "xonsh: To log full traceback to a file set: "
-                "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
+                "$XONSH_TRACEBACK_LOGFILE = 'error.log'\n"
             )
         traceback.print_stack()
     # additionally, check if a file for traceback logging has been
@@ -858,6 +866,8 @@ def print_warning(msg):
 def print_exception(msg=None, exc_info=None, source_msg=None):
     """Print given exception (or current if None) with/without traceback and set sys.last_exc accordingly."""
 
+    env = xsh.env or os_environ
+
     # is no exec_info() triple is given, use the exception beeing handled at the moment
     if exc_info is None:
         exc_info = sys.exc_info()
@@ -873,7 +883,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     # this is also done to be consistent with python
     is_syntax_error = issubclass(exc_info[0], SyntaxError)
 
-    # XonshErrors don't show where in the users code they occured
+    # XonshErrors don't show where in the users code they occurred
     # (most are reported deeper in the callstack, e.g. see procs/pipelines.py),
     # but only show non-helpful xonsh internals.
     # These are only relevent when developing/debugging xonsh itself.
@@ -886,7 +896,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         limit = 0
         chain = False
 
-    if xsh.env.get("XONSH_SHOW_TRACEBACK", False):
+    if env.get("XONSH_SHOW_TRACEBACK", False):
         """
         This moved under ``XONSH_SHOW_TRACEBACK`` because it looks that python's
         internal machinery behind ``sys.last_*`` is not thread safe
@@ -919,7 +929,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
         if not manually_set_logfile:
             sys.stderr.write(
                 "xonsh: To log full traceback to a file set: "
-                "$XONSH_TRACEBACK_LOGFILE = <filename>\n"
+                "$XONSH_TRACEBACK_LOGFILE = 'error.log'\n"
             )
 
         display_colored_error_message(exc_info)
@@ -936,9 +946,7 @@ def print_exception(msg=None, exc_info=None, source_msg=None):
     if not show_trace:
         # if traceback output is disabled, print the exception's
         # error message on stderr.
-        if not xsh.env.get("XONSH_SHOW_TRACEBACK") and xsh.env.get(
-            "RAISE_SUBPROC_ERROR"
-        ):
+        if not env.get("XONSH_SHOW_TRACEBACK") and env.get("RAISE_SUBPROC_ERROR"):
             display_colored_error_message(exc_info, limit=1)
         else:
             display_error_message(exc_info)
@@ -1345,7 +1353,10 @@ def is_bool_or_int(x):
 def to_bool_or_int(x):
     """Converts a value to a boolean or an integer."""
     if isinstance(x, str):
-        return int(x) if x.isdigit() else to_bool(x)
+        try:
+            return int(x)
+        except ValueError:
+            return to_bool(x)
     elif is_int(x):  # bools are ints too!
         return x
     else:
@@ -1843,7 +1854,7 @@ def is_regex(x):
 
 def is_history_backend(x):
     """Tests if something is a valid history backend."""
-    return is_string(x) or is_class(x) or isinstance(x, object)
+    return is_string(x) or is_class(x)
 
 
 def is_dynamic_cwd_width(x):
@@ -1862,7 +1873,7 @@ def to_dynamic_cwd_tuple(x):
     """Convert to a canonical cwd_width tuple."""
     unit = "c"
     if isinstance(x, str):
-        if x[-1] == "%":
+        if x and x[-1] == "%":
             x = x[:-1]
             unit = "%"
         else:
@@ -2200,6 +2211,7 @@ def format_std_prepost(template, env=None):
     else:
         # shell has fully started. do the normal thing
         shell = xsh.shell.shell
+        s = ""
         try:
             s = shell.prompt_formatter(template)
         except Exception:
@@ -2330,12 +2342,54 @@ def check_for_partial_string(x):
     quote : str (or None)
         A string containing the quote used to start the string (e.g., b", ",
         '''), or None if no string was found.
+
+    Notes
+    -----
+    This is a regex-based scanner, not a full Python tokenizer. It correctly
+    handles `#` comments at the top level (quotes inside `#...\n` are ignored)
+    and `#` inside string literals (which are part of the string, not a
+    comment). Known limitations / cases NOT covered:
+
+    * PEP 701 f-strings with nested quotes of the same kind, e.g.
+      ``f"{ "hi" }"`` (Python 3.12+). The scanner sees this as two separate
+      strings (``f"{ "`` and ``" }"``) instead of one f-string. Quotes of a
+      *different* kind nested inside f-string expressions work fine.
+    * Brace-balancing inside f-string expressions in general — anything that
+      relies on knowing where ``{ ... }`` starts and ends is out of scope.
+    * Comment characters that are not ``#`` (xonsh has no others, but other
+      shells' line-comment markers are not recognized).
+    * Line continuation inside ``#`` comments — irrelevant since Python
+      comments always end at the next newline regardless of any trailing
+      backslash.
+    * Arbitrary Python tokenization errors: malformed input (e.g. four
+      double-quotes in a row) may be reported as a partial triple-quoted
+      string rather than a syntax error; downstream code is responsible for
+      validating syntax.
+
+    Improvements are welcome!
     """
     string_indices = []
     starting_quote = []
     current_index = 0
-    match = re.search(RE_BEGIN_STRING, x)
-    while match is not None:
+    while True:
+        match = re.search(RE_BEGIN_STRING, x)
+        if match is None:
+            break
+        # If the match is inside a `#` comment (i.e. there is a `#` between
+        # the most recent newline and the match), skip the rest of that
+        # comment line and search again. This avoids treating quotes inside
+        # comments as string delimiters.
+        prefix = x[: match.start()]
+        line_prefix = prefix[prefix.rfind("\n") + 1 :]
+        if "#" in line_prefix:
+            nl_after = x.find("\n", match.start())
+            if nl_after < 0:
+                # rest of input is a comment; no more strings to find
+                break
+            offset = nl_after + 1
+            current_index += offset
+            x = x[offset:]
+            continue
         # add the start in
         start = match.start()
         quote = match.group(0)
@@ -2360,8 +2414,6 @@ def check_for_partial_string(x):
         if contents.end() < len(x):
             string_indices.append(current_index)
         x = x[leninside + len(ender) :]
-        # find the next match
-        match = re.search(RE_BEGIN_STRING, x)
     numquotes = len(string_indices)
     if numquotes == 0:
         return (None, None, None)
@@ -2492,19 +2544,6 @@ def globpath(
     return o if len(o) != 0 else no_match
 
 
-def _dotglobstr(s):
-    modified = False
-    dotted_s = s
-    if "/*" in dotted_s:
-        dotted_s = dotted_s.replace("/*", "/.*")
-        dotted_s = dotted_s.replace("/.**/.*", "/**/.*")
-        modified = True
-    if dotted_s.startswith("*") and not dotted_s.startswith("**"):
-        dotted_s = "." + dotted_s
-        modified = True
-    return dotted_s, modified
-
-
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     s = xsh.expand_path(s)
     if sort_result is None:
@@ -2513,20 +2552,11 @@ def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
         include_dotfiles = xsh.env.get("DOTGLOB")
     if ignore_case:
         s = expand_case_matching(s)
-    if "**" in s and "**/*" not in s:
-        s = s.replace("**", "**/*")
-    if include_dotfiles:
-        dotted_s, dotmodified = _dotglobstr(s)
+    kwargs = {"recursive": True, "include_hidden": include_dotfiles or False}
     if sort_result:
-        paths = glob.glob(s, recursive=True)
-        if include_dotfiles and dotmodified:
-            paths.extend(glob.iglob(dotted_s, recursive=True))
-        paths.sort()
-        paths = iter(paths)
+        paths = iter(sorted(glob.glob(s, **kwargs)))
     else:
-        paths = glob.iglob(s, recursive=True)
-        if include_dotfiles and dotmodified:
-            paths = itertools.chain(glob.iglob(dotted_s, recursive=True), paths)
+        paths = glob.iglob(s, **kwargs)
     return paths, s
 
 
@@ -2551,13 +2581,23 @@ def ensure_timestamp(t, datetime_format=None):
         return float(t)
     except (ValueError, TypeError):
         pass
+    if isinstance(t, datetime.datetime):
+        return t.timestamp()
     if datetime_format is None:
         datetime_format = xsh.env["XONSH_DATETIME_FORMAT"]
-    if isinstance(t, datetime.datetime):
-        t = t.timestamp()
-    else:
-        t = datetime.datetime.strptime(t, datetime_format).timestamp()
-    return t
+    # Try the configured format first, then fall back to ISO-8601 parsing
+    # so that e.g. "2023-07-17" works without requiring "2023-07-17 00:00".
+    try:
+        return datetime.datetime.strptime(t, datetime_format).timestamp()
+    except ValueError:
+        pass
+    try:
+        return datetime.datetime.fromisoformat(t).timestamp()
+    except ValueError as err:
+        raise ValueError(
+            f"time data {t!r} does not match format {datetime_format!r} "
+            f"and is not a valid ISO-8601 date"
+        ) from err
 
 
 def format_datetime(dt):
@@ -2571,6 +2611,8 @@ def columnize(elems, width=80, newline="\n"):
     elements placed in columns. Each line will be at most *width* columns.
     The newline character will be appended to the end of each line.
     """
+    if not elems:
+        return []
     sizes = [len(e) + 1 for e in elems]
     total = sum(sizes)
     nelem = len(elems)
@@ -2592,6 +2634,8 @@ def columnize(elems, width=80, newline="\n"):
             # we might be able to fit another column.
             ncols += 1
             nrows = nelem // ncols
+            if nrows == 0:
+                break
             columns = [sizes[i * nrows : (i + 1) * nrows] for i in range(ncols)]
             last_longest_row = longest_row
         else:
@@ -2613,9 +2657,6 @@ def columnize(elems, width=80, newline="\n"):
     return lines
 
 
-ALIAS_KWARG_NAMES = frozenset(["args", "stdin", "stdout", "stderr", "spec", "stack"])
-
-
 def unthreadable(f):
     """Decorator that specifies that a callable alias should be run only
     on the main thread process. This is often needed for debuggers and
@@ -2625,12 +2666,28 @@ def unthreadable(f):
     return f
 
 
+def threadable(f):
+    """Decorator that specifies that a callable alias should be run
+    in a background thread. This is the default behavior.
+    """
+    f.__xonsh_threadable__ = True
+    return f
+
+
 def uncapturable(f):
     """Decorator that specifies that a callable alias should not be run with
     any capturing. This is often needed if the alias call interactive
     subprocess, like pagers and text editors.
     """
     f.__xonsh_capturable__ = False
+    return f
+
+
+def capturable(f):
+    """Decorator that specifies that a callable alias should be run with
+    capturing. This is the default behavior.
+    """
+    f.__xonsh_capturable__ = True
     return f
 
 
@@ -2709,8 +2766,17 @@ def _deprecated_error_on_expiration(name, removed_in):
         raise AssertionError(f"{name} has passed its version {removed_in} expiry date!")
 
 
+def qualified_name(obj) -> str:
+    """Return fully qualified class name, e.g. 'xonsh.environ.VarPattern'."""
+    cls = obj if isinstance(obj, type) else type(obj)
+    module = getattr(cls, "__module__", None)
+    if module and not module.startswith("builtins"):
+        return f"{module}.{cls.__name__}"
+    return cls.__name__
+
+
 def to_repr_pretty_(inst, p, cycle):
-    name = f"{inst.__class__.__module__}.{inst.__class__.__name__}"
+    name = qualified_name(inst)
     with p.group(0, name + "(", ")"):
         if cycle:
             p.text("...")

@@ -25,7 +25,7 @@ from collections.abc import Iterator
 
 from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
-from xonsh.platform import ON_POSIX
+from xonsh.platform import ON_POSIX, ON_WINDOWS
 from xonsh.tools import (
     XonshCalledProcessError,
     XonshError,
@@ -96,7 +96,7 @@ def superhelper(x, name=""):
     return x
 
 
-def reglob(path, parts=None, i=None):
+def reglob(path, parts=None, i=None, include_dotfiles=False):
     """Regular expression-based globbing."""
     if parts is None:
         path = os.path.normpath(path)
@@ -104,7 +104,7 @@ def reglob(path, parts=None, i=None):
         parts = tail.split(os.sep)
         d = os.sep if os.path.isabs(path) else "."
         d = os.path.join(drive, d)
-        return reglob(d, parts, i=0)
+        return reglob(d, parts, i=0, include_dotfiles=include_dotfiles)
     base = subdir = path
     if i == 0:
         if not os.path.isabs(base):
@@ -113,13 +113,14 @@ def reglob(path, parts=None, i=None):
             i += 1
     try:
         regex = re.compile(parts[i])
-    except Exception as e:
-        if isinstance(e, re.error) and str(e) == "nothing to repeat at position 0":
-            raise XonshError(
-                "Consider adding a leading '.' to your glob regex pattern."
-            ) from e
-        else:
-            raise e
+    except re.error as e:
+        original = "/".join(parts)
+        raise XonshError(
+            f"Regex glob error in segment {parts[i]!r} of pattern {original!r}: {e}. "
+            f"Regex globs are split by '/' and each segment is compiled separately, "
+            f"so groups and backreferences cannot span across '/'. "
+            f"See https://xon.sh/globbing.html"
+        ) from e
 
     files = os.listdir(subdir)
     files.sort()
@@ -127,15 +128,19 @@ def reglob(path, parts=None, i=None):
     i1 = i + 1
     if i1 == len(parts):
         for f in files:
+            if not include_dotfiles and f.startswith("."):
+                continue
             p = os.path.join(base, f)
             if regex.fullmatch(f) is not None:
                 paths.append(p)
     else:
         for f in files:
+            if not include_dotfiles and f.startswith("."):
+                continue
             p = os.path.join(base, f)
             if regex.fullmatch(f) is None or not os.path.isdir(p):
                 continue
-            paths += reglob(p, parts=parts, i=i1)
+            paths += reglob(p, parts=parts, i=i1, include_dotfiles=include_dotfiles)
     return paths
 
 
@@ -187,6 +192,95 @@ class XonshPathLiteral(BasePath):  # type: ignore
         return self
 
 
+class XonshList(list):
+    """List subclass returned by glob operations with convenience methods.
+
+    All methods return XonshList, enabling chaining::
+
+        g`**/*.py`.files().sorted().paths()
+    """
+
+    def _check_paths(self, method):
+        """Raise if list contains tuples (e.g. from multi-group m``)."""
+        if self and isinstance(self[0], tuple):
+            raise TypeError(
+                f".{method}() requires string paths, got tuples. "
+                f"Use .select(n) to pick a tuple element first, e.g. .select(0).{method}()"
+            )
+
+    def select(self, n):
+        """Pick the n-th element from each tuple, skipping None values."""
+        return XonshList(
+            v
+            for x in self
+            for v in [x[n] if isinstance(x, tuple) else x]
+            if v is not None
+        )
+
+    def unique(self):
+        """Return a XonshList with duplicates removed, preserving order."""
+        return XonshList(dict.fromkeys(self))
+
+    def paths(self):
+        """Convert string elements to pathlib.Path objects."""
+        self._check_paths("paths")
+        return XonshList(pathlib.Path(p) for p in self)
+
+    def sorted(self, key=None, reverse=False):
+        """Return a new sorted XonshList."""
+        return XonshList(builtins.sorted(self, key=key, reverse=reverse))
+
+    def filter(self, func):
+        """Return a XonshList with only elements where func(elem) is truthy."""
+        return XonshList(x for x in self if func(x))
+
+    def dirs(self):
+        """Keep only paths that are existing directories."""
+        self._check_paths("dirs")
+        return XonshList(p for p in self if os.path.isdir(p))
+
+    def files(self):
+        """Keep only paths that are existing files."""
+        self._check_paths("files")
+        return XonshList(p for p in self if os.path.isfile(p))
+
+    def exists(self):
+        """Keep only paths that exist on disk."""
+        self._check_paths("exists")
+        return XonshList(p for p in self if os.path.exists(p))
+
+    @staticmethod
+    def _is_hidden(p):
+        """Check if a path is hidden. Cross-platform: dotfiles on Unix,
+        FILE_ATTRIBUTE_HIDDEN on Windows."""
+        name = os.path.basename(p)
+        if name.startswith("."):
+            return True
+        if ON_WINDOWS:
+            try:
+                import stat
+
+                attrs = os.stat(p).st_file_attributes
+                return bool(attrs & stat.FILE_ATTRIBUTE_HIDDEN)
+            except (OSError, AttributeError):
+                pass
+        return False
+
+    def hidden(self):
+        """Keep only hidden files and directories.
+        On Unix: names starting with '.'. On Windows: also FILE_ATTRIBUTE_HIDDEN.
+        """
+        self._check_paths("hidden")
+        return XonshList(p for p in self if self._is_hidden(p))
+
+    def visible(self):
+        """Keep only visible (non-hidden) files and directories.
+        On Unix: names not starting with '.'. On Windows: no FILE_ATTRIBUTE_HIDDEN.
+        """
+        self._check_paths("visible")
+        return XonshList(p for p in self if not self._is_hidden(p))
+
+
 def path_literal(s):
     s = expand_path(s)
     return XonshPathLiteral(s)
@@ -194,18 +288,55 @@ def path_literal(s):
 
 def regexsearch(s):
     s = expand_path(s)
-    return reglob(s)
+    dotglob = XSH.env.get("DOTGLOB")
+    return XonshList(reglob(s, include_dotfiles=dotglob))
+
+
+def regexmatchsearch(s):
+    """Regex glob that returns match groups instead of paths."""
+    s = expand_path(s)
+    dotglob = XSH.env.get("DOTGLOB")
+    regex = re.compile(s)
+    # Find the static prefix (path before any regex special chars)
+    _RE_SPECIAL = re.compile(r"[\\()\[\]{}.*+?|^$]")
+    m = _RE_SPECIAL.search(s)
+    if m:
+        prefix = s[: m.start()]
+        start = prefix.rsplit("/", 1)[0] or "."
+    else:
+        start = s if os.path.isdir(s) else os.path.dirname(s) or "."
+    results = []
+    for root, dirs, files in os.walk(start):
+        if not dotglob:
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+        for name in dirs + files:
+            if not dotglob and name.startswith("."):
+                continue
+            path = os.path.join(root, name)
+            match = regex.fullmatch(path)
+            if match:
+                groups = match.groups()
+                if not groups:
+                    results.append(path)
+                elif len(groups) == 1:
+                    results.append(groups[0])
+                else:
+                    results.append(groups)
+    results.sort()
+    return XonshList(results)
 
 
 def globsearch(s):
     glob_sorted = XSH.env.get("GLOB_SORTED")
     dotglob = XSH.env.get("DOTGLOB")
-    return globpath(
-        s,
-        ignore_case=True,
-        return_empty=True,
-        sort_result=glob_sorted,
-        include_dotfiles=dotglob,
+    return XonshList(
+        globpath(
+            s,
+            ignore_case=True,
+            return_empty=True,
+            sort_result=glob_sorted,
+            include_dotfiles=dotglob,
+        )
     )
 
 
@@ -220,22 +351,76 @@ def pathsearch(func, s, pymode=False, pathobj=False):
         raise XonshError(error % func)
     o = func(s)
     if pathobj and pymode:
-        o = list(map(pathlib.Path, o))
-    no_match = [] if pymode else [s]
+        o = XonshList(map(pathlib.Path, o))
+    no_match = XonshList() if pymode else [s]
     return o if len(o) != 0 else no_match
 
 
-def subproc_captured_stdout(*cmds, envs=None):
+def _check_subproc_helper_raise(in_boolop):
+    """Raise ``CalledProcessError`` if the most recently completed
+    pipeline (``XSH.lastcmd``) failed and the active settings say we
+    should raise.
+
+    Called by the ``subproc_*`` helpers right after they finish, so
+    that nested calls like ``echo @$(ls nono)`` raise on the inner
+    failure even though the *outer* helper would have succeeded with
+    an empty injection.
+
+    Skip conditions:
+
+    * ``in_boolop=True`` — the helper is a direct operand of a
+      ``&&``/``||`` chain; let the chain wrapper see the result.
+    * ``$XONSH_SUBPROC_RAISE_ERROR`` is False.
+    * No completed pipeline (e.g. background job).
+    * The pipeline succeeded.
+    * ``spec.captured == 'object'`` — ``!(...)`` is the explicit
+      "user takes responsibility" form per spec.
+    * ``@error_ignore`` was applied (``spec.raise_subproc_error is False``).
+    """
+    if in_boolop:
+        return
+    if not XSH.env.get("XONSH_SUBPROC_RAISE_ERROR"):
+        return
+    cp = XSH.lastcmd
+    if cp is None:
+        return
+    rtn = getattr(cp, "returncode", None)
+    if rtn is None or rtn == 0:
+        return
+    spec = getattr(cp, "spec", None)
+    if spec is None:
+        return
+    if getattr(spec, "captured", None) == "object":
+        return
+    if getattr(spec, "raise_subproc_error", None) is False:
+        return
+
+    import subprocess
+
+    output = getattr(cp, "output", None)
+    raise subprocess.CalledProcessError(rtn, spec.args, output=output)
+
+
+def subproc_captured_stdout(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, capturing the output. Returns the stdout
     that was produced as a str or list based on ``$XONSH_SUBPROC_OUTPUT_FORMAT``.
+
+    ``in_boolop`` is set by the parser to True when this call is a direct
+    operand of a ``&&``/``||`` chain, so the runtime can adjust behavior
+    (e.g. suppress ``$XONSH_SUBPROC_CMD_RAISE_ERROR`` to let the chain
+    short-circuit on returncode).
     """
 
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
+    r = xonsh.procs.specs.run_subproc(
+        cmds, captured="stdout", envs=envs, in_boolop=in_boolop
+    )
+    _check_subproc_helper_raise(in_boolop)
+    return r
 
 
-def subproc_captured_inject(*cmds, envs=None):
+def subproc_captured_inject(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, capturing the output. Returns a list of
     whitespace-separated strings of the stdout that was produced.
     The string is split using xonsh's lexer, rather than Python's str.split()
@@ -243,7 +428,10 @@ def subproc_captured_inject(*cmds, envs=None):
     """
     import xonsh.procs.specs
 
-    o = xonsh.procs.specs.run_subproc(cmds, captured="stdout", envs=envs)
+    o = xonsh.procs.specs.run_subproc(
+        cmds, captured="stdout", envs=envs, in_boolop=in_boolop
+    )
+    _check_subproc_helper_raise(in_boolop)
     o = o if isinstance(o, list) else o.splitlines()
     toks = []
     for line in o:
@@ -252,32 +440,130 @@ def subproc_captured_inject(*cmds, envs=None):
     return toks
 
 
-def subproc_captured_object(*cmds, envs=None):
+def subproc_captured_object(*cmds, envs=None, in_boolop=False):
     """
     Runs a subprocess, capturing the output. Returns an instance of
     CommandPipeline representing the completed command.
     """
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured="object", envs=envs)
+    return xonsh.procs.specs.run_subproc(
+        cmds, captured="object", envs=envs, in_boolop=in_boolop
+    )
 
 
-def subproc_captured_hiddenobject(*cmds, envs=None):
+def subproc_captured_hiddenobject(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, capturing the output. Returns an instance of
     HiddenCommandPipeline representing the completed command.
     """
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured="hiddenobject", envs=envs)
+    return xonsh.procs.specs.run_subproc(
+        cmds, captured="hiddenobject", envs=envs, in_boolop=in_boolop
+    )
 
 
-def subproc_uncaptured(*cmds, envs=None):
+def subproc_uncaptured(*cmds, envs=None, in_boolop=False):
     """Runs a subprocess, without capturing the output. Returns the stdout
     that was produced as a str.
     """
     import xonsh.procs.specs
 
-    return xonsh.procs.specs.run_subproc(cmds, captured=False, envs=envs)
+    r = xonsh.procs.specs.run_subproc(
+        cmds, captured=False, envs=envs, in_boolop=in_boolop
+    )
+    _check_subproc_helper_raise(in_boolop)
+    return r
+
+
+def subproc_check_boolop(value):
+    """Raise ``CalledProcessError`` if *value* is the (final) result of
+    a subproc statement that ended in failure.
+
+    Used as the AST wrapper around two kinds of nodes:
+
+    * The outermost ``BoolOp`` of a logical chain (``cmd1 && cmd2`` /
+      ``cmd1 || cmd2``).  Python ``and``/``or`` short-circuits to the
+      pipeline that determined the chain result, so the wrapper sees
+      the *final* pipeline.
+    * A standalone subproc-helper call at statement level — bare
+      commands, ``![...]``, ``$[...]``, ``$(...)``, ``@$(...)``.  The
+      explicit-capture form ``!(...)`` is *intentionally* not wrapped:
+      per spec it is the user's full responsibility.
+
+    When ``$XONSH_SUBPROC_RAISE_ERROR`` is True (default), this enforces
+    "raise on the last executed pipeline's non-zero exit code" semantics:
+
+    * ``ls nono`` (standalone) — rc≠0: raises.
+    * ``$(ls nono)`` (standalone) — rc≠0: raises.
+    * ``$[ls nono]`` (standalone) — rc≠0: raises.
+    * ``echo 1 && echo 2`` — last is ``echo 2`` (rc=0): no raise.
+    * ``ls nono || echo 1`` — last is ``echo 1`` (rc=0): no raise.
+    * ``ls nono && echo 1`` — last is ``ls nono`` (rc≠0): raises.
+
+    Per-command overrides:
+
+    * ``@error_ignore`` (``spec.raise_subproc_error is False``) on the
+      final pipeline suppresses the raise — used e.g. for
+      ``echo 1 && @error_ignore ls nono``.
+    * ``@error_raise`` raises directly at the pipeline level, so the
+      wrapper never sees a failed value.
+
+    Some subproc helpers (``$()``, ``$[]``, ``@$()``) return a *string*
+    / *None* / *list* rather than a ``CommandPipeline``, so the wrapper
+    can't read ``returncode`` directly off ``value``.  In that case it
+    falls back to ``XSH.lastcmd`` — the most recently completed pipeline,
+    which is the one this helper just ran.
+    """
+    if not XSH.env.get("XONSH_SUBPROC_RAISE_ERROR"):
+        return value
+    # Try to get the pipeline from the value first (BoolOp result, ![...]).
+    spec = getattr(value, "spec", None)
+    rtn = getattr(value, "returncode", None)
+    cp_for_output = value
+    if spec is None or rtn is None:
+        # Value isn't a CommandPipeline (e.g. string from $(), None from
+        # $[], list from @$()).  Fall back to the most recently
+        # completed pipeline so we can still inspect its returncode.
+        last = XSH.lastcmd
+        if last is None:
+            return value
+        spec = getattr(last, "spec", None)
+        rtn = getattr(last, "returncode", None)
+        cp_for_output = last
+    if spec is None or rtn is None or rtn == 0:
+        return value
+    # ``!(...)`` is the "user takes full responsibility" form — never
+    # raise even if it ends up here via a chain like ``cmd && !(cmd)``.
+    if getattr(spec, "captured", None) == "object":
+        return value
+    # @error_ignore on the final pipeline of the chain opts out.
+    if getattr(spec, "raise_subproc_error", None) is False:
+        return value
+    import subprocess
+
+    output = getattr(cp_for_output, "output", None)
+    raise subprocess.CalledProcessError(rtn, spec.args, output=output)
+
+
+_SPECIAL_BUILTINS = {"...": ...}
+
+
+def builtin_cmd(name):
+    """Run a builtin name as a subprocess command if $XONSH_BUILTINS_TO_CMD is set
+    and the name is a known command or alias. Otherwise return the builtin value."""
+    env = XSH.env or {}
+    if env.get("XONSH_BUILTINS_TO_CMD"):
+        has_cmd = name in (XSH.aliases or {})
+        if not has_cmd and XSH.commands_cache:
+            has_cmd = XSH.commands_cache.locate_binary(name) is not None
+        if has_cmd:
+            return subproc_captured_hiddenobject([name])
+    if name in _SPECIAL_BUILTINS:
+        return _SPECIAL_BUILTINS[name]
+    import builtins as _builtins
+
+    return getattr(_builtins, name, None)
 
 
 def ensure_list_of_strs(x):
@@ -705,7 +991,8 @@ class XonshSession:
         self.pathsearch = pathsearch
         self.globsearch = globsearch
         self.regexsearch = regexsearch
-        self.glob = globpath
+        self.regexmatchsearch = regexmatchsearch
+        self.glob = lambda *a, **kw: XonshList(globpath(*a, **kw))
         self.expand_path = expand_path
 
         self.subproc_captured_stdout = subproc_captured_stdout
@@ -713,10 +1000,12 @@ class XonshSession:
         self.subproc_captured_object = subproc_captured_object
         self.subproc_captured_hiddenobject = subproc_captured_hiddenobject
         self.subproc_uncaptured = subproc_uncaptured
+        self.subproc_check_boolop = subproc_check_boolop
         self.call_macro = call_macro
         self.enter_macro = enter_macro
         self.path_literal = path_literal
 
+        self.builtin_cmd = builtin_cmd
         self.list_of_strs_or_callables = list_of_strs_or_callables
         self.list_of_list_of_strs_outer_product = list_of_list_of_strs_outer_product
         self.eval_fstring_field = eval_fstring_field
@@ -856,6 +1145,7 @@ class XonshSession:
             if self.history is not None:
                 self.history.flush(at_exit=True)
 
+        self._flush_on_exit = flush_on_exit
         atexit.register(flush_on_exit)
 
         # Add one-shot handler for exit
@@ -894,6 +1184,9 @@ class XonshSession:
 
         if self.history is not None:
             self.history.flush(at_exit=True)
+
+        if hasattr(self, "_flush_on_exit"):
+            atexit.unregister(self._flush_on_exit)
 
         self.unlink_builtins()
         delattr(builtins, "__xonsh__")
@@ -946,7 +1239,7 @@ class DynamicAccessProxy:
         return getattr(self.obj, name)
 
     def __setattr__(self, name, value):
-        return super().__setattr__(name, value)
+        return setattr(self.obj, name, value)
 
     def __delattr__(self, name):
         return delattr(self.obj, name)

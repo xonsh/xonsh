@@ -6,13 +6,13 @@ import contextlib
 import glob
 import os
 import subprocess
+import sys
 import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.events import events
 from xonsh.platform import ON_WINDOWS
-from xonsh.tools import get_sep
 
 DIRSTACK: list[str] = []
 """A list containing the currently remembered directories."""
@@ -134,8 +134,8 @@ def _unc_unmap_temp_drive(left_drive, cwd):
         if p.casefold().startswith(left_drive):
             return
 
-    _unc_tempDrives.pop(left_drive)
     subprocess.check_output(["NET", "USE", left_drive, "/delete"], text=True)
+    _unc_tempDrives.pop(left_drive)
 
 
 events.doc(
@@ -176,11 +176,9 @@ def _change_working_directory(newdir, follow_symlinks=False):
 
     try:
         os.chdir(absnew)
-    except OSError:
-        if new.endswith(get_sep()):
-            new = new[:-1]
-        if os.path.basename(new) == "..":
-            env["PWD"] = new
+    except OSError as e:
+        print(f"cd: {e}", file=sys.stderr)
+        return
     else:
         if old is not None:
             env["OLDPWD"] = old

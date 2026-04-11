@@ -146,7 +146,20 @@ class CommandCompleter:
                 *XSH.env.get("XONSH_COMPLETER_DIRS", []),
             )
             self._matcher.wrap(r"\bx?pip(?:\d|\.)*(exe)?$", "pip")
+            self._matcher.wrap(r"\bpython(?:\d|\.)*(exe)?$", "python")
+            # More patterns can be registered via self.wrap() from xonshrc/xontrib
         return self._matcher
+
+    def wrap(self, pattern, module_name):
+        """Register a regex pattern to map command name variants to a completer module.
+
+        Can be called from xonshrc or xontrib::
+
+            from xonsh.completers.commands import complete_xompletions as xmp
+            xmp.wrap(r"\\bmycmd(?:\\d)*$", "mycmd")
+
+        """
+        self.matcher.wrap(pattern, module_name)
 
     @staticmethod
     @functools.lru_cache(10)

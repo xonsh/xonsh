@@ -5,6 +5,7 @@ import collections.abc as cabc
 import os
 import re
 import sys
+import tempfile
 import threading
 import time
 
@@ -110,16 +111,30 @@ def _xhj_get_data_dir_files(data_dir, include_mtime=False):
     # list of (file, mtime) pairs
     data_dir = xt.expanduser_abs_path(data_dir)
     try:
-        for file in os.listdir(data_dir):
-            if file.startswith("xonsh-") and file.endswith(".json"):
-                fullpath = os.path.join(data_dir, file)
-                mtime = os.path.getmtime(fullpath) if include_mtime else None
-                yield fullpath, mtime
+        entries = os.listdir(data_dir)
     except OSError:
         if XSH.env.get("XONSH_DEBUG"):
             xt.print_exception(
                 f"Could not collect xonsh history json files from {data_dir}"
             )
+        return
+    for file in entries:
+        if not (file.startswith("xonsh-") and file.endswith(".json")):
+            continue
+        fullpath = os.path.join(data_dir, file)
+        if include_mtime:
+            try:
+                mtime = os.path.getmtime(fullpath)
+            except OSError as err:
+                if XSH.env.get("XONSH_DEBUG"):
+                    print(
+                        f"xonsh history: skipping unreadable file {fullpath!r}: {err}",
+                        file=sys.stderr,
+                    )
+                continue
+        else:
+            mtime = None
+        yield fullpath, mtime
 
 
 def _xhj_get_history_files(sort=True, newest_first=False, modified_since=None):
@@ -165,8 +180,8 @@ def _xhj_pull_items(pull_times, src_sessionid=None):
         )
 
     # src_paths may include the current session's file, so skip it to avoid duplicates
-    custom_history_file = XSH.env.get("XONSH_HISTORY_FILE") or ""
-    current_session_path = xt.expanduser_abs_path(custom_history_file)
+    hist = XSH.history
+    current_session_path = getattr(hist, "filename", None) or ""
     items = []
     for path in src_paths:
         if path == current_session_path:
@@ -283,7 +298,7 @@ class JsonHistoryGC(threading.Thread):
                     hist = lj.load()
                     lj.close()
                     hist["locked"] = False
-                    with open(f, "w", newline="\n") as fp:
+                    with open(f, "w", newline="\n", encoding="utf-8") as fp:
                         xlj.ljdump(hist, fp, sort_keys=True)
                     lj = xlj.LazyJSON(f, reopen=False)
                 if only_unlocked and lj.get("locked", False):
@@ -325,8 +340,11 @@ class JsonHistoryFlusher(threading.Thread):
         self.at_exit = at_exit
         self.skip = skip
         if at_exit:
-            self.dump()
-            queue.popleft()
+            with self.cond:
+                self.cond.wait_for(self.i_am_at_the_front)
+                self.dump()
+                self.queue.popleft()
+                self.cond.notify_all()
         else:
             self.start()
 
@@ -335,6 +353,7 @@ class JsonHistoryFlusher(threading.Thread):
             self.cond.wait_for(self.i_am_at_the_front)
             self.dump()
             self.queue.popleft()
+            self.cond.notify_all()
 
     def i_am_at_the_front(self):
         """Tests if the flusher is at the front of the queue."""
@@ -359,8 +378,12 @@ class JsonHistoryFlusher(threading.Thread):
 
             cmds.append(cmd)
             last_inp = cmd["inp"]
-        with open(self.filename, newline="\n") as f:
-            hist = xlj.LazyJSON(f).load()
+        try:
+            with open(self.filename, newline="\n", encoding="utf-8") as f:
+                hist = xlj.LazyJSON(f).load()
+        except (JSONDecodeError, ValueError, OSError):
+            # File is corrupted or unreadable - start with empty history
+            hist = {"cmds": [], "sessionid": "", "ts": [time.time(), 0], "locked": True}
         load_hist_len = len(hist["cmds"])
         hist["cmds"].extend(cmds)
         if self.at_exit:
@@ -370,8 +393,22 @@ class JsonHistoryFlusher(threading.Thread):
             hist["locked"] = False
         if not XSH.env.get("XONSH_STORE_STDOUT", False):
             [cmd.pop("out") for cmd in hist["cmds"][load_hist_len:] if "out" in cmd]
-        with open(self.filename, "w", newline="\n") as f:
-            xlj.ljdump(hist, f, sort_keys=True)
+        # Atomic write: write to temp file, then os.replace()
+        dirname = os.path.dirname(self.filename)
+        fd, tmpname = tempfile.mkstemp(dir=dirname, suffix=".json.tmp")
+        try:
+            with os.fdopen(fd, "w", newline="\n", encoding="utf-8") as f:
+                xlj.ljdump(hist, f, sort_keys=True)
+        except Exception as err:
+            print(f"history: failed to write {tmpname!r}: {err}", file=sys.stderr)
+            return
+        try:
+            os.replace(tmpname, self.filename)
+        except Exception as err:
+            print(
+                f"history: failed to replace {tmpname!r} -> {self.filename!r}: {err}",
+                file=sys.stderr,
+            )
 
 
 class JsonCommandField(cabc.Sequence):
@@ -420,7 +457,7 @@ class JsonCommandField(cabc.Sequence):
         queue.append(self)
         with self.hist._cond:
             self.hist._cond.wait_for(self.i_am_at_the_front)
-            with open(self.hist.filename, newline="\n") as f:
+            with open(self.hist.filename, newline="\n", encoding="utf-8") as f:
                 lj = xlj.LazyJSON(f, reopen=False)
                 rtn = lj["cmds"][key].get(self.field, self.default)
                 if isinstance(rtn, xlj.LJNode):
@@ -478,7 +515,7 @@ class JsonHistory(History):
         if self.filename and not os.path.exists(os.path.expanduser(self.filename)):
             meta["cmds"] = []
             meta["sessionid"] = str(self.sessionid)
-            with open(self.filename, "w", newline="\n") as f:
+            with open(self.filename, "w", newline="\n", encoding="utf-8") as f:
                 xlj.ljdump(meta, f, sort_keys=True)
 
             try:
@@ -609,6 +646,8 @@ class JsonHistory(History):
         while self.gc and self.gc.is_alive():
             time.sleep(0.011)  # gc sleeps for 0.01 secs, sleep a beat longer
         for f in _xhj_get_history_files(newest_first=newest_first):
+            if f == self.filename:
+                continue
             try:
                 json_file = xlj.LazyJSON(f, reopen=False)
             except ValueError:
@@ -618,7 +657,7 @@ class JsonHistory(History):
                 commands = json_file.load()["cmds"]
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
-                if XSH.env.get("XONSH_DEBUG") > 0:
+                if XSH.env.get("XONSH_DEBUG", 0) > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
                     print(msg.format(f), file=sys.stderr)
                 continue
@@ -684,8 +723,11 @@ class JsonHistory(History):
         self._len = 0
         self._skipped = 0
 
-        # Flush empty history object to disk, overwriting previous data.
-        self.flush()
+        # Write empty history directly — flush() would skip empty buffer.
+        if self.filename:
+            meta = {"cmds": [], "sessionid": str(self.sessionid)}
+            with open(self.filename, "w", newline="\n", encoding="utf-8") as f:
+                xlj.ljdump(meta, f, sort_keys=True)
 
     def delete(self, pattern):
         """Deletes all entries in history which matches a pattern."""
@@ -712,11 +754,25 @@ class JsonHistory(History):
                 new_commands = [c for c in commands if not pattern.match(c["inp"])]
                 deleted += len(commands) - len(new_commands)
                 file_content["cmds"] = new_commands
-                with open(f, "w") as fp:
-                    xlj.ljdump(file_content, fp)
+                dirname = os.path.dirname(f)
+                fd, tmpname = tempfile.mkstemp(dir=dirname, suffix=".json.tmp")
+                try:
+                    with os.fdopen(fd, "w", newline="\n", encoding="utf-8") as fp:
+                        xlj.ljdump(file_content, fp)
+                    os.replace(tmpname, f)
+                except Exception as err:
+                    try:
+                        os.unlink(tmpname)
+                    except OSError:
+                        pass
+                    print(
+                        f"history delete: failed to update {f!r}: {err}",
+                        file=sys.stderr,
+                    )
+                    continue
             except (JSONDecodeError, ValueError):
                 # file is corrupted somehow
-                if XSH.env.get("XONSH_DEBUG") > 0:
+                if XSH.env.get("XONSH_DEBUG", 0) > 0:
                     msg = "xonsh history file {0!r} is not valid JSON"
                     print(msg.format(f), file=sys.stderr)
                 continue
