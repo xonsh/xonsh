@@ -78,8 +78,16 @@ def test_resolve_one_directory_is_bad(tmp_path):
     assert bad is True
 
 
+@skip_if_on_windows
 def test_resolve_one_not_executable_is_bad(tmp_path):
-    """An existing, accessible, but non-``+x`` file is bad."""
+    """An existing, accessible, but non-``+x`` file is bad.
+
+    POSIX-only: Windows has no per-file execute bit. Executability is
+    determined by extension via ``PATHEXT`` and ``os.access(X_OK)`` on
+    Windows is effectively always True for readable files. Windows
+    coverage for the extension-based executable check lives in the
+    dedicated ``_llm`` test module.
+    """
     f = tmp_path / "foo.py"
     _make_unexecutable(f)
     resolved, bad = _resolve_one(str(f), resolve=True)
@@ -120,9 +128,12 @@ def test_resolve_one_executable_file_is_ok(tmp_path):
     assert bad is False
 
 
+@skip_if_on_windows
 def test_resolve_one_not_executable_bad_even_without_resolve(tmp_path):
     """``resolve=False`` must NOT disable the accessibility / +x check —
-    otherwise ``--no-resolve`` would hide broken entries from the user."""
+    otherwise ``--no-resolve`` would hide broken entries from the user.
+    POSIX-only — see :func:`test_resolve_one_not_executable_is_bad`.
+    """
     f = tmp_path / "foo.py"
     _make_unexecutable(f)
     _, bad = _resolve_one(str(f), resolve=False)
@@ -207,9 +218,12 @@ def test_resolve_path_list_with_good_head(tmp_path):
     assert resolved[1:] == ["-m", "pip"]
 
 
+@skip_if_on_windows
 def test_resolve_path_list_with_bad_head_not_executable(tmp_path):
     """A list whose first element points to a non-``+x`` file is flagged
-    bad (no symlinks involved)."""
+    bad (no symlinks involved). POSIX-only — see
+    :func:`test_resolve_one_not_executable_is_bad`.
+    """
     f = tmp_path / "foo.py"
     _make_unexecutable(f)
     value = [str(f), "-m", "pip"]
@@ -236,7 +250,11 @@ def test_is_executable_file_directory(tmp_path):
     assert _is_executable_file(str(tmp_path)) is False
 
 
+@skip_if_on_windows
 def test_is_executable_file_plain_file(tmp_path):
+    """POSIX-only — see :func:`test_resolve_one_not_executable_is_bad`
+    for why the ``+x``-based tests cannot run on Windows.
+    """
     f = tmp_path / "plain.txt"
     _make_unexecutable(f)
     assert _is_executable_file(str(f)) is False
