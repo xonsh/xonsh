@@ -1866,12 +1866,29 @@ class XonshConsoleLexer(XonshLexer):
     aliases = ["xonshcon"]
     filenames: list[str] = []
 
+    # Prompt patterns:
+    #
+    # The first line of a block is matched with ``^(prompt) `` (via
+    # ``re.MULTILINE`` which pygments enables by default on ``RegexLexer``),
+    # so the whole ``@ ``/``>>> `` — *including* the trailing space — is
+    # tokenised as ``Generic.Prompt``. That space is important: Sphinx
+    # themes and ``sphinx_copybutton`` strip ``Generic.Prompt`` from
+    # copy-to-clipboard, so anything inside the prompt token is removed.
+    #
+    # Continuation lines use ``bygroups`` to split the preceding newline
+    # off from the prompt: ``(\n)(@ |\. )`` emits ``\n`` as ``Text``
+    # (preserved in the clipboard → the two lines stay separated) and
+    # ``@ ``/``. `` as ``Generic.Prompt`` (stripped together with its
+    # trailing space → no orphan leading space). The earlier version of
+    # this rule was ``\n(@|\.)`` which captured the newline *and* the
+    # prompt char but *not* the trailing space, leaving a visible leading
+    # space on every continuation line in copy-paste.
     tokens = {
         "root": [
             (r"^(>>>|\.\.\.) ", Generic.Prompt),
-            (r"\n(>>>|\.\.\.)", Generic.Prompt),
+            (r"(\n)(>>> |\.\.\. )", bygroups(Text, Generic.Prompt)),
             (r"^(@|\.) ", Generic.Prompt),
-            (r"\n(@|\.)", Generic.Prompt),
+            (r"(\n)(@ |\. )", bygroups(Text, Generic.Prompt)),
             (r"\n(?![>.][>.][>.] )([^\n]*)", Generic.Output),
             (r"\n(?![>.][>.][>.] )(.*?)$", Generic.Output),
             inherit,

@@ -13,6 +13,7 @@ from xonsh.pyghooks import (
     XSH,
     Color,
     Token,
+    XonshConsoleLexer,
     XonshLexer,
     XonshStyle,
     code_by_name,
@@ -408,3 +409,56 @@ def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     lexer = XonshLexer()
     assert XSH.env is not None
     list(lexer.get_tokens_unprocessed("  some text"))
+
+
+def _prompt_tokens(xsh_console_text):
+    """Return the list of ``(token_type, value)`` tuples that
+    ``XonshConsoleLexer`` produces for a given multi-line console text."""
+    return list(XonshConsoleLexer().get_tokens(xsh_console_text))
+
+
+def test_xonshcon_first_prompt_includes_trailing_space(xession):
+    """The first-line ``@ `` prompt must be tokenised as a single
+    ``Generic.Prompt`` token that includes the trailing space, so that
+    stripping prompts from copy-paste leaves the command with no orphan
+    leading space."""
+    tokens = _prompt_tokens("@ echo hello\n")
+    prompt = next((v for t, v in tokens if t is Token.Generic.Prompt), None)
+    assert prompt == "@ "
+
+
+def test_xonshcon_continuation_prompt_symmetric_with_first(xession):
+    """Regression: a second ``@ ``-prefixed line used to be tokenised as
+    ``(\\n@, Generic.Prompt)`` + ``( , Text)``, i.e. the leading newline
+    was eaten by the prompt token while the trailing space was *not*.
+    That made copy-paste produce ``"echo hello\\n cd $HOME"`` — with an
+    orphan leading space on every continuation line. The fix splits the
+    newline off into a plain ``Text`` token and includes the trailing
+    space in the prompt, so both lines yield an identical ``"@ "``
+    prompt token."""
+    tokens = _prompt_tokens("@ echo hello\n@ cd $HOME\n")
+    prompts = [v for t, v in tokens if t is Token.Generic.Prompt]
+    # Exactly two prompts, both identical "@ " (with trailing space).
+    assert prompts == ["@ ", "@ "]
+    # The newline between the two command lines is a plain Text token,
+    # NOT part of any Prompt span — so it survives clipboard stripping.
+    assert any(t is Token.Text and v == "\n" for t, v in tokens)
+
+
+def test_xonshcon_python_continuation_prompt_symmetric(xession):
+    """Same regression for Python interactive prompts (``>>>`` / ``...``)."""
+    tokens = _prompt_tokens(">>> x = 1\n>>> print(x)\n")
+    prompts = [v for t, v in tokens if t is Token.Generic.Prompt]
+    assert prompts == [">>> ", ">>> "]
+    assert any(t is Token.Text and v == "\n" for t, v in tokens)
+
+
+def test_xonshcon_copy_paste_strips_prompts_cleanly(xession):
+    """End-to-end: stripping every ``Generic.Prompt`` token from the
+    tokenised stream must yield the raw command text with correct line
+    breaks and no orphan leading spaces."""
+    text = "@ echo hello\n@ cd $HOME\n"
+    tokens = _prompt_tokens(text)
+    copied = "".join(v for t, v in tokens if t is not Token.Generic.Prompt)
+    # Prompt stripped, newlines and command content preserved exactly.
+    assert copied == "echo hello\ncd $HOME\n"
