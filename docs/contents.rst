@@ -77,6 +77,7 @@ developer tools.
     env
     completers
     xontrib
+    embedding
     api/index
     Create an extension using template <https://github.com/xonsh/xontrib-template>
 
