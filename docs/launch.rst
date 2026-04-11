@@ -279,47 +279,71 @@ re-installed.
 What xonsh does now
 -------------------
 
-On POSIX, during ``main_xonsh``, xonsh runs the bash-style handshake
-in :func:`xonsh.main._acquire_controlling_terminal`:
+On POSIX, the **very first thing** :func:`xonsh.main.main` does — before
+argument parsing, xontrib loading or xonshrc execution — is call
+:func:`xonsh.main._setup_controlling_terminal`. That in turn runs the
+bash-style handshake in
+:func:`xonsh.main._acquire_controlling_terminal` and installs matching
+signal handlers. The early placement matters: xonsh's rc files are
+arbitrary user code, and a typical ``~/.xonshrc`` will contain
+``$(...)``/``!(...)`` subprocess captures, possibly including
+interactive programs like ``fzf`` that themselves want to manipulate
+the terminal via ``tcsetattr``. If xonsh is already foreground by the
+time rc runs, every downstream TTY operation is straightforward; if it
+is not, the ``SIG_IGN`` fallback (see below) keeps the asyncio wakeup
+pipe from overflowing while rc executes.
 
-* It uses **stderr** (file descriptor 2) as the TTY handle. This
-  matches :func:`xonsh.procs.jobs.give_terminal_to`, which also uses
-  FD 2 when xonsh later transfers the terminal between pipeline
-  groups.
-* It aborts cleanly — with no side effects — if any precondition
-  fails: Windows, non-TTY stderr, session leader (which cannot
-  ``setpgid`` itself), missing ``pthread_sigmask``, or the escape
-  hatch described below.
-* It blocks ``SIGTTOU``, ``SIGTTIN``, ``SIGTSTP`` and ``SIGCHLD`` in
-  the calling thread with ``pthread_sigmask``. ``SIGTTOU`` is the
-  critical one; without the block, ``tcsetpgrp`` below would send
-  ``SIGTTOU`` to xonsh itself and suspend it immediately.
-* It short-circuits to success if the TTY's foreground group is
-  already our process group — the handshake is not needed and the
-  restorer is *not* registered, so on shutdown we don't race with
-  the parent shell's own ``tcsetpgrp``.
-* Otherwise it calls ``setpgid(0, 0)`` followed by
-  ``tcsetpgrp(tty_fd, getpgrp())``, remembers the previous
-  foreground group, and records the fact that the handshake
-  succeeded.
-* It restores the signal mask in a ``finally`` block so any error
-  path leaves the process in a clean state.
+The handshake itself (``_acquire_controlling_terminal``):
 
-If the handshake succeeds, xonsh then installs a Python-level no-op
-handler for ``SIGTTIN`` and ``SIGTTOU`` — the kernel should not
-deliver those signals any more under normal operation, but a Python
-handler defends against races and, crucially, is **not** inherited
-across ``exec``, so child processes of xonsh see the normal
+* Uses **stderr** (file descriptor 2) as the TTY handle. This matches
+  :func:`xonsh.procs.jobs.give_terminal_to`, which also uses FD 2 when
+  xonsh later transfers the terminal between pipeline groups.
+* Aborts cleanly — with no side effects — if any precondition fails:
+  Windows, session leader (which cannot ``setpgid`` itself), missing
+  ``pthread_sigmask``, or the escape hatch described below.
+* Blocks ``SIGTTOU``, ``SIGTTIN``, ``SIGTSTP`` and ``SIGCHLD`` in the
+  calling thread with ``pthread_sigmask``. ``SIGTTOU`` is the critical
+  one; without the block, ``tcsetpgrp`` below would send ``SIGTTOU``
+  to xonsh itself and suspend it immediately.
+* Short-circuits to success if the TTY's foreground group is already
+  our process group — the handshake is not needed and the restorer is
+  *not* registered, so on shutdown we don't race with the parent
+  shell's own ``tcsetpgrp``.
+* Otherwise calls ``setpgid(0, 0)`` followed by
+  ``tcsetpgrp(tty_fd, getpgrp())``, remembers the previous foreground
+  group, and records the fact that the handshake succeeded.
+* Restores the signal mask in a ``finally`` block so any error path
+  leaves the process in a clean state.
+
+``_setup_controlling_terminal`` wraps the handshake with the signal
+policy decision and an idempotency flag. It only does anything if
+**stderr is a TTY** — script mode, piped input and test runners all
+skip the setup entirely and keep their default POSIX signal
+dispositions. This gate makes the whole feature transparent to
+non-interactive use.
+
+On the success path (either the fast path or a full acquire),
+``_setup_controlling_terminal`` installs a Python-level no-op handler
+for ``SIGTTIN`` and ``SIGTTOU``. Once xonsh is foreground the kernel
+should not deliver those signals any more under normal operation, but
+a Python handler defends against races and, crucially, is **not**
+inherited across ``exec``, so child processes of xonsh see the normal
 ``SIG_DFL`` disposition and their own job control keeps working.
 
-If the handshake fails — as it will in a sandbox where xonsh cannot
-become foreground — xonsh falls back to setting ``SIG_IGN`` for
-``SIGTTIN`` and ``SIGTTOU`` instead of the Python handler. That
-discards the signals at the kernel level, so they never reach
-Python's wakeup pipe and the ``BlockingIOError`` storm cannot happen.
-``SIG_IGN`` *is* inherited across ``exec``, but in a sandbox the
-children have the same TTY ownership problem anyway, so this is the
-right default.
+On the failure path — as will happen in a sandbox where xonsh cannot
+become foreground — ``_setup_controlling_terminal`` installs
+``SIG_IGN`` for ``SIGTTIN`` and ``SIGTTOU`` instead. That discards the
+signals at the kernel level, so they never reach Python's wakeup pipe
+and the ``BlockingIOError`` storm cannot happen. ``SIG_IGN`` *is*
+inherited across ``exec``, but in a sandbox the children have the same
+TTY ownership problem anyway, so this is the right default.
+
+``_setup_controlling_terminal`` is idempotent. It is also called from
+the top of :func:`xonsh.main.main_xonsh`, so callers that enter the
+shell loop without going through ``main`` (tests, programmatic
+launches) still end up with the correct signal setup; the second call
+in a normal ``main → main_xonsh`` flow short-circuits on the
+``_tty_setup_done`` module flag.
 
 Shutdown: handing the TTY back
 -------------------------------
@@ -338,17 +362,23 @@ failed), the restorer is a no-op.
 When the handshake is a no-op
 ------------------------------
 
-The handshake does nothing in any of these situations:
+The setup does nothing in any of these situations:
 
 * **Windows.** POSIX controlling terminals do not apply.
 * **Non-interactive invocations** where stderr is not a TTY:
-  ``xonsh script.xsh``, piped input, redirected stderr, and
-  script-from-stdin mode.
+  ``xonsh script.xsh``, piped input, redirected stderr, script-from-
+  stdin mode, and tests under pytest (which captures stderr via a
+  pipe). In these modes ``_setup_controlling_terminal`` returns
+  before touching signal state — default POSIX dispositions are
+  kept intact.
 * **xonsh is a session leader** (``getsid(0) == getpid()``). A
   session leader cannot change its own process group id, and if it
-  is session leader it almost always already owns the TTY.
+  is session leader it almost always already owns the TTY. The
+  handshake declines and the ``SIG_IGN`` fallback takes over.
 * **xonsh is already the foreground group** — the fast path returns
-  immediately and does not register the atexit restorer.
+  immediately, the Python no-op handler is still installed as a
+  safety net, but the atexit restorer is *not* registered (there is
+  nothing to restore).
 * **Missing** ``pthread_sigmask``, which is POSIX-only and absent on
   exotic builds.
 

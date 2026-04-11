@@ -160,6 +160,12 @@ def path_argument(s):
 #: the atexit restorer is a thin closure without extra globals.
 _fg_tty_state: dict = {"acquired": False, "tty_fd": -1, "old_fg": -1}
 
+#: Idempotency flag for :func:`_setup_controlling_terminal`. Flipped to
+#: ``True`` once the TTY signal handlers have been installed in a given
+#: process — a second call becomes a cheap no-op. Exposed on the module
+#: so tests can reset it between runs.
+_tty_setup_done: bool = False
+
 
 def _acquire_controlling_terminal():
     """Put xonsh into the foreground process group of its controlling TTY.
@@ -362,6 +368,86 @@ def _release_controlling_terminal():
         _fg_tty_state["acquired"] = False
         _fg_tty_state["tty_fd"] = -1
         _fg_tty_state["old_fg"] = -1
+
+
+def _setup_controlling_terminal():
+    """Run the TTY startup handshake and install matching signal handlers.
+
+    This is the *orchestration* layer around
+    :func:`_acquire_controlling_terminal`: it calls the handshake, picks
+    a signal-handling policy based on whether the handshake succeeded,
+    and registers the ``atexit`` restorer when appropriate. It is
+    idempotent — a second call in the same process is a cheap no-op.
+
+    It is called from the top of :func:`main` so that the handshake
+    happens *before* :func:`premain`. ``premain`` loads xontribs and
+    runs user ``xonshrc`` files, and rc files are arbitrary xonsh code
+    — they routinely contain ``$(...)`` / ``!(...)`` captures and can
+    invoke interactive programs like ``fzf`` that will themselves want
+    to take over the TTY via ``tcsetattr``. When xonsh is foreground
+    *before* rc runs, every downstream TTY operation simply works; when
+    it is not, and the handshake cannot fix that (sandboxed nested
+    containers, cross-session TTYs, …), the ``SIG_IGN`` fallback
+    installed here prevents the asyncio wakeup pipe from overflowing
+    during rc execution. It is also called from :func:`main_xonsh` as a
+    backup for callers that enter the shell loop without going through
+    :func:`main` (tests, programmatic invocation).
+
+    The setup is a no-op when stderr is not a TTY. That gate is crucial:
+    it means non-interactive callers (script mode, piped input, test
+    runners under pytest) keep their default POSIX signal dispositions
+    for ``SIGTTIN`` / ``SIGTTOU`` and are not affected by the startup
+    changes.
+    """
+    global _tty_setup_done
+    if _tty_setup_done:
+        return
+    if ON_WINDOWS:
+        return
+    # Gate on a real TTY. Script mode, piped stdin/stdout, and test
+    # runners (pytest captures stderr via a pipe) all land here and
+    # return without touching signal state — that keeps the change
+    # transparent to non-interactive use.
+    try:
+        if not os.isatty(sys.stderr.fileno()):
+            return
+    except (AttributeError, OSError, ValueError):
+        return
+    _tty_setup_done = True
+    fg_acquired = _acquire_controlling_terminal()
+    if fg_acquired:
+        # Register the shutdown restorer only if the handshake actually
+        # changed the foreground group. The fast-path case (we were
+        # already foreground) deliberately leaves ``_fg_tty_state``
+        # unacquired so the restorer does nothing and we never race
+        # with the parent shell's own tcsetpgrp on exit.
+        if _fg_tty_state.get("acquired"):
+            atexit.register(_release_controlling_terminal)
+
+        # Python-level no-op as a safety net. Once we are foreground
+        # the kernel will not deliver SIGTTIN/SIGTTOU under normal
+        # operation, but races are possible (e.g. a child process in
+        # our group calling tcsetpgrp before we reinstall ourselves).
+        # A Python handler is preferred over SIG_IGN here because the
+        # latter is inherited across ``exec`` and would subtly break
+        # job control in subprocess children.
+        def func_sig_ttin_ttou(n, f):
+            pass
+
+        signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
+        signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
+    else:
+        # We could not become foreground — typical inside Flatpak /
+        # Bubblewrap sandboxes, nested containers, some CI runners.
+        # The kernel *will* keep sending SIGTTIN/SIGTTOU every time
+        # xonsh touches the TTY, and a Python-level handler would
+        # overflow asyncio's signal wakeup pipe with ``BlockingIOError``.
+        # SIG_IGN makes the kernel discard the signals outright,
+        # bypassing Python entirely. It is inherited across ``exec``,
+        # but in a sandbox children have the same TTY ownership
+        # problem anyway, so this is the right default.
+        signal.signal(signal.SIGTTIN, signal.SIG_IGN)
+        signal.signal(signal.SIGTTOU, signal.SIG_IGN)
 
 
 @lazyobject
@@ -767,6 +853,17 @@ def _failback_to_other_shells(args, err):
 
 
 def main(argv=None):
+    # Run the TTY startup handshake *before* premain so that xontrib
+    # loading and xonshrc execution happen with xonsh already as the
+    # foreground process group. rc files are arbitrary user code and
+    # can contain subprocess captures ``$(...)``/``!(...)`` — including
+    # interactive tools like ``fzf`` that take over the TTY via
+    # ``tcsetattr``. Having the handshake done before rc runs means
+    # those child processes inherit a "foreground shell" context and
+    # the race between their own TTY manipulation and xonsh's
+    # :func:`xonsh.procs.jobs.give_terminal_to` never has to open.
+    # See :func:`_setup_controlling_terminal` for the full rationale.
+    _setup_controlling_terminal()
     args = None
     try:
         args = premain(argv)
@@ -777,49 +874,13 @@ def main(argv=None):
 
 def main_xonsh(args):
     """Main entry point for xonsh cli."""
-    if not ON_WINDOWS:
-        # Try the bash-style startup handshake: make xonsh the
-        # foreground process group of its controlling terminal so that
-        # kernel-delivered SIGTTIN/SIGTTOU do not fire under normal
-        # operation. See :func:`_acquire_controlling_terminal` for
-        # the full rationale.
-        fg_acquired = _acquire_controlling_terminal()
-        if fg_acquired:
-            # Make sure we hand the TTY back to its previous owner
-            # when xonsh exits. Registered only when we actually took
-            # over, so in the common case (xonsh launched from a
-            # well-behaved shell that already installed us as fg) this
-            # is a no-op.
-            if _fg_tty_state.get("acquired"):
-                atexit.register(_release_controlling_terminal)
-
-            # Install a Python-level no-op handler as a safety net.
-            # Once we are foreground the kernel should not deliver
-            # these signals any more, but races are possible
-            # (e.g. a child process in our group calling tcsetpgrp
-            # before we reinstall ourselves). A Python handler is
-            # preferred over SIG_IGN here because the latter is
-            # inherited across ``exec`` and would subtly break job
-            # control in child processes that rely on SIGTTIN/SIGTTOU.
-            def func_sig_ttin_ttou(n, f):
-                pass
-
-            signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
-            signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
-        else:
-            # We could not become foreground. This is the typical
-            # outcome inside Flatpak/Bubblewrap sandboxes, nested
-            # containers, and some CI runners. In that regime the
-            # kernel *will* keep sending SIGTTIN/SIGTTOU every time
-            # xonsh touches the TTY, and a Python-level handler would
-            # overflow asyncio's signal wakeup pipe with
-            # ``BlockingIOError``. Use SIG_IGN so the kernel discards
-            # the signals outright and never routes them through
-            # Python. This is inherited across ``exec``, but in a
-            # sandbox children have the same TTY ownership problem
-            # anyway, so this is the right default.
-            signal.signal(signal.SIGTTIN, signal.SIG_IGN)
-            signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+    # Normally :func:`main` has already run the handshake before
+    # premain — this call is a cheap idempotent no-op in that case
+    # (the module-level ``_tty_setup_done`` flag short-circuits).
+    # It exists so that callers which enter the shell loop without
+    # going through ``main`` (tests, programmatic launches) still
+    # get the same TTY signal setup.
+    _setup_controlling_terminal()
 
     events.on_post_init.fire()
 
