@@ -93,6 +93,53 @@ class AliasReturnCommandResult(list):
         self.local_env = local_env or {}
 
 
+def _normalize_return_command_result(val, alias_repr):
+    """Normalize the return value of a ``@return_command`` alias.
+
+    A ``return_command`` alias may return either:
+
+    - a non-empty ``list`` — the resolved command tokens, with **no** env
+      overlay attached to the returned command,
+    - a ``dict`` with a required ``"cmd"`` key (a non-empty list of tokens)
+      and an optional ``"env"`` key (a ``dict``) — the command tokens plus
+      an env overlay that applies **only** to the returned command.
+
+    The ``env=`` kwarg the alias received is a separate concept: it is an
+    overlay active **during the function body** (mutating it affects
+    subprocesses the alias runs inline, just like for an ordinary callable
+    alias). It is independent of the returned command's env — to set env
+    for the returned command, the alias must use dict-return.
+
+    Raises ``ValueError`` on malformed returns, using ``alias_repr`` in the
+    message so the user can tell which alias produced the bad value.
+
+    Returns
+    -------
+    cmd : list
+        The command tokens to execute.
+    returned_env : dict
+        The env overlay for the returned command (empty dict if the alias
+        returned a bare list or a dict without ``"env"``).
+    """
+    returned_env: dict = {}
+    if isinstance(val, dict):
+        env_overlay = val.get("env")
+        if env_overlay is not None:
+            if not isinstance(env_overlay, dict):
+                raise ValueError(
+                    f"return_command alias {alias_repr}: 'env' must be a dict, "
+                    f"got {env_overlay!r}."
+                )
+            returned_env = dict(env_overlay)
+        val = val.get("cmd")
+    if not isinstance(val, list) or not val:
+        raise ValueError(
+            f"return_command alias {alias_repr}: wrong return value {val!r}, "
+            f"expected a non-empty list or dict with 'cmd' (non-empty list)."
+        )
+    return val, returned_env
+
+
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
@@ -351,6 +398,7 @@ class Aliases(cabc.MutableMapping):
         seen_tokens=frozenset(),
         acc_args=(),
         decorators=None,
+        env_out=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -361,6 +409,11 @@ class Aliases(cabc.MutableMapping):
         where ``cmd=ls -al`` and ``ls`` is an alias with its value being a
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
+
+        ``env_out``, if given, is a mutable dict that accumulates the env
+        overlay requested by any ``return_command`` alias encountered while
+        resolving the chain (via dict-return ``"env"`` key). The top-level
+        :meth:`get` caller passes its own collector dict here.
         """
         decorators = decorators if decorators is not None else []
         # Beware of mutability: default values for keyword args are evaluated
@@ -380,15 +433,25 @@ class Aliases(cabc.MutableMapping):
             value = value[i:]
 
         if callable(value) and getattr(value, "return_what", "result") == "command":
-            local_env = {}
+            alias_repr = repr(getattr(value, "__name__", value))
+            # ``kwarg_env`` is a live overlay: while the alias body runs,
+            # mutating it affects commands the alias spawns inline (same
+            # semantics as the ``env=`` kwarg for a normal callable alias).
+            # It does NOT flow to the returned command — for that, the
+            # alias must return a dict with an ``"env"`` key.
+            kwarg_env: dict = {}
             try:
-                value = value(acc_args, decorators=decorators, env=local_env)
+                with XSH.env.swap(overlay=kwarg_env):
+                    value = value(acc_args, decorators=decorators, env=kwarg_env)
                 acc_args = []
             except Exception as e:
-                print_exception(f"Exception inside alias {value}: {e}")
+                print_exception(f"Exception inside alias {alias_repr}: {e}")
                 return None
-            if not len(value):
-                raise ValueError("return_command alias: zero arguments.")
+            value, returned_env = _normalize_return_command_result(
+                value, alias_repr=alias_repr
+            )
+            if env_out is not None and returned_env:
+                env_out.update(returned_env)
 
         if callable(value):
             return [value] + list(acc_args)
@@ -411,6 +474,7 @@ class Aliases(cabc.MutableMapping):
                     seen_tokens,
                     acc_args,
                     decorators=decorators,
+                    env_out=env_out,
                 )
 
     def get(
@@ -437,19 +501,24 @@ class Aliases(cabc.MutableMapping):
         if isinstance(key, list):
             args = key[1:]
             key = key[0]
-        local_env = {}
         val = self._raw.get(key)
+        # Env overlay collected for the RETURNED command — from a dict-return
+        # at any level of the alias chain. Kept strictly separate from the
+        # ``env=`` kwarg, which is a live overlay active only during the body
+        # of a return_command alias.
+        returned_env: dict = {}
         if callable(val) and getattr(val, "return_what", "result") == "command":
+            kwarg_env: dict = {}
             try:
-                val = val(args, decorators=decorators, env=local_env)
+                with XSH.env.swap(overlay=kwarg_env):
+                    val = val(args, decorators=decorators, env=kwarg_env)
                 args = []
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
                 return None
-            if not isinstance(val, list) or not len(val):
-                raise ValueError(
-                    f"return_command alias {key!r}: wrong return value {val!r}, expected a list."
-                )
+            val, returned_env = _normalize_return_command_result(
+                val, alias_repr=repr(key)
+            )
 
         if val is None:
             return default
@@ -459,9 +528,10 @@ class Aliases(cabc.MutableMapping):
                 seen_tokens={key},
                 decorators=decorators,
                 acc_args=args,
+                env_out=returned_env,
             )
-            if local_env and result is not None:
-                result = AliasReturnCommandResult(result, local_env=local_env)
+            if returned_env and result is not None:
+                result = AliasReturnCommandResult(result, local_env=returned_env)
             return result
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"

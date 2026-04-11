@@ -696,21 +696,119 @@ def test_alias_env_overlay(xession):
     assert xession.env["GLOBAL"] == "global_write"
 
 
-def test_return_command_alias_env(xession):
-    """return_command alias passes env overlay to the returned command."""
+def test_return_command_alias_env_kwarg_is_body_only(xession):
+    """The ``env=`` kwarg of a return_command alias is a live overlay
+    active only during the function body. It does NOT become the returned
+    command's env overlay, and it does NOT persist after the alias exits.
+    To set env for the returned command, the alias must use dict-return.
+    """
+    captured = {}
 
     @xession.aliases.register("rca")
     @xession.aliases.return_command
     def _rca(args, env=None):
-        env["LOCAL"] = "123"
-        xession.env["GLOBAL"] = "321"
+        env["BODY_ONLY"] = "yes"
+        # While the body runs, the overlay is active. Read via
+        # ``__getitem__`` / ``__contains__`` — those consult the overlay
+        # stack (and so does the ``detype()`` path used for subprocess env).
+        captured["during"] = xession.env["BODY_ONLY"]
+        captured["in_env"] = "BODY_ONLY" in xession.env
+        captured["detype"] = xession.env.detype().get("BODY_ONLY")
+        xession.env["GLOBAL"] = "321"  # direct write persists after exit
         return ["echo", "ok"]
 
     spec = cmds_to_specs([["rca"]], captured="object")[-1]
+    # Overlay was visible to every "normal" read path during the body
+    assert captured["during"] == "yes"
+    assert captured["in_env"] is True
+    assert captured["detype"] == "yes"
+    # Overlay does NOT leak to the returned command's env
+    assert spec.env is None or "BODY_ONLY" not in (spec.env or {})
+    # Overlay does NOT persist in the global env either
+    assert "BODY_ONLY" not in xession.env
+    # A direct write during the body persists normally
+    assert xession.env["GLOBAL"] == "321"
+
+
+def test_return_command_alias_dict_cmd_only(xession):
+    """Dict return with only ``cmd`` is treated like a bare list return."""
+
+    @xession.aliases.register("rcdc")
+    @xession.aliases.return_command
+    def _rcdc(args):
+        return {"cmd": ["echo", "ok"] + args}
+
+    spec = cmds_to_specs([["rcdc", "x"]], captured="object")[-1]
+    assert spec.cmd == ["echo", "ok", "x"]
+    # No env overlay was requested
+    assert spec.env is None or "LOCAL" not in (spec.env or {})
+
+
+def test_return_command_alias_dict_cmd_and_env(xession):
+    """Dict return carries both ``cmd`` and ``env`` overlay in one go."""
+
+    @xession.aliases.register("rcde")
+    @xession.aliases.return_command
+    def _rcde(args):
+        return {"cmd": ["echo", "ok"], "env": {"LOCAL": "123", "FOO": "bar"}}
+
+    spec = cmds_to_specs([["rcde"]], captured="object")[-1]
+    assert spec.cmd == ["echo", "ok"]
     assert spec.env is not None
     assert spec.env.get("LOCAL") == "123"
-    assert xession.env["GLOBAL"] == "321"
+    assert spec.env.get("FOO") == "bar"
+    # env overlay must not leak into the global env
     assert "LOCAL" not in xession.env
+    assert "FOO" not in xession.env
+
+
+def test_return_command_alias_dict_env_independent_of_kwarg_env(xession):
+    """Dict-return ``"env"`` and the ``env=`` kwarg are independent: the
+    kwarg env is only a body-scoped overlay, and the dict env is the only
+    source of the returned command's env overlay."""
+
+    @xession.aliases.register("rcme")
+    @xession.aliases.return_command
+    def _rcme(args, env=None):
+        # These only affect the function body, not the returned command.
+        env["BODY_ONLY_A"] = "body_a"
+        env["BODY_ONLY_B"] = "body_b"
+        return {
+            "cmd": ["echo", "ok"],
+            "env": {"RETURNED": "returned_value"},
+        }
+
+    spec = cmds_to_specs([["rcme"]], captured="object")[-1]
+    assert spec.cmd == ["echo", "ok"]
+    assert spec.env is not None
+    # Dict-return env is on the returned command
+    assert spec.env.get("RETURNED") == "returned_value"
+    # Kwarg env does NOT flow through
+    assert "BODY_ONLY_A" not in spec.env
+    assert "BODY_ONLY_B" not in spec.env
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {},  # no "cmd"
+        {"cmd": []},  # empty cmd
+        {"cmd": None},  # missing cmd
+        {"cmd": "echo"},  # cmd not a list
+        {"cmd": ["echo"], "env": "X=1"},  # env not a dict
+        {"cmd": ["echo"], "env": ["X", "1"]},  # env not a dict
+    ],
+)
+def test_return_command_alias_dict_wrong_return(xession, bad):
+    """Malformed dict returns raise ValueError."""
+
+    @xession.aliases.register("rcwr")
+    @xession.aliases.return_command
+    def _rcwr(args):
+        return bad
+
+    with pytest.raises(ValueError):
+        cmds_to_specs([["rcwr"]], captured="object")[-1]
 
 
 def test_auto_cd(xession, tmpdir):
