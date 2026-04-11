@@ -216,6 +216,49 @@ def test_acquire_fast_path_when_already_foreground(
 
 
 @skip_if_on_windows
+def test_acquire_pid_namespace_unrepresentable_pgid(
+    monkeypatch, reset_fg_state, fake_tty
+):
+    """PID namespace edge case: ``getpgrp`` and ``tcgetpgrp`` both
+    return 0 because our real pgid is not representable inside the
+    namespace (typical for Flatpak / Bubblewrap / Podman / kubectl
+    exec scenarios). The fast path must NOT treat ``0 == 0`` as
+    "already foreground" — it must fall through to ``setpgid(0, 0)``
+    so we end up with a valid, namespace-visible pgid.
+
+    This reproduces the Flatpak crash where ``tcsetpgrp(fd, 0)``
+    later failed with ESRCH and the TTY foreground ended up
+    orphaned on a dead subprocess group, ultimately raising
+    ``termios.error: (5, 'Input/output error')`` from ptk.
+    """
+    install, _, _ = fake_tty
+    monkeypatch.delenv("XONSH_NO_FG_TAKEOVER", raising=False)
+    # Inside a PID namespace:
+    #   - our visible pid is 2 (namespace-local)
+    #   - our sid is e.g. 500 (some visible session leader)
+    #   - our "real" pgid was inherited from outside the namespace,
+    #     so the kernel reports it as 0 (unrepresentable)
+    #   - the TTY fg pgrp is also 0 (it belongs to a pgrp outside
+    #     the namespace, i.e. the outer bash)
+    fake = FakeOS(pid=2, pgid=0, sid=500, fg_pgrp=0)
+    install(fake)
+    assert xonsh.main._acquire_controlling_terminal() is True
+    # State IS recorded — we really did acquire foreground via
+    # a full setpgid + tcsetpgrp, not via the fast path.
+    assert xonsh.main._fg_tty_state["acquired"] is True
+    assert xonsh.main._fg_tty_state["old_fg"] == 0
+    # setpgid(0, 0) and tcsetpgrp must both have been called.
+    kinds = [c[0] for c in fake.calls]
+    assert "setpgid" in kinds
+    assert "tcsetpgrp" in kinds
+    # After setpgid(0, 0) our FakeOS model sets pgid := pid = 2,
+    # which is representable inside the namespace.
+    assert fake.pgid == 2
+    # And tcsetpgrp installed pgid=2 as the TTY foreground.
+    assert fake.fg_pgrp == 2
+
+
+@skip_if_on_windows
 def test_acquire_full_handshake_success(monkeypatch, reset_fg_state, fake_tty):
     """Full success path: setpgid then tcsetpgrp, state recorded."""
     install, mask_log, expected_fd = fake_tty

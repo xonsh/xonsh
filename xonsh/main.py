@@ -234,12 +234,61 @@ def _acquire_controlling_terminal():
         group of its controlling terminal. ``False`` on any failure or
         when the handshake is not applicable (non-TTY, Windows, session
         leader, disabled by env var, …).
+
+    References
+    ----------
+    POSIX.1-2017 specifications (https://pubs.opengroup.org/onlinepubs/9699919799/):
+
+    * ``setpgid(2)``: https://man7.org/linux/man-pages/man2/setpgid.2.html
+      — session leader cannot change its own pgid (EPERM); ``setpgid(0, 0)``
+      creates a new pgrp with ``pgid == pid``.
+    * ``tcsetpgrp(3)``: https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html
+      — a background-group caller receives ``SIGTTOU`` unless it is blocked
+      or ignored; fails with ESRCH if the target pgid does not exist.
+    * ``tcgetpgrp(3)``: https://man7.org/linux/man-pages/man3/tcgetpgrp.3.html
+      — reads the controlling terminal's current foreground pgid.
+    * ``tcsetattr(3)``: https://man7.org/linux/man-pages/man3/tcsetattr.3.html
+      — returns EIO when called on an orphaned pgrp's controlling terminal
+      (Linux) rather than sending SIGTTOU, which is the Flatpak crash path.
+    * ``pthread_sigmask(3)``: https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html
+      — per-thread signal mask; used here to block ``SIGTTOU`` across the
+      ``tcsetpgrp`` call without affecting the rest of the process.
+    * ``pid_namespaces(7)``: https://man7.org/linux/man-pages/man7/pid_namespaces.7.html
+      — specifies that ``getpgid``/``getsid`` return 0 for ids not
+      representable inside the namespace; this is the Linux kernel
+      behaviour that the ``my_pgid > 0`` guard in the fast-path exists for.
+    * ``execve(2)``: https://man7.org/linux/man-pages/man2/execve.2.html
+      — specifies signal-disposition inheritance across exec (``SIG_IGN``
+      persists, custom handlers reset to ``SIG_DFL``), which informs the
+      choice between Python no-op handler and ``SIG_IGN`` in
+      :func:`_setup_controlling_terminal`.
+    * ``credentials(7)``: https://man7.org/linux/man-pages/man7/credentials.7.html
+      — general background on sessions and process groups.
+
+    Non-POSIX / Linux-specific:
+
+    * ``signal(7)``: https://man7.org/linux/man-pages/man7/signal.7.html
+      — Linux signal semantics table, including the inheritance rules
+      across ``fork`` and ``exec``.
+
+    Historical prior art:
+
+    * bash ``jobs.c``
+      (https://cgit.git.savannah.gnu.org/cgit/bash.git/tree/jobs.c) —
+      source of the ``setpgid`` + ``tcsetpgrp`` startup pattern, verified
+      for ``start_pipeline``, ``make_child``, ``stop_pipeline``,
+      ``default_tty_job_signals`` and ``ignore_tty_job_signals``.
+    * Original xonsh-flatpak wrapper that documented the failure modes
+      (``BlockingIOError``, ``termios.error``):
+      https://github.com/anki-code/xonsh-flatpak/blob/main/xonsh-wrapper.py
     """
     if ON_WINDOWS:
         return False
     if os.environ.get("XONSH_NO_FG_TAKEOVER"):
         return False
     # pthread_sigmask is POSIX-only and may be absent on exotic builds.
+    # See pthread_sigmask(3):
+    #   https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html
     if not hasattr(signal, "pthread_sigmask"):
         return False
     # Use stderr as the TTY handle. xonsh already uses FD 2 for
@@ -257,7 +306,8 @@ def _acquire_controlling_terminal():
     # A session leader cannot change its own process group id, so the
     # setpgid(0, 0) call below would fail with EPERM. Detect this up
     # front and skip cleanly — if we are session leader we almost
-    # certainly already own the TTY anyway.
+    # certainly already own the TTY anyway. See setpgid(2):
+    #   https://man7.org/linux/man-pages/man2/setpgid.2.html
     try:
         if os.getsid(0) == os.getpid():
             return False
@@ -271,6 +321,8 @@ def _acquire_controlling_terminal():
     # desynchronise state; SIGCHLD so a child reaping does not
     # interrupt us mid-handshake. The block is thread-local — it
     # does not affect signal disposition for the rest of the process.
+    # See tcsetpgrp(3) for the SIGTTOU-when-bg semantics:
+    #   https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html
     block = {signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP, signal.SIGCHLD}
     try:
         old_mask = signal.pthread_sigmask(signal.SIG_BLOCK, block)
@@ -282,16 +334,48 @@ def _acquire_controlling_terminal():
         except OSError:
             return False
         my_pgid = os.getpgrp()
-        if current_fg == my_pgid:
+        if current_fg == my_pgid and my_pgid > 0:
             # We are already the foreground group. Nothing to acquire
             # and nothing to release on shutdown — return success but
             # do *not* mark state as acquired, so the atexit restorer
             # stays a no-op and we don't risk racing with the parent
             # shell's own tcsetpgrp() on exit.
+            #
+            # The ``my_pgid > 0`` guard handles PID namespaces
+            # (Flatpak, Bubblewrap, Podman rootless, systemd-nspawn,
+            # kubectl exec, Chrome/Firefox sandboxes, …). From inside
+            # a PID namespace, if our process group id or the TTY's
+            # foreground group id refers to a process *outside* the
+            # namespace (typically because bwrap/flatpak inherited the
+            # pgid from the host before creating the namespace), the
+            # kernel returns 0 from both ``getpgrp`` and ``tcgetpgrp``
+            # — 0 is the "unrepresentable pgid" sentinel specified in
+            # pid_namespaces(7):
+            #   https://man7.org/linux/man-pages/man7/pid_namespaces.7.html
+            # Without the guard, the fast path would see 0 == 0 and
+            # declare success, leaving our pgid as the unrepresentable
+            # 0. Subsequent ``tcsetpgrp(fd, 0)`` calls from
+            # :func:`xonsh.procs.jobs.give_terminal_to` would fail with
+            # ESRCH (tcsetpgrp(3):
+            #   https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html),
+            # the TTY's foreground group would end up orphaned on the
+            # previous pipeline's process group, and the next
+            # ``tcsetattr`` from prompt_toolkit would raise
+            # ``termios.error: (5, 'Input/output error')`` — the
+            # Flatpak sandbox failure mode reported downstream
+            # (tcsetattr(3):
+            #   https://man7.org/linux/man-pages/man3/tcsetattr.3.html).
+            # Falling through to the ``setpgid(0, 0)`` call below
+            # creates a new process group visible inside the namespace
+            # (``pgid == pid``), so the subsequent ``tcsetpgrp`` has a
+            # valid, representable target (setpgid(2):
+            #   https://man7.org/linux/man-pages/man2/setpgid.2.html).
             return True
         # Become our own process group leader. If we are already a
         # leader this is a no-op; if the kernel refuses (EPERM), we
-        # bail out. After this succeeds our pgid == pid.
+        # bail out. After this succeeds our pgid == pid. See
+        # setpgid(2):
+        #   https://man7.org/linux/man-pages/man2/setpgid.2.html
         try:
             os.setpgid(0, 0)
         except OSError:
@@ -334,6 +418,12 @@ def _release_controlling_terminal():
     installed as foreground, the parent will immediately receive
     ``SIGTTIN`` on the next read. Robust shells recover from this, but it
     is much cleaner to hand the TTY back explicitly.
+
+    References
+    ----------
+    * ``atexit(3)``: https://docs.python.org/3/library/atexit.html
+    * ``tcsetpgrp(3)``: https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html
+    * ``pthread_sigmask(3)``: https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html
     """
     if not _fg_tty_state.get("acquired"):
         return
@@ -424,6 +514,26 @@ def _setup_controlling_terminal():
 
     Non-TTY callers (script mode, piped input, test runners under
     pytest) stop after step 1 and keep the historical Python handlers.
+
+    References
+    ----------
+    * ``signal(7)``: https://man7.org/linux/man-pages/man7/signal.7.html
+      — Linux signal semantics, inheritance across ``fork``/``exec``.
+    * ``execve(2)``: https://man7.org/linux/man-pages/man2/execve.2.html
+      — specifies that ``SIG_IGN`` dispositions survive ``exec`` while
+      custom handlers are reset to ``SIG_DFL``. This asymmetry drives
+      the step-1 / step-3 policy split: a Python callable handler in
+      the success path so subprocess children see ``SIG_DFL`` and keep
+      normal job control; ``SIG_IGN`` in the sandbox-failure path to
+      discard signals at the kernel boundary before they reach Python's
+      asyncio wakeup pipe.
+    * ``tcsetattr(3)``: https://man7.org/linux/man-pages/man3/tcsetattr.3.html
+      — the syscall ``prompt_toolkit``'s ``raw_mode`` uses; the one that
+      actually crashes under the Flatpak failure mode described above.
+    * PEP 475 (Retry system calls failing with EINTR):
+      https://peps.python.org/pep-0475/ — confirms that ``termios.*``
+      is *not* covered by Python's automatic EINTR retry, motivating
+      the existing outer retry loop in ``ptk_shell.singleline``.
     """
     global _tty_setup_done
     if _tty_setup_done:
