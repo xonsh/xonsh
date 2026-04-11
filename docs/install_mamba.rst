@@ -26,27 +26,27 @@ Python version changes, or other experiments with environments. You can use
 
 Install the latest xonsh release with a well-tested Python version:
 
-.. code-block:: bash
+.. code-block:: console
 
-   TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
-    /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
+   $ TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
+     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 Install xonsh from the ``main`` Git branch with a stable Python version
 
-.. code-block:: bash
+.. code-block:: console
 
-   TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full] @ git+https://github.com/xonsh/xonsh@main' \
-    /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
+   $ TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full] @ git+https://github.com/xonsh/xonsh@main' \
+     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 
 Preinstall and preload `xontribs <https://github.com/topics/xontrib>`_:
 
-.. code-block:: bash
+.. code-block:: console
 
-   TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full] @ git+https://github.com/xonsh/xonsh@main' \
-    PIP_INSTALL="uv xontrib-sh xontrib-jump-to-dir xontrib-dalias xontrib-pipeliner xontrib-whole-word-jumping" \
-    XONSHRC="\$XONSH_HISTORY_BACKEND = 'sqlite'; xontrib load -s sh jump_to_dir pipeliner whole_word_jumping dalias; \$PROMPT = \$PROMPT.replace('{prompt_end}', '\n{prompt_end}')" \
-    /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
+   $ TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full] @ git+https://github.com/xonsh/xonsh@main' \
+     PIP_INSTALL="uv xontrib-sh xontrib-jump-to-dir xontrib-dalias xontrib-pipeliner xontrib-whole-word-jumping" \
+     XONSHRC="\$XONSH_HISTORY_BACKEND = 'sqlite'; xontrib load -s sh jump_to_dir pipeliner whole_word_jumping dalias; \$PROMPT = \$PROMPT.replace('{prompt_end}', '\n{prompt_end}')" \
+     /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 Usage
 =====
@@ -85,13 +85,13 @@ Using mamba from xonsh-env
 
 To bind the xonsh-env micromamba to the ``xmamba`` alias, run:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
    @ source xmamba.xsh
 
 You can then use:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
    @ xmamba activate base  # Environment where xonsh was installed.
    @ pip install lolcat    # Install ``lolcat`` into the ``base`` environment.
@@ -108,7 +108,7 @@ Cleaning
 If you do not plan to use ``xmamba``, you can reclaim disk space using
 `mamba clean <https://fig.io/manual/mamba/clean>`_:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
    @ source xmamba.xsh
    @ xmamba clean -a
@@ -118,7 +118,7 @@ Uninstall
 
 Simply delete ``$TARGET_DIR``. For example:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
    @ rm -rf ~/.local/xonsh-env/
 
