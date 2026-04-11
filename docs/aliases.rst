@@ -53,7 +53,7 @@ Xonsh-specific Aliases
 --------------------
 Displays how commands and arguments are evaluated. Use ``-e`` to expand aliases.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ showcmd echo The @('args') @(['list', 'is']) $(echo here) "and" --say="hello" to @([]) you
     ['echo', 'The', 'args', 'list', 'is', 'here', 'and', '--say="hello"', 'to', 'you']
@@ -69,11 +69,15 @@ Manages xonsh configuration information.
 
 .. command-help:: xonsh.xonfig.xonfig_main
 
+``xontrib``
+--------------------
+Manages xonsh extensions. More information is available at :doc:`xontrib`
+
 
 ``xcontext``
 --------------------
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xcontext
     [Current xonsh session]
@@ -90,17 +94,12 @@ Manages xonsh configuration information.
 Report information about the current xonsh environment, including paths to the Python interpreter, pip, xonsh itself, and relevant environment variables.
 
 
-``xontrib``
---------------------
-Manages xonsh extensions. More information is available at :doc:`xontrib`
-
-
 ``xpip``
 --------------------
 Runs the ``pip`` package manager for xonsh itself. Useful for installations where xonsh is in an
 isolated environment (e.g. conda, mamba, homebrew).
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ which pip
     /usr/bin/pip  # system pip
@@ -117,7 +116,7 @@ isolated environment (e.g. conda, mamba, homebrew).
 
 Alias to the Python interpreter that is currently running xonsh (``sys.executable``). This is useful for running Python modules or scripts in the same environment as the shell itself, especially in complex setups like AppImage.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ python -V
     Python 3.12.10
@@ -129,11 +128,21 @@ Alias to the Python interpreter that is currently running xonsh (``sys.executabl
     /home/snail/.local/xonsh-env/bin/python
 
 
+``xxonsh``
+--------------------
+
+Launches exactly the same ``xonsh`` that was used to start the current session.
+
+See :ref:`xxonsh` for a worked example of using it as a building block to
+launch ``tmux`` with this exact xonsh (the ``xtmux`` recipe).
+
+Mnemonic: think of the initial ‘x’ as ‘c’—xxonsh stands for (c)urrent xonsh.
+
 ``xreset``
 --------------------
 Clean the xonsh context. All user variables will be deleted.
 
-.. code-block:: console
+.. code-block:: xonshcon
     @ a=1
     @ a
     1
@@ -167,7 +176,7 @@ raises unconditionally (even inside ``&&``/``||`` chains and even when
 the raise — it also wins over the chain-result check performed by
 ``$XONSH_SUBPROC_RAISE_ERROR``.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ r = !(@error_raise ls nonono)
     subprocess.CalledProcessError: Command '['@error_raise', 'ls', 'nonono']' returned non-zero exit status 1.
@@ -178,7 +187,7 @@ the raise — it also wins over the chain-result check performed by
 -----------------------------
 Use ``@thread`` and ``@unthread`` to run command as threadable or unthreadable e.g to have a result of SSH command:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ !(@thread ssh host -T "echo 1")
 
@@ -187,7 +196,7 @@ Use ``@thread`` and ``@unthread`` to run command as threadable or unthreadable e
 -----------------------------
 Use ``@path`` and ``@paths`` to get Path object(s) from the command output.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ dir = $(@path echo '/bin')
       dir.exists()
@@ -199,7 +208,7 @@ Use ``@path`` and ``@paths`` to get Path object(s) from the command output.
 -----------
 Return output as list of lines.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ lines = $(@lines cat file)
 
@@ -208,7 +217,7 @@ Return output as list of lines.
 ----------
 Parses JSON and returns a JSON object.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ data = $(@json curl https://example.com/data.json)
 
@@ -217,7 +226,7 @@ Parses JSON and returns a JSON object.
 -----------
 Parses JSON lines and returns a list of JSON objects.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ items = $(@jsonl cat data.jsonl)
 
@@ -226,7 +235,7 @@ Parses JSON lines and returns a list of JSON objects.
 ----------
 Parses YAML and returns a dict.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ config = $(@yaml cat config.yaml)
 
