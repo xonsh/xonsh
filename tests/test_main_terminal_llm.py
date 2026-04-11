@@ -23,19 +23,24 @@ def reset_fg_state():
     """Ensure the module-level foreground state is clean around each test.
 
     The state leaks between tests otherwise because ``_fg_tty_state`` is a
-    plain module-level dict and ``_tty_setup_done`` is a module-level
-    flag for :func:`_setup_controlling_terminal` idempotency.
+    plain module-level dict, ``_tty_setup_done`` is a module-level flag
+    for :func:`_setup_controlling_terminal` idempotency, and
+    ``_ttin_ttou_counter`` is a module-level counter for
+    :func:`_handle_sig_ttin_ttou` livelock escalation.
     """
     original = dict(xonsh.main._fg_tty_state)
     original_done = xonsh.main._tty_setup_done
+    original_counter = xonsh.main._ttin_ttou_counter[0]
     xonsh.main._fg_tty_state["acquired"] = False
     xonsh.main._fg_tty_state["tty_fd"] = -1
     xonsh.main._fg_tty_state["old_fg"] = -1
     xonsh.main._tty_setup_done = False
+    xonsh.main._ttin_ttou_counter[0] = 0
     yield
     xonsh.main._fg_tty_state.clear()
     xonsh.main._fg_tty_state.update(original)
     xonsh.main._tty_setup_done = original_done
+    xonsh.main._ttin_ttou_counter[0] = original_counter
 
 
 class FakeOS:
@@ -388,6 +393,92 @@ def test_acquire_returns_false_on_windows(monkeypatch, reset_fg_state):
     """POSIX concepts don't apply on Windows — fast no-op."""
     monkeypatch.setattr(xonsh.main, "ON_WINDOWS", True)
     assert xonsh.main._acquire_controlling_terminal() is False
+
+
+# ---------------------------------------------------------------------------
+# _handle_sig_ttin_ttou — livelock guard tests
+# ---------------------------------------------------------------------------
+
+
+@skip_if_on_windows
+def test_handle_sig_ttin_ttou_no_op_under_threshold(monkeypatch, reset_fg_state):
+    """Below threshold the handler is a pure no-op: counter increments
+    but no signal disposition change happens.
+
+    Normal operation fires the handler zero times (xonsh is foreground),
+    and legitimate transient bursts — a subprocess briefly stealing
+    foreground during a pipeline, a mis-timed tcsetpgrp — should all
+    recover well below the threshold without triggering the escalation.
+    """
+    calls = []
+
+    def fake_signal(sig, handler):
+        calls.append((sig, handler))
+        return signal.SIG_DFL
+
+    monkeypatch.setattr(xonsh.main.signal, "signal", fake_signal)
+    # Fire the handler many times but below threshold.
+    threshold = xonsh.main._TTIN_TTOU_LIVELOCK_THRESHOLD
+    for _i in range(threshold):
+        xonsh.main._handle_sig_ttin_ttou(signal.SIGTTOU, None)
+    # Counter reflects all invocations.
+    assert xonsh.main._ttin_ttou_counter[0] == threshold
+    # But no escalation — signal.signal was never called.
+    assert calls == []
+
+
+@skip_if_on_windows
+def test_handle_sig_ttin_ttou_escalates_above_threshold(monkeypatch, reset_fg_state):
+    """One firing above threshold → escalate to SIG_IGN.
+
+    This is the livelock guard. If something has been hammering the
+    handler (PEP 475 retry on SIGTTIN, PR #6192 application-level
+    retry on SIGTTOU), we assume xonsh has lost foreground ownership
+    for a reason that won't self-resolve, and we fall back to letting
+    the kernel discard the signals outright so the underlying
+    syscalls can complete on their next retry.
+    """
+    calls = []
+
+    def fake_signal(sig, handler):
+        calls.append((sig, handler))
+        return signal.SIG_DFL
+
+    monkeypatch.setattr(xonsh.main.signal, "signal", fake_signal)
+    # One firing past the threshold triggers escalation.
+    threshold = xonsh.main._TTIN_TTOU_LIVELOCK_THRESHOLD
+    for _i in range(threshold + 1):
+        xonsh.main._handle_sig_ttin_ttou(signal.SIGTTOU, None)
+    # Two signal.signal calls — one for SIGTTIN, one for SIGTTOU.
+    assert len(calls) == 2
+    sigs = {sig for sig, _ in calls}
+    assert sigs == {signal.SIGTTIN, signal.SIGTTOU}
+    for _, handler in calls:
+        assert handler is signal.SIG_IGN
+
+
+@skip_if_on_windows
+def test_handle_sig_ttin_ttou_counter_resets_on_setup(
+    monkeypatch, reset_fg_state, fake_tty, capture_signal_signal, capture_atexit
+):
+    """``_setup_controlling_terminal`` must reset the counter so that
+    a previous run's escalation does not bleed through into a fresh
+    installation.
+
+    Without this reset, a long-lived test process that calls setup
+    twice (first triggering escalation, then resetting state) would
+    start the second run already at threshold, escalating on the
+    first signal instead of providing the full livelock guard.
+    """
+    # Simulate a prior run that left the counter above threshold.
+    xonsh.main._ttin_ttou_counter[0] = xonsh.main._TTIN_TTOU_LIVELOCK_THRESHOLD + 10
+    install, _, _ = fake_tty
+    monkeypatch.delenv("XONSH_NO_FG_TAKEOVER", raising=False)
+    fake = FakeOS(pid=1000, pgid=999, sid=500, fg_pgrp=42)
+    install(fake)
+    xonsh.main._setup_controlling_terminal()
+    # Counter was reset to 0 by _setup_controlling_terminal.
+    assert xonsh.main._ttin_ttou_counter[0] == 0
 
 
 # ---------------------------------------------------------------------------

@@ -166,6 +166,105 @@ _fg_tty_state: dict = {"acquired": False, "tty_fd": -1, "old_fg": -1}
 #: so tests can reset it between runs.
 _tty_setup_done: bool = False
 
+#: Delivery counter for :func:`_handle_sig_ttin_ttou`. A Python list is
+#: used instead of a plain int so that the handler (a closure / nested
+#: call site) can mutate it in place without a ``global`` declaration.
+#: Exposed so tests can reset it.
+_ttin_ttou_counter: list = [0]
+
+#: Threshold at which :func:`_handle_sig_ttin_ttou` escalates the
+#: ``SIGTTIN`` / ``SIGTTOU`` disposition from the Python no-op handler
+#: to ``SIG_IGN`` as a livelock guard. See the handler's docstring for
+#: the rationale. Chosen conservatively high — normal operation fires
+#: the handler zero times, and legitimate transient bursts (e.g. a
+#: misbehaving subprocess briefly stealing foreground during a
+#: pipeline) should recover well below this bound.
+_TTIN_TTOU_LIVELOCK_THRESHOLD: int = 1000
+
+
+def _handle_sig_ttin_ttou(n, f):
+    """Python no-op handler for ``SIGTTIN`` / ``SIGTTOU`` with a
+    built-in livelock guard.
+
+    Installed by :func:`_setup_controlling_terminal`'s success path.
+    Under normal operation xonsh is the foreground process group of
+    its controlling terminal and this handler never fires — the
+    kernel does not deliver ``SIGTTIN`` / ``SIGTTOU`` to a foreground
+    process. It exists as a safety net for pathological cases where
+    xonsh temporarily loses foreground ownership (unexpected
+    ``tcsetpgrp`` from a subprocess, a PID-namespace race, a buggy
+    xontrib, …) and then tries to touch the TTY.
+
+    Why a plain ``pass`` is a trap
+    ------------------------------
+    There are two independent paths that can turn a ``pass`` no-op
+    handler into a 99%-CPU livelock:
+
+    1. **PEP 475 (``os.read`` retry) — triggered by SIGTTIN.**
+       Since Python 3.5, ``os.read`` is one of the syscalls that
+       Python automatically retries on ``EINTR`` when the signal
+       handler does not raise — see
+       https://peps.python.org/pep-0475/ for the full list. If xonsh
+       is a background process of the TTY and calls ``os.read`` on
+       the TTY fd (directly, or indirectly via ``prompt_toolkit``'s
+       asyncio event loop), the kernel returns ``EINTR`` and sends
+       ``SIGTTIN``. The Python handler runs, does ``pass``, returns.
+       Python retries ``os.read``. The kernel sends ``SIGTTIN``
+       again. Loop — at 99% CPU until the process is killed.
+       ``termios.*`` is **not** in PEP 475's retry list, so
+       ``tcsetattr`` itself does not trigger this path — but
+       ``os.read`` does, and prompt_toolkit reads stdin on every
+       prompt.
+
+    2. **xonsh PR #6192 application-level retry — triggered by
+       SIGTTOU.** The existing outer retry loop in
+       ``xonsh/shells/ptk_shell/__init__.py`` catches any exception
+       with ``args[0] == 4`` (``EINTR``) and calls
+       ``self.prompter.prompt(**prompt_args)`` again. If
+       ``tcsetattr`` inside ``raw_mode`` is what raised (because
+       xonsh is background, so the kernel generates ``SIGTTOU`` and
+       fails the syscall with ``EINTR``), the retry re-enters
+       ``raw_mode`` and re-calls ``tcsetattr``, the kernel re-sends
+       ``SIGTTOU``, the handler passes, the retry fires again —
+       another 99%-CPU loop.
+
+    The fix
+    -------
+    Count deliveries. On the first few thousand we do nothing — that
+    covers every legitimate transient scenario. Above the threshold
+    we **replace the Python handler with ``SIG_IGN``**. POSIX says
+    that if ``SIGTTOU`` / ``SIGTTIN`` are ignored, the underlying
+    operation "shall be allowed to perform" — so the next
+    ``tcsetattr`` / ``read`` succeeds instead of re-entering the
+    loop, and the caller makes progress.
+
+    ``SIG_IGN`` is inherited across ``exec``, so subprocess children
+    launched after escalation see ``SIG_IGN`` for these signals too.
+    That is an acceptable trade-off: we only reach this branch if
+    xonsh is already in a degraded "lost foreground" state, and the
+    alternative is a hard hang.
+
+    References
+    ----------
+    * PEP 475 (Retry system calls failing with EINTR):
+      https://peps.python.org/pep-0475/
+    * ``tcsetattr(3)`` — "the operation shall be allowed to perform"
+      when SIGTTOU is ignored:
+      https://man7.org/linux/man-pages/man3/tcsetattr.3.html
+    * ``read(2)`` — EINTR semantics and PEP 475 coverage:
+      https://man7.org/linux/man-pages/man2/read.2.html
+    * xonsh PR #6192 — the application-level retry loop that
+      provides the SIGTTOU livelock path.
+    """
+    _ttin_ttou_counter[0] += 1
+    if _ttin_ttou_counter[0] > _TTIN_TTOU_LIVELOCK_THRESHOLD:
+        # Escalate: let the kernel drop the signals outright. Future
+        # deliveries will not reach Python at all, and interrupted
+        # syscalls will complete on the next retry (POSIX: "the
+        # operation shall be allowed to perform" when ignored).
+        signal.signal(signal.SIGTTIN, signal.SIG_IGN)
+        signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+
 
 def _acquire_controlling_terminal():
     """Put xonsh into the foreground process group of its controlling TTY.
@@ -542,16 +641,19 @@ def _setup_controlling_terminal():
         return
     _tty_setup_done = True
 
-    # Step 1: unconditional Python no-op handlers for SIGTTIN/SIGTTOU.
-    # This matches the pre-handshake xonsh behavior and is what
-    # script-mode / non-TTY callers rely on. The only reason to
-    # deviate from it is the sandbox-failure case below, which
-    # overrides with SIG_IGN to avoid the asyncio wakeup pipe storm.
-    def func_sig_ttin_ttou(n, f):
-        pass
-
-    signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
-    signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
+    # Step 1: unconditional Python no-op-with-livelock-guard handler
+    # for SIGTTIN/SIGTTOU. The ``pass`` body of the historical inline
+    # handler is a trap — a background xonsh touching the TTY would
+    # loop forever via PEP 475 retry on ``os.read`` (SIGTTIN path) or
+    # via the application-level retry in
+    # ``xonsh/shells/ptk_shell/__init__.py`` (SIGTTOU path). The
+    # module-level :func:`_handle_sig_ttin_ttou` counts deliveries and
+    # escalates to ``SIG_IGN`` after a high threshold, breaking the
+    # loop while preserving normal job control for typical use (where
+    # the handler never fires at all).
+    _ttin_ttou_counter[0] = 0  # reset any previous-run state
+    signal.signal(signal.SIGTTIN, _handle_sig_ttin_ttou)
+    signal.signal(signal.SIGTTOU, _handle_sig_ttin_ttou)
 
     # Step 2: only attempt the handshake when stderr is a real TTY.
     # Script mode, piped stdin/stdout, and test runners (pytest
