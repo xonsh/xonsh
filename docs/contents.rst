@@ -42,7 +42,6 @@ and streamline your command-line experience.
     :titlesonly:
     :maxdepth: 1
 
-    tutorial
     xonshrc
     envvars
     aliases
