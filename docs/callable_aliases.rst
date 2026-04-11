@@ -47,7 +47,7 @@ combination of the following parameters in any order:
 
 You only need to declare the parameters you actually use:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _hello():
@@ -83,7 +83,7 @@ Alias Name and Called Alias Name
 When one alias points to another, it can be useful to know how the alias was
 invoked. The ``alias_name`` and ``called_alias_name`` parameters provide this:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register('groot')
       def _groot(alias_name=None, called_alias_name=None):
@@ -110,7 +110,7 @@ removed and the global environment is unchanged.
 Direct writes to ``$VAR`` or ``@.env`` modify the global environment as usual
 and persist after the alias exits:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _ca(env=None):
@@ -146,7 +146,7 @@ The alias may return its result in either of two forms:
 no env overlay; if you need to set env vars for it you must use the dict
 form below.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
@@ -157,7 +157,7 @@ form below.
 an optional ``"env"`` key (dict) — the command tokens plus an env overlay
 that applies **only** to the returned command.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
@@ -179,7 +179,7 @@ inline (e.g. via ``$[...]``, ``!()``, or subprocess syntax), but it does
 **not** flow to the returned command. To set env for the returned command,
 the alias must use the dict form above.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
@@ -198,7 +198,7 @@ The following example exercises all four env-flow paths of a
 a direct global write (persists), a dict-return ``"env"`` overlay (applies only
 to the returned command), and the global value that flows through both.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ $GLOBAL = 1
 
@@ -237,7 +237,7 @@ Return Values
 
 Callable aliases can return values in several forms:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _ret0():
@@ -284,7 +284,7 @@ alias's captured output, not directly to the terminal:
     print("x", file=stdout)    # same
     stdout.write("x\n")        # same
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _demo(args, stdout=None, stderr=None):
@@ -303,7 +303,7 @@ alias's captured output, not directly to the terminal:
 Here is a more complete example showing how different output methods behave
 under capture:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _printer(args, stdin, stdout, stderr):
@@ -358,7 +358,7 @@ When called uncaptured (bare command), output goes to the terminal as usual.
 The ``stderr`` argument and ``sys.stderr`` are also redirected — use
 ``sys.__stderr__`` if you need to bypass capture:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _loud(args, stdin=None):
@@ -393,7 +393,7 @@ decorators for a single invocation:
 
 To set it permanently on the function, use the Python decorator:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.unthreadable
@@ -416,7 +416,7 @@ take over the terminal. These must not be captured, or the program will not
 display correctly. Use ``@aliases.uncapturable``, typically together with
 ``@aliases.unthreadable``:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.uncapturable
@@ -458,7 +458,7 @@ Both are loaded lazily on first access — sessions that never touch click
 don't pay the import cost, and nothing breaks on systems where click is
 not installed.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register_click_command
       @aliases.click.option('--count', default=1, help='Number of greetings.')

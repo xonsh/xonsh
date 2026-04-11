@@ -54,7 +54,7 @@ Putting the following code into `xonshrc <xonshrc.rst>`_ file can achieve this.
 
 After starting a new xonsh session, try the following commands:
 
-.. code-block:: none
+.. code-block:: xonshcon
 
     @ history info
     backend: couchdb
@@ -75,7 +75,7 @@ install it. we will wait for you. Take your time.
 
 After installing, check that it's configured correctly with ``curl``:
 
-.. code-block:: none
+.. code-block:: xonshcon
 
     @ curl -i 'http://127.0.0.1:5984/'
     HTTP/1.1 200 OK
@@ -233,7 +233,7 @@ with ``pip`` or other library managers. You can find the full code here:
 
 Let's start a new xonsh session:
 
-.. code-block:: none
+.. code-block:: xonshcon
 
     @ history info
     backend: couchdb
@@ -247,7 +247,7 @@ Let's start a new xonsh session:
 
 Start a second xonsh session:
 
-.. code-block:: none
+.. code-block:: xonshcon
 
     @ history info
     backend: couchdb

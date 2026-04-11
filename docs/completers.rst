@@ -175,7 +175,7 @@ xonsh actually uses, in the ``xonsh.completers`` module.
 To understand how xonsh uses completers and their return values try
 to set :ref:`$XONSH_TRACE_COMPLETIONS <xonsh_trace_completions>` to ``True``:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $XONSH_TRACE_COMPLETIONS = True
     @ pip c<TAB>

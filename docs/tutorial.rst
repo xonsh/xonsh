@@ -724,7 +724,7 @@ subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
 ``@()``, ``@$()``).  An instance of ``ls -l`` that is on the wrong side of the
 border of the absurd is shown below:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     total 0
@@ -741,7 +741,7 @@ With great power, and so forth...
 To understand how xonsh executes the subprocess commands try
 to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $XONSH_TRACE_SUBPROC = True
     @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
@@ -1106,7 +1106,7 @@ be used with backticks with the following syntax: ``@<name>`test```
 
 The following example shows the form of these functions:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ def foo(s):
           return [i for i in os.listdir('.') if i.startswith(s)]
@@ -1216,7 +1216,7 @@ Alias to Modify Command
 The best way to modify command on the fly is to use alias that returns modified command.
 One of the most interesting application is expanding an alias:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
@@ -1231,7 +1231,7 @@ One of the most interesting application is expanding an alias:
 
 Or implement logic to run the right command:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
@@ -1255,7 +1255,7 @@ A callable alias is a function (or callable object) with a specific signature th
 
 Using directly with Python evaluation via ``@()``:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ def mybox():
          print('apple')
@@ -1266,7 +1266,7 @@ Using directly with Python evaluation via ``@()``:
 
 Register callable as an alias:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register('mybox')
       def _mybox():
@@ -1311,7 +1311,7 @@ You need to add ``@($args)`` manually if you need arguments in ExecAlias:
 
 These three definitions are equal:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _answer():
@@ -1383,7 +1383,7 @@ you can register a click command as a xonsh alias with
 the ``click`` module itself, so ``@aliases.click.option(...)`` works without
 a separate ``import click``. Both are loaded lazily on first access.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register_click_command
       @aliases.click.option('--name', help='The person to greet.')
@@ -1540,7 +1540,7 @@ and exit, instead of entering the command loop.
 .. note::
     When executing commands this way :doc:`the run control ("xonshrc") files </xonshrc>` are not applied.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh -c "echo @(7+3)"
     10
@@ -1570,7 +1570,7 @@ script, stored in ``test.xsh``:
 
 This script could be run by piping its contents to xonsh:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ cat test.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
@@ -1581,7 +1581,7 @@ This script could be run by piping its contents to xonsh:
 
 or by invoking xonsh with its filename as an argument:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh test.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
@@ -1623,7 +1623,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     print()
 
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh test2.xsh snails
     ['test_script.sh', 'snails']

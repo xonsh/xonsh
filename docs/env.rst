@@ -313,7 +313,7 @@ Excluding variables from a pattern
 Some variables may match a pattern but have different meaning.  Add them to
 the ``exclude`` list:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
     @ $XONSH_ENV_PATTERN_DIRS.exclude.append('JUPYTER_PLATFORM_DIRS')
     @ $JUPYTER_PLATFORM_DIRS = '1'

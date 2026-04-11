@@ -64,7 +64,7 @@ etc.) which have different flags and behaviour compared to the GNU versions
 found on Linux. If you work across both platforms or prefer GNU behaviour,
 install GNU coreutils and grep via Homebrew:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ brew install coreutils grep findutils gnu-sed gnu-tar gawk
 

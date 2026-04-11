@@ -147,7 +147,7 @@ This page provides xonsh equivalents for common patterns in Bash.
 
 To understand how xonsh executes the subprocess commands try ``showcmd`` or set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $XONSH_TRACE_SUBPROC = True
     @ echo $(echo @('hello')) @('wor' + 'ld') | grep hello
