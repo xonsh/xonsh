@@ -24,13 +24,14 @@ step by step and helps you build a solid foundation for working in the shell.
     :maxdepth: 1
 
     tutorial
-    subproc_strings
-    subproc_types
+    strings
+    subprocess
+    error_handling
     platforms
     Extensions (xontribs) on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
 
-Everyday User
+Regular User
 -------------
 
 How to use Xonsh efficiently in daily workflows by configuring
@@ -42,7 +43,6 @@ and streamline your command-line experience.
     :titlesonly:
     :maxdepth: 1
 
-    tutorial
     xonshrc
     envvars
     aliases
@@ -52,9 +52,9 @@ and streamline your command-line experience.
     prompt
     events
     globbing
-    error_handling
     macros
     xonsh_session
+    launch
     Open technical issue <https://github.com/xonsh/xonsh>
 
 Creator
@@ -77,6 +77,7 @@ developer tools.
     env
     completers
     xontrib
+    api/index
     Create an extension using template <https://github.com/xonsh/xontrib-template>
 
 Contributor
@@ -92,11 +93,11 @@ and collaborating with others
     :hidden:
 
     developer
-    api/index
+    lib/index
     history_backend
 
 * `Developer’s Guide <developer.html>`_
-* `Xonsh API Reference <api/index.html>`_
+* `Xonsh Library Reference <lib/index.html>`_
 * `History Backend <history_backend.html>`_
 * `Contribute to documentation <https://github.com/xonsh/xonsh/tree/main/docs>`_
 * Write a note or an article about xonsh.

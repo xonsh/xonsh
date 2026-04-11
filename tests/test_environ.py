@@ -15,6 +15,7 @@ import pytest
 from xonsh.environ import (
     DeprecatedSetting,
     Env,
+    EnvPath,
     InternalEnvironDict,
     LsColors,
     PTKSetting,
@@ -804,6 +805,17 @@ def test_envpath_in_env_object():
     assert "/bin" in env["PATH"].paths
 
 
+def test_envpath_eq_expands_both_sides(xession):
+    """EnvPath.__eq__ should expand both sides, so ~/bin matches the absolute path."""
+    xession.env["EXPAND_ENV_VARS"] = True
+    home = os.path.expanduser("~")
+    p = EnvPath(["~/bin", "/usr/local/bin"])
+    # raw form
+    assert p == ["~/bin", "/usr/local/bin"]
+    # expanded form
+    assert p == [f"{home}/bin", "/usr/local/bin"]
+
+
 def test_env_deprecated():
     env = Env()
     env._vars["XONSH_PROMPT_AUTO_SUGGEST"] = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST
@@ -825,3 +837,12 @@ def test_env_deprecated():
     with warnings.catch_warnings(record=True) as wrngs:
         env["XONSH_PROMPT_AUTO_SUGGEST"] = False
     assert len(wrngs) == 0
+
+
+def test_swap_preserves_exception_chain(env):
+    """env.swap() must not suppress __cause__ on re-raised exceptions."""
+    orig = ValueError("root cause")
+    with pytest.raises(RuntimeError) as exc_info:
+        with env.swap(FOO="bar"):
+            raise RuntimeError("wrapped") from orig
+    assert exc_info.value.__cause__ is orig

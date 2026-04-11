@@ -1,20 +1,48 @@
-"""Misc. xonsh tools.
+"""Shared utility functions and helpers for the xonsh shell.
 
-The following implementations were forked from the IPython project:
+This module is the grab-bag of small, broadly-useful helpers used across
+the xonsh codebase — anything that doesn't naturally fit into one of the
+more focused subsystems (parser, execer, environ, procs, completers,
+prompt, history) ends up here. Downstream code — including xontribs —
+can import from :mod:`xonsh.tools` as a stable public API.
+
+The module groups its helpers roughly by topic:
+
+* **Exceptions and error handling** — :class:`XonshError`,
+  :class:`XonshCalledProcessError`, :func:`print_exception`,
+  :func:`format_std_prepost`.
+* **Type conversion and validation** — the ``is_*`` / ``to_*`` /
+  ``*_or_default`` family used by :class:`~xonsh.environ.Env` to
+  validate and normalise environment variables (bools, ints, paths,
+  lists, dicts, history units, log levels, color schemes, etc.).
+* **Path and file utilities** — :func:`expand_path`,
+  :func:`expanduser_abs_path`, :func:`is_writable_file`,
+  :func:`executables_in`, :func:`iglobpath`, cross-platform path
+  normalisation helpers.
+* **String, token and AST helpers** — quoting/escaping,
+  :func:`subexpr_from_unbalanced`, :func:`find_next_break`, regex
+  constants for string prefixes and history tuples, the
+  :class:`FlexibleFormatter` for prompt/format-string rendering.
+* **Subprocess and signal helpers** — :func:`on_main_thread`,
+  :func:`suggest_commands`, signal-safe context managers, PTY helpers.
+* **Terminal and color handling** — ANSI/ANSI256/RGB color parsing,
+  ``PTK_NEW_OLD_COLOR_MAP``, ``WIN10_COLOR_MAP`` and related lookup
+  tables, :func:`print_color` / :func:`format_color`.
+* **Collections and functional helpers** — :class:`LazyObject`,
+  :class:`LazyDict`, :class:`DefaultNotGivenType`, ``always_true``,
+  ``always_false``, ``all_permutations``, small functional shims.
+* **Platform and environment probes** — Windows/POSIX conditionals,
+  locale detection, terminal-size queries, shell-level (``SHLVL``)
+  adjustment.
+
+A handful of the oldest helpers (``decode``, ``encode``,
+``cast_unicode``, ``safe_hasattr``, ``indent``) were originally forked
+from the IPython project and retain their upstream copyrights:
 
 * Copyright (c) 2008-2014, IPython Development Team
 * Copyright (C) 2001-2007 Fernando Perez <fperez@colorado.edu>
 * Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 * Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
-
-Implementations:
-
-* decode()
-* encode()
-* cast_unicode()
-* safe_hasattr()
-* indent()
-
 """
 
 import ast
@@ -631,7 +659,7 @@ def indent(instr, nspaces=4, ntabs=0, flatten=False):
 
     """
     if instr is None:
-        return
+        return ""
     ind = "\t" * ntabs + " " * nspaces
     if flatten:
         pat = re.compile(r"^\s*", re.MULTILINE)
@@ -1091,7 +1119,7 @@ def argvquote(arg, force=False):
         # Escape all backslashes, but let the terminating
         # double quotation mark we add below be interpreted
         # as a metacharacter
-        cmdline += +n_backslashes * 2 * "\\" + '"'
+        cmdline += n_backslashes * 2 * "\\" + '"'
         return cmdline
 
 
@@ -1586,8 +1614,8 @@ def ptk2_color_depth_setter(x):
         "TRUE_COLOR",
     }:
         pass
-    elif x in {"", None}:
-        x = ""
+    elif x == "":
+        pass
     else:
         msg = f'"{x}" is not a valid value for $PROMPT_TOOLKIT_COLOR_DEPTH. '
         warnings.warn(msg, RuntimeWarning, stacklevel=2)

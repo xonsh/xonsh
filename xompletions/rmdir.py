@@ -1,3 +1,5 @@
+"""Completion for "rmdir", includes only valid directory names."""
+
 from xonsh.completers.path import complete_dir
 from xonsh.parsers.completion_context import CommandContext
 

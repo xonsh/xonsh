@@ -25,3 +25,48 @@ li > p:last-child {
 .sidebar-logo {
     height: 8em;
 }
+
+/* Disable red-on-white error highlighting from Pygments for unrecognized tokens
+   (e.g. xonsh $VAR syntax in python/xonshcon code blocks). */
+.highlight .err {
+    color: inherit !important;
+    background-color: inherit !important;
+    border: none !important;
+}
+
+/* Xonsh / Python console prompt (``@ ``, ``>>> ``, ``... `` — Pygments'
+   Generic.Prompt token). ``user-select: none`` is applied in both themes
+   so the prompt is stripped from mouse-copy everywhere. */
+.highlight .gp {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Dark theme only: override the prompt colour to ``#555``. Furo's default
+   (~``#AAA``) stays untouched in light mode. Both the explicit dark toggle
+   (``body[data-theme="dark"]``) and the auto / system-preference dark mode
+   (``body:not([data-theme="light"])`` inside ``prefers-color-scheme: dark``)
+   are covered. */
+body[data-theme="dark"] .highlight .gp {
+    color: #888 !important;
+}
+@media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) .highlight .gp {
+        color: #888 !important;
+    }
+}
+
+/* Xonsh console output comments (``# ...`` lines inside ``xonshcon`` blocks):
+   render in muted grey and exclude from native text selection so that
+   mouse-copy of a xonshcon block yields only the code, not the ``# output``
+   annotations. Matches pygments' Generic.Output token class. */
+.highlight .go {
+    color: #888 !important;
+    font-style: italic;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}

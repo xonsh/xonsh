@@ -3,82 +3,38 @@
 =================
 Xonsh API
 =================
-For those of you who want the gritty details.
+
+The ``xonsh.api`` package is a set of public libraries that can be used
+in third-party projects as well as in xonsh extensions (xontribs).  If
+you are writing a xontrib, using ``xonsh.api`` is the recommended way to
+interact with xonsh internals.
+
+.. warning::
+
+    The API is under development and currently has a small number
+    of methods.  Contributions are welcome!
+
+For the full internal library reference, see :doc:`/lib/index`.
 
 
-**Language:**
+``xonsh.api.subprocess``
+========================
 
-.. autosummary::
-    :toctree: _autosummary/lang
-    :template: api-summary-module.rst
-    :recursive:
+Drop-in replacements for :mod:`subprocess` functions that use xonsh's
+subprocess pipeline under the hood.
 
-    xonsh.parsers.lexer
-    xonsh.parser
-    xonsh.parsers.ast
-    xonsh.execer
-    xonsh.imphooks
+.. autofunction:: xonsh.api.subprocess.run
 
+.. autofunction:: xonsh.api.subprocess.check_call
 
-**Command Prompt:**
-
-.. autosummary::
-    :toctree: _autosummary/cmd
-    :template: api-summary-module.rst
-    :recursive:
-
-    xonsh.built_ins
-    xonsh.environ
-    xonsh.aliases
-    xonsh.dirstack
-    xonsh.procs
-    xonsh.lib.inspectors
-    xonsh.history
-    xonsh.completer
-    xonsh.completers
-    xonsh.prompt
-    xonsh.shells
-    xonsh.shells.base_shell
-    xonsh.shells.readline_shell
-    xonsh.shells.ptk_shell
-    xonsh.lib.pretty
-    xonsh.history.diff_history
-    xonsh.xoreutils
+.. autofunction:: xonsh.api.subprocess.check_output
 
 
-**Helpers:**
+``xonsh.api.os``
+================
 
-.. autosummary::
-    :toctree: _autosummary/helpers
-    :template: api-summary-module.rst
-    :recursive:
+Xonsh-powered utilities inspired by the :mod:`os` module.
 
-    xonsh.events
-    xonsh.lib
-    xonsh.tools
-    xonsh.platform
-    xonsh.lib.lazyjson
-    xonsh.lib.lazyasd
-    xonsh.lib.openpy
-    xonsh.foreign_shells
-    xonsh.commands_cache
-    xonsh.tracer
-    xonsh.main
-    xonsh.color_tools
-    xonsh.pyghooks
-    xonsh.shells.dumb_shell
-    xonsh.wizard
-    xonsh.xonfig
-    xonsh.xontribs
-    xonsh.codecache
-    xonsh.contexts
+.. autofunction:: xonsh.api.os.rmtree
 
-
-**Xontribs:**
-
-.. autosummary::
-    :toctree: _autosummary/xontribs
-    :template: api-summary-module.rst
-    :recursive:
-
-    xontrib
+.. autodata:: xonsh.api.os.indir

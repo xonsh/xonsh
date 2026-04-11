@@ -127,6 +127,20 @@ def get_setproctitle():
     return spt
 
 
+def get_current_xonsh():
+    """Return the path used to invoke the current xonsh session.
+
+    This is a thin wrapper around ``sys.argv[0]`` so that callers can share
+    a single source of truth for "how was this xonsh started".
+
+    Examples
+    --------
+    - Entry point: ``/usr/bin/xonsh``.
+    - Source via ``python -m xonsh``: ``/path/to/xonsh/__main__.py``
+    """
+    return sys.argv[0]
+
+
 def path_argument(s):
     """Return a path only if the path is actually legal (file or directory)
 

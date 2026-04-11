@@ -159,6 +159,9 @@ N_TOKENS += 1  # type: ignore
 CASE = N_TOKENS
 tok_name[N_TOKENS] = "CASE"
 N_TOKENS += 1  # type: ignore
+TYPE = N_TOKENS
+tok_name[N_TOKENS] = "TYPE"
+N_TOKENS += 1  # type: ignore
 FSTRING_START = N_TOKENS
 tok_name[N_TOKENS] = "FSTRING_START"
 N_TOKENS += 1  # type: ignore
@@ -185,6 +188,7 @@ _xonsh_tokens = {
     "@!(": "ATBANGLPAREN",
     "match": "MATCH",
     "case": "CASE",
+    "type": "TYPE",
 }
 
 additional_parenlevs = frozenset({"@(", "!(", "![", "$(", "$[", "${", "@$(", "@!("})
@@ -1452,6 +1456,16 @@ def _tokenize(
                                 # End of f-string expression
                                 fs["in_expr"] = False
                                 fs["in_format_spec"] = False
+                                if stashed:
+                                    yield stashed
+                                    stashed = None
+                                yield TokenInfo(OP, "}", spos, epos, line)
+                                continue
+                            elif fs["brace_depth"] == 1 and fs["in_format_spec"]:
+                                # Closing a nested sub-expression inside
+                                # a format spec (e.g. {n} in f"{x:.{n}f}").
+                                # Resume format spec literal scanning.
+                                fs["in_expr"] = False
                                 if stashed:
                                     yield stashed
                                     stashed = None

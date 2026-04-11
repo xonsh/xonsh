@@ -153,7 +153,7 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
 .. code-block:: xonshcon
 
    @ 'HOME' in @.env
-   True
+   # True
 
 To get information about a specific environment variable you can use the
 :func:`~xonsh.environ.Env.help` method.
@@ -207,80 +207,43 @@ Not bad, xonsh, not bad.
 Environment Types
 -----------------
 
-Like other variables in Python, environment variables have a type. Sometimes
-this type is imposed based on the variable name. The current rules are pretty
-simple:
+Environment variables in xonsh are not limited to strings -- they can hold
+any Python type: strings, numbers, lists, and arbitrary objects.  When a
+variable is used as a subprocess argument, xonsh converts it to a string
+automatically:
 
-* ``\w*PATH``: any variable whose name ends in PATH is a list of strings.
-* ``\w*DIRS``: any variable whose name ends in DIRS is a list of strings.
+.. code-block:: xonshcon
 
-Futhermore, a number of predefined environment variables listed `here <envvars.html>`_ have a static type.
-For example ``XONSH_HISTORY_SIZE`` is an int.
+    @ $MY_STR = 'hello'
+    @ $MY_NUM = 42
+    @ $MY_LIST = [1, 2, 3]
+    @ showcmd echo $MY_STR $MY_NUM $MY_LIST
+    ['echo', 'hello', '42', '[1, 2, 3]']
 
-xonsh will automatically convert back and forth to untyped (string-only)
-representations of the environment as needed (mostly by subprocess commands).
-When in xonsh, you'll always have the typed version.
-
-Variables that do not match the rules above are converted to strings using ``str``,
-except they are ``None``. In this case the empty string is used.
-
-Here are a couple of
-PATH examples:
+``$PATH`` is an :class:`~xonsh.environ.EnvPath` object -- a special list that makes it easy
+to add and remove directories:
 
 .. code-block:: xonshcon
 
     @ $PATH
-    ['/home/snail/.local/bin', '/home/snail/sandbox/bin',
-    '/home/snail/miniconda3/bin', '/usr/local/bin', '/usr/local/sbin',
-    '/usr/bin', '/usr/sbin', '/bin', '/sbin', '.']
-    @ $LD_LIBRARY_PATH
-    ['/home/snail/.local/lib', '']
+    ['/usr/local/bin', '/usr/bin', '/bin']
+    @ $PATH.append('/opt/mytools/bin')
+    @ $PATH.insert(0, '$HOME/.local/bin')
+    @ $PATH
+    ['/home/snail/.local/bin', '/usr/local/bin', '/usr/bin', '/bin',
+    '/opt/mytools/bin']
 
-Also note that *any* Python object can go into the environment. It is sometimes
-useful to have more sophisticated types, like functions, in the environment.
-There are handful of environment variables that xonsh considers special.
-They can be seen on the `Environment Variables page <envvars.html>`_.
+Any variable whose name ends in ``PATH`` or ``DIRS`` is automatically
+treated as an ``EnvPath``.
 
 .. note:: In subprocess mode, referencing an undefined environment variable
           will produce an empty string.  In Python mode, however, a
           ``KeyError`` will be raised if the variable does not exist in the
           environment.
 
-Callable Environment Variables
-------------------------------
-
-In some cases you may want to have environment variable with dynamically created value.
-Here is the example of callable environment variable:
-
-.. code-block:: python
-
-    @ class Stamp:
-         """Return current date as string representation."""
-         def __repr__(self):
-            return @.imp.datetime.datetime.now().isoformat()
-
-
-    @ $DT = Stamp()
-    @ $DT
-    2024-11-11T11:11:22
-    @ echo $DT
-    2024-11-11T11:11:33
-    @ env | grep DT
-    DT=2024-11-11T11:11:44
-
-Registering Environment Variables
----------------------------------
-
-You can manually register environment variables to define their type and documentation.
-This is particularly useful for extensions or complex configurations. The documentation provided
-will be shown during tab-completion.
-
-.. code-block:: xonsh
-
-    @.env.register('MY_VAR1', type='int', default=1, doc='Demo variable 1.')
-    @.env.register('MY_VAR2', type='int', default=2, doc='Demo variable 2.')
-
-Now, when you type ``$MY_<Tab>``, you will see the description.
+You can also register custom variables with types and documentation,
+create callable variables with dynamic values, and more -- see
+:doc:`env` for the full details.
 
 Python-mode vs Subprocess-mode
 ================================
@@ -445,7 +408,7 @@ These can be combined (``fr""``, ``pf""``, ``pr""``). For example:
     @ pf"$HOME/{name}"
     PosixPath('/Users/snail/docs')
 
-See :doc:`subproc_strings` for the full reference table of how each prefix
+See :doc:`strings` for the full reference table of how each prefix
 affects environment variable substitution, brace formatting, and escapes.
 
 
@@ -481,15 +444,15 @@ input and output were redirected.  For example:
 
     @ !(ls nonexistent_directory)
     CommandPipeline(
-        pid=26968,
-        returncode=2,
-        args=['ls', 'nonexistent_directory'],
-        alias=['ls', '--color=auto', '-v'],
-        timestamps=[1485235484.5016758, None],
-        executed_cmd=['ls', '--color=auto', '-v', 'nonexistent_directory'],
-        input=None,
-        output=,
-        errors=None
+       pid=26968,
+       returncode=2,
+       args=['ls', 'nonexistent_directory'],
+       alias=['ls', '--color=auto', '-v'],
+       timestamps=[1485235484.5016758, None],
+       executed_cmd=['ls', '--color=auto', '-v', 'nonexistent_directory'],
+       input=None,
+       output=,
+       errors=None
     )
 
 The captured object ``!()`` operator allows for non-blocking execution.
@@ -705,7 +668,7 @@ feed them to a subprocess as needed.  For example:
 The ``@()`` syntax may also be used inside of subprocess
 arguments, not just as a stand-alone argument. For example:
 
-  .. code-block:: xonshcon
+.. code-block:: xonshcon
 
     @ x = 'hello'
     @ echo /path/to/@(x)
@@ -715,7 +678,7 @@ When used inside of a subprocess argument and ``<expr>`` evaluates to a
 non-string iterable, ``@()`` will expand to the outer product of all
 given values:
 
-  .. code-block:: sh
+.. code-block:: xonshcon
 
     @ echo /path/to/@(['hello', 'world'])
     /path/to/hello /path/to/world
@@ -761,7 +724,7 @@ subprocess operators that we have seen so far (``$()``, ``$[]``, ``${}``,
 ``@()``, ``@$()``).  An instance of ``ls -l`` that is on the wrong side of the
 border of the absurd is shown below:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     total 0
@@ -778,7 +741,7 @@ With great power, and so forth...
 To understand how xonsh executes the subprocess commands try
 to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $XONSH_TRACE_SUBPROC = True
     @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
@@ -857,7 +820,7 @@ you will see the error and then the file that does exist:
 .. code-block:: xonshcon
 
     @ ls doesnt or ls exists
-    /bin/ls: cannot access doesnt: No such file or directory
+    #/bin/ls: cannot access doesnt: No such file or directory
     exists
 
 Xonsh also directly translates the ``||`` operator into ``or``, too.
@@ -1143,7 +1106,7 @@ be used with backticks with the following syntax: ``@<name>`test```
 
 The following example shows the form of these functions:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ def foo(s):
           return [i for i in os.listdir('.') if i.startswith(s)]
@@ -1253,7 +1216,7 @@ Alias to Modify Command
 The best way to modify command on the fly is to use alias that returns modified command.
 One of the most interesting application is expanding an alias:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
@@ -1263,12 +1226,12 @@ One of the most interesting application is expanding an alias:
 
     @ aliases['install'] = "apt install cowsay"
     @ xsudo install
-    # Password:
-    # Install cowsay
+    Password:
+    Install cowsay
 
 Or implement logic to run the right command:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
@@ -1292,7 +1255,7 @@ A callable alias is a function (or callable object) with a specific signature th
 
 Using directly with Python evaluation via ``@()``:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ def mybox():
          print('apple')
@@ -1303,7 +1266,7 @@ Using directly with Python evaluation via ``@()``:
 
 Register callable as an alias:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register('mybox')
       def _mybox():
@@ -1348,7 +1311,7 @@ You need to add ``@($args)`` manually if you need arguments in ExecAlias:
 
 These three definitions are equal:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _answer():
@@ -1420,7 +1383,7 @@ you can register a click command as a xonsh alias with
 the ``click`` module itself, so ``@aliases.click.option(...)`` works without
 a separate ``import click``. Both are loaded lazily on first access.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register_click_command
       @aliases.click.option('--name', help='The person to greet.')
@@ -1577,7 +1540,7 @@ and exit, instead of entering the command loop.
 .. note::
     When executing commands this way :doc:`the run control ("xonshrc") files </xonshrc>` are not applied.
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh -c "echo @(7+3)"
     10
@@ -1586,7 +1549,7 @@ Longer scripts can be run either by specifying a filename containing the script,
 or by feeding them to xonsh via stdin.  For example, consider the following
 script, stored in ``test.xsh``:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     #!/usr/bin/env xonsh
 
@@ -1607,7 +1570,7 @@ script, stored in ``test.xsh``:
 
 This script could be run by piping its contents to xonsh:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ cat test.xsh | xonsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
@@ -1618,7 +1581,7 @@ This script could be run by piping its contents to xonsh:
 
 or by invoking xonsh with its filename as an argument:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh test.xsh
     file0.txt  file1.txt  file2.txt  file3.txt  file4.txt  test_script.sh
@@ -1652,7 +1615,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     ls
 
     print('adding files')
-    # This is a comment
+    This is a comment
     for i, x in enumerate($ARG1):
         echo @(x) > @("file{0}.txt".format(i))
 
@@ -1660,7 +1623,7 @@ operates on a given argument, rather than on the string ``'xonsh'`` (notice how
     print()
 
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh test2.xsh snails
     ['test_script.sh', 'snails']
@@ -1757,7 +1720,7 @@ written in pure Python.
 
     @ @.imp.json.loads??
     def loads(s, *, cls=None, object_hook=None, parse_float=None,
-        parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
+       parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):
 
     @ @.imp.json?.loads?
     <json help>
@@ -1855,3 +1818,13 @@ On Windows, you can also type ``Ctrl-Z``.
 To exit from the xonsh script just call the ``exit(code)`` function.
 
 Now it is your turn.
+
+
+See also
+========
+
+* :doc:`strings` -- how strings and quoting work in subprocess mode
+* :doc:`subprocess` -- subprocess operators and capturing modes
+* :doc:`env` -- environment variable types and patterns
+* :doc:`aliases` -- built-in aliases and command decorators
+* :doc:`xonshrc` -- configuration snippets and tips

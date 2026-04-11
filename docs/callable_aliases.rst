@@ -42,11 +42,12 @@ combination of the following parameters in any order:
    * - ``env``
      - A local environment overlay dict. Values set here shadow the global
        env during alias execution and are visible to subprocesses. Removed
-       automatically when the alias exits.
+       automatically when the alias exits. When you set `env['VAR']=1` it's
+       like `with @.env.swap(VAR=1)` for the rest of the callable alias code.
 
 You only need to declare the parameters you actually use:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _hello():
@@ -82,7 +83,7 @@ Alias Name and Called Alias Name
 When one alias points to another, it can be useful to know how the alias was
 invoked. The ``alias_name`` and ``called_alias_name`` parameters provide this:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register('groot')
       def _groot(alias_name=None, called_alias_name=None):
@@ -109,7 +110,7 @@ removed and the global environment is unchanged.
 Direct writes to ``$VAR`` or ``@.env`` modify the global environment as usual
 and persist after the alias exits:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _ca(env=None):
@@ -135,29 +136,105 @@ Return Command Aliases
 ----------------------
 
 The ``@aliases.return_command`` decorator creates aliases that return a new
-command to execute instead of running it themselves. The ``env`` overlay works
-here too — values set in ``env`` are passed to the returned command's
-environment:
+command to execute instead of running it themselves. The body of the alias
+can run its own commands first, then return the command xonsh should execute
+on its behalf.
 
-.. code-block:: python
+The alias may return its result in either of two forms:
+
+**1. A non-empty list** — just the command tokens. The returned command has
+no env overlay; if you need to set env vars for it you must use the dict
+form below.
+
+.. code-block:: xonshcon
+
+    @ @aliases.register
+      @aliases.return_command
+      def _rca(args):
+          return ['xonsh', '-c', 'echo hello']
+
+**2. A dict** with a required ``"cmd"`` key (non-empty list of tokens) and
+an optional ``"env"`` key (dict) — the command tokens plus an env overlay
+that applies **only** to the returned command.
+
+.. code-block:: xonshcon
+
+    @ @aliases.register
+      @aliases.return_command
+      def _rca(args):
+          return {
+              'cmd': ['xonsh', '-c', 'echo $RETURNED'],
+              'env': {'RETURNED': 'set_by_dict'},
+          }
+
+    @ rca
+    set_by_dict
+    @ $RETURNED
+    Unknown environment variable: $RETURNED
+
+The ``env=`` kwarg of a ``return_command`` alias behaves exactly like the
+``env=`` kwarg of an ordinary callable alias: it is a **local overlay active
+only during the function body**. Mutating it affects commands the alias runs
+inline (e.g. via ``$[...]``, ``!()``, or subprocess syntax), but it does
+**not** flow to the returned command. To set env for the returned command,
+the alias must use the dict form above.
+
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.return_command
       def _rca(args, env=None):
-          env['LOCAL'] = 123
-          $GLOBAL = 321
-          return ['bash', '-c', 'echo $LOCAL']
+          env['BODY_ONLY'] = 'visible_inside'
+          # A subprocess spawned here sees BODY_ONLY=visible_inside
+          $[env | grep BODY_ONLY]
+          # But the returned command does NOT — it has no overlay at all.
+          return ['env']
+
+Direct writes to ``$VAR`` or ``@.env`` still modify the global environment
+and persist after the alias exits, as for any callable alias.
+
+The following example exercises all four env-flow paths of a
+``return_command`` alias in one place: the ``env=`` kwarg overlay (body-only),
+a direct global write (persists), a dict-return ``"env"`` overlay (applies only
+to the returned command), and the global value that flows through both.
+
+.. code-block:: xonshcon
+
+    @ $GLOBAL = 1
+
+    @ @aliases.register
+      @aliases.return_command
+      def _rca(env):
+          # ``env`` is the body-scoped overlay (introduced in 0.23.0).
+          # Mutating it affects commands the alias runs inline.
+          env['LOCAL'] = 1
+          xonsh -c @('echo g=$GLOBAL l=$LOCAL')
+          # Direct write to the global env — persists after the alias exits.
+          $GLOBAL = 2
+          return {
+              'cmd': ['xonsh', '-c', 'echo g=$GLOBAL l=$LOCAL'],
+              'env': {'LOCAL': 2},
+          }
 
     @ rca
-    123
-    @ $LOCAL
-    Unknown environment variable: $LOCAL
-    @ $GLOBAL
-    321
+    # xonsh inside the alias body:
+    #   g=1  from the global $GLOBAL set before the alias
+    #   l=1  from the ``env=`` kwarg overlay (body-scoped)
+    g=1 l=1
 
-The returned command ``bash -c 'echo $LOCAL'`` sees ``LOCAL=123`` in its
-process environment, but ``$LOCAL`` does not exist in the global xonsh env
-after the alias exits. ``$GLOBAL = 321`` was a direct write and persists.
+    # the returned xonsh command:
+    #   g=2  from the direct write ``$GLOBAL = 2`` in the body
+    #   l=2  from the dict-return ``"env"`` overlay
+    g=2 l=2
+
+    @ $LOCAL
+    # the body overlay is gone,
+    # and the dict overlay only
+    # applied to the returned command
+    Unknown environment variable: $LOCAL
+
+    @ $GLOBAL
+    2    # the direct write persisted
 
 
 Return Values
@@ -165,14 +242,14 @@ Return Values
 
 Callable aliases can return values in several forms:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _ret0():
           return 0  # integer return code (0 = success)
 
     @ ret0
-    @ $XONSH_LAST_RETURN_CODE
+    @ $LAST_RETURN_CODE
     0
 
     @ @aliases.register
@@ -212,7 +289,7 @@ alias's captured output, not directly to the terminal:
     print("x", file=stdout)    # same
     stdout.write("x\n")        # same
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _demo(args, stdout=None, stderr=None):
@@ -231,7 +308,7 @@ alias's captured output, not directly to the terminal:
 Here is a more complete example showing how different output methods behave
 under capture:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _printer(args, stdin, stdout, stderr):
@@ -286,7 +363,7 @@ When called uncaptured (bare command), output goes to the terminal as usual.
 The ``stderr`` argument and ``sys.stderr`` are also redirected — use
 ``sys.__stderr__`` if you need to bypass capture:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       def _loud(args, stdin=None):
@@ -321,7 +398,7 @@ decorators for a single invocation:
 
 To set it permanently on the function, use the Python decorator:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.unthreadable
@@ -344,7 +421,7 @@ take over the terminal. These must not be captured, or the program will not
 display correctly. Use ``@aliases.uncapturable``, typically together with
 ``@aliases.unthreadable``:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register
       @aliases.uncapturable
@@ -386,7 +463,7 @@ Both are loaded lazily on first access — sessions that never touch click
 don't pay the import cost, and nothing breaks on systems where click is
 not installed.
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ @aliases.register_click_command
       @aliases.click.option('--count', default=1, help='Number of greetings.')

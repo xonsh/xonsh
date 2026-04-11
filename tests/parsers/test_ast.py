@@ -188,3 +188,14 @@ def test_subproc_with_numeric_path_and_boolop(test_input, xonsh_execer_parse):
 def test_isexpression(xonsh_execer, inp, exp):
     obs = isexpression(inp)
     assert exp is obs
+
+
+def test_const_str_sets_is_raw():
+    """const_str must set is_raw on all Python versions so that
+    p_subproc_atom_str can distinguish raw strings from normal ones."""
+    raw = ast.const_str("hello", is_raw=True)
+    assert hasattr(raw, "is_raw")
+    assert raw.is_raw is True
+
+    normal = ast.const_str("hello", is_raw=False)
+    assert not getattr(normal, "is_raw", False)

@@ -18,6 +18,37 @@ def RE_FSTR_SELF_DOC_FIELD_WRAPPER():
     return re.compile(r"(__xonsh__\.eval_fstring_field\((\d+)\)\s*)=")
 
 
+@lazyobject
+def RE_XONSH_EXPR():
+    """Matches xonsh-specific expressions: $NAME, $(...), ${...}, $[...],
+    @(...), @$(...), @!(...), !(...), ![...]."""
+    # Order matters: @$(...) and @!(...) must be tried before @(...).
+    return re.compile(
+        r"\$\w+"  # $NAME
+        r"|\$\([^)]*\)"  # $(...)
+        r"|\$\{[^}]*\}"  # ${...}
+        r"|\$\[[^\]]*\]"  # $[...]
+        r"|@\$\([^)]*\)"  # @$(...)
+        r"|@!\([^)]*\)"  # @!(...)
+        r"|@\([^)]*\)"  # @(...)
+        r"|!\([^)]*\)"  # !(...)
+        r"|!\[[^\]]*\]"  # ![...]
+    )
+
+
+def _extract_xonsh_expr(template, pos):
+    """Extract a xonsh expression from template starting at or near pos."""
+    m = RE_XONSH_EXPR.match(template, pos)
+    if m is not None:
+        return m.group()
+    # The offset may point past a leading space: `{ $HOME }`
+    if pos > 0:
+        m = RE_XONSH_EXPR.match(template, pos - 1)
+        if m is not None:
+            return m.group()
+    return None
+
+
 class FStringAdaptor:
     """Helper for parsing Xonsh syntax within f-strings."""
 
@@ -70,11 +101,38 @@ class FStringAdaptor:
                     if epos < 0:
                         raise
                 else:
-                    # Python 3.12+ reports the error differently.
-                    # todo: implement a better way to get the error expression
-                    raise RuntimeError("Unsupported fstring syntax") from e
+                    # Python 3.12+ reports the error with offset pointing
+                    # to the '$' character. e.text is the failing source
+                    # line, e.offset is 1-based within that line, and
+                    # e.lineno indicates which line (for multi-line strings).
+                    if e.text is None or e.offset is None:
+                        raise
+                    # Find the error position within e.text
+                    err_col = e.offset - 1  # 0-based column in e.text
+                    # For line 1, skip the prefix and opening quote
+                    if e.lineno == 1:
+                        err_col -= prelen + len(quote)
+                    # Locate the corresponding position in template
+                    if e.lineno == 1:
+                        epos = err_col
+                    else:
+                        # Skip to the start of line e.lineno within template
+                        line_start = 0
+                        for _ in range(e.lineno - 1):
+                            nl = template.find("\n", line_start)
+                            if nl < 0:
+                                break
+                            line_start = nl + 1
+                        epos = line_start + err_col
+                    if epos < 0 or epos >= len(template):
+                        raise
+                    # Extract xonsh expression at this position
+                    error_expr = _extract_xonsh_expr(template, epos)
+                    if error_expr is None:
+                        raise
+                    epos = template.find(error_expr, max(0, epos - 1))
 
-            # We can olny get here in the case of handled SyntaxError.
+            # We can only get here in the case of handled SyntaxError.
             # Patch the last error and start over.
             xonsh_field = (error_expr, self.filename if self.filename else None)
             self._field_counter += 1
@@ -136,6 +194,8 @@ class FStringAdaptor:
         for node in ast.walk(self.res):
             if not (
                 isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
                 and node.func.value.id == "__xonsh__"
                 and node.func.attr == "eval_fstring_field"
                 and len(node.args) > 0

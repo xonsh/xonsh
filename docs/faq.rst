@@ -190,8 +190,13 @@ There are a few gotchas when using xonsh across multiple versions of Python,
 where some behavior can differ, as the underlying Python might behave
 differently.
 
-For example double star globbing `**` will only work on Python 3.5+ (ie not on 3.4)
-as recursive globbing is `new in Python 3.5 <https://docs.python.org/3/library/glob.html#glob.glob>`_
-
 To keep available packages independent from underlying environments, use the provided `xpip` alias in the same way as `pip` is installed.
 It will make sure that the installed packages are available to `xonsh`
+
+
+See also
+========
+
+* :doc:`tutorial` -- introduction to xonsh
+* :doc:`subprocess` -- subprocess operators and capturing modes
+* :doc:`python_virtual_environments` -- virtual environments in xonsh

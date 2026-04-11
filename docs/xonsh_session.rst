@@ -62,7 +62,7 @@ Use cases:
         $[git log --oneline -3]
 
     # Register a custom env variable with a validator and default
-    @.env.register('MY_TIMEOUT', type=int, default=30,
+    @.env.register('MY_TIMEOUT', type='int', default=30,
                    doc='Request timeout in seconds.')
 
 ``@.env`` shines when the variable name is **dynamic** (built from a
@@ -140,7 +140,7 @@ Use cases:
     print('exit:', @.lastcmd.rtn)        # exit code
     print('stdout:', @.lastcmd.output)   # captured stdout (if any)
     print('stderr:', @.lastcmd.errors)   # captured stderr (if any)
-    print('cmd:',    @.lastcmd.cmd)      # the parsed command list
+    print('args:',   @.lastcmd.args)     # the parsed command list
     print('alias:',  @.lastcmd.alias)    # alias resolved (if any)
 
     # Build a "fail fast" wrapper in a script
@@ -186,9 +186,9 @@ order you are likely to need them.
   delegates to ``commands_cache.aliases`` and is read-only on the
   session itself; mutate the mapping in place.
 
-* ``__xonsh__.completers`` — list of registered completer callables.
+* ``__xonsh__.completers`` — ``OrderedDict`` of registered completer callables.
   Lazily initialized on first access. Modify with the ``completer``
-  command or by mutating the list directly.
+  command or by mutating the dict directly.
 
 * ``__xonsh__.shell`` — the active shell wrapper
   (:class:`xonsh.shell.Shell`). The concrete implementation is in
@@ -336,8 +336,8 @@ rewrites special syntax into calls on them. You normally do not call
 these directly, but it is useful to know they are there:
 
 * ``pathsearch`` / ``globsearch`` / ``regexsearch`` /
-  ``regexmatchsearch`` — implement ``p"..."``, ``g"..."``, ``r"..."``
-  and ``$VAR`` glob expansion.
+  ``regexmatchsearch`` — implement backtick expressions (```regex```,
+  ``g`glob```, etc.) and ``$VAR`` glob expansion.
 * ``glob`` — wrapper used by glob expansion in subproc mode.
 * ``expand_path`` — applied to bare path arguments.
 * ``call_macro`` / ``enter_macro`` — power xonsh **macro** calls
@@ -355,3 +355,12 @@ these directly, but it is useful to know they are there:
 When in doubt, prefer ``@.<x>`` (``XSH.interface``) for the four stable bits of the API,
 and treat everything on ``__xonsh__`` as power-user territory that
 should be guarded with try/except and feature checks.
+
+
+See also
+========
+
+* :doc:`env` -- environment variables and ``@.env``
+* :doc:`subprocess` -- subprocess operators backed by session attributes
+* :doc:`aliases` -- ``@.aliases`` and alias management
+* :doc:`events` -- event system and handler registration

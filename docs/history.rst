@@ -8,7 +8,7 @@ on ``history``.
 
 How is xonsh history different?
 ================================
-Most shells - bash foremost among them - think of history as a linear sequence of
+Most shells think of history as a linear sequence of
 past commands that have been entered into *the* terminal. This is saved when *the*
 shell exits, and loaded when *the* new shell starts. But this is no longer
 how the world works.
@@ -357,42 +357,23 @@ you could run the following command:
 
 History Indexing
 =======================
-History object (``@.history``, ``__xonsh__.history``) acts like a sequence that can be indexed in a special way
-that adds extra functionality. At the moment only history from the
+History object (``@.history``, ``__xonsh__.history``) acts like a sequence
+that can be indexed by int or slice. At the moment only history from the
 current session can be retrieved. Note that the most recent command
 is the last item in history.
 
-The index acts as a filter with two parts, command and argument,
-separated by comma. Based on the type of each part different
-filtering can be achieved,
-
-for the command part:
-    - an int returns the command in that position.
-    - a slice returns a list of commands.
-
-for the argument part:
-    - an int returns the argument of the command in that position.
-    - a slice returns a part of the command based on the argument
-      position.
-
-The argument part of the filter can be omitted but the command part is
-required.
-
-Command arguments are separated by white space.
-
-If the filtering produces only one result it is
-returned as a string else a list of strings is returned.
-
-examples:
+Indexing with an **int** returns a single ``HistoryEntry`` object with
+attributes ``cmd``, ``out``, ``rtn``, ``ts``, and ``cwd``. Indexing with a
+**slice** returns a list of ``HistoryEntry`` objects.
 
 .. code-block:: xonshcon
 
     @ echo mkdir with/a/huge/name/
-    mkdir with/a/huge/name
-    @ @.history[-1, -1]
-    'with/a/huge/name/'
-    @ @.history[0, 1:]
-    'mkdir with/a/huge/name'
+    mkdir with/a/huge/name/
+    @ @.history[-1].cmd
+    'echo mkdir with/a/huge/name/\n'
+    @ @.history[-1].rtn
+    0
 
 
 Exciting Technical Detail: Lazy JSON
@@ -408,7 +389,7 @@ only read in the parts of a file that we need. For garbage collecting based on t
 of commands, we can get this information from the index and don't need to read in any of the
 original data.
 
-The best part about this is that it is totally generic. Feel free to use ``xonsh.lazyjson``
+The best part about this is that it is totally generic. Feel free to use ``xonsh.lib.lazyjson``
 yourself for things other than xonsh history! Of course, if you want to read in xonsh history,
 you should probably use the module.
 
@@ -423,10 +404,7 @@ enabled by setting ``$XONSH_CAPTURE_ALWAYS=True``. Storing stdout to the history
 is disabled by default but can be enabled by setting ``$XONSH_STORE_STDOUT=True``.
 
 To be able to tee stdout and stderr and still have the terminal responsive, xonsh implements
-its own teeing pseudo-terminal on top of the Python standard library ``pty`` module. You
-can find this class in the ``xonsh.teepty`` module. Like with lazy JSON, this is independent
-from other parts of xonsh and can be used on its own.  If you find this useful in other areas,
-please let us know!
+its own teeing pseudo-terminal on top of the Python standard library ``pty`` module.
 
 
 Sqlite History Backend
@@ -469,3 +447,11 @@ implemented:
 * and many more!
 
 Let us know if you'd be interested in working on any of these, inside or outside of xonsh.
+
+
+See also
+========
+
+* :doc:`envvars` -- history-related environment variables (``$XONSH_HISTORY_*``)
+* :doc:`xonshrc` -- configuring history backend in RC files
+* :doc:`tutorial` -- introduction to xonsh

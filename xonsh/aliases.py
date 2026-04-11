@@ -93,6 +93,53 @@ class AliasReturnCommandResult(list):
         self.local_env = local_env or {}
 
 
+def _normalize_return_command_result(val, alias_repr):
+    """Normalize the return value of a ``@return_command`` alias.
+
+    A ``return_command`` alias may return either:
+
+    - a non-empty ``list`` — the resolved command tokens, with **no** env
+      overlay attached to the returned command,
+    - a ``dict`` with a required ``"cmd"`` key (a non-empty list of tokens)
+      and an optional ``"env"`` key (a ``dict``) — the command tokens plus
+      an env overlay that applies **only** to the returned command.
+
+    The ``env=`` kwarg the alias received is a separate concept: it is an
+    overlay active **during the function body** (mutating it affects
+    subprocesses the alias runs inline, just like for an ordinary callable
+    alias). It is independent of the returned command's env — to set env
+    for the returned command, the alias must use dict-return.
+
+    Raises ``ValueError`` on malformed returns, using ``alias_repr`` in the
+    message so the user can tell which alias produced the bad value.
+
+    Returns
+    -------
+    cmd : list
+        The command tokens to execute.
+    returned_env : dict
+        The env overlay for the returned command (empty dict if the alias
+        returned a bare list or a dict without ``"env"``).
+    """
+    returned_env: dict = {}
+    if isinstance(val, dict):
+        env_overlay = val.get("env")
+        if env_overlay is not None:
+            if not isinstance(env_overlay, dict):
+                raise ValueError(
+                    f"return_command alias {alias_repr}: 'env' must be a dict, "
+                    f"got {env_overlay!r}."
+                )
+            returned_env = dict(env_overlay)
+        val = val.get("cmd")
+    if not isinstance(val, list) or not val:
+        raise ValueError(
+            f"return_command alias {alias_repr}: wrong return value {val!r}, "
+            f"expected a non-empty list or dict with 'cmd' (non-empty list)."
+        )
+    return val, returned_env
+
+
 class FuncAlias:
     """Provides a callable alias for xonsh commands."""
 
@@ -240,6 +287,11 @@ class Aliases(cabc.MutableMapping):
         self._raw = {}
         self.update(*args, **kwargs)
 
+    def __dir__(self):
+        d = set(super().__dir__())
+        d.update(("click", "register_click_command"))
+        return list(d)
+
     def __getattr__(self, name):
         # Lazy click integration: import is deferred until the first access
         # to ``aliases.click`` or ``aliases.register_click_command``, so
@@ -346,6 +398,7 @@ class Aliases(cabc.MutableMapping):
         seen_tokens=frozenset(),
         acc_args=(),
         decorators=None,
+        env_out=None,
     ):
         """
         "Evaluates" the alias ``value``, by recursively looking up the leftmost
@@ -356,6 +409,11 @@ class Aliases(cabc.MutableMapping):
         where ``cmd=ls -al`` and ``ls`` is an alias with its value being a
         callable.  The resulting callable will be "partially applied" with
         ``["-al", "arg"]``.
+
+        ``env_out``, if given, is a mutable dict that accumulates the env
+        overlay requested by any ``return_command`` alias encountered while
+        resolving the chain (via dict-return ``"env"`` key). The top-level
+        :meth:`get` caller passes its own collector dict here.
         """
         decorators = decorators if decorators is not None else []
         # Beware of mutability: default values for keyword args are evaluated
@@ -375,15 +433,25 @@ class Aliases(cabc.MutableMapping):
             value = value[i:]
 
         if callable(value) and getattr(value, "return_what", "result") == "command":
-            local_env = {}
+            alias_repr = repr(getattr(value, "__name__", value))
+            # ``kwarg_env`` is a live overlay: while the alias body runs,
+            # mutating it affects commands the alias spawns inline (same
+            # semantics as the ``env=`` kwarg for a normal callable alias).
+            # It does NOT flow to the returned command — for that, the
+            # alias must return a dict with an ``"env"`` key.
+            kwarg_env: dict = {}
             try:
-                value = value(acc_args, decorators=decorators, env=local_env)
+                with XSH.env.swap(overlay=kwarg_env):
+                    value = value(acc_args, decorators=decorators, env=kwarg_env)
                 acc_args = []
             except Exception as e:
-                print_exception(f"Exception inside alias {value}: {e}")
+                print_exception(f"Exception inside alias {alias_repr}: {e}")
                 return None
-            if not len(value):
-                raise ValueError("return_command alias: zero arguments.")
+            value, returned_env = _normalize_return_command_result(
+                value, alias_repr=alias_repr
+            )
+            if env_out is not None and returned_env:
+                env_out.update(returned_env)
 
         if callable(value):
             return [value] + list(acc_args)
@@ -406,6 +474,7 @@ class Aliases(cabc.MutableMapping):
                     seen_tokens,
                     acc_args,
                     decorators=decorators,
+                    env_out=env_out,
                 )
 
     def get(
@@ -432,19 +501,24 @@ class Aliases(cabc.MutableMapping):
         if isinstance(key, list):
             args = key[1:]
             key = key[0]
-        local_env = {}
         val = self._raw.get(key)
+        # Env overlay collected for the RETURNED command — from a dict-return
+        # at any level of the alias chain. Kept strictly separate from the
+        # ``env=`` kwarg, which is a live overlay active only during the body
+        # of a return_command alias.
+        returned_env: dict = {}
         if callable(val) and getattr(val, "return_what", "result") == "command":
+            kwarg_env: dict = {}
             try:
-                val = val(args, decorators=decorators, env=local_env)
+                with XSH.env.swap(overlay=kwarg_env):
+                    val = val(args, decorators=decorators, env=kwarg_env)
                 args = []
             except Exception as e:
                 print_exception(f"Exception inside alias {key!r}: {e}")
                 return None
-            if not isinstance(val, list) or not len(val):
-                raise ValueError(
-                    f"return_command alias {key!r}: wrong return value {val!r}, expected a list."
-                )
+            val, returned_env = _normalize_return_command_result(
+                val, alias_repr=repr(key)
+            )
 
         if val is None:
             return default
@@ -454,9 +528,10 @@ class Aliases(cabc.MutableMapping):
                 seen_tokens={key},
                 decorators=decorators,
                 acc_args=args,
+                env_out=returned_env,
             )
-            if local_env and result is not None:
-                result = AliasReturnCommandResult(result, local_env=local_env)
+            if returned_env and result is not None:
+                result = AliasReturnCommandResult(result, local_env=returned_env)
             return result
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
@@ -623,6 +698,12 @@ def _click_command_alias(func_or_name=None, *, _aliases):
         else:
             original_func = func
             name_source = func
+            params = list(inspect.signature(func).parameters)
+            if not params or params[0] != "ctx":
+                raise TypeError(
+                    f"Click alias {func.__name__!r} must have 'ctx' as the "
+                    f"first parameter."
+                )
             cmd = click.command()(click.pass_context(func))
 
         class XonshContext(click.Context):
@@ -1028,7 +1109,7 @@ def source_alias_fn(
         ):
             try:
                 XSH.builtins.execx(src, "exec", ctx, filename=fpath)
-            except Exception:
+            except SyntaxError:
                 print_color(
                     "You may be attempting to source non-xonsh file: "
                     f"{fpath!r}. "
@@ -1269,7 +1350,55 @@ def showcmd(args, stdin=None):
         sys.displayhook(args)
 
 
-def detect_xpip_alias():
+def get_xxonsh_alias():
+    """
+    Determine the correct invocation to launch xonsh the same way the
+    current session was launched.
+
+    Always returns a list, so the result can be concatenated with other
+    argv lists (e.g. ``['tmux', 'new-session'] + get_xxonsh_alias()``).
+
+    For an entry-point launch (e.g. ``/usr/local/bin/xonsh``) the value of
+    ``sys.argv[0]`` is already a runnable absolute path, so the result is
+    a single-element list.
+
+    For a "from source" launch via ``python -m xonsh`` (``sys.argv[0]``
+    basename is ``__main__.py``) a naive ``[sys.executable, "-m", "xonsh"]``
+    would be CWD-dependent: ``python -m xonsh`` resolves the package via
+    ``sys.path``, which has the *current* working directory at position 0.
+    Running ``xxonsh`` from outside the source repo would silently pick
+    whatever ``import xonsh`` resolves to in ``site-packages`` (or raise
+    ``ModuleNotFoundError``), which is almost never what the user wants.
+
+    Instead, compute the parent directory of the source ``xonsh`` package
+    once (from the absolute path of ``__main__.py``) and spawn Python with
+    a ``-c`` bootstrap that prepends that directory to ``sys.path`` before
+    importing ``xonsh.main``. This makes the alias resolve to the same
+    source tree from any CWD, regardless of what is installed in
+    ``site-packages``.
+    """
+    # Local import: xonsh.main pulls in heavy modules (shell, execer,
+    # xontribs), so keep the dependency lazy.
+    from xonsh.main import get_current_xonsh
+
+    current_xonsh = get_current_xonsh()
+    if os.path.basename(current_xonsh) != "__main__.py":
+        # Entry-point case: sys.argv[0] is an absolute path to the xonsh
+        # launcher and is already runnable as-is.
+        return [current_xonsh]
+
+    # Source case: __main__.py lives inside the xonsh/ package, whose
+    # parent directory is the one we need on sys.path for
+    # ``from xonsh.main import main`` to pick up the source version.
+    pkg_parent = os.path.dirname(os.path.dirname(os.path.abspath(current_xonsh)))
+    bootstrap = (
+        f"import sys; sys.path.insert(0, {pkg_parent!r}); "
+        f"from xonsh.main import main; main()"
+    )
+    return [sys.executable, "-c", bootstrap]
+
+
+def get_xpip_alias():
     """
     Determines the correct invocation to get xonsh's pip
     """
@@ -1335,6 +1464,7 @@ def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
         "cd": cd,
+        "completer": xca.completer_alias,
         "pushd": pushd,
         "popd": popd,
         "dirs": dirs,
@@ -1368,8 +1498,8 @@ def make_default_aliases():
         "which": xxw.which,
         "xcontext": xxt.xcontext,
         "xontrib": xontribs_main,
-        "completer": xca.completer_alias,
-        "xpip": detect_xpip_alias(),
+        "xxonsh": get_xxonsh_alias(),
+        "xpip": get_xpip_alias(),
         "xpython": [XSH.env.get("_", sys.executable)]
         if IN_APPIMAGE
         else [sys.executable],

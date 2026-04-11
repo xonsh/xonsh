@@ -13,6 +13,7 @@ from xonsh.pyghooks import (
     XSH,
     Color,
     Token,
+    XonshConsoleLexer,
     XonshLexer,
     XonshStyle,
     code_by_name,
@@ -408,3 +409,150 @@ def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     lexer = XonshLexer()
     assert XSH.env is not None
     list(lexer.get_tokens_unprocessed("  some text"))
+
+
+def _prompt_tokens(xsh_console_text):
+    """Return the list of ``(token_type, value)`` tuples that
+    ``XonshConsoleLexer`` produces for a given multi-line console text."""
+    return list(XonshConsoleLexer().get_tokens(xsh_console_text))
+
+
+def test_xonshcon_first_prompt_includes_trailing_space(xession):
+    """The first-line ``@ `` prompt must be tokenised as a single
+    ``Generic.Prompt`` token that includes the trailing space, so that
+    stripping prompts from copy-paste leaves the command with no orphan
+    leading space."""
+    tokens = _prompt_tokens("@ echo hello\n")
+    prompt = next((v for t, v in tokens if t is Token.Generic.Prompt), None)
+    assert prompt == "@ "
+
+
+def test_xonshcon_continuation_prompt_symmetric_with_first(xession):
+    """Regression: a second ``@ ``-prefixed line used to be tokenised as
+    ``(\\n@, Generic.Prompt)`` + ``( , Text)``, i.e. the leading newline
+    was eaten by the prompt token while the trailing space was *not*.
+    That made copy-paste produce ``"echo hello\\n cd $HOME"`` — with an
+    orphan leading space on every continuation line. The fix splits the
+    newline off into a plain ``Text`` token and includes the trailing
+    space in the prompt, so both lines yield an identical ``"@ "``
+    prompt token."""
+    tokens = _prompt_tokens("@ echo hello\n@ cd $HOME\n")
+    prompts = [v for t, v in tokens if t is Token.Generic.Prompt]
+    # Exactly two prompts, both identical "@ " (with trailing space).
+    assert prompts == ["@ ", "@ "]
+    # The newline between the two command lines is a plain Text token,
+    # NOT part of any Prompt span — so it survives clipboard stripping.
+    assert any(t is Token.Text and v == "\n" for t, v in tokens)
+
+
+def test_xonshcon_python_continuation_prompt_symmetric(xession):
+    """Same regression for Python interactive prompts (``>>>`` / ``...``)."""
+    tokens = _prompt_tokens(">>> x = 1\n>>> print(x)\n")
+    prompts = [v for t, v in tokens if t is Token.Generic.Prompt]
+    assert prompts == [">>> ", ">>> "]
+    assert any(t is Token.Text and v == "\n" for t, v in tokens)
+
+
+def test_xonshcon_copy_paste_strips_prompts_cleanly(xession):
+    """End-to-end: stripping every ``Generic.Prompt`` token from the
+    tokenised stream must yield the raw command text with correct line
+    breaks and no orphan leading spaces."""
+    text = "@ echo hello\n@ cd $HOME\n"
+    tokens = _prompt_tokens(text)
+    copied = "".join(v for t, v in tokens if t is not Token.Generic.Prompt)
+    # Prompt stripped, newlines and command content preserved exactly.
+    assert copied == "echo hello\ncd $HOME\n"
+
+
+def _copy_simulated(text):
+    """Simulate what the browser copies: strip every ``Generic.Prompt``
+    and ``Generic.Output`` token from the lexer stream (that's what the
+    CSS ``user-select: none`` on ``.gp`` + ``.go`` does).
+    """
+    return "".join(
+        v
+        for t, v in _prompt_tokens(text)
+        if "Prompt" not in str(t) and "Output" not in str(t)
+    )
+
+
+def test_xonshcon_output_hash_comment_is_output(xession):
+    """A line starting with ``#`` at column 0 is tokenised as
+    ``Generic.Output`` (rendered in grey and excluded from copy).
+
+    The preceding newline is included in the Output token so that
+    stripping the output from the clipboard also strips the leading
+    line break — otherwise a stray ``\\n`` leaks through and leaves a
+    blank line between the previous and next code line.
+    """
+    tokens = _prompt_tokens("@ echo 1\n# 1 output line\n")
+    outputs = [v for t, v in tokens if "Output" in str(t)]
+    assert "\n# 1 output line" in outputs
+    # And the simulated clipboard contains only the command:
+    assert _copy_simulated("@ echo 1\n# 1 output line\n") == "echo 1\n"
+
+
+def test_xonshcon_indented_hash_not_output(xession):
+    """A ``#`` comment *inside* a continuation body (preceded by the
+    2-space prompt-width compensation) must be treated as a regular
+    Python comment, NOT as a documented output line."""
+    text = "@ def f():\n      # python comment\n      return 1\n"
+    tokens = _prompt_tokens(text)
+    # The "# python comment" should NOT be tokenised as Generic.Output —
+    # its leading 2 spaces get stripped and the rest flows into xonsh
+    # highlighting as a Comment.
+    outputs = [v for t, v in tokens if "Output" in str(t)]
+    assert not any("python comment" in v for v in outputs)
+    # And it survives copy-paste with 4 real Python spaces of indent:
+    copied = _copy_simulated(text)
+    assert "    # python comment" in copied
+    assert "    return 1" in copied
+
+
+def test_xonshcon_two_space_continuation_becomes_prompt(xession):
+    """Continuation body lines start with 2 spaces of prompt-width
+    compensation. Those 2 spaces must be tokenised as ``Generic.Prompt``
+    so they're stripped from copy-paste, leaving the body with its real
+    Python indentation."""
+    text = "@ def qwe():\n      print(321)\n  qwe()\n"
+    tokens = _prompt_tokens(text)
+    # Find every Generic.Prompt token and confirm at least one of them
+    # is the 2-space compensation, not a real ``@ `` prompt.
+    prompts = [v for t, v in tokens if t is Token.Generic.Prompt]
+    assert "  " in prompts, f"expected 2-space compensation prompt in {prompts}"
+
+    copied = _copy_simulated(text)
+    # ``print(321)`` keeps its real 4-space Python indent (6 − 2 = 4).
+    assert "    print(321)" in copied
+    # ``qwe()`` is at top level (2 − 2 = 0).
+    assert "\nqwe()\n" in copied or copied.startswith("qwe()") or "\nqwe()" in copied
+    # Nothing is indented at 6 spaces (i.e. the prompt-width spaces are gone).
+    assert "      print" not in copied
+    assert "  qwe()" not in copied
+
+
+def test_xonshcon_blank_line_preserved_in_copy(xession):
+    """Blank lines between command blocks must survive clipboard-strip
+    (the separator is important for readable Python)."""
+    text = "@ def f():\n      return 1\n\n@ def g():\n      return 2\n"
+    copied = _copy_simulated(text)
+    # Two function definitions separated by a blank line.
+    assert copied == "def f():\n    return 1\n\ndef g():\n    return 2\n"
+
+
+def test_xonshcon_full_users_example(xession):
+    """End-to-end check of the canonical xonshcon convention the user
+    wants: ``# ``-prefixed output lines, continuation lines with 2-space
+    prompt-width compensation. Clipboard yields runnable Python."""
+    text = (
+        "@ echo 1\n"
+        "# 1 output from command\n"
+        "@ def qwe():\n"
+        "      print(321)\n"
+        "  qwe()\n"
+        "# 321 output\n"
+    )
+    copied = _copy_simulated(text)
+    # Prompts and ``# output`` lines are gone; real code remains with
+    # correct Python indentation.
+    assert copied == "echo 1\ndef qwe():\n    print(321)\nqwe()\n"

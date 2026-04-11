@@ -31,7 +31,7 @@ This page provides xonsh equivalents for common patterns in Bash.
 
         ``echo ";"``
 
-      - Read `Subprocess Strings <https://xon.sh/subproc_strings.html>`_ tutorial
+      - Read `Subprocess Strings <https://xon.sh/strings.html>`_ tutorial
         to understand how strings become arguments in xonsh.
         There is no notion of an escaping character in xonsh like the backslash (``\``) in bash.
         Single or double quotes can be used to remove the special meaning of certain
@@ -147,7 +147,7 @@ This page provides xonsh equivalents for common patterns in Bash.
 
 To understand how xonsh executes the subprocess commands try ``showcmd`` or set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $XONSH_TRACE_SUBPROC = True
     @ echo $(echo @('hello')) @('wor' + 'ld') | grep hello

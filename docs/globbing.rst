@@ -298,7 +298,7 @@ Xonsh supports custom path search functions with the ``@func`pattern``` syntax.
 This can be used to implement full-path regex matching where the pattern is
 applied to the entire path, not split by ``/``:
 
-.. code-block:: python
+.. code-block:: xonshcon
 
     @ def refullglob(pattern):
           import re, os

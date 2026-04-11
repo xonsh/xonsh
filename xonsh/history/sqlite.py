@@ -5,7 +5,6 @@ import json
 import os
 import re
 import sqlite3
-import sys
 import threading
 import time
 
@@ -289,9 +288,13 @@ class SqliteHistoryGC(threading.Thread):
             envs = XSH.env
             hsize, units = envs.get("XONSH_HISTORY_SIZE")
         if units != "commands":
-            print(
-                'sqlite backed history gc currently only supports "commands" as units',
-                file=sys.stderr,
+            import warnings
+
+            warnings.warn(
+                f"$XONSH_HISTORY_SIZE unit {units!r} is not supported "
+                f'by the sqlite history backend (only "commands" is supported). '
+                f"History GC is disabled — the history file will keep growing.",
+                stacklevel=1,
             )
             return
         if hsize < 0:
@@ -304,8 +307,9 @@ class SqliteHistory(History):
 
     def __init__(self, gc=True, filename=None, save_cwd=None, **kwargs):
         super().__init__(**kwargs)
-        if filename is None:
+        if filename is None or not str(filename).endswith(".sqlite"):
             filename = _xh_sqlite_get_file_name()
+            XSH.env["XONSH_HISTORY_FILENAME"] = filename
         self.filename = filename
         self.last_pull_times = {None: time.time()}
         self.gc = SqliteHistoryGC() if gc else None

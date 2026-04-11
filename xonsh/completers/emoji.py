@@ -2,8 +2,8 @@
 
 Trigger prefixes are configurable via environment variables:
 
-- ``$XONSH_EMOJI_TRIGGER`` (default ``"::"``) — colorful emoji (faces, animals, objects).
-- ``$XONSH_EMOJI_SYMBOL_TRIGGER`` (default ``":::"``) — simple unicode symbols (arrows, math, dingbats).
+- ``$XONSH_COMPLETER_EMOJI_PREFIX`` (default ``"::"``) — colorful emoji (faces, animals, objects).
+- ``$XONSH_COMPLETER_SYMBOLS_PREFIX`` (default ``":::"``) — simple unicode symbols (arrows, math, dingbats).
 
 Set to empty string to disable.
 """
@@ -15,7 +15,7 @@ from xonsh.completers.tools import RichCompletion, contextual_command_completer
 from xonsh.parsers.completion_context import CommandContext
 
 # Colorful emoji (width=2 only)
-_COLOR_RANGES = [
+_EMOJI_RANGES = [
     (0x1F300, 0x1F5FF),  # Misc symbols and pictographs
     (0x1F600, 0x1F64F),  # Emoticons
     (0x1F680, 0x1F6FF),  # Transport and map
@@ -24,7 +24,7 @@ _COLOR_RANGES = [
 ]
 
 # Simple unicode symbols
-_SIMPLE_RANGES = [
+_SYMBOL_RANGES = [
     (0x2190, 0x21FF),  # Arrows
     (0x2200, 0x22FF),  # Mathematical operators
     (0x2300, 0x23FF),  # Miscellaneous technical
@@ -34,44 +34,44 @@ _SIMPLE_RANGES = [
     (0x2B00, 0x2BFF),  # Misc symbols and arrows
 ]
 
-_COLOR_CACHE: list[tuple[str, str]] | None = None
-_SIMPLE_CACHE: list[tuple[str, str]] | None = None
+_EMOJI_CACHE: list[tuple[str, str]] | None = None
+_SYMBOL_CACHE: list[tuple[str, str]] | None = None
 
 
-def _get_color_cache():
-    global _COLOR_CACHE
-    if _COLOR_CACHE is None:
+def _get_emoji_cache():
+    global _EMOJI_CACHE
+    if _EMOJI_CACHE is None:
         from wcwidth import wcwidth
 
-        _COLOR_CACHE = []
-        for start, end in _COLOR_RANGES:
+        _EMOJI_CACHE = []
+        for start, end in _EMOJI_RANGES:
             for cp in range(start, end + 1):
                 ch = chr(cp)
                 if wcwidth(ch) != 2:
                     continue
                 try:
-                    _COLOR_CACHE.append((ch, unicodedata.name(ch).lower()))
+                    _EMOJI_CACHE.append((ch, unicodedata.name(ch).lower()))
                 except ValueError:
                     pass
-    return _COLOR_CACHE
+    return _EMOJI_CACHE
 
 
-def _get_simple_cache():
-    global _SIMPLE_CACHE
-    if _SIMPLE_CACHE is None:
+def _get_symbol_cache():
+    global _SYMBOL_CACHE
+    if _SYMBOL_CACHE is None:
         from wcwidth import wcwidth
 
-        _SIMPLE_CACHE = []
-        for start, end in _SIMPLE_RANGES:
+        _SYMBOL_CACHE = []
+        for start, end in _SYMBOL_RANGES:
             for cp in range(start, end + 1):
                 ch = chr(cp)
                 if wcwidth(ch) != 1:
                     continue
                 try:
-                    _SIMPLE_CACHE.append((ch, unicodedata.name(ch).lower()))
+                    _SYMBOL_CACHE.append((ch, unicodedata.name(ch).lower()))
                 except ValueError:
                     pass
-    return _SIMPLE_CACHE
+    return _SYMBOL_CACHE
 
 
 def _search(cache, query, prefix_len):
@@ -136,13 +136,13 @@ def complete_emoji(ctx: CommandContext):
     # Check longer trigger first to avoid prefix conflict
     if len(symbol_trigger) >= len(emoji_trigger):
         triggers = [
-            (symbol_trigger, _get_simple_cache),
-            (emoji_trigger, _get_color_cache),
+            (symbol_trigger, _get_symbol_cache),
+            (emoji_trigger, _get_emoji_cache),
         ]
     else:
         triggers = [
-            (emoji_trigger, _get_color_cache),
-            (symbol_trigger, _get_simple_cache),
+            (emoji_trigger, _get_emoji_cache),
+            (symbol_trigger, _get_symbol_cache),
         ]
 
     for trigger, get_cache in triggers:

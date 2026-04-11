@@ -12,8 +12,8 @@ Starter
     :maxdepth: 2
 
     tutorial
-    subproc_strings
-    subproc_types
+    strings
+    subprocess
     bash_to_xsh
     platforms
 
@@ -57,4 +57,4 @@ Xontributor
     :maxdepth: 1
 
     developer
-    api/index
+    lib/index

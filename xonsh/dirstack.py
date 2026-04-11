@@ -568,7 +568,9 @@ dirs = ArgParserAlias(prog="dirs", func=dirs_fn, has_args=True)
 @contextlib.contextmanager
 def with_pushd(d):
     """Use pushd as a context manager"""
-    pushd_fn(d)
+    _out, err, rtn = pushd_fn(d)
+    if rtn:
+        raise RuntimeError(err or f"pushd failed for {d!r}")
     try:
         yield
     finally:

@@ -218,3 +218,13 @@ Of course, you're under no obligation to register your xontrib.  Users will
 still be able to load your xontrib, as long as they have it installed.
 
 Go forth!
+
+
+See also
+========
+
+* :doc:`events_tutorial` -- using events in xontribs
+* :doc:`env` -- registering environment variables for your xontrib
+* :doc:`completers` -- writing custom completers
+* `Awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_ -- registry of community xontribs
+* `Xontrib template <https://github.com/xonsh/xontrib-template>`_ -- quickstart template

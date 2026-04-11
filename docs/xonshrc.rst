@@ -63,7 +63,7 @@ The page has:
 xonfig wizard
 --------------
 
-This imports settings and tools you have defined in your existing (ordinary) shell such as ``bash``.
+This imports settings and tools you have defined in your existing (POSIX) shell.
 It also walks you through setting all known environment variables and xontribs
 in a question-and-answer format:
 
@@ -206,8 +206,9 @@ The following snippet reimplements the formatter also to include untracked files
 .. code-block:: python
 
     from xonsh.prompt.vc import git_dirty_working_directory
+    $VC_GIT_INCLUDE_UNTRACKED = True
     $PROMPT_FIELDS['branch_color'] = lambda: ('{BOLD_INTENSE_RED}'
-                                                   if git_dirty_working_directory(include_untracked=True)
+                                                   if git_dirty_working_directory()
                                                    else '{BOLD_INTENSE_GREEN}')
 
 
@@ -225,7 +226,8 @@ The colors of the ``ls`` command may be hard to read in a dark terminal. If so, 
 Make JSON data directly pastable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 With the following snippet, xonsh will understand JSON data such as ``{ "name": "Tyler", "active": false, "age": null }``.
-Note that, though practical, this is rather hacky and might break other functionality. Use at your own risk.
+Note that this injects names into Python's ``builtins`` module, which is
+rather hacky and might break other functionality. Use at your own risk.
 
 .. code-block:: python
 
@@ -250,3 +252,13 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
     get_shelldate.fulldate = 0
 
     $PROMPT_FIELDS['shelldate'] = get_shelldate
+
+
+See also
+--------
+
+* :doc:`env` -- environment variable types, patterns, and ``swap``
+* :doc:`aliases` -- defining aliases
+* :doc:`prompt` -- prompt customization
+* :doc:`launch` -- command-line options and ``--rc``
+* :doc:`events` -- event hooks for customization

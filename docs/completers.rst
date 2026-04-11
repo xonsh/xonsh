@@ -110,26 +110,32 @@ functionality, which will be displayed by ``completer list``.
 Some simple examples follow.  For more examples, see the source code of the completers
 xonsh actually uses, in the ``xonsh.completers`` module.
 
+.. code-block:: xonshcon
+
+    @ from xonsh.completers.tools import *
+
+    @ @contextual_completer
+      def dummy_completer(context):
+          '''
+          Completes everything with options "lou" and "carcolh",
+          regardless of the value of prefix.
+          '''
+          return {"lou", "carcolh"}
+
+    @ completer add dummy dummy_completer
+    @ xzecze<TAB>   # → lou, carcolh
+
+    @ @non_exclusive_completer
+      @contextual_completer
+      def nx_dummy_completer(context):
+          '''
+          Like dummy_completer but its results are ADDED to the other completions.
+          '''
+          return {"lou", "carcolh"}
+
+    @ completer add nx_dummy nx_dummy_completer
+
 .. code-block:: python
-
-    # Helper decorators for completers:
-    from xonsh.completers.tools import *
-
-    @contextual_completer
-    def dummy_completer(context):
-        '''
-        Completes everything with options "lou" and "carcolh",
-        regardless of the value of prefix.
-        '''
-        return {"lou", "carcolh"}
-
-    @non_exclusive_completer
-    @contextual_completer
-    def nx_dummy_completer(context):
-        '''
-        Like dummy_completer but its results are ADDED to the other completions.
-        '''
-        return {"lou", "carcolh"}
 
     @contextual_completer
     def python_context_completer(context):
@@ -169,7 +175,7 @@ xonsh actually uses, in the ``xonsh.completers`` module.
 To understand how xonsh uses completers and their return values try
 to set :ref:`$XONSH_TRACE_COMPLETIONS <xonsh_trace_completions>` to ``True``:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ $XONSH_TRACE_COMPLETIONS = True
     @ pip c<TAB>
@@ -203,7 +209,7 @@ active completers via the ``completer add`` command or ``xonsh.completers.comple
 * ``">KEY"``, where ``KEY`` is a pre-existing name, indicates that this should be added after the completer named ``KEY``
 * ``"<KEY"``, where ``KEY`` is a pre-existing name, indicates that this should be added before the completer named ``KEY``
 
-If ``POS`` is not provided, it defaults to ``"end"``.
+If ``POS`` is not provided, it defaults to ``"start"``.
 
 .. note:: It is also possible to manipulate ``__xonsh__.completers`` directly,
           but this is the preferred method.
@@ -396,12 +402,16 @@ It is disabled by default. To enable, set the trigger prefixes:
     @ $XONSH_COMPLETER_SYMBOLS_PREFIX = ':::'
 
 Then type ``::`` followed by a keyword and press TAB to search for colorful
-emoji::
+emoji:
+
+.. code-block:: python
 
     echo "great job ::fire<TAB>"   →  echo "great job 🔥"
     echo "::cat<TAB>"              →  echo "🐈"
 
-For classic unicode symbols (arrows, math, stars), use ``:::``::
+For classic unicode symbols (arrows, math, stars), use ``:::``:
+
+.. code-block:: python
 
     echo ":::arrow<TAB>"  →  echo "→"
     echo ":::star<TAB>"   →  echo "★"

@@ -49,10 +49,9 @@ class Parser(ThreeTenParser):
             p0 = ast.Dict(
                 keys=[],
                 values=[],
-                lineno=self.lineno,
-                col_offset=self.col,
+                lineno=p1_tok.lineno,
+                col_offset=p1_tok.lexpos,
             )
-            p0.ctx = ast.Load()
         else:
             p0 = p2
             p0.lineno, p0.col_offset = p1_tok.lineno, p1_tok.lexpos
@@ -111,7 +110,6 @@ class Parser(ThreeTenParser):
         p0 = self.apply_trailers(p[2], p[3])
         p1 = p[1]
         p0 = ast.Await(value=p0, lineno=p1.lineno, col_offset=p1.lexpos)
-        p0.ctx = ast.Load()
         p[0] = p0
 
     #
@@ -140,7 +138,6 @@ class Parser(ThreeTenParser):
             vals.append(v)
         lineno, col = lopen_loc(p1)
         p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
-        p[0].ctx = ast.Load()
 
     def p_dictorsetmaker_i4(self, p):
         """dictorsetmaker : item comma_item_list comma_opt"""
@@ -152,7 +149,6 @@ class Parser(ThreeTenParser):
             vals.append(v)
         lineno, col = lopen_loc(p1[0] or p1[1])
         p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
-        p[0].ctx = ast.Load()
 
     def p_dictorsetmaker_t4_dict(self, p):
         """dictorsetmaker : test COLON testlist"""
@@ -162,7 +158,6 @@ class Parser(ThreeTenParser):
             self._set_error("invalid syntax")
         lineno, col = lopen_loc(p[1])
         p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
-        p[0].ctx = ast.Load()
 
     def p_dictorsetmaker_item_comma(self, p):
         """dictorsetmaker : item comma_opt"""
@@ -171,24 +166,20 @@ class Parser(ThreeTenParser):
         vals = [p1[1]]
         lineno, col = lopen_loc(p1[0] or p1[1])
         p[0] = ast.Dict(keys=keys, values=vals, lineno=lineno, col_offset=col)
-        p[0].ctx = ast.Load()
 
     def p_dictorsetmaker_t4_set(self, p):
         """dictorsetmaker : test_or_star_expr comma_test_or_star_expr_list comma_opt"""
         p[0] = ast.Set(elts=[p[1]] + p[2], lineno=self.lineno, col_offset=self.col)
-        p[0].ctx = ast.Load()
 
     def p_dictorsetmaker_test_comma(self, p):
         """dictorsetmaker : test_or_star_expr comma_opt"""
         elts = self._list_or_elts_if_not_real_tuple(p[1])
         p[0] = ast.Set(elts=elts, lineno=self.lineno, col_offset=self.col)
-        p[0].ctx = ast.Load()
 
     def p_dictorsetmaker_testlist(self, p):
         """dictorsetmaker : testlist"""
         elts = self._list_or_elts_if_not_real_tuple(p[1])
         p[0] = ast.Set(elts=elts, lineno=self.lineno, col_offset=self.col)
-        p[0].ctx = ast.Load()
 
     def p_op_factor(self, p):
         """
@@ -211,17 +202,23 @@ class Parser(ThreeTenParser):
         p[0] = [op, p[2]]
 
     def p_comp_for(self, p):
-        """comp_for : FOR exprlist IN or_test comp_iter_opt"""
-        targs, it, p5 = p[2], p[4], p[5]
+        """comp_for : FOR exprlist IN or_test comp_iter_opt
+        | ASYNC FOR exprlist IN or_test comp_iter_opt
+        """
+        is_async = p[1] == "async"
+        if is_async:
+            targs, it, p_last = p[3], p[5], p[6]
+        else:
+            targs, it, p_last = p[2], p[4], p[5]
         if len(targs) == 1:
             targ = targs[0]
         else:
             targ = ensure_has_elts(targs)
         store_ctx(targ)
-        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=0)
+        comp = ast.comprehension(target=targ, iter=it, ifs=[], is_async=int(is_async))
         comps = [comp]
         p0 = {"comps": comps}
-        if p5 is not None:
-            comps += p5.get("comps", [])
-            comp.ifs += p5.get("if", [])
+        if p_last is not None:
+            comps += p_last.get("comps", [])
+            comp.ifs += p_last.get("if", [])
         p[0] = p0

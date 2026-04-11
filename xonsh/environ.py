@@ -4,7 +4,6 @@ import contextlib
 import inspect
 import json
 import locale
-import operator
 import os
 import pathlib
 import platform
@@ -425,7 +424,7 @@ class LsColors(cabc.MutableMapping):
     target_value = "target"  # special value to set for ln=target
     target_color = ("RESET",)  # repres in color space
 
-    def __init__(self, ini_dict: dict = None):
+    def __init__(self, ini_dict: dict | None = None):
         self._style = self._style_name = None
         self._detyped = None
         self._d = dict()
@@ -2563,6 +2562,7 @@ class Env(cabc.MutableMapping):
                 default=vardocs.doc_default,
                 configurable=vardocs.is_configurable,
             )
+            template = _rst_inline_to_color(template)
         print_color(template)
 
     def is_manually_set(self, varname):
@@ -2611,7 +2611,8 @@ class Env(cabc.MutableMapping):
                 else:
                     self._set_item(k, v, thread_local=True)
             if exception is not None:
-                raise exception from None
+                # plain re-raise to preserve __cause__/__context__ chains
+                raise exception
 
     def get_swapped_values(self):
         return self._d.get_local_overrides()
@@ -2793,6 +2794,9 @@ class Env(cabc.MutableMapping):
         )
 
     def __len__(self):
+        # Counts only explicitly-set vars (not defaults from self._vars).
+        # Note: __iter__ yields defaults too, so len(env) != len(list(env)).
+        # Use sum(1 for _ in self) if Mapping-protocol consistency is needed.
         return len(self._d)
 
     def __str__(self):
@@ -3222,7 +3226,11 @@ class EnvPath(cabc.MutableSequence):
             return NotImplemented
         if len(self) != len(other):
             return False
-        return all(map(operator.eq, self, other))
+        # Expand both sides so that "~/bin" and "/Users/x/bin" compare equal.
+        return all(
+            _expandpath(a) == _expandpath(b)
+            for a, b in zip(self._l, other, strict=True)
+        )
 
     def _repr_pretty_(self, p, cycle):
         """Pretty print path list"""

@@ -436,6 +436,39 @@ Since Python has adopted yearly release cycle, most of the time,
 the latest 4 minor versions of Python would be supported at any given time.
 
 
+Testing xonsh on Different Operating Systems
+---------------------------------------------
+
+It is often useful to try xonsh in a clean environment on a distribution
+other than your own — for example to reproduce a bug report or to
+validate a change against a pristine setup. The recipes below use
+rootless ``podman`` containers; ``docker`` would work just as well if
+you prefer it.
+
+NixOS
+^^^^^
+
+.. code-block:: bash
+
+    podman run --rm -it nixos/nix
+    nix-channel --update && nix-shell -p xonsh
+    xonsh
+    xcontext
+
+Arch Linux
+^^^^^^^^^^
+
+.. code-block:: bash
+
+    podman run --rm -it archlinux/archlinux
+    pacman -Syu git python-pip
+    pacman -Syu man-db man-pages bash-completion
+    git clone https://github.com/xonsh/xonsh
+    cd xonsh
+    pip install --break-system-packages '.[dev]' '.[test]' '.[doc]'
+    python -m pytest
+
+
 Document History
 -----------------
 

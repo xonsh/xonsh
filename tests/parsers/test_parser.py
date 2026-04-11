@@ -9,9 +9,9 @@ import pytest
 from xonsh.parsers.ast import AST, Call, Pass, With, is_const_str
 from xonsh.parsers.fstring_adaptor import FStringAdaptor
 from xonsh.pytest.tools import (
-    VER_MAJOR_MINOR,
     skip_if_pre_3_8,
     skip_if_pre_3_10,
+    skip_if_pre_3_12,
 )
 
 
@@ -143,13 +143,79 @@ bar"""''',
 
 @pytest.mark.parametrize("inp, exp", fstring_adaptor_parameters)
 def test_fstring_adaptor(inp, exp, xsh, monkeypatch):
-    if VER_MAJOR_MINOR > (3, 11):
-        pytest.xfail("f-string with special syntax are not supported yet")
     joined_str_node = FStringAdaptor(inp, "f").run()
     assert isinstance(joined_str_node, ast.JoinedStr)
     node = ast.Expression(body=joined_str_node)
     code = compile(node, "<test_fstring_adaptor>", mode="eval")
     xenv = {"HOME": "/foo/bar", "FOO": "HO", "BAR": "ME"}
+    for key, val in xenv.items():
+        monkeypatch.setitem(xsh.env, key, val)
+    obs = eval(code)
+    assert exp == obs
+
+
+@skip_if_pre_3_12
+@pytest.mark.parametrize(
+    "inp",
+    [
+        'f"{@$(echo hi)}"',
+        'f"{@!(echo hi)}"',
+        'f"result: @$(ls)"',
+        'f"result: @!(ls)"',
+        'f"{@$(echo hi)} world"',
+        'f"{$HOME} and {@$(ls)}"',
+    ],
+)
+def test_fstring_adaptor_captured_subproc(inp):
+    """FStringAdaptor must recognize @$(...) and @!(...) xonsh expressions.
+
+    Regression test: previously RE_XONSH_EXPR only covered $(...), @(...),
+    !(...) and similar — but @$(...) (captured injection) and @!(...)
+    (captured object) were missing, causing SyntaxError in f-strings.
+    """
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+
+
+@pytest.mark.parametrize(
+    "inp",
+    [
+        'f"{len(x)} {$HOME}"',
+        'f"{len([])} {$HOME}"',
+        'f"{foo()} {$HOME}"',
+        'f"{a.b.c()} {$HOME}"',
+    ],
+)
+def test_fstring_adaptor_func_call_with_xonsh_expr(inp):
+    """FStringAdaptor must not crash on f-strings mixing function calls
+    with xonsh expressions.
+
+    Regression test: ``_fix_eval_field_params`` previously unconditionally
+    accessed ``node.func.value.id``, assuming every ``ast.Call`` in the
+    patched AST is a ``__xonsh__.eval_fstring_field(...)`` call. For
+    user calls like ``len(x)``, ``node.func`` is an ``ast.Name`` (no
+    ``.value``), and for ``a.b.c()`` ``node.func.value`` is itself an
+    ``ast.Attribute`` (no ``.id``) — both raise ``AttributeError``.
+    """
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+
+
+fstring_adaptor_pathsearch_parameters = [
+    ("f'''{$HOME}/*'''", "/foo/bar/*"),
+    ("f'''{$HOME}/{$USER}'''", "/foo/bar/me"),
+    ("f'''prefix_{$HOME}_suffix'''", "prefix_/foo/bar_suffix"),
+]
+
+
+@pytest.mark.parametrize("inp, exp", fstring_adaptor_pathsearch_parameters)
+def test_fstring_adaptor_pathsearch(inp, exp, xsh, monkeypatch):
+    """Test FStringAdaptor with triple-quoted strings used by pathsearch/glob."""
+    joined_str_node = FStringAdaptor(inp, "f").run()
+    assert isinstance(joined_str_node, ast.JoinedStr)
+    node = ast.Expression(body=joined_str_node)
+    code = compile(node, "<test_fstring_adaptor_pathsearch>", mode="eval")
+    xenv = {"HOME": "/foo/bar", "USER": "me"}
     for key, val in xenv.items():
         monkeypatch.setitem(xsh.env, key, val)
     obs = eval(code)
@@ -1699,6 +1765,82 @@ def test_while_else(check_stmts):
     check_stmts("while False:\n  pass\nelse:\n  pass")
 
 
+def test_while_lineno(parser):
+    """While node must get the position of 'while', not the lookahead token."""
+    tree = parser.parse("while x:\n    pass\ny = 2\n")
+    w = tree.body[0]
+    assert w.lineno == 1
+    assert w.col_offset == 0
+
+
+def test_ternary_lineno(parser):
+    """IfExp node must get the position of the body expression."""
+    tree = parser.parse("x = a if b else c\n")
+    ie = tree.body[0].value
+    assert ie.lineno == 1
+    assert ie.col_offset == 4
+
+
+def test_not_lineno(parser):
+    """UnaryOp(Not) must get the position of 'not', not the lookahead."""
+    tree = parser.parse("x = not y\n")
+    u = tree.body[0].value
+    assert u.lineno == 1
+    assert u.col_offset == 4
+
+
+@pytest.mark.parametrize(
+    "code",
+    ["x = ()\n", "x = []\n", "x = {}\n"],
+)
+def test_empty_container_lineno(parser, code):
+    """Empty (), [], {} must get the position of the opening bracket."""
+    n = parser.parse(code).body[0].value
+    assert n.lineno == 1
+    assert n.col_offset == 4
+
+
+def test_unary_op_lineno(parser):
+    """UnaryOp(-/+/~) must get the operator's line, not the lookahead's."""
+    tree = parser.parse("x = (-\n  y)\n")
+    u = tree.body[0].value
+    assert u.lineno == 1
+    assert u.col_offset == 5
+
+
+def test_elif_lineno(parser):
+    """elif If node must get position of 'elif', not the test expression."""
+    tree = parser.parse("if x:\n    pass\nelif y:\n    pass\n")
+    elif_node = tree.body[0].orelse[0]
+    assert elif_node.lineno == 3
+    assert elif_node.col_offset == 0
+
+
+@pytest.mark.parametrize(
+    "code",
+    ["x = a + b + c\n", "x = a * b * c\n", "x = a << b << c\n", "x = a | b | c\n"],
+)
+def test_binop_multi_lineno(parser, code):
+    """Chained BinOp must get position of leftmost operand, not last operator."""
+    import ast as stdlib_ast
+
+    outer = parser.parse(code).body[0].value
+    ref = stdlib_ast.parse(code).body[0].value
+    assert outer.lineno == ref.lineno
+    assert outer.col_offset == ref.col_offset
+
+
+@pytest.mark.parametrize("code", ["f(a=1)\n", "f(**d)\n"])
+def test_keyword_arg_lineno(parser, code):
+    """Keyword arg node must get position of key/**, not value."""
+    import ast as stdlib_ast
+
+    kw = parser.parse(code).body[0].value.keywords[0]
+    ref = stdlib_ast.parse(code).body[0].value.keywords[0]
+    assert kw.lineno == ref.lineno
+    assert kw.col_offset == ref.col_offset
+
+
 def test_for(check_stmts):
     check_stmts("for x in range(6):\n  pass")
 
@@ -2137,6 +2279,141 @@ def test_async_await(check_stmts):
     check_stmts("async def f():\n    await fut\n", False)
 
 
+def test_async_comp_for(check_stmts):
+    check_stmts("async def f():\n    return [x async for x in aiter]\n", False)
+
+
+def test_async_comp_for_with_if(check_stmts):
+    check_stmts(
+        "async def f():\n    return [x async for x in aiter if x > 0]\n",
+        False,
+    )
+
+
+def test_async_genexpr(check_stmts):
+    check_stmts("async def f():\n    return (x async for x in aiter)\n", False)
+
+
+def test_async_comp_for_set(check_stmts):
+    check_stmts("async def f():\n    return {x async for x in aiter}\n", False)
+
+
+def test_async_comp_for_dict(check_stmts):
+    check_stmts("async def f():\n    return {k: v async for k, v in aiter}\n", False)
+
+
+@skip_if_pre_3_12
+def test_type_alias(check_stmts):
+    check_stmts("type Point = tuple[int, int]")
+
+
+@skip_if_pre_3_12
+def test_type_alias_with_params(check_stmts):
+    check_stmts("type Alias[T] = list[T]")
+
+
+@skip_if_pre_3_12
+def test_type_alias_complex_params(check_stmts):
+    check_stmts("type Handler[*Ts, **P] = Callable[P, int]")
+
+
+@skip_if_pre_3_12
+def test_funcdef_type_params(check_stmts):
+    check_stmts("def func[T](x: T) -> T: ...\n", False)
+
+
+@skip_if_pre_3_12
+def test_funcdef_type_params_bound(check_stmts):
+    check_stmts("def func[T: int](x: T) -> T: ...\n", False)
+
+
+@skip_if_pre_3_12
+def test_classdef_type_params(check_stmts):
+    check_stmts("class MyClass[T]: ...\n", False)
+
+
+@skip_if_pre_3_12
+def test_classdef_type_params_with_bases(check_stmts):
+    check_stmts("class MyList[T](list): ...\n", False)
+
+
+def test_type_as_name(check_stmts):
+    """type is a soft keyword — still works as a regular name."""
+    check_stmts("x = type(1)")
+
+
+@skip_if_pre_3_12
+def test_pep695_combined(check_stmts):
+    """Multiple PEP 695 features together: generic class with bounded type var,
+    generic method, and type alias using the class."""
+    check_stmts(
+        "type Num = int | float\n"
+        "class Stack[T: Num]:\n"
+        "    def push[U](self, item: U) -> None: ...\n"
+        "    def pop(self) -> T: ...\n",
+        False,
+    )
+
+
+@skip_if_pre_3_12
+def test_pep695_integration(xonsh_execer):
+    """Integration: compile and execute PEP 695 code through xonsh execer."""
+    glbs = {}
+    xonsh_execer.exec(
+        "type Vector[T] = list[T]\n"
+        "class Box[T]:\n"
+        "    def __init__(self, val: T) -> None:\n"
+        "        self.val = val\n"
+        "b = Box(42)\n",
+        glbs=glbs,
+    )
+    assert glbs["b"].val == 42
+    assert glbs["Box"].__name__ == "Box"
+    # Vector is a TypeAliasType (PEP 695 runtime object)
+    assert "Vector" in glbs
+
+
+def test_except_star_basic(check_stmts):
+    check_stmts("try:\n    pass\nexcept* ValueError:\n    pass\n", False)
+
+
+def test_except_star_as(check_stmts):
+    check_stmts("try:\n    pass\nexcept* ValueError as eg:\n    pass\n", False)
+
+
+def test_except_star_multiple(check_stmts):
+    check_stmts(
+        "try:\n    pass\nexcept* ValueError:\n    pass\nexcept* TypeError:\n    pass\n",
+        False,
+    )
+
+
+def test_except_star_else_finally(check_stmts):
+    check_stmts(
+        "try:\n    pass\nexcept* ValueError:\n    pass\n"
+        "else:\n    pass\nfinally:\n    pass\n",
+        False,
+    )
+
+
+def test_except_star_integration(xonsh_execer):
+    """Integration: except* catches ExceptionGroup members."""
+    glbs = {}
+    xonsh_execer.exec(
+        "result = []\n"
+        "try:\n"
+        "    raise ExceptionGroup('eg', [ValueError(1), TypeError(2)])\n"
+        "except* ValueError as eg:\n"
+        "    result.append(('val', eg.exceptions))\n"
+        "except* TypeError as eg:\n"
+        "    result.append(('type', eg.exceptions))\n",
+        glbs=glbs,
+    )
+    assert len(glbs["result"]) == 2
+    assert glbs["result"][0][0] == "val"
+    assert glbs["result"][1][0] == "type"
+
+
 @skip_if_pre_3_8
 def test_named_expr_args(check_stmts):
     check_stmts("id(x := 42)")
@@ -2238,6 +2515,39 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
     call = expr_node.value
     assert isinstance(call, stdlib_ast.Call)
     assert call.args[0].value == "zip"
+
+
+@skip_if_pre_3_8
+def test_walrus_in_assign_ctx(parser, xsh):
+    """Walrus operator variable in RHS should be tracked in context."""
+    import ast as stdlib_ast
+
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    code = "x = (y := 5)\ny\n"
+    tree = parser.parse(code, debug_level=0)
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, code, set())
+    y_stmt = tree.body[1]
+    assert isinstance(y_stmt.value, stdlib_ast.Name)
+    assert y_stmt.value.id == "y"
+
+
+def test_async_for_ctx(parser, xsh):
+    """Variables from async for should be tracked in context."""
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    code = "async def f():\n    async for x in items:\n        x\n"
+    tree = parser.parse(code, debug_level=0)
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, code, set())
+    # 'x' inside the async for body should be a Name load, not a subprocess call
+    func_body = tree.body[0].body[0]  # AsyncFor
+    x_stmt = func_body.body[0]  # Expr(x)
+    import ast as stdlib_ast
+
+    assert isinstance(x_stmt.value, stdlib_ast.Name)
+    assert x_stmt.value.id == "x"
 
 
 @skip_if_pre_3_8
@@ -3469,6 +3779,14 @@ def test_match_literal_pattern(check_stmts):
 
 
 @skip_if_pre_3_10
+def test_match_fstring_pattern_error(parser):
+    """f-string in match pattern must raise SyntaxError with correct location."""
+    with pytest.raises(SyntaxError, match="formatted string literals") as exc_info:
+        parser.parse('match x:\n    case f"hello":\n        pass\n')
+    assert exc_info.value.lineno == 2
+
+
+@skip_if_pre_3_10
 def test_match_or_pattern(check_stmts):
     check_stmts(
         """match 1:
@@ -3559,6 +3877,19 @@ def test_match_mapping_pattern(check_stmts):
         pass
 """,
         run=False,
+    )
+
+
+@skip_if_pre_3_10
+def test_match_mapping_pattern_none_true_false_keys(check_stmts):
+    """None/True/False as mapping pattern keys must be AST nodes, not raw values."""
+    check_stmts(
+        """
+x = {None: 1, True: 2, False: 3}
+match x:
+    case {None: a, True: b, False: c}:
+        assert (a, b, c) == (1, 2, 3)
+""",
     )
 
 

@@ -1,5 +1,6 @@
 """Command pipeline tools."""
 
+import errno
 import io
 import os
 import re
@@ -461,11 +462,21 @@ class CommandPipeline:
         for line in self.iterraw():
             # write to stdout line ASAP, if needed
             if stream:
-                if stdout_has_buffer:
-                    out_target.buffer.write(line)
-                else:
-                    out_target.write(line.decode(encoding=enc, errors=err))
-                out_target.flush()
+                try:
+                    if stdout_has_buffer:
+                        out_target.buffer.write(line)
+                    else:
+                        out_target.write(line.decode(encoding=enc, errors=err))
+                    out_target.flush()
+                except OSError as e:
+                    if e.errno in (errno.EPIPE, errno.EINVAL):
+                        # Downstream process closed the pipe. Stop streaming
+                        # but keep collecting raw output for captured result.
+                        # Linux: errno.EPIPE (32, BrokenPipeError)
+                        # Windows: errno.EINVAL (22, "Invalid argument")
+                        stream = False
+                    else:
+                        raise
             # save the raw bytes
             raw_out_lines.append(line)
             # do some munging of the line before we return it
@@ -508,11 +519,18 @@ class CommandPipeline:
         )
         if show_stderr:
             # write bytes to std stream
-            if stderr_has_buffer:
-                err_target.buffer.write(b)
-            else:
-                err_target.write(b.decode(encoding=enc, errors=err))
-            err_target.flush()
+            try:
+                if stderr_has_buffer:
+                    err_target.buffer.write(b)
+                else:
+                    err_target.write(b.decode(encoding=enc, errors=err))
+                err_target.flush()
+            except OSError as e:
+                if e.errno not in (errno.EPIPE, errno.EINVAL):
+                    raise
+                # Downstream process closed the pipe.
+                # Linux: errno.EPIPE (32, BrokenPipeError)
+                # Windows: errno.EINVAL (22, "Invalid argument")
         # accumulate the raw bytes
         self._raw_error += b
         # do some munging of the line before we save it to the attr
@@ -705,7 +723,7 @@ class CommandPipeline:
         """
         any_running = False
         for s, p in zip(self.specs[:-1], self.procs[:-1], strict=False):
-            if p.poll() is None:
+            if p is None or p.poll() is None:
                 any_running = True
                 continue
             # Ensure thread is fully done - poll() returns non-None
@@ -725,8 +743,6 @@ class CommandPipeline:
             # `_close_proc`, after the next proc has finished.
             for ch in s.pipe_channels:
                 ch.close_writer()
-            if p is None:
-                continue
             self._safe_close(p.stdin)
             self._safe_close(p.stdout)
             self._safe_close(p.stderr)
