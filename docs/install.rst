@@ -100,7 +100,7 @@ Install Xonsh independently using Micromamba:
 
 .. code-block:: console
 
-    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
+    $ TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
       /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 Learn more: `Mamba installer <install_mamba.html>`_.
@@ -113,8 +113,8 @@ Install Xonsh independently on Windows (without admin rights):
 
 .. code-block:: console
 
-    curl -L -o install_xonsh.cmd https://xon.sh/install/windows_install_xonsh.cmd
-    install_xonsh.cmd  # Install to ~/xonsh-env/
+    > curl -L -o install_xonsh.cmd https://xon.sh/install/windows_install_xonsh.cmd
+    > install_xonsh.cmd  # Install to ~/xonsh-env/
 
 Package
 ========================
@@ -125,27 +125,27 @@ You can install xonsh package from PyPi using an existing installation of ``pip`
 
 .. code-block:: console
 
-    pip install 'xonsh[full]'
+    $ pip install 'xonsh[full]'
 
 Pip can also install the most recent xonsh source code from the
 `xonsh project repository <https://github.com/xonsh/xonsh>`_:
 
 .. code-block:: console
 
-    pip install 'https://github.com/xonsh/xonsh/archive/main.zip#egg=xonsh[full]'
+    $ pip install 'https://github.com/xonsh/xonsh/archive/main.zip#egg=xonsh[full]'
 
 **mamba:**
 
 .. code-block:: console
 
-    mamba install xonsh
+    $ mamba install xonsh
 
 **conda:**
 
 .. code-block:: console
 
-    conda config --add channels conda-forge
-    conda install xonsh
+    $ conda config --add channels conda-forge
+    $ conda install xonsh
 
 
 AppImage
@@ -155,9 +155,9 @@ Xonsh is available as a single AppImage bundled with Python, allowing you to run
 
 .. code-block:: console
 
-    wget 'https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage' -O xonsh
-    chmod +x xonsh
-    ./xonsh
+    $ wget 'https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage' -O xonsh
+    $ chmod +x xonsh
+    $ ./xonsh
 
 Study how to package your libraries in `Xonsh AppImage <appimage.html>`_ article.
 
@@ -171,7 +171,7 @@ Example of running an interactive xonsh session in a container:
 
 .. code-block:: console
 
-    docker run --rm -it xonsh/interactive
+    $ docker run --rm -it xonsh/interactive
 
 Learn more: `Containers <containers.html>`_.
 
@@ -190,31 +190,31 @@ This approach is **not recommended** for the following reasons:
 
 .. code-block:: console
 
-    pacman -S xonsh  # not recommended but possible
+    $ pacman -S xonsh  # not recommended but possible
 
 **Debian/Ubuntu:**
 
 .. code-block:: console
 
-    apt install xonsh  # not recommended but possible
+    $ apt install xonsh  # not recommended but possible
 
 **Fedora:**
 
 .. code-block:: console
 
-    dnf install xonsh  # not recommended but possible
+    $ dnf install xonsh  # not recommended but possible
 
 **GNU guix:**
 
 .. code-block:: console
 
-    guix install xonsh  # not recommended but possible
+    $ guix install xonsh  # not recommended but possible
 
 **OSX:**
 
 .. code-block:: console
 
-    brew install xonsh  # not recommended but possible
+    $ brew install xonsh  # not recommended but possible
 
 WIP Binary build
 ========================
