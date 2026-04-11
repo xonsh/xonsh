@@ -121,6 +121,26 @@ What each flag does:
 * ``-DXONTRIBS_AUTOLOAD_DISABLED=1`` -- skip loading xontribs.
 
 
+.. _xxonsh:
+
+Launching the Same Xonsh (xxonsh)
+=================================
+
+The built-in ``xxonsh`` alias launches exactly the same ``xonsh`` that was
+used to start the current session — same interpreter, same source tree,
+regardless of the current working directory or whatever is installed in
+``site-packages``.
+
+When another tool needs to spawn xonsh with the same identity as the
+current session, use ``get_xxonsh_alias()`` from ``xonsh.aliases``: it
+always returns a ``list`` so it can be concatenated with any other argv
+list. For example, to start ``tmux`` with exactly this xonsh:
+
+.. code-block:: xonsh
+
+    aliases['xtmux'] = ['tmux', 'new-session'] + @.imp.xonsh.aliases.get_xxonsh_alias()
+
+
 Save and Load Origin Environment
 ================================
 
@@ -148,12 +168,13 @@ and possibly a custom prompt as well.
 After finishing work on that project, you can exit and return to your main environment.
 
 
-Running from a Bash Script
+Running from Another Shell
 ==========================
 
-If you want to run interactive xonsh from a bash script you need to have
-an interactive shebang (i.e. ``#!/bin/bash -i``) to avoid suspending by
-the OS.
+To launch xonsh from another shell, make sure that shell is itself running
+in interactive mode — otherwise the OS will suspend the interactive xonsh
+process. For example, when starting xonsh from a bash script, use an
+interactive shebang (``#!/bin/bash -i``).
 
 
 See also

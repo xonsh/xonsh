@@ -1280,7 +1280,55 @@ def showcmd(args, stdin=None):
         sys.displayhook(args)
 
 
-def detect_xpip_alias():
+def get_xxonsh_alias():
+    """
+    Determine the correct invocation to launch xonsh the same way the
+    current session was launched.
+
+    Always returns a list, so the result can be concatenated with other
+    argv lists (e.g. ``['tmux', 'new-session'] + get_xxonsh_alias()``).
+
+    For an entry-point launch (e.g. ``/usr/local/bin/xonsh``) the value of
+    ``sys.argv[0]`` is already a runnable absolute path, so the result is
+    a single-element list.
+
+    For a "from source" launch via ``python -m xonsh`` (``sys.argv[0]``
+    basename is ``__main__.py``) a naive ``[sys.executable, "-m", "xonsh"]``
+    would be CWD-dependent: ``python -m xonsh`` resolves the package via
+    ``sys.path``, which has the *current* working directory at position 0.
+    Running ``xxonsh`` from outside the source repo would silently pick
+    whatever ``import xonsh`` resolves to in ``site-packages`` (or raise
+    ``ModuleNotFoundError``), which is almost never what the user wants.
+
+    Instead, compute the parent directory of the source ``xonsh`` package
+    once (from the absolute path of ``__main__.py``) and spawn Python with
+    a ``-c`` bootstrap that prepends that directory to ``sys.path`` before
+    importing ``xonsh.main``. This makes the alias resolve to the same
+    source tree from any CWD, regardless of what is installed in
+    ``site-packages``.
+    """
+    # Local import: xonsh.main pulls in heavy modules (shell, execer,
+    # xontribs), so keep the dependency lazy.
+    from xonsh.main import get_current_xonsh
+
+    current_xonsh = get_current_xonsh()
+    if os.path.basename(current_xonsh) != "__main__.py":
+        # Entry-point case: sys.argv[0] is an absolute path to the xonsh
+        # launcher and is already runnable as-is.
+        return [current_xonsh]
+
+    # Source case: __main__.py lives inside the xonsh/ package, whose
+    # parent directory is the one we need on sys.path for
+    # ``from xonsh.main import main`` to pick up the source version.
+    pkg_parent = os.path.dirname(os.path.dirname(os.path.abspath(current_xonsh)))
+    bootstrap = (
+        f"import sys; sys.path.insert(0, {pkg_parent!r}); "
+        f"from xonsh.main import main; main()"
+    )
+    return [sys.executable, "-c", bootstrap]
+
+
+def get_xpip_alias():
     """
     Determines the correct invocation to get xonsh's pip
     """
@@ -1346,6 +1394,7 @@ def make_default_aliases():
     """Creates a new default aliases dictionary."""
     default_aliases = {
         "cd": cd,
+        "completer": xca.completer_alias,
         "pushd": pushd,
         "popd": popd,
         "dirs": dirs,
@@ -1379,8 +1428,8 @@ def make_default_aliases():
         "which": xxw.which,
         "xcontext": xxt.xcontext,
         "xontrib": xontribs_main,
-        "completer": xca.completer_alias,
-        "xpip": detect_xpip_alias(),
+        "xxonsh": get_xxonsh_alias(),
+        "xpip": get_xpip_alias(),
         "xpython": [XSH.env.get("_", sys.executable)]
         if IN_APPIMAGE
         else [sys.executable],
