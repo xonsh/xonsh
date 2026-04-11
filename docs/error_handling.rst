@@ -15,10 +15,6 @@ interact with pipes, logical operators, captured forms and per-command
 decorators, and how the interactive prompt displays (or hides) the
 resulting exception.
 
-.. contents::
-   :local:
-   :depth: 2
-
 
 Chains
 ------
