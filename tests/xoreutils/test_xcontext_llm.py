@@ -10,7 +10,6 @@ import pytest
 from xonsh.platform import ON_WINDOWS
 from xonsh.xoreutils import xcontext
 
-
 # ---------------------------------------------------------------------------
 # _resolve_one — Windows PATHEXT fallback via locate_relative_path
 # ---------------------------------------------------------------------------
@@ -203,9 +202,15 @@ def _run_xcontext_main(xession):
     with (
         mock.patch.object(xcontext.subprocess, "run", return_value=fake_completed),
         mock.patch.object(xcontext, "locate_executable", return_value="/fake/bin"),
-        mock.patch.object(xcontext, "_resolve_path", side_effect=lambda v, r: (v, False)),
+        mock.patch.object(
+            xcontext, "_resolve_path", side_effect=lambda v, r: (v, False)
+        ),
         mock.patch("xonsh.main.get_current_xonsh", return_value="/fake/xonsh"),
-        mock.patch.object(xcontext, "print_color", side_effect=lambda s, file=None: print(s, file=file)),
+        mock.patch.object(
+            xcontext,
+            "print_color",
+            side_effect=lambda s, file=None: print(s, file=file),
+        ),
     ):
         xcontext.xcontext_main(_stdout=buf)
     return buf.getvalue()
