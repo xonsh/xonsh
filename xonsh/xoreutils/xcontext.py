@@ -58,18 +58,18 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
 
     # Color tokens: section headers are purple; within a family (xonsh/xxonsh,
     # python/xpython, pip/xpip) both labels go GREEN when the session binary
-    # matches what ``$PATH`` resolves to — otherwise they stay in the "attention"
-    # color (yellow / orange / blue). Printed via print_color, which dispatches
-    # to the active shell's own color renderer.
+    # matches what ``$PATH`` resolves to, otherwise BLUE. Labels outside any
+    # family (pytest, ``[Current environment]`` vars) stay YELLOW. Printed
+    # via print_color, which dispatches to the active shell's own color
+    # renderer.
     PURPLE = "{PURPLE}"
     GREEN = "{GREEN}"
-    ORANGE = "{#ff8800}"
     BLUE = "{BLUE}"
     YELLOW = "{YELLOW}"
     RESET = "{RESET}"
 
-    xonsh_color = GREEN if current_xonsh == path_resolved["xonsh"] else YELLOW
-    python_color = GREEN if xpy == path_resolved["python"] else ORANGE
+    xonsh_color = GREEN if current_xonsh == path_resolved["xonsh"] else BLUE
+    python_color = GREEN if xpy == path_resolved["python"] else BLUE
     pip_color = GREEN if xpip_display == path_resolved["pip"] else BLUE
 
     label_color = {
