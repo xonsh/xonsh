@@ -71,15 +71,16 @@ buildPythonPackage {
   disabledTests = [
     # fails on sandbox
     "test_colorize_file"
+    "test_repath_HOME_PATH_itself"
+    "test_repath_HOME_PATH_var"
+    "test_repath_HOME_PATH_var_brace"
 
     # flaky tests in test_integrations.py
     "test_script"
     "test_catching_system_exit"
     "test_catching_exit_signal"
-    "test_alias_stability"
     "test_captured_subproc_is_not_affected_next_command"
     "test_spec_decorator_alias"
-    "test_alias_stability_exception"
 
     # flaky tests in test_python.py
     "test_complete_import"
@@ -108,10 +109,11 @@ buildPythonPackage {
     "test_on_command_not_found_replacement"
     "test_skipper_command"
     "test_xonsh_lexer_no_win"
-  ]
-  ++ lib.optionals (lib.versionAtLeast python.version "3.13") [
-    # FIXME: Why it fails here? It can't be reproduced in nixpkgs packaging.
-    "test_shebang_cr"
+  ];
+
+  disabledTestPaths = [
+    # don't run stress tests when building package
+    "tests/xintegration/test_stress.py"
   ];
 
   # https://github.com/NixOS/nixpkgs/issues/248978
@@ -119,9 +121,9 @@ buildPythonPackage {
 
   postPatch = ''
     sed -i -e 's|/bin/ls|${lib.getExe' coreutils "ls"}|' tests/test_execer.py
-    sed -i -e 's|SHELL=xonsh|SHELL=$out/bin/xonsh|' tests/test_integrations.py
+    sed -i -e 's|SHELL=xonsh|SHELL=$out/bin/xonsh|' tests/xintegration/test_integrations.py
 
-    for script in tests/test_integrations.py scripts/xon.sh $(find -name "*.xsh"); do
+    for script in tests/xintegration/test_integrations.py scripts/xon.sh $(find -name "*.xsh"); do
       sed -i -e 's|/usr/bin/env|${lib.getExe' coreutils "env"}|' $script
     done
     patchShebangs .
