@@ -27,8 +27,8 @@ lines to your ``~/.bashrc file``:
 
 .. code-block:: console
 
-    unset module
-    unset scl
+    $ unset module
+    $ unset scl
 
 macOS, OSX
 ----------

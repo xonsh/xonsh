@@ -87,20 +87,20 @@ To bind the xonsh-env micromamba to the ``xmamba`` alias, run:
 
 .. code-block:: console
 
-   source xmamba.xsh
+   @ source xmamba.xsh
 
 You can then use:
 
 .. code-block:: console
 
-   xmamba activate base  # Environment where xonsh was installed.
-   pip install lolcat    # Install ``lolcat`` into the ``base`` environment.
-   xmamba deactivate
+   @ xmamba activate base  # Environment where xonsh was installed.
+   @ pip install lolcat    # Install ``lolcat`` into the ``base`` environment.
+   @ xmamba deactivate
 
-   xmamba create --name myenv python=3.12
-   xmamba activate myenv
-   pip install lolcat    # Install ``lolcat`` into ``myenv``.
-   xmamba deactivate
+   @ xmamba create --name myenv python=3.12
+   @ xmamba activate myenv
+   @ pip install lolcat    # Install ``lolcat`` into ``myenv``.
+   @ xmamba deactivate
 
 Cleaning
 --------
@@ -110,8 +110,8 @@ If you do not plan to use ``xmamba``, you can reclaim disk space using
 
 .. code-block:: console
 
-   source xmamba.xsh
-   xmamba clean -a
+   @ source xmamba.xsh
+   @ xmamba clean -a
 
 Uninstall
 =========
@@ -120,7 +120,7 @@ Simply delete ``$TARGET_DIR``. For example:
 
 .. code-block:: console
 
-   rm -rf ~/.local/xonsh-env/
+   @ rm -rf ~/.local/xonsh-env/
 
 Known Issues
 ============
