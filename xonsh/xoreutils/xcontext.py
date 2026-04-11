@@ -1,11 +1,11 @@
 """The xontext command."""
 
-import shutil
 import sys
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
 from xonsh.platform import IN_APPIMAGE
+from xonsh.procs.executables import locate_executable
 from xonsh.tools import print_color
 
 
@@ -34,21 +34,51 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
     xpy = appimage_python if appimage_python else sys.executable
     xpy_ver = _get_version(xpy)
 
-    # Per-label color tokens: python family is orange, pip family is blue,
-    # everything else (xonsh variants, section headers, env vars) is yellow.
-    # Printed via print_color, which dispatches to the active shell's own
-    # color renderer (prompt_toolkit tokens, readline ANSI, etc.).
+    # Pre-resolve the PATH-visible binaries once so we can both display them
+    # in the "commands environment" section and compare them against the
+    # session-specific values (xxonsh/xpython/xpip) to decide coloring.
+    # Uses xonsh's own ``locate_executable`` rather than ``shutil.which``
+    # because the stdlib one is flagged (deprecated for ``PathLike`` args on
+    # Windows < 3.12), and xonsh's version is the recommended replacement.
+    path_resolved = {
+        "xonsh": locate_executable("xonsh"),
+        "python": locate_executable("python"),
+        "pip": locate_executable("pip"),
+        "pytest": locate_executable("pytest"),
+    }
+
+    # xpip alias value as a single string (for display AND for match check).
+    xpip = XSH.aliases.get("xpip")
+    if isinstance(xpip, list) and all(isinstance(x, str) for x in xpip):
+        xpip_display = " ".join(xpip)
+    elif xpip:
+        xpip_display = str(xpip)
+    else:
+        xpip_display = None
+
+    # Color tokens: section headers are purple; within a family (xonsh/xxonsh,
+    # python/xpython, pip/xpip) both labels go GREEN when the session binary
+    # matches what ``$PATH`` resolves to — otherwise they stay in the "attention"
+    # color (yellow / orange / blue). Printed via print_color, which dispatches
+    # to the active shell's own color renderer.
+    PURPLE = "{PURPLE}"
+    GREEN = "{GREEN}"
     ORANGE = "{#ff8800}"
     BLUE = "{BLUE}"
     YELLOW = "{YELLOW}"
     RESET = "{RESET}"
+
+    xonsh_color = GREEN if current_xonsh == path_resolved["xonsh"] else YELLOW
+    python_color = GREEN if xpy == path_resolved["python"] else ORANGE
+    pip_color = GREEN if xpip_display == path_resolved["pip"] else BLUE
+
     label_color = {
-        "xonsh": YELLOW,
-        "xxonsh": YELLOW,
-        "python": ORANGE,
-        "xpython": ORANGE,
-        "pip": BLUE,
-        "xpip": BLUE,
+        "xonsh": xonsh_color,
+        "xxonsh": xonsh_color,
+        "python": python_color,
+        "xpython": python_color,
+        "pip": pip_color,
+        "xpip": pip_color,
         "pytest": YELLOW,
     }
 
@@ -56,26 +86,21 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
         """Return ``{COLOR}name:{RESET}`` for ``print_color`` format strings."""
         return f"{label_color.get(name, YELLOW)}{name}:{RESET}"
 
-    print_color(f"{YELLOW}[Current xonsh session]{RESET}", file=stdout)
+    print_color(f"{PURPLE}[Current xonsh session]{RESET}", file=stdout)
     print_color(f"{_label('xxonsh')} {current_xonsh}", file=stdout)
     print_color(f"{_label('xpython')} {xpy}  # {xpy_ver}", file=stdout)
-
-    xpip = XSH.aliases.get("xpip")
-    if xpip:
-        if isinstance(xpip, list) and all(isinstance(x, str) for x in xpip):
-            print_color(f"{_label('xpip')} {' '.join(xpip)}", file=stdout)
-        else:
-            print_color(f"{_label('xpip')} {xpip}", file=stdout)
+    if xpip_display is not None:
+        print_color(f"{_label('xpip')} {xpip_display}", file=stdout)
     else:
         print_color(f"{_label('xpip')} not found", file=stdout)
 
     print("", file=stdout)
-    print_color(f"{YELLOW}[Current commands environment]{RESET}", file=stdout)
+    print_color(f"{PURPLE}[Current commands environment]{RESET}", file=stdout)
     cmds = ["xonsh", "python", "pip"]
-    if shutil.which("pytest"):
+    if path_resolved["pytest"]:
         cmds.append("pytest")
     for cmd in cmds:
-        path = shutil.which(cmd)
+        path = path_resolved[cmd]
         if path:
             ver = ""
             if cmd == "python":
@@ -84,7 +109,7 @@ def xcontext_main(_args=None, _stdin=None, _stdout=None, _stderr=None):
         else:
             print_color(f"{_label(cmd)} not found", file=stdout)
     print("", file=stdout)
-    print_color(f"{YELLOW}[Current environment]{RESET}", file=stdout)
+    print_color(f"{PURPLE}[Current environment]{RESET}", file=stdout)
     envs = ["CONDA_DEFAULT_ENV", "VIRTUAL_ENV"]
     for ev in envs:
         val = XSH.env.get(ev)
