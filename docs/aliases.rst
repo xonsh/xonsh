@@ -136,6 +136,7 @@ Launches exactly the same ``xonsh`` that was used to start the current session.
 See :ref:`xxonsh` for a worked example of using it as a building block to
 launch ``tmux`` with this exact xonsh (the ``xtmux`` recipe).
 
+Mnemonic: think of the initial ‘x’ as ‘c’—xxonsh stands for (c)urrent xonsh.
 
 ``xreset``
 --------------------
