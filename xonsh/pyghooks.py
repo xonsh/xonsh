@@ -1860,35 +1860,90 @@ class XonshLexer(Python3Lexer):
 
 
 class XonshConsoleLexer(XonshLexer):
-    """Xonsh console lexer for pygments."""
+    """Xonsh console lexer for pygments.
+
+    A xonshcon block is a sequence of lines with the following conventions:
+
+    * ``@ ...`` — an interactive xonsh command. Tokenised with the ``@ ``
+      (and trailing space) as :data:`Generic.Prompt` so that Sphinx themes
+      / ``sphinx_copybutton`` strip the prompt from copy-to-clipboard,
+      leaving just the command text on the clipboard.
+
+    * ``>>> ...`` / ``... ...`` — same behaviour for Python interactive
+      prompts.
+
+    * A line starting with ``# `` at column 0 — a documented output
+      comment. Tokenised as :data:`Generic.Output` so it is rendered in a
+      distinct (grey) colour and excluded from copy (via ``user-select:
+      none`` on ``.go`` in the Sphinx theme / ``custom.css``). This lets
+      authors annotate *what the command would print* inline while the
+      reader still copies only the code:
+
+      .. code-block:: xonshcon
+
+          @ echo 1
+          # 1    (output — grey, not copied)
+          @ def qwe():
+                print(321)
+            qwe()
+          # 321  (output — grey, not copied)
+
+    * A line starting with two leading spaces — a continuation of the
+      previous ``@ `` line (e.g. the body of a ``def``/``for``/...). The
+      first two spaces line up with the character after the ``@ `` prompt
+      and are tokenised as :data:`Generic.Prompt` so they are stripped
+      from copy-paste alongside the real prompts, leaving the body with
+      its true (Python) indentation. Any further whitespace flows into
+      the normal xonsh highlighting.
+
+    Continuation and prompt rules use ``bygroups`` to split the preceding
+    newline off from the prompt token: ``(\\n)(@ |\\. )`` emits ``\\n``
+    as :data:`Text` (preserved in the clipboard — the two lines stay
+    separated) and ``@ ``/``. `` as :data:`Generic.Prompt` (stripped
+    together with its trailing space, so no orphan leading space lands
+    on the next line).
+
+    The trailing catch-all ``\\n...`` rules keep backwards compat with
+    older xonshcon blocks that have bare output lines at column 0 — any
+    line that is not a prompt, a ``#``-comment, or a 2-space continuation
+    is still tokenised as :data:`Generic.Output`. New documentation
+    should prefer the ``# `` convention so the rendered block is more
+    self-explanatory.
+    """
 
     name = "Xonsh console lexer"
     aliases = ["xonshcon"]
     filenames: list[str] = []
 
-    # Prompt patterns:
-    #
-    # The first line of a block is matched with ``^(prompt) `` (via
-    # ``re.MULTILINE`` which pygments enables by default on ``RegexLexer``),
-    # so the whole ``@ ``/``>>> `` — *including* the trailing space — is
-    # tokenised as ``Generic.Prompt``. That space is important: Sphinx
-    # themes and ``sphinx_copybutton`` strip ``Generic.Prompt`` from
-    # copy-to-clipboard, so anything inside the prompt token is removed.
-    #
-    # Continuation lines use ``bygroups`` to split the preceding newline
-    # off from the prompt: ``(\n)(@ |\. )`` emits ``\n`` as ``Text``
-    # (preserved in the clipboard → the two lines stay separated) and
-    # ``@ ``/``. `` as ``Generic.Prompt`` (stripped together with its
-    # trailing space → no orphan leading space). The earlier version of
-    # this rule was ``\n(@|\.)`` which captured the newline *and* the
-    # prompt char but *not* the trailing space, leaving a visible leading
-    # space on every continuation line in copy-paste.
     tokens = {
         "root": [
+            # Python prompts.
             (r"^(>>>|\.\.\.) ", Generic.Prompt),
             (r"(\n)(>>> |\.\.\. )", bygroups(Text, Generic.Prompt)),
+            # Xonsh prompts.
             (r"^(@|\.) ", Generic.Prompt),
             (r"(\n)(@ |\. )", bygroups(Text, Generic.Prompt)),
+            # Documented output — lines that start with ``#`` at column 0.
+            # Entire line (including the leading newline) → Generic.Output
+            # so that stripping the output from the clipboard also strips
+            # the surrounding line break. Otherwise a leftover ``\n``
+            # would produce a blank line between the previous and the
+            # next code line in the copied text.
+            (r"^#[^\n]*", Generic.Output),
+            (r"\n#[^\n]*", Generic.Output),
+            # Continuation of the previous ``@`` command: 2 spaces of
+            # prompt-width compensation at column 0. These two spaces go
+            # to Generic.Prompt so they disappear from copy-paste; the
+            # rest of the line flows into normal xonsh highlighting.
+            (r"(\n)(  )", bygroups(Text, Generic.Prompt)),
+            # Blank line: a lone ``\n`` followed by another newline or
+            # end-of-input. Kept as plain :data:`Text` so the separator
+            # survives clipboard-strip (otherwise the catch-all output
+            # rule below would swallow it as ``Generic.Output`` and the
+            # ``user-select: none`` CSS would drop it from copy-paste).
+            (r"\n(?=\n|\Z)", Text),
+            # Backwards-compat catch-all output: bare output lines at
+            # column 0 (no prompt, no ``#``, no 2-space indent).
             (r"\n(?![>.][>.][>.] )([^\n]*)", Generic.Output),
             (r"\n(?![>.][>.][>.] )(.*?)$", Generic.Output),
             inherit,

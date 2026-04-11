@@ -33,3 +33,16 @@ li > p:last-child {
     background-color: inherit !important;
     border: none !important;
 }
+
+/* Xonsh console output comments (``# ...`` lines inside ``xonshcon`` blocks):
+   render in muted grey and exclude from native text selection so that
+   mouse-copy of a xonshcon block yields only the code, not the ``# output``
+   annotations. Matches pygments' Generic.Output token class. */
+.highlight .go {
+    color: #888 !important;
+    font-style: italic;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
