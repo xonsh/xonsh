@@ -270,9 +270,7 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
         bad = path_bad[cmd]
         if path:
             ver = f"  # {_get_version(path)}" if cmd == "python" else ""
-            print_color(
-                _format_row(cmd, path, ver=ver, bad=bad), file=stdout
-            )
+            print_color(_format_row(cmd, path, ver=ver, bad=bad), file=stdout)
         else:
             print_color(_format_row(cmd, "not found"), file=stdout)
     print("", file=stdout)
