@@ -151,7 +151,7 @@ form below.
     @ @aliases.register
       @aliases.return_command
       def _rca(args):
-          return ['bash', '-c', 'echo hello']
+          return ['xonsh', '-c', 'echo hello']
 
 **2. A dict** with a required ``"cmd"`` key (non-empty list of tokens) and
 an optional ``"env"`` key (dict) — the command tokens plus an env overlay
@@ -163,7 +163,7 @@ that applies **only** to the returned command.
       @aliases.return_command
       def _rca(args):
           return {
-              'cmd': ['bash', '-c', 'echo $RETURNED'],
+              'cmd': ['xonsh', '-c', 'echo $RETURNED'],
               'env': {'RETURNED': 'set_by_dict'},
           }
 
@@ -208,19 +208,19 @@ to the returned command), and the global value that flows through both.
           # ``env`` is the body-scoped overlay (introduced in 0.23.0).
           # Mutating it affects commands the alias runs inline.
           env['LOCAL'] = 1
-          bash -c @('echo g=$GLOBAL l=$LOCAL')
+          xonsh -c @('echo g=$GLOBAL l=$LOCAL')
           # Direct write to the global env — persists after the alias exits.
           $GLOBAL = 2
           return {
-              'cmd': ['bash', '-c', 'echo g=$GLOBAL l=$LOCAL'],
+              'cmd': ['xonsh', '-c', 'echo g=$GLOBAL l=$LOCAL'],
               'env': {'LOCAL': 2},
           }
 
     @ rca
-    g=1 l=1    # bash inside the alias body:
+    g=1 l=1    # xonsh inside the alias body:
                #   g=1  from the global $GLOBAL set before the alias
                #   l=1  from the ``env=`` kwarg overlay (body-scoped)
-    g=2 l=2    # the returned bash command:
+    g=2 l=2    # the returned xonsh command:
                #   g=2  from the direct write ``$GLOBAL = 2`` in the body
                #   l=2  from the dict-return ``"env"`` overlay
 
