@@ -129,7 +129,7 @@ be strings (which will be inserted into the prompt verbatim), or functions
 (which will be called each time the prompt is generated, and the results
 of those calls will be inserted into the prompt). For example:
 
-.. code-block:: console
+.. code-block:: python
 
     snail@home ~ @ $PROMPT_FIELDS['test'] = "hey"
     snail@home ~ @ $PROMPT = "{test} {cwd} @ "
@@ -141,7 +141,9 @@ of those calls will be inserted into the prompt). For example:
     2 ~ @
     8 ~ @
 
-Here is an example — a random emoji before the prompt character::
+Here is an example — a random emoji before the prompt character:
+
+.. code-block:: python
 
     from xonsh.completers.emoji import _get_emoji_cache
     $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(_get_emoji_cache())[0]
@@ -154,7 +156,7 @@ Here is an example — a random emoji before the prompt character::
 Environment variables and functions are also available with the ``$``
 prefix.  For example:
 
-.. code-block:: console
+.. code-block:: python
 
     snail@home ~ @ $PROMPT = "{$LANG} >"
     en_US.utf8 >
@@ -165,7 +167,7 @@ repository. The ``None`` will be interpreted as an empty string.
 
 But let's consider a problem:
 
-.. code-block:: console
+.. code-block:: python
 
     snail@home ~/xonsh @ $PROMPT = "{cwd_base} [{curr_branch}] @ "
     xonsh [main] @ cd ..
@@ -176,7 +178,7 @@ the brackets (and the extra space) to be displayed when there is no branch. The
 solution is to add a nested format string (separated with a colon) that will be
 invoked only if the value is not ``None``:
 
-.. code-block:: console
+.. code-block:: python
 
     snail@home ~/xonsh @ $PROMPT = "{cwd_base}{curr_branch: [{}]} @ "
     xonsh [main] @ cd ..
@@ -247,7 +249,9 @@ Useful imports
 --------------
 
 There are a few useful ``prompt_toolkit`` tools that will help us create better
-bindings::
+bindings:
+
+.. code-block:: python
 
     from prompt_toolkit.keys import Keys
     from prompt_toolkit.filters import Condition, EmacsInsertMode, ViInsertMode
@@ -259,7 +263,9 @@ We need our additional keybindings to load after the shell is initialized, so we
 define a function that contains all of the custom keybindings and decorate it
 with the appropriate event, in this case ``on_ptk_create``.
 
-We'll start with a toy example that just inserts the text "hi" into the current line of the prompt::
+We'll start with a toy example that just inserts the text "hi" into the current line of the prompt:
+
+.. code-block:: python
 
     @events.on_ptk_create
     def custom_keybindings(bindings, **kw):
@@ -280,7 +286,9 @@ What commands can keybindings run?
 Pretty much anything! Since we're defining these commands after xonsh has
 started up, we can create keybinding events that run subprocess commands with
 hardly any effort at all. If we wanted to, say, have a command that runs ``ls
--l`` in the current directory::
+-l`` in the current directory:
+
+.. code-block:: python
 
     from prompt_toolkit.application import run_in_terminal
 
@@ -325,7 +333,9 @@ respective insert mode is active.
 
 But it's also easy to create our own filters that take advantage of xonsh's
 beautiful strangeness. Suppose we want a filter to restrict a given command to
-run only when there are fewer than ten files in a given directory. We just need a function that returns a Bool that matches that requirement and then we decorate it! And remember, those functions can be in xonsh-language, not just pure Python::
+run only when there are fewer than ten files in a given directory. We just need a function that returns a Bool that matches that requirement and then we decorate it! And remember, those functions can be in xonsh-language, not just pure Python:
+
+.. code-block:: python
 
     from prompt_toolkit.filters import Condition
 
@@ -336,7 +346,9 @@ run only when there are fewer than ten files in a given directory. We just need 
 .. note:: See `the tutorial section on globbing
           <tutorial.html#normal-globbing>`_ for more globbing options.
 
-Now that the condition is defined, we can pass it as a ``filter`` keyword to a keybinding definition::
+Now that the condition is defined, we can pass it as a ``filter`` keyword to a keybinding definition:
+
+.. code-block:: python
 
     @events.on_ptk_create
     def custom_keybindings(bindings, **kw):
@@ -362,7 +374,9 @@ keybindings that prepare a command for the user to review and edit before runnin
 ``$XONSH_PROMPT_NEXT_CMD``
 --------------------------
 
-Sets the text that will appear in the next prompt as editable input::
+Sets the text that will appear in the next prompt as editable input:
+
+.. code-block:: python
 
     $XONSH_PROMPT_NEXT_CMD = 'git commit -m ""'
 
@@ -370,7 +384,9 @@ The next time the prompt appears, ``git commit -m ""`` will be pre-filled
 and the user can edit it before pressing Enter.
 
 **Cursor positioning:** Use the ``<cursor>`` marker to place the cursor at a
-specific position::
+specific position:
+
+.. code-block:: python
 
     $XONSH_PROMPT_NEXT_CMD = 'git commit -m "<cursor>"'
 
@@ -403,8 +419,6 @@ Unlike ``$XONSH_PROMPT_NEXT_CMD``, this does not pre-fill the input — it only
 shows a suggestion that the user can accept or ignore.
 
 Both variables are cleared automatically after being consumed by the prompt.
-
-
 
 
 Virtual Environment in Prompt
