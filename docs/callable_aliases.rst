@@ -136,29 +136,100 @@ Return Command Aliases
 ----------------------
 
 The ``@aliases.return_command`` decorator creates aliases that return a new
-command to execute instead of running it themselves. The ``env`` overlay works
-here too — values set in ``env`` are passed to the returned command's
-environment:
+command to execute instead of running it themselves. The body of the alias
+can run its own commands first, then return the command xonsh should execute
+on its behalf.
+
+The alias may return its result in either of two forms:
+
+**1. A non-empty list** — just the command tokens. The returned command has
+no env overlay; if you need to set env vars for it you must use the dict
+form below.
+
+.. code-block:: python
+
+    @ @aliases.register
+      @aliases.return_command
+      def _rca(args):
+          return ['xonsh', '-c', 'echo hello']
+
+**2. A dict** with a required ``"cmd"`` key (non-empty list of tokens) and
+an optional ``"env"`` key (dict) — the command tokens plus an env overlay
+that applies **only** to the returned command.
+
+.. code-block:: python
+
+    @ @aliases.register
+      @aliases.return_command
+      def _rca(args):
+          return {
+              'cmd': ['xonsh', '-c', 'echo $RETURNED'],
+              'env': {'RETURNED': 'set_by_dict'},
+          }
+
+    @ rca
+    set_by_dict
+    @ $RETURNED
+    Unknown environment variable: $RETURNED
+
+The ``env=`` kwarg of a ``return_command`` alias behaves exactly like the
+``env=`` kwarg of an ordinary callable alias: it is a **local overlay active
+only during the function body**. Mutating it affects commands the alias runs
+inline (e.g. via ``$[...]``, ``!()``, or subprocess syntax), but it does
+**not** flow to the returned command. To set env for the returned command,
+the alias must use the dict form above.
 
 .. code-block:: python
 
     @ @aliases.register
       @aliases.return_command
       def _rca(args, env=None):
-          env['LOCAL'] = 123
-          $GLOBAL = 321
-          return ['bash', '-c', 'echo $LOCAL']
+          env['BODY_ONLY'] = 'visible_inside'
+          # A subprocess spawned here sees BODY_ONLY=visible_inside
+          $[env | grep BODY_ONLY]
+          # But the returned command does NOT — it has no overlay at all.
+          return ['env']
+
+Direct writes to ``$VAR`` or ``@.env`` still modify the global environment
+and persist after the alias exits, as for any callable alias.
+
+The following example exercises all four env-flow paths of a
+``return_command`` alias in one place: the ``env=`` kwarg overlay (body-only),
+a direct global write (persists), a dict-return ``"env"`` overlay (applies only
+to the returned command), and the global value that flows through both.
+
+.. code-block:: python
+
+    @ $GLOBAL = 1
+
+    @ @aliases.register
+      @aliases.return_command
+      def _rca(env):
+          # ``env`` is the body-scoped overlay (introduced in 0.23.0).
+          # Mutating it affects commands the alias runs inline.
+          env['LOCAL'] = 1
+          xonsh -c @('echo g=$GLOBAL l=$LOCAL')
+          # Direct write to the global env — persists after the alias exits.
+          $GLOBAL = 2
+          return {
+              'cmd': ['xonsh', '-c', 'echo g=$GLOBAL l=$LOCAL'],
+              'env': {'LOCAL': 2},
+          }
 
     @ rca
-    123
-    @ $LOCAL
-    Unknown environment variable: $LOCAL
-    @ $GLOBAL
-    321
+    g=1 l=1    # xonsh inside the alias body:
+               #   g=1  from the global $GLOBAL set before the alias
+               #   l=1  from the ``env=`` kwarg overlay (body-scoped)
+    g=2 l=2    # the returned xonsh command:
+               #   g=2  from the direct write ``$GLOBAL = 2`` in the body
+               #   l=2  from the dict-return ``"env"`` overlay
 
-The returned command ``bash -c 'echo $LOCAL'`` sees ``LOCAL=123`` in its
-process environment, but ``$LOCAL`` does not exist in the global xonsh env
-after the alias exits. ``$GLOBAL = 321`` was a direct write and persists.
+    @ $LOCAL
+    Unknown environment variable: $LOCAL    # the body overlay is gone,
+                                            # and the dict overlay only
+                                            # applied to the returned command
+    @ $GLOBAL
+    2    # the direct write persisted
 
 
 Return Values
