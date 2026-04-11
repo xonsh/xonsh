@@ -294,7 +294,7 @@ def _acquire_controlling_terminal():
         # bail out. After this succeeds our pgid == pid.
         try:
             os.setpgid(0, 0)
-        except (PermissionError, OSError):
+        except OSError:
             return False
         my_pgid = os.getpgrp()
         # Install our pgid as the TTY's foreground group. SIGTTOU is
