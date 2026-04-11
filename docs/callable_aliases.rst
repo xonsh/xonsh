@@ -217,17 +217,22 @@ to the returned command), and the global value that flows through both.
           }
 
     @ rca
-    g=1 l=1    # xonsh inside the alias body:
-               #   g=1  from the global $GLOBAL set before the alias
-               #   l=1  from the ``env=`` kwarg overlay (body-scoped)
-    g=2 l=2    # the returned xonsh command:
-               #   g=2  from the direct write ``$GLOBAL = 2`` in the body
-               #   l=2  from the dict-return ``"env"`` overlay
+    # xonsh inside the alias body:
+    #   g=1  from the global $GLOBAL set before the alias
+    #   l=1  from the ``env=`` kwarg overlay (body-scoped)
+    g=1 l=1
+
+    # the returned xonsh command:
+    #   g=2  from the direct write ``$GLOBAL = 2`` in the body
+    #   l=2  from the dict-return ``"env"`` overlay
+    g=2 l=2
 
     @ $LOCAL
-    Unknown environment variable: $LOCAL    # the body overlay is gone,
-                                            # and the dict overlay only
-                                            # applied to the returned command
+    # the body overlay is gone,
+    # and the dict overlay only
+    # applied to the returned command
+    Unknown environment variable: $LOCAL
+
     @ $GLOBAL
     2    # the direct write persisted
 

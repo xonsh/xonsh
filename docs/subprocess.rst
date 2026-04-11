@@ -165,9 +165,9 @@ Runs ``cmd``, captures stdout, splits it using
 (shell-aware, respects quoting), and injects the resulting tokens as
 separate arguments:
 
-.. code-block:: xonsh
+.. code-block:: xonshcon
 
-    showcmd @$(echo -e '1\n2\r3 4\r\n5')
+    @ showcmd @$(echo -e '1\n2\r3 4\r\n5')
     # ['1', '2\r3', '4', '5']
 
 You can use the same function directly to split any command string:

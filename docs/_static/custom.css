@@ -50,11 +50,11 @@ li > p:last-child {
    (``body:not([data-theme="light"])`` inside ``prefers-color-scheme: dark``)
    are covered. */
 body[data-theme="dark"] .highlight .gp {
-    color: #555 !important;
+    color: #888 !important;
 }
 @media (prefers-color-scheme: dark) {
     body:not([data-theme="light"]) .highlight .gp {
-        color: #555 !important;
+        color: #888 !important;
     }
 }
 
