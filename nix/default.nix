@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
 
-let 
+let
   callXonshPackage = pkgs.callPackage ./package.nix;
 in
 {
