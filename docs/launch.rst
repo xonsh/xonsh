@@ -121,15 +121,16 @@ What each flag does:
 * ``-DXONTRIBS_AUTOLOAD_DISABLED=1`` -- skip loading xontribs.
 
 
-.. _xxonsh:
+.. _launch-xxonsh:
 
 Launching the Same Xonsh (xxonsh)
 =================================
 
-The built-in ``xxonsh`` alias launches exactly the same ``xonsh`` that was
-used to start the current session — same interpreter, same source tree,
-regardless of the current working directory or whatever is installed in
-``site-packages``.
+The built-in ``xxonsh`` alias (see :ref:`aliases-xxonsh` for the alias
+entry in the Built-in Aliases reference) launches exactly the same
+``xonsh`` that was used to start the current session — same interpreter,
+same source tree, regardless of the current working directory or whatever
+is installed in ``site-packages``.
 
 When another tool needs to spawn xonsh with the same identity as the
 current session, use ``get_xxonsh_alias()`` from ``xonsh.aliases``: it

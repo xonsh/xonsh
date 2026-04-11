@@ -128,12 +128,14 @@ Alias to the Python interpreter that is currently running xonsh (``sys.executabl
     /home/snail/.local/xonsh-env/bin/python
 
 
+.. _aliases-xxonsh:
+
 ``xxonsh``
 --------------------
 
 Launches exactly the same ``xonsh`` that was used to start the current session.
 
-See :ref:`xxonsh` for a worked example of using it as a building block to
+See :ref:`launch-xxonsh` for a worked example of using it as a building block to
 launch ``tmux`` with this exact xonsh (the ``xtmux`` recipe).
 
 Mnemonic: think of the initial ‘x’ as ‘c’—xxonsh stands for (c)urrent xonsh.
