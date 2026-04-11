@@ -93,6 +93,8 @@ Manages xonsh extensions. More information is available at :doc:`xontrib`
 
 Report information about the current xonsh environment, including paths to the Python interpreter, pip, xonsh itself, and relevant environment variables.
 
+By default, symlinks in the displayed paths are resolved to their real targets; pass ``--no-resolve`` (``-n``) to show the raw paths instead.
+
 
 ``xpip``
 --------------------
