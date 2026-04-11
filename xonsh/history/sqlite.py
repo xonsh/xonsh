@@ -307,8 +307,9 @@ class SqliteHistory(History):
 
     def __init__(self, gc=True, filename=None, save_cwd=None, **kwargs):
         super().__init__(**kwargs)
-        if filename is None:
+        if filename is None or not str(filename).endswith(".sqlite"):
             filename = _xh_sqlite_get_file_name()
+            XSH.env["XONSH_HISTORY_FILENAME"] = filename
         self.filename = filename
         self.last_pull_times = {None: time.time()}
         self.gc = SqliteHistoryGC() if gc else None
