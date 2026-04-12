@@ -80,7 +80,7 @@ Example:
 events.doc(
     "on_command_not_found",
     """
-on_command_not_found(cmd: list[str]) -> list[str] | tuple[str, ...] | None
+on_command_not_found(cmd: list[str]) -> list[str] | tuple[str, ...] | dict | None
 
 Fires if a command is not found (only in interactive sessions).
 
@@ -92,11 +92,14 @@ Returns:
 
 * ``list[str]`` or ``tuple[str, ...]``: A replacement command to execute instead.
   The first valid replacement from any handler will be used.
+* ``dict``: A dict with a required ``"cmd"`` key (list of command tokens) and an
+  optional ``"env"`` key (dict of environment variables to set for the replacement
+  command). Same convention as ``@Aliases.return_command``.
 * ``None``: To let the error be raised normally
 
 Note: If the replacement command also fails, the original error is shown.
 
-Example:
+Examples:
 
 .. code-block:: python
 
@@ -105,6 +108,12 @@ Example:
         '''If vim not found let's try to use vi.'''
         if cmd[0] == 'vim':
             return ['vi'] + cmd[1:]
+
+    @events.on_command_not_found
+    def _node_with_path(cmd, **kwargs):
+        '''Run node with a custom NODE_PATH.'''
+        if cmd[0] == 'mynode':
+            return {"cmd": ["node"] + cmd[1:], "env": {"NODE_PATH": "/opt/libs"}}
 
 """,
 )

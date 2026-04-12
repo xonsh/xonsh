@@ -621,11 +621,24 @@ class SubprocSpec:
                 for replacement in replacements:
                     if replacement is None:
                         continue
+                    # Accept dict with "cmd" and optional "env" keys
+                    # (same convention as @Aliases.return_command).
+                    replacement_env = None
+                    if isinstance(replacement, dict):
+                        replacement_env = replacement.get("env")
+                        replacement = replacement.get("cmd")
                     # Validate replacement format (accept list or tuple)
                     if not isinstance(replacement, (list, tuple)) or not replacement:
                         continue
                     try:
-                        return self.cls(list(replacement), bufsize=bufsize, **kwargs)
+                        kw = {**kwargs}
+                        if replacement_env is not None:
+                            base = kw.get("env") or {}
+                            kw["env"] = {
+                                **base,
+                                **{str(k): str(v) for k, v in replacement_env.items()},
+                            }
+                        return self.cls(list(replacement), bufsize=bufsize, **kw)
                     except (FileNotFoundError, PermissionError):
                         # If replacement also fails, continue to next replacement
                         # or fall through to original error with suggestions
