@@ -6,9 +6,9 @@
     <name>Xonsh</name>
     <summary>Xonsh shell on Python {{ python-fullversion }}</summary>
     <description>
-        <p>Xonsh shell, bundled with Python {{ python-fullversion }}. Xonsh (sounds like "consh") is a modern, 
-           full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with 
-           seamless integration of shell functionality and commands. Xonsh is meant for the daily use of experts 
+        <p>Xonsh shell, bundled with Python {{ python-fullversion }}. Xonsh (sounds like "consh") is a modern,
+           full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with
+           seamless integration of shell functionality and commands. Xonsh is meant for the daily use of experts
            and novices.
         </p>
     </description>
