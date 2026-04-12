@@ -35,10 +35,10 @@ from xonsh.lib.lazyasd import LazyBool, lazyobject
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
     DEFAULT_ENCODING,
+    IN_FLATPAK,
     ON_CYGWIN,
     ON_WINDOWS,
     ON_WSL,
-    IN_FLATPAK,
     PATH_DEFAULT,
     os_environ,
 )
