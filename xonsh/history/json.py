@@ -824,6 +824,7 @@ class JsonHistory(History):
                 continue
             try:
                 file_content = json_file.load()
+                del json_file  # release file handle before replacing (Windows)
                 cmds = file_content.get("cmds", [])
                 new_cmds = [cmd for idx, cmd in enumerate(cmds) if (f, idx) in keep_set]
                 if len(new_cmds) == len(cmds):
