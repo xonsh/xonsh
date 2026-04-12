@@ -331,6 +331,7 @@ class BaseShell:
         self.buffer = []
         self.need_more_lines = False
         self.src_starts_with_space = False
+        self._cmd_prefix = ""
         self.mlprompt = None
         self._styler = DefaultNotGiven
         self.prompt_formatter = PromptFormatter()
@@ -375,21 +376,26 @@ class BaseShell:
             self.precwd = os.getcwd()
         except FileNotFoundError:
             self.precwd = os.path.expanduser("~")
-        return line if self.need_more_lines else line.lstrip()
+        if self.need_more_lines:
+            return line
+        stripped = line.lstrip()
+        self._cmd_prefix = line[: len(line) - len(stripped)]
+        return stripped
 
     def default(self, line, raw_line=None):
         """Implements code execution."""
         line = line if line.endswith("\n") else line + "\n"
         if not self.need_more_lines:  # this is the first line
-            if not raw_line:
-                self.src_starts_with_space = False
-            else:
+            if raw_line:
                 self.src_starts_with_space = raw_line[0].isspace()
+            else:
+                self.src_starts_with_space = bool(self._cmd_prefix)
         src, code = self.push(line)
         if code is None:
             return
 
-        events.on_precommand.fire(cmd=src)
+        raw_src = self._cmd_prefix + src
+        events.on_precommand.fire(cmd=raw_src)
 
         env = XSH.env
         hist = XSH.history  # pylint: disable=no-member
@@ -449,7 +455,7 @@ class BaseShell:
             )
             if not isinstance(exc_info[1], SystemExit):
                 events.on_postcommand.fire(
-                    cmd=info["inp"],
+                    cmd=raw_src,
                     rtn=info["rtn"],
                     out=info.get("out", None),
                     ts=info["ts"],
