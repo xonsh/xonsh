@@ -404,6 +404,19 @@ class HistoryAlias(xcli.ArgParserAlias):
         print(f"Deleted {deleted} entries from history")
 
     @staticmethod
+    def erasedups():
+        """Remove duplicate commands, keeping only the latest occurrence of each"""
+        hist = XSH.history
+        removed, total = hist.erasedups()
+        if removed:
+            print(
+                f"Removed {removed} duplicate entries ({total} total)",
+                file=sys.stderr,
+            )
+        else:
+            print(f"No duplicates found ({total} total)", file=sys.stderr)
+
+    @staticmethod
     def file(_stdout):
         """Display the current history filename"""
         hist = XSH.history
@@ -530,6 +543,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         parser.add_command(self.on)
         parser.add_command(self.clear)
         parser.add_command(self.delete)
+        parser.add_command(self.erasedups)
         parser.add_command(self.gc)
         parser.add_command(self.transfer)
 

@@ -292,6 +292,17 @@ the overhead of an unfiltered `pull` can be significantly higher.
 Deletes the history from the current session up until this point. Later commands
 will still be saved.
 
+``erasedups`` action
+=====================
+Removes duplicate commands from history, keeping only the latest occurrence of each
+command. Works with both JSON and SQLite backends.
+
+.. code-block:: xonshcon
+
+    @ history erasedups
+    Removed 42 duplicate entries (187 total)
+
+
 ``off`` action
 ================
 Deletes the history from the current session and turns off history saving for the
