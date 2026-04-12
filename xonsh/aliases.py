@@ -4,6 +4,7 @@ import argparse
 import functools
 import inspect
 import operator
+import textwrap
 import os
 import pathlib
 import re
@@ -230,7 +231,8 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
     if expanded and isinstance(expanded[0], str):
         arg0 = expanded[0]
         arg0_path = locate_executable(arg0)
-        lines.append(f"{_label('Resolved ' + arg0 + ':')} {repr(arg0_path)}")
+        if arg0_path is not None and arg0_path != arg0:
+            lines.append(f"{_label('Resolved ' + arg0 + ':')} {repr(arg0_path)}")
 
     func = getattr(alias, "func", None)
 
@@ -244,7 +246,9 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
     else:
         doc = getattr(alias, "__doc__", "") or ""
     if doc:
-        lines.append(f"{_label('Descr:')} {doc}")
+        from xonsh.environ import _rst_inline_to_color
+
+        lines.append(f"{_label('Descr:')} {_rst_inline_to_color(doc)}")
 
     if superhelp:
         # FuncAlias-only metadata.
@@ -273,7 +277,7 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
             except (OSError, TypeError):
                 src = None
             if src:
-                lines.append(f"{_label('Code:')}\n{src.rstrip()}")
+                lines.append(f"{_label('Code:')}\n{textwrap.dedent(src).rstrip()}")
             else:
                 lines.append(f"{_label('Code:')} <source unavailable>")
 
@@ -382,7 +386,8 @@ class Aliases(cabc.MutableMapping):
 
         return decorator
 
-    def return_command(self, f):
+    @staticmethod
+    def return_command(f):
         """Decorator that switches alias from returning result to return in new command for execution."""
         f.return_what = "command"
         return f
@@ -1422,10 +1427,30 @@ def get_xpip_alias():
                 "pip",
             ]
         elif not os.access(os.path.dirname(sys.executable), os.W_OK):
-            return (
-                sys.executable
-                + " -m pip @(['install', '--user'] + $args[1:] if $args and $args[0] == 'install' else $args)"
+            import site
+
+            pydir = os.path.dirname(sys.executable)
+
+            @Aliases.return_command
+            def _xpip_user(args):
+                if args and args[0] == 'install':
+                    return basecmd + ['install', '--user'] + args[1:]
+                else:
+                    return basecmd + args
+
+            _xpip_user.__doc__ = (
+                f"Normally ``xpip`` runs ``{' '.join(basecmd)}``, but in this "
+                "session it is a wrapper that adds ``--user`` to ``pip install`` "
+                "commands.\n"
+                "\n"
+                "Created during startup because the directory containing the "
+                f"Python executable (``{pydir}``) is not writable by the current "
+                "user. This typically means Python is installed system-wide, so "
+                "``pip install`` without ``--user`` would require root privileges. "
+                "The ``--user`` flag tells pip to install packages into the "
+                f"per-user site-packages directory (``{site.getusersitepackages()}``)."
             )
+            return _xpip_user
         else:
             return basecmd
     except Exception:
