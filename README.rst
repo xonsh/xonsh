@@ -70,9 +70,11 @@ xonsh
             $PATH
             # ['/bin', '/sbin']           # Linux
             # ['/homebrew/bin']           # macOS
-            # ['/nix/store/0-python/bin'] # Nix
             # ['/mnt/c/Windows/System32'] # WSL
             # [r'c:\Windows\System32']    # Windows
+            # ['/nix/store/0-python/bin'] # Nix
+            # ['/tmp/.mount_x/usr/bin/']  # AppImage
+            # ['/app/bin']                # Flatpak
 
             $PATH = ['/my/own/path']
 
