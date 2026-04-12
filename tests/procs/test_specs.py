@@ -545,6 +545,69 @@ def test_on_command_not_found_fallback_on_bad_replacement(xession):
     assert "command not found: 'xonshcommandnotfound'" in str(expected.value)
 
 
+def test_on_command_not_found_dict_replacement_with_env(xession):
+    """Test that returning a dict with cmd and env sets the subprocess environment."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def dict_handler(cmd, **kwargs):
+        if cmd[0] == "xonshcommandnotfound":
+            if ON_WINDOWS:
+                return {
+                    "cmd": ["cmd", "/c", "echo", "%XONSH_TEST_VAR%"],
+                    "env": {"XONSH_TEST_VAR": "hello_from_env"},
+                }
+            return {
+                "cmd": ["sh", "-c", "echo $XONSH_TEST_VAR"],
+                "env": {"XONSH_TEST_VAR": "hello_from_env"},
+            }
+        return None
+
+    xession.builtins.events.on_command_not_found(dict_handler)
+    out = run_subproc([["xonshcommandnotfound"]], captured="stdout")
+    assert "hello_from_env" in out.strip()
+
+
+def test_on_command_not_found_dict_without_env(xession):
+    """Test that returning a dict with only cmd (no env) works."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def dict_no_env_handler(cmd, **kwargs):
+        if cmd[0] == "xonshcommandnotfound":
+            if ON_WINDOWS:
+                return {"cmd": ["cmd", "/c", "echo", "dict_no_env"]}
+            return {"cmd": ["echo", "dict_no_env"]}
+        return None
+
+    xession.builtins.events.on_command_not_found(dict_no_env_handler)
+    out = run_subproc([["xonshcommandnotfound"]], captured="stdout")
+    assert out.strip() == "dict_no_env"
+
+
+def test_on_command_not_found_dict_missing_cmd_ignored(xession):
+    """Test that a dict without 'cmd' key is treated as invalid and ignored."""
+    xession.env.update(
+        dict(
+            XONSH_INTERACTIVE=True,
+        )
+    )
+
+    def bad_dict_handler(cmd, **kwargs):
+        return {"env": {"FOO": "bar"}}  # no 'cmd' key
+
+    xession.builtins.events.on_command_not_found(bad_dict_handler)
+    subproc = SubprocSpec.build(["xonshcommandnotfound"])
+    with pytest.raises(XonshError):
+        subproc.run()
+
+
 def test_redirect_to_substitution(tmpdir):
     file = str(tmpdir / "test_redirect_to_substitution.txt")
     s = SubprocSpec.build(

@@ -35,10 +35,10 @@ from xonsh.lib.lazyasd import LazyBool, lazyobject
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
     DEFAULT_ENCODING,
+    IN_FLATPAK,
     ON_CYGWIN,
     ON_WINDOWS,
     ON_WSL,
-    IN_FLATPAK,
     PATH_DEFAULT,
     os_environ,
 )
@@ -788,8 +788,8 @@ def default_xonshrc(env) -> "tuple[str, ...]":
     return dxrc
 
 
-def get_config_paths(env: "Env", name: str):
-    paths = (
+def get_config_paths(env: "Env", name: str) -> tuple[str, ...]:
+    paths: tuple[str, ...] = (
         os.path.join(xonsh_sys_config_dir(env), name),
         os.path.join(xonsh_config_dir(env), name),
     )
