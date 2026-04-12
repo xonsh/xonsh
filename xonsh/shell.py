@@ -20,11 +20,12 @@ from xonsh.tools import XonshError, is_class, print_exception, simple_random_cho
 events.doc(
     "on_transform_command",
     """
-on_transform_command(cmd: str) -> str
+on_transform_command(cmd: str) -> str | None
 
 Fired to request xontribs to transform a command line. Return the transformed
-command, or the same command if no transformation occurs. Only done for
-interactive sessions.
+command, or the same command if no transformation occurs. Return None to
+indicate no transformation (equivalent to returning the original command).
+Only done for interactive sessions.
 
 This may be fired multiple times per command, with other transformers input or
 output, so design any handlers for this carefully.
