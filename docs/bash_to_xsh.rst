@@ -1,6 +1,5 @@
 Bash to Xonsh Translation Guide
 ================================
-Xonsh relies primarily on the Python syntax and is not a suitable replacement for `sh` and is thus considered a non-POSIX shell.
 This page provides xonsh equivalents for common patterns in Bash.
 
 .. list-table::

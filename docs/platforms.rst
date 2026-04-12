@@ -96,7 +96,7 @@ First of all take a look `xontrib-fish-completer <https://github.com/xonsh/xontr
 
 Xonsh has support for using bash completion files on the shell, to use it you need to install
 the bash-completion package.
-The regular bash-completion package uses v1 which mostly works, but `occasionally has rough edges <https://github.com/xonsh/xonsh/issues/2111>`_ so we recommend using bash-completion v2.
+The regular bash-completion package uses v1 which mostly works, but we recommend using bash-completion v2`* <https://github.com/xonsh/xonsh/issues/2111>`_.
 
 Bash completion comes from <https://github.com/scop/bash-completion> which suggests you use a package manager to install it, this manager will also install a new version of bash without affecting  /bin/bash. Xonsh also needs to be told where the bash shell file that builds the completions is, this has to be added to $BASH_COMPLETIONS. The package includes completions for many Unix commands.
 
@@ -124,7 +124,9 @@ Common packaging systems for macOS include
 
     @ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
 
-Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script to be called as in .../profile.d/bash_completion.sh which will the call the script mentioned above and one in $XDG_CONFIG_HOME . Currently xonsh seems only to be able to read the first script directly.
+Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script
+to be called as in ``.../profile.d/bash_completion.sh`` which will the call the script mentioned above
+and one in $XDG_CONFIG_HOME .
 
 
 Windows

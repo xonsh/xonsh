@@ -342,10 +342,6 @@ must be used to force xonsh to not interpret them.
     @ echo '${'
     ${
 
-.. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\\) in POSIX shells.
-
-
 The contents of the string are passed directly to the subprocess command as a
 single argument.  So whenever you are in doubt, or if there is a xonsh syntax
 error because of a filename, just wrap the offending portion in a string.
