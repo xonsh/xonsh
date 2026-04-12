@@ -17,6 +17,20 @@ if tp.TYPE_CHECKING:
     FieldType = tp.TypeVar("FieldType", bound="BasePromptField")
 
 
+def _current_username():
+    """Get the current username from the OS, not from environment variables.
+
+    On POSIX, ``$USER`` may be stale after ``su`` (su does not update it
+    for the root user).  Use ``pwd.getpwuid`` which always reflects the
+    real effective user.
+    """
+    if xp.ON_WINDOWS:
+        return xp.os_environ.get("USERNAME", "<user>")
+    import pwd
+
+    return pwd.getpwuid(os.getuid()).pw_name
+
+
 @xt.lazyobject
 def DEFAULT_PROMPT():
     return default_prompt()
@@ -337,10 +351,7 @@ class PromptFields(tp.MutableMapping[str, "FieldType"]):
 
         self.update(
             dict(
-                user=xp.os_environ.get(
-                    "USERNAME" if xp.ON_WINDOWS else "USER",
-                    "root" if xt.is_superuser() else "<user>",
-                ),
+                user=_current_username(),
                 prompt_end="@#" if xt.is_superuser() else "@",
                 hostname=socket.gethostname().split(".", 1)[0],
                 cwd=_dynamically_collapsed_pwd,
