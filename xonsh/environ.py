@@ -743,7 +743,7 @@ def xdg_data_dirs(env):
 @default_value
 def xonsh_sys_config_dir(env):
     """
-    On Linux & Mac OSX: ``'/etc/xonsh'``
+    On Linux & macOS: ``'/etc/xonsh'``
     On Windows: ``'%ALLUSERSPROFILE%\\\\xonsh'``
     """
     if ON_WINDOWS:

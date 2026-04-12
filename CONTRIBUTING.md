@@ -320,7 +320,7 @@ But alas here are some other ways to test things
 
    - [wine](https://www.winehq.org/) can be used to emulate the development environment. It provides cmd.exe with its default installation.
 
-2. OS X
+2. macOS
 
    - [darlinghq](https://www.darlinghq.org/) can be used to emulate the development environment for Linux users.
      Windows users can use Linux inside a virtual machine or WSL to run the same.

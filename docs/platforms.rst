@@ -30,8 +30,8 @@ lines to your ``~/.bashrc file``:
     $ unset module
     $ unset scl
 
-macOS, OSX
-----------
+macOS
+-----
 
 Path Helper
 ^^^^^^^^^^^

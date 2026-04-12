@@ -210,7 +210,7 @@ This approach is **not recommended** for the following reasons:
 
     $ guix install xonsh  # not recommended but possible
 
-**OSX:**
+**macOS:**
 
 .. code-block:: console
 

@@ -603,7 +603,7 @@ def LIBC():
         except AttributeError:
             libc = None
         except OSError:
-            # OS X; can't use ctypes.util.find_library because that creates
+            # macOS; can't use ctypes.util.find_library because that creates
             # a new process on Linux, which is undesirable.
             try:
                 libc = ctypes.CDLL("libc.dylib")
