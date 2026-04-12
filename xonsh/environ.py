@@ -788,8 +788,8 @@ def default_xonshrc(env) -> "tuple[str, ...]":
     return dxrc
 
 
-def get_config_paths(env: "Env", name: str):
-    paths = (
+def get_config_paths(env: "Env", name: str) -> tuple[str, ...]:
+    paths: tuple[str, ...] = (
         os.path.join(xonsh_sys_config_dir(env), name),
         os.path.join(xonsh_config_dir(env), name),
     )
