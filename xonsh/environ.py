@@ -38,6 +38,7 @@ from xonsh.platform import (
     ON_CYGWIN,
     ON_WINDOWS,
     ON_WSL,
+    IN_FLATPAK,
     PATH_DEFAULT,
     os_environ,
 )
@@ -788,10 +789,13 @@ def default_xonshrc(env) -> "tuple[str, ...]":
 
 
 def get_config_paths(env: "Env", name: str):
-    return (
+    paths = (
         os.path.join(xonsh_sys_config_dir(env), name),
         os.path.join(xonsh_config_dir(env), name),
     )
+    if IN_FLATPAK:
+        paths = (os.path.join("/app/etc/xonsh", name),) + paths
+    return paths
 
 
 @default_value
