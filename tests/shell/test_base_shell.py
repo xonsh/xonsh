@@ -90,20 +90,12 @@ def test_default_append_history(cmd, exp_append_history, xonsh_session, monkeypa
         assert len(append_history_calls) == 0
 
 
-def test_precmd_preserves_leading_whitespace(xession, xonsh_execer):
-    """precmd() must save the stripped prefix so hooks can reconstruct it."""
+def test_precmd_does_not_strip(xession, xonsh_execer):
+    """precmd() must preserve leading whitespace."""
     shell = BaseShell(xonsh_execer, None)
-    result = shell.precmd("  echo test")
-    assert result == "echo test"
-    assert shell._cmd_prefix == "  "
-
-
-def test_precmd_no_strip_on_continuation(xession, xonsh_execer):
-    """precmd() must not strip when collecting continuation lines."""
-    shell = BaseShell(xonsh_execer, None)
-    shell.need_more_lines = True
-    result = shell.precmd("  continuation")
-    assert result == "  continuation"
+    assert shell.precmd("  echo test") == "  echo test"
+    assert shell.precmd("\techo test") == "\techo test"
+    assert shell.precmd("echo test") == "echo test"
 
 
 @pytest.mark.parametrize(
@@ -118,10 +110,7 @@ def test_on_precommand_preserves_leading_whitespace(prefix, xonsh_session):
     def capture(cmd, **_):
         fired.append(cmd)
 
-    cmd = prefix + "print('test')"
-    shell = xonsh_session.shell
-    stripped = shell.precmd(cmd)
-    shell.default(stripped)
+    xonsh_session.shell.default(prefix + "print('test')")
     assert len(fired) == 1
     assert fired[0].startswith(prefix + "print")
 
@@ -134,27 +123,35 @@ def test_on_postcommand_preserves_leading_whitespace(xonsh_session):
     def capture(cmd, **_):
         fired.append(cmd)
 
-    shell = xonsh_session.shell
-    stripped = shell.precmd("  print('test')")
-    shell.default(stripped)
+    xonsh_session.shell.default("  print('test')")
     assert len(fired) == 1
     assert fired[0].startswith("  print")
 
 
+def test_on_transform_command_receives_leading_whitespace(xonsh_session):
+    """on_transform_command must receive the original command with whitespace."""
+    received = []
+
+    @xonsh_session.builtins.events.on_transform_command
+    def capture(cmd, **_):
+        received.append(cmd)
+        return cmd
+
+    xonsh_session.shell.default("  print('test')")
+    assert len(received) >= 1
+    assert received[0].startswith("  print")
+
+
 def test_src_starts_with_space_without_raw_line(xonsh_session):
-    """src_starts_with_space must be set from _cmd_prefix when raw_line is absent."""
-    shell = xonsh_session.shell
-    stripped = shell.precmd("  print('test')")
-    shell.default(stripped)  # no raw_line — readline path
-    assert shell.src_starts_with_space is True
+    """src_starts_with_space must detect leading whitespace (readline path)."""
+    xonsh_session.shell.default("  print('test')")
+    assert xonsh_session.shell.src_starts_with_space is True
 
 
 def test_src_starts_with_space_no_prefix(xonsh_session):
     """src_starts_with_space must be False when there is no leading whitespace."""
-    shell = xonsh_session.shell
-    stripped = shell.precmd("print('test')")
-    shell.default(stripped)
-    assert shell.src_starts_with_space is False
+    xonsh_session.shell.default("print('test')")
+    assert xonsh_session.shell.src_starts_with_space is False
 
 
 class TestTeeStdBuf:

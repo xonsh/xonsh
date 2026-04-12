@@ -331,7 +331,6 @@ class BaseShell:
         self.buffer = []
         self.need_more_lines = False
         self.src_starts_with_space = False
-        self._cmd_prefix = ""
         self.mlprompt = None
         self._styler = DefaultNotGiven
         self.prompt_formatter = PromptFormatter()
@@ -376,26 +375,19 @@ class BaseShell:
             self.precwd = os.getcwd()
         except FileNotFoundError:
             self.precwd = os.path.expanduser("~")
-        if self.need_more_lines:
-            return line
-        stripped = line.lstrip()
-        self._cmd_prefix = line[: len(line) - len(stripped)]
-        return stripped
+        return line
 
     def default(self, line, raw_line=None):
         """Implements code execution."""
         line = line if line.endswith("\n") else line + "\n"
         if not self.need_more_lines:  # this is the first line
-            if raw_line:
-                self.src_starts_with_space = raw_line[0].isspace()
-            else:
-                self.src_starts_with_space = bool(self._cmd_prefix)
+            check = raw_line or line
+            self.src_starts_with_space = bool(check) and check[0].isspace()
         src, code = self.push(line)
         if code is None:
             return
 
-        raw_src = self._cmd_prefix + src
-        events.on_precommand.fire(cmd=raw_src)
+        events.on_precommand.fire(cmd=src)
 
         env = XSH.env
         hist = XSH.history  # pylint: disable=no-member
@@ -447,7 +439,7 @@ class BaseShell:
             ts1 = ts1 or time.time()
             tee_out = tee.getvalue()
             info = self._append_history(
-                inp=src,
+                inp=src.lstrip(),
                 ts=[ts0, ts1],
                 spc=self.src_starts_with_space,
                 tee_out=tee_out,
@@ -455,7 +447,7 @@ class BaseShell:
             )
             if not isinstance(exc_info[1], SystemExit):
                 events.on_postcommand.fire(
-                    cmd=raw_src,
+                    cmd=src,
                     rtn=info["rtn"],
                     out=info.get("out", None),
                     ts=info["ts"],
@@ -536,7 +528,8 @@ class BaseShell:
             return None, None
         src = "".join(self.buffer)
         src = transform_command(src)
-        return self.compile(src)
+        _, code = self.compile(src.lstrip())
+        return src, code
 
     def compile(self, src):
         """Compiles source code and returns the (possibly modified) source and
