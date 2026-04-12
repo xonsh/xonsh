@@ -171,7 +171,7 @@ def complete_xonsh_imp(context: CompletionContext) -> CompleterResult:
 
         # Try to get completions for the submodule
         try:
-            submodule_completions = try_import(base_module, only_modules=True)
+            submodule_completions = try_import(base_module)
             full_prefix = f"{xsh}.imp.{base_module}."
             completions = {
                 full_prefix + comp
