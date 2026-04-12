@@ -375,16 +375,14 @@ class BaseShell:
             self.precwd = os.getcwd()
         except FileNotFoundError:
             self.precwd = os.path.expanduser("~")
-        return line if self.need_more_lines else line.lstrip()
+        return line
 
     def default(self, line, raw_line=None):
         """Implements code execution."""
         line = line if line.endswith("\n") else line + "\n"
         if not self.need_more_lines:  # this is the first line
-            if not raw_line:
-                self.src_starts_with_space = False
-            else:
-                self.src_starts_with_space = raw_line[0].isspace()
+            check = raw_line or line
+            self.src_starts_with_space = bool(check) and check[0].isspace()
         src, code = self.push(line)
         if code is None:
             return
@@ -441,7 +439,7 @@ class BaseShell:
             ts1 = ts1 or time.time()
             tee_out = tee.getvalue()
             info = self._append_history(
-                inp=src,
+                inp=src.lstrip(),
                 ts=[ts0, ts1],
                 spc=self.src_starts_with_space,
                 tee_out=tee_out,
@@ -449,7 +447,7 @@ class BaseShell:
             )
             if not isinstance(exc_info[1], SystemExit):
                 events.on_postcommand.fire(
-                    cmd=info["inp"],
+                    cmd=src,
                     rtn=info["rtn"],
                     out=info.get("out", None),
                     ts=info["ts"],
@@ -530,7 +528,8 @@ class BaseShell:
             return None, None
         src = "".join(self.buffer)
         src = transform_command(src)
-        return self.compile(src)
+        _, code = self.compile(src.lstrip())
+        return src, code
 
     def compile(self, src):
         """Compiles source code and returns the (possibly modified) source and
