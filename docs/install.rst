@@ -83,7 +83,7 @@ the main approaches and their advantages.
 Work in progress:
 `binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_,
 `running in RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_,
-`xonsh.Flatpak <https://github.com/xonsh/xonsh-flatpak>`_.
+`xonsh Flatpak <https://github.com/xonsh/xonsh-flatpak>`_.
 
 Independent install
 ========================
