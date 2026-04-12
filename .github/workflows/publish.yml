@@ -18,6 +18,7 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
+          - "3.14"          
     steps:
       - uses: actions/checkout@v6
       - name: setup-python
@@ -57,7 +58,7 @@ jobs:
           cat ./appimage/pre-requirements.txt >> ./appimage/requirements.txt
       - name: build xonsh AppImage
         run: |
-          python -m python_appimage build app -p 3.11 ./appimage  # Unpin python after fix https://github.com/xonsh/xonsh/issues/5166
+          python -m python_appimage build app -p 3.14 ./appimage  # Unpin python after fix https://github.com/xonsh/xonsh/issues/5166
       - name: upload xonsh AppImage to release
         if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
