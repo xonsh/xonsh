@@ -260,16 +260,14 @@ def xh_sqlite_erasedups(filename=None):
 
             # Delete all other entries for this inp
             c.execute(
-                f"DELETE FROM {XH_SQLITE_TABLE_NAME} "
-                f"WHERE inp = ? AND rowid != ?",
+                f"DELETE FROM {XH_SQLITE_TABLE_NAME} WHERE inp = ? AND rowid != ?",
                 (inp, keep_rowid),
             )
             removed += c.rowcount
 
             # Update frequency on the kept row
             c.execute(
-                f"UPDATE {XH_SQLITE_TABLE_NAME} "
-                f"SET frequency = ? WHERE rowid = ?",
+                f"UPDATE {XH_SQLITE_TABLE_NAME} SET frequency = ? WHERE rowid = ?",
                 (total_freq, keep_rowid),
             )
 

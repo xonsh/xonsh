@@ -825,9 +825,7 @@ class JsonHistory(History):
             try:
                 file_content = json_file.load()
                 cmds = file_content.get("cmds", [])
-                new_cmds = [
-                    cmd for idx, cmd in enumerate(cmds) if (f, idx) in keep_set
-                ]
+                new_cmds = [cmd for idx, cmd in enumerate(cmds) if (f, idx) in keep_set]
                 if len(new_cmds) == len(cmds):
                     continue  # no changes needed
                 file_content["cmds"] = new_cmds
