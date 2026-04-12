@@ -37,8 +37,7 @@ def _xh_sqlite_create_history_table(cursor):
 
     Columns:
         info - JSON formatted, reserved for future extension.
-        frequency - in case of HISTCONTROL=erasedups,
-        it tracks the frequency of the inputs. helps in sorting autocompletion
+        frequency - tracks the frequency of the inputs
     """
     if not getattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, False):
         cursor.execute(
@@ -78,7 +77,7 @@ def _xh_sqlite_create_history_table(cursor):
         except sqlite3.OperationalError:
             pass
 
-        # add index on inp. since we query when erasedups is True
+        # add index on inp for faster lookups
         cursor.execute(
             f"""\
 CREATE INDEX IF NOT EXISTS  idx_inp_history
@@ -87,20 +86,6 @@ ON {XH_SQLITE_TABLE_NAME}(inp);"""
 
         # mark that this function ran for this session
         setattr(XH_SQLITE_CACHE, XH_SQLITE_CREATED_SQL_TBL, True)
-
-
-def _xh_sqlite_get_frequency(cursor, input):
-    # type: (sqlite3.Cursor, str) -> int
-    sql = f"SELECT sum(frequency) FROM {XH_SQLITE_TABLE_NAME} WHERE inp=?"
-    cursor.execute(sql, (input,))
-    return cursor.fetchone()[0] or 0
-
-
-def _xh_sqlite_erase_dups(cursor, input):
-    freq = _xh_sqlite_get_frequency(cursor, input)
-    sql = f"DELETE FROM {XH_SQLITE_TABLE_NAME} WHERE inp=?"
-    cursor.execute(sql, (input,))
-    return freq
 
 
 def _sql_insert(cursor, values):
@@ -114,7 +99,7 @@ def _sql_insert(cursor, values):
     )
 
 
-def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout, remove_duplicates):
+def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout):
     tss = cmd.get("ts", [None, None])
     values = collections.OrderedDict(
         [
@@ -132,8 +117,6 @@ def _xh_sqlite_insert_command(cursor, cmd, sessionid, store_stdout, remove_dupli
     if "info" in cmd:
         info = json.dumps(cmd["info"])
         values["info"] = info
-    if remove_duplicates:
-        values["frequency"] = _xh_sqlite_erase_dups(cursor, values["inp"]) + 1
     _sql_insert(cursor, values)
 
 
@@ -176,13 +159,11 @@ def _xh_sqlite_delete_records(cursor, size_to_keep):
     return result.rowcount
 
 
-def xh_sqlite_append_history(
-    cmd, sessionid, store_stdout, filename=None, remove_duplicates=False
-):
+def xh_sqlite_append_history(cmd, sessionid, store_stdout, filename=None):
     with _xh_sqlite_get_conn(filename=filename) as conn:
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
-        _xh_sqlite_insert_command(c, cmd, sessionid, store_stdout, remove_duplicates)
+        _xh_sqlite_insert_command(c, cmd, sessionid, store_stdout)
         conn.commit()
 
 
@@ -248,6 +229,52 @@ def xh_sqlite_wipe_session(sessionid=None, filename=None):
         c = conn.cursor()
         _xh_sqlite_create_history_table(c)
         c.execute(sql, (str(sessionid),))
+
+
+def xh_sqlite_erasedups(filename=None):
+    """Remove duplicate commands, keeping only the latest occurrence of each."""
+    with _xh_sqlite_get_conn(filename=filename) as conn:
+        c = conn.cursor()
+        _xh_sqlite_create_history_table(c)
+
+        # Count total entries
+        c.execute(f"SELECT COUNT(*) FROM {XH_SQLITE_TABLE_NAME}")
+        total = c.fetchone()[0]
+
+        # Find all inps that have more than one entry
+        c.execute(
+            f"SELECT inp, COUNT(*) as cnt, SUM(frequency) as total_freq "
+            f"FROM {XH_SQLITE_TABLE_NAME} GROUP BY inp HAVING cnt > 1"
+        )
+        dups = c.fetchall()
+
+        removed = 0
+        for inp, _cnt, total_freq in dups:
+            # Keep only the latest entry (by tsb)
+            c.execute(
+                f"SELECT rowid FROM {XH_SQLITE_TABLE_NAME} "
+                f"WHERE inp = ? ORDER BY tsb DESC LIMIT 1",
+                (inp,),
+            )
+            keep_rowid = c.fetchone()[0]
+
+            # Delete all other entries for this inp
+            c.execute(
+                f"DELETE FROM {XH_SQLITE_TABLE_NAME} "
+                f"WHERE inp = ? AND rowid != ?",
+                (inp, keep_rowid),
+            )
+            removed += c.rowcount
+
+            # Update frequency on the kept row
+            c.execute(
+                f"UPDATE {XH_SQLITE_TABLE_NAME} "
+                f"SET frequency = ? WHERE rowid = ?",
+                (total_freq, keep_rowid),
+            )
+
+        conn.commit()
+        return removed, total
 
 
 def xh_sqlite_delete_input_matching(pattern, filename=None):
@@ -373,7 +400,6 @@ class SqliteHistory(History):
                 str(self.sessionid),
                 store_stdout=envs.get("XONSH_STORE_STDOUT", False),
                 filename=self.filename,
-                remove_duplicates=("erasedups" in opts),
             )
         except sqlite3.OperationalError as err:
             print(f"SQLite History Backend Error: {err}")
@@ -448,3 +474,7 @@ class SqliteHistory(History):
         return xh_sqlite_delete_input_matching(
             pattern=re.compile(pattern), filename=self.filename
         )
+
+    def erasedups(self):
+        """Remove duplicate commands, keeping only the latest occurrence."""
+        return xh_sqlite_erasedups(filename=self.filename)

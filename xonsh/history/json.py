@@ -778,3 +778,71 @@ class JsonHistory(History):
                 continue
 
         return deleted
+
+    def erasedups(self):
+        """Remove duplicate commands across all history files, keeping the latest."""
+        while self.gc and self.gc.is_alive():
+            time.sleep(0.011)
+
+        # Collect all commands from all files with their source file.
+        # Each entry: (inp, tsb, file_path, index_in_file)
+        entries = []
+        for f in _xhj_get_history_files():
+            try:
+                json_file = xlj.LazyJSON(f, reopen=False)
+            except ValueError:
+                continue
+            try:
+                file_content = json_file.load()
+                for idx, cmd in enumerate(file_content.get("cmds", [])):
+                    inp = cmd.get("inp", "").rstrip()
+                    ts = cmd.get("ts", [0, 0])
+                    tsb = ts[0] if ts else 0
+                    entries.append((inp, tsb, f, idx))
+            except (JSONDecodeError, ValueError):
+                continue
+
+        # Find which entries to keep: for each inp, keep the one with max tsb.
+        keep = {}  # inp -> (tsb, file_path, idx)
+        for inp, tsb, fpath, idx in entries:
+            if inp not in keep or tsb > keep[inp][0]:
+                keep[inp] = (tsb, fpath, idx)
+
+        # Build set of (file_path, idx) to keep.
+        keep_set = {(v[1], v[2]) for v in keep.values()}
+
+        total_before = len(entries)
+        total_after = len(keep_set)
+        if total_before == total_after:
+            return 0, total_before
+
+        # Rewrite each file, removing duplicate entries.
+        for f in _xhj_get_history_files():
+            try:
+                json_file = xlj.LazyJSON(f, reopen=False)
+            except ValueError:
+                continue
+            try:
+                file_content = json_file.load()
+                cmds = file_content.get("cmds", [])
+                new_cmds = [
+                    cmd for idx, cmd in enumerate(cmds) if (f, idx) in keep_set
+                ]
+                if len(new_cmds) == len(cmds):
+                    continue  # no changes needed
+                file_content["cmds"] = new_cmds
+                dirname = os.path.dirname(f)
+                fd, tmpname = tempfile.mkstemp(dir=dirname, suffix=".json.tmp")
+                try:
+                    with os.fdopen(fd, "w", newline="\n", encoding="utf-8") as fp:
+                        xlj.ljdump(file_content, fp)
+                    os.replace(tmpname, f)
+                except Exception:
+                    try:
+                        os.unlink(tmpname)
+                    except OSError:
+                        pass
+            except (JSONDecodeError, ValueError):
+                continue
+
+        return total_before - total_after, total_before

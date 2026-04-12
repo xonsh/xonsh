@@ -110,6 +110,26 @@ from xonsh.tools import (
     to_tok_color_dict,
 )
 
+_warned_erasedups = False
+
+
+def histcontrol_csv_to_set(x):
+    """Convert HISTCONTROL value, warning if erasedups is used."""
+    global _warned_erasedups
+    result = csv_to_set(x)
+    if "erasedups" in result and not _warned_erasedups:
+        _warned_erasedups = True
+        import warnings
+
+        warnings.warn(
+            "'erasedups' in $HISTCONTROL is deprecated. "
+            "Use the 'history erasedups' command instead.",
+            FutureWarning,
+            stacklevel=2,
+        )
+    return result
+
+
 events.doc(
     "on_envvar_new",
     """
@@ -1897,7 +1917,7 @@ class PromptHistorySetting(Xettings):
     )
     HISTCONTROL = Var(
         is_string_set,
-        csv_to_set,
+        histcontrol_csv_to_set,
         set_to_csv,
         set(),
         "A set of strings (comma-separated list in string form) of options "
@@ -1906,9 +1926,7 @@ class PromptHistorySetting(Xettings):
         "- ``ignoredups`` will not save the command if it matches the previous command\n"
         "- ``ignoreerr`` will cause any commands that fail (i.e. return non-zero "
         "exit status) to not be added to the history list\n"
-        "- ``ignorespace`` will not save the command if it begins with a space\n"
-        "- ``erasedups`` will remove all previous commands that matches and updates the frequency "
-        "(Note: only supported in sqlite backend).",
+        "- ``ignorespace`` will not save the command if it begins with a space\n",
         can_store_as_str=True,
     )
     XONSH_HISTORY_SIZE = Var(
