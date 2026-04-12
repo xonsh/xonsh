@@ -650,8 +650,13 @@ class JsonHistory(History):
                 continue
             try:
                 json_file = xlj.LazyJSON(f, reopen=False)
-            except ValueError:
-                # Invalid json file
+            except (ValueError, OSError) as err:
+                if isinstance(err, OSError):
+                    if str(f) in str(err):
+                        msg = f"history: skip: {err}"
+                    else:
+                        msg = f"history: skip {f}: {err}"
+                    xt.print_above_prompt(msg)
                 continue
             try:
                 commands = json_file.load()["cmds"]

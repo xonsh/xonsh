@@ -891,6 +891,17 @@ def print_warning(msg):
     sys.stderr.write(msg)
 
 
+def print_above_prompt(msg):
+    """Print a message above the active prompt when using prompt_toolkit,
+    otherwise fall back to stderr. Safe to call from background threads."""
+    try:
+        from prompt_toolkit.shortcuts import print_formatted_text
+
+        print_formatted_text(msg)
+    except Exception:
+        print(msg, file=sys.stderr)
+
+
 def print_exception(msg=None, exc_info=None, source_msg=None):
     """Print given exception (or current if None) with/without traceback and set sys.last_exc accordingly."""
 
