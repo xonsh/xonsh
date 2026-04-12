@@ -556,8 +556,14 @@ def test_on_command_not_found_dict_replacement_with_env(xession):
     def dict_handler(cmd, **kwargs):
         if cmd[0] == "xonshcommandnotfound":
             if ON_WINDOWS:
-                return {"cmd": ["cmd", "/c", "echo", "%XONSH_TEST_VAR%"], "env": {"XONSH_TEST_VAR": "hello_from_env"}}
-            return {"cmd": ["sh", "-c", "echo $XONSH_TEST_VAR"], "env": {"XONSH_TEST_VAR": "hello_from_env"}}
+                return {
+                    "cmd": ["cmd", "/c", "echo", "%XONSH_TEST_VAR%"],
+                    "env": {"XONSH_TEST_VAR": "hello_from_env"},
+                }
+            return {
+                "cmd": ["sh", "-c", "echo $XONSH_TEST_VAR"],
+                "env": {"XONSH_TEST_VAR": "hello_from_env"},
+            }
         return None
 
     xession.builtins.events.on_command_not_found(dict_handler)

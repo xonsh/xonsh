@@ -4,13 +4,13 @@ import argparse
 import functools
 import inspect
 import operator
-import textwrap
 import os
 import pathlib
 import re
 import shlex
 import shutil
 import sys
+import textwrap
 import types
 import typing as tp
 from collections import abc as cabc
@@ -1433,8 +1433,8 @@ def get_xpip_alias():
 
             @Aliases.return_command
             def _xpip_user(args):
-                if args and args[0] == 'install':
-                    return basecmd + ['install', '--user'] + args[1:]
+                if args and args[0] == "install":
+                    return basecmd + ["install", "--user"] + args[1:]
                 else:
                     return basecmd + args
 
