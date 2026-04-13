@@ -412,6 +412,22 @@ def test_register_custom_pygments_style(name, styles, refrules):
         assert style.styles[rule] == color
 
 
+def test_register_custom_style_inherits_xonsh_base():
+    """Custom style based on 'default' should inherit XONSH_BASE_STYLE ANSI names,
+    not pygments' hex codes.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/5162
+    """
+    from pygments.token import Name
+
+    from xonsh.pyghooks import XONSH_BASE_STYLE
+
+    register_custom_pygments_style("test_inherit", {}, base="default")
+    style = get_style_by_name("test_inherit")
+
+    assert style.styles[Name.Variable] == XONSH_BASE_STYLE[Name.Variable]
+
+
 def test_pygments_style_no_bg_in_palette():
     """Color.* tokens must never map to the theme's background color.
 

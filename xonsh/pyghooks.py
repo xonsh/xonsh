@@ -40,9 +40,9 @@ from xonsh.color_tools import (
     warn_deprecated_no_color,
 )
 from xonsh.events import events
-from xonsh.parsers.tokenize import SubprocCommentHighlight
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lib.lazyimps import html, os_listxattr, terminal256
+from xonsh.parsers.tokenize import SubprocCommentHighlight
 from xonsh.platform import (
     os_environ,
     ptk_version_info,
@@ -545,6 +545,12 @@ def register_custom_pygments_style(
     """
     base_style = get_style_by_name(base)
     custom_styles = base_style.styles.copy()
+
+    # Overlay XONSH_BASE_STYLE so that the custom style inherits
+    # xonsh's ANSI color names instead of pygments' hex codes.
+    if base == "default":
+        for token, value in XONSH_BASE_STYLE.items():
+            custom_styles[token] = value
 
     for token, value in _tokenize_style_dict(styles).items():
         custom_styles[token] = value
