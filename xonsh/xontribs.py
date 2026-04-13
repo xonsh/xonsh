@@ -263,7 +263,7 @@ def xontribs_unload(
     ] = (),
     verbose=False,
 ):
-    """Unload the given xontribs
+    """Unload the given xontribs (requires ``_unload_xontrib_`` for full cleanup)
 
     Parameters
     ----------
@@ -274,7 +274,9 @@ def xontribs_unload(
 
     Notes
     -----
-    Proper cleanup can be implemented by the xontrib. The default is equivalent to ``del sys.modules[module]``.
+    The xontrib must implement ``_unload_xontrib_()`` for proper cleanup.
+    Without it, registered event handlers, env vars, aliases, and completers
+    will remain active. The default is equivalent to ``del sys.modules[module]``.
     """
     for name in names:
         if verbose:
@@ -299,7 +301,7 @@ def xontribs_reload(
     ] = (),
     verbose=False,
 ):
-    """Reload the given xontribs
+    """Reload the given xontribs (requires ``_unload_xontrib_`` for full cleanup)
 
     Parameters
     ----------

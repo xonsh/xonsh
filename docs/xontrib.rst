@@ -57,6 +57,12 @@ Here is a template:
     def _unload_xontrib_(xsh: XonshSession, **kwargs) -> dict:
         """If you want your extension to be unloadable, put that logic here"""
 
+.. warning::
+
+    The xontrib must implement ``_unload_xontrib_`` itself. If this function
+    is not provided, any registered event handlers, environment variables,
+    aliases, and completers will remain active after ``xontribs unload/reload``.
+
 This _load_xontrib_() function is called after your extension is imported,
 and the currently active :py:class:`xonsh.built_ins.XonshSession` instance is passed as the argument.
 
