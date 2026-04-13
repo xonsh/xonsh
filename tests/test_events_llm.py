@@ -2,7 +2,7 @@
 
 import pytest
 
-from xonsh.events import Event, EventManager, LoadEvent, _handler_key
+from xonsh.events import EventManager, LoadEvent, _handler_key
 
 
 @pytest.fixture
@@ -234,6 +234,7 @@ def test_delayed_discard_by_key_during_fire(events):
         nonlocal removed
         if not removed:
             removed = True
+
             # Create a new object with same key to discard
             def target(**kw):
                 pass

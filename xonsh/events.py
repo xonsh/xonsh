@@ -28,12 +28,7 @@ def _handler_key(handler):
     """
     module = getattr(handler, "__module__", None)
     qualname = getattr(handler, "__qualname__", None)
-    if (
-        module
-        and qualname
-        and "<" not in qualname
-        and not hasattr(handler, "__self__")
-    ):
+    if module and qualname and "<" not in qualname and not hasattr(handler, "__self__"):
         return (module, qualname)
     return id(handler)
 
