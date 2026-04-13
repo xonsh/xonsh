@@ -40,6 +40,7 @@ from xonsh.color_tools import (
     warn_deprecated_no_color,
 )
 from xonsh.events import events
+from xonsh.parsers.tokenize import SubprocCommentHighlight
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lib.lazyimps import html, os_listxattr, terminal256
 from xonsh.platform import (
@@ -1827,6 +1828,7 @@ class XonshLexer(Python3Lexer):
             (r"&|=", Punctuation),
             (r"\|", Punctuation, "subproc_start"),
             (r"\s+", Text),
+            (SubprocCommentHighlight, Comment.Single),
             (r'[^=\s\[\]{}()$"\'`<&|;]+', subproc_arg_callback),
             (r"<", Text),
             (r"\$\w+", Name.Variable),
