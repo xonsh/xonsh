@@ -1774,6 +1774,37 @@ def _import_comma_cb(_, match):
     yield match.start(), Punctuation, ","
 
 
+# ---------------------------------------------------------------------------
+# @() Python substitution — highlight undefined names as Error.
+# Only bare names are checked (not attributes like os.path.join).
+# ---------------------------------------------------------------------------
+
+_at_bracket_check: bool = False
+
+
+def _at_bracket_start_cb(_, match):
+    """Enter @() substitution — mark that the first name should be checked."""
+    global _at_bracket_check
+    _at_bracket_check = True
+    yield match.start(), Keyword, match.group(1)
+    yield match.start() + len(match.group(1)), Punctuation, match.group(2)
+
+
+def _at_bracket_name_cb(_, match):
+    """Check first bare name inside @() against session context and builtins."""
+    global _at_bracket_check
+    import builtins
+
+    name = match.group()
+    if _at_bracket_check:
+        _at_bracket_check = False
+        ctx = getattr(XSH, "ctx", None) or {}
+        found = name in ctx or hasattr(builtins, name) or iskeyword(name)
+        yield match.start(), Name if found else Error, name
+    else:
+        yield match.start(), Name, name
+
+
 def subproc_cmd_callback(_, match):
     """Yield Builtin token if match contains valid command,
     otherwise fallback to fallback lexer.
@@ -1820,7 +1851,7 @@ class XonshLexer(Python3Lexer):
         "mode_switch_brackets": [
             (r"(\$)(\{)", bygroups(Keyword, Punctuation), "py_curly_bracket"),
             (r"(@!)(\()", bygroups(Keyword, Punctuation), "py_bracket"),
-            (r"(@)(\()", bygroups(Keyword, Punctuation), "py_bracket"),
+            (r"(@)(\()", _at_bracket_start_cb, "at_py_bracket"),
             (
                 r"([\!\$])(\()",
                 bygroups(Keyword, Punctuation),
@@ -1828,8 +1859,8 @@ class XonshLexer(Python3Lexer):
             ),
             (
                 r"(@\$)(\()",
-                bygroups(Keyword, Punctuation),
-                ("subproc_bracket", "subproc_start"),
+                _at_bracket_start_cb,
+                "at_py_bracket",
             ),
             (
                 r"([\!\$])(\[)",
@@ -1845,6 +1876,11 @@ class XonshLexer(Python3Lexer):
         "subproc_bracket": [(r"\)", Punctuation, "#pop"), include("subproc")],
         "subproc_square_bracket": [(r"\]", Punctuation, "#pop"), include("subproc")],
         "py_bracket": [(r"\)", Punctuation, "#pop"), include("root")],
+        "at_py_bracket": [
+            (r"\)", Punctuation, "#pop"),
+            (r"\w+", _at_bracket_name_cb),
+            include("root"),
+        ],
         "py_curly_bracket": [(r"\}", Punctuation, "#pop"), include("root")],
         "backtick_re": [
             (r"[\.\^\$\*\+\?\[\]\|]", String.Regex),

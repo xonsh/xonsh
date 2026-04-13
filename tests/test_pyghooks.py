@@ -466,6 +466,26 @@ def test_import_module_validation(code, expect_error):
     assert has_error == expect_error, f"{code!r}: tokens={tokens}"
 
 
+@pytest.mark.parametrize(
+    "name, expect_error",
+    [
+        ("len", False),      # builtin
+        ("True", False),     # keyword
+        ("myvar", False),    # in ctx
+        ("undefined", True), # not defined anywhere
+    ],
+)
+def test_at_bracket_name_validation(name, expect_error, xession):
+    """Undefined names inside @() should be highlighted as Error."""
+    from xonsh.pyghooks import XonshLexer
+
+    xession.ctx["myvar"] = 42
+    lexer = XonshLexer()
+    tokens = list(lexer.get_tokens(f"echo @({name})"))
+    has_error = any(t == Token.Error for t, _ in tokens)
+    assert has_error == expect_error, f"@({name}): tokens={tokens}"
+
+
 def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     # When Xonsh is used as a library and simply for its lexer plugin, the
     # xession's env can be unset, so test that it can yield tokens without
