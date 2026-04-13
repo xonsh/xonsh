@@ -157,16 +157,18 @@ use the following solution in your ``xonshrc``:
 ...make terminal tabs start in the correct directory?
 -----------------------------------------------------
 
-If you use Gnome Terminal or another VTE terminal and it doesn't start new tabs
-in the CWD of the original TAB, this is because of a custom VTE interface. To
-fix this, please add ``{vte_new_tab_cwd}`` somewhere to you prompt:
+Xonsh automatically emits `OSC 7 <https://gitlab.freedesktop.org/terminal-wg/specifications/-/merge_requests/7>`_
+escape sequences to report the current working directory to the terminal.
+This means new tabs should open in the correct directory out of the box
+on most modern terminals (GNOME Terminal, macOS Terminal.app, iTerm2, WezTerm,
+Windows Terminal, Kitty, and others).
+
+If your terminal still doesn't pick up the directory, you can additionally add
+the ``{vte_new_tab_cwd}`` prompt field to your prompt as a workaround:
 
 .. code-block:: xonsh
 
     $PROMPT = '{vte_new_tab_cwd}' + $PROMPT
-
-This will issue the proper escape sequence to the terminal without otherwise
-affecting the displayed prompt.
 
 .. _open_terminal_here:
 
