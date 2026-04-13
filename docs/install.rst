@@ -110,7 +110,9 @@ Learn more: `Mamba installer <install_mamba.html>`_.
 Windows
 -------
 
-Install Xonsh independently on Windows (without admin rights):
+Install xonsh independently using `Xonsh WinGet installer <https://github.com/xonsh/xonsh-winget/releases>`_ (without admin rights).
+
+Or using script (without admin rights):
 
 .. code-block:: doscon
 
