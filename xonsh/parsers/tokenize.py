@@ -287,7 +287,9 @@ Comment = r"#[^\r\n]*"
 # In subprocess mode a comment must be preceded by whitespace so that
 # tokens like ``1#2`` are parsed as arguments, not comments.
 SubprocComment = r" " + Comment  # for the tokenizer (literal space prefix)
-SubprocCommentHighlight = r"(?<=\s)" + Comment  # for the Pygments highlighter (lookbehind)
+SubprocCommentHighlight = (
+    r"(?<=\s)" + Comment
+)  # for the Pygments highlighter (lookbehind)
 Ignore = Whitespace + tokany(r"\\\r?\n" + Whitespace) + maybe(Comment)
 Name_RE = r"\$?\w+"
 

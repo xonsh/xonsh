@@ -40,9 +40,9 @@ from xonsh.color_tools import (
     warn_deprecated_no_color,
 )
 from xonsh.events import events
-from xonsh.parsers.tokenize import SubprocCommentHighlight
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lib.lazyimps import html, os_listxattr, terminal256
+from xonsh.parsers.tokenize import SubprocCommentHighlight
 from xonsh.platform import (
     os_environ,
     ptk_version_info,
