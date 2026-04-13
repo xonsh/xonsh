@@ -329,6 +329,14 @@ class Shell:
         if hist.gc is not None:
             hist.gc.wait_for_shell = False
 
+        # Emit OSC 7 (CWD reporting) on directory changes so terminals can
+        # track the working directory (new-tab-in-cwd, session restore, etc.)
+        if env.get("XONSH_INTERACTIVE"):
+            from xonsh.prompt.env import emit_osc7
+
+            events.on_chdir(emit_osc7)
+            emit_osc7()  # emit once at startup
+
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""
         return getattr(self.shell, attr)

@@ -71,7 +71,22 @@ def vte_new_tab_cwd() -> None:
     on startup. Note that this does not return a string, it simply prints
     and flushes the escape sequence to stdout directly.
     """
+    emit_osc7()
+
+
+def emit_osc7(**kwargs) -> None:
+    """Emit an OSC 7 escape sequence to report the current working directory.
+
+    Terminals use this for features like "Open new tab in same directory"
+    and macOS Terminal.app session restoration.
+    """
+    import socket
+    import urllib.parse
+
     env = XSH.env
-    t = "\033]7;file://{}{}\007"
-    s = t.format(env.get("HOSTNAME"), env.get("PWD"))
-    print(s, end="", flush=True)
+    host = env.get("HOSTNAME") or socket.gethostname()
+    pwd = env.get("PWD", "")
+    # OSC 7 requires a file:// URL with forward slashes
+    pwd = pwd.replace("\\", "/")
+    pwd = urllib.parse.quote(pwd, safe="/:")
+    print(f"\033]7;file://{host}{pwd}\007", end="", flush=True)
