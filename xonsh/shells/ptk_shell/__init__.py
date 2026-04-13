@@ -562,15 +562,17 @@ class PromptToolkitShell(BaseShell):
             # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;P;k=c\x07')]
             # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;B\x07')]
 
-        basetoks = self.format_color(dots)
+        # Resolve both xonsh colors ({RED}) and ANSI escapes (\033[31m)
+        # so baselen counts only visible characters.  See #5898.
+        basetoks = tokenize_ansi(PygmentsTokens(self.format_color(dots)))
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            toks = [(Token, " " * width)]
-            if is_affix:  # to convert ↓ classes to str to allow +
-                return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+            toks = [("", " " * width)]
+            if is_affix:
+                return prefixtoks + toks + suffixtoks
             else:
-                return PygmentsTokens(toks)
-        toks = basetoks * (width // baselen)
+                return toks
+        toks = list(basetoks) * (width // baselen)
         n = width % baselen
         count = 0
         for tok in basetoks:
@@ -586,9 +588,9 @@ class PromptToolkitShell(BaseShell):
             if n <= count:
                 break
         if is_affix:
-            return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+            return prefixtoks + toks + suffixtoks
         else:
-            return PygmentsTokens(toks)
+            return toks
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns
