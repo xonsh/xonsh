@@ -599,7 +599,7 @@ def register_custom_pygments_style(
 XONSH_BASE_STYLE = LazyObject(
     lambda: {
         Whitespace: "ansigray",
-        Comment: "underline ansicyan",
+        Comment: "ansicyan",
         Comment.Preproc: "underline ansiyellow",
         Keyword: "bold ansigreen",
         Keyword.Pseudo: "nobold",
@@ -619,7 +619,7 @@ XONSH_BASE_STYLE = LazyObject(
         Name.Tag: "bold ansigreen",
         Name.Decorator: "ansibrightmagenta",
         String: "ansibrightred",
-        String.Doc: "underline",
+        String.Doc: "ansicyan",
         String.Interpol: "bold ansimagenta",
         String.Escape: "bold ansiyellow",
         String.Regex: "ansimagenta",
@@ -1805,6 +1805,22 @@ def _at_bracket_name_cb(_, match):
         yield match.start(), Name, name
 
 
+def _at_bracket_walrus_cb(_, match):
+    """Walrus operator target — it's a definition, skip the check."""
+    global _at_bracket_check
+    _at_bracket_check = False
+    yield match.start(), Name, match.group()
+
+
+def _env_var_cb(_, match):
+    """Check $VAR against the environment."""
+    text = match.group()
+    name = text[1:]  # strip leading $
+    env = getattr(XSH, "env", None)
+    found = env is not None and name in env
+    yield match.start(), Name.Variable if found else Error, text
+
+
 def subproc_cmd_callback(_, match):
     """Yield Builtin token if match contains valid command,
     otherwise fallback to fallback lexer.
@@ -1859,8 +1875,8 @@ class XonshLexer(Python3Lexer):
             ),
             (
                 r"(@\$)(\()",
-                _at_bracket_start_cb,
-                "at_py_bracket",
+                bygroups(Keyword, Punctuation),
+                ("subproc_bracket", "subproc_start"),
             ),
             (
                 r"([\!\$])(\[)",
@@ -1878,6 +1894,7 @@ class XonshLexer(Python3Lexer):
         "py_bracket": [(r"\)", Punctuation, "#pop"), include("root")],
         "at_py_bracket": [
             (r"\)", Punctuation, "#pop"),
+            (r"\w+(?=\s*:=)", _at_bracket_walrus_cb),
             (r"\w+", _at_bracket_name_cb),
             include("root"),
         ],
@@ -1907,7 +1924,7 @@ class XonshLexer(Python3Lexer):
         "root": [
             (r"\?", Keyword),
             (r"(?<=\w)!", Keyword),
-            (r"\$\w+", Name.Variable),
+            (r"\$\w+", _env_var_cb),
             (r"\(", Punctuation, "py_bracket"),
             (r"\{", Punctuation, "py_curly_bracket"),
             (r"(import)((?:\s|\\\s)+)", _import_start_cb, "import"),
@@ -1934,7 +1951,7 @@ class XonshLexer(Python3Lexer):
             (SubprocCommentHighlight, Comment.Single),
             (r'[^=\s\[\]{}()$"\'`<&|;]+', subproc_arg_callback),
             (r"<", Text),
-            (r"\$\w+", Name.Variable),
+            (r"\$\w+", _env_var_cb),
         ],
         "subproc_macro": [
             (r"(\s*)([^\n]+)", bygroups(Whitespace, String)),
