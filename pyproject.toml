@@ -9,8 +9,8 @@ build-backend = "setuptools.build_meta"
 name = "xonsh"
 dynamic = ["version", "readme"]
 description = "Python-powered shell. Full-featured, cross-platform and AI-friendly. "
-authors = [{ name = "Anthony Scopatz" }, { email = "scopatz@gmail.com" }]
-maintainers = [{ name = "Xonsh Community" }, { email = "xonsh@gil.forsyth.dev" }]
+authors = [{ name = "Xonsh Maintainers", email = "xore.004fdbd5c8e6589bdd80944b5b8d4100.show-sender@streams.zulipchat.com" }]
+maintainers = [{ name = "Xonsh Maintainers", email = "xore.004fdbd5c8e6589bdd80944b5b8d4100.show-sender@streams.zulipchat.com" }, { name = "Gil Forsyth", email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
 requires-python = ">=3.11"
 dependencies = []
