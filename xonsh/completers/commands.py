@@ -28,21 +28,31 @@ def complete_command(command: CommandContext):
 
     cmd = command.prefix
     show_desc = (XSH.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
+
     for s, (path, is_alias) in XSH.commands_cache.iter_commands():
         if get_filter_function()(s, cmd):
-            kwargs = {}
+            kwargs = {
+                "append_space": True,
+                "source": "aliases" if is_alias else "commands_cache",
+            }
             if show_desc:
                 kwargs["description"] = "Alias" if is_alias else path
-            yield RichCompletion(s, append_space=True, **kwargs)  # type: ignore
+            yield RichCompletion(s, **kwargs)  # type: ignore
+
     if xp.ON_WINDOWS:
         for i in executables_in("."):
             if get_filter_function()(i, cmd):
-                yield RichCompletion(i, append_space=True)
+                yield RichCompletion(i, source="cwd")
+
     base = os.path.basename(cmd)
     if os.path.isdir(base):
         for i in executables_in(base):
             if get_filter_function()(i, cmd):
-                yield RichCompletion(os.path.join(base, i))
+                yield RichCompletion(
+                    os.path.join(base, i),
+                    append_space=True,
+                    source="path",
+                )
 
 
 @contextual_command_completer

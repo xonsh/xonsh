@@ -64,6 +64,7 @@ class RichCompletion(str):
         style: str = "",
         append_closing_quote: bool = True,
         append_space: bool = False,
+        source: str | None = None,
     ):
         """
         Parameters
@@ -88,6 +89,9 @@ class RichCompletion(str):
             This is intended to work with ``appending_closing_quote``, so the space will be added correctly **after** the closing quote.
             This is used in ``Completer.complete``.
             An extra bonus is that the space won't show up in the ``display`` attribute.
+        source :
+            Optional label describing where this completion came from.
+            This is primarily intended for debugging and trace output, such as ``XONSH_TRACE_COMPLETIONS``, and does not affect normal completion behavior.
         """
         super().__init__()
         self.prefix_len = prefix_len
@@ -96,6 +100,7 @@ class RichCompletion(str):
         self.style = style
         self.append_closing_quote = append_closing_quote
         self.append_space = append_space
+        self.source = source
 
     @property
     def value(self):

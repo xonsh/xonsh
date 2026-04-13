@@ -231,26 +231,74 @@ def _complete_python(prefix, context: PythonContext):
     ctx = context.ctx
     filt = get_filter_function()
     rtn = set()
+    _sentinel = object()
     if ctx is not None:
         if "." in prefix:
             rtn |= attr_complete(prefix, ctx, filt)
         args = python_signature_complete(prefix, line, end, ctx, filt)
-        rtn |= args
-        rtn |= {s for s in ctx if filt(s, prefix)}
+        for s in args:
+            rtn.add(_rich_with_source(s, "function_arg"))
+
+        for s in ctx:
+            if isinstance(s, str) and filt(s, prefix):
+                obj = ctx.get(s, _sentinel) if hasattr(ctx, "get") else _sentinel
+                source = None if obj is _sentinel else _python_source_from_obj(obj)
+                rtn.add(_rich_with_source(s, source))
     else:
         args = ()
     if len(args) == 0:
-        # not in a function call, so we can add non-expression tokens
-        rtn |= {s for s in XONSH_TOKENS if filt(s, prefix)}
+        for s in XONSH_TOKENS:
+            if filt(s, prefix):
+                rtn.add(_rich_with_source(s, "keyword"))
     else:
-        rtn |= {s for s in XONSH_EXPR_TOKENS if filt(s, prefix)}
-    rtn |= {s for s in dir(builtins) if filt(s, prefix)}
+        for s in XONSH_EXPR_TOKENS:
+            if filt(s, prefix):
+                rtn.add(_rich_with_source(s, "keyword"))
+
+    for s in dir(builtins):
+        if filt(s, prefix):
+            obj = getattr(builtins, s, None)
+            rtn.add(_rich_with_source(s, _python_source_from_obj(obj)))
+
     if prefix.startswith("@"):
         dp = prefix[1:]
         if ctx is not None:
-            rtn |= {"@" + s for s in ctx if filt(s, dp)}
-        rtn |= {"@" + s for s in dir(builtins) if filt(s, dp)}
+            for s in ctx:
+                if isinstance(s, str) and filt(s, dp):
+                    obj = ctx.get(s, _sentinel) if hasattr(ctx, "get") else _sentinel
+                    source = None if obj is _sentinel else _python_source_from_obj(obj)
+                    rtn.add(_rich_with_source("@" + s, source))
+        for s in dir(builtins):
+            if filt(s, dp):
+                obj = getattr(builtins, s, None)
+                rtn.add(_rich_with_source("@" + s, _python_source_from_obj(obj)))
+
     return rtn
+
+
+def _python_source_from_obj(obj):
+    if inspect.isbuiltin(obj) or inspect.isfunction(obj) or inspect.ismethod(obj):
+        return "function"
+    if inspect.isclass(obj):
+        return "class"
+    if inspect.ismodule(obj):
+        return "module"
+    return "python"
+
+
+def _rich_with_source(value, source, **kwargs):
+    if isinstance(value, RichCompletion):
+        return RichCompletion(
+            str(value),
+            prefix_len=value.prefix_len,
+            display=value.display,
+            description=value.description,
+            style=value.style,
+            append_closing_quote=value.append_closing_quote,
+            append_space=value.append_space,
+            source=getattr(value, "source", None) or source,
+        )
+    return RichCompletion(str(value), source=source, **kwargs)
 
 
 def _turn_off_warning(func):
@@ -283,6 +331,20 @@ def _safe_eval(expr, ctx):
     return val, _ctx
 
 
+def _attr_source(obj):
+    if inspect.isbuiltin(obj) or inspect.isfunction(obj) or inspect.ismethod(obj):
+        return "function"
+    if inspect.isclass(obj):
+        return "class"
+    if inspect.ismodule(obj):
+        return "module"
+    if isinstance(obj, cabc.Mapping):
+        return "mapping"
+    if isinstance(obj, cabc.Sequence) and not isinstance(obj, str):
+        return "sequence"
+    return "attribute"
+
+
 @_turn_off_warning
 def attr_complete(prefix, ctx, filter_func):
     """Complete attributes of an object."""
@@ -308,47 +370,44 @@ def attr_complete(prefix, ctx, filter_func):
     might_block = isinstance(val, CommandPipeline)
     prelen = len(prefix)
     for opt in opts:
-        # check whether these options actually work (e.g., disallow 7.imag)
         _expr = f"{expr}.{opt}"
-        # skip properties marked as blocking (e.g. CommandPipeline.returncode)
         if might_block:
             static_attr = inspect.getattr_static(val, opt, None)
             if isinstance(static_attr, blocking_property):
-                attrs.add(prefix[: prelen - len(attr)] + opt)
+                comp = prefix[: prelen - len(attr)] + opt
+                attrs.add(RichCompletion(comp, source="attribute"))
                 continue
         _val_, _ctx_ = _safe_eval(_expr, _ctx)
         if _val_ is None and _ctx_ is None:
             continue
-        a = getattr(val, opt)
+
+        source = _attr_source(_val_)
         if XSH.env["COMPLETIONS_BRACKETS"]:
-            if callable(a):
-                # Determine if this callable has useful attributes (class/module/namespace)
+            if callable(_val_):
                 has_useful_attrs = (
-                    inspect.isclass(a)
-                    or inspect.ismodule(a)
-                    or any(not attr.startswith("_") for attr in dir(a))
+                    inspect.isclass(_val_)
+                    or inspect.ismodule(_val_)
+                    or any(not name.startswith("_") for name in dir(_val_))
                 )
 
                 base_comp = prefix[: prelen - len(attr)] + opt
 
                 if has_useful_attrs:
-                    # Show plain name for attribute access (e.g., classes, modules)
-                    attrs.add(base_comp)
+                    attrs.add(RichCompletion(base_comp, source=source))
                 else:
-                    # Show with ( for calling (e.g., simple functions, methods)
-                    attrs.add(base_comp + "(")
-            elif isinstance(a, cabc.Sequence | cabc.Mapping):
+                    attrs.add(RichCompletion(base_comp + "(", source=source))
+            elif isinstance(_val_, cabc.Sequence | cabc.Mapping):
                 rpl = opt + "["
                 comp = prefix[: prelen - len(attr)] + rpl
-                attrs.add(comp)
+                attrs.add(RichCompletion(comp, source=source))
             else:
                 rpl = opt
                 comp = prefix[: prelen - len(attr)] + rpl
-                attrs.add(comp)
+                attrs.add(RichCompletion(comp, source=source))
         else:
             rpl = opt
             comp = prefix[: prelen - len(attr)] + rpl
-            attrs.add(comp)
+            attrs.add(RichCompletion(comp, source=source))
     return attrs
 
 

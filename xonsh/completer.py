@@ -164,7 +164,6 @@ class Completer:
                     completion = completion + closing_quote
 
         completion = list(apply_lprefix([completion], lprefix))[0]
-
         if (
             isinstance(completion, RichCompletion)
             and completion.append_space
@@ -258,7 +257,10 @@ class Completer:
                     f"TRACE COMPLETIONS: Got {len(items)} results"
                     f" from {'' if is_exclusive_completer(func) else 'non-'}exclusive completer '{name}':"
                 )
-                sys.displayhook(items)
+                for completion, _ in items:
+                    shown = getattr(completion, "display", None) or str(completion)
+                    source = getattr(completion, "source", None) or name
+                    print(f"# {shown} <- {source}")
 
             if is_exclusive_completer(func):
                 # we got completions for an exclusive completer
