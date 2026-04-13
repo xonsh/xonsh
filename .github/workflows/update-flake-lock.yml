@@ -13,14 +13,14 @@ jobs:
       id-token: write
       issues: write
       pull-requests: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      
+
       - name: Set up Nix
         uses: cachix/install-nix-action@v31
-      
+
       - name: Update flake.lock
         uses: DeterminateSystems/update-flake-lock@v28
         with:
