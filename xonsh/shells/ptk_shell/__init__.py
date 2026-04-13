@@ -545,7 +545,6 @@ class PromptToolkitShell(BaseShell):
         """Displays dots in multiline prompt"""
         if is_soft_wrap:
             return ""
-        width -= 1
         dots = XSH.env.get("MULTILINE_PROMPT")
         dots = dots() if callable(dots) else dots
         if not dots:
@@ -566,7 +565,7 @@ class PromptToolkitShell(BaseShell):
         basetoks = self.format_color(dots)
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            toks = [(Token, " " * (width + 1))]
+            toks = [(Token, " " * width)]
             if is_affix:  # to convert ↓ classes to str to allow +
                 return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
             else:
@@ -586,7 +585,6 @@ class PromptToolkitShell(BaseShell):
             count = newcount
             if n <= count:
                 break
-        toks.append((Token, " "))  # final space
         if is_affix:
             return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
         else:
