@@ -42,6 +42,7 @@ from xonsh.color_tools import (
 from xonsh.events import events
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lib.lazyimps import html, os_listxattr, terminal256
+from xonsh.parsers.tokenize import SubprocCommentHighlight
 from xonsh.platform import (
     os_environ,
     ptk_version_info,
@@ -133,26 +134,26 @@ def color_by_name(name, fg=None, bg=None):
 
 @lazyobject
 def PYGMENTS_MODIFIERS():
-    # pygments doesn't support all modifiers.
-    # use None to represent unsupported
+    # prompt_toolkit supports: bold, italic, underline, reverse, blink, hidden, strike.
+    # use None to represent unsupported modifiers (only FAINT and REVEALOFF)
     return {
         "BOLD": "bold",
         "FAINT": None,
         "ITALIC": "italic",
         "UNDERLINE": "underline",
-        "SLOWBLINK": None,
-        "FASTBLINK": None,
-        "INVERT": None,
-        "CONCEAL": None,
-        "STRIKETHROUGH": None,
-        "BOLDOFF": None,
+        "SLOWBLINK": "blink",
+        "FASTBLINK": "blink",
+        "INVERT": "reverse",
+        "CONCEAL": "hidden",
+        "STRIKETHROUGH": "strike",
+        "BOLDOFF": "nobold",
         "FAINTOFF": None,
-        "ITALICOFF": None,
-        "UNDERLINEOFF": None,
-        "BLINKOFF": None,
-        "INVERTOFF": None,
+        "ITALICOFF": "noitalic",
+        "UNDERLINEOFF": "nounderline",
+        "BLINKOFF": "noblink",
+        "INVERTOFF": "noreverse",
         "REVEALOFF": None,
-        "STRIKETHROUGHOFF": None,
+        "STRIKETHROUGHOFF": "nostrike",
     }
 
 
@@ -544,6 +545,12 @@ def register_custom_pygments_style(
     """
     base_style = get_style_by_name(base)
     custom_styles = base_style.styles.copy()
+
+    # Overlay XONSH_BASE_STYLE so that the custom style inherits
+    # xonsh's ANSI color names instead of pygments' hex codes.
+    if base == "default":
+        for token, value in XONSH_BASE_STYLE.items():
+            custom_styles[token] = value
 
     for token, value in _tokenize_style_dict(styles).items():
         custom_styles[token] = value
@@ -1315,6 +1322,10 @@ def pygments_style_by_name(name):
         return STYLES[name]
     pstyle = get_style_by_name(name)
     palette = make_palette(pstyle.styles.values())
+    # Exclude the theme's background color from the palette so that
+    # Color.* tokens are never mapped to it (which makes text invisible).
+    bg = pstyle.background_color.lstrip("#")
+    palette.pop(bg, None)
     astyle = make_pygments_style(palette)
     STYLES[name] = astyle
     return astyle
@@ -1827,6 +1838,7 @@ class XonshLexer(Python3Lexer):
             (r"&|=", Punctuation),
             (r"\|", Punctuation, "subproc_start"),
             (r"\s+", Text),
+            (SubprocCommentHighlight, Comment.Single),
             (r'[^=\s\[\]{}()$"\'`<&|;]+', subproc_arg_callback),
             (r"<", Text),
             (r"\$\w+", Name.Variable),

@@ -284,6 +284,12 @@ def maybe(*choices):
 # number literals.
 Whitespace = r"[ \f\t]*"
 Comment = r"#[^\r\n]*"
+# In subprocess mode a comment must be preceded by whitespace so that
+# tokens like ``1#2`` are parsed as arguments, not comments.
+SubprocComment = r" " + Comment  # for the tokenizer (literal space prefix)
+SubprocCommentHighlight = (
+    r"(?<=\s)" + Comment
+)  # for the Pygments highlighter (lookbehind)
 Ignore = Whitespace + tokany(r"\\\r?\n" + Whitespace) + maybe(Comment)
 Name_RE = r"\$?\w+"
 
@@ -398,14 +404,14 @@ ContStr = group(
 
 
 def getPseudoToken(is_subproc=False):
-    Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
-    PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
+    comment = SubprocComment if is_subproc else Comment
+    PseudoExtras = group(r"\\\r?\n|\Z", comment, Triple, SearchPath)
     return Whitespace + group(PseudoExtras, IORedirect, Number, Funny, ContStr, Name_RE)
 
 
 def getPseudoTokenWithoutIO(is_subproc=False):
-    Comment = r" #[^\r\n]*" if is_subproc else r"#[^\r\n]*"
-    PseudoExtras = group(r"\\\r?\n|\Z", Comment, Triple, SearchPath)
+    comment = SubprocComment if is_subproc else Comment
+    PseudoExtras = group(r"\\\r?\n|\Z", comment, Triple, SearchPath)
     return Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name_RE)
 
 

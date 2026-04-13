@@ -16,6 +16,23 @@ from xonsh.built_ins import XSH
 from xonsh.tools import print_exception
 
 
+def _handler_key(handler):
+    """Return a uniqueness key for an event handler.
+
+    Named module-level functions use ``(__module__, __qualname__)`` so that
+    re-registering the same function after a module reload *replaces* the
+    old handler instead of duplicating it.
+
+    Closures / lambdas (``'<' in __qualname__``) and bound methods fall back
+    to ``id()`` so that distinct dynamic handlers are never collapsed.
+    """
+    module = getattr(handler, "__module__", None)
+    qualname = getattr(handler, "__qualname__", None)
+    if module and qualname and "<" not in qualname and not hasattr(handler, "__self__"):
+        return (module, qualname)
+    return id(handler)
+
+
 def has_kwargs(func):
     return any(
         p.kind == p.VAR_KEYWORD for p in inspect.signature(func).parameters.values()
@@ -123,9 +140,8 @@ class Event(AbstractEvent):
     An event species for notify and scatter-gather events.
     """
 
-    # Wish I could just pull from set...
     def __init__(self):
-        self._handlers = set()
+        self._handlers: dict = {}  # _handler_key -> handler
         self._firing_depth = 0
         self._delayed_adds = None
         self._delayed_discards = None
@@ -134,23 +150,24 @@ class Event(AbstractEvent):
         return len(self._handlers)
 
     def __contains__(self, item):
-        return item in self._handlers
+        return _handler_key(item) in self._handlers
 
     def __iter__(self):
-        yield from self._handlers
+        yield from self._handlers.values()
 
     def add(self, item):
         """
         Add an element to a set.
 
-        This has no effect if the element is already present.
+        If a handler with the same key is already present, it is replaced.
         """
+        key = _handler_key(item)
         if self._firing_depth:
             if self._delayed_adds is None:
-                self._delayed_adds = set()
-            self._delayed_adds.add(item)
+                self._delayed_adds = {}
+            self._delayed_adds[key] = item
         else:
-            self._handlers.add(item)
+            self._handlers[key] = item
 
     def discard(self, item):
         """
@@ -158,12 +175,13 @@ class Event(AbstractEvent):
 
         If the element is not a member, do nothing.
         """
+        key = _handler_key(item)
         if self._firing_depth:
             if self._delayed_discards is None:
                 self._delayed_discards = set()
-            self._delayed_discards.add(item)
+            self._delayed_discards.add(key)
         else:
-            self._handlers.discard(item)
+            self._handlers.pop(key, None)
 
     def fire(self, **kwargs):
         """
@@ -186,7 +204,7 @@ class Event(AbstractEvent):
         vals = []
         self._firing_depth += 1
         try:
-            for handler in self._filterhandlers(self._handlers, **kwargs):
+            for handler in self._filterhandlers(self._handlers.values(), **kwargs):
                 try:
                     rv = handler(**kwargs)
                 except Exception:
@@ -200,7 +218,8 @@ class Event(AbstractEvent):
                     self._handlers.update(self._delayed_adds)
                     self._delayed_adds = None
                 if self._delayed_discards is not None:
-                    self._handlers.difference_update(self._delayed_discards)
+                    for key in self._delayed_discards:
+                        self._handlers.pop(key, None)
                     self._delayed_discards = None
         return vals
 
@@ -218,31 +237,33 @@ class LoadEvent(AbstractEvent):
     """
 
     def __init__(self):
-        self._fired = set()
-        self._unfired = set()
+        self._fired: dict = {}  # _handler_key -> handler
+        self._unfired: dict = {}  # _handler_key -> handler
         self._hasfired = False
 
     def __len__(self):
         return len(self._fired) + len(self._unfired)
 
     def __contains__(self, item):
-        return item in self._fired or item in self._unfired
+        key = _handler_key(item)
+        return key in self._fired or key in self._unfired
 
     def __iter__(self):
-        yield from self._fired
-        yield from self._unfired
+        yield from self._fired.values()
+        yield from self._unfired.values()
 
     def add(self, item):
         """
         Add an element to a set.
 
-        This has no effect if the element is already present.
+        If a handler with the same key is already present, it is replaced.
         """
+        key = _handler_key(item)
         if self._hasfired:
             self._call(item)
-            self._fired.add(item)
+            self._fired[key] = item
         else:
-            self._unfired.add(item)
+            self._unfired[key] = item
 
     def discard(self, item):
         """
@@ -250,8 +271,9 @@ class LoadEvent(AbstractEvent):
 
         If the element is not a member, do nothing.
         """
-        self._fired.discard(item)
-        self._unfired.discard(item)
+        key = _handler_key(item)
+        self._fired.pop(key, None)
+        self._unfired.pop(key, None)
 
     def _call(self, handler):
         try:
@@ -264,9 +286,9 @@ class LoadEvent(AbstractEvent):
             return
         self._kwargs = kwargs
         while self._unfired:
-            handler = self._unfired.pop()
+            key, handler = self._unfired.popitem()
             self._call(handler)
-            self._fired.add(handler)
+            self._fired[key] = handler
         self._hasfired = True
         return ()  # Entirely for API compatibility
 

@@ -79,13 +79,25 @@ DEFAULT_STYLES = {
         ("UNDERLINE_RED", "underline ansired"),
         ("BOLD_UNDERLINE_RED", "bold underline ansired"),
         ("UNDERLINE_BOLD_RED", "underline bold ansired"),
+        # test supported modifiers
+        ("BOLD_SLOWBLINK_RED", "bold blink ansired"),
+        ("BOLD_FASTBLINK_RED", "bold blink ansired"),
+        ("BOLD_INVERT_RED", "bold reverse ansired"),
+        ("BOLD_CONCEAL_RED", "bold hidden ansired"),
+        ("BOLD_STRIKETHROUGH_RED", "bold strike ansired"),
+        ("INVERT_WHITE", "reverse ansigray"),
+        ("SLOWBLINK_RED", "blink ansired"),
+        ("CONCEAL_GREEN", "hidden ansigreen"),
+        ("STRIKETHROUGH_BLUE", "strike ansiblue"),
         # test unsupported modifiers
         ("BOLD_FAINT_RED", "bold ansired"),
-        ("BOLD_SLOWBLINK_RED", "bold ansired"),
-        ("BOLD_FASTBLINK_RED", "bold ansired"),
-        ("BOLD_INVERT_RED", "bold ansired"),
-        ("BOLD_CONCEAL_RED", "bold ansired"),
-        ("BOLD_STRIKETHROUGH_RED", "bold ansired"),
+        # test off modifiers
+        ("BOLDOFF_RED", "nobold ansired"),
+        ("ITALICOFF_RED", "noitalic ansired"),
+        ("UNDERLINEOFF_RED", "nounderline ansired"),
+        ("BLINKOFF_RED", "noblink ansired"),
+        ("INVERTOFF_RED", "noreverse ansired"),
+        ("STRIKETHROUGHOFF_RED", "nostrike ansired"),
         # test hexes
         ("#000", "#000"),
         ("#000000", "#000000"),
@@ -112,13 +124,14 @@ def test_color_name_to_pygments_code(name, exp):
         ("UNDERLINE_RED", "underline ansired"),
         ("BOLD_UNDERLINE_RED", "bold underline ansired"),
         ("UNDERLINE_BOLD_RED", "underline bold ansired"),
+        # test supported modifiers
+        ("BOLD_SLOWBLINK_RED", "bold blink ansired"),
+        ("BOLD_FASTBLINK_RED", "bold blink ansired"),
+        ("BOLD_INVERT_RED", "bold reverse ansired"),
+        ("BOLD_CONCEAL_RED", "bold hidden ansired"),
+        ("BOLD_STRIKETHROUGH_RED", "bold strike ansired"),
         # test unsupported modifiers
         ("BOLD_FAINT_RED", "bold ansired"),
-        ("BOLD_SLOWBLINK_RED", "bold ansired"),
-        ("BOLD_FASTBLINK_RED", "bold ansired"),
-        ("BOLD_INVERT_RED", "bold ansired"),
-        ("BOLD_CONCEAL_RED", "bold ansired"),
-        ("BOLD_STRIKETHROUGH_RED", "bold ansired"),
         # test hexes
         ("#000", "#000"),
         ("#000000", "#000000"),
@@ -397,6 +410,38 @@ def test_register_custom_pygments_style(name, styles, refrules):
     for rule, color in refrules.items():
         assert rule in style.styles
         assert style.styles[rule] == color
+
+
+def test_register_custom_style_inherits_xonsh_base():
+    """Custom style based on 'default' should inherit XONSH_BASE_STYLE ANSI names,
+    not pygments' hex codes.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/5162
+    """
+    from pygments.token import Name
+
+    from xonsh.pyghooks import XONSH_BASE_STYLE
+
+    register_custom_pygments_style("test_inherit", {}, base="default")
+    style = get_style_by_name("test_inherit")
+
+    assert style.styles[Name.Variable] == XONSH_BASE_STYLE[Name.Variable]
+
+
+def test_pygments_style_no_bg_in_palette():
+    """Color.* tokens must never map to the theme's background color.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/5001
+    """
+    from xonsh.pyghooks import STYLES, pygments_style_by_name
+
+    # Clear cached style so it's regenerated with the fix
+    STYLES.pop("gruvbox-dark", None)
+    cmap = pygments_style_by_name("gruvbox-dark")
+
+    bg_color = get_style_by_name("gruvbox-dark").background_color
+    for token, color in cmap.items():
+        assert color != bg_color, f"{token} mapped to background color {bg_color}"
 
 
 def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
