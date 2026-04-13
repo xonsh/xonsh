@@ -135,7 +135,7 @@ def color_by_name(name, fg=None, bg=None):
 @lazyobject
 def PYGMENTS_MODIFIERS():
     # prompt_toolkit supports: bold, italic, underline, reverse, blink, hidden, strike.
-    # use None to represent unsupported modifiers
+    # use None to represent unsupported modifiers (only FAINT and REVEALOFF)
     return {
         "BOLD": "bold",
         "FAINT": None,
@@ -1322,6 +1322,10 @@ def pygments_style_by_name(name):
         return STYLES[name]
     pstyle = get_style_by_name(name)
     palette = make_palette(pstyle.styles.values())
+    # Exclude the theme's background color from the palette so that
+    # Color.* tokens are never mapped to it (which makes text invisible).
+    bg = pstyle.background_color.lstrip("#")
+    palette.pop(bg, None)
     astyle = make_pygments_style(palette)
     STYLES[name] = astyle
     return astyle
