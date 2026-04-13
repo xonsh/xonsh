@@ -82,7 +82,7 @@ xontrib load gitinfo   # xontrib gitinfo.xsh compiled and cached
 
 ### Non-blocking prompt ([#6183](https://github.com/xonsh/xonsh/issues/6183))
 
-Syntax highlighting is now non-blocking — typing feels instant regardless of `$PATH` size. Especially noticeable 
+Syntax highlighting is now non-blocking — typing feels instant regardless of `$PATH` size. Especially noticeable
 on Windows with slow directories. Slow `$PATH` directories can be cached to `$XONSH_COMMANDS_CACHE_READ_DIR_ONCE`.
 
 ### Regex glob `m` with match groups ([#6235](https://github.com/xonsh/xonsh/issues/6235))
@@ -137,7 +137,7 @@ $XONSH_COMPLETER_EMOJI_PREFIX = "::"  # disabled by default
 $XONSH_COMPLETER_SYMBOLS_PREFIX = ":::" # disabled by default
 
 ::<Tab>        # shows emoji picker: ✨
-::cat<Tab>     # shows 🐈 related emoji  
+::cat<Tab>     # shows 🐈 related emoji
 ::<Tab>        # shows symbols picker: ⚝
 :::arr<Tab>    # shows arr symbols: →, ↔, ↗.
 ```
@@ -163,8 +163,8 @@ $PATHEXT = ['.xsh', '.py']
 
 ### Xonsh WinGet Installer on Windows
 
-Now we have [Xonsh installer](https://github.com/xonsh/xonsh-winget/releases) for Windows. 
-The WinGet package for xonsh 0.23.0 will be uploaded soon. 
+Now we have [Xonsh installer](https://github.com/xonsh/xonsh-winget/releases) for Windows.
+The WinGet package for xonsh 0.23.0 will be uploaded soon.
 
 # Release Notes
 
@@ -211,9 +211,9 @@ The WinGet package for xonsh 0.23.0 will be uploaded soon.
 * **Windows/WSL:** Improved execution performance and prompt highlighting with commands cache ([#6183](https://github.com/xonsh/xonsh/issues/6183)), @anki-code (@ndemou, @gforsyth, @scopatz, @jaraco, @KoStard, @BYK, @AsafFisher, @NotTheDr01ds, @bestlem, @daddycocoaman, @geoffreyvanwyk, @kodjac, @danielcranford, @toihr, @laloch, @melund, @DeadlySquad13, @egigoka, @panki27, @willothy)
 * **Windows:** Added installation script and instructions to the installation guide ([#6196](https://github.com/xonsh/xonsh/issues/6196)), @anki-code
 * **Builtins:** Added `xxonsh` - launches exactly the same xonsh that was used to start the current session. Also tmux example in the docs. ([#6283](https://github.com/xonsh/xonsh/pull/6283)), @anki-code
-* **Builtins**: `xcontext` now resolves the paths before showing and highlight green if python/xpython, xonsh/xxonsh have the same real path. ([#6286)](https://github.com/xonsh/xonsh/pull/6286)) 
+* **Builtins**: `xcontext` now resolves the paths before showing and highlight green if python/xpython, xonsh/xxonsh have the same real path. ([#6286)](https://github.com/xonsh/xonsh/pull/6286))
 * **Xontrib:** Show xontrib description in `xontrib list` output ([#6181](https://github.com/xonsh/xonsh/issues/6181)), @knQzx (@anki-code)
-* **Package:** Flatpak support. Xonsh Flatpak build in https://github.com/xonsh/xonsh-flatpak, @anki-code 
+* **Package:** Flatpak support. Xonsh Flatpak build in https://github.com/xonsh/xonsh-flatpak, @anki-code
 
 
 ## Fixes

@@ -285,7 +285,9 @@ def test_reset_clears_dependent_field(live_fields, formatter, xession):
     """
     xession.shell.prompt_formatter = formatter
 
-    live_fields["modified_title"] = lambda: live_fields.pick_val("current_job") or "xonsh"
+    live_fields["modified_title"] = lambda: (
+        live_fields.pick_val("current_job") or "xonsh"
+    )
 
     # first render — no job running, modified_title caches "xonsh"
     assert formatter("{modified_title}", fields=live_fields) == "xonsh"
