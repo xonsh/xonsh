@@ -546,7 +546,13 @@ class PromptToolkitShell(BaseShell):
         if is_soft_wrap:
             return ""
         dots = XSH.env.get("MULTILINE_PROMPT")
-        dots = dots() if callable(dots) else dots
+        if callable(dots):
+            try:
+                # prompt_toolkit passes 1 for the first continuation,
+                # but the main prompt is line 1, so shift by 1.
+                dots = dots(line_number=line_number + 1, width=width)
+            except TypeError:
+                dots = dots()
         if not dots:
             return ""
         prefix = XSH.env.get(

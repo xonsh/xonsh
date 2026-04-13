@@ -192,6 +192,62 @@ ordinary format string. What we're doing here is equivalent to this expression:
     " [{}]".format(curr_branch()) if curr_branch() is not None else ""
 
 
+Multiline Prompt
+================
+
+When you enter a multi-line statement (``for`` loop, ``if`` block, etc.),
+xonsh displays a continuation prompt on each subsequent line.  The pattern
+is controlled by ``$MULTILINE_PROMPT`` (default ``" "``).
+
+The value is **repeated** to fill the width of the main prompt.  It can be a
+plain string, a string with color markup, or a callable:
+
+.. code-block:: xonshcon
+
+    @ $MULTILINE_PROMPT = '   |'
+    @ for i in range(3):
+       |    print(i)
+       |
+
+Both xonsh color keywords (``{RED}``) and ANSI escape codes (``\033[31m``)
+are supported:
+
+.. code-block:: python
+
+    $MULTILINE_PROMPT = '{CYAN}   |{RESET} '
+
+Callable with ``line_number`` and ``width``
+-------------------------------------------
+
+When ``$MULTILINE_PROMPT`` is a callable, it receives two keyword arguments:
+
+* ``line_number`` — the line number of the continuation line.
+  The main prompt is line 1, so the first continuation is ``line_number=2``.
+* ``width`` — the visible width (in columns) of the main prompt.
+
+This lets you render unique content per line, for example line numbers:
+
+.. code-block:: python
+
+    _ml_colors = ['{CYAN}', '{GREEN}', '{YELLOW}', '{BLUE}', '{PURPLE}', '{RED}']
+
+    def _multiline(line_number, width):
+        c = _ml_colors[line_number % len(_ml_colors)]
+        return f'{c}{line_number:>{width - 2}}|{{RESET}} '
+
+    $MULTILINE_PROMPT = _multiline
+
+Result (each line is a different color)::
+
+    prompt @
+          2|    for i in range(5):
+          3|        if i > 2:
+          4|            print(i)
+          5|
+
+Existing callables that accept no arguments continue to work.
+
+
 Custom Keybindings
 ==================
 
