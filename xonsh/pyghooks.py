@@ -618,7 +618,7 @@ XONSH_BASE_STYLE = LazyObject(
         Name.Attribute: "ansibrightyellow",
         Name.Tag: "bold ansigreen",
         Name.Decorator: "ansibrightmagenta",
-        String: "ansibrightred",
+        String: "ansiyellow",
         String.Doc: "ansicyan",
         String.Interpol: "bold ansimagenta",
         String.Escape: "bold ansiyellow",
