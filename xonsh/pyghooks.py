@@ -134,26 +134,26 @@ def color_by_name(name, fg=None, bg=None):
 
 @lazyobject
 def PYGMENTS_MODIFIERS():
-    # pygments doesn't support all modifiers.
-    # use None to represent unsupported
+    # prompt_toolkit supports: bold, italic, underline, reverse, blink, hidden, strike.
+    # use None to represent unsupported modifiers (only FAINT and REVEALOFF)
     return {
         "BOLD": "bold",
         "FAINT": None,
         "ITALIC": "italic",
         "UNDERLINE": "underline",
-        "SLOWBLINK": None,
-        "FASTBLINK": None,
-        "INVERT": None,
-        "CONCEAL": None,
-        "STRIKETHROUGH": None,
-        "BOLDOFF": None,
+        "SLOWBLINK": "blink",
+        "FASTBLINK": "blink",
+        "INVERT": "reverse",
+        "CONCEAL": "hidden",
+        "STRIKETHROUGH": "strike",
+        "BOLDOFF": "nobold",
         "FAINTOFF": None,
-        "ITALICOFF": None,
-        "UNDERLINEOFF": None,
-        "BLINKOFF": None,
-        "INVERTOFF": None,
+        "ITALICOFF": "noitalic",
+        "UNDERLINEOFF": "nounderline",
+        "BLINKOFF": "noblink",
+        "INVERTOFF": "noreverse",
         "REVEALOFF": None,
-        "STRIKETHROUGHOFF": None,
+        "STRIKETHROUGHOFF": "nostrike",
     }
 
 
