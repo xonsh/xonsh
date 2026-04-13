@@ -1,5 +1,6 @@
 """Hooks for pygments syntax highlighting."""
 
+import importlib.util
 import os
 import re
 import stat
@@ -10,7 +11,7 @@ from collections.abc import MutableMapping
 from keyword import iskeyword
 
 import pygments.util
-from pygments.lexer import bygroups, include, inherit
+from pygments.lexer import bygroups, default, include, inherit
 from pygments.lexers.agile import Python3Lexer
 from pygments.style import Style
 from pygments.token import (
@@ -1734,6 +1735,45 @@ def _run_bg_validation(gen):
             pass
 
 
+# ---------------------------------------------------------------------------
+# Import module validation — highlight non-importable top-level modules
+# as Error.  Only the first name after ``import`` / ``from`` is checked;
+# submodule parts after a dot are left as Name.Namespace.
+# ---------------------------------------------------------------------------
+
+_import_check_next: bool = False
+
+
+def _import_start_cb(_, match):
+    """Intercept ``import``/``from`` keyword — check the next module name."""
+    global _import_check_next
+    _import_check_next = True
+    yield match.start(), Keyword.Namespace, match.group(1)
+    yield match.start() + len(match.group(1)), Text.Whitespace, match.group(2)
+
+
+def _import_module_cb(_, match):
+    """Check only the first identifier after import/from.  Rest pass through."""
+    global _import_check_next
+    name = match.group()
+    if _import_check_next:
+        _import_check_next = False
+        try:
+            found = importlib.util.find_spec(name) is not None
+        except (ModuleNotFoundError, ValueError, AttributeError):
+            found = False
+        yield match.start(), Name.Namespace if found else Error, name
+    else:
+        yield match.start(), Name.Namespace, name
+
+
+def _import_comma_cb(_, match):
+    """Comma separates independent imports — re-enable check for next name."""
+    global _import_check_next
+    _import_check_next = True
+    yield match.start(), Punctuation, ","
+
+
 def subproc_cmd_callback(_, match):
     """Yield Builtin token if match contains valid command,
     otherwise fallback to fallback lexer.
@@ -1813,12 +1853,29 @@ class XonshLexer(Python3Lexer):
             (r"`", String.Backtick, "#pop"),
             (r"[^`\.\^\$\*\+\?\[\]\|]+", String.Backtick),
         ],
+        "import": [
+            (r"(\s+)(as)(\s+)", bygroups(Keyword, Keyword, Text)),
+            (r"\.", Name.Namespace),
+            (r"\w+", _import_module_cb),
+            (r",", _import_comma_cb),
+            (r"\s+", Text.Whitespace),
+            default("#pop"),
+        ],
+        "fromimport": [
+            (r"(\s+)(import)\b", bygroups(Text.Whitespace, Keyword.Namespace), "#pop"),
+            (r"\.", Name.Namespace),
+            (r"None\b", Keyword.Constant, "#pop"),
+            (r"\w+", _import_module_cb),
+            default("#pop"),
+        ],
         "root": [
             (r"\?", Keyword),
             (r"(?<=\w)!", Keyword),
             (r"\$\w+", Name.Variable),
             (r"\(", Punctuation, "py_bracket"),
             (r"\{", Punctuation, "py_curly_bracket"),
+            (r"(import)((?:\s|\\\s)+)", _import_start_cb, "import"),
+            (r"(from)((?:\s|\\\s)+)", _import_start_cb, "fromimport"),
             include("mode_switch_brackets"),
             inherit,
         ],

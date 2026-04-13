@@ -444,6 +444,28 @@ def test_pygments_style_no_bg_in_palette():
         assert color != bg_color, f"{token} mapped to background color {bg_color}"
 
 
+@pytest.mark.parametrize(
+    "code, expect_error",
+    [
+        ("import json", False),
+        ("import qweqweqwe", True),
+        ("import os.path", False),
+        ("import os, qweqweqwe", True),
+        ("from os import path", False),
+        ("from qweqweqwe import foo", True),
+        ("from . import something", False),
+    ],
+)
+def test_import_module_validation(code, expect_error):
+    """Non-existent modules in import statements should be highlighted as Error."""
+    from xonsh.pyghooks import XonshLexer
+
+    lexer = XonshLexer()
+    tokens = list(lexer.get_tokens(code))
+    has_error = any(t == Token.Error for t, _ in tokens)
+    assert has_error == expect_error, f"{code!r}: tokens={tokens}"
+
+
 def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     # When Xonsh is used as a library and simply for its lexer plugin, the
     # xession's env can be unset, so test that it can yield tokens without
