@@ -2,6 +2,7 @@
 
 import functools
 import re
+import sys
 from pathlib import Path
 
 from xonsh.built_ins import XSH
@@ -80,6 +81,8 @@ def emit_osc7(**kwargs) -> None:
     Terminals use this for features like "Open new tab in same directory"
     and macOS Terminal.app session restoration.
     """
+    if not hasattr(sys.stdout, "isatty") or not sys.stdout.isatty():
+        return
     import socket
     import urllib.parse
 

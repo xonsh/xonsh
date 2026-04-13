@@ -451,6 +451,25 @@ For example:
     (env) @
 
 
+OSC 7 — Working directory reporting
+====================================
+
+Xonsh automatically emits `OSC 7 <https://gitlab.freedesktop.org/terminal-wg/specifications/-/merge_requests/7>`_
+escape sequences on every directory change and at shell startup. This is an
+invisible signal that tells the terminal emulator what the current working
+directory is.
+
+Terminals use it for:
+
+* Opening new tabs/splits in the same directory
+* macOS Terminal.app session restoration after reboot
+* Showing the path in the terminal title bar or tab
+
+This works out of the box on most modern terminals including macOS Terminal.app,
+iTerm2, GNOME Terminal, Windows Terminal, WezTerm, and Kitty. No configuration
+is needed.
+
+
 See also
 ========
 
