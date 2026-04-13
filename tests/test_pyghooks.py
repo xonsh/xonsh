@@ -412,6 +412,22 @@ def test_register_custom_pygments_style(name, styles, refrules):
         assert style.styles[rule] == color
 
 
+def test_pygments_style_no_bg_in_palette():
+    """Color.* tokens must never map to the theme's background color.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/5001
+    """
+    from xonsh.pyghooks import STYLES, pygments_style_by_name
+
+    # Clear cached style so it's regenerated with the fix
+    STYLES.pop("gruvbox-dark", None)
+    cmap = pygments_style_by_name("gruvbox-dark")
+
+    bg_color = get_style_by_name("gruvbox-dark").background_color
+    for token, color in cmap.items():
+        assert color != bg_color, f"{token} mapped to background color {bg_color}"
+
+
 def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     # When Xonsh is used as a library and simply for its lexer plugin, the
     # xession's env can be unset, so test that it can yield tokens without
