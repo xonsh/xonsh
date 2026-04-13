@@ -346,6 +346,10 @@ class PromptToolkitShell(BaseShell):
         env["PROMPT_FIELDS"].reset()
 
         get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
+        if get_bottom_toolbar_tokens is None:
+            # Explicitly clear PTK's cached toolbar — passing None to prompt()
+            # means "don't change", so we must set the attribute directly.
+            self.prompter.bottom_toolbar = None
         if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
