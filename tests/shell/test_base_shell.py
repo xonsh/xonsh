@@ -90,6 +90,25 @@ def test_default_append_history(cmd, exp_append_history, xonsh_session, monkeypa
         assert len(append_history_calls) == 0
 
 
+def test_prompt_subproc_does_not_leak_rtn(xonsh_session):
+    """A subprocess run during prompt rendering must not pollute
+    hist.last_cmd_rtn for the next pure-Python command.
+
+    Regression test for #4912.
+    """
+    hist = xonsh_session.history
+
+    # Simulate a prompt field that ran a failing subprocess:
+    # CommandPipeline._apply_to_history() would have done this.
+    hist.last_cmd_rtn = 222
+
+    # Now the user executes a pure-Python expression.
+    xonsh_session.shell.default("2+2")
+
+    # The env var must reflect success, not the prompt field's code.
+    assert xonsh_session.env["LAST_RETURN_CODE"] == 0
+
+
 def test_precmd_does_not_strip(xession, xonsh_execer):
     """precmd() must preserve leading whitespace."""
     shell = BaseShell(xonsh_execer, None)
