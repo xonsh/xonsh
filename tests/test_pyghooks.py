@@ -469,10 +469,10 @@ def test_import_module_validation(code, expect_error):
 @pytest.mark.parametrize(
     "name, expect_error",
     [
-        ("len", False),      # builtin
-        ("True", False),     # keyword
-        ("myvar", False),    # in ctx
-        ("undefined", True), # not defined anywhere
+        ("len", False),  # builtin
+        ("True", False),  # keyword
+        ("myvar", False),  # in ctx
+        ("undefined", True),  # not defined anywhere
     ],
 )
 def test_at_bracket_name_validation(name, expect_error, xession):
