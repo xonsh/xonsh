@@ -134,26 +134,26 @@ def color_by_name(name, fg=None, bg=None):
 
 @lazyobject
 def PYGMENTS_MODIFIERS():
-    # pygments doesn't support all modifiers.
-    # use None to represent unsupported
+    # prompt_toolkit supports: bold, italic, underline, reverse, blink, hidden, strike.
+    # use None to represent unsupported modifiers
     return {
         "BOLD": "bold",
         "FAINT": None,
         "ITALIC": "italic",
         "UNDERLINE": "underline",
-        "SLOWBLINK": None,
-        "FASTBLINK": None,
-        "INVERT": None,
-        "CONCEAL": None,
-        "STRIKETHROUGH": None,
-        "BOLDOFF": None,
+        "SLOWBLINK": "blink",
+        "FASTBLINK": "blink",
+        "INVERT": "reverse",
+        "CONCEAL": "hidden",
+        "STRIKETHROUGH": "strike",
+        "BOLDOFF": "nobold",
         "FAINTOFF": None,
-        "ITALICOFF": None,
-        "UNDERLINEOFF": None,
-        "BLINKOFF": None,
-        "INVERTOFF": None,
+        "ITALICOFF": "noitalic",
+        "UNDERLINEOFF": "nounderline",
+        "BLINKOFF": "noblink",
+        "INVERTOFF": "noreverse",
         "REVEALOFF": None,
-        "STRIKETHROUGHOFF": None,
+        "STRIKETHROUGHOFF": "nostrike",
     }
 
 
@@ -545,6 +545,12 @@ def register_custom_pygments_style(
     """
     base_style = get_style_by_name(base)
     custom_styles = base_style.styles.copy()
+
+    # Overlay XONSH_BASE_STYLE so that the custom style inherits
+    # xonsh's ANSI color names instead of pygments' hex codes.
+    if base == "default":
+        for token, value in XONSH_BASE_STYLE.items():
+            custom_styles[token] = value
 
     for token, value in _tokenize_style_dict(styles).items():
         custom_styles[token] = value

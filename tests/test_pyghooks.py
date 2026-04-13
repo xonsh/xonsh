@@ -399,6 +399,22 @@ def test_register_custom_pygments_style(name, styles, refrules):
         assert style.styles[rule] == color
 
 
+def test_register_custom_style_inherits_xonsh_base():
+    """Custom style based on 'default' should inherit XONSH_BASE_STYLE ANSI names,
+    not pygments' hex codes.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/5162
+    """
+    from pygments.token import Name
+
+    from xonsh.pyghooks import XONSH_BASE_STYLE
+
+    register_custom_pygments_style("test_inherit", {}, base="default")
+    style = get_style_by_name("test_inherit")
+
+    assert style.styles[Name.Variable] == XONSH_BASE_STYLE[Name.Variable]
+
+
 def test_can_use_xonsh_lexer_without_xession(xession, monkeypatch):
     # When Xonsh is used as a library and simply for its lexer plugin, the
     # xession's env can be unset, so test that it can yield tokens without
