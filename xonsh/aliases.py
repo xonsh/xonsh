@@ -762,6 +762,14 @@ def _click_command_alias(func_or_name=None, *, _aliases):
             ]
         )
 
+        # Tab-completion: ``complete_aliases`` picks this up via
+        # ``alias.func.xonsh_complete``. Bound to the live click.Command so
+        # the completer always reflects the current option/argument set —
+        # even if the user mutates ``cmd.params`` after registration.
+        from xonsh.completers.click import complete_click
+
+        _wrapper.xonsh_complete = functools.partial(complete_click, cmd)
+
         _aliases.register(registered_name, dash_case=False)(_wrapper)
         return _wrapper
 
