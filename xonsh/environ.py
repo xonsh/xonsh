@@ -1501,9 +1501,9 @@ class CacheSetting(Xettings):
         type_str="env_path",
     )
 
-    XONSH_COMMANDS_CACHE_DEBUG = Var.with_default(
+    XONSH_COMMANDS_CACHE_TRACE = Var.with_default(
         False,
-        "If True, print debug messages showing where each command was resolved "
+        "If True, print trace messages showing where each command was resolved "
         "from (cached directory listing XONSH_COMMANDS_CACHE_READ_DIR_ONCE vs. disk stat) "
         "and how long it took.",
     )

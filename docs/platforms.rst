@@ -333,7 +333,7 @@ To debug command resolution, enable:
 
 .. code-block:: xonshcon
 
-    @ $XONSH_COMMANDS_CACHE_DEBUG = True
+    @ $XONSH_COMMANDS_CACHE_TRACE = True
 
 
 
