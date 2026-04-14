@@ -94,7 +94,7 @@ such as ``venv``, ``pipx``, or ``rye`` do not fully address this requirement.
 Package managers that can install fully isolated Python environments as a core feature,
 such as Miniconda or Micromamba, should be used.
 
-macOS / Linux / WSL
+Linux / macOS / WSL
 -------------------
 
 Install Xonsh independently using Micromamba:
