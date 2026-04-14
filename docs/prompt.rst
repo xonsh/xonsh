@@ -526,9 +526,42 @@ iTerm2, GNOME Terminal, Windows Terminal, WezTerm, and Kitty. No configuration
 is needed.
 
 
+.. _change_theme:
+
+Color theme
+===========
+
+You can view the available styles by typing
+
+.. code-block:: xonshcon
+
+   @ xonfig styles                      # list styles
+   @ xonfig colors paraiso-dark         # review how it looks
+   @ $XONSH_COLOR_STYLE='paraiso-dark'  # set a new theme
+
+Registering custom styles
+-------------------------
+
+If you aren't happy with the styles provided by us (and ``pygments``), you can create and register custom styles.
+
+To do so, add something similar to your ``.xonshrc``:
+
+.. code-block:: python
+
+   from xonsh.tools import register_custom_style
+   mystyle = {
+       "Literal.String.Single": "#ff88aa",
+       "Literal.String.Double": "#ff4488",
+       "RED": "#008800",
+   }
+   register_custom_style("mystyle", mystyle, base="monokai")
+   $XONSH_COLOR_STYLE = "mystyle"
+
+You can check ``xonfig colors`` for the token names. The ``base`` style will be used as a fallback for styles you don't set - pick one from ``xonfig styles`` (``default`` is used if omitted).
+
+
 See also
 ========
 
-* :doc:`customization` -- colors, themes, and visual settings
 * :doc:`envvars` -- prompt-related environment variables
 * :doc:`events` -- prompt lifecycle events (``on_pre_prompt``, ``on_post_prompt``)

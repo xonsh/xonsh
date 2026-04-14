@@ -1,8 +1,8 @@
 .. _embedding:
 
-***************************
-Embedding Xonsh in Your App
-***************************
+***************
+Embedding Xonsh
+***************
 
 .. warning::
 
@@ -20,10 +20,6 @@ Xonsh exposes itself as a Python library in addition to the standalone
 load xontribs and rc files, and drive the execer / shell from their
 own code. The public entry point for this is :func:`xonsh.main.setup`,
 documented in :mod:`xonsh.main`.
-
-.. contents::
-    :local:
-    :depth: 1
 
 
 Controlling Terminal Handshake for Embedded Interactive Shells

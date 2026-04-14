@@ -26,8 +26,8 @@ step by step and helps you build a solid foundation for working in the shell.
     tutorial
     strings
     subprocess
+    python
     error_handling
-    platforms
     Extensions (xontribs) on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
 
@@ -47,7 +47,6 @@ and streamline your command-line experience.
     envvars
     aliases
     history
-    customization
     keyboard_shortcuts
     prompt
     events
@@ -55,6 +54,7 @@ and streamline your command-line experience.
     macros
     xonsh_session
     launch
+    platforms
     Open technical issue <https://github.com/xonsh/xonsh>
 
 Creator

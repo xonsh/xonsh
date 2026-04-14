@@ -240,3 +240,56 @@ WIP RustPython build
 
 Using RustPython (a Python Interpreter written in Rust), it is possible to run xonsh using Rust.
 Learn more in `xonsh/5082 <https://github.com/xonsh/xonsh/issues/5082>`_.
+
+
+Updating xonsh
+========================
+
+How you update xonsh depends on the install method.
+
+**xonsh installed via pip**
+
+If xonsh was installed via pip (possibly into a virtual environment), you can
+update it from within xonsh itself using :ref:`xpip <aliases-xpip>` — a
+predefined alias pointing to the ``pip`` command associated with the Python
+executable that runs the current xonsh session:
+
+.. code-block:: xonshcon
+
+   @ xpip install --upgrade xonsh  # install the latest release
+   @ xpip install -U --force-reinstall git+https://github.com/xonsh/xonsh  # install from the repository
+
+**xonsh installed via a package manager**
+
+If you installed xonsh via a package manager, it is recommended to update it
+through the package manager's appropriate command. For example, on macOS with
+homebrew:
+
+.. code-block:: console
+
+   $ brew upgrade xonsh
+
+
+.. _default_shell:
+
+Setting xonsh as the default shell
+========================================
+
+Setting xonsh as your default login shell is **not recommended**.
+Xonsh is a full-featured shell and can technically be used as a login
+shell, but since it is not POSIX-compatible, system scripts and tooling
+that expect a POSIX shell may misbehave. Use it only if you clearly
+understand the purpose and consequences — see the rationale in
+`Before Installing`_ above. The recommended practice is to create a
+xonsh profile in your terminal emulator instead.
+
+If you still want to use xonsh as your default shell, you will have
+to add xonsh to ``/etc/shells`` and switch:
+
+.. code-block:: console
+
+    $ which xonsh
+    # which xonsh >> /etc/shells
+    $ chsh -s $(which xonsh)
+
+You will have to log out and log back in before the changes take effect.
