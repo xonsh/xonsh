@@ -5,7 +5,7 @@ import collections.abc as cabc
 from xonsh.completers.commands import complete_command
 from xonsh.completers.path import contextual_complete_path
 from xonsh.completers.python import complete_python
-from xonsh.completers.tools import apply_lprefix, contextual_completer
+from xonsh.completers.tools import apply_lprefix, contextual_completer, tag_provider
 from xonsh.parsers.completion_context import CompletionContext
 
 
@@ -22,11 +22,11 @@ def complete_base(context: CompletionContext):
     python_comps = complete_python(context) or set()
     if isinstance(python_comps, cabc.Sequence):
         python_comps, python_comps_len = python_comps  # type: ignore
-        yield from apply_lprefix(python_comps, python_comps_len)
+        yield from tag_provider(apply_lprefix(python_comps, python_comps_len), "python")
     else:
-        yield from python_comps
+        yield from tag_provider(python_comps, "python")
 
-    # add command completions
+    # add command completions (they tag themselves with alias/command)
     yield from complete_command(context.command)
 
     # add paths, if needed
@@ -34,4 +34,4 @@ def complete_base(context: CompletionContext):
         path_comps, path_comp_len = contextual_complete_path(
             context.command, cdpath=False
         )
-        yield from apply_lprefix(path_comps, path_comp_len)
+        yield from tag_provider(apply_lprefix(path_comps, path_comp_len), "path")

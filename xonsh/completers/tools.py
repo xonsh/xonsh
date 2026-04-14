@@ -64,6 +64,7 @@ class RichCompletion(str):
         style: str = "",
         append_closing_quote: bool = True,
         append_space: bool = False,
+        provider: str | None = None,
     ):
         """
         Parameters
@@ -88,6 +89,13 @@ class RichCompletion(str):
             This is intended to work with ``appending_closing_quote``, so the space will be added correctly **after** the closing quote.
             This is used in ``Completer.complete``.
             An extra bonus is that the space won't show up in the ``display`` attribute.
+        provider :
+            Optional, debug-only tag identifying the sub-source inside the
+            completer that produced this completion (e.g. ``"alias"``,
+            ``"command"``, ``"python"``, ``"path"``). Surfaced by
+            ``$XONSH_COMPLETER_TRACE`` so users can tell whether a match
+            came from, say, an alias vs. a ``$PATH`` executable inside the
+            same ``base`` completer. Does not affect UX.
         """
         super().__init__()
         self.prefix_len = prefix_len
@@ -96,6 +104,7 @@ class RichCompletion(str):
         self.style = style
         self.append_closing_quote = append_closing_quote
         self.append_space = append_space
+        self.provider = provider
 
     @property
     def value(self):
@@ -209,6 +218,40 @@ def apply_lprefix(comps, lprefix):
                 yield comp
         else:
             yield RichCompletion(comp, prefix_len=lprefix)
+
+
+def _tag_each(comps, provider: str):
+    """Yield completions with ``provider`` set, promoting ``str`` to
+    ``RichCompletion``. A completion that already has a ``provider`` keeps
+    its own — lets a nested completer override the outer tag.
+    """
+    for comp in comps:
+        if isinstance(comp, RichCompletion):
+            if comp.provider is None:
+                yield comp.replace(provider=provider)
+            else:
+                yield comp
+        else:
+            yield RichCompletion(comp, provider=provider)
+
+
+def tag_provider(result, provider: str):
+    """Tag completer output with ``provider`` for ``$XONSH_COMPLETER_TRACE``.
+
+    Accepts any of the three standard completer return shapes and
+    preserves the shape so downstream pipeline logic (exclusivity,
+    filtering, lprefix) is unaffected:
+
+    - ``None`` → returned unchanged.
+    - ``(comps, extra)`` 2-tuple → ``(tagged_generator, extra)``.
+    - Any other iterable → generator of tagged completions.
+    """
+    if result is None:
+        return None
+    if isinstance(result, tuple) and len(result) == 2:
+        comps, extra = result
+        return _tag_each(comps, provider), extra
+    return _tag_each(result, provider)
 
 
 def completion_from_cmd_output(line: str, append_space=False):
