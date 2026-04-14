@@ -173,18 +173,126 @@ xonsh actually uses, in the ``xonsh.completers`` module.
             return {'snail'}, len('lou ') + len(command.prefix)
 
 To understand how xonsh uses completers and their return values try
-to set :ref:`$XONSH_TRACE_COMPLETIONS <xonsh_trace_completions>` to ``True``:
+to set :ref:`$XONSH_COMPLETER_TRACE <xonsh_completer_trace>` to ``True``:
 
 .. code-block:: xonshcon
 
-    @ $XONSH_TRACE_COMPLETIONS = True
+    @ $XONSH_COMPLETER_TRACE = True
     @ pip c<TAB>
     TRACE COMPLETIONS: Getting completions with context:
     CompletionContext(command=CommandContext(args=(CommandArg(value='pip', opening_quote='', closing_quote=''),), arg_index=1, prefix='c', suffix='', opening_quote='', closing_quote='', is_after_closing_quote=False, subcmd_opening=''), python=PythonContext('pip c', 5, is_sub_expression=False))
-    TRACE COMPLETIONS: Got 3 results from exclusive completer 'pip':
-    {RichCompletion('cache', append_space=True),
-     RichCompletion('check', append_space=True),
-     RichCompletion('config', append_space=True)}
+    TRACE COMPLETIONS: Got 3 from exclusive 'pip' for 'c':
+    'cache': src=pip, type=exclusive, prefix_len=1, append_space=True
+    'check': src=pip, type=exclusive, prefix_len=1, append_space=True
+    'config': src=pip, type=exclusive, prefix_len=1, append_space=True
+
+The header reads as ``Got <N> from <type> '<name>' for '<prefix>'`` —
+showing the number of results, the completer's exclusivity, its name,
+and the prefix the completer tried to match. Each body line shows the
+completion value, the ``src`` (completer that produced it), the
+completer ``type`` (``exclusive`` or ``non-exclusive``), and any
+non-default ``RichCompletion`` attributes (``prefix_len``, ``display``,
+``description``, ``append_space``, ``close_quote`` — short for
+``append_closing_quote`` — ``style``, ``pvd`` — short for ``provider``).
+The format is grep-friendly, so you can filter by source or type,
+e.g. ``... | grep 'src=pip'`` or ``... | grep 'type=non-exclusive'``.
+
+Fine-grained origin via ``provider``
+------------------------------------
+
+A completer may set a ``provider`` tag on each ``RichCompletion`` to
+identify the sub-source inside the completer. This is trace-only
+metadata and does not affect the completion UX.
+
+For example, the ``base`` completer runs a union of Python names,
+``$PATH`` executables, aliases, and file paths. When you type the first
+argument and hit ``<TAB>``, the trace distinguishes them:
+
+.. code-block:: xonshcon
+
+    @ aliases['qwe-xonsh'] = 'echo'
+    @ xonsh<TAB>
+    TRACE COMPLETIONS: Got 2 from exclusive 'base' for 'xonsh':
+    'qwe-xonsh ': src=base, pvd='alias', type=exclusive, prefix_len=5, append_space=True
+    'xonsh ': src=base, pvd='command', type=exclusive, prefix_len=5, append_space=True
+
+Completers that are invoked but return no usable matches are also
+reported, so you can see the full decision path:
+
+.. code-block:: text
+
+    TRACE COMPLETIONS: Got 0 from non-exclusive 'environment_vars' for 'xonsh'.
+    TRACE COMPLETIONS: Got 0 from exclusive 'bash' for 'xonsh'.
+    TRACE COMPLETIONS: Got 3 from exclusive 'path' for './do':
+    ...
+
+This way you can see immediately that ``qwe-xonsh`` comes from an alias
+while ``xonsh`` is a real executable on ``$PATH``. Built-in providers:
+``alias``, ``command``, ``python``, ``path``, plus the xompletion module
+name (e.g. ``pip``, ``gh``) for completions produced by the ``xompleter``.
+Custom completers may set any string they like.
+
+Setting ``provider`` in your own completer
+------------------------------------------
+
+There are two ways to tag your completions, depending on whether you
+want per-item control or want to label the whole result at once.
+
+**Per-item**: pass ``provider=...`` directly to each ``RichCompletion``.
+This is most useful when a single completer has internal branches and
+you want to distinguish them in trace:
+
+.. code-block:: python
+
+    from xonsh.completers.tools import (
+        RichCompletion,
+        contextual_command_completer_for,
+    )
+
+    @contextual_command_completer_for("deploy")
+    def complete_deploy(command):
+        """Complete ``deploy <env>`` with fast- and slow-paths tagged."""
+        cached = {"prod", "staging"}       # e.g. loaded from a local cache
+        remote = {"dev-42", "dev-43"}      # e.g. hit an HTTP endpoint
+
+        for env in cached:
+            if env.startswith(command.prefix):
+                yield RichCompletion(env, provider="deploy:cache")
+        for env in remote:
+            if env.startswith(command.prefix):
+                yield RichCompletion(env, provider="deploy:remote")
+
+After ``completer add deploy complete_deploy`` the trace will show:
+
+.. code-block:: text
+
+    TRACE COMPLETIONS: Got 3 from exclusive 'deploy' for 'd':
+    'dev-42': src=deploy, pvd='deploy:remote', type=exclusive, prefix_len=1
+    'dev-43': src=deploy, pvd='deploy:remote', type=exclusive, prefix_len=1
+    'staging': src=deploy, pvd='deploy:cache', type=exclusive, prefix_len=1
+
+**Whole-result**: wrap the completer's return value with
+``tag_provider``. This preserves the return shape (``None``, iterable,
+or ``(comps, lprefix)`` tuple) and only tags completions that do not
+already carry their own ``provider``:
+
+.. code-block:: python
+
+    from xonsh.completers.tools import (
+        contextual_command_completer_for,
+        tag_provider,
+    )
+
+    @contextual_command_completer_for("mycmd")
+    def complete_mycmd(command):
+        """Completer whose entire output is tagged ``provider='mycmd'``."""
+        results = {"start", "stop", "status"}
+        return tag_provider(results, "mycmd")
+
+``tag_provider`` is also what the built-in ``xompleter`` uses under the
+hood to label each xompletion module's output — so any ``RichCompletion``
+that *already* specifies its own ``provider`` is kept intact and won't
+be overwritten by the outer tag.
 
 
 
