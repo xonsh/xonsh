@@ -914,10 +914,10 @@ pipe. Both operators require a following pipe.
 
 .. code-block:: xonshcon
 
-    @ cmd a>p | cmd2                 # stdout + stderr into the pipe
+    @ cmd a>p | cmd2                     # stdout + stderr into the pipe
     @ cmd e>p | grep warning             # same — pipe carries both streams
     @ cmd o> out.txt e>p | grep warning  # stdout to file, stderr into the pipe
-    @ cmd all>p | cmd2               # aliases: all>p, err>p, 2>p
+    @ cmd all>p | cmd2                   # aliases: all>p, err>p, 2>p
     @ cmd err>p | cmd2
 
 Redirecting ``stdin`` is also possible to have a command read its input from a file, rather
