@@ -1312,9 +1312,15 @@ class SubprocessSetting(Xettings):
     )
     XONSH_BUILTINS_TO_CMD = Var.with_default(
         False,
-        "If True, bare Python builtin names (e.g. `dir`, `zip`, `type`) "
-        "typed as a standalone expression will be executed as a subprocess command "
-        "if a matching alias or executable exists. "
+        "If True, Python builtin names (e.g. ``dir``, ``zip``, ``type``) "
+        "will be executed as a subprocess command when a matching alias or "
+        "executable exists. Covers two cases that otherwise run as Python "
+        "and may fail or return surprising values: "
+        "(1) a bare builtin name typed as a standalone expression "
+        "(``zip`` → run the ``zip`` command); "
+        "(2) a builtin name followed by flag-looking arguments that also "
+        "parses as a valid Python ``BinOp`` expression "
+        "(``zip --help``, ``id -a``). "
         "Otherwise the Python builtin value is returned as usual.",
     )
     XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
