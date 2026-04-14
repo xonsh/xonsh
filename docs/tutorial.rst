@@ -735,11 +735,11 @@ With great power, and so forth...
           inside of them.
 
 To understand how xonsh executes the subprocess commands try
-to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+to set :ref:`$XONSH_SUBPROC_TRACE <xonsh_subproc_trace>` to ``True``:
 
 .. code-block:: xonshcon
 
-    @ $XONSH_TRACE_SUBPROC = True
+    @ $XONSH_SUBPROC_TRACE = True
     @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     TRACE SUBPROC: (['echo', 'ls'],)
     TRACE SUBPROC: (['which', 'ls'],)

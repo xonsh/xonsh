@@ -11,7 +11,7 @@ assignees: ''
 <!---
 For general xonsh issues, please try to replicate the failure using `xonsh --no-rc --no-env`.
 Short, reproducible code snippets are highly appreciated.
-You can use `$XONSH_SHOW_TRACEBACK=1`, `$XONSH_TRACE_SUBPROC=2`, or `$XONSH_DEBUG=1`
+You can use `$XONSH_SHOW_TRACEBACK=1`, `$XONSH_SUBPROC_TRACE=2`, or `$XONSH_DEBUG=1`
 to collect more information about the failure.
 -->
 
