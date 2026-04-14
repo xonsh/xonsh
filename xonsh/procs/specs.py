@@ -1226,8 +1226,9 @@ def _shell_set_title(cmds):
         # context manager updates the command information that gets
         # accessed by CurrentJobField when setting the terminal's title
         with XSH.env["PROMPT_FIELDS"]["current_job"].update_current_cmds(cmds):
-            # remove current_job from prompt level cache
-            XSH.env["PROMPT_FIELDS"].reset_key("current_job")
+            # clear the prompt cache so that fields depending on
+            # current_job are also re-evaluated (see #4926)
+            XSH.env["PROMPT_FIELDS"].reset()
             # The terminal's title needs to be set before starting the
             # subprocess to avoid accidentally answering interactive questions
             # from commands such as `rm -i` (see #1436)

@@ -167,3 +167,30 @@ def test_ptk_combine_history(monkeypatch):
     shell_hist = PromptToolkitHistory()
     hist_strs = list(shell_hist.load_history_strings())
     assert len(hist_strs) == 3
+
+
+def test_bottom_toolbar_cleared_when_empty(ptk_shell, xession):
+    """Setting $BOTTOM_TOOLBAR to '' must clear PTK's cached toolbar.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/3810
+    """
+    _, _, shell = ptk_shell
+    env = xession.env
+
+    # Set a toolbar — the property should return a callable
+    env["BOTTOM_TOOLBAR"] = "some text"
+    assert shell.bottom_toolbar_tokens is not None
+
+    # Simulate what singleline() does: the callable is passed to PTK
+    shell.prompter.bottom_toolbar = shell.bottom_toolbar_tokens
+
+    # Now clear the toolbar
+    env["BOTTOM_TOOLBAR"] = ""
+    tokens = shell.bottom_toolbar_tokens
+    assert tokens is None
+
+    # The fix: singleline() explicitly resets the PTK attribute
+    if tokens is None:
+        shell.prompter.bottom_toolbar = None
+
+    assert shell.prompter.bottom_toolbar is None

@@ -397,6 +397,28 @@ class BaseShell:
         tee = Tee(encoding=enc, errors=err)
         ts0 = time.time()
         exc_info = (None, None, None)
+        if hist is not None:
+            # Reset so the ``is None`` guard below can distinguish
+            # "no subprocess ran" from "a subprocess already reported
+            # its return code".
+            #
+            # Flow:
+            #   1. Prompt fields may run subprocesses (e.g. ``$(cmd)``
+            #      inside a lambda) whose pipelines call
+            #      ``CommandPipeline._apply_to_history()`` and set
+            #      ``hist.last_cmd_rtn`` to *their* exit code.
+            #   2. ``run_compiled_code()`` executes the user's command.
+            #      - Subprocess commands (``echo 1``, ``!(cmd)``,
+            #        ``$(cmd)``) again go through ``_apply_to_history()``
+            #        and set ``hist.last_cmd_rtn`` to the real exit code.
+            #      - Pure-Python expressions (``2+2``) never touch it.
+            #   3. The ``if hist.last_cmd_rtn is None`` guard then sets 0
+            #      for success — but only fires when no subprocess has
+            #      already reported a code.
+            #
+            # Without this reset, a stale code from step 1 survives into
+            # step 3 and is mistaken for the user command's result.  #4912
+            hist.last_cmd_rtn = None
         try:
             exc_info = run_compiled_code(code, self.ctx, None, "single")
             if exc_info != (None, None, None):

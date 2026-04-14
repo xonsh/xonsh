@@ -291,7 +291,7 @@ class HistoryAlias(xcli.ArgParserAlias):
                 location=location,
             )
         except Exception as err:
-            self.parser.error(err)
+            print(f"history: error: {err}", file=_stderr or sys.stderr)
             return
 
         if reverse:

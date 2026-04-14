@@ -346,6 +346,10 @@ class PromptToolkitShell(BaseShell):
         env["PROMPT_FIELDS"].reset()
 
         get_bottom_toolbar_tokens = self.bottom_toolbar_tokens
+        if get_bottom_toolbar_tokens is None:
+            # Explicitly clear PTK's cached toolbar — passing None to prompt()
+            # means "don't change", so we must set the attribute directly.
+            self.prompter.bottom_toolbar = None
         if env.get("UPDATE_PROMPT_ON_KEYPRESS"):
             get_prompt_tokens = self.prompt_tokens
             get_rprompt_tokens = self.rprompt_tokens
@@ -541,9 +545,14 @@ class PromptToolkitShell(BaseShell):
         """Displays dots in multiline prompt"""
         if is_soft_wrap:
             return ""
-        width -= 1
         dots = XSH.env.get("MULTILINE_PROMPT")
-        dots = dots() if callable(dots) else dots
+        if callable(dots):
+            try:
+                # prompt_toolkit passes 1 for the first continuation,
+                # but the main prompt is line 1, so shift by 1.
+                dots = dots(line_number=line_number + 1, width=width)
+            except TypeError:
+                dots = dots()
         if not dots:
             return ""
         prefix = XSH.env.get(
@@ -559,15 +568,17 @@ class PromptToolkitShell(BaseShell):
             # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;P;k=c\x07')]
             # [('class:pygments.color.reset',''), ('[ZeroWidthEscape]','\x1b]133;B\x07')]
 
-        basetoks = self.format_color(dots)
+        # Resolve both xonsh colors ({RED}) and ANSI escapes (\033[31m)
+        # so baselen counts only visible characters.  See #5898.
+        basetoks = tokenize_ansi(PygmentsTokens(self.format_color(dots)))
         baselen = sum(len(t[1]) for t in basetoks)
         if baselen == 0:
-            toks = [(Token, " " * (width + 1))]
-            if is_affix:  # to convert ↓ classes to str to allow +
-                return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+            toks = [("", " " * width)]
+            if is_affix:
+                return prefixtoks + toks + suffixtoks
             else:
-                return PygmentsTokens(toks)
-        toks = basetoks * (width // baselen)
+                return toks
+        toks = list(basetoks) * (width // baselen)
         n = width % baselen
         count = 0
         for tok in basetoks:
@@ -582,11 +593,10 @@ class PromptToolkitShell(BaseShell):
             count = newcount
             if n <= count:
                 break
-        toks.append((Token, " "))  # final space
         if is_affix:
-            return prefixtoks + to_formatted_text(PygmentsTokens(toks)) + suffixtoks
+            return prefixtoks + toks + suffixtoks
         else:
-            return PygmentsTokens(toks)
+            return toks
 
     def format_color(self, string, hide=False, force_string=False, **kwargs):
         """Formats a color string using Pygments. This, therefore, returns

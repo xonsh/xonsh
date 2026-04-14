@@ -275,3 +275,29 @@ def test_promptformatter_clears_cache(formatter):
     formatter(template, fields)
 
     assert spam.call_count == 2
+
+
+def test_reset_clears_dependent_field(live_fields, formatter, xession):
+    """Fields depending on current_job via pick_val must update after reset.
+
+    Regression test for #4926: _shell_set_title only cleared current_job
+    from the cache, so custom fields that depended on it stayed stale.
+    """
+    xession.shell.prompt_formatter = formatter
+
+    live_fields["modified_title"] = lambda: (
+        live_fields.pick_val("current_job") or "xonsh"
+    )
+
+    # first render — no job running, modified_title caches "xonsh"
+    assert formatter("{modified_title}", fields=live_fields) == "xonsh"
+
+    # simulate a job starting (as _shell_set_title does)
+    current_job = live_fields["current_job"]
+    current_job._tlocal.current_cmds = [["sleep", "10"]]
+    try:
+        # full reset — the fix for #4926
+        live_fields.reset()
+        assert formatter("{modified_title}", fields=live_fields) == "sleep"
+    finally:
+        current_job._tlocal.current_cmds = None
