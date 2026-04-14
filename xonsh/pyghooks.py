@@ -1932,73 +1932,25 @@ class XonshLexer(Python3Lexer):
             include("mode_switch_brackets"),
             # xonsh path-string literals (p prefix)
             # raw formatted path strings
-            (
-                '([fF][rR]p)(""")',
-                bygroups(String.Affix, String.Double),
-                combined("rfstringescape", "tdqf"),
-            ),
-            (
-                "([fF][rR]p)(''')",
-                bygroups(String.Affix, String.Single),
-                combined("rfstringescape", "tsqf"),
-            ),
-            (
-                '([fF][rR]p)(")',
-                bygroups(String.Affix, String.Double),
-                combined("rfstringescape", "dqf"),
-            ),
-            (
-                "([fF][rR]p)(')",
-                bygroups(String.Affix, String.Single),
-                combined("rfstringescape", "sqf"),
-            ),
+            ('([fF][rR]p)(""")', bygroups(String.Affix, String.Double), combined('rfstringescape', 'tdqf')),
+            ("([fF][rR]p)(''')", bygroups(String.Affix, String.Single), combined('rfstringescape', 'tsqf')),
+            ('([fF][rR]p)(")', bygroups(String.Affix, String.Double), combined('rfstringescape', 'dqf')),
+            ("([fF][rR]p)(')", bygroups(String.Affix, String.Single), combined('rfstringescape', 'sqf')),
             # formatted path strings
-            (
-                '(p[fF]|[fF]p)(""")',
-                bygroups(String.Affix, String.Double),
-                combined("fstringescape", "tdqf"),
-            ),
-            (
-                "(p[fF]|[fF]p)(''')",
-                bygroups(String.Affix, String.Single),
-                combined("fstringescape", "tsqf"),
-            ),
-            (
-                '(p[fF]|[fF]p)(")',
-                bygroups(String.Affix, String.Double),
-                combined("fstringescape", "dqf"),
-            ),
-            (
-                "(p[fF]|[fF]p)(')",
-                bygroups(String.Affix, String.Single),
-                combined("fstringescape", "sqf"),
-            ),
+            ('(p[fF]|[fF]p)(""")', bygroups(String.Affix, String.Double), combined('fstringescape', 'tdqf')),
+            ("(p[fF]|[fF]p)(''')", bygroups(String.Affix, String.Single), combined('fstringescape', 'tsqf')),
+            ('(p[fF]|[fF]p)(")', bygroups(String.Affix, String.Double), combined('fstringescape', 'dqf')),
+            ("(p[fF]|[fF]p)(')", bygroups(String.Affix, String.Single), combined('fstringescape', 'sqf')),
             # raw path strings
-            ('(p[rR]|[rR]p)(""")', bygroups(String.Affix, String.Double), "tdqs"),
-            ("(p[rR]|[rR]p)(''')", bygroups(String.Affix, String.Single), "tsqs"),
-            ('(p[rR]|[rR]p)(")', bygroups(String.Affix, String.Double), "dqs"),
-            ("(p[rR]|[rR]p)(')", bygroups(String.Affix, String.Single), "sqs"),
+            ('(p[rR]|[rR]p)(""")', bygroups(String.Affix, String.Double), 'tdqs'),
+            ("(p[rR]|[rR]p)(''')", bygroups(String.Affix, String.Single), 'tsqs'),
+            ('(p[rR]|[rR]p)(")', bygroups(String.Affix, String.Double), 'dqs'),
+            ("(p[rR]|[rR]p)(')", bygroups(String.Affix, String.Single), 'sqs'),
             # plain path strings
-            (
-                '(p)(""")',
-                bygroups(String.Affix, String.Double),
-                combined("stringescape", "tdqs"),
-            ),
-            (
-                "(p)(''')",
-                bygroups(String.Affix, String.Single),
-                combined("stringescape", "tsqs"),
-            ),
-            (
-                '(p)(")',
-                bygroups(String.Affix, String.Double),
-                combined("stringescape", "dqs"),
-            ),
-            (
-                "(p)(')",
-                bygroups(String.Affix, String.Single),
-                combined("stringescape", "sqs"),
-            ),
+            ('(p)(""")', bygroups(String.Affix, String.Double), combined('stringescape', 'tdqs')),
+            ("(p)(''')", bygroups(String.Affix, String.Single), combined('stringescape', 'tsqs')),
+            ('(p)(")', bygroups(String.Affix, String.Double), combined('stringescape', 'dqs')),
+            ("(p)(')", bygroups(String.Affix, String.Single), combined('stringescape', 'sqs')),
             inherit,
         ],
         "subproc_start": [

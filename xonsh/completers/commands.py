@@ -42,7 +42,7 @@ def complete_command(command: CommandContext):
     if xp.ON_WINDOWS:
         for i in executables_in("."):
             if get_filter_function()(i, cmd):
-                yield RichCompletion(i, source="cwd")
+                yield RichCompletion(i, append_space=True, source="cwd")
 
     base = os.path.basename(cmd)
     if os.path.isdir(base):
@@ -50,7 +50,6 @@ def complete_command(command: CommandContext):
             if get_filter_function()(i, cmd):
                 yield RichCompletion(
                     os.path.join(base, i),
-                    append_space=True,
                     source="path",
                 )
 

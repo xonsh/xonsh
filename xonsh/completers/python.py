@@ -272,7 +272,6 @@ def _complete_python(prefix, context: PythonContext):
             if filt(s, dp):
                 obj = getattr(builtins, s, None)
                 rtn.add(_rich_with_source("@" + s, _python_source_from_obj(obj)))
-
     return rtn
 
 

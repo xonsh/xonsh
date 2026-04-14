@@ -32,7 +32,6 @@ def _with_source(completions, source):
                 source=source,
             )
 
-
 @contextual_completer
 def complete_base(context: CompletionContext):
     """If the line is empty, complete based on valid commands, python names, and paths."""
