@@ -110,7 +110,19 @@ Learn more: `Mamba installer <install_mamba.html>`_.
 Windows
 -------
 
-Install Xonsh independently on Windows (without admin rights):
+.. note::
+
+   The installation instructions for Windows were recently updated.
+   If you run into any issues, please report them to the
+   `issue tracker <https://github.com/xonsh/xonsh/issues>`_.
+
+We provide an experimental Xonsh installer for Windows (no admin rights required). Download the ``.exe`` from the
+`Xonsh WinGet releases page <https://github.com/xonsh/xonsh-winget/releases>`_:
+
+ - ``inno6`` — for Windows 10/11 (latest Python 3).
+ - ``inno5`` — for Windows 8.1+ (pinned to Python 3.13).
+
+Or install via the script (no admin rights required):
 
 .. code-block:: doscon
 
