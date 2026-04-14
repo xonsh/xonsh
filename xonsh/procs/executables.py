@@ -198,9 +198,9 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
 
 
 def _cache_debug(msg):
-    """Print debug message if $XONSH_COMMANDS_CACHE_DEBUG is True."""
+    """Print trace message if $XONSH_COMMANDS_CACHE_TRACE is True."""
     env = XSH.env if XSH.env is not None else {}
-    if not env.get("XONSH_COMMANDS_CACHE_DEBUG", False):
+    if not env.get("XONSH_COMMANDS_CACHE_TRACE", False):
         return
     from xonsh.tools import print_above_prompt
 

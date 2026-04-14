@@ -81,7 +81,11 @@ def emit_osc7(**kwargs) -> None:
     Terminals use this for features like "Open new tab in same directory"
     and macOS Terminal.app session restoration.
     """
-    if not hasattr(sys.stdout, "isatty") or not sys.stdout.isatty():
+    # Use sys.__stdout__ — the original stdout saved by Python at startup,
+    # never replaced by the Tee wrapper that captures command output into
+    # history.  This avoids escape sequences leaking into hist.out.
+    stdout = sys.__stdout__
+    if stdout is None or not hasattr(stdout, "isatty") or not stdout.isatty():
         return
     import socket
     import urllib.parse
@@ -92,4 +96,5 @@ def emit_osc7(**kwargs) -> None:
     # OSC 7 requires a file:// URL with forward slashes
     pwd = pwd.replace("\\", "/")
     pwd = urllib.parse.quote(pwd, safe="/:")
-    print(f"\033]7;file://{host}{pwd}\007", end="", flush=True)
+    stdout.write(f"\033]7;file://{host}{pwd}\007")
+    stdout.flush()

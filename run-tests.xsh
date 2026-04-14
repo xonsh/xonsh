@@ -10,7 +10,7 @@ import itertools
 
 
 $XONSH_SUBPROC_CMD_RAISE_ERROR = True
-# $XONSH_TRACE_SUBPROC = True
+# $XONSH_SUBPROC_TRACE = True
 
 
 def colored_tracer(cmds, **_):

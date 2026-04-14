@@ -216,6 +216,40 @@ def _O2E_MAP():
     return frozenset({f"{o}>{e}" for e in _REDIR_ERR for o in _REDIR_OUT if o != ""})
 
 
+@xl.lazyobject
+def _A2P_MAP():
+    # `a>p` and variants: merge stdout+stderr into the following pipe.
+    # `&` is excluded here: `&>p` would conflict with the background-process
+    # parsing of `&` in subproc redirects.
+    return frozenset({f"{a}>p" for a in _REDIR_ALL if a != "&"})
+
+
+@xl.lazyobject
+def _E2P_MAP():
+    # `e>p` and variants: route stderr into the following pipe
+    return frozenset({f"{e}>p" for e in _REDIR_ERR})
+
+
+class _PipeRedirectSentinel:
+    """Marker put in a spec's stdout/stderr slot by ``_redirect_streams``
+    when the command uses ``a>p`` or ``e>p``. It is replaced by the pipe's
+    write fd later in ``cmds_to_specs``; if it survives to execution, the
+    redirect was used without a subsequent ``|`` pipe.
+    """
+
+    __slots__ = ("name",)
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f"<pipe-redirect {self.name}>"
+
+
+_PIPE_ALL = _PipeRedirectSentinel("a>p")
+_PIPE_ERR = _PipeRedirectSentinel("e>p")
+
+
 def safe_open(fname, mode, buffering=-1):
     """Safely attempts to open a file in for xonsh subprocs."""
     # file descriptors
@@ -272,6 +306,12 @@ def _redirect_streams(r, loc=None):
         raise Exception(f"Unsupported redirect: {r!r} {loc!r}")
 
     stdin = stdout = stderr = None
+    # pipe redirects: a>p merges both streams into the following pipe,
+    # e>p routes stderr into the following pipe (stdout left alone).
+    if r in _A2P_MAP:
+        return stdin, _PIPE_ALL, subprocess.STDOUT
+    elif r in _E2P_MAP:
+        return stdin, stdout, _PIPE_ERR
     no_ampersand = r.replace("&", "")
     # special case of redirecting stderr to stdout
     if no_ampersand in _E2O_MAP:
@@ -1106,48 +1146,56 @@ def _update_proc_alias_captured(proc):
     proc.captured = getattr(proc.alias, "__xonsh_capturable__", proc.captured)
 
 
-def _trace_specs(trace_mode, specs, cmds, captured):
-    """Show information about specs."""
-    tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
-    if callable(tracer):
-        tracer(cmds, captured=captured)
-    else:
-        r = {"cmds": cmds, "captured": captured}
-        print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
-        if trace_mode >= 2:
-            for i, s in enumerate(specs):
-                pcls = s.cls.__module__ + "." + s.cls.__name__
-                pcmd = (
-                    [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
-                )
-                p = {
-                    "cmd": pcmd,
-                    "cls": pcls,
-                }
+def _trace_specs(trace, specs, cmds, captured):
+    """Show information about specs.
+
+    ``trace`` is the value of ``$XONSH_SUBPROC_TRACE``. If it's a
+    callable, it's used as the formatter — called as
+    ``trace(cmds, captured=<str|bool>, specs=<list[SubprocSpec]>)``.
+    ``specs`` exposes per-command ``args``, ``alias``, ``binary_loc``,
+    ``threadable`` and friends. ``CommandPipeline`` is *not* available
+    at this point — it's built later, during ``_run_specs``.
+
+    Otherwise ``trace`` is a verbosity int (1/2/3) for the default
+    printer.
+    """
+    if callable(trace):
+        trace(cmds, captured=captured, specs=specs)
+        return
+    r = {"cmds": cmds, "captured": captured}
+    print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
+    if trace >= 2:
+        for i, s in enumerate(specs):
+            pcls = s.cls.__module__ + "." + s.cls.__name__
+            pcmd = [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
+            p = {
+                "cmd": pcmd,
+                "cls": pcls,
+            }
+            p |= {
+                a: getattr(s, a, None)
+                for a in [
+                    "alias_name",
+                    "alias",
+                    "binary_loc",
+                    "threadable",
+                    "background",
+                ]
+            }
+            if trace == 3:
                 p |= {
                     a: getattr(s, a, None)
                     for a in [
-                        "alias_name",
-                        "alias",
-                        "binary_loc",
-                        "threadable",
-                        "background",
+                        "stdin",
+                        "stdout",
+                        "stderr",
+                        "captured",
+                        "captured_stdout",
+                        "captured_stderr",
                     ]
                 }
-                if trace_mode == 3:
-                    p |= {
-                        a: getattr(s, a, None)
-                        for a in [
-                            "stdin",
-                            "stdout",
-                            "stderr",
-                            "captured",
-                            "captured_stdout",
-                            "captured_stderr",
-                        ]
-                    }
-                p = {k: v for k, v in p.items() if v is not None}
-                print(f"{i}: {repr(p)}", file=sys.stderr)
+            p = {k: v for k, v in p.items() if v is not None}
+            print(f"{i}: {repr(p)}", file=sys.stderr)
 
 
 def cmds_to_specs(cmds, captured=False, envs=None, in_boolop=False):
@@ -1178,13 +1226,37 @@ def cmds_to_specs(cmds, captured=False, envs=None, in_boolop=False):
             # these should remain integer file descriptors, and not Python
             # file objects since they connect processes.
             pipe = PipeChannel.from_pipe()
-            specs[i].stdout = pipe.write_fd
+            upstream = specs[i]
+            # `e>p` adds stderr to the pipe; stdout still goes through the
+            # pipe by default, unless the user diverted it with `o>`/`>`.
+            if upstream._stderr is _PIPE_ERR:
+                upstream._stderr = None
+                upstream.stderr = pipe.write_fd
+                # Skip wiring stdout if it is already redirected elsewhere
+                # (e.g. `cmd o> file e>p | grep` — stdout to file, pipe gets
+                # only stderr).
+                skip_stdout = upstream._stdout is not None
+            else:
+                skip_stdout = False
+            # `a>p`: stdout goes to the pipe and stderr is merged into it
+            # (stderr was already set to subprocess.STDOUT by _redirect_streams).
+            if upstream._stdout is _PIPE_ALL:
+                upstream._stdout = None
+            if not skip_stdout:
+                upstream.stdout = pipe.write_fd
             specs[i + 1].stdin = pipe.read_fd
-            specs[i].pipe_channels.append(pipe)
+            upstream.pipe_channels.append(pipe)
         elif redirect == "&" and i == len(redirects) - 1:
             specs[i].background = True
         else:
             raise xt.XonshError(f"unrecognized redirect {redirect!r}")
+    # Any pipe-redirect sentinel still present means `a>p`/`e>p` was used
+    # without a following `|` pipe.
+    for spec in specs:
+        if spec._stdout is _PIPE_ALL or spec._stderr is _PIPE_ERR:
+            raise xt.XonshError(
+                "xonsh: redirect 'a>p'/'e>p' requires a following pipe '|'"
+            )
 
     # Apply boundary conditions
     if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
@@ -1256,8 +1328,8 @@ def run_subproc(cmds, captured=False, envs=None, in_boolop=False):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs, in_boolop=in_boolop)
 
-    if trace_mode := XSH.env.get("XONSH_TRACE_SUBPROC", False):
-        _trace_specs(trace_mode, specs, cmds, captured)
+    if trace := XSH.env.get("XONSH_SUBPROC_TRACE", False):
+        _trace_specs(trace, specs, cmds, captured)
 
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds

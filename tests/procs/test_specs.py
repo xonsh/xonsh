@@ -951,6 +951,89 @@ def test_redirect_without_left_part(tmpdir):
     assert "subprocess mode: command is empty" in str(expected.value)
 
 
+# -- a>p / e>p pipe-redirects ------------------------------------------------
+
+import subprocess as _subprocess  # noqa: E402
+
+from xonsh.procs.specs import _PIPE_ALL, _PIPE_ERR, _redirect_streams  # noqa: E402
+
+
+@pytest.mark.parametrize("op", ["a>p", "all>p"])
+def test_a2p_redirect_streams_returns_sentinel(op):
+    stdin, stdout, stderr = _redirect_streams(op)
+    assert stdin is None
+    assert stdout is _PIPE_ALL
+    assert stderr is _subprocess.STDOUT
+
+
+@pytest.mark.parametrize("op", ["e>p", "err>p", "2>p"])
+def test_e2p_redirect_streams_returns_sentinel(op):
+    stdin, stdout, stderr = _redirect_streams(op)
+    assert stdin is None
+    assert stdout is None
+    assert stderr is _PIPE_ERR
+
+
+@skip_if_on_windows
+def test_a2p_pipes_both_streams_to_next_spec(xession):
+    cmds = [["echo", "hi", ("a>p",)], "|", ["cat"]]
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
+    assert len(specs) == 2
+    # upstream: stdout wired to pipe write fd, stderr merged via STDOUT flag
+    assert isinstance(specs[0].stdout, int)
+    assert specs[0].stderr is _subprocess.STDOUT
+    # downstream: stdin reads from pipe
+    assert isinstance(specs[1].stdin, int)
+    # sentinel was replaced
+    assert specs[0]._stdout is not _PIPE_ALL
+
+
+@skip_if_on_windows
+def test_e2p_without_stdout_redirect_pipes_both_streams(xession):
+    """`cmd e>p | next` — pipe still carries stdout by default, plus stderr."""
+    cmds = [["echo", "hi", ("e>p",)], "|", ["cat"]]
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
+    assert len(specs) == 2
+    assert isinstance(specs[0].stdout, int)
+    assert isinstance(specs[0].stderr, int)
+    assert specs[0].stdout == specs[0].stderr  # same pipe write fd
+    assert isinstance(specs[1].stdin, int)
+    assert specs[0]._stderr is not _PIPE_ERR
+
+
+@skip_if_on_windows
+def test_e2p_with_stdout_redirect_preserves_file(xession, tmpdir):
+    """`cmd o> file e>p | grep` — stdout to file, stderr through pipe."""
+    outfile = str(tmpdir / "out.txt")
+    cmds = [["echo", "hi", ("o>", outfile), ("e>p",)], "|", ["cat"]]
+    specs = cmds_to_specs(cmds, captured="hiddenobject")
+    # stdout is a file object, stderr is the pipe fd
+    assert getattr(specs[0].stdout, "name", None) == outfile
+    assert isinstance(specs[0].stderr, int)
+    specs[0].stdout.close()
+
+
+@pytest.mark.parametrize("op", ["a>p", "e>p"])
+def test_pipe_redirect_without_pipe_errors(xession, op):
+    cmds = [["echo", "hi", (op,)]]
+    with pytest.raises(XonshError, match=r"requires a following pipe"):
+        cmds_to_specs(cmds, captured="hiddenobject")
+
+
+def test_a2p_conflict_with_o_redirect_errors(xession, tmpdir):
+    outfile = str(tmpdir / "conflict.txt")
+    cmds = [["echo", "hi", ("a>p",), ("o>", outfile)], "|", ["cat"]]
+    with pytest.raises(XonshError, match="Multiple redirections for stdout"):
+        cmds_to_specs(cmds, captured="hiddenobject")
+
+
+def test_e2p_conflict_with_e_redirect_errors(xession, tmpdir):
+    errfile = str(tmpdir / "conflict.txt")
+    cmds = [["echo", "hi", ("e>p",), ("e>", errfile)], "|", ["cat"]]
+    with pytest.raises(XonshError, match="Multiple redirections for stderr"):
+        cmds_to_specs(cmds, captured="hiddenobject")
+
+
 def test_resolve_executable_commands_updates_binary_loc(tmpdir, xession):
     """After resolve_executable_commands wraps a script with an interpreter,
     binary_loc must point to the interpreter, not the script.

@@ -40,7 +40,7 @@ class Routes:
     _external_links = [
         ("Docs", "https://xon.sh/dev/contents.html"),
         ("Xontribs", "https://github.com/topics/xontrib"),
-        ("Github", "https://github.com/xonsh/xonsh"),
+        ("Code", "https://github.com/xonsh/xonsh"),
         ("Sponsor", "https://github.com/sponsors/xonsh"),
     ]
 

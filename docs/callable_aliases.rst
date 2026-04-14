@@ -376,6 +376,58 @@ The ``stderr`` argument and ``sys.stderr`` are also redirected — use
     this is captured
 
 
+Streams
+-------
+
+Inside a callable alias xonsh replaces ``sys.stdout`` and ``sys.stderr``
+with the alias's own streams.  The ``stdout`` and ``stderr`` function
+arguments point to the **same** redirected streams.  So bare ``print()``
+just works — in pipes, in capture, everywhere:
+
+.. code-block:: python
+
+    @aliases.register
+    def _greet(args):
+        print("hello")       # goes to pipe, capture, or terminal — wherever needed
+
+    # all of these work:
+    greet                     # prints to terminal
+    greet | grep hello        # piped to grep
+    output = $(greet)         # captured into variable
+
+The ``stdout`` / ``stderr`` arguments give you the **same stream as a file
+object**, which is useful when you need to pass it to functions that accept
+a file argument, or when you need ``.write()`` for finer control:
+
+.. code-block:: python
+
+    @aliases.register
+    def _json_dump(args, stdout=None):
+        import json
+        data = {"key": "value"}
+        json.dump(data, stdout)          # json.dump needs a file object
+        stdout.write("\n")
+
+**Reading from** ``stdin``
+
+``stdin`` is ``None`` when the alias is called standalone, and a readable
+stream when piped into.  This is the one argument you **must** use explicitly
+— there is no automatic redirection of ``sys.stdin`` for aliases:
+
+.. code-block:: python
+
+    @aliases.register
+    def _upper(args, stdin=None):
+        if stdin is not None:
+            for line in stdin:
+                print(line.strip().upper())
+
+.. code-block:: xonshcon
+
+    @ echo hello | upper
+    HELLO
+
+
 Threading
 ---------
 
@@ -501,6 +553,15 @@ without a separate ``import click``.
 Use these when a click command needs the underlying xonsh streams or
 environment overlay — for example, ``print(text, file=ctx.stdout)`` writes
 to the alias's captured output the same way a regular callable alias does.
+
+Tab completion is wired up automatically: option flags, ``click.Choice``
+option values, positional ``click.Choice`` arguments, and sub-commands of
+a ``click.Group`` are all suggested without any extra configuration.
+
+.. code-block:: xonshcon
+
+    @ hello --<TAB>
+    --count --help --name
 
 
 String Aliases and ExecAlias

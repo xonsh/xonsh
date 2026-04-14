@@ -1312,9 +1312,15 @@ class SubprocessSetting(Xettings):
     )
     XONSH_BUILTINS_TO_CMD = Var.with_default(
         False,
-        "If True, bare Python builtin names (e.g. `dir`, `zip`, `type`) "
-        "typed as a standalone expression will be executed as a subprocess command "
-        "if a matching alias or executable exists. "
+        "If True, Python builtin names (e.g. ``dir``, ``zip``, ``type``) "
+        "will be executed as a subprocess command when a matching alias or "
+        "executable exists. Covers two cases that otherwise run as Python "
+        "and may fail or return surprising values: "
+        "(1) a bare builtin name typed as a standalone expression "
+        "(``zip`` → run the ``zip`` command); "
+        "(2) a builtin name followed by flag-looking arguments that also "
+        "parses as a valid Python ``BinOp`` expression "
+        "(``zip --help``, ``id -a``). "
         "Otherwise the Python builtin value is returned as usual.",
     )
     XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
@@ -1371,25 +1377,27 @@ class SubprocessSetting(Xettings):
         "xonsh process threads sleep for while running command pipelines. "
         "The value has units of seconds [s].",
     )
-    XONSH_TRACE_SUBPROC = Var(
+    XONSH_SUBPROC_TRACE = Var(
         default=False,
-        validate=is_bool_or_int,
-        convert=to_bool_or_int,
+        validate=lambda x: callable(x) or is_bool_or_int(x),
+        convert=lambda x: x if callable(x) else to_bool_or_int(x),
         doc="Set to ``True`` or ``1`` to show arguments list of every executed subprocess command. "
-        "Use ``2`` to have a specification. Use ``3`` to have full specification.",
-    )
-    XONSH_TRACE_SUBPROC_FUNC = Var.with_default(
-        None,
-        doc=(
-            "A callback function used to format the trace output shown when ``$XONSH_TRACE_SUBPROC=True``."
-        ),
+        "Use ``2`` to have a specification. Use ``3`` to have full specification. "
+        "Alternatively assign a callable ``f(cmds, captured=..., specs=...)`` to format "
+        "the trace output yourself — it is invoked instead of the default printer. "
+        "``specs`` is the list of :class:`SubprocSpec` objects about to be executed; "
+        "``CommandPipeline`` is not yet built at this point.",
         doc_default="""\
     By default it just prints ``cmds`` like below.
 
     .. code-block:: python
 
-        def tracer(cmds: list, captured: Union[bool, str]):
+        def _tracer(cmds, captured, specs):
+            # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,
+            # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.
             print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
+
+        $XONSH_SUBPROC_TRACE = _tracer
     """,
     )
 
@@ -1501,9 +1509,9 @@ class CacheSetting(Xettings):
         type_str="env_path",
     )
 
-    XONSH_COMMANDS_CACHE_DEBUG = Var.with_default(
+    XONSH_COMMANDS_CACHE_TRACE = Var.with_default(
         False,
-        "If True, print debug messages showing where each command was resolved "
+        "If True, print trace messages showing where each command was resolved "
         "from (cached directory listing XONSH_COMMANDS_CACHE_READ_DIR_ONCE vs. disk stat) "
         "and how long it took.",
     )
@@ -2194,9 +2202,11 @@ The file should contain a function with the signature
         "Set to ``':::'`` to enable, then type ``:::<TAB>`` or ``:::arrow<TAB>`` to search. "
         "Default is ``None`` (disabled).",
     )
-    XONSH_TRACE_COMPLETIONS = Var.with_default(
+    XONSH_COMPLETER_TRACE = Var.with_default(
         False,
-        "Set to ``True`` to show completers invoked and their return values.",
+        "Set to ``True`` to show completers invoked and their return values. "
+        "Each completion is printed on its own line with its ``source`` "
+        "completer and any non-default ``RichCompletion`` attributes.",
     )
 
 

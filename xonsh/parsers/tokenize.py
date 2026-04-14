@@ -358,6 +358,13 @@ _redir_map = (
     "1>e",
     "o>2",
     "1>2",
+    # all streams to the following pipe (merged)
+    "a>p",
+    "all>p",
+    # stderr to the following pipe (stdout untouched)
+    "e>p",
+    "err>p",
+    "2>p",
 )
 IORedirect = group(group(*_redir_map), f"{group(*_redir_names)}>>?")
 
