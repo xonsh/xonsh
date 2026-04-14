@@ -2194,9 +2194,11 @@ The file should contain a function with the signature
         "Set to ``':::'`` to enable, then type ``:::<TAB>`` or ``:::arrow<TAB>`` to search. "
         "Default is ``None`` (disabled).",
     )
-    XONSH_TRACE_COMPLETIONS = Var.with_default(
+    XONSH_COMPLETER_TRACE = Var.with_default(
         False,
-        "Set to ``True`` to show completers invoked and their return values.",
+        "Set to ``True`` to show completers invoked and their return values. "
+        "Each completion is printed on its own line with its ``source`` "
+        "completer and any non-default ``RichCompletion`` attributes.",
     )
 
 
