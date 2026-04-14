@@ -455,6 +455,12 @@ def test_ioredir2(case):
     assert check_tokens_subproc(case, [("IOREDIRECT2", case, 2)], stop=-2)
 
 
+@pytest.mark.parametrize("case", ["a>p", "all>p", "e>p", "err>p", "2>p"])
+def test_ioredir2_pipe(case):
+    """`a>p`/`e>p` and variants are single IOREDIRECT2 tokens."""
+    assert check_tokens_subproc(case, [("IOREDIRECT2", case, 2)], stop=-2)
+
+
 @pytest.mark.parametrize("case", [">", ">>", "<", "e>", "> ", ">>   ", "<  ", "e> "])
 def test_redir_whitespace(case):
     inp = f"![{case}/path/to/file]"

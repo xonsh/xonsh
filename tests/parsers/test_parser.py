@@ -3248,6 +3248,17 @@ def test_redirect_output_to_error(r, e, check_xonsh_ast):
     assert check_xonsh_ast({}, f'$[echo "test" {r} {e}> test.txt < input.txt]', False)
 
 
+@pytest.mark.parametrize("r", ["a>p", "all>p"])
+def test_redirect_all_to_pipe_parse(r, check_xonsh_ast):
+    assert check_xonsh_ast({}, f'$[echo "test" {r} | cat]', False)
+
+
+@pytest.mark.parametrize("r", ["e>p", "err>p", "2>p"])
+def test_redirect_err_to_pipe_parse(r, check_xonsh_ast):
+    assert check_xonsh_ast({}, f'$[echo "test" {r} | cat]', False)
+    assert check_xonsh_ast({}, f'$[echo "test" o> out.txt {r} | cat]', False)
+
+
 def test_macro_call_empty(check_xonsh_ast):
     assert check_xonsh_ast({}, "f!()", False)
 
