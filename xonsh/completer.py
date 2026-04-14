@@ -240,6 +240,14 @@ class Completer:
             for comp in res:
                 if (not is_filtered) and (not filter_func(comp, prefix)):
                     continue
+                # Skip empty or whitespace-only completions as if the
+                # completer had not returned them. Without this an
+                # exclusive completer that yields only blanks (e.g. a
+                # subprocess-based completer returning spurious empty
+                # lines) would short-circuit the pipeline and hide the
+                # fallback ``python``/``path`` completers. See #5810.
+                if not str(comp).strip():
+                    continue
                 comp = Completer._format_completion(
                     comp,
                     completion_context,

@@ -268,6 +268,11 @@ def complete_from_sub_proc(*args: str, sep=None, filter_prefix=None, **env_vars:
         else:
             lines = output.split(sep)
 
+        # Drop blank lines before counting / yielding so that a subprocess
+        # emitting trailing/extra whitespace doesn't produce empty
+        # RichCompletion objects (see #5810).
+        lines = [ln for ln in lines if ln.strip()]
+
         # if there is a single completion candidate then maybe it is over
         append_space = len(lines) == 1 and not lines[0].rstrip().endswith(os.sep)
         for line in lines:
