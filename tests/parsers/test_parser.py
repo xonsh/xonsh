@@ -2517,6 +2517,73 @@ def test_bare_builtin_becomes_cmd_call(parser, xsh):
     assert call.args[0].value == "zip"
 
 
+def _builtins_ctx():
+    """``dir(__builtins__)`` varies (module vs dict) depending on how the
+    test module is loaded — be explicit so tests are deterministic."""
+    import builtins
+
+    return set(dir(builtins))
+
+
+def test_flag_pattern_becomes_subproc_when_flag_enabled(parser, xsh, monkeypatch):
+    """``zip --help`` / ``id -a`` parse as Python ``BinOp(Sub)`` and would
+    blow up at runtime (``-help`` → ``_Helper.__neg__`` → TypeError). With
+    ``$XONSH_BUILTINS_TO_CMD=True`` and LHS being a known alias/command,
+    the transformer must re-parse the line as subprocess so the user gets
+    the expected behaviour."""
+    import ast as stdlib_ast
+
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    monkeypatch.setitem(xsh.env, "XONSH_BUILTINS_TO_CMD", True)
+    monkeypatch.setitem(xsh.aliases, "zip", ["zip"])
+    code = "zip --help\n"
+    tree = parser.parse(code, debug_level=0)
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, code, _builtins_ctx())
+    expr_node = tree.body[0]
+    # The original ``BinOp(Sub)`` must be gone — it's now a subprocess call.
+    assert not isinstance(expr_node.value, stdlib_ast.BinOp)
+
+
+def test_flag_pattern_stays_python_when_flag_disabled(parser, xsh, monkeypatch):
+    """With ``$XONSH_BUILTINS_TO_CMD`` off (default), the flag-pattern
+    rewrite must not fire — preserves the legacy behaviour."""
+    import ast as stdlib_ast
+
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    monkeypatch.setitem(xsh.env, "XONSH_BUILTINS_TO_CMD", False)
+    monkeypatch.setitem(xsh.aliases, "zip", ["zip"])
+    code = "zip --help\n"
+    tree = parser.parse(code, debug_level=0)
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, code, _builtins_ctx())
+    expr_node = tree.body[0]
+    # ``zip`` is a Python builtin so ``is_in_scope`` is True and the node
+    # remains a ``BinOp`` — the old (buggy at runtime) behaviour is kept.
+    assert isinstance(expr_node.value, stdlib_ast.BinOp)
+
+
+def test_flag_pattern_leaves_user_arithmetic_alone(parser, xsh, monkeypatch):
+    """``x - -y`` with user-defined ``x``/``y`` must stay as plain arithmetic,
+    even with ``$XONSH_BUILTINS_TO_CMD`` on and a command of the same name
+    on $PATH."""
+    import ast as stdlib_ast
+
+    from xonsh.parsers.ast import CtxAwareTransformer
+
+    monkeypatch.setitem(xsh.env, "XONSH_BUILTINS_TO_CMD", True)
+    monkeypatch.setitem(xsh.aliases, "ls", ["ls"])
+    code = "ls = 10\nls - -5\n"
+    tree = parser.parse(code, debug_level=0)
+    ctxtr = CtxAwareTransformer(parser)
+    tree = ctxtr.ctxvisit(tree, code, _builtins_ctx())
+    # Second statement must remain a BinOp (the arithmetic), not a subproc.
+    second = tree.body[1]
+    assert isinstance(second.value, stdlib_ast.BinOp)
+
+
 @skip_if_pre_3_8
 def test_walrus_in_assign_ctx(parser, xsh):
     """Walrus operator variable in RHS should be tracked in context."""
