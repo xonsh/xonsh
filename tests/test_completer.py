@@ -44,6 +44,23 @@ def test_sanity(completer, completers_mock):
     )
 
 
+def test_empty_completions_filtered(completer, completers_mock):
+    """Completers returning only empty/whitespace values should be treated as
+    returning no completions (see #5809, #5810)."""
+    # whitespace-only completion:
+    completers_mock["a"] = lambda *a: {" "}
+    assert completer.complete("pre", "", 0, 0) == ((), 0)
+    # empty string completion:
+    completers_mock["a"] = lambda *a: {""}
+    assert completer.complete("pre", "", 0, 0) == ((), 0)
+    # RichCompletion with whitespace-only value:
+    completers_mock["a"] = lambda *a: {RichCompletion(" ", prefix_len=3)}
+    assert completer.complete("pre", "", 0, 0) == ((), 0)
+    # mix of empty and valid completions keeps valid ones:
+    completers_mock["a"] = lambda *a: {"", " ", "valid"}
+    assert completer.complete("pre", "", 0, 0) == (("valid",), 3)
+
+
 def test_cursor_after_closing_quote(completer, completers_mock):
     """See ``Completer.complete`` in ``xonsh/completer.py``"""
 

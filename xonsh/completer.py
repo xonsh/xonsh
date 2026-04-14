@@ -236,6 +236,12 @@ class Completer:
             if res is None:
                 continue
 
+            # Filter out empty completions (e.g. whitespace-only values)
+            # to prevent them from appearing as valid results (see #5809).
+            res = [c for c in res if str(c).strip()]
+            if not res:
+                continue
+
             items = []
             for comp in res:
                 if (not is_filtered) and (not filter_func(comp, prefix)):
