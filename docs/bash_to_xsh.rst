@@ -94,7 +94,7 @@ This page provides xonsh equivalents for common patterns in Bash.
         ``$XONSH_SUBPROC_CMD_RAISE_ERROR = True`` to additionally raise on
         *every* failing individual command.
     * - ``set -x``
-      - ``trace on`` and ``$XONSH_TRACE_SUBPROC = True``
+      - ``trace on`` and ``$XONSH_SUBPROC_TRACE = True``
       - Turns on tracing of source code lines during execution.
     * - ``&&``
       - ``&&`` or ``and``
@@ -144,11 +144,11 @@ This page provides xonsh equivalents for common patterns in Bash.
       - ``exit 1`` or ``exit(1)``
       - Exiting from the current script.
 
-To understand how xonsh executes the subprocess commands try ``showcmd`` or set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+To understand how xonsh executes the subprocess commands try ``showcmd`` or set :ref:`$XONSH_SUBPROC_TRACE <xonsh_subproc_trace>` to ``True``:
 
 .. code-block:: xonshcon
 
-    @ $XONSH_TRACE_SUBPROC = True
+    @ $XONSH_SUBPROC_TRACE = True
     @ echo $(echo @('hello')) @('wor' + 'ld') | grep hello
     TRACE SUBPROC: (['echo', 'hello'],)
     TRACE SUBPROC: (['echo', 'hello\n', 'world'], '|', ['grep', 'hello'])

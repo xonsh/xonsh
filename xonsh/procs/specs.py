@@ -1106,48 +1106,56 @@ def _update_proc_alias_captured(proc):
     proc.captured = getattr(proc.alias, "__xonsh_capturable__", proc.captured)
 
 
-def _trace_specs(trace_mode, specs, cmds, captured):
-    """Show information about specs."""
-    tracer = XSH.env.get("XONSH_TRACE_SUBPROC_FUNC", None)
-    if callable(tracer):
-        tracer(cmds, captured=captured)
-    else:
-        r = {"cmds": cmds, "captured": captured}
-        print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
-        if trace_mode >= 2:
-            for i, s in enumerate(specs):
-                pcls = s.cls.__module__ + "." + s.cls.__name__
-                pcmd = (
-                    [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
-                )
-                p = {
-                    "cmd": pcmd,
-                    "cls": pcls,
-                }
+def _trace_specs(trace, specs, cmds, captured):
+    """Show information about specs.
+
+    ``trace`` is the value of ``$XONSH_SUBPROC_TRACE``. If it's a
+    callable, it's used as the formatter — called as
+    ``trace(cmds, captured=<str|bool>, specs=<list[SubprocSpec]>)``.
+    ``specs`` exposes per-command ``args``, ``alias``, ``binary_loc``,
+    ``threadable`` and friends. ``CommandPipeline`` is *not* available
+    at this point — it's built later, during ``_run_specs``.
+
+    Otherwise ``trace`` is a verbosity int (1/2/3) for the default
+    printer.
+    """
+    if callable(trace):
+        trace(cmds, captured=captured, specs=specs)
+        return
+    r = {"cmds": cmds, "captured": captured}
+    print(f"Trace run_subproc({repr(r)})", file=sys.stderr)
+    if trace >= 2:
+        for i, s in enumerate(specs):
+            pcls = s.cls.__module__ + "." + s.cls.__name__
+            pcmd = [s.args[0].__name__] + s.args[1:] if callable(s.args[0]) else s.args
+            p = {
+                "cmd": pcmd,
+                "cls": pcls,
+            }
+            p |= {
+                a: getattr(s, a, None)
+                for a in [
+                    "alias_name",
+                    "alias",
+                    "binary_loc",
+                    "threadable",
+                    "background",
+                ]
+            }
+            if trace == 3:
                 p |= {
                     a: getattr(s, a, None)
                     for a in [
-                        "alias_name",
-                        "alias",
-                        "binary_loc",
-                        "threadable",
-                        "background",
+                        "stdin",
+                        "stdout",
+                        "stderr",
+                        "captured",
+                        "captured_stdout",
+                        "captured_stderr",
                     ]
                 }
-                if trace_mode == 3:
-                    p |= {
-                        a: getattr(s, a, None)
-                        for a in [
-                            "stdin",
-                            "stdout",
-                            "stderr",
-                            "captured",
-                            "captured_stdout",
-                            "captured_stderr",
-                        ]
-                    }
-                p = {k: v for k, v in p.items() if v is not None}
-                print(f"{i}: {repr(p)}", file=sys.stderr)
+            p = {k: v for k, v in p.items() if v is not None}
+            print(f"{i}: {repr(p)}", file=sys.stderr)
 
 
 def cmds_to_specs(cmds, captured=False, envs=None, in_boolop=False):
@@ -1256,8 +1264,8 @@ def run_subproc(cmds, captured=False, envs=None, in_boolop=False):
 
     specs = cmds_to_specs(cmds, captured=captured, envs=envs, in_boolop=in_boolop)
 
-    if trace_mode := XSH.env.get("XONSH_TRACE_SUBPROC", False):
-        _trace_specs(trace_mode, specs, cmds, captured)
+    if trace := XSH.env.get("XONSH_SUBPROC_TRACE", False):
+        _trace_specs(trace, specs, cmds, captured)
 
     cmds = [
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
