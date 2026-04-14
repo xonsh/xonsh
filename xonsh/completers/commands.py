@@ -31,15 +31,13 @@ def complete_command(command: CommandContext):
     show_desc = (XSH.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
     for s, (path, is_alias) in XSH.commands_cache.iter_commands():
         if get_filter_function()(s, cmd):
-            kwargs = {}
-            if show_desc:
-                kwargs["description"] = "Alias" if is_alias else path
+            description = ("Alias" if is_alias else path) if show_desc else ""
             yield RichCompletion(
                 s,
                 append_space=True,
                 provider="alias" if is_alias else "command",
-                **kwargs,
-            )  # type: ignore
+                description=description,
+            )
     if xp.ON_WINDOWS:
         for i in executables_in("."):
             if get_filter_function()(i, cmd):
