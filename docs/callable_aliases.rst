@@ -554,6 +554,15 @@ Use these when a click command needs the underlying xonsh streams or
 environment overlay — for example, ``print(text, file=ctx.stdout)`` writes
 to the alias's captured output the same way a regular callable alias does.
 
+Tab completion is wired up automatically: option flags, ``click.Choice``
+option values, positional ``click.Choice`` arguments, and sub-commands of
+a ``click.Group`` are all suggested without any extra configuration.
+
+.. code-block:: xonshcon
+
+    @ hello --<TAB>
+    --count --help --name
+
 
 String Aliases and ExecAlias
 ----------------------------
