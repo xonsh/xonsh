@@ -31,6 +31,7 @@ from xonsh.tools import (
     XonshError,
     expand_path,
     globpath,
+    on_main_thread,
     print_color,
 )
 
@@ -57,6 +58,13 @@ def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
     once the new handle is finished.
     """
+    # signal.signal() only works on the main thread; from a worker it raises
+    # ValueError. When xonsh is set up from a non-main thread (e.g. an embedded
+    # host calling xonsh.main.setup() off-main, like the 2020 virtualenv CI
+    # case in xonsh/xonsh#3689), skip registration rather than crash — the host
+    # owns process signals in that scenario. Same guard is used in procs/posix.py.
+    if not on_main_thread():
+        return
     prev_signal_handler = signal.getsignal(sig)
 
     def new_signal_handler(s=None, frame=None):
