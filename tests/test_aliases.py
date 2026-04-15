@@ -267,6 +267,45 @@ def test_register_click_command(xession):
     assert stdout.getvalue() == "hello Xonsh\n"
 
 
+def test_register_decorator_alias_class():
+    """``@aliases.register`` accepts a ``DecoratorAlias`` subclass and
+    stores a live instance so the runtime calls the hooks bound to
+    ``self`` instead of trying to instantiate the class on every
+    invocation.
+    """
+    from xonsh.procs.specs import DecoratorAlias
+
+    aliases = Aliases()
+
+    @aliases.register("@my-deco")
+    class MyDeco(DecoratorAlias):
+        descr = "test"
+
+    stored = aliases._raw["@my-deco"]
+    assert isinstance(stored, MyDeco), type(stored)
+    # The class itself is returned by the decorator so users can keep
+    # referencing it (e.g. for inheritance).
+    assert MyDeco.__alias_name__ == "@my-deco"
+
+
+def test_register_decorator_alias_class_bare():
+    """Bare ``@aliases.register`` (no args) on a ``DecoratorAlias``
+    subclass derives the alias name from ``__name__``.
+    """
+    from xonsh.procs.specs import DecoratorAlias
+
+    aliases = Aliases()
+
+    @aliases.register
+    class _my_deco(DecoratorAlias):
+        descr = "test"
+
+    # Leading underscore stripped, dash-cased — same convention as
+    # function-based aliases.
+    assert "my-deco" in aliases
+    assert isinstance(aliases._raw["my-deco"], _my_deco)
+
+
 def test_run_alias_by_params():
     def alias_named_params(args, stdout):
         return (args, stdout)

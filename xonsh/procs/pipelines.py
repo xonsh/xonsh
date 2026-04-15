@@ -15,6 +15,7 @@ import xonsh.platform as xp
 import xonsh.procs.jobs as xj
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.events import events
 from xonsh.procs.readers import ConsoleParallelReader, NonBlockingFDReader, safe_fdclose
 
 
@@ -181,6 +182,13 @@ class CommandPipeline:
         self.suspended = None
         self.output_format = self.spec.output_format
 
+        # Pipeline-level pre-run hook: every distinct DecoratorAlias on
+        # any spec gets ``on_command_pipeline_pre_run(self)`` exactly
+        # once, before any subprocess is spawned. Per-spec setup still
+        # happens below via ``decorate_spec_pre_run``.
+        for mod in self._unique_decorators():
+            mod.on_command_pipeline_pre_run(self)
+
         background = self.spec.background
         pipeline_group = None
         if xp.ON_POSIX and not xt.on_main_thread():
@@ -248,6 +256,21 @@ class CommandPipeline:
     def __str__(self):
         self.end()
         return self.output
+
+    def _unique_decorators(self):
+        """Yield every distinct ``DecoratorAlias`` instance attached to
+        any spec in this pipeline, preserving first-seen order. Used to
+        fan out pipeline-level hooks (``on_command_pipeline_pre_run`` /
+        ``on_command_pipeline_post_run``) without double-firing for
+        decorators applied to multiple specs.
+        """
+        seen: set[int] = set()
+        for spec in self.specs:
+            for mod in getattr(spec, "decorators", ()):
+                if id(mod) in seen:
+                    continue
+                seen.add(id(mod))
+                yield mod
 
     def __len__(self):
         return len(self.procs)
@@ -603,6 +626,13 @@ class CommandPipeline:
         self._check_signal()
         self._apply_to_history()
         self._apply_to_thread_local()
+        events.on_post_command_pipeline.fire(pipeline=self)
+        # Pipeline-level post-run hook for each unique DecoratorAlias —
+        # symmetric with the pre-run hook in ``__init__``. Fires after
+        # the global event so a decorator that subscribed to both gets
+        # its hook called last.
+        for mod in self._unique_decorators():
+            mod.on_command_pipeline_post_run(self)
         self._raise_subproc_error()
 
     def _save_term_state(self):

@@ -387,6 +387,27 @@ class DecoratorAlias:
         """Modify spec before run."""
         pass
 
+    def on_command_pipeline_pre_run(self, cp):
+        """Hook into the start of a ``CommandPipeline``.
+
+        Called once per pipeline (not per spec) just before the first
+        subprocess is spawned. Receives the not-yet-run
+        :class:`xonsh.procs.pipelines.CommandPipeline`. Default no-op.
+        """
+        pass
+
+    def on_command_pipeline_post_run(self, cp):
+        """Hook into the end of a ``CommandPipeline``.
+
+        Called once per pipeline (not per spec) when the pipeline has
+        finished — same point as the global
+        :func:`xonsh.events.on_post_command_pipeline` event. Receives
+        the finished :class:`xonsh.procs.pipelines.CommandPipeline`,
+        with ``returncode``, ``output``, etc. populated. Default
+        no-op.
+        """
+        pass
+
 
 class SpecAttrDecoratorAlias(DecoratorAlias):
     """Decorator Alias for spec attributes."""

@@ -468,6 +468,15 @@ class BaseShell:
                 cwd=self.precwd,
             )
             if not isinstance(exc_info[1], SystemExit):
+                # Both events are fired with the same payload — new
+                # handlers should subscribe to ``on_post_interactive_command``;
+                # ``on_postcommand`` is kept for backward compatibility.
+                events.on_post_interactive_command.fire(
+                    cmd=src,
+                    rtn=info["rtn"],
+                    out=info.get("out", None),
+                    ts=info["ts"],
+                )
                 events.on_postcommand.fire(
                     cmd=src,
                     rtn=info["rtn"],

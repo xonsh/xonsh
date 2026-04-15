@@ -52,9 +52,46 @@ Fires just before a command is executed.
 )
 
 events.doc(
+    "on_post_interactive_command",
+    """
+on_post_interactive_command(cmd: str, rtn: int, out: str or None, ts: list) -> None
+
+Fires just after an interactively-typed command finishes — i.e. once
+per line accepted from the prompt loop. For every-mode coverage use
+:func:`on_post_command_pipeline` instead.
+
+Parameters:
+
+* ``cmd``: The command that was executed (after transformation)
+* ``rtn``: The result of the command executed (``0`` for success)
+* ``out``: If xonsh stores command output, this is the output
+* ``ts``: Timestamps, in the order of ``[starting, ending]``
+
+Example:
+
+.. code-block:: python
+
+@events.on_post_interactive_command
+def _prompt_err_command_again(cmd, rtn, out, ts):
+    '''Repeat the command on the next prompt if it failed.'''
+    if rtn != 0:
+        $XONSH_PROMPT_NEXT_CMD = cmd.rstrip() + '<cursor>' + ' # edit this'
+""",
+)
+
+
+events.doc(
     "on_postcommand",
     """
 on_postcommand(cmd: str, rtn: int, out: str or None, ts: list) -> None
+
+.. deprecated::
+
+   Use :func:`on_post_interactive_command` (same payload) for prompt-loop
+   commands, or :func:`on_post_command_pipeline` if you want every
+   pipeline (including ``xonsh -c`` and scripts). ``on_postcommand`` is
+   kept for backward compatibility and currently fires alongside
+   ``on_post_interactive_command``.
 
 Fires just after a command is executed. The arguments are the same as history.
 This event only fires in interactive mode.
@@ -77,6 +114,46 @@ Example:
             $XONSH_PROMPT_NEXT_CMD = cmd.rstrip()
 """,
 )
+
+events.doc(
+    "on_post_command_pipeline",
+    """
+on_post_command_pipeline(pipeline: CommandPipeline) -> None
+
+Fires just after every subprocess command pipeline finishes — both
+top-level invocations (``ls``, ``echo foo | grep bar``) and inner
+substitutions (``$(...)``, ``!(...)``).
+
+Unlike :func:`on_postcommand`, which only fires in interactive
+mode and reports one event per user-typed line, this fires in every
+execution mode: interactive shell, ``xonsh -c``, ``./script.xsh``,
+and embedded use. Use it for resource cleanup that must happen
+regardless of how xonsh was invoked.
+
+The ``pipeline`` argument carries the full
+:class:`xonsh.procs.pipelines.CommandPipeline` so handlers can
+inspect ``pipeline.spec``, ``pipeline.returncode``, captured
+output, etc. Notably:
+
+* ``pipeline.spec.captured`` is ``False`` for top-level uncaptured
+  pipelines and a string (``"stdout"``, ``"object"``,
+  ``"hiddenobject"``) for everything inside ``$(...)`` /
+  ``!(...)`` / ``$[...]`` / ``![...]``. Filter on this if you
+  only want one event per user-visible command.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_post_command_pipeline
+    def _drop_tmp_paths(pipeline, **kw):
+        '''Clean up tempfiles after the outer command finishes.'''
+        if pipeline.spec.captured:
+            return  # inner $()/!() — wait for the outer pipeline
+        cleanup_my_tempfiles()
+""",
+)
+
 
 events.doc(
     "on_command_not_found",

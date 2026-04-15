@@ -388,6 +388,97 @@ that poly fills the "run as Admin" behavior with the help of ``ShellExecuteEx`` 
 command to run.
 
 
+Writing your own command decorator
+==================================
+
+A command decorator is a subclass of
+:class:`xonsh.procs.specs.DecoratorAlias` registered under an
+``@``-prefixed alias name. The base class exposes four hooks; you
+override the ones you need:
+
+* ``decorate_spec(spec)`` — runs once when the decorator is attached
+  to a spec (parser-time-ish). Use to set spec attributes ahead of
+  any execution. ``SpecAttrDecoratorAlias`` (used by ``@thread``,
+  ``@lines``, ``@json``, …) is a thin wrapper that just sets a dict
+  of attributes here.
+* ``decorate_spec_pre_run(pipeline, spec, spec_num)`` — runs once
+  per spec immediately before that spec's subprocess is spawned.
+* ``on_command_pipeline_pre_run(cp)`` — runs once for the entire
+  pipeline before any subprocess is spawned. Receives the
+  not-yet-run :class:`xonsh.procs.pipelines.CommandPipeline`.
+* ``on_command_pipeline_post_run(cp)`` — runs once for the entire
+  pipeline at the same point as the
+  :func:`xonsh.events.on_post_command_pipeline` event, with
+  ``cp.returncode`` and other completion fields populated.
+
+The ``@`` prefix in the alias name is just a convention — the parser
+treats anything registered as a ``DecoratorAlias`` instance as a
+decorator regardless of name, but the prefix keeps decorators visually
+distinct from regular aliases.
+
+The example below registers ``@trace``, which prints the resolved
+pipeline (with ``|`` separators), the return code, and the elapsed
+time — using the two pipeline-level hooks. ``print`` writes to
+``sys.stderr`` so the trace appears in the right order even when the
+inner command is buffered.
+
+.. code-block:: python
+
+    # ~/.xonshrc
+    @aliases.register("@trace")
+    class TraceCmd(@.imp.xonsh.procs.specs.DecoratorAlias):
+        """Print the resolved pipeline before and after execution."""
+
+        descr = "Command decorator. Trace the pipeline (cmd, rtn, elapsed time)."
+
+        @staticmethod
+        def _fmt_pipeline(cp):
+            return " | ".join(" ".join(spec.cmd) for spec in cp.specs)
+
+        def on_command_pipeline_pre_run(self, cp):
+            print(f"[trace] >>> {self._fmt_pipeline(cp)}",
+                  file=@.imp.sys.stderr, flush=True)
+            cp._trace_t0 = @.imp.time.monotonic()
+
+        def on_command_pipeline_post_run(self, cp):
+            dt = @.imp.time.monotonic() - getattr(cp, "_trace_t0", @.imp.time.monotonic())
+            print(
+                f"[trace] <<< {self._fmt_pipeline(cp)}  "
+                f"rtn={cp.returncode}  ({dt * 1000:.1f} ms)",
+                file=@.imp.sys.stderr, flush=True,
+            )
+
+``@aliases.register`` accepts a ``DecoratorAlias`` subclass and
+auto-instantiates it under the given name (here ``@trace``). The bare
+form (``@aliases.register`` without args) derives the name from the
+class's ``__name__`` — only useful when you happen to name the class
+exactly the way you want the alias spelled.
+
+Usage:
+
+.. code-block:: xonshcon
+
+    @ @trace echo hello world
+    [trace] >>> echo hello world
+    hello world
+    [trace] <<< echo hello world  rtn=0  (6.1 ms)
+
+    @ @trace ls /etc/hosts | wc -l
+    [trace] >>> ls -G /etc/hosts | wc -l
+    1
+    [trace] <<< ls -G /etc/hosts | wc -l  rtn=0  (15.7 ms)
+
+A few details that surface in the example above:
+
+* ``spec.cmd`` is the *resolved* argv after alias expansion, so ``ls``
+  shows up as ``ls -G`` (or whatever your shell aliases it to).
+* Storing ``_trace_t0`` directly on the pipeline avoids a global
+  ``id(cp)``-keyed dict to bridge the two hooks.
+* The hooks fire once per pipeline, not once per spec — a pipeline
+  like ``cmd1 | cmd2`` produces a single ``>>> ... | ...`` /
+  ``<<< ... | ...`` pair.
+
+
 See also
 ========
 

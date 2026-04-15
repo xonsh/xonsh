@@ -338,6 +338,17 @@ class Aliases(cabc.MutableMapping):
         )
 
     def _register(self, func, name="", dash_case=True):
+        # ``DecoratorAlias`` subclasses are registered as live instances —
+        # the runtime expects an instance with hooks bound to ``self``,
+        # and registering the class would cause every invocation to build
+        # a fresh object with the call args fed into ``__init__``.
+        if isinstance(func, type) and issubclass(func, DecoratorAlias):
+            resolved_name = get_alias_name(name or func, dash_case=dash_case)
+            instance = func()
+            self[resolved_name] = instance
+            func.__alias_name__ = resolved_name
+            return func
+
         name = get_alias_name(name or func, dash_case=dash_case)
         func.__alias_name__ = name
         self[name] = func
@@ -353,9 +364,18 @@ class Aliases(cabc.MutableMapping):
     ) -> tp.Callable[[types.FunctionType], types.FunctionType]: ...
 
     def register(self, func_or_name, name=None, dash_case=True):
-        """Decorator to register the given function by name."""
+        """Decorator to register a function or ``DecoratorAlias`` subclass.
 
-        if isinstance(func_or_name, types.FunctionType):
+        Bare form (``@aliases.register``) accepts a function or a
+        ``DecoratorAlias`` subclass. Parameterized form
+        (``@aliases.register("name")``) lets you override the derived
+        alias name. ``DecoratorAlias`` subclasses are auto-instantiated
+        — register the class, the live instance lands in ``aliases``.
+        """
+        is_decorator_cls = isinstance(func_or_name, type) and issubclass(
+            func_or_name, DecoratorAlias
+        )
+        if isinstance(func_or_name, types.FunctionType) or is_decorator_cls:
             return self._register(func_or_name, name, dash_case)
 
         def wrapper(func):
