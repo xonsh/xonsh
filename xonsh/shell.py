@@ -164,11 +164,7 @@ def deindent(src):
     """
     src = textwrap.dedent(src)
     first_line = src.split("\n", 1)[0]
-    if (
-        first_line
-        and first_line[0].isspace()
-        and first_line.rstrip().endswith("\\")
-    ):
+    if first_line and first_line[0].isspace() and first_line.rstrip().endswith("\\"):
         src = src.lstrip()
     return src
 
