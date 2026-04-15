@@ -25,15 +25,14 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-          cache-dependency-path: 'pyproject.toml'
-      - name: install pypa/build
-        run: pip install build
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
       - name: build sdist(tarball) to dist/
         if: ${{ startsWith(matrix.python-version, '3.11') }}
-        run: python -m build . --sdist
+        run: uv build --sdist
       - name: build bdist(wheel) to dist/
-        run: python -m build . --wheel
+        run: uv build --wheel
       - name: publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 

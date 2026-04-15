@@ -3,7 +3,7 @@
   stdenv,
   buildPythonPackage,
 
-  setuptools,
+  hatchling,
   ply,
   prompt-toolkit,
   pygments,
@@ -38,7 +38,7 @@ buildPythonPackage {
   src = ../.;
 
   build-system = [
-    setuptools
+    hatchling
   ];
 
   dependencies = [

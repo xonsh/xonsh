@@ -1,70 +1,35 @@
 [build-system]
-# PEP 518 https://www.python.org/dev/peps/pep-0518/
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 # PEP 621 project metadata
 # See https://www.python.org/dev/peps/pep-0621/
 name = "xonsh"
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 description = "Python-powered shell. Full-featured, cross-platform and AI-friendly. "
+readme = {file = "README.rst", content-type = "text/x-rst"}
 authors = [{ name = "Xonsh Maintainers", email = "xore.004fdbd5c8e6589bdd80944b5b8d4100.show-sender@streams.zulipchat.com" }]
 maintainers = [{ name = "Xonsh Maintainers", email = "xore.004fdbd5c8e6589bdd80944b5b8d4100.show-sender@streams.zulipchat.com" }, { name = "Gil Forsyth", email = "xonsh@gil.forsyth.dev" }]
 license = { text = "BSD 2-Clause License" }
 requires-python = ">=3.11"
 dependencies = []
 
-[tool.setuptools.dynamic]
-version = {attr = "xonsh.__version__"}
-readme = {file = ["README.rst"], content-type = "text/plain"}
+[tool.hatch.version]
+path = "xonsh/__init__.py"
 
-[tool.setuptools]
-packages = [
-    "xonsh",
-    "xonsh.api",
-    "xonsh.shells",
-    "xonsh.shells.ptk_shell",
-    "xonsh.parsers.ply",
-    "xonsh.procs",
-    "xonsh.platforms",
-    "xonsh.parsers",
-    "xonsh.xoreutils",
-    "xontrib",
-    "xonsh.completers",
-    "xonsh.history",
-    "xonsh.prompt",
-    "xonsh.pytest",
-    "xonsh.lib",
-    "xonsh.webconfig",
-    "xonsh.virtualenv",
-    "xompletions",
+[tool.hatch.build]
+artifacts = [
+    "xonsh/parser_table.py",
+    "xonsh/completion_parser_table.py",
 ]
-platforms = ["Cross Platform"]
-include-package-data = false
 
-[tool.setuptools.package-dir]
-xonsh = "xonsh"
-xontrib = "xontrib"
-xompletions = "xompletions"
-"xonsh.lib" = "xonsh/lib"
-"xonsh.webconfig" = "xonsh/webconfig"
+[tool.hatch.build.targets.wheel]
+packages = ["xonsh", "xontrib", "xompletions"]
 
-[tool.setuptools.package-data]
-xonsh = [
-    "*.json",
-    "*.githash",
-]
-xontrib = ["*.xsh"]
-"xonsh.lib" = ["*.xsh"]
-"xonsh.virtualenv" = ["*.xsh"]
-"xonsh.webconfig" = [
-    "*.html",
-    "js/app.min.js",
-    "js/bootstrap.min.css",
-    "js/LICENSE-bootstrap",
-    "js/xonsh_sticker_mini.png",
-]
+[tool.hatch.build.targets.wheel.hooks.custom]
+
+[tool.hatch.build.targets.sdist.hooks.custom]
 
 [project.entry-points]
 pytest11 = { xonsh = "xonsh.pytest.plugin" }
@@ -165,7 +130,6 @@ extend-exclude = [
     "completion_parser_table.py",
     "build/",
     "dist/",
-    "setup.py",
     ".vscode/",
     "feedstock",
     "rever",
@@ -270,3 +234,54 @@ convention = "numpy"
 dev = [
     "xonsh[dev]",
 ]
+
+[tool.mypy]
+cache_dir = ".cache/mypy/"
+warn_unused_configs = true
+warn_no_return = false
+packages = ["xonsh", "xontrib", "xompletions"]
+exclude = "((xonsh/parsers/ply)|(xontrib/(mpl.*py|distributed.py|jedi.py)))"
+local_partial_types = true
+no_implicit_optional = false
+show_error_context = true
+show_column_numbers = true
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = [
+    "xonsh.parser_table",
+    "xonsh.completion_parser_table",
+    "xonsh.parsers.parser_table.*",
+    "xonsh.parsers.completion_parser_table.*",
+    "xonsh",
+    "xonsh.prompt",
+    "xonsh.history",
+    "xonsh.completers",
+    "xonsh.procs",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "zmq.*",
+    "setproctitle",
+    "xonsh.parsers.ply.*",
+    "winreg.*",
+    "pygments.*",
+    "importlib_resources.*",
+    "nt.*",
+    "prompt_toolkit.*",
+    "distro.*",
+    "conda_suggest.*",
+    "_winreg.*",
+]
+ignore_missing_imports = true
+ignore_errors = true
+
+[tool.pytest.ini_options]
+cache_dir = ".cache/pytest"
+markers = [
+    "news: check changelog unit is valid rst",
+]
+testpaths = ["tests"]
