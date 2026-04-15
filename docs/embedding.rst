@@ -59,11 +59,10 @@ How to invoke it from embedded code
 -----------------------------------
 
 The helper currently lives in ``xonsh.main`` as a module-private
-function: ``_setup_controlling_terminal``. It is private by
-convention (leading underscore) but the implementation is stable and
-idempotent. A future release is expected to expose a public alias;
-until then, calling the private function directly is the supported
-path.
+function: ``_setup_controlling_terminal``. Its signature and name may
+change in future releases, so wrap the call in ``try`` / ``except`` —
+or reach out to the xonsh maintainers if you need a stable public
+entry point for your embedding scenario.
 
 Call it **before** you start your interactive shell loop — ideally as
 early in your program's startup as possible, so that any xonshrc or
@@ -73,13 +72,16 @@ xontrib code your embedder runs already has foreground ownership:
 
     # embedded_launcher.py
     from xonsh.main import setup
-    from xonsh.main import _setup_controlling_terminal
 
     # Acquire foreground of controlling TTY (idempotent, safe to
     # call multiple times — only the first call does real work).
     # No-op on Windows, in non-TTY contexts (pytest, piped input,
     # redirected stderr), and when XONSH_NO_FG_TAKEOVER=1 is set.
-    _setup_controlling_terminal()
+    try:
+        from xonsh.main import _setup_controlling_terminal
+        _setup_controlling_terminal()
+    except Exception:
+        pass
 
     # Your existing xonsh setup stays unchanged.
     setup(
