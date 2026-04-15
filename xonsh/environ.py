@@ -1035,8 +1035,14 @@ def _commands_cache_read_dir_once_default():
     return []
 
 
-class GeneralSetting(Xettings):
-    """General"""
+class SystemSetting(Xettings):
+    """System Environment Variables
+
+    Common, well-known variables inherited from the surrounding OS / shell
+    (POSIX-standard and XDG Base Directory Specification). They are not
+    xonsh-specific — xonsh only provides sensible defaults and lets scripts
+    read/write them the same way any other shell would.
+    """
 
     HOSTNAME = Var.with_default(
         default=default_value(lambda env: platform.node()),
@@ -1113,12 +1119,6 @@ class GeneralSetting(Xettings):
         is_configurable=False,
     )
 
-    UPDATE_OS_ENVIRON = Var.with_default(
-        False,
-        "If True ``os_environ`` will always be updated "
-        "when the xonsh environment changes. The environment can be reset to "
-        "the default value by calling ``__xonsh__.env.undo_replace_env()``",
-    )
     XDG_CONFIG_HOME = Var.with_default(
         os.path.expanduser(os.path.join("~", ".config")),
         "Open desktop standard configuration home dir. This is the same "
@@ -1144,6 +1144,17 @@ class GeneralSetting(Xettings):
         xdg_data_dirs,
         "A list of directories where system level data files are stored.",
         type_str="env_path",
+    )
+
+
+class GeneralSetting(Xettings):
+    """General"""
+
+    UPDATE_OS_ENVIRON = Var.with_default(
+        False,
+        "If True ``os_environ`` will always be updated "
+        "when the xonsh environment changes. The environment can be reset to "
+        "the default value by calling ``__xonsh__.env.undo_replace_env()``",
     )
     XONSH_CONFIG_DIR = Var.with_default(
         xonsh_config_dir,
