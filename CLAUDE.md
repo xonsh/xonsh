@@ -157,13 +157,154 @@ Every change must be accompanied by tests.
 
 ## Code Style
 
-- **Deprecated syntax**: The `${...}` syntax for dynamic environment variable lookup is deprecated. Never use it or mention it in code, docs, or examples. We use `@.env`.
 - **Formatter/linter**: ruff (line length 88, rules: B, D, E, F, I, T10, TID, YTT, W, UP)
 - **Type checking**: mypy
 - **Docstrings**: NumPy convention
 - **Imports**: absolute only. First-party: `xonsh`, `xontrib`, `xompletions`, `tests`
 - **Commit messages**: conventional commits (`feat:`, `fix:`, `docs:`, `ci:`, etc.)
 - **Pre-commit hooks**: ruff lint + ruff format + mypy + trailing-whitespace + check-yaml/toml
+
+### Xonsh (xsh) Code Preferences
+
+When writing xonsh code — in `.xsh` files, rc files, xontribs, docs, and examples — prefer the idiomatic xonsh form over the Python-style equivalent. These patterns are shorter, more readable, and showcase what xonsh offers.
+
+1. **Environment lookup** — use `@.env` (attribute-style) instead of the deprecated `${...}` syntax. `${...}` must never appear in code, docs, or examples.
+
+   ```xsh
+   # Good
+   echo @.env.HOME
+
+   # Bad — deprecated
+   echo ${...}['HOME']
+   ```
+
+2. **Alias registration** — prefer the `@aliases.register` decorator over dict assignment for callable aliases. The decorator keeps the name next to the function and enables richer metadata.
+
+   ```xsh
+   # Good
+   @aliases.register
+   def _my_cmd(args):
+       ...
+
+   # Less idiomatic
+   def _my_cmd(args):
+       ...
+   aliases['my-cmd'] = _my_cmd
+   ```
+
+3. **One-shot env overrides** — for short commands, use the `$VAR=value cmd` prefix (with the leading `$`) instead of a `with @.env.swap(...)` block. Reserve `swap()` for multi-statement scopes.
+
+   ```xsh
+   # Good — short, inline
+   $LANG='C' $LC_ALL='C' sort file.txt
+
+   # Heavier — only when wrapping multiple statements
+   with @.env.swap(LANG='C', LC_ALL='C'):
+       sort file.txt
+       uniq file.txt
+   ```
+
+4. **Bulk alias definition** — use the `|=` merge operator with a dict literal rather than a series of individual assignments.
+
+   ```xsh
+   # Good
+   aliases |= {
+       'a': 'echo a',
+       'b': 'echo b',
+   }
+
+   # Noisier
+   aliases['a'] = 'echo a'
+   aliases['b'] = 'echo b'
+   ```
+
+5. **One-off module access** — for a single call, use implicit import via `@.imp.<module>.<func>()` instead of adding an `import` statement. Keep real `import` statements for modules used repeatedly.
+
+   ```xsh
+   # Good — single use
+   pw = @.imp.getpass.getpass('password: ')
+
+   # Use a real import only when the module is used several times
+   import getpass
+   pw1 = getpass.getpass('a: ')
+   pw2 = getpass.getpass('b: ')
+   ```
+
+6. **Iterating over files** — use a xonsh globbing form (`` g`...` ``, `` r`...` ``, `` p`...` ``) instead of parsing `$(ls)`. Globs return lists directly, skip the subprocess, and don't break on filenames with spaces or newlines.
+
+   ```xsh
+   # Good
+   for f in g`*.py`:
+       echo @(f)
+
+   # Regex glob / pathlib glob when you need them
+   for f in r`.*\.log`:
+       ...
+   for p in p`**/*.txt`:
+       print(p.stat().st_size)
+
+   # Bad — fragile, spawns a subprocess, breaks on whitespace
+   for f in $(ls).split():
+       ...
+   ```
+
+7. **Installing shell-facing packages** — use `xpip` instead of `pip` when the package is for xonsh itself (xontribs, completers, libraries you'll use from the shell or rc files). `xpip` targets the Python interpreter running xonsh, which matters when xonsh is installed in an isolated env (conda, mamba, homebrew, AppImage) and a bare `pip` would install into the wrong interpreter. Use plain `pip` only when you're working inside a project's own virtualenv.
+
+   ```xsh
+   # Good — installs into the xonsh interpreter
+   xpip install xontrib-vox
+
+   # Plain pip is fine only when a project venv is active
+   pip install -e .
+   ```
+
+8. **One-off output format** — for a single capture, use a command decorator inside `$(...)` (`@lines`, `@json`, `@jsonl`, `@yaml`, `@paths`, …) instead of flipping `$XONSH_SUBPROC_OUTPUT_FORMAT` globally. Reserve the env var for session-wide defaults.
+
+   ```xsh
+   # Good — scoped to this call
+   procs = $(@lines ps -ax)
+   data = $(@json curl -s https://example.com/data.json)
+
+   # Avoid for one-off use — leaks into every later capture
+   $XONSH_SUBPROC_OUTPUT_FORMAT = 'list_lines'
+   procs = $(ps -ax)
+   ```
+
+9. **Modules as classes** — when a module (xontrib, rc helper, integration) has more than one related function, group them as methods on a class and instantiate once, rather than exposing a flat list of prefixed functions. Classes keep related state together, avoid name-prefix noise, and give users a natural dot-path to explore via tab completion.
+
+   ```xsh
+   # Good — cohesive namespace, tab-completable
+   class MyIntegration:
+       def func1(self): ...
+       def func2(self): ...
+
+   my = MyIntegration()
+   my.func1()
+   my.func2()
+
+   # Less ideal — prefix-based namespacing, no shared state
+   def myint_func1(): ...
+   def myint_func2(): ...
+   ```
+
+10. **Non-trivial integrations as session attributes** — when building a sizeable integration or piece of complex functionality (e.g. VSCode, Docker, a remote API), take the class from point 9 one step further and attach the instance to the session via `@.<name> = <Class>()`. This gives the user a discoverable, namespaced handle (`@.vscode.any_tuning()`) reachable from anywhere in the session, rc files, or other xontribs.
+
+    ```xsh
+    # Good — one explicit entry point, methods hang off the class
+    class VSCodeIntegration:
+        def open(self, path): ...
+        def any_tuning(self): ...
+
+    @.vscode = VSCodeIntegration()
+
+    # Later, anywhere in the session / rc / xontrib
+    @.vscode.open('.')
+    @.vscode.any_tuning()
+    ```
+
+    Reach for this when the integration has state, several related operations, or needs to expose a small API to the user. For a single helper function, a plain alias or callable is still fine.
+
+11. **Working with LLMs — research first, code second** — when using an LLM to change this codebase, first ask it to investigate the code it's about to touch: read the relevant module, search for every caller, map the surrounding invariants, and return a written plan of the proposed changes. Only after you've reviewed that plan should you let it implement. Skipping the research step — the "I want to fix this, just do it" prompt — pushes the model toward the shortest patch that compiles, which routinely breaks callers, skips edge cases, and produces integration bugs. Xonsh is a concurrent, multi-process system with many subtle interactions (parser, procs, events, prompt, completion), so a change that looks local often isn't. Don't skip the plan.
 
 ## CI
 
