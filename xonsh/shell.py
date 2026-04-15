@@ -2,6 +2,7 @@
 
 import difflib
 import sys
+import textwrap
 import time
 import warnings
 
@@ -47,7 +48,24 @@ events.doc(
     """
 on_precommand(cmd: str) -> None
 
-Fires just before a command is executed.
+Fires just before a command is executed, after ``on_transform_command`` has
+produced its final form. Handlers cannot modify the command — use
+``on_transform_command`` if you need to change the source before it runs.
+This event only fires in interactive mode.
+
+Parameters:
+
+* ``cmd``: The command about to be executed.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_precommand
+    def _audit(cmd, **kw):
+        '''Log each command to a file right before execution.'''
+        with open('/tmp/xonsh_audit.log', 'a') as f:
+            f.write(cmd)
 """,
 )
 
@@ -61,7 +79,8 @@ This event only fires in interactive mode.
 
 Parameters:
 
-* ``cmd``: The command that was executed (after transformation)
+* ``cmd``: The command that was executed — the final form after transformation
+  and dedent.
 * ``rtn``: The result of the command executed (``0`` for success)
 * ``out``: If xonsh stores command output, this is the output
 * ``ts``: Timestamps, in the order of ``[starting, ending]``
@@ -146,6 +165,23 @@ on_post_prompt() -> None
 Fires just after the prompt returns
 """,
 )
+
+
+def deindent(src):
+    """Remove leading indentation from ``src`` before compilation.
+
+    Applies ``textwrap.dedent`` to strip the common leading whitespace
+    from every line. If the first line ends with a line-continuation
+    backslash and still begins with whitespace after dedent (paste of a
+    subproc command where line 1 was indented deeper than the
+    continuation line), also ``lstrip`` the source so the first line is
+    flush-left.
+    """
+    src = textwrap.dedent(src)
+    first_line = src.split("\n", 1)[0]
+    if first_line and first_line[0].isspace() and first_line.rstrip().endswith("\\"):
+        src = src.lstrip()
+    return src
 
 
 def transform_command(src, show_diff=True):

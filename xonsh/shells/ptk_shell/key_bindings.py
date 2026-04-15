@@ -23,7 +23,7 @@ from prompt_toolkit.keys import Keys
 from xonsh.aliases import xonsh_exit
 from xonsh.built_ins import XSH
 from xonsh.platform import ON_WINDOWS
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.tools import (
     check_for_partial_string,
     ends_with_colon_token,
@@ -95,7 +95,7 @@ def can_compile(src):
     """Returns whether the code can be compiled, i.e. it is valid xonsh."""
     src = src if src.endswith("\n") else src + "\n"
     src = transform_command(src, show_diff=False)
-    src = src.lstrip()
+    src = deindent(src)
     try:
         XSH.execer.compile(src, mode="single", glbs=None, locs=XSH.ctx)
         rtn = True

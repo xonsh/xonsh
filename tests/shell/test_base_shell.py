@@ -5,8 +5,37 @@ import os
 
 import pytest
 
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.shells.base_shell import BaseShell, _TeeStdBuf
+
+
+@pytest.mark.parametrize(
+    "src, expected",
+    [
+        # single-line indented input
+        ("  echo 1\n", "echo 1\n"),
+        ("\techo 1\n", "echo 1\n"),
+        # no leading whitespace - untouched
+        ("echo 1\n", "echo 1\n"),
+        # multi-line block with common leading indent (Python paste case)
+        (
+            "    if True:\n        x = 1\n    print(x)\n",
+            "if True:\n    x = 1\nprint(x)\n",
+        ),
+        # multi-line subproc with common leading indent
+        ("  echo 1\n  echo 2\n", "echo 1\necho 2\n"),
+        # first line deeper than continuation -- line-continuation subproc
+        # paste: dedent alone leaves line 1 indented, so lstrip kicks in
+        ("        echo 1 \\\n    2\n", "echo 1 \\\n2\n"),
+        # first line deeper but no continuation -- lstrip does NOT fire,
+        # so the (already-broken) indent structure is preserved as-is
+        ("        echo 1\n    echo 2\n", "    echo 1\necho 2\n"),
+        # empty string
+        ("", ""),
+    ],
+)
+def test_deindent(src, expected):
+    assert deindent(src) == expected
 
 
 def test_pwd_tracks_cwd(xession, xonsh_execer, tmpdir_factory, monkeypatch):
@@ -134,8 +163,11 @@ def test_on_precommand_preserves_leading_whitespace(prefix, xonsh_session):
     assert fired[0].startswith(prefix + "print")
 
 
-def test_on_postcommand_preserves_leading_whitespace(xonsh_session):
-    """on_postcommand must also receive the command with original whitespace."""
+def test_on_postcommand_receives_dedented_command(xonsh_session):
+    """on_postcommand must receive the command in the form that was executed:
+    post-transform and post-dedent — i.e. what was actually compiled and run.
+    This is the counterpart to on_precommand, which sees the original input.
+    """
     fired = []
 
     @xonsh_session.builtins.events.on_postcommand
@@ -144,7 +176,57 @@ def test_on_postcommand_preserves_leading_whitespace(xonsh_session):
 
     xonsh_session.shell.default("  print('test')")
     assert len(fired) == 1
-    assert fired[0].startswith("  print")
+    assert fired[0].startswith("print")
+
+
+def test_event_chain_transform_precommand_dedent_postcommand(xonsh_session):
+    """The full command chain: ``on_transform_command`` (may modify) →
+    ``on_precommand`` (reacts to the transformed input, whitespace preserved)
+    → dedent + execute → ``on_postcommand`` (sees what was actually run).
+    Each stage receives a different, correctly-progressed form of the command.
+    """
+    transformed = []
+    precommand = []
+    postcommand = []
+
+    @xonsh_session.builtins.events.on_transform_command
+    def transform(cmd, **_):
+        transformed.append(cmd)
+        return cmd.replace("echo 1", "echo 2")
+
+    @xonsh_session.builtins.events.on_precommand
+    def precmd(cmd, **_):
+        precommand.append(cmd)
+
+    @xonsh_session.builtins.events.on_postcommand
+    def postcmd(cmd, **_):
+        postcommand.append(cmd)
+
+    xonsh_session.shell.default("   echo 1")
+
+    # on_transform_command sees the raw input on its first firing
+    assert transformed[0] == "   echo 1\n"
+    # on_precommand sees the post-transform command with leading whitespace
+    assert precommand == ["   echo 2\n"]
+    # on_postcommand sees the dedented form that was actually executed
+    assert postcommand == ["echo 2\n"]
+
+
+def test_on_postcommand_dedents_block_with_comment_backslash(xonsh_session):
+    """on_postcommand must see the dedented block even when a line ends with a
+    ``\\`` *inside a comment*. The backslash in a comment is not a line
+    continuation, so the whole ``if``-block compiles as one unit and the
+    dedented form reaches the event.
+    """
+    fired = []
+
+    @xonsh_session.builtins.events.on_postcommand
+    def capture(cmd, **_):
+        fired.append(cmd)
+
+    xonsh_session.shell.default("   if 1: # \\\n     echo 1")
+    assert len(fired) == 1
+    assert fired[0] == "if 1: # \\\n  echo 1\n"
 
 
 def test_on_transform_command_receives_leading_whitespace(xonsh_session):
