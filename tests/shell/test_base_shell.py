@@ -163,8 +163,11 @@ def test_on_precommand_preserves_leading_whitespace(prefix, xonsh_session):
     assert fired[0].startswith(prefix + "print")
 
 
-def test_on_postcommand_preserves_leading_whitespace(xonsh_session):
-    """on_postcommand must also receive the command with original whitespace."""
+def test_on_postcommand_receives_dedented_command(xonsh_session):
+    """on_postcommand must receive the command in the form that was executed:
+    post-transform and post-dedent — i.e. what was actually compiled and run.
+    This is the counterpart to on_precommand, which sees the original input.
+    """
     fired = []
 
     @xonsh_session.builtins.events.on_postcommand
@@ -173,7 +176,24 @@ def test_on_postcommand_preserves_leading_whitespace(xonsh_session):
 
     xonsh_session.shell.default("  print('test')")
     assert len(fired) == 1
-    assert fired[0].startswith("  print")
+    assert fired[0].startswith("print")
+
+
+def test_on_postcommand_dedents_block_with_comment_backslash(xonsh_session):
+    """on_postcommand must see the dedented block even when a line ends with a
+    ``\\`` *inside a comment*. The backslash in a comment is not a line
+    continuation, so the whole ``if``-block compiles as one unit and the
+    dedented form reaches the event.
+    """
+    fired = []
+
+    @xonsh_session.builtins.events.on_postcommand
+    def capture(cmd, **_):
+        fired.append(cmd)
+
+    xonsh_session.shell.default("   if 1: # \\\n     echo 1")
+    assert len(fired) == 1
+    assert fired[0] == "if 1: # \\\n  echo 1\n"
 
 
 def test_on_transform_command_receives_leading_whitespace(xonsh_session):
