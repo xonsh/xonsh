@@ -80,9 +80,7 @@ This event only fires in interactive mode.
 Parameters:
 
 * ``cmd``: The command that was executed — the final form after transformation
-  and dedent, i.e. exactly what was compiled and run (and what is stored in
-  history). This may differ from the ``cmd`` seen by ``on_precommand``, which
-  preserves the original leading whitespace.
+  and dedent.
 * ``rtn``: The result of the command executed (``0`` for success)
 * ``out``: If xonsh stores command output, this is the output
 * ``ts``: Timestamps, in the order of ``[starting, ending]``
