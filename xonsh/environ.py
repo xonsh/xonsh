@@ -2301,14 +2301,14 @@ class WindowsSetting(Xettings):
     )
 
 
-class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
+class DeprecatedSetting(Xettings):  # sub-classing -> sub-group
     """Deprecated settings."""
 
     AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs(
-        {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
+        {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True, "doc": "Deprecated. Use XONSH_PROMPT_AUTO_SUGGEST."}
     )
     RAISE_SUBPROC_ERROR = SubprocessSetting.XONSH_SUBPROC_CMD_RAISE_ERROR.set_attrs(
-        {"sync": "XONSH_SUBPROC_CMD_RAISE_ERROR", "deprecated": True}
+        {"sync": "XONSH_SUBPROC_CMD_RAISE_ERROR", "deprecated": True, "doc": "Deprecated. Use XONSH_SUBPROC_CMD_RAISE_ERROR."}
     )
 
 
