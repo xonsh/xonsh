@@ -48,7 +48,24 @@ events.doc(
     """
 on_precommand(cmd: str) -> None
 
-Fires just before a command is executed.
+Fires just before a command is executed, after ``on_transform_command`` has
+produced its final form. Handlers cannot modify the command — use
+``on_transform_command`` if you need to change the source before it runs.
+This event only fires in interactive mode.
+
+Parameters:
+
+* ``cmd``: The command about to be executed.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_precommand
+    def _audit(cmd, **kw):
+        '''Log each command to a file right before execution.'''
+        with open('/tmp/xonsh_audit.log', 'a') as f:
+            f.write(cmd)
 """,
 )
 

@@ -179,6 +179,39 @@ def test_on_postcommand_receives_dedented_command(xonsh_session):
     assert fired[0].startswith("print")
 
 
+def test_event_chain_transform_precommand_dedent_postcommand(xonsh_session):
+    """The full command chain: ``on_transform_command`` (may modify) →
+    ``on_precommand`` (reacts to the transformed input, whitespace preserved)
+    → dedent + execute → ``on_postcommand`` (sees what was actually run).
+    Each stage receives a different, correctly-progressed form of the command.
+    """
+    transformed = []
+    precommand = []
+    postcommand = []
+
+    @xonsh_session.builtins.events.on_transform_command
+    def transform(cmd, **_):
+        transformed.append(cmd)
+        return cmd.replace("echo 1", "echo 2")
+
+    @xonsh_session.builtins.events.on_precommand
+    def precmd(cmd, **_):
+        precommand.append(cmd)
+
+    @xonsh_session.builtins.events.on_postcommand
+    def postcmd(cmd, **_):
+        postcommand.append(cmd)
+
+    xonsh_session.shell.default("   echo 1")
+
+    # on_transform_command sees the raw input on its first firing
+    assert transformed[0] == "   echo 1\n"
+    # on_precommand sees the post-transform command with leading whitespace
+    assert precommand == ["   echo 2\n"]
+    # on_postcommand sees the dedented form that was actually executed
+    assert postcommand == ["echo 2\n"]
+
+
 def test_on_postcommand_dedents_block_with_comment_backslash(xonsh_session):
     """on_postcommand must see the dedented block even when a line ends with a
     ``\\`` *inside a comment*. The backslash in a comment is not a line
