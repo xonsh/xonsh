@@ -8,7 +8,7 @@ Xonsh ships with two REPL engines. Historically, they have been referred to in x
 as “shells” or “prompts”, but they will likely be renamed in the future, as they are in fact
 REPL (read–eval–print loop) engines that power all user interaction with the terminal. These are:
 
-* **ptk** (``$SHELL_TYPE='prompt_toolkit'``) — the recommended, full-featured
+* **prompt-toolkit** or **ptk** (``$SHELL_TYPE='prompt_toolkit'``) — the recommended, full-featured
   engine built on `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_.
   It provides syntax highlighting, multi-line editing, completion menus, custom
   key bindings, and more. It is included when installing the full package
@@ -509,25 +509,6 @@ For example:
     (env) @
 
 
-OSC 7 — Working directory reporting
-====================================
-
-Xonsh automatically emits `OSC 7 <https://gitlab.freedesktop.org/terminal-wg/specifications/-/merge_requests/7>`_
-escape sequences on every directory change and at shell startup. This is an
-invisible signal that tells the terminal emulator what the current working
-directory is.
-
-Terminals use it for:
-
-* Opening new tabs/splits in the same directory
-* macOS Terminal.app session restoration after reboot
-* Showing the path in the terminal title bar or tab
-
-This works out of the box on most modern terminals including macOS Terminal.app,
-iTerm2, GNOME Terminal, Windows Terminal, WezTerm, and Kitty. No configuration
-is needed.
-
-
 .. _change_theme:
 
 Color theme
@@ -560,6 +541,25 @@ To do so, add something similar to your ``.xonshrc``:
    $XONSH_COLOR_STYLE = "mystyle"
 
 You can check ``xonfig colors`` for the token names. The ``base`` style will be used as a fallback for styles you don't set - pick one from ``xonfig styles`` (``default`` is used if omitted).
+
+
+OSC 7 — Working directory reporting
+====================================
+
+Xonsh automatically emits `OSC 7 <https://gitlab.freedesktop.org/terminal-wg/specifications/-/merge_requests/7>`_
+escape sequences on every directory change and at shell startup. This is an
+invisible signal that tells the terminal emulator what the current working
+directory is.
+
+Terminals use it for:
+
+* Opening new tabs/splits in the same directory
+* macOS Terminal.app session restoration after reboot
+* Showing the path in the terminal title bar or tab
+
+This works out of the box on most modern terminals including macOS Terminal.app,
+iTerm2, GNOME Terminal, Windows Terminal, WezTerm, and Kitty. No configuration
+is needed.
 
 
 See also
