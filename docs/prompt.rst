@@ -4,7 +4,9 @@
 Prompt
 ******
 
-xonsh ships with two prompt engines:
+Xonsh ships with two REPL engines. Historically, they have been referred to in xonsh
+as “shells” or “prompts”, but they will likely be renamed in the future, as they are in fact
+REPL (read–eval–print loop) engines that power all user interaction with the terminal. These are:
 
 * **ptk** (``$SHELL_TYPE='prompt_toolkit'``) — the recommended, full-featured
   engine built on `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_.
@@ -37,7 +39,7 @@ which will be replaced automatically:
 
     @ $PROMPT = '{user}@{hostname}:{cwd} @ '
     snail@home:~ @ # it works!
-    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
     snail@home:~ @> # so does that!
 
 By default, the following variables are available for use:
