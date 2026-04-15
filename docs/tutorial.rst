@@ -1514,7 +1514,7 @@ which will be replaced automatically:
 
     @ $PROMPT = '{user}@{hostname}:{cwd} @ '
     snail@home:~ @ # it works!
-    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
     snail@home:~ @> # so does that!
 
 See :ref:`customprompt_ref` in the Prompt Toolkit page for the full list of
