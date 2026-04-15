@@ -265,19 +265,15 @@ define keybindings and warns you about potential pitfalls.
 
 All of the code below can be entered into your :doc:`xonshrc`.
 
-.. warning:: This will let you hook directly into the ``prompt_toolkit``
-             keybinding manager. It will not stop you from rendering your
-             prompt completely unusable, so tread lightly.
+This will let you hook directly into the ``prompt_toolkit`` keybinding manager. It will not stop you from rendering your
+prompt completely unusable, so tread lightly.
 
 Control characters
 ------------------
 
-We can't and won't stop you from doing what you want, but in the interest of a
-functioning shell, you probably shouldn't mess with the following keystrokes.
-Some of them are `ASCII control characters
-<https://en.wikipedia.org/wiki/Control_character#In_ASCII>`_ and *really*
-shouldn't be used. The others are used by xonsh and will result in some loss of
-functionality (in less you take the time to rebind them elsewhere).
+Some `ASCII control characters <https://en.wikipedia.org/wiki/Control_character#In_ASCII>`_ are widely used,
+and it is generally not recommended to override them. Additionally, certain keybindings are used by xonsh
+and may affect functionality if changed.
 
 .. list-table::
     :widths: 2 2 2
@@ -328,15 +324,12 @@ We'll start with a toy example that just inserts the text "hi" into the current 
     @events.on_ptk_create
     def custom_keybindings(bindings, **kw):
 
-        @bindings.add(Keys.ControlW)
+        @bindings.add(Keys.ControlW)  # or just "c-w" string
         def say_hi(event):
             event.current_buffer.insert_text('hi')
 
 Put that in your :doc:`xonshrc`, restart xonsh and then see if
 pressing ``Ctrl-w`` does anything (it should!)
-
-.. note:: It is also possible to write ``Keys.ControlW`` like ``c-w``.
-
 
 What commands can keybindings run?
 ----------------------------------
@@ -360,22 +353,15 @@ hardly any effort at all. If we wanted to, say, have a command that runs ``ls
             run_in_terminal(_task)
 
 
-.. note:: ``run_in_terminal(func)`` (imported from
-          ``prompt_toolkit.application``) is the canonical
-          ``prompt_toolkit`` idiom for running code that writes to
-          ``STDOUT`` from a keybinding.  It temporarily hides the
-          prompt, runs your function (which can freely ``print`` or
-          launch subprocesses), then redraws the prompt — including
-          ``$RIGHT_PROMPT`` and ``$BOTTOM_TOOLBAR`` — above the
-          captured output.
-
-          Do **not** use ``event.cli.renderer.erase()`` for this
-          purpose: it resets the renderer's height bookkeeping and
-          ``$BOTTOM_TOOLBAR`` (and sometimes ``$RIGHT_PROMPT``) will
-          disappear until the next keypress.  See
-          `xonsh/xonsh#5084
-          <https://github.com/xonsh/xonsh/issues/5084>`_ for the
-          underlying ``prompt_toolkit`` quirk.
+``run_in_terminal(func)`` (imported from ``prompt_toolkit.application``)
+is the canonical ``prompt_toolkit`` idiom for running code that writes
+to ``STDOUT`` from a keybinding. It temporarily hides the prompt, runs
+your function (which can freely ``print`` or launch subprocesses), then
+redraws the prompt — including ``$RIGHT_PROMPT`` and ``$BOTTOM_TOOLBAR``
+— above the captured output. Do **not** use ``event.cli.renderer.erase()``
+for this purpose: it resets the renderer's height bookkeeping and
+``$BOTTOM_TOOLBAR`` (and sometimes ``$RIGHT_PROMPT``) will disappear
+until the next keypress.
 
 Restrict actions with filters
 -----------------------------
@@ -420,6 +406,40 @@ Now that the condition is defined, we can pass it as a ``filter`` keyword to a k
 With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
 contents of your current directory if there are fewer than 10 items in it.
 Useful? Debatable. Powerful? Yes.
+
+Edit-mode filter
+~~~~~~~~~~~~~~~~
+
+A common use of filters is restricting a binding to a specific editing
+mode — Emacs insert, Vi insert, or Vi navigation. ``prompt_toolkit``
+ships ready-made filters for each; pass them as ``filter`` to
+``bindings.add``:
+
+.. code-block:: python
+
+    from prompt_toolkit.filters import (
+        EmacsInsertMode, ViInsertMode, ViNavigationMode,
+    )
+
+    @events.on_ptk_create
+    def custom_keybindings(bindings, **kw):
+
+        @bindings.add('c-l', filter=EmacsInsertMode())
+        def ls_in_emacs_insert(event):
+            def _task():
+                ls -l
+            run_in_terminal(_task)
+
+        @bindings.add('c-l', filter=ViInsertMode() | ViNavigationMode())
+        def ls_in_any_vi_mode(event):
+            def _task():
+                ls -l
+            run_in_terminal(_task)
+
+The same key (``Ctrl-L``) can be bound to different actions per mode —
+``prompt_toolkit`` picks the binding whose ``filter`` is currently
+true. Combine with custom ``Condition`` filters using ``&``, ``|``, ``~``
+(as in ``ViInsertMode() & lt_ten_files``) for finer-grained rules.
 
 
 Pre-filling the next command
@@ -469,9 +489,11 @@ and place the cursor between the quotes.
 -------------------------------------
 
 Sets a greyed-out suggestion (like auto-suggest from history) for the next prompt.
-The user can accept it by pressing the right arrow key::
+The user can accept it by pressing the right arrow key:
 
-    $XONSH_PROMPT_NEXT_CMD_SUGGESTION = 'git push origin main'
+.. code-block:: xonshcon
+
+    @ $XONSH_PROMPT_NEXT_CMD_SUGGESTION = 'git push origin main'
 
 Unlike ``$XONSH_PROMPT_NEXT_CMD``, this does not pre-fill the input — it only
 shows a suggestion that the user can accept or ignore.
