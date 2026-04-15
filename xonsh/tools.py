@@ -511,6 +511,48 @@ def get_line_continuation():
     return "\\"
 
 
+def _ends_with_line_continuation(line, linecont):
+    """True if ``line`` ends with ``linecont`` outside of a comment.
+
+    A ``#`` that is not inside a string literal starts a comment;
+    Python's tokenizer treats ``\\`` inside a comment as literal text,
+    not as a line continuation. ``xonsh``'s context-free subproc
+    fallback must agree, otherwise a comment ending in ``\\`` silently
+    swallows the next physical line (#6294 follow-up).
+    """
+    if not line.endswith(linecont):
+        return False
+    quote = None  # active string delimiter, or None
+    triple = False  # whether the active string is triple-quoted
+    escape = False  # previous char in a string opened an escape
+    i = 0
+    end = len(line) - len(linecont)
+    while i < end:
+        c = line[i]
+        if quote is None:
+            if c == "#":
+                return False
+            if c in ("'", '"'):
+                if line[i : i + 3] == c * 3:
+                    quote, triple = c, True
+                    i += 3
+                    continue
+                quote, triple = c, False
+        else:
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif triple and line[i : i + 3] == quote * 3:
+                quote, triple = None, False
+                i += 3
+                continue
+            elif not triple and c == quote:
+                quote, triple = None, False
+        i += 1
+    return True
+
+
 def get_logical_line(lines, idx):
     """Returns a single logical line (i.e. one without line continuations)
     from a list of lines.  This line should begin at index idx. This also
@@ -520,15 +562,17 @@ def get_logical_line(lines, idx):
     n = 1
     nlines = len(lines)
     linecont = get_line_continuation()
-    while idx > 0 and lines[idx - 1].endswith(linecont):
+    while idx > 0 and _ends_with_line_continuation(lines[idx - 1], linecont):
         idx -= 1
     start = idx
     line = lines[idx]
     open_triple = _have_open_triple_quotes(line)
-    while (line.endswith(linecont) or open_triple) and idx < nlines - 1:
+    while (
+        _ends_with_line_continuation(line, linecont) or open_triple
+    ) and idx < nlines - 1:
         n += 1
         idx += 1
-        if line.endswith(linecont):
+        if _ends_with_line_continuation(line, linecont):
             line = line[:-1] + lines[idx]
         else:
             line = line + "\n" + lines[idx]
