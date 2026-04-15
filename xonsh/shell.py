@@ -2,6 +2,7 @@
 
 import difflib
 import sys
+import textwrap
 import time
 import warnings
 
@@ -146,6 +147,27 @@ on_post_prompt() -> None
 Fires just after the prompt returns
 """,
 )
+
+
+def deindent(src):
+    """Remove leading indentation from ``src`` before compilation.
+
+    Applies ``textwrap.dedent`` to strip the common leading whitespace
+    from every line. If the first line ends with a line-continuation
+    backslash and still begins with whitespace after dedent (paste of a
+    subproc command where line 1 was indented deeper than the
+    continuation line), also ``lstrip`` the source so the first line is
+    flush-left.
+    """
+    src = textwrap.dedent(src)
+    first_line = src.split("\n", 1)[0]
+    if (
+        first_line
+        and first_line[0].isspace()
+        and first_line.rstrip().endswith("\\")
+    ):
+        src = src.lstrip()
+    return src
 
 
 def transform_command(src, show_diff=True):

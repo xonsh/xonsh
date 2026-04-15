@@ -21,7 +21,7 @@ from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.prompt.base import PromptFormatter, multiline_prompt
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.tools import (
     DefaultNotGiven,
     XonshError,
@@ -461,7 +461,7 @@ class BaseShell:
             ts1 = ts1 or time.time()
             tee_out = tee.getvalue()
             info = self._append_history(
-                inp=src.lstrip(),
+                inp=deindent(src),
                 ts=[ts0, ts1],
                 spc=self.src_starts_with_space,
                 tee_out=tee_out,
@@ -550,7 +550,7 @@ class BaseShell:
             return None, None
         src = "".join(self.buffer)
         src = transform_command(src)
-        _, code = self.compile(src.lstrip())
+        _, code = self.compile(deindent(src))
         return src, code
 
     def compile(self, src):

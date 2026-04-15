@@ -5,8 +5,37 @@ import os
 
 import pytest
 
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.shells.base_shell import BaseShell, _TeeStdBuf
+
+
+@pytest.mark.parametrize(
+    "src, expected",
+    [
+        # single-line indented input
+        ("  echo 1\n", "echo 1\n"),
+        ("\techo 1\n", "echo 1\n"),
+        # no leading whitespace - untouched
+        ("echo 1\n", "echo 1\n"),
+        # multi-line block with common leading indent (Python paste case)
+        (
+            "    if True:\n        x = 1\n    print(x)\n",
+            "if True:\n    x = 1\nprint(x)\n",
+        ),
+        # multi-line subproc with common leading indent
+        ("  echo 1\n  echo 2\n", "echo 1\necho 2\n"),
+        # first line deeper than continuation -- line-continuation subproc
+        # paste: dedent alone leaves line 1 indented, so lstrip kicks in
+        ("        echo 1 \\\n    2\n", "echo 1 \\\n2\n"),
+        # first line deeper but no continuation -- lstrip does NOT fire,
+        # so the (already-broken) indent structure is preserved as-is
+        ("        echo 1\n    echo 2\n", "    echo 1\necho 2\n"),
+        # empty string
+        ("", ""),
+    ],
+)
+def test_deindent(src, expected):
+    assert deindent(src) == expected
 
 
 def test_pwd_tracks_cwd(xession, xonsh_execer, tmpdir_factory, monkeypatch):

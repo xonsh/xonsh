@@ -30,7 +30,7 @@ from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
 from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS
 from xonsh.pygments_cache import get_all_styles
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.shells.base_shell import BaseShell
 from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.shells.ptk_shell.formatter import PTKPromptFormatter
@@ -451,7 +451,11 @@ class PromptToolkitShell(BaseShell):
         src = transform_command(src)
         try:
             code = self.execer.compile(
-                src, mode="single", glbs=self.ctx, locs=None, compile_empty_tree=False
+                deindent(src),
+                mode="single",
+                glbs=self.ctx,
+                locs=None,
+                compile_empty_tree=False,
             )
             self.reset_buffer()
         except Exception:  # pylint: disable=broad-except
