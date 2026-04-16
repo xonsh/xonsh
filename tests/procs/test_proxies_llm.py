@@ -4,6 +4,7 @@ import sys
 from unittest.mock import patch
 
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread, still_writable
+from xonsh.procs.readers import safe_fdclose
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -121,7 +122,9 @@ class TestProcProxyWaitFdCleanup:
             stdin.read()
 
         p = _make_proc_proxy(alias, xession, stdin=r)
-        with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
+        with patch(
+            "xonsh.procs.proxies.safe_fdclose", wraps=safe_fdclose
+        ) as mock_close:
             p.wait()
             # At least one call should be a TextIOWrapper wrapping our fd
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
@@ -137,7 +140,9 @@ class TestProcProxyWaitFdCleanup:
             stdout.write("hi")
 
         p = _make_proc_proxy(alias, xession, stdout=w)
-        with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
+        with patch(
+            "xonsh.procs.proxies.safe_fdclose", wraps=safe_fdclose
+        ) as mock_close:
             p.wait()
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
             assert any(isinstance(h, io.TextIOWrapper) for h in closed_handles), (
@@ -153,7 +158,9 @@ class TestProcProxyWaitFdCleanup:
             stderr.write("err")
 
         p = _make_proc_proxy(alias, xession, stderr=w)
-        with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
+        with patch(
+            "xonsh.procs.proxies.safe_fdclose", wraps=safe_fdclose
+        ) as mock_close:
             p.wait()
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
             assert any(isinstance(h, io.TextIOWrapper) for h in closed_handles), (
@@ -168,7 +175,9 @@ class TestProcProxyWaitFdCleanup:
             pass
 
         p = _make_proc_proxy(alias, xession)
-        with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
+        with patch(
+            "xonsh.procs.proxies.safe_fdclose", wraps=safe_fdclose
+        ) as mock_close:
             p.wait()
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
             assert sys.stdout not in closed_handles
@@ -182,7 +191,9 @@ class TestProcProxyWaitFdCleanup:
             stdout.write("hi")
 
         p = _make_proc_proxy(alias, xession, stdout=buf)
-        with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
+        with patch(
+            "xonsh.procs.proxies.safe_fdclose", wraps=safe_fdclose
+        ) as mock_close:
             p.wait()
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
             assert buf not in closed_handles
@@ -195,7 +206,9 @@ class TestProcProxyWaitFdCleanup:
             raise RuntimeError("boom")
 
         p = _make_proc_proxy(alias, xession, stdout=w)
-        with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
+        with patch(
+            "xonsh.procs.proxies.safe_fdclose", wraps=safe_fdclose
+        ) as mock_close:
             p.wait()
             assert p.returncode == 1
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
@@ -216,7 +229,9 @@ class TestProcProxyWaitFdCleanup:
             stdout.write(stdin.read())
 
         p = _make_proc_proxy(alias, xession, stdin=in_r, stdout=out_w, stderr=err_w)
-        with patch("xonsh.procs.proxies.safe_fdclose") as mock_close:
+        with patch(
+            "xonsh.procs.proxies.safe_fdclose", wraps=safe_fdclose
+        ) as mock_close:
             p.wait()
             closed_handles = [c.args[0] for c in mock_close.call_args_list]
             wrappers = [h for h in closed_handles if isinstance(h, io.TextIOWrapper)]
