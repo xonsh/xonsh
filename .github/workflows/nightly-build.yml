@@ -1,0 +1,268 @@
+name: nightly-build
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+
+      - name: install python-appimage
+        run: pip install python-appimage
+
+      - name: create requirements.txt
+        run: |
+          echo $PWD > ./appimage/requirements.txt
+          cat ./appimage/pre-requirements.txt >> ./appimage/requirements.txt
+
+      - name: build AppImage
+        run: python -m python_appimage build app -p 3.14 ./appimage
+
+      - name: rename to nightly
+        run: mv xonsh-x86_64.AppImage xonsh-nightly.AppImage
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xonsh-nightly.AppImage
+          path: xonsh-nightly.AppImage
+
+      - name: update continuous release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete continuous --cleanup-tag --yes || true
+          gh release create continuous \
+            --title "Nightly build" \
+            --notes "$(cat <<'EOF'
+          xonsh ${{ github.sha }}
+          EOF
+          )" \
+            --prerelease \
+            xonsh-nightly.AppImage
+
+  nuitka:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+
+      - name: install nuitka and deps
+        run: |
+          pip install nuitka ordered-set zstandard
+          pip install -e '.[full]'
+
+      - name: build standalone onefile
+        run: |
+          python -m nuitka \
+            --onefile \
+            --show-progress \
+            --show-scons \
+            --show-modules \
+            --output-filename=xonsh-nightly-nuitka.bin \
+            --include-package=xonsh \
+            --include-package=xontrib \
+            --include-package=xompletions \
+            --include-package-data=xonsh \
+            --include-package-data=xontrib \
+            --include-package-data=xompletions \
+            --include-data-files=xonsh/parsers/ply/=xonsh/parsers/ply/ \
+            --include-package=pip --include-package=setuptools --include-package=wheel \
+            --include-package=certifi --include-package-data=certifi \
+            --include-module=ujson \
+            --include-package=pygments --include-package=prompt_toolkit \
+            --include-module=pyperclip --include-package=click \
+            --assume-yes-for-downloads \
+            -m xonsh
+
+      - name: smoke test
+        run: |
+          chmod +x xonsh-nightly-nuitka.bin
+          ./xonsh-nightly-nuitka.bin -c 'echo "nuitka build ok"'
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xonsh-nightly-nuitka.bin
+          path: xonsh-nightly-nuitka.bin
+
+      - name: upload to continuous release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          until gh release view continuous &>/dev/null; do sleep 5; done
+          gh release upload continuous xonsh-nightly-nuitka.bin --clobber
+
+  windows-inno6:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/checkout@v6
+        with:
+          repository: xonsh/xonsh-winget
+          path: winget
+
+      - name: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+
+      - name: install xonsh and build deps
+        run: |
+          pip install -e .[full]
+          pip install jinja2 click pyyaml
+
+      - name: install inno setup 6
+        run: choco install innosetup -y --no-progress
+
+      - name: build distribution
+        working-directory: winget
+        run: xonsh build.xsh build --git --version nightly
+
+      - name: build installer
+        working-directory: winget
+        run: xonsh build.xsh installer --version nightly --inno-version 6
+
+      - name: collect artifact
+        shell: bash
+        run: |
+          mv winget/dist/*.exe xonsh-nightly-inno6-setup.exe
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xonsh-nightly-inno6-setup.exe
+          path: xonsh-nightly-inno6-setup.exe
+
+      - name: upload to continuous release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          until gh release view continuous &>/dev/null; do sleep 5; done
+          gh release upload continuous xonsh-nightly-inno6-setup.exe --clobber
+
+  windows-inno5:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/checkout@v6
+        with:
+          repository: xonsh/xonsh-winget
+          path: winget
+
+      - name: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+
+      - name: install xonsh and build deps
+        run: |
+          pip install -e .[full]
+          pip install jinja2 click pyyaml
+
+      - name: install inno setup 5
+        shell: bash
+        run: |
+          curl -fSL -o inno5.exe \
+            https://files.jrsoftware.org/is/5/innosetup-5.6.1.exe
+          ./inno5.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+          echo "C:\Program Files (x86)\Inno Setup 5" >> "$GITHUB_PATH"
+
+      - name: build distribution
+        working-directory: winget
+        run: xonsh build.xsh build --git --version nightly --python-version 3.13
+
+      - name: build installer
+        working-directory: winget
+        run: xonsh build.xsh installer --version nightly --inno-version 5
+
+      - name: collect artifact
+        shell: bash
+        run: |
+          mv winget/dist/*.exe xonsh-nightly-inno5-setup.exe
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xonsh-nightly-inno5-setup.exe
+          path: xonsh-nightly-inno5-setup.exe
+
+      - name: upload to continuous release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          until gh release view continuous &>/dev/null; do sleep 5; done
+          gh release upload continuous xonsh-nightly-inno5-setup.exe --clobber
+
+  flatpak:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/checkout@v6
+        with:
+          repository: xonsh/xonsh-flatpak
+          path: flatpak-build
+
+      - name: install system deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq flatpak flatpak-builder
+
+      - name: install build script deps
+        run: pip install ./flatpak-build
+
+      - name: setup flathub and runtimes
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub \
+            org.freedesktop.Platform/x86_64/24.08 \
+            org.freedesktop.Sdk/x86_64/24.08
+
+      - name: build flatpak
+        working-directory: flatpak-build
+        run: xonsh build.xsh --git-url xonsh/xonsh --no-deps
+
+      - name: rename to nightly
+        run: mv flatpak-build/xonsh.flatpak xonsh-nightly.flatpak
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xonsh-nightly.flatpak
+          path: xonsh-nightly.flatpak
+
+      - name: upload to continuous release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          until gh release view continuous &>/dev/null; do sleep 5; done
+          gh release upload continuous xonsh-nightly.flatpak --clobber
