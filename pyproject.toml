@@ -139,6 +139,7 @@ doc = [
     "sphinx-autobuild",
     "sphinx-prompt",
     "sphinx-reredirects",
+    "sphinx-sitemap",
 ]
 
 
