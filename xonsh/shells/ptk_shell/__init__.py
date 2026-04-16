@@ -588,6 +588,9 @@ class PromptToolkitShell(BaseShell):
                 return prefixtoks + toks + suffixtoks
             else:
                 return toks
+        # Reserve the last column for a trailing space so the continuation
+        # aligns with the parent prompt, which is assumed to end with one.
+        width -= 1
         toks = list(basetoks) * (width // baselen)
         n = width % baselen
         count = 0
@@ -603,6 +606,7 @@ class PromptToolkitShell(BaseShell):
             count = newcount
             if n <= count:
                 break
+        toks.append(("", " "))
         if is_affix:
             return prefixtoks + toks + suffixtoks
         else:

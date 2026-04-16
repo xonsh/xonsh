@@ -201,22 +201,23 @@ When you enter a multi-line statement (``for`` loop, ``if`` block, etc.),
 xonsh displays a continuation prompt on each subsequent line.  The pattern
 is controlled by ``$MULTILINE_PROMPT`` (default ``" "``).
 
-The value is **repeated** to fill the width of the main prompt.  It can be a
+The value is repeated to fill the width of the main prompt.  It can be a
 plain string, a string with color markup, or a callable:
-
-.. code-block:: xonshcon
-
-    @ $MULTILINE_PROMPT = '   |'
-    @ for i in range(3):
-       |    print(i)
-       |
-
-Both xonsh color keywords (``{RED}``) and ANSI escape codes (``\033[31m``)
-are supported:
 
 .. code-block:: python
 
-    $MULTILINE_PROMPT = '{CYAN}   |{RESET} '
+    prompt @ $MULTILINE_PROMPT = '~'
+    prompt @ for i in range(3):
+    ~~~~~~~~     print(i)
+    ~~~~~~~~
+    prompt @ $MULTILINE_PROMPT = '{GREEN}`·.,¸,.·*¯`·.,¸,.·*¯{RESET}'
+    prompt @ if True:
+    `·.,¸,.·     pass
+    `·.,¸,.·
+
+Both xonsh color keywords (``{RED}``) and ANSI escape codes (``\033[31m``)
+are supported.
+
 
 Callable with ``line_number`` and ``width``
 -------------------------------------------
