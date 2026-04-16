@@ -66,6 +66,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "numpydoc",
     "extensions.cmdhelp",
+    "extensions.softwaresourcecode",
     "runthis.sphinxext",
     "extensions.jinja_rst_ext",
     "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
