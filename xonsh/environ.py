@@ -1398,18 +1398,14 @@ class SubprocessSetting(Xettings):
         "the trace output yourself — it is invoked instead of the default printer. "
         "``specs`` is the list of :class:`SubprocSpec` objects about to be executed; "
         "``CommandPipeline`` is not yet built at this point.",
-        doc_default="""\
-    By default it just prints ``cmds`` like below.
-
-    .. code-block:: python
-
-        def _tracer(cmds, captured, specs):
-            # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,
-            # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.
-            print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
-
-        $XONSH_SUBPROC_TRACE = _tracer
-    """,
+        doc_default="By default it just prints ``cmds`` like below.\n\n"
+        ".. code-block:: python\n\n"
+        "    def _tracer(cmds, captured, specs):\n"
+        "        # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,\n"
+        "        # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.\n"
+        '        print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)\n'
+        "\n"
+        "    $XONSH_SUBPROC_TRACE = _tracer",
     )
 
 
@@ -1619,15 +1615,10 @@ class XontribSetting(Xettings):
     XONTRIBS_AUTOLOAD_DISABLED = Var.with_default(
         default=False,
         type_str="bool",
-        doc="""\
-    Controls auto-loading behaviour of xontrib packages at the startup.
-
-    * Set this to ``True`` to disable autoloading completely.
-    * Setting this to a list of xontrib names will block loading those specifically.
-    """,
-        doc_default="""\
-    Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.
-    """,
+        doc="Controls auto-loading behaviour of xontrib packages at the startup.\n\n"
+        "* Set this to ``True`` to disable autoloading completely.\n"
+        "* Setting this to a list of xontrib names will block loading those specifically.",
+        doc_default="Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.",
     )
 
 
@@ -2115,18 +2106,16 @@ class AutoCompletionSetting(Xettings):
     """Tab-completion behavior."""
 
     ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT = Var.with_default(
-        doc="""\
-If True, :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions
-will show options (e.g. ``--help``) without requesting explicitly with option prefix ``-``.""",
+        doc="If True, :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions "
+        "will show options (e.g. ``--help``) without requesting explicitly with option prefix ``-``.",
         default=False,
     )
     ALIAS_COMPLETIONS_OPTIONS_LONGEST = Var.with_default(
-        doc="""\
-Whether to show all options or just the longest for
-the :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions.
-For example, with ``-h``, ``--help`` both denoting ``help`` action.
-If True, then only ``--help`` is shown.
-This is to reduce the noise in generated completions.""",
+        doc="Whether to show all options or just the longest for "
+        "the :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions. "
+        "For example, with ``-h``, ``--help`` both denoting ``help`` action. "
+        "If True, then only ``--help`` is shown. "
+        "This is to reduce the noise in generated completions.",
         default=False,
     )
     CMD_COMPLETIONS_SHOW_DESC = Var.with_default(

@@ -206,14 +206,10 @@ plain string, a string with color markup, or a callable:
 
 .. code-block:: python
 
-    prompt @ $MULTILINE_PROMPT = '~'
+    prompt @ $MULTILINE_PROMPT = '~*'
     prompt @ for i in range(3):
-    ~~~~~~~~     print(i)
-    ~~~~~~~~
-    prompt @ $MULTILINE_PROMPT = '{GREEN}`·.,¸,.·*¯`·.,¸,.·*¯{RESET}'
-    prompt @ if True:
-    `·.,¸,.·     pass
-    `·.,¸,.·
+    ~*~*~*~*     print(i)
+    ~*~*~*~*
 
 Both xonsh color keywords (``{RED}``) and ANSI escape codes (``\033[31m``)
 are supported.
