@@ -85,6 +85,26 @@ def test_bad_indent(xonsh_execer_parse):
         xonsh_execer_parse(code)
 
 
+def test_non_default_after_default_arg_raises_syntax_error(xonsh_execer_parse):
+    # Regression for #4915. Two layers of bug here:
+    #   1. The parser's argument-list rule already detected the problem
+    #      and stashed the message via `_set_error`, but PLY caught the
+    #      bare SyntaxError as a parse-error signal, ran error recovery,
+    #      and ultimately raised `unexpected dedent` on a later line —
+    #      hiding the real error.
+    #   2. The execer's recovery loop in `_try_parse` then dereferenced
+    #      `lines[idx]` past EOF, surfacing a raw IndexError to the user.
+    # After the fix the parser surfaces CPython-shaped diagnostics:
+    #   `non-default argument follows default argument` on the offending
+    #   line, with column pointing at the parameter.
+    code = "def f(x=0,y):\n    print()\n"
+    with pytest.raises(SyntaxError) as exc_info:
+        xonsh_execer_parse(code)
+    err = exc_info.value
+    assert "non-default argument follows default argument" in err.msg
+    assert err.lineno == 1
+
+
 def test_comment_colon_ending(xonsh_execer_parse):
     code = "# this is a comment:\necho hello"
     assert xonsh_execer_parse(code)
