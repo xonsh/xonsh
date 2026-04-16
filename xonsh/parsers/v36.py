@@ -142,6 +142,16 @@ class Parser(BaseParser):
     def p_argument_eq(self, p):
         """argument : test EQUALS test"""
         p1 = p[1]
+        if not isinstance(p1, ast.Name):
+            # Anything other than a bare identifier on the LHS of `=` in a
+            # call argument is a syntax error: `foo('spam'='eggs')`,
+            # `foo(a+b='eggs')`, etc.  Without this guard the action would
+            # do `p1.id` on e.g. an ast.Constant and raise an opaque
+            # AttributeError instead of a proper SyntaxError (issue #2574).
+            self._set_error(
+                'expression cannot contain assignment, perhaps you meant "=="?',
+                self.currloc(lineno=p1.lineno, column=p1.col_offset),
+            )
         p[0] = ast.keyword(
             arg=p1.id, value=p[3], lineno=p1.lineno, col_offset=p1.col_offset
         )

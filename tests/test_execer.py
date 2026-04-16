@@ -85,6 +85,18 @@ def test_bad_indent(xonsh_execer_parse):
         xonsh_execer_parse(code)
 
 
+def test_keyword_arg_with_non_name_lhs_raises_syntax_error(xonsh_execer_parse):
+    # Regression for #2574: `foo('spam'='eggs')` used to raise an opaque
+    # AttributeError ('Constant' object has no attribute 'id') from inside
+    # the parser action.  Match CPython's diagnostic message instead.
+    code = "foo('spam'='eggs')\n"
+    with pytest.raises(SyntaxError) as exc_info:
+        xonsh_execer_parse(code)
+    err = exc_info.value
+    assert "expression cannot contain assignment" in err.msg
+    assert err.lineno == 1
+
+
 def test_non_default_after_default_arg_raises_syntax_error(xonsh_execer_parse):
     # Regression for #4915. Two layers of bug here:
     #   1. The parser's argument-list rule already detected the problem
