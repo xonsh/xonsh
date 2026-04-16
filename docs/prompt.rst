@@ -506,22 +506,28 @@ Virtual Environment in Prompt
 -----------------------------
 
 xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
-`as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
-#envvar-VIRTUAL_ENV_DISABLE_PROMPT>`__. If this variable is truthy, xonsh
-will *always* substitute an empty string for ``{env_name}``. Note that unlike
-other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
-after being set --- it is not necessary to re-activate the environment.
+`as defined by virtualenv <https://virtualenv.pypa.io/en/latest/how-to/usage.html#customize-prompt>`__.
+If this variable is truthy, xonsh will *always* substitute an empty string
+for ``{env_name}``. Note that unlike other shells,
+``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately* after being set
+--- it is not necessary to re-activate the environment.
 
 xonsh also allows for an explicit override of the rendering of ``{env_name}``,
 via the ``$VIRTUAL_ENV_PROMPT`` environment variable. If this variable is
-defined and has any value other than ``None``, ``{env_name}`` will *always*
-render as ``str($VIRTUAL_ENV_PROMPT)`` when an environment is activated.
-It will still render as an empty string when no environment is active.
+set to a non-empty value, ``{env_name}`` will *always* render as its value,
+regardless of whether a virtual environment is active. The value is used
+as-is, without the usual ``{env_prefix}`` / ``{env_postfix}`` wrapping.
 ``$VIRTUAL_ENV_PROMPT`` is overridden by ``$VIRTUAL_ENV_DISABLE_PROMPT``.
+
+When neither variable is set, ``{env_name}`` falls back to the active
+environment's name --- determined, in order, from the ``prompt = ...`` field
+in ``<venv>/pyvenv.cfg``, from the venv directory name, or from
+``$CONDA_DEFAULT_ENV``. The detected name is wrapped in ``{env_prefix}`` and
+``{env_postfix}`` (``(`` and ``) `` by default).
 
 For example:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ $PROMPT = '{env_name}@ '
     @ source env/bin/activate.xsh
