@@ -356,6 +356,45 @@ def test_run_subproc_background(captured, exp_is_none, xonsh_session):
     assert (return_val is None) == exp_is_none
 
 
+@pytest.mark.timeout(15)
+@pytest.mark.parametrize(
+    "wrap_boolop",
+    [False, True],
+    ids=["helper_only", "with_boolop_wrap"],
+)
+def test_subproc_uncaptured_background_does_not_block(wrap_boolop, xonsh_session):
+    # Background jobs must return immediately even when
+    # $XONSH_SUBPROC_RAISE_ERROR=True. The error-check helpers used
+    # to read the blocking `returncode` property on the still-running
+    # pipeline, stalling the shell until the child exited.
+    import time as _time
+
+    from xonsh.built_ins import XSH, subproc_check_boolop, subproc_uncaptured
+
+    xonsh_session.env["XONSH_INTERACTIVE"] = False
+    xonsh_session.env["XONSH_SUBPROC_RAISE_ERROR"] = True
+
+    long_running = [sys.executable, "-c", "import time; time.sleep(30)"]
+    cp = None
+    try:
+        t0 = _time.monotonic()
+        result = subproc_uncaptured(long_running, "&")
+        if wrap_boolop:
+            result = subproc_check_boolop(result)
+        elapsed = _time.monotonic() - t0
+        assert result is None
+        assert elapsed < 5, f"background subproc helper blocked for {elapsed:.1f}s"
+        cp = XSH.lastcmd
+    finally:
+        proc = getattr(cp, "proc", None) if cp is not None else None
+        if proc is not None and proc.poll() is None:
+            proc.kill()
+            try:
+                proc.wait(timeout=5)
+            except Exception:
+                pass
+
+
 def test_spec_decorator_alias_alone(xession):
     xession.aliases["xunthread"] = SpecAttrDecoratorAlias(
         {"threadable": False, "force_threadable": False}
