@@ -582,6 +582,24 @@ class SubprocSpec:
     def get_command_str(self):
         return " ".join(arg for arg in self.args)
 
+    def close(self):
+        """Release any pipe wrappers and channels held by this spec.
+
+        Required when a spec is created via ``cmds_to_specs`` but never
+        executed (no ``CommandPipeline._close_proc`` is invoked). The
+        wrappers from ``PipeChannel.open_writer/open_reader`` use
+        ``closefd=False``, so leaving them for GC produces a
+        ``ResourceWarning: unclosed file`` on Python 3.12+. Idempotent.
+        """
+        safe_close(self._stdin)
+        safe_close(self._stdout)
+        safe_close(self._stderr)
+        safe_close(self.captured_stdout)
+        safe_close(self.captured_stderr)
+        for ch in self.pipe_channels:
+            ch.close()
+        self.pipe_channels.clear()
+
     #
     # Execution methods
     #
@@ -1211,76 +1229,83 @@ def cmds_to_specs(cmds, captured=False, envs=None, in_boolop=False):
     # first build the subprocs independently and separate from the redirects
     specs = []
     redirects = []
-    for i, cmd in enumerate(cmds):
-        if isinstance(cmd, str):
-            redirects.append(cmd)
-        else:
-            env = envs[i] if envs is not None else None
-            spec = SubprocSpec.build(cmd, captured=captured, env=env)
-            spec.pipeline_index = len(specs)
-            spec.in_boolop = in_boolop
-            specs.append(spec)
-    # now modify the subprocs based on the redirects.
-    for i, redirect in enumerate(redirects):
-        if redirect == "|":
-            # these should remain integer file descriptors, and not Python
-            # file objects since they connect processes.
-            pipe = PipeChannel.from_pipe()
-            upstream = specs[i]
-            # `e>p` adds stderr to the pipe; stdout still goes through the
-            # pipe by default, unless the user diverted it with `o>`/`>`.
-            if upstream._stderr is _PIPE_ERR:
-                upstream._stderr = None
-                upstream.stderr = pipe.write_fd
-                # Skip wiring stdout if it is already redirected elsewhere
-                # (e.g. `cmd o> file e>p | grep` — stdout to file, pipe gets
-                # only stderr).
-                skip_stdout = upstream._stdout is not None
+    try:
+        for i, cmd in enumerate(cmds):
+            if isinstance(cmd, str):
+                redirects.append(cmd)
             else:
-                skip_stdout = False
-            # `a>p`: stdout goes to the pipe and stderr is merged into it
-            # (stderr was already set to subprocess.STDOUT by _redirect_streams).
-            if upstream._stdout is _PIPE_ALL:
-                upstream._stdout = None
-            if not skip_stdout:
-                upstream.stdout = pipe.write_fd
-            specs[i + 1].stdin = pipe.read_fd
-            upstream.pipe_channels.append(pipe)
-        elif redirect == "&" and i == len(redirects) - 1:
-            specs[i].background = True
-        else:
-            raise xt.XonshError(f"unrecognized redirect {redirect!r}")
-    # Any pipe-redirect sentinel still present means `a>p`/`e>p` was used
-    # without a following `|` pipe.
-    for spec in specs:
-        if spec._stdout is _PIPE_ALL or spec._stderr is _PIPE_ERR:
-            raise xt.XonshError(
-                "xonsh: redirect 'a>p'/'e>p' requires a following pipe '|'"
-            )
-
-    # Apply boundary conditions
-    if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
-        # Make sure sub-specs are always captured in case:
-        # `![some_alias | grep x]`, `$(some_alias)`, `some_alias > file`.
-        last = spec
-        is_redirected_stdout = bool(last.stdout)
-        specs_to_capture = (
-            specs
-            if captured in STDOUT_CAPTURE_KINDS or is_redirected_stdout
-            else specs[:-1]
-        )
-        _set_specs_capture_always(specs_to_capture)
-
-    # Validate: unthreadable callable aliases cannot be used in pipelines
-    if len(specs) > 1:
+                env = envs[i] if envs is not None else None
+                spec = SubprocSpec.build(cmd, captured=captured, env=env)
+                spec.pipeline_index = len(specs)
+                spec.in_boolop = in_boolop
+                specs.append(spec)
+        # now modify the subprocs based on the redirects.
+        for i, redirect in enumerate(redirects):
+            if redirect == "|":
+                # these should remain integer file descriptors, and not Python
+                # file objects since they connect processes.
+                pipe = PipeChannel.from_pipe()
+                upstream = specs[i]
+                # `e>p` adds stderr to the pipe; stdout still goes through the
+                # pipe by default, unless the user diverted it with `o>`/`>`.
+                if upstream._stderr is _PIPE_ERR:
+                    upstream._stderr = None
+                    upstream.stderr = pipe.write_fd
+                    # Skip wiring stdout if it is already redirected elsewhere
+                    # (e.g. `cmd o> file e>p | grep` — stdout to file, pipe gets
+                    # only stderr).
+                    skip_stdout = upstream._stdout is not None
+                else:
+                    skip_stdout = False
+                # `a>p`: stdout goes to the pipe and stderr is merged into it
+                # (stderr was already set to subprocess.STDOUT by _redirect_streams).
+                if upstream._stdout is _PIPE_ALL:
+                    upstream._stdout = None
+                if not skip_stdout:
+                    upstream.stdout = pipe.write_fd
+                specs[i + 1].stdin = pipe.read_fd
+                upstream.pipe_channels.append(pipe)
+            elif redirect == "&" and i == len(redirects) - 1:
+                specs[i].background = True
+            else:
+                raise xt.XonshError(f"unrecognized redirect {redirect!r}")
+        # Any pipe-redirect sentinel still present means `a>p`/`e>p` was used
+        # without a following `|` pipe.
         for spec in specs:
-            if callable(spec.alias) and not spec.threadable:
+            if spec._stdout is _PIPE_ALL or spec._stderr is _PIPE_ERR:
                 raise xt.XonshError(
-                    f"Callable alias {spec.alias_name!r} is explicitly marked as unthreadable and is not supported in pipelines.\n"
-                    f"If it's really threadable try to add command decorator `@thread {spec.alias_name}`."
+                    "xonsh: redirect 'a>p'/'e>p' requires a following pipe '|'"
                 )
 
-    _update_last_spec(specs[-1])
+        # Apply boundary conditions
+        if not XSH.env.get("XONSH_CAPTURE_ALWAYS"):
+            # Make sure sub-specs are always captured in case:
+            # `![some_alias | grep x]`, `$(some_alias)`, `some_alias > file`.
+            last = spec
+            is_redirected_stdout = bool(last.stdout)
+            specs_to_capture = (
+                specs
+                if captured in STDOUT_CAPTURE_KINDS or is_redirected_stdout
+                else specs[:-1]
+            )
+            _set_specs_capture_always(specs_to_capture)
+
+        # Validate: unthreadable callable aliases cannot be used in pipelines
+        if len(specs) > 1:
+            for spec in specs:
+                if callable(spec.alias) and not spec.threadable:
+                    raise xt.XonshError(
+                        f"Callable alias {spec.alias_name!r} is explicitly marked as unthreadable and is not supported in pipelines.\n"
+                        f"If it's really threadable try to add command decorator `@thread {spec.alias_name}`."
+                    )
+
+        _update_last_spec(specs[-1])
+    except BaseException:
+        # Any pipes/files opened during spec construction would otherwise
+        # leak as `ResourceWarning: unclosed file` once GC reaps them.
+        for s in specs:
+            s.close()
+        raise
     return specs
 
 

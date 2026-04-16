@@ -200,6 +200,11 @@ class CommandPipeline:
             except Exception:
                 xt.print_exception()
                 self._return_terminal()
+                # Release any pipe wrappers held by specs that won't be
+                # routed through _close_proc(): the failing spec, plus any
+                # later specs that never got to run().
+                for s in specs[i:]:
+                    s.close()
                 self.proc = None
                 return
             if proc.pid and pipeline_group is None and not spec.is_proxy:
