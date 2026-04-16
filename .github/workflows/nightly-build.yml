@@ -195,7 +195,7 @@ jobs:
         shell: bash
         run: |
           curl -fSL -o inno5.exe \
-            https://files.jrsoftware.org/is/5/innosetup-5.6.1.exe
+            https://github.com/xonsh/xonsh-winget/raw/main/inno/innosetup-5.6.1.exe
           ./inno5.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
           echo "C:\Program Files (x86)\Inno Setup 5" >> "$GITHUB_PATH"
 
