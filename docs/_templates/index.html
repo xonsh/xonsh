@@ -12,6 +12,9 @@
 
         <link rel="canonical" href="https://xon.sh/" />
 
+        <link rel="alternate" type="application/rss+xml" title="Xonsh releases" href="https://github.com/xonsh/xonsh/releases.atom" />
+        <link rel="alternate" type="application/atom+xml" title="Xonsh commits" href="https://github.com/xonsh/xonsh/commits/main.atom" />
+
         <meta name="twitter:image" content="https://xon.sh/_static/landing2/images/xonsh_landing_preview.png" />
         <meta name="twitter:site" content="https://xon.sh/" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -158,7 +161,7 @@
 
     <header id="header" class="">
         <div class="container">
-            <nav class="navbar navbar-light navbar-expand-lg justify-content-center">
+            <nav class="navbar navbar-light navbar-expand-lg justify-content-center" aria-label="Main">
                 <a class="logo" href="https://xon.sh"><img src="_static/landing2/images/logo.png" alt="logo"></a>
                 <button class="navbar-toggler ml-1" type="button" data-toggle="collapse" data-target="#NavbarContent">
                     <span class="icofont-navigation-menu"></span>
@@ -249,7 +252,7 @@
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-<pre class="code">
+<pre class="code" itemscope itemtype="https://schema.org/SoftwareSourceCode"><meta itemprop="programmingLanguage" content="Xonsh" /><meta itemprop="codeSampleType" content="snippet" />
 <span unselectable-text="@ "></span><b>cd</b> $HOME
 
 <span unselectable-text="@ "></span><b>id</b> <span style="color: lightgreen;">$(whoami)</span> > ~/id.txt
@@ -279,7 +282,7 @@
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-                        <pre class="code">
+                        <pre class="code" itemscope itemtype="https://schema.org/SoftwareSourceCode"><meta itemprop="programmingLanguage" content="Xonsh" /><meta itemprop="codeSampleType" content="snippet" />
 <span unselectable-text="@ "></span>2 + 2
 
 <span unselectable-text="@ "></span>var = <span style="color: lightblue;">"hello"</span>.upper()
@@ -310,7 +313,7 @@
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-                        <pre class="code">
+                        <pre class="code" itemscope itemtype="https://schema.org/SoftwareSourceCode"><meta itemprop="programmingLanguage" content="Xonsh" /><meta itemprop="codeSampleType" content="snippet" />
 <span unselectable-text="@ "></span><b>len</b>(<span style="color: lightgreen;">$(curl -L https://xon.sh)</span>)
 
 <span unselectable-text="@ "></span>$PATH.append(<span style="color: lightblue;">'/tmp'</span>)
@@ -345,7 +348,7 @@
                 <div class="col-lg-6 col-md-5">
                     <div class="text-center">
 
-<pre class="code">
+<pre class="code" itemscope itemtype="https://schema.org/SoftwareSourceCode"><meta itemprop="programmingLanguage" content="Xonsh" /><meta itemprop="codeSampleType" content="snippet" />
 <span unselectable-text="@ "></span>name = <span style="color: lightblue;">'snail'</span>
 <span unselectable-text="  "></span><b>echo</b> <span style="color: lightsalmon;">@(name)</span> > /tmp/<span style="color: lightsalmon;">@(name)</span>
 
@@ -377,7 +380,7 @@
 
     <div class="col-lg-6 col-md-5">
       <div class="text-center">
-        <pre class="code">
+        <pre class="code" itemscope itemtype="https://schema.org/SoftwareSourceCode"><meta itemprop="programmingLanguage" content="Xonsh" /><meta itemprop="codeSampleType" content="snippet" />
 <span unselectable-text="@ "></span><b>xontrib</b> load sh \
 <span unselectable-text="  "></span>             fish_completer
 
@@ -410,7 +413,7 @@
 
     <div class="col-lg-6 col-md-5">
       <div class="text-center">
-        <pre class="code">
+        <pre class="code" itemscope itemtype="https://schema.org/SoftwareSourceCode"><meta itemprop="programmingLanguage" content="Xonsh" /><meta itemprop="codeSampleType" content="snippet" />
 <span unselectable-text="@ "></span><b>xontrib</b> load term_integration \
 <span unselectable-text="  "></span>             prompt_starship  \
 <span unselectable-text="  "></span>             powerline        \
@@ -442,7 +445,7 @@
 
     <div class="col-lg-6 col-md-5">
       <div class="text-center">
-        <pre class="code">
+        <pre class="code" itemscope itemtype="https://schema.org/SoftwareSourceCode"><meta itemprop="programmingLanguage" content="Xonsh" /><meta itemprop="codeSampleType" content="snippet" />
 <span unselectable-text="@ "></span>$PATH
 <span unselectable-text="  "></span><span style="color: lightgrey;">['/bin', '/sbin']            # Linux</span>
 <span unselectable-text="  "></span><span style="color: lightgrey;">['/homebrew/bin']            # macOS</span>
@@ -668,7 +671,7 @@
                             <a href="https://xon.sh/" target="_blank">Website</a>
                         </p>
                         <p>
-                            <a href="contents.html" target="_blank">Documentation</a></li>
+                            <a href="contents.html" target="_blank">Xonsh documentation</a>
                         </p>
                         <p>
                             <a href="https://github.com/xonsh/xonsh/releases" target="_blank">Releases</a>
