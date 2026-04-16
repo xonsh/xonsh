@@ -40,12 +40,12 @@ jobs:
           name: xonsh-nightly.AppImage
           path: xonsh-nightly.AppImage
 
-      - name: update continuous release
+      - name: update nightly-build release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete continuous --cleanup-tag --yes || true
-          gh release create continuous \
+          gh release delete nightly-build --cleanup-tag --yes || true
+          gh release create nightly-build \
             --title "Nightly build" \
             --notes "$(cat <<'EOF'
           xonsh ${{ github.sha }}
@@ -66,6 +66,11 @@ jobs:
           cache: "pip"
           cache-dependency-path: "pyproject.toml"
 
+      - name: install system deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y curl git vim patchelf elfutils binutils-common binutils
+
       - name: install nuitka and deps
         run: |
           pip install nuitka ordered-set zstandard
@@ -73,6 +78,7 @@ jobs:
 
       - name: build standalone onefile
         run: |
+          XONSH_PKG=$(python -c "import xonsh; print(xonsh.__path__[0])")
           python -m nuitka \
             --onefile \
             --show-progress \
@@ -92,7 +98,7 @@ jobs:
             --include-package=pygments --include-package=prompt_toolkit \
             --include-module=pyperclip --include-package=click \
             --assume-yes-for-downloads \
-            -m xonsh
+            "$XONSH_PKG"
 
       - name: smoke test
         run: |
@@ -105,12 +111,12 @@ jobs:
           name: xonsh-nightly-nuitka.bin
           path: xonsh-nightly-nuitka.bin
 
-      - name: upload to continuous release
+      - name: upload to nightly-build release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          until gh release view continuous &>/dev/null; do sleep 5; done
-          gh release upload continuous xonsh-nightly-nuitka.bin --clobber
+          until gh release view nightly-build &>/dev/null; do sleep 5; done
+          gh release upload nightly-build xonsh-nightly-nuitka.bin --clobber
 
   windows-inno6:
     runs-on: windows-latest
@@ -156,13 +162,13 @@ jobs:
           name: xonsh-nightly-inno6-setup.exe
           path: xonsh-nightly-inno6-setup.exe
 
-      - name: upload to continuous release
+      - name: upload to nightly-build release
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          until gh release view continuous &>/dev/null; do sleep 5; done
-          gh release upload continuous xonsh-nightly-inno6-setup.exe --clobber
+          until gh release view nightly-build &>/dev/null; do sleep 5; done
+          gh release upload nightly-build xonsh-nightly-inno6-setup.exe --clobber
 
   windows-inno5:
     runs-on: windows-latest
@@ -213,13 +219,13 @@ jobs:
           name: xonsh-nightly-inno5-setup.exe
           path: xonsh-nightly-inno5-setup.exe
 
-      - name: upload to continuous release
+      - name: upload to nightly-build release
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          until gh release view continuous &>/dev/null; do sleep 5; done
-          gh release upload continuous xonsh-nightly-inno5-setup.exe --clobber
+          until gh release view nightly-build &>/dev/null; do sleep 5; done
+          gh release upload nightly-build xonsh-nightly-inno5-setup.exe --clobber
 
   flatpak:
     runs-on: ubuntu-24.04
@@ -260,9 +266,9 @@ jobs:
           name: xonsh-nightly.flatpak
           path: xonsh-nightly.flatpak
 
-      - name: upload to continuous release
+      - name: upload to nightly-build release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          until gh release view continuous &>/dev/null; do sleep 5; done
-          gh release upload continuous xonsh-nightly.flatpak --clobber
+          until gh release view nightly-build &>/dev/null; do sleep 5; done
+          gh release upload nightly-build xonsh-nightly.flatpak --clobber
