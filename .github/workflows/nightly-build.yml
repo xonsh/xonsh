@@ -69,10 +69,12 @@ jobs:
       - name: install system deps
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y curl git vim patchelf elfutils binutils-common binutils
+          sudo apt-get install -y curl git vim patchelf elfutils binutils-common binutils \
+            gcc ccache libpython3-dev
 
       - name: install nuitka and deps
         run: |
+          pip install -U pip setuptools wheel certifi
           pip install nuitka ordered-set zstandard
           pip install -e '.[full]'
 
@@ -130,25 +132,20 @@ jobs:
       - name: setup-python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.14"
-          cache: "pip"
-          cache-dependency-path: "pyproject.toml"
+          python-version: "3.12"
 
-      - name: install xonsh and build deps
-        run: |
-          pip install -e .[full]
-          pip install jinja2 click pyyaml
+      - name: install dependencies
+        run: pip install ./winget
 
       - name: install inno setup 6
         run: choco install innosetup -y --no-progress
 
-      - name: build distribution
-        working-directory: winget
-        run: xonsh build.xsh build --git --version nightly
-
       - name: build installer
+        shell: bash
         working-directory: winget
-        run: xonsh build.xsh installer --version nightly --inno-version 6
+        run: |
+          xonsh build.xsh build --git --version nightly --python-version 3.14
+          xonsh build.xsh installer --version nightly --inno-version 6 --include-inno-tag
 
       - name: collect artifact
         shell: bash
@@ -182,30 +179,25 @@ jobs:
       - name: setup-python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
-          cache: "pip"
-          cache-dependency-path: "pyproject.toml"
+          python-version: "3.12"
 
-      - name: install xonsh and build deps
-        run: |
-          pip install -e .[full]
-          pip install jinja2 click pyyaml
+      - name: install dependencies
+        run: pip install ./winget
 
       - name: install inno setup 5
-        shell: bash
+        shell: pwsh
         run: |
-          curl -fSL -o inno5.exe \
-            https://github.com/xonsh/xonsh-winget/raw/main/inno/innosetup-5.6.1.exe
-          ./inno5.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
-          echo "C:\Program Files (x86)\Inno Setup 5" >> "$GITHUB_PATH"
-
-      - name: build distribution
-        working-directory: winget
-        run: xonsh build.xsh build --git --version nightly --python-version 3.13
+          $url = "https://github.com/xonsh/xonsh-winget/raw/main/inno/innosetup-5.6.1.exe"
+          $exe = "$env:RUNNER_TEMP\innosetup5.exe"
+          Invoke-WebRequest -Uri $url -OutFile $exe
+          Start-Process -FilePath $exe -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-' -Wait
 
       - name: build installer
+        shell: bash
         working-directory: winget
-        run: xonsh build.xsh installer --version nightly --inno-version 5
+        run: |
+          xonsh build.xsh build --git --version nightly --python-version 3.13.1
+          xonsh build.xsh installer --version nightly --inno-version 5 --include-python-tag --include-inno-tag
 
       - name: collect artifact
         shell: bash
