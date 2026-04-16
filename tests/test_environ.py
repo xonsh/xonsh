@@ -181,13 +181,6 @@ def test_histcontrol_ignoreerr_ignoredups():
     assert "ignoredups" in env["HISTCONTROL"]
 
 
-def test_histcontrol_ignoreerr_ignoredups():
-    env = Env(HISTCONTROL="ignoreerr,ignoredups,ignoreerr")
-    assert len(env["HISTCONTROL"]) == 2
-    assert "ignoreerr" in env["HISTCONTROL"]
-    assert "ignoredups" in env["HISTCONTROL"]
-
-
 def test_swap():
     env = Env(VAR="wakka")
     assert env["VAR"] == "wakka"
