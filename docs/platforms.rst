@@ -27,11 +27,72 @@ lines to your ``~/.bashrc file``:
 
 .. code-block:: console
 
-    unset module
-    unset scl
+    $ unset module
+    $ unset scl
 
-macOS, OSX
-----------
+.. _fix_libgcc_core_dump:
+
+``libgcc_s.so.1`` error on startup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On certain (mostly older or stripped) Linux distributions you may
+occasionally see this error when starting xonsh:
+
+.. code-block:: xonshcon
+
+   libgcc_s.so.1 must be installed for pthread_cancel to work
+   Aborted (core dumped)
+
+This is an upstream CPython issue — libgcc must already be loaded at the
+time a thread is cancelled. Preloading it fixes the crash:
+
+.. code-block:: bash
+
+   $ env LD_PRELOAD=libgcc_s.so.1 xonsh
+
+.. _unicode_troubles:
+
+UTF-8 characters and locale
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If UTF-8 characters fail with errors like::
+
+    @ echo "ßðđ"
+    UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-2...
+
+your process locale is not UTF-8. Usually seen in minimal containers,
+stripped SSH sessions, systemd units, or cron jobs where ``LANG`` / ``LC_ALL``
+are set to ``C`` or ``POSIX``.
+
+The locale must be set **before** xonsh starts — setting ``$LC_ALL`` from
+your `xonsh RC <xonshrc.html>`_ is too late for subprocesses that already
+inherited the broken environment. Fix it at the OS level (``~/.pam_environment``,
+``/etc/locale.conf``, the container image's base layer, or the systemd unit's
+``Environment=`` directive). As a temporary workaround, ``PYTHONUTF8=1``
+forces Python into UTF-8 mode regardless of locale.
+
+Colored man pages
+^^^^^^^^^^^^^^^^^
+
+You can add `man page color support`_ using ``less`` environment variables —
+these work on any POSIX system with ``less`` as the pager:
+
+.. code-block:: xonsh
+
+    # format is '\E[<brightness>;<colour>m'
+    $LESS_TERMCAP_mb = "\033[01;31m"     # begin blinking
+    $LESS_TERMCAP_md = "\033[01;31m"     # begin bold
+    $LESS_TERMCAP_me = "\033[0m"         # end mode
+    $LESS_TERMCAP_so = "\033[01;44;36m"  # begin standout-mode
+    $LESS_TERMCAP_se = "\033[0m"         # end standout-mode
+    $LESS_TERMCAP_us = "\033[00;36m"     # begin underline
+    $LESS_TERMCAP_ue = "\033[0m"         # end underline
+
+.. _man page color support:
+    https://wiki.archlinux.org/index.php/Color_output_in_console#less
+
+macOS
+-----
 
 Path Helper
 ^^^^^^^^^^^
@@ -96,7 +157,7 @@ First of all take a look `xontrib-fish-completer <https://github.com/xonsh/xontr
 
 Xonsh has support for using bash completion files on the shell, to use it you need to install
 the bash-completion package.
-The regular bash-completion package uses v1 which mostly works, but `occasionally has rough edges <https://github.com/xonsh/xonsh/issues/2111>`_ so we recommend using bash-completion v2.
+The regular bash-completion package uses v1 which mostly works, but we recommend using bash-completion v2`* <https://github.com/xonsh/xonsh/issues/2111>`_.
 
 Bash completion comes from <https://github.com/scop/bash-completion> which suggests you use a package manager to install it, this manager will also install a new version of bash without affecting  /bin/bash. Xonsh also needs to be told where the bash shell file that builds the completions is, this has to be added to $BASH_COMPLETIONS. The package includes completions for many Unix commands.
 
@@ -124,7 +185,9 @@ Common packaging systems for macOS include
 
     @ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
 
-Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script to be called as in .../profile.d/bash_completion.sh which will the call the script mentioned above and one in $XDG_CONFIG_HOME . Currently xonsh seems only to be able to read the first script directly.
+Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script
+to be called as in ``.../profile.d/bash_completion.sh`` which will the call the script mentioned above
+and one in $XDG_CONFIG_HOME .
 
 
 Windows
@@ -331,8 +394,23 @@ To debug command resolution, enable:
 
 .. code-block:: xonshcon
 
-    @ $XONSH_COMMANDS_CACHE_DEBUG = True
+    @ $XONSH_COMMANDS_CACHE_TRACE = True
 
+
+.. _open_terminal_here:
+
+"Open Terminal Here" action in Thunar (XFCE)
+============================================
+
+If you use Thunar and the "Open Terminal Here" action does not work with
+xonsh, you can replace the command for this action:
+
+.. code-block:: sh
+
+    exo-open --working-directory %f --launch TerminalEmulator xonsh --shell-type=best
+
+Open ``Edit > Configure custom actions...``, select ``Open Terminal Here``,
+and click ``Edit currently selected action``.
 
 
 See Also

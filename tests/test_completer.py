@@ -232,3 +232,210 @@ def test_deduplicate_trailing_space(completer, completers_mock):
 def test_python_only_context(completer, completers_mock):
     assert completer.complete_line("echo @(") != ()
     assert completer.complete("", "echo @(", 0, 0, {}, "echo @(", 7) != ()
+
+
+def test_trace_completions_is_per_line_with_source(
+    completer, completers_mock, xession, monkeypatch, capsys
+):
+    """``$XONSH_COMPLETER_TRACE`` should print one line per completion,
+    each tagged with ``source=<completer-name>`` and non-default
+    ``RichCompletion`` attrs. See user request in conversation.
+    """
+    monkeypatch.setitem(xession.env, "XONSH_COMPLETER_TRACE", True)
+
+    completers_mock["commands"] = lambda *a: {
+        RichCompletion("ls", append_space=True),
+        "lsof",
+    }
+
+    completer.complete("l", "l", 0, 1, {}, multiline_text="l", cursor_index=1)
+    captured = capsys.readouterr().out
+
+    # Header still present — now compact form with prefix echoed back.
+    assert "Got 2 from exclusive 'commands' for 'l':" in captured
+    # Per-line source for every completion (shortened label ``src``).
+    assert captured.count("src=commands") == 2
+    # type= tag on every line.
+    assert captured.count("type=exclusive") == 2
+    # RichCompletion attribute shown.
+    assert "append_space=True" in captured
+    # Plain str shows the pipeline lprefix after ``type=``.
+    assert "'lsof': src=commands, type=exclusive, prefix_len=1" in captured
+    # No pprint-style dump of a set/list object.
+    assert "RichCompletion(" not in captured
+    # No two-space indent before completion lines.
+    assert "\n  'ls " not in captured and "\n  'lsof'" not in captured
+
+
+def test_trace_completions_non_exclusive_type(
+    completer, completers_mock, xession, monkeypatch, capsys
+):
+    """Trace lines from a non-exclusive completer must show ``type=non-exclusive``."""
+    monkeypatch.setitem(xession.env, "XONSH_COMPLETER_TRACE", True)
+
+    completers_mock["env"] = non_exclusive_completer(lambda *a: {"$FOO"})
+    completers_mock["cmd"] = lambda *a: {"ls"}
+
+    completer.complete("", "", 0, 0, {}, multiline_text="", cursor_index=0)
+    captured = capsys.readouterr().out
+
+    assert "'$FOO': src=env, type=non-exclusive" in captured
+    assert "'ls': src=cmd, type=exclusive" in captured
+
+
+def test_trace_completions_shows_provider(
+    completer, completers_mock, xession, monkeypatch, capsys
+):
+    """Completions with a ``provider`` tag must surface it in trace output.
+
+    Verifies the user-facing goal: telling that ``qwe-xonsh`` from the
+    ``base`` completer came from aliases rather than $PATH. We mock the
+    ``base`` completer directly so the test doesn't depend on the real
+    commands_cache/filesystem.
+    """
+    monkeypatch.setitem(xession.env, "XONSH_COMPLETER_TRACE", True)
+
+    completers_mock["base"] = lambda *a: {
+        RichCompletion("qwe-xonsh ", append_space=True, provider="alias"),
+        RichCompletion("xonsh-real ", append_space=True, provider="command"),
+    }
+
+    completer.complete(
+        "xonsh", "xonsh", 0, 5, {}, multiline_text="xonsh", cursor_index=5
+    )
+    captured = capsys.readouterr().out
+
+    # pvd sits immediately after src, before type.
+    assert "src=base, pvd='alias', type=exclusive" in captured
+    assert "src=base, pvd='command', type=exclusive" in captured
+
+
+def test_tag_provider_preserves_return_shapes():
+    """``tag_provider`` must accept None / iterable / (iter, extra) tuple."""
+    from xonsh.completers.tools import tag_provider
+
+    # None passthrough
+    assert tag_provider(None, "x") is None
+
+    # bare iterable
+    out = list(tag_provider(["a", RichCompletion("b")], "pip"))
+    assert all(c.provider == "pip" for c in out)
+    assert [str(c) for c in out] == ["a", "b"]
+
+    # (iterable, extra) tuple — extra preserved, comps tagged
+    gen, extra = tag_provider((["a"], 3), "gh")
+    assert extra == 3
+    assert [c.provider for c in gen] == ["gh"]
+
+
+def test_tag_provider_does_not_overwrite_existing():
+    """A completion with an existing ``provider`` keeps its own tag."""
+    from xonsh.completers.tools import tag_provider
+
+    out = list(tag_provider([RichCompletion("x", provider="inner"), "y"], "outer"))
+    assert out[0].provider == "inner"
+    assert out[1].provider == "outer"
+
+
+def test_xompleter_tags_with_module_basename():
+    """``CommandCompleter`` must tag xompletion results with module basename.
+
+    Verifies that ``xompletions.<name>.xonsh_complete`` output is wrapped
+    so the trace shows ``provider=<name>`` — the ``xompleter`` bridging
+    layer discussed in the user conversation.
+    """
+    from types import SimpleNamespace
+
+    from xonsh.completers.commands import CommandCompleter
+    from xonsh.parsers.completion_context import (
+        CommandArg,
+        CommandContext,
+        CompletionContext,
+    )
+
+    fake_module = SimpleNamespace(
+        __name__="xompletions.fake_pip",
+        xonsh_complete=lambda ctx: {RichCompletion("install"), "freeze"},
+    )
+    cc = CommandCompleter()
+    cc._matcher = SimpleNamespace(
+        get_module=lambda name: fake_module,
+        search_completer=lambda name, cleaned=False: None,
+    )
+
+    full_ctx = CompletionContext(
+        command=CommandContext(args=(CommandArg("fake_pip"),), arg_index=1, prefix="")
+    )
+    result = list(cc(full_ctx))
+    assert {str(c) for c in result} == {"install", "freeze"}
+    assert all(c.provider == "fake_pip" for c in result)
+
+
+def test_xompleter_passes_through_none():
+    """If the xompletion module returns ``None`` (no match), ``CommandCompleter``
+    must still pass ``None`` through so the pipeline falls to the next completer.
+    """
+    from types import SimpleNamespace
+
+    from xonsh.completers.commands import CommandCompleter
+    from xonsh.parsers.completion_context import (
+        CommandArg,
+        CommandContext,
+        CompletionContext,
+    )
+
+    fake_module = SimpleNamespace(
+        __name__="xompletions.fake_pip",
+        xonsh_complete=lambda ctx: None,
+    )
+    cc = CommandCompleter()
+    cc._matcher = SimpleNamespace(
+        get_module=lambda name: fake_module,
+        search_completer=lambda name, cleaned=False: None,
+    )
+
+    full_ctx = CompletionContext(
+        command=CommandContext(args=(CommandArg("fake_pip"),), arg_index=1, prefix="")
+    )
+    assert cc(full_ctx) is None
+
+
+def test_trace_completions_uses_close_quote_alias(
+    completer, completers_mock, xession, monkeypatch, capsys
+):
+    """``append_closing_quote=False`` should surface as ``close_quote=False``."""
+    monkeypatch.setitem(xession.env, "XONSH_COMPLETER_TRACE", True)
+
+    completers_mock["a"] = lambda *a: {
+        RichCompletion("foo", append_closing_quote=False)
+    }
+
+    completer.complete("f", "f", 0, 1, {}, multiline_text="f", cursor_index=1)
+    captured = capsys.readouterr().out
+
+    assert "close_quote=False" in captured
+    assert "append_closing_quote" not in captured
+
+
+def test_trace_completions_reports_zero_results(
+    completer, completers_mock, xession, monkeypatch, capsys
+):
+    """A completer that is invoked but returns nothing still gets a header.
+
+    Lets the user see which completers ran even when they produce no
+    matches. Non-exclusive completers with 0 results must also be shown.
+    """
+    monkeypatch.setitem(xession.env, "XONSH_COMPLETER_TRACE", True)
+
+    completers_mock["first"] = non_exclusive_completer(lambda *a: None)
+    completers_mock["second"] = lambda *a: set()
+    completers_mock["third"] = lambda *a: {"real"}
+
+    completer.complete("pre", "", 0, 0)
+    captured = capsys.readouterr().out
+
+    assert "TRACE COMPLETIONS: Got 0 from non-exclusive 'first' for 'pre'." in captured
+    assert "TRACE COMPLETIONS: Got 0 from exclusive 'second' for 'pre'." in captured
+    assert "TRACE COMPLETIONS: Got 1 from exclusive 'third' for 'pre':" in captured
+    # 0-result header ends with "." and has no body lines.
+    assert "from non-exclusive 'first' for 'pre'.\n" in captured

@@ -603,6 +603,30 @@ def test_hist_clear_wipes_file_and_allows_new_commands(hist, xession, tmpdir):
         assert lj["cmds"][0]["inp"] == "echo after"
 
 
+def test_erasedups_command(hist, xession, tmpdir):
+    """Test history erasedups removes duplicates across JSON history."""
+    xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})
+    xession.env["HISTCONTROL"] = set()
+
+    hist.append({"inp": "ls foo", "rtn": 0, "ts": (1, 2)})
+    hist.append({"inp": "ls bar", "rtn": 0, "ts": (3, 4)})
+    hist.append({"inp": "ls foo", "rtn": 0, "ts": (5, 6)})
+    hist.flush(at_exit=True)
+
+    removed, total = hist.erasedups()
+    assert removed == 1
+    assert total == 3
+
+    from xonsh.lib.lazyjson import LazyJSON
+
+    with LazyJSON(hist.filename) as lj:
+        cmds = list(lj["cmds"])
+        inps = [c["inp"] for c in cmds]
+        assert len(inps) == 2
+        assert "ls bar" in inps
+        assert "ls foo" in inps
+
+
 def test_hist_off_cmd(hist, xession, capsys, tmpdir):
     """Verify that the CLI history off command works."""
     xession.env.update({"XONSH_DATA_DIR": str(tmpdir)})

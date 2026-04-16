@@ -82,7 +82,8 @@ the main approaches and their advantages.
 
 Work in progress:
 `binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_,
-`running in RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_.
+`running in RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_,
+`xonsh Flatpak <https://github.com/xonsh/xonsh-flatpak>`_.
 
 Independent install
 ========================
@@ -93,14 +94,14 @@ such as ``venv``, ``pipx``, or ``rye`` do not fully address this requirement.
 Package managers that can install fully isolated Python environments as a core feature,
 such as Miniconda or Micromamba, should be used.
 
-macOS / Linux / WSL
+Linux / macOS / WSL
 -------------------
 
 Install Xonsh independently using Micromamba:
 
 .. code-block:: console
 
-    TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
+    $ TARGET_DIR=$HOME/.local/xonsh-env PYTHON_VER=3.11 XONSH_VER='xonsh[full]' \
       /bin/bash -c "$(curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh)"
 
 Learn more: `Mamba installer <install_mamba.html>`_.
@@ -109,12 +110,24 @@ Learn more: `Mamba installer <install_mamba.html>`_.
 Windows
 -------
 
-Install Xonsh independently on Windows (without admin rights):
+.. note::
 
-.. code-block:: console
+   The installation instructions for Windows were recently updated.
+   If you run into any issues, please report them to the
+   `issue tracker <https://github.com/xonsh/xonsh/issues>`_.
 
-    curl -L -o install_xonsh.cmd https://xon.sh/install/windows_install_xonsh.cmd
-    install_xonsh.cmd  # Install to ~/xonsh-env/
+We provide an experimental Xonsh installer for Windows (no admin rights required). Download the ``.exe`` from the
+`Xonsh WinGet releases page <https://github.com/xonsh/xonsh-winget/releases>`_:
+
+* ``inno6`` — for Windows 10/11 (latest Python 3).
+* ``inno5`` — for Windows 8.1+ (pinned to Python 3.13).
+
+Or install via the script (no admin rights required):
+
+.. code-block:: doscon
+
+    > curl -L -o install_xonsh.cmd https://xon.sh/install/windows_install_xonsh.cmd
+    > install_xonsh.cmd  # Install to ~/xonsh-env/
 
 Package
 ========================
@@ -125,27 +138,27 @@ You can install xonsh package from PyPi using an existing installation of ``pip`
 
 .. code-block:: console
 
-    pip install 'xonsh[full]'
+    $ pip install 'xonsh[full]'
 
 Pip can also install the most recent xonsh source code from the
 `xonsh project repository <https://github.com/xonsh/xonsh>`_:
 
 .. code-block:: console
 
-    pip install 'https://github.com/xonsh/xonsh/archive/main.zip#egg=xonsh[full]'
+    $ pip install 'https://github.com/xonsh/xonsh/archive/main.zip#egg=xonsh[full]'
 
 **mamba:**
 
 .. code-block:: console
 
-    mamba install xonsh
+    $ mamba install xonsh
 
 **conda:**
 
 .. code-block:: console
 
-    conda config --add channels conda-forge
-    conda install xonsh
+    $ conda config --add channels conda-forge
+    $ conda install xonsh
 
 
 AppImage
@@ -155,9 +168,9 @@ Xonsh is available as a single AppImage bundled with Python, allowing you to run
 
 .. code-block:: console
 
-    wget 'https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage' -O xonsh
-    chmod +x xonsh
-    ./xonsh
+    $ wget 'https://github.com/xonsh/xonsh/releases/latest/download/xonsh-x86_64.AppImage' -O xonsh
+    $ chmod +x xonsh
+    $ ./xonsh
 
 Study how to package your libraries in `Xonsh AppImage <appimage.html>`_ article.
 
@@ -171,7 +184,7 @@ Example of running an interactive xonsh session in a container:
 
 .. code-block:: console
 
-    docker run --rm -it xonsh/interactive
+    $ docker run --rm -it xonsh/interactive
 
 Learn more: `Containers <containers.html>`_.
 
@@ -190,31 +203,31 @@ This approach is **not recommended** for the following reasons:
 
 .. code-block:: console
 
-    pacman -S xonsh  # not recommended but possible
+    $ pacman -S xonsh  # not recommended but possible
 
 **Debian/Ubuntu:**
 
 .. code-block:: console
 
-    apt install xonsh  # not recommended but possible
+    $ apt install xonsh  # not recommended but possible
 
 **Fedora:**
 
 .. code-block:: console
 
-    dnf install xonsh  # not recommended but possible
+    $ dnf install xonsh  # not recommended but possible
 
 **GNU guix:**
 
 .. code-block:: console
 
-    guix install xonsh  # not recommended but possible
+    $ guix install xonsh  # not recommended but possible
 
-**OSX:**
+**macOS:**
 
 .. code-block:: console
 
-    brew install xonsh  # not recommended but possible
+    $ brew install xonsh  # not recommended but possible
 
 WIP Binary build
 ========================
@@ -227,3 +240,56 @@ WIP RustPython build
 
 Using RustPython (a Python Interpreter written in Rust), it is possible to run xonsh using Rust.
 Learn more in `xonsh/5082 <https://github.com/xonsh/xonsh/issues/5082>`_.
+
+
+Updating xonsh
+========================
+
+How you update xonsh depends on the install method.
+
+**xonsh installed via pip**
+
+If xonsh was installed via pip (possibly into a virtual environment), you can
+update it from within xonsh itself using :ref:`xpip <aliases-xpip>` — a
+predefined alias pointing to the ``pip`` command associated with the Python
+executable that runs the current xonsh session:
+
+.. code-block:: xonshcon
+
+   @ xpip install --upgrade xonsh  # install the latest release
+   @ xpip install -U --force-reinstall git+https://github.com/xonsh/xonsh  # install from the repository
+
+**xonsh installed via a package manager**
+
+If you installed xonsh via a package manager, it is recommended to update it
+through the package manager's appropriate command. For example, on macOS with
+homebrew:
+
+.. code-block:: console
+
+   $ brew upgrade xonsh
+
+
+.. _default_shell:
+
+Setting xonsh as the default shell
+========================================
+
+Setting xonsh as your default login shell is **not recommended**.
+Xonsh is a full-featured shell and can technically be used as a login
+shell, but since it is not POSIX-compatible, system scripts and tooling
+that expect a POSIX shell may misbehave. Use it only if you clearly
+understand the purpose and consequences — see the rationale in
+`Before Installing`_ above. The recommended practice is to create a
+xonsh profile in your terminal emulator instead.
+
+If you still want to use xonsh as your default shell, you will have
+to add xonsh to ``/etc/shells`` and switch:
+
+.. code-block:: console
+
+    $ which xonsh
+    # which xonsh >> /etc/shells
+    $ chsh -s $(which xonsh)
+
+You will have to log out and log back in before the changes take effect.

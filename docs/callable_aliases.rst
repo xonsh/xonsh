@@ -376,6 +376,98 @@ The ``stderr`` argument and ``sys.stderr`` are also redirected — use
     this is captured
 
 
+Streams
+-------
+
+Inside a callable alias xonsh replaces ``sys.stdout`` and ``sys.stderr``
+with the alias's own streams.  The ``stdout`` and ``stderr`` function
+arguments point to the **same** redirected streams.  So bare ``print()``
+just works — in pipes, in capture, everywhere:
+
+.. code-block:: python
+
+    @aliases.register
+    def _greet(args):
+        print("hello")       # goes to pipe, capture, or terminal — wherever needed
+
+    # all of these work:
+    greet                     # prints to terminal
+    greet | grep hello        # piped to grep
+    output = $(greet)         # captured into variable
+
+The ``stdout`` / ``stderr`` arguments give you the **same stream as a file
+object**, which is useful when you need to pass it to functions that accept
+a file argument, or when you need ``.write()`` for finer control:
+
+.. code-block:: python
+
+    @aliases.register
+    def _json_dump(args, stdout=None):
+        import json
+        data = {"key": "value"}
+        json.dump(data, stdout)          # json.dump needs a file object
+        stdout.write("\n")
+
+**Reading from** ``stdin``
+
+``stdin`` is ``None`` when the alias is called standalone, and a readable
+stream when piped into.  This is the one argument you **must** use explicitly
+— there is no automatic redirection of ``sys.stdin`` for aliases:
+
+.. code-block:: python
+
+    @aliases.register
+    def _upper(args, stdin=None):
+        if stdin is not None:
+            for line in stdin:
+                print(line.strip().upper())
+
+.. code-block:: xonshcon
+
+    @ echo hello | upper
+    HELLO
+
+
+**Binary data — bypassing universal newlines**
+
+``stdin``, ``stdout``, and ``stderr`` are text streams
+(``io.TextIOWrapper``). Reading them applies *universal newlines* to
+incoming bytes: ``\r\n`` and lone ``\r`` are translated to ``\n``. That
+is convenient for text but can corrupts binary data flowing through the
+alias — every CR is silently rewritten.
+
+To pass bytes through unchanged, use the underlying ``.buffer`` on both
+ends:
+
+.. code-block:: python
+
+    @aliases.register
+    def _passthru(args, stdin=None, stdout=None):
+        """Copy stdin to stdout byte-for-byte."""
+        if stdin is None:
+            return
+        for chunk in iter(lambda: stdin.buffer.read(65536), b""):
+            stdout.buffer.write(chunk)
+        stdout.buffer.flush()
+
+.. code-block:: xonshcon
+
+    @ cat /usr/bin/python | passthru > /tmp/copy
+    @ # bytes preserved exactly — diff /usr/bin/python /tmp/copy is empty
+
+This applies symmetrically: ``stdout.write(text)`` goes through the
+text layer (and on Windows translates ``\n`` to ``\r\n``), while
+``stdout.buffer.write(b"...")`` writes raw bytes. Reach for
+``.buffer`` whenever the alias is a passthrough or otherwise
+binary-aware — ``cat``-likes, hashing, compression, image/audio
+filters, ``ssh``-style streaming.
+
+Reading a file directly with ``open(path, "rb")`` is also unaffected:
+the text layer only applies to ``stdin``/``stdout``/``stderr``. So
+``mycat file > out`` (no upstream pipe) is safe; ``something | mycat
+> out`` needs ``stdin.buffer`` to stay byte-clean.
+
+
 Threading
 ---------
 
@@ -501,6 +593,15 @@ without a separate ``import click``.
 Use these when a click command needs the underlying xonsh streams or
 environment overlay — for example, ``print(text, file=ctx.stdout)`` writes
 to the alias's captured output the same way a regular callable alias does.
+
+Tab completion is wired up automatically: option flags, ``click.Choice``
+option values, positional ``click.Choice`` arguments, and sub-commands of
+a ``click.Group`` are all suggested without any extra configuration.
+
+.. code-block:: xonshcon
+
+    @ hello --<TAB>
+    --count --help --name
 
 
 String Aliases and ExecAlias

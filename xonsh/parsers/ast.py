@@ -546,6 +546,21 @@ class CtxAwareTransformer(NodeTransformer):
                 col=node.col_offset,
             )
             return node
+        if self._looks_like_flag_subproc(node.value):
+            # ``zip --help`` / ``id -v`` parse as Python ``BinOp(Sub)`` (the
+            # LHS name minus ``-flag``). Evaluating that at runtime blows up
+            # when the RHS name is a non-numeric builtin (``help`` →
+            # ``_Helper``) or produces nonsense arithmetic. Since the LHS is
+            # a known alias/command, re-parse the source line as subprocess.
+            newnode = self.try_subproc_toks(node)
+            if not isinstance(newnode, Expr):
+                newnode = Expr(
+                    value=newnode, lineno=node.lineno, col_offset=node.col_offset
+                )
+                if hasattr(node, "max_lineno"):
+                    newnode.max_lineno = node.max_lineno
+                    newnode.max_col = node.max_col
+            return newnode
         if self.is_in_scope(node) or isinstance(node.value, Lambda):
             return node
         else:
@@ -558,6 +573,47 @@ class CtxAwareTransformer(NodeTransformer):
                     newnode.max_lineno = node.max_lineno
                     newnode.max_col = node.max_col
             return newnode
+
+    def _looks_like_flag_subproc(self, node):
+        """Heuristic: does this Python expression look like ``cmd -flag``?
+
+        Matches ``BinOp(Name, Sub, [UnaryOp(USub, …)]*, Name)`` where the LHS
+        name is a known alias, executable on ``$PATH``, or a Python builtin
+        that shadows one — i.e. the user clearly typed a subprocess command
+        with flags but it happened to also be valid Python syntax (e.g.
+        ``zip --help``, ``id -a``). Expressions involving user-defined
+        variables are excluded so legitimate arithmetic stays untouched.
+
+        Gated on ``$XONSH_BUILTINS_TO_CMD``: this is the same experimental
+        "commands win over Python names" switch that already covers the
+        bare-builtin case (``zip`` → run ``zip`` if it exists), so the
+        ``cmd -flag`` behaviour lives under the same opt-in toggle.
+        """
+        env = XSH.env or {}
+        if not env.get("XONSH_BUILTINS_TO_CMD"):
+            return False
+        if not (isinstance(node, BinOp) and isinstance(node.op, Sub)):
+            return False
+        if not isinstance(node.left, Name):
+            return False
+        # Peel off chained unary minuses on the right to handle ``--flag``,
+        # ``---flag``, etc.
+        rhs = node.right
+        while isinstance(rhs, UnaryOp) and isinstance(rhs.op, USub):
+            rhs = rhs.operand
+        if not isinstance(rhs, Name):
+            return False
+        name = node.left.id
+        if name in self._user_names:
+            return False
+        for ctx in self.contexts[1:]:
+            if name in ctx:
+                return False
+        aliases = XSH.aliases or {}
+        if name in aliases:
+            return True
+        cc = XSH.commands_cache
+        return bool(cc and cc.locate_binary(name) is not None)
 
     def _is_bare_builtin(self, node):
         """Check if node is a bare Name referencing a Python builtin, or Ellipsis.

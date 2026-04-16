@@ -1,3 +1,5 @@
 'prompt-toolkit>=3.0.29'
 Pygments
 ujson
+pyyaml
+click

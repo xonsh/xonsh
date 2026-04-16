@@ -12,6 +12,7 @@ from xonsh.completers.tools import (
     contextual_command_completer,
     get_filter_function,
     non_exclusive_completer,
+    tag_provider,
 )
 from xonsh.lib.modules import ModuleFinder
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
@@ -30,19 +31,22 @@ def complete_command(command: CommandContext):
     show_desc = (XSH.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
     for s, (path, is_alias) in XSH.commands_cache.iter_commands():
         if get_filter_function()(s, cmd):
-            kwargs = {}
-            if show_desc:
-                kwargs["description"] = "Alias" if is_alias else path
-            yield RichCompletion(s, append_space=True, **kwargs)  # type: ignore
+            description = ("Alias" if is_alias else path) if show_desc else ""
+            yield RichCompletion(
+                s,
+                append_space=True,
+                provider="alias" if is_alias else "command",
+                description=description,
+            )
     if xp.ON_WINDOWS:
         for i in executables_in("."):
             if get_filter_function()(i, cmd):
-                yield RichCompletion(i, append_space=True)
+                yield RichCompletion(i, append_space=True, provider="command")
     base = os.path.basename(cmd)
     if os.path.isdir(base):
         for i in executables_in(base):
             if get_filter_function()(i, cmd):
-                yield RichCompletion(os.path.join(base, i))
+                yield RichCompletion(os.path.join(base, i), provider="command")
 
 
 @contextual_command_completer
@@ -194,7 +198,12 @@ class CommandCompleter:
 
         if hasattr(module, "xonsh_complete"):
             func = module.xonsh_complete
-            return func(ctx)
+            # Tag results with the xompletion module's short name
+            # (``xompletions.pip`` → ``pip``) so ``$XONSH_COMPLETER_TRACE``
+            # can tell which concrete module produced each completion
+            # under the generic ``source=xompleter`` umbrella.
+            provider = module.__name__.rsplit(".", 1)[-1]
+            return tag_provider(func(ctx), provider)
 
 
 complete_xompletions = CommandCompleter()

@@ -96,6 +96,8 @@ Report information about the current xonsh environment, including paths to the P
 By default, symlinks in the displayed paths are resolved to their real targets; pass ``--no-resolve`` (``-n``) to show the raw paths instead.
 
 
+.. _aliases-xpip:
+
 ``xpip``
 --------------------
 Runs the ``pip`` package manager for xonsh itself. Useful for installations where xonsh is in an

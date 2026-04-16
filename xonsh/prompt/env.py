@@ -2,6 +2,7 @@
 
 import functools
 import re
+import sys
 from pathlib import Path
 
 from xonsh.built_ins import XSH
@@ -71,7 +72,36 @@ def vte_new_tab_cwd() -> None:
     on startup. Note that this does not return a string, it simply prints
     and flushes the escape sequence to stdout directly.
     """
+    emit_osc7()
+
+
+def emit_osc7(**kwargs) -> None:
+    """Emit an OSC 7 escape sequence to report the current working directory.
+
+    Terminals use this for features like "Open new tab in same directory"
+    and macOS Terminal.app session restoration.
+    """
+    # Use sys.__stdout__ — the original stdout saved by Python at startup,
+    # never replaced by the Tee wrapper that captures command output into
+    # history.  This avoids escape sequences leaking into hist.out.
+    stdout = sys.__stdout__
+    if stdout is None or not hasattr(stdout, "isatty") or not stdout.isatty():
+        return
+    # On Windows the legacy conhost (pre-Win10 build 14393) does not
+    # interpret VT/ANSI sequences, so emitting OSC 7 there leaks raw bytes
+    # to the screen (see issue #6325). Skip if no ANSI support detected.
+    from xonsh.platform import ON_WINDOWS, win_ansi_support
+
+    if ON_WINDOWS and not win_ansi_support():
+        return
+    import socket
+    import urllib.parse
+
     env = XSH.env
-    t = "\033]7;file://{}{}\007"
-    s = t.format(env.get("HOSTNAME"), env.get("PWD"))
-    print(s, end="", flush=True)
+    host = env.get("HOSTNAME") or socket.gethostname()
+    pwd = env.get("PWD", "")
+    # OSC 7 requires a file:// URL with forward slashes
+    pwd = pwd.replace("\\", "/")
+    pwd = urllib.parse.quote(pwd, safe="/:")
+    stdout.write(f"\033]7;file://{host}{pwd}\007")
+    stdout.flush()

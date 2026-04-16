@@ -178,6 +178,72 @@ process. For example, when starting xonsh from a bash script, use an
 interactive shebang (``#!/bin/bash -i``).
 
 
+.. _launch-fg-takeover:
+
+Controlling Terminal and Foreground Process Group
+==================================================
+
+At startup xonsh performs the industry-standard handshake used by interactive shells
+to install itself as the foreground process group of its controlling terminal.
+
+On POSIX, the first thing :func:`xonsh.main.main` does — before argument
+parsing, xontrib loading, or xonshrc execution — is call
+:func:`xonsh.main._setup_controlling_terminal`. This function installs a
+Python-level no-op handler for ``SIGTTIN`` and ``SIGTTOU`` on every POSIX
+invocation. If ``os.isatty(stderr)`` is true, it then calls
+:func:`xonsh.main._acquire_controlling_terminal`; otherwise it returns after
+installing the handlers.
+
+``_acquire_controlling_terminal`` uses stderr (file descriptor 2) as the TTY
+handle, matching :func:`xonsh.procs.jobs.give_terminal_to`. It blocks
+``SIGTTOU``, ``SIGTTIN``, ``SIGTSTP``, and ``SIGCHLD`` in the calling thread
+with ``pthread_sigmask``. If the TTY's foreground group is already the current
+process group, it short-circuits to success without registering an ``atexit``
+restorer. Otherwise it calls ``setpgid(0, 0)`` followed by
+``tcsetpgrp(tty_fd, getpgrp())``, remembers the previous foreground group, and
+records the success. The signal mask is restored in a ``finally`` block.
+
+Control returns to ``_setup_controlling_terminal``, which branches on the
+result. On success, the Python no-op handlers stay in place, and
+:func:`xonsh.main._release_controlling_terminal` is registered with
+:mod:`atexit` only when foreground ownership was actually transferred. On
+failure, the Python no-op handlers are replaced with ``SIG_IGN`` for
+``SIGTTIN`` and ``SIGTTOU``. ``_setup_controlling_terminal`` is idempotent and
+is also called from the top of :func:`xonsh.main.main_xonsh`, with the second
+call short-circuiting on the ``_tty_setup_done`` module flag.
+
+On shutdown, if the ``atexit`` restorer was registered,
+``_release_controlling_terminal`` calls ``tcsetpgrp`` to hand the previous
+foreground group back to the parent shell with ``SIGTTOU`` blocked during the
+call. If the parent has already reclaimed the TTY, or if the fd is no longer
+valid, the error is swallowed. In every other case — no handshake ran, the
+fast path was taken, or the handshake failed — the restorer is a no-op.
+
+When the handshake is a no-op
+------------------------------
+
+The handshake itself is skipped, though the Python no-op handlers for
+``SIGTTIN`` and ``SIGTTOU`` are still installed, on Windows; in non-interactive
+invocations where stderr is not a TTY, such as ``xonsh script.xsh``, piped
+input, redirected stderr, script-from-stdin mode, and pytest runs that capture
+stderr via a pipe; when xonsh is a session leader (``getsid(0) == getpid()``);
+when xonsh is already the foreground group, in which case the fast path
+returns and the ``atexit`` restorer is not registered; and when
+``pthread_sigmask`` is not available on the platform.
+
+Disabling the handshake
+------------------------
+
+Set ``XONSH_NO_FG_TAKEOVER=1`` in the parent environment (before launching
+xonsh) to skip the handshake entirely. When the handshake is disabled, xonsh
+falls back to installing ``SIG_IGN`` for ``SIGTTIN`` and ``SIGTTOU``.
+
+.. code-block:: bash
+
+    # disable the takeover
+    XONSH_NO_FG_TAKEOVER=1 xonsh
+
+
 See also
 ========
 

@@ -2,6 +2,7 @@
 
 import difflib
 import sys
+import textwrap
 import time
 import warnings
 
@@ -20,11 +21,12 @@ from xonsh.tools import XonshError, is_class, print_exception, simple_random_cho
 events.doc(
     "on_transform_command",
     """
-on_transform_command(cmd: str) -> str
+on_transform_command(cmd: str) -> str | None
 
 Fired to request xontribs to transform a command line. Return the transformed
-command, or the same command if no transformation occurs. Only done for
-interactive sessions.
+command, or the same command if no transformation occurs. Return None to
+indicate no transformation (equivalent to returning the original command).
+Only done for interactive sessions.
 
 This may be fired multiple times per command, with other transformers input or
 output, so design any handlers for this carefully.
@@ -46,7 +48,24 @@ events.doc(
     """
 on_precommand(cmd: str) -> None
 
-Fires just before a command is executed.
+Fires just before a command is executed, after ``on_transform_command`` has
+produced its final form. Handlers cannot modify the command — use
+``on_transform_command`` if you need to change the source before it runs.
+This event only fires in interactive mode.
+
+Parameters:
+
+* ``cmd``: The command about to be executed.
+
+Example:
+
+.. code-block:: python
+
+    @events.on_precommand
+    def _audit(cmd, **kw):
+        '''Log each command to a file right before execution.'''
+        with open('/tmp/xonsh_audit.log', 'a') as f:
+            f.write(cmd)
 """,
 )
 
@@ -60,7 +79,8 @@ This event only fires in interactive mode.
 
 Parameters:
 
-* ``cmd``: The command that was executed (after transformation)
+* ``cmd``: The command that was executed — the final form after transformation
+  and dedent.
 * ``rtn``: The result of the command executed (``0`` for success)
 * ``out``: If xonsh stores command output, this is the output
 * ``ts``: Timestamps, in the order of ``[starting, ending]``
@@ -80,7 +100,7 @@ Example:
 events.doc(
     "on_command_not_found",
     """
-on_command_not_found(cmd: list[str]) -> list[str] | tuple[str, ...] | None
+on_command_not_found(cmd: list[str]) -> list[str] | tuple[str, ...] | dict | None
 
 Fires if a command is not found (only in interactive sessions).
 
@@ -92,11 +112,14 @@ Returns:
 
 * ``list[str]`` or ``tuple[str, ...]``: A replacement command to execute instead.
   The first valid replacement from any handler will be used.
+* ``dict``: A dict with a required ``"cmd"`` key (list of command tokens) and an
+  optional ``"env"`` key (dict of environment variables to set for the replacement
+  command). Same convention as ``@Aliases.return_command``.
 * ``None``: To let the error be raised normally
 
 Note: If the replacement command also fails, the original error is shown.
 
-Example:
+Examples:
 
 .. code-block:: python
 
@@ -105,6 +128,12 @@ Example:
         '''If vim not found let's try to use vi.'''
         if cmd[0] == 'vim':
             return ['vi'] + cmd[1:]
+
+    @events.on_command_not_found
+    def _node_with_path(cmd, **kwargs):
+        '''Run node with a custom NODE_PATH.'''
+        if cmd[0] == 'mynode':
+            return {"cmd": ["node"] + cmd[1:], "env": {"NODE_PATH": "/opt/libs"}}
 
 """,
 )
@@ -136,6 +165,23 @@ on_post_prompt() -> None
 Fires just after the prompt returns
 """,
 )
+
+
+def deindent(src):
+    """Remove leading indentation from ``src`` before compilation.
+
+    Applies ``textwrap.dedent`` to strip the common leading whitespace
+    from every line. If the first line ends with a line-continuation
+    backslash and still begins with whitespace after dedent (paste of a
+    subproc command where line 1 was indented deeper than the
+    continuation line), also ``lstrip`` the source so the first line is
+    flush-left.
+    """
+    src = textwrap.dedent(src)
+    first_line = src.split("\n", 1)[0]
+    if first_line and first_line[0].isspace() and first_line.rstrip().endswith("\\"):
+        src = src.lstrip()
+    return src
 
 
 def transform_command(src, show_diff=True):
@@ -318,6 +364,14 @@ class Shell:
         # allows history garbage collector to start running
         if hist.gc is not None:
             hist.gc.wait_for_shell = False
+
+        # Emit OSC 7 (CWD reporting) on directory changes so terminals can
+        # track the working directory (new-tab-in-cwd, session restore, etc.)
+        if env.get("XONSH_INTERACTIVE"):
+            from xonsh.prompt.env import emit_osc7
+
+            events.on_chdir(emit_osc7)
+            emit_osc7()  # emit once at startup
 
     def __getattr__(self, attr):
         """Delegates calls to appropriate shell instance."""

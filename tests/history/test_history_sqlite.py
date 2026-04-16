@@ -1,11 +1,13 @@
 """Tests the xonsh history."""
 
 # pylint: disable=protected-access
+import gc
 import itertools
 import os
 import shlex
 import sys
 import time
+import warnings
 
 import pytest
 
@@ -32,8 +34,8 @@ def hist(tmpdir):
 
 
 def _clean_up(h):
-    conn = _xh_sqlite_get_conn(h.filename)
-    conn.close()
+    with _xh_sqlite_get_conn(h.filename):
+        pass
     filename = h.filename
     del h
     os.remove(filename)
@@ -214,27 +216,60 @@ def test_histcontrol(hist, xession):
 
 
 @skipwin311
-def test_histcontrol_erase_dup(hist, xession):
-    """Test HISTCONTROL=erasedups"""
+def test_erasedups_command(hist, xession):
+    """Test history erasedups command removes duplicates."""
 
-    xession.env["HISTCONTROL"] = "erasedups"
+    xession.env["HISTCONTROL"] = set()
     assert len(hist) == 0
 
-    hist.append({"inp": "ls foo", "rtn": 2})
-    hist.append({"inp": "ls foobazz", "rtn": 0})
-    hist.append({"inp": "ls foo", "rtn": 0})
-    hist.append({"inp": "ls foobazz", "rtn": 0})
-    hist.append({"inp": "ls foo", "rtn": 0})
-    assert len(hist) == 2
-    assert len(hist.inps) == 5
+    hist.append({"inp": "ls foo", "rtn": 2, "ts": (1, 2)})
+    hist.append({"inp": "ls foobazz", "rtn": 0, "ts": (3, 4)})
+    hist.append({"inp": "ls foo", "rtn": 0, "ts": (5, 6)})
+    hist.append({"inp": "ls foobazz", "rtn": 0, "ts": (7, 8)})
+    hist.append({"inp": "ls foo", "rtn": 0, "ts": (9, 10)})
+    assert len(hist) == 5
 
-    items = list(hist.items())
-    assert "ls foo" == items[-1]["inp"]
-    assert "ls foobazz" == items[-2]["inp"]
-    assert items[-2]["frequency"] == 2
-    assert items[-1]["frequency"] == 3
+    removed, total = hist.erasedups()
+    assert removed == 3
+    assert total == 5
+
+    items = list(hist.all_items())
+    assert len(items) == 2
+    assert items[0]["inp"] == "ls foobazz"
+    assert items[0]["frequency"] == 2
+    assert items[1]["inp"] == "ls foo"
+    assert items[1]["frequency"] == 3
 
     _clean_up(hist)
+
+
+@skipwin311
+def test_clear_does_not_destroy_other_sessions(tmpdir, xession):
+    """Test that history clear in one session does not lose commands from another.
+    This is the bug described in xonsh/xonsh#5919.
+    """
+    db_file = tmpdir / "xonsh-HISTORY-TEST-CLEAR.sqlite"
+    xession.env["HISTCONTROL"] = set()
+
+    # Session A: type foobar, close session
+    hist_a = SqliteHistory(filename=db_file, gc=False, sessionid="session-a")
+    hist_a.append({"inp": "foobar", "rtn": 0, "ts": (1, 2)})
+
+    # Session B: type foobar and bazbar
+    hist_b = SqliteHistory(filename=db_file, gc=False, sessionid="session-b")
+    hist_b.append({"inp": "foobar", "rtn": 0, "ts": (3, 4)})
+    hist_b.append({"inp": "bazbar", "rtn": 0, "ts": (5, 6)})
+
+    # Session B: history clear
+    hist_b.clear()
+
+    # foobar from session A must still be in history
+    all_items = list(hist_a.all_items())
+    inps = [item["inp"] for item in all_items]
+    assert "foobar" in inps
+    assert "bazbar" not in inps
+
+    _clean_up(hist_a)
 
 
 @skipwin311
@@ -420,3 +455,54 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
 
     hist_strings = ptk_shell[2].prompter.history.get_strings()
     assert hist_strings == ["a1", "b1", "a2", "b2"]
+
+
+@skipwin311
+def test_no_unclosed_sqlite_connection_warning(tmpdir, xession):
+    """Regression: every sqlite operation must close its connection.
+
+    `with sqlite3.connect(...) as conn` only commits/rolls back the
+    transaction; the connection itself stays open until GC, at which
+    point Python (3.12+) reports `ResourceWarning: unclosed database`
+    via `sys.unraisablehook` (it fires from Connection.__del__, not
+    via warnings.warn, so warnings filters don't see it).
+    `_xh_sqlite_get_conn` wraps sqlite3.connect in a contextmanager
+    that calls conn.close() in finally — this test catches a regression
+    of that wrapper.
+    """
+    xession.env["HISTCONTROL"] = set()
+    db_file = tmpdir / "xonsh-HISTORY-RES.sqlite"
+
+    unraisable = []
+    orig_hook = sys.unraisablehook
+    sys.unraisablehook = lambda args: unraisable.append(args)
+    try:
+        # Suppress the warning channel too, in case finalisation goes that route.
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", ResourceWarning)
+
+            h = SqliteHistory(filename=db_file, gc=False)
+            for i in range(5):
+                h.append({"inp": f"echo {i}", "rtn": 0, "ts": [i, i + 1]})
+            list(h.items())
+            list(h.all_items())
+            h.info()
+            h.append({"inp": "echo 0", "rtn": 0, "ts": [99, 100]})
+            h.erasedups()
+            h.delete("echo 1")
+            h.clear()
+
+            # Drop the instance and force GC — any leaked sqlite3.Connection
+            # will trigger __del__ and surface via the unraisable hook.
+            del h
+            gc.collect()
+    finally:
+        sys.unraisablehook = orig_hook
+
+    leaks = [
+        u
+        for u in unraisable
+        if isinstance(u.exc_value, ResourceWarning)
+        and "sqlite3.Connection" in str(u.exc_value)
+    ]
+    assert not leaks, f"sqlite3 connections leaked: {[str(u.exc_value) for u in leaks]}"

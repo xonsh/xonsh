@@ -21,7 +21,7 @@ from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.prompt.base import PromptFormatter, multiline_prompt
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.tools import (
     DefaultNotGiven,
     XonshError,
@@ -375,16 +375,14 @@ class BaseShell:
             self.precwd = os.getcwd()
         except FileNotFoundError:
             self.precwd = os.path.expanduser("~")
-        return line if self.need_more_lines else line.lstrip()
+        return line
 
     def default(self, line, raw_line=None):
         """Implements code execution."""
         line = line if line.endswith("\n") else line + "\n"
         if not self.need_more_lines:  # this is the first line
-            if not raw_line:
-                self.src_starts_with_space = False
-            else:
-                self.src_starts_with_space = raw_line[0].isspace()
+            check = raw_line or line
+            self.src_starts_with_space = bool(check) and check[0].isspace()
         src, code = self.push(line)
         if code is None:
             return
@@ -399,6 +397,28 @@ class BaseShell:
         tee = Tee(encoding=enc, errors=err)
         ts0 = time.time()
         exc_info = (None, None, None)
+        if hist is not None:
+            # Reset so the ``is None`` guard below can distinguish
+            # "no subprocess ran" from "a subprocess already reported
+            # its return code".
+            #
+            # Flow:
+            #   1. Prompt fields may run subprocesses (e.g. ``$(cmd)``
+            #      inside a lambda) whose pipelines call
+            #      ``CommandPipeline._apply_to_history()`` and set
+            #      ``hist.last_cmd_rtn`` to *their* exit code.
+            #   2. ``run_compiled_code()`` executes the user's command.
+            #      - Subprocess commands (``echo 1``, ``!(cmd)``,
+            #        ``$(cmd)``) again go through ``_apply_to_history()``
+            #        and set ``hist.last_cmd_rtn`` to the real exit code.
+            #      - Pure-Python expressions (``2+2``) never touch it.
+            #   3. The ``if hist.last_cmd_rtn is None`` guard then sets 0
+            #      for success — but only fires when no subprocess has
+            #      already reported a code.
+            #
+            # Without this reset, a stale code from step 1 survives into
+            # step 3 and is mistaken for the user command's result.  #4912
+            hist.last_cmd_rtn = None
         try:
             exc_info = run_compiled_code(code, self.ctx, None, "single")
             if exc_info != (None, None, None):
@@ -441,7 +461,7 @@ class BaseShell:
             ts1 = ts1 or time.time()
             tee_out = tee.getvalue()
             info = self._append_history(
-                inp=src,
+                inp=deindent(src),
                 ts=[ts0, ts1],
                 spc=self.src_starts_with_space,
                 tee_out=tee_out,
@@ -530,7 +550,8 @@ class BaseShell:
             return None, None
         src = "".join(self.buffer)
         src = transform_command(src)
-        return self.compile(src)
+        _, code = self.compile(deindent(src))
+        return src, code
 
     def compile(self, src):
         """Compiles source code and returns the (possibly modified) source and

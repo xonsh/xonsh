@@ -1,6 +1,7 @@
 """The main xonsh script."""
 
 import argparse
+import atexit
 import builtins
 import contextlib
 import enum
@@ -152,6 +153,541 @@ def path_argument(s):
         msg = f"{s!r} must be a valid path to a file or directory"
         raise argparse.ArgumentTypeError(msg)
     return s
+
+
+#: Module-level state written by :func:`_acquire_controlling_terminal` and
+#: consumed by :func:`_release_controlling_terminal`. Kept as a dict so that
+#: the atexit restorer is a thin closure without extra globals.
+_fg_tty_state: dict = {"acquired": False, "tty_fd": -1, "old_fg": -1}
+
+#: Idempotency flag for :func:`_setup_controlling_terminal`. Flipped to
+#: ``True`` once the TTY signal handlers have been installed in a given
+#: process — a second call becomes a cheap no-op. Exposed on the module
+#: so tests can reset it between runs.
+_tty_setup_done: bool = False
+
+#: Delivery counter for :func:`_handle_sig_ttin_ttou`. A Python list is
+#: used instead of a plain int so that the handler (a closure / nested
+#: call site) can mutate it in place without a ``global`` declaration.
+#: Exposed so tests can reset it.
+_ttin_ttou_counter: list = [0]
+
+#: Threshold at which :func:`_handle_sig_ttin_ttou` escalates the
+#: ``SIGTTIN`` / ``SIGTTOU`` disposition from the Python no-op handler
+#: to ``SIG_IGN`` as a livelock guard. See the handler's docstring for
+#: the rationale. Chosen conservatively high — normal operation fires
+#: the handler zero times, and legitimate transient bursts (e.g. a
+#: misbehaving subprocess briefly stealing foreground during a
+#: pipeline) should recover well below this bound.
+_TTIN_TTOU_LIVELOCK_THRESHOLD: int = 1000
+
+
+def _handle_sig_ttin_ttou(n, f):
+    """Python no-op handler for ``SIGTTIN`` / ``SIGTTOU`` with a
+    built-in livelock guard.
+
+    Installed by :func:`_setup_controlling_terminal`'s success path.
+    Under normal operation xonsh is the foreground process group of
+    its controlling terminal and this handler never fires — the
+    kernel does not deliver ``SIGTTIN`` / ``SIGTTOU`` to a foreground
+    process. It exists as a safety net for pathological cases where
+    xonsh temporarily loses foreground ownership (unexpected
+    ``tcsetpgrp`` from a subprocess, a PID-namespace race, a buggy
+    xontrib, …) and then tries to touch the TTY.
+
+    Why a plain ``pass`` is a trap
+    ------------------------------
+    There are two independent paths that can turn a ``pass`` no-op
+    handler into a 99%-CPU livelock:
+
+    1. **PEP 475 (``os.read`` retry) — triggered by SIGTTIN.**
+       Since Python 3.5, ``os.read`` is one of the syscalls that
+       Python automatically retries on ``EINTR`` when the signal
+       handler does not raise — see
+       https://peps.python.org/pep-0475/ for the full list. If xonsh
+       is a background process of the TTY and calls ``os.read`` on
+       the TTY fd (directly, or indirectly via ``prompt_toolkit``'s
+       asyncio event loop), the kernel returns ``EINTR`` and sends
+       ``SIGTTIN``. The Python handler runs, does ``pass``, returns.
+       Python retries ``os.read``. The kernel sends ``SIGTTIN``
+       again. Loop — at 99% CPU until the process is killed.
+       ``termios.*`` is **not** in PEP 475's retry list, so
+       ``tcsetattr`` itself does not trigger this path — but
+       ``os.read`` does, and prompt_toolkit reads stdin on every
+       prompt.
+
+    2. **xonsh PR #6192 application-level retry — triggered by
+       SIGTTOU.** The existing outer retry loop in
+       ``xonsh/shells/ptk_shell/__init__.py`` catches any exception
+       with ``args[0] == 4`` (``EINTR``) and calls
+       ``self.prompter.prompt(**prompt_args)`` again. If
+       ``tcsetattr`` inside ``raw_mode`` is what raised (because
+       xonsh is background, so the kernel generates ``SIGTTOU`` and
+       fails the syscall with ``EINTR``), the retry re-enters
+       ``raw_mode`` and re-calls ``tcsetattr``, the kernel re-sends
+       ``SIGTTOU``, the handler passes, the retry fires again —
+       another 99%-CPU loop.
+
+    The fix
+    -------
+    Count deliveries. On the first few thousand we do nothing — that
+    covers every legitimate transient scenario. Above the threshold
+    we **replace the Python handler with ``SIG_IGN``**. POSIX says
+    that if ``SIGTTOU`` / ``SIGTTIN`` are ignored, the underlying
+    operation "shall be allowed to perform" — so the next
+    ``tcsetattr`` / ``read`` succeeds instead of re-entering the
+    loop, and the caller makes progress.
+
+    ``SIG_IGN`` is inherited across ``exec``, so subprocess children
+    launched after escalation see ``SIG_IGN`` for these signals too.
+    That is an acceptable trade-off: we only reach this branch if
+    xonsh is already in a degraded "lost foreground" state, and the
+    alternative is a hard hang.
+
+    References
+    ----------
+    * PEP 475 (Retry system calls failing with EINTR):
+      https://peps.python.org/pep-0475/
+    * ``tcsetattr(3)`` — "the operation shall be allowed to perform"
+      when SIGTTOU is ignored:
+      https://man7.org/linux/man-pages/man3/tcsetattr.3.html
+    * ``read(2)`` — EINTR semantics and PEP 475 coverage:
+      https://man7.org/linux/man-pages/man2/read.2.html
+    * xonsh PR #6192 — the application-level retry loop that
+      provides the SIGTTOU livelock path.
+    """
+    _ttin_ttou_counter[0] += 1
+    if _ttin_ttou_counter[0] > _TTIN_TTOU_LIVELOCK_THRESHOLD:
+        # Escalate: let the kernel drop the signals outright. Future
+        # deliveries will not reach Python at all, and interrupted
+        # syscalls will complete on the next retry (POSIX: "the
+        # operation shall be allowed to perform" when ignored).
+        signal.signal(signal.SIGTTIN, signal.SIG_IGN)
+        signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+
+
+def _acquire_controlling_terminal():
+    """Put xonsh into the foreground process group of its controlling TTY.
+
+    Background
+    ----------
+    On POSIX systems every terminal has a single *foreground process group*.
+    Only processes belonging to that group may read from or perform control
+    operations on the terminal without being suspended by ``SIGTTIN`` /
+    ``SIGTTOU``. Interactive shells (bash, zsh, …) perform a small startup
+    handshake to make sure they are that foreground group: they put
+    themselves into their own process group and call ``tcsetpgrp`` on the
+    TTY. xonsh historically did not do this — it relied on the launching
+    shell to have arranged things correctly. That assumption breaks in a
+    number of environments:
+
+    * Flatpak / Bubblewrap and similar sandboxes that spawn children
+      without adjusting the TTY's foreground group.
+    * Build systems, CI runners, IDE integrated terminals and service
+      managers (e.g. ``systemd --user``) that don't wire xonsh up as the
+      foreground process of the PTY they attach.
+    * Nested containers that reuse the outer PTY.
+
+    In those cases xonsh is technically a background process. Every TTY
+    touch — ``tcgetattr`` during prompt_toolkit init, ``tcsetpgrp`` when
+    launching a pipeline, plain writes when stdout is line-buffered —
+    raises ``SIGTTIN`` or ``SIGTTOU``. The signals are delivered to
+    Python's asyncio wakeup pipe faster than it can be drained, overflow
+    it, and crash startup with ``BlockingIOError: Resource temporarily
+    unavailable``. Other signals interrupt ``termios`` calls mid-flight
+    and surface as ``termios.error: Interrupted system call``.
+
+    The fix
+    -------
+    Perform the same handshake bash does, very early in xonsh's lifetime:
+
+    1. Find a TTY file descriptor (stderr, same choice xonsh already uses
+       for :func:`xonsh.procs.jobs.give_terminal_to`).
+    2. Compare its current foreground group to our process group. If we
+       are already foreground, record that and exit fast.
+    3. Block ``SIGTTOU``, ``SIGTTIN``, ``SIGTSTP`` and ``SIGCHLD`` in the
+       calling thread so that the handshake cannot suspend us or be
+       reentered by a child's death.
+    4. Call ``setpgid(0, 0)`` to make us a process group of our own.
+    5. Call ``tcsetpgrp(tty_fd, getpgrp())`` to install that group as
+       the foreground group of the TTY.
+    6. Remember the previous foreground group so :func:`_release_controlling_terminal`
+       (registered via ``atexit``) can hand it back on shutdown.
+
+    Every failure mode returns ``False`` cleanly — this is a best-effort
+    upgrade, never a hard requirement. Windows has no concept of
+    controlling terminals in the POSIX sense; the function immediately
+    returns ``False`` there.
+
+    Environment
+    -----------
+    Set ``XONSH_NO_FG_TAKEOVER=1`` in the parent environment to disable
+    the handshake entirely. This is an escape hatch for rare cases where
+    the takeover conflicts with a parent process that expects xonsh to
+    stay in its original process group.
+
+    Returns
+    -------
+    bool
+        ``True`` if xonsh is now (or already was) the foreground process
+        group of its controlling terminal. ``False`` on any failure or
+        when the handshake is not applicable (non-TTY, Windows, session
+        leader, disabled by env var, …).
+
+    References
+    ----------
+    POSIX.1-2017 specifications (https://pubs.opengroup.org/onlinepubs/9699919799/):
+
+    * ``setpgid(2)``: https://man7.org/linux/man-pages/man2/setpgid.2.html
+      — session leader cannot change its own pgid (EPERM); ``setpgid(0, 0)``
+      creates a new pgrp with ``pgid == pid``.
+    * ``tcsetpgrp(3)``: https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html
+      — a background-group caller receives ``SIGTTOU`` unless it is blocked
+      or ignored; fails with ESRCH if the target pgid does not exist.
+    * ``tcgetpgrp(3)``: https://man7.org/linux/man-pages/man3/tcgetpgrp.3.html
+      — reads the controlling terminal's current foreground pgid.
+    * ``tcsetattr(3)``: https://man7.org/linux/man-pages/man3/tcsetattr.3.html
+      — returns EIO when called on an orphaned pgrp's controlling terminal
+      (Linux) rather than sending SIGTTOU, which is the Flatpak crash path.
+    * ``pthread_sigmask(3)``: https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html
+      — per-thread signal mask; used here to block ``SIGTTOU`` across the
+      ``tcsetpgrp`` call without affecting the rest of the process.
+    * ``pid_namespaces(7)``: https://man7.org/linux/man-pages/man7/pid_namespaces.7.html
+      — specifies that ``getpgid``/``getsid`` return 0 for ids not
+      representable inside the namespace; this is the Linux kernel
+      behaviour that the ``my_pgid > 0`` guard in the fast-path exists for.
+    * ``execve(2)``: https://man7.org/linux/man-pages/man2/execve.2.html
+      — specifies signal-disposition inheritance across exec (``SIG_IGN``
+      persists, custom handlers reset to ``SIG_DFL``), which informs the
+      choice between Python no-op handler and ``SIG_IGN`` in
+      :func:`_setup_controlling_terminal`.
+    * ``credentials(7)``: https://man7.org/linux/man-pages/man7/credentials.7.html
+      — general background on sessions and process groups.
+
+    Non-POSIX / Linux-specific:
+
+    * ``signal(7)``: https://man7.org/linux/man-pages/man7/signal.7.html
+      — Linux signal semantics table, including the inheritance rules
+      across ``fork`` and ``exec``.
+
+    Historical prior art:
+
+    * bash ``jobs.c``
+      (https://cgit.git.savannah.gnu.org/cgit/bash.git/tree/jobs.c) —
+      source of the ``setpgid`` + ``tcsetpgrp`` startup pattern, verified
+      for ``start_pipeline``, ``make_child``, ``stop_pipeline``,
+      ``default_tty_job_signals`` and ``ignore_tty_job_signals``.
+    * Original xonsh-flatpak wrapper that documented the failure modes
+      (``BlockingIOError``, ``termios.error``):
+      https://github.com/anki-code/xonsh-flatpak/blob/main/xonsh-wrapper.py
+    """
+    if ON_WINDOWS:
+        return False
+    if os.environ.get("XONSH_NO_FG_TAKEOVER"):
+        return False
+    # pthread_sigmask is POSIX-only and may be absent on exotic builds.
+    # See pthread_sigmask(3):
+    #   https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html
+    if not hasattr(signal, "pthread_sigmask"):
+        return False
+    # Use stderr as the TTY handle. xonsh already uses FD 2 for
+    # give_terminal_to in pipeline management (xonsh/procs/jobs.py), so
+    # this keeps the choice consistent across subsystems.
+    try:
+        tty_fd = sys.stderr.fileno()
+    except (AttributeError, OSError, ValueError):
+        return False
+    try:
+        if not os.isatty(tty_fd):
+            return False
+    except OSError:
+        return False
+    # A session leader cannot change its own process group id, so the
+    # setpgid(0, 0) call below would fail with EPERM. Detect this up
+    # front and skip cleanly — if we are session leader we almost
+    # certainly already own the TTY anyway. See setpgid(2):
+    #   https://man7.org/linux/man-pages/man2/setpgid.2.html
+    try:
+        if os.getsid(0) == os.getpid():
+            return False
+    except OSError:
+        return False
+    # Block the signals that can disrupt the handshake. SIGTTOU is the
+    # critical one — without this mask, the tcsetpgrp() call below
+    # would send SIGTTOU to our own process group (we are in a
+    # background group at this point) and suspend us. SIGTTIN is
+    # blocked for symmetry; SIGTSTP so that a stray Ctrl+Z cannot
+    # desynchronise state; SIGCHLD so a child reaping does not
+    # interrupt us mid-handshake. The block is thread-local — it
+    # does not affect signal disposition for the rest of the process.
+    # See tcsetpgrp(3) for the SIGTTOU-when-bg semantics:
+    #   https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html
+    block = {signal.SIGTTOU, signal.SIGTTIN, signal.SIGTSTP, signal.SIGCHLD}
+    try:
+        old_mask = signal.pthread_sigmask(signal.SIG_BLOCK, block)
+    except (AttributeError, OSError):
+        return False
+    try:
+        try:
+            current_fg = os.tcgetpgrp(tty_fd)
+        except OSError:
+            return False
+        my_pgid = os.getpgrp()
+        if current_fg == my_pgid and my_pgid > 0:
+            # We are already the foreground group. Nothing to acquire
+            # and nothing to release on shutdown — return success but
+            # do *not* mark state as acquired, so the atexit restorer
+            # stays a no-op and we don't risk racing with the parent
+            # shell's own tcsetpgrp() on exit.
+            #
+            # The ``my_pgid > 0`` guard handles PID namespaces
+            # (Flatpak, Bubblewrap, Podman rootless, systemd-nspawn,
+            # kubectl exec, Chrome/Firefox sandboxes, …). From inside
+            # a PID namespace, if our process group id or the TTY's
+            # foreground group id refers to a process *outside* the
+            # namespace (typically because bwrap/flatpak inherited the
+            # pgid from the host before creating the namespace), the
+            # kernel returns 0 from both ``getpgrp`` and ``tcgetpgrp``
+            # — 0 is the "unrepresentable pgid" sentinel specified in
+            # pid_namespaces(7):
+            #   https://man7.org/linux/man-pages/man7/pid_namespaces.7.html
+            # Without the guard, the fast path would see 0 == 0 and
+            # declare success, leaving our pgid as the unrepresentable
+            # 0. Subsequent ``tcsetpgrp(fd, 0)`` calls from
+            # :func:`xonsh.procs.jobs.give_terminal_to` would fail with
+            # ESRCH (tcsetpgrp(3):
+            #   https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html),
+            # the TTY's foreground group would end up orphaned on the
+            # previous pipeline's process group, and the next
+            # ``tcsetattr`` from prompt_toolkit would raise
+            # ``termios.error: (5, 'Input/output error')`` — the
+            # Flatpak sandbox failure mode reported downstream
+            # (tcsetattr(3):
+            #   https://man7.org/linux/man-pages/man3/tcsetattr.3.html).
+            # Falling through to the ``setpgid(0, 0)`` call below
+            # creates a new process group visible inside the namespace
+            # (``pgid == pid``), so the subsequent ``tcsetpgrp`` has a
+            # valid, representable target (setpgid(2):
+            #   https://man7.org/linux/man-pages/man2/setpgid.2.html).
+            return True
+        # Become our own process group leader. If we are already a
+        # leader this is a no-op; if the kernel refuses (EPERM), we
+        # bail out. After this succeeds our pgid == pid. See
+        # setpgid(2):
+        #   https://man7.org/linux/man-pages/man2/setpgid.2.html
+        try:
+            os.setpgid(0, 0)
+        except OSError:
+            return False
+        my_pgid = os.getpgrp()
+        # Install our pgid as the TTY's foreground group. SIGTTOU is
+        # blocked, so this cannot suspend us; it may still fail with
+        # EPERM if the TTY belongs to a different session, or ENOTTY
+        # if the fd lost its TTY-ness between isatty() and now — both
+        # degrade to a clean False return.
+        try:
+            os.tcsetpgrp(tty_fd, my_pgid)
+        except OSError:
+            return False
+        _fg_tty_state["acquired"] = True
+        _fg_tty_state["tty_fd"] = tty_fd
+        _fg_tty_state["old_fg"] = current_fg
+        return True
+    finally:
+        # Always restore the signal mask, even on error paths. We only
+        # changed the mask for this thread, so this call is cheap and
+        # cannot fail in any practical scenario — but guard it anyway.
+        try:
+            signal.pthread_sigmask(signal.SIG_SETMASK, old_mask)
+        except (AttributeError, OSError):
+            pass
+
+
+def _release_controlling_terminal():
+    """Give the controlling TTY's foreground group back to its previous
+    owner on shutdown.
+
+    Registered via :mod:`atexit` when :func:`_acquire_controlling_terminal`
+    actually took over the TTY. A no-op in every other case: if xonsh was
+    already foreground, if the handshake failed, or if there is no TTY.
+
+    Restoring the previous foreground group matters because the parent
+    shell (bash, zsh, another xonsh, …) usually calls ``wait`` on us and
+    then expects to read from the terminal. If xonsh leaves its own pgid
+    installed as foreground, the parent will immediately receive
+    ``SIGTTIN`` on the next read. Robust shells recover from this, but it
+    is much cleaner to hand the TTY back explicitly.
+
+    References
+    ----------
+    * ``atexit(3)``: https://docs.python.org/3/library/atexit.html
+    * ``tcsetpgrp(3)``: https://man7.org/linux/man-pages/man3/tcsetpgrp.3.html
+    * ``pthread_sigmask(3)``: https://man7.org/linux/man-pages/man3/pthread_sigmask.3.html
+    """
+    if not _fg_tty_state.get("acquired"):
+        return
+    tty_fd = _fg_tty_state.get("tty_fd", -1)
+    old_fg = _fg_tty_state.get("old_fg", -1)
+    if tty_fd < 0 or old_fg < 0:
+        return
+    if not hasattr(signal, "pthread_sigmask"):
+        return
+    try:
+        old_mask = signal.pthread_sigmask(
+            signal.SIG_BLOCK, {signal.SIGTTOU, signal.SIGTTIN}
+        )
+    except (AttributeError, OSError):
+        return
+    try:
+        try:
+            os.tcsetpgrp(tty_fd, old_fg)
+        except OSError:
+            # Parent may already have reclaimed the TTY, or the fd may
+            # have been closed by shutdown — either way nothing
+            # actionable remains. Swallow silently: this runs inside
+            # atexit and raising here would just make shutdown noisy.
+            pass
+    finally:
+        try:
+            signal.pthread_sigmask(signal.SIG_SETMASK, old_mask)
+        except (AttributeError, OSError):
+            pass
+        # Clear state so a second call (e.g. atexit + explicit shutdown)
+        # is a no-op.
+        _fg_tty_state["acquired"] = False
+        _fg_tty_state["tty_fd"] = -1
+        _fg_tty_state["old_fg"] = -1
+
+
+def _setup_controlling_terminal():
+    """Run the TTY startup handshake and install matching signal handlers.
+
+    This is the *orchestration* layer around
+    :func:`_acquire_controlling_terminal`: it installs the baseline
+    signal policy, optionally calls the handshake, and registers the
+    ``atexit`` restorer when appropriate. It is idempotent — a second
+    call in the same process is a cheap no-op.
+
+    It is called from the top of :func:`main` so that the handshake
+    happens *before* :func:`premain`. ``premain`` loads xontribs and
+    runs user ``xonshrc`` files, and rc files are arbitrary xonsh code
+    — they routinely contain ``$(...)`` / ``!(...)`` captures and can
+    invoke interactive programs like ``fzf`` that will themselves want
+    to take over the TTY via ``tcsetattr``. When xonsh is foreground
+    *before* rc runs, every downstream TTY operation simply works; when
+    it is not, and the handshake cannot fix that (sandboxed nested
+    containers, cross-session TTYs, …), the ``SIG_IGN`` fallback
+    installed here prevents the asyncio wakeup pipe from overflowing
+    during rc execution. It is also called from :func:`main_xonsh` as a
+    backup for callers that enter the shell loop without going through
+    :func:`main` (tests, programmatic invocation).
+
+    Signal policy
+    -------------
+    Step 1: **always** install a Python-level no-op handler for
+    ``SIGTTIN`` and ``SIGTTOU``, on any POSIX invocation. This matches
+    the historical xonsh behavior (before this function existed,
+    ``main_xonsh`` installed the same no-op handler unconditionally)
+    and protects script-mode xonsh from being suspended by
+    ``SIG_DFL`` when something indirectly touches the TTY. A Python
+    handler is preferred over ``SIG_IGN`` here because the latter is
+    inherited across ``exec`` and would subtly break job control in
+    subprocess children.
+
+    Step 2: if stderr is a real TTY, attempt the foreground handshake.
+    If it succeeds, the no-op handlers installed in step 1 already
+    cover the ``success`` case and no further action is needed. If
+    the handshake fails (typical in sandboxes that cannot be made
+    foreground), **replace** the no-op handlers with ``SIG_IGN`` —
+    the kernel will then discard ``SIGTTIN`` / ``SIGTTOU`` outright
+    and they will never reach Python's asyncio wakeup pipe, which
+    would otherwise overflow with ``BlockingIOError`` under a signal
+    storm.
+
+    Step 3: register ``atexit`` to restore the previous foreground
+    group on shutdown, but only when the handshake *actually*
+    transferred foreground ownership (``_fg_tty_state["acquired"]``
+    is True). Fast-path success — where we were already foreground —
+    leaves state unacquired so the restorer does nothing and we don't
+    race with the parent shell's own ``tcsetpgrp`` on exit.
+
+    Non-TTY callers (script mode, piped input, test runners under
+    pytest) stop after step 1 and keep the historical Python handlers.
+
+    References
+    ----------
+    * ``signal(7)``: https://man7.org/linux/man-pages/man7/signal.7.html
+      — Linux signal semantics, inheritance across ``fork``/``exec``.
+    * ``execve(2)``: https://man7.org/linux/man-pages/man2/execve.2.html
+      — specifies that ``SIG_IGN`` dispositions survive ``exec`` while
+      custom handlers are reset to ``SIG_DFL``. This asymmetry drives
+      the step-1 / step-3 policy split: a Python callable handler in
+      the success path so subprocess children see ``SIG_DFL`` and keep
+      normal job control; ``SIG_IGN`` in the sandbox-failure path to
+      discard signals at the kernel boundary before they reach Python's
+      asyncio wakeup pipe.
+    * ``tcsetattr(3)``: https://man7.org/linux/man-pages/man3/tcsetattr.3.html
+      — the syscall ``prompt_toolkit``'s ``raw_mode`` uses; the one that
+      actually crashes under the Flatpak failure mode described above.
+    * PEP 475 (Retry system calls failing with EINTR):
+      https://peps.python.org/pep-0475/ — confirms that ``termios.*``
+      is *not* covered by Python's automatic EINTR retry, motivating
+      the existing outer retry loop in ``ptk_shell.singleline``.
+    """
+    global _tty_setup_done
+    if _tty_setup_done:
+        return
+    if ON_WINDOWS:
+        return
+    _tty_setup_done = True
+
+    # Step 1: unconditional Python no-op-with-livelock-guard handler
+    # for SIGTTIN/SIGTTOU. The ``pass`` body of the historical inline
+    # handler is a trap — a background xonsh touching the TTY would
+    # loop forever via PEP 475 retry on ``os.read`` (SIGTTIN path) or
+    # via the application-level retry in
+    # ``xonsh/shells/ptk_shell/__init__.py`` (SIGTTOU path). The
+    # module-level :func:`_handle_sig_ttin_ttou` counts deliveries and
+    # escalates to ``SIG_IGN`` after a high threshold, breaking the
+    # loop while preserving normal job control for typical use (where
+    # the handler never fires at all).
+    _ttin_ttou_counter[0] = 0  # reset any previous-run state
+    signal.signal(signal.SIGTTIN, _handle_sig_ttin_ttou)
+    signal.signal(signal.SIGTTOU, _handle_sig_ttin_ttou)
+
+    # Step 2: only attempt the handshake when stderr is a real TTY.
+    # Script mode, piped stdin/stdout, and test runners (pytest
+    # captures stderr via a pipe) all bail out here and keep the
+    # Python handlers from step 1.
+    try:
+        if not os.isatty(sys.stderr.fileno()):
+            return
+    except (AttributeError, OSError, ValueError):
+        return
+
+    fg_acquired = _acquire_controlling_terminal()
+    if fg_acquired:
+        # Step 3: register the shutdown restorer only if the handshake
+        # actually changed the foreground group. The fast-path case
+        # (we were already foreground) deliberately leaves
+        # ``_fg_tty_state`` unacquired so the restorer does nothing
+        # and we never race with the parent shell's own tcsetpgrp
+        # on exit.
+        if _fg_tty_state.get("acquired"):
+            atexit.register(_release_controlling_terminal)
+        # Python handlers from step 1 remain in place as a safety net.
+    else:
+        # Sandbox failure path: the kernel *will* keep sending
+        # SIGTTIN/SIGTTOU every time xonsh touches the TTY, and a
+        # Python-level handler would overflow asyncio's signal wakeup
+        # pipe with ``BlockingIOError`` during a signal storm. Replace
+        # the step-1 handlers with SIG_IGN so the kernel discards the
+        # signals outright and never routes them through Python.
+        # SIG_IGN is inherited across ``exec``, but in a sandbox
+        # children have the same TTY ownership problem anyway, so
+        # this is the right default.
+        signal.signal(signal.SIGTTIN, signal.SIG_IGN)
+        signal.signal(signal.SIGTTOU, signal.SIG_IGN)
 
 
 @lazyobject
@@ -557,6 +1093,17 @@ def _failback_to_other_shells(args, err):
 
 
 def main(argv=None):
+    # Run the TTY startup handshake *before* premain so that xontrib
+    # loading and xonshrc execution happen with xonsh already as the
+    # foreground process group. rc files are arbitrary user code and
+    # can contain subprocess captures ``$(...)``/``!(...)`` — including
+    # interactive tools like ``fzf`` that take over the TTY via
+    # ``tcsetattr``. Having the handshake done before rc runs means
+    # those child processes inherit a "foreground shell" context and
+    # the race between their own TTY manipulation and xonsh's
+    # :func:`xonsh.procs.jobs.give_terminal_to` never has to open.
+    # See :func:`_setup_controlling_terminal` for the full rationale.
+    _setup_controlling_terminal()
     args = None
     try:
         args = premain(argv)
@@ -567,13 +1114,13 @@ def main(argv=None):
 
 def main_xonsh(args):
     """Main entry point for xonsh cli."""
-    if not ON_WINDOWS:
-
-        def func_sig_ttin_ttou(n, f):
-            pass
-
-        signal.signal(signal.SIGTTIN, func_sig_ttin_ttou)
-        signal.signal(signal.SIGTTOU, func_sig_ttin_ttou)
+    # Normally :func:`main` has already run the handshake before
+    # premain — this call is a cheap idempotent no-op in that case
+    # (the module-level ``_tty_setup_done`` flag short-circuits).
+    # It exists so that callers which enter the shell loop without
+    # going through ``main`` (tests, programmatic launches) still
+    # get the same TTY signal setup.
+    _setup_controlling_terminal()
 
     events.on_post_init.fire()
 

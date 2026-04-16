@@ -35,6 +35,7 @@ from xonsh.lib.lazyasd import LazyBool, lazyobject
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
     DEFAULT_ENCODING,
+    IN_FLATPAK,
     ON_CYGWIN,
     ON_WINDOWS,
     ON_WSL,
@@ -108,6 +109,26 @@ from xonsh.tools import (
     to_shlvl,
     to_tok_color_dict,
 )
+
+_warned_erasedups = False
+
+
+def histcontrol_csv_to_set(x):
+    """Convert HISTCONTROL value, warning if erasedups is used."""
+    global _warned_erasedups
+    result = csv_to_set(x)
+    if "erasedups" in result and not _warned_erasedups:
+        _warned_erasedups = True
+        import warnings
+
+        warnings.warn(
+            "'erasedups' in $HISTCONTROL is deprecated. "
+            "Remove it and use the 'history erasedups' command.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    return result
+
 
 events.doc(
     "on_envvar_new",
@@ -742,7 +763,7 @@ def xdg_data_dirs(env):
 @default_value
 def xonsh_sys_config_dir(env):
     """
-    On Linux & Mac OSX: ``'/etc/xonsh'``
+    On Linux & macOS: ``'/etc/xonsh'``
     On Windows: ``'%ALLUSERSPROFILE%\\\\xonsh'``
     """
     if ON_WINDOWS:
@@ -787,11 +808,14 @@ def default_xonshrc(env) -> "tuple[str, ...]":
     return dxrc
 
 
-def get_config_paths(env: "Env", name: str):
-    return (
+def get_config_paths(env: "Env", name: str) -> tuple[str, ...]:
+    paths: tuple[str, ...] = (
         os.path.join(xonsh_sys_config_dir(env), name),
         os.path.join(xonsh_config_dir(env), name),
     )
+    if IN_FLATPAK:
+        paths = (os.path.join("/app/etc/xonsh", name),) + paths
+    return paths
 
 
 @default_value
@@ -1011,8 +1035,14 @@ def _commands_cache_read_dir_once_default():
     return []
 
 
-class GeneralSetting(Xettings):
-    """General"""
+class SystemSetting(Xettings):
+    """System Environment Variables
+
+    Common, well-known variables inherited from the surrounding OS / shell
+    (POSIX-standard and XDG Base Directory Specification). They are not
+    xonsh-specific — xonsh only provides sensible defaults and lets scripts
+    read/write them the same way any other shell would.
+    """
 
     HOSTNAME = Var.with_default(
         default=default_value(lambda env: platform.node()),
@@ -1089,12 +1119,6 @@ class GeneralSetting(Xettings):
         is_configurable=False,
     )
 
-    UPDATE_OS_ENVIRON = Var.with_default(
-        False,
-        "If True ``os_environ`` will always be updated "
-        "when the xonsh environment changes. The environment can be reset to "
-        "the default value by calling ``__xonsh__.env.undo_replace_env()``",
-    )
     XDG_CONFIG_HOME = Var.with_default(
         os.path.expanduser(os.path.join("~", ".config")),
         "Open desktop standard configuration home dir. This is the same "
@@ -1120,6 +1144,17 @@ class GeneralSetting(Xettings):
         xdg_data_dirs,
         "A list of directories where system level data files are stored.",
         type_str="env_path",
+    )
+
+
+class GeneralSetting(Xettings):
+    """General"""
+
+    UPDATE_OS_ENVIRON = Var.with_default(
+        False,
+        "If True ``os_environ`` will always be updated "
+        "when the xonsh environment changes. The environment can be reset to "
+        "the default value by calling ``__xonsh__.env.undo_replace_env()``",
     )
     XONSH_CONFIG_DIR = Var.with_default(
         xonsh_config_dir,
@@ -1288,9 +1323,15 @@ class SubprocessSetting(Xettings):
     )
     XONSH_BUILTINS_TO_CMD = Var.with_default(
         False,
-        "If True, bare Python builtin names (e.g. `dir`, `zip`, `type`) "
-        "typed as a standalone expression will be executed as a subprocess command "
-        "if a matching alias or executable exists. "
+        "If True, Python builtin names (e.g. ``dir``, ``zip``, ``type``) "
+        "will be executed as a subprocess command when a matching alias or "
+        "executable exists. Covers two cases that otherwise run as Python "
+        "and may fail or return surprising values: "
+        "(1) a bare builtin name typed as a standalone expression "
+        "(``zip`` → run the ``zip`` command); "
+        "(2) a builtin name followed by flag-looking arguments that also "
+        "parses as a valid Python ``BinOp`` expression "
+        "(``zip --help``, ``id -a``). "
         "Otherwise the Python builtin value is returned as usual.",
     )
     XONSH_SUBPROC_OUTPUT_FORMAT = Var.with_default(
@@ -1347,25 +1388,27 @@ class SubprocessSetting(Xettings):
         "xonsh process threads sleep for while running command pipelines. "
         "The value has units of seconds [s].",
     )
-    XONSH_TRACE_SUBPROC = Var(
+    XONSH_SUBPROC_TRACE = Var(
         default=False,
-        validate=is_bool_or_int,
-        convert=to_bool_or_int,
+        validate=lambda x: callable(x) or is_bool_or_int(x),
+        convert=lambda x: x if callable(x) else to_bool_or_int(x),
         doc="Set to ``True`` or ``1`` to show arguments list of every executed subprocess command. "
-        "Use ``2`` to have a specification. Use ``3`` to have full specification.",
-    )
-    XONSH_TRACE_SUBPROC_FUNC = Var.with_default(
-        None,
-        doc=(
-            "A callback function used to format the trace output shown when ``$XONSH_TRACE_SUBPROC=True``."
-        ),
+        "Use ``2`` to have a specification. Use ``3`` to have full specification. "
+        "Alternatively assign a callable ``f(cmds, captured=..., specs=...)`` to format "
+        "the trace output yourself — it is invoked instead of the default printer. "
+        "``specs`` is the list of :class:`SubprocSpec` objects about to be executed; "
+        "``CommandPipeline`` is not yet built at this point.",
         doc_default="""\
     By default it just prints ``cmds`` like below.
 
     .. code-block:: python
 
-        def tracer(cmds: list, captured: Union[bool, str]):
+        def _tracer(cmds, captured, specs):
+            # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,
+            # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.
             print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
+
+        $XONSH_SUBPROC_TRACE = _tracer
     """,
     )
 
@@ -1477,9 +1520,9 @@ class CacheSetting(Xettings):
         type_str="env_path",
     )
 
-    XONSH_COMMANDS_CACHE_DEBUG = Var.with_default(
+    XONSH_COMMANDS_CACHE_TRACE = Var.with_default(
         False,
-        "If True, print debug messages showing where each command was resolved "
+        "If True, print trace messages showing where each command was resolved "
         "from (cached directory listing XONSH_COMMANDS_CACHE_READ_DIR_ONCE vs. disk stat) "
         "and how long it took.",
     )
@@ -1893,7 +1936,7 @@ class PromptHistorySetting(Xettings):
     )
     HISTCONTROL = Var(
         is_string_set,
-        csv_to_set,
+        histcontrol_csv_to_set,
         set_to_csv,
         set(),
         "A set of strings (comma-separated list in string form) of options "
@@ -1902,9 +1945,7 @@ class PromptHistorySetting(Xettings):
         "- ``ignoredups`` will not save the command if it matches the previous command\n"
         "- ``ignoreerr`` will cause any commands that fail (i.e. return non-zero "
         "exit status) to not be added to the history list\n"
-        "- ``ignorespace`` will not save the command if it begins with a space\n"
-        "- ``erasedups`` will remove all previous commands that matches and updates the frequency "
-        "(Note: only supported in sqlite backend).",
+        "- ``ignorespace`` will not save the command if it begins with a space\n",
         can_store_as_str=True,
     )
     XONSH_HISTORY_SIZE = Var(
@@ -2076,7 +2117,7 @@ class AutoCompletionSetting(Xettings):
     ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT = Var.with_default(
         doc="""\
 If True, :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions
-will show options (e.g. -h, ...) without requesting explicitly with option prefix (e.g. '-').""",
+will show options (e.g. ``--help``) without requesting explicitly with option prefix ``-``.""",
         default=False,
     )
     ALIAS_COMPLETIONS_OPTIONS_LONGEST = Var.with_default(
@@ -2172,9 +2213,11 @@ The file should contain a function with the signature
         "Set to ``':::'`` to enable, then type ``:::<TAB>`` or ``:::arrow<TAB>`` to search. "
         "Default is ``None`` (disabled).",
     )
-    XONSH_TRACE_COMPLETIONS = Var.with_default(
+    XONSH_COMPLETER_TRACE = Var.with_default(
         False,
-        "Set to ``True`` to show completers invoked and their return values.",
+        "Set to ``True`` to show completers invoked and their return values. "
+        "Each completion is printed on its own line with its ``source`` "
+        "completer and any non-default ``RichCompletion`` attributes.",
     )
 
 
@@ -2269,14 +2312,22 @@ class WindowsSetting(Xettings):
     )
 
 
-class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
+class DeprecatedSetting(Xettings):  # sub-classing -> sub-group
     """Deprecated settings."""
 
     AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs(
-        {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
+        {
+            "sync": "XONSH_PROMPT_AUTO_SUGGEST",
+            "deprecated": True,
+            "doc": "Deprecated. Use XONSH_PROMPT_AUTO_SUGGEST.",
+        }
     )
     RAISE_SUBPROC_ERROR = SubprocessSetting.XONSH_SUBPROC_CMD_RAISE_ERROR.set_attrs(
-        {"sync": "XONSH_SUBPROC_CMD_RAISE_ERROR", "deprecated": True}
+        {
+            "sync": "XONSH_SUBPROC_CMD_RAISE_ERROR",
+            "deprecated": True,
+            "doc": "Deprecated. Use XONSH_SUBPROC_CMD_RAISE_ERROR.",
+        }
     )
 
 

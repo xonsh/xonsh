@@ -412,7 +412,7 @@ But alas here are some other ways to test things
 
    - `wine <https://www.winehq.org/>`_ can be used to emulate the development environment. It provides cmd.exe with its default installation.
 
-2. OS X
+2. macOS
 
    - `darlinghq <https://www.darlinghq.org/>`_ can be used to emulate the development environment for Linux users.
      Windows users can use Linux inside a virtual machine or WSL to run the same.
@@ -426,14 +426,6 @@ One can leverage the Github Actions to provide a reverse shell to test things ou
 Solutions like `actions-tmate <https://mxschmitt.github.io/action-tmate/>`_ are available,
 but they should not in any way violate the Github Action policies.
 
-
-Python versions support policy
-------------------------------
-
-Xonsh adopts `NEP-0029 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_ in supporting Python versions.
-Simply speaking a minor Python release (X.*) will be supported for 42 months from its date of initial release.
-Since Python has adopted yearly release cycle, most of the time,
-the latest 4 minor versions of Python would be supported at any given time.
 
 
 Testing xonsh on Different Operating Systems

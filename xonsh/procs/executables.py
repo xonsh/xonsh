@@ -198,20 +198,13 @@ def locate_relative_path(name, env=None, check_executable=False, use_pathext=Fal
 
 
 def _cache_debug(msg):
-    """Print debug message if $XONSH_COMMANDS_CACHE_DEBUG is True.
-
-    Uses prompt_toolkit's ``print_formatted_text`` when available so the
-    message appears above the active prompt without disrupting input.
-    """
+    """Print trace message if $XONSH_COMMANDS_CACHE_TRACE is True."""
     env = XSH.env if XSH.env is not None else {}
-    if not env.get("XONSH_COMMANDS_CACHE_DEBUG", False):
+    if not env.get("XONSH_COMMANDS_CACHE_TRACE", False):
         return
-    try:
-        from prompt_toolkit.shortcuts import print_formatted_text
+    from xonsh.tools import print_above_prompt
 
-        print_formatted_text(msg)
-    except Exception:
-        print(msg)
+    print_above_prompt(msg)
 
 
 def locate_file_in_path_env(name, env=None, check_executable=False, use_pathext=False):

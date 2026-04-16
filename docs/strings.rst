@@ -16,9 +16,6 @@ No Escape
 =========
 Xonsh strings are exactly like Python strings everywhere. Xonsh uses
 exactly the same escape characters that Python does; no more and no less.
-This is different from other shells, which have a different set of escape
-sequences than Python has.  Notably, many sh-langs allow you to escape
-spaces with ``"\ "`` (backslash-space).
 
 **bash**
 

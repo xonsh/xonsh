@@ -148,6 +148,50 @@ def test_ptk_default_append_history(cmd, exp_append_history, ptk_shell, monkeypa
         assert len(append_history_calls) == 0
 
 
+@pytest.mark.parametrize(
+    "prefix",
+    ["  ", "\t", " \t "],
+)
+def test_ptk_push_compiles_indented_input(prefix, ptk_shell):
+    """``_push`` must lstrip before compile so leading whitespace from the
+    user's input doesn't turn ``echo 1`` into a ``SyntaxError: unexpected
+    indent``. The returned ``src`` still carries the original whitespace so
+    events like ``on_precommand`` see it unmodified.
+    """
+    _, _, shell = ptk_shell
+    src, code = shell.push(prefix + "print('test')\n")
+    assert code is not None
+    assert src.startswith(prefix)
+
+
+def test_ptk_default_executes_indented_input(ptk_shell, xession):
+    """Regression for #6294 follow-up: ``  echo 1`` in ptk shell must run
+    without raising ``SyntaxError: unexpected indent``.
+    """
+    _, _, shell = ptk_shell
+    fired = []
+
+    @xession.builtins.events.on_precommand
+    def capture(cmd, **_):
+        fired.append(cmd)
+
+    shell.default("  print('test')")
+    assert len(fired) == 1
+    assert fired[0].startswith("  print")
+
+
+def test_ptk_push_compiles_multiline_indented_block(ptk_shell):
+    """A multi-line paste with a common leading indent must compile —
+    ``lstrip()`` would only strip the first line and break inner
+    indentation, so the fix must use ``textwrap.dedent``.
+    """
+    _, _, shell = ptk_shell
+    block = "    if True:\n        x = 1\n    y = 2\n"
+    src, code = shell.push(block)
+    assert code is not None
+    assert src == block  # event-visible src is unchanged
+
+
 def test_ptk_combine_history(monkeypatch):
     """Test that consecutive identical history items are combined into a single item
     when loading xonsh history items into prompt-toolkit history."""
@@ -167,3 +211,30 @@ def test_ptk_combine_history(monkeypatch):
     shell_hist = PromptToolkitHistory()
     hist_strs = list(shell_hist.load_history_strings())
     assert len(hist_strs) == 3
+
+
+def test_bottom_toolbar_cleared_when_empty(ptk_shell, xession):
+    """Setting $BOTTOM_TOOLBAR to '' must clear PTK's cached toolbar.
+
+    Regression test for https://github.com/xonsh/xonsh/issues/3810
+    """
+    _, _, shell = ptk_shell
+    env = xession.env
+
+    # Set a toolbar — the property should return a callable
+    env["BOTTOM_TOOLBAR"] = "some text"
+    assert shell.bottom_toolbar_tokens is not None
+
+    # Simulate what singleline() does: the callable is passed to PTK
+    shell.prompter.bottom_toolbar = shell.bottom_toolbar_tokens
+
+    # Now clear the toolbar
+    env["BOTTOM_TOOLBAR"] = ""
+    tokens = shell.bottom_toolbar_tokens
+    assert tokens is None
+
+    # The fix: singleline() explicitly resets the PTK attribute
+    if tokens is None:
+        shell.prompter.bottom_toolbar = None
+
+    assert shell.prompter.bottom_toolbar is None

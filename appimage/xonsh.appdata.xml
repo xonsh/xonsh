@@ -4,9 +4,12 @@
     <metadata_license>BSD</metadata_license>
     <project_license>BSD</project_license>
     <name>Xonsh</name>
-    <summary>Xonsh on Python {{ python-fullversion }}</summary>
+    <summary>Xonsh shell on Python {{ python-fullversion }}</summary>
     <description>
-        <p>  Python {{ python-fullversion }} + Xonsh bundled in an AppImage.
+        <p>Xonsh shell, bundled with Python {{ python-fullversion }}. Xonsh (sounds like "consh") is a modern,
+           full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with
+           seamless integration of shell functionality and commands. Xonsh is meant for the daily use of experts
+           and novices.
         </p>
     </description>
     <launchable type="desktop-id">xonsh.desktop</launchable>

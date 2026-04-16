@@ -342,10 +342,6 @@ must be used to force xonsh to not interpret them.
     @ echo '${'
     ${
 
-.. warning:: There is no notion of an escaping character in xonsh like the
-             backslash (\\) in POSIX shells.
-
-
 The contents of the string are passed directly to the subprocess command as a
 single argument.  So whenever you are in doubt, or if there is a xonsh syntax
 error because of a filename, just wrap the offending portion in a string.
@@ -739,11 +735,11 @@ With great power, and so forth...
           inside of them.
 
 To understand how xonsh executes the subprocess commands try
-to set :ref:`$XONSH_TRACE_SUBPROC <xonsh_trace_subproc>` to ``True``:
+to set :ref:`$XONSH_SUBPROC_TRACE <xonsh_subproc_trace>` to ``True``:
 
 .. code-block:: xonshcon
 
-    @ $XONSH_TRACE_SUBPROC = True
+    @ $XONSH_SUBPROC_TRACE = True
     @ $[@$(which @($(echo ls).strip())) @('-' + $(printf 'l'))]
     TRACE SUBPROC: (['echo', 'ls'],)
     TRACE SUBPROC: (['which', 'ls'],)
@@ -840,92 +836,81 @@ examples.
 .. note:: The target of the redirection should be separated by a space,
           otherwise xonsh will raise a SyntaxError.
 
-Redirecting ``stdout``. All of the following examples will execute ``COMMAND`` and write its regular
-output (stdout) to a file called ``output.txt``, creating it if it does not
-exist:
+Redirecting ``stdout``. The operators ``>``, ``out>``, ``o>``, and ``1>`` (POSIX) all
+execute ``cmd`` and write its regular output (stdout) to a file, creating it if it does
+not exist:
 
 .. code-block:: xonshcon
 
-    @ COMMAND > output.txt
-    @ COMMAND out> output.txt
-    @ COMMAND o> output.txt
-    @ COMMAND 1> output.txt # included for POSIX compatibility
+    @ cmd > output.txt
 
 These can be made to append to ``output.txt`` instead of overwriting its contents
 by replacing ``>`` with ``>>`` (note that ``>>`` will still create the file if it
 does not exist).
 
-Redirecting ``stderr``. All of the following examples will execute ``COMMAND`` and write its error
-output (stderr) to a file called ``errors.txt``, creating it if it does not
-exist:
+Redirecting ``stderr``. The operators ``err>``, ``e>``, and ``2>`` (POSIX)
+all execute ``cmd`` and write its error output (stderr) to a file, creating it if it does
+not exist:
 
 .. code-block:: xonshcon
 
-    @ COMMAND err> errors.txt
-    @ COMMAND e> errors.txt
-    @ COMMAND 2> errors.txt # included for POSIX compatibility
+    @ cmd err> errors.txt
 
 As above, replacing ``>`` with ``>>`` will cause the error output to be
 appended to ``errors.txt``, rather than replacing its contents.
 
-Combining streams is possible to send all of ``COMMAND``'s output (both regular output and
-error output) to the same location.  All of the following examples accomplish
-that task:
+Combining streams. The operators ``all>``, ``a>``, and ``&>`` (POSIX) all
+send both regular output and error output to the same location:
 
 .. code-block:: xonshcon
 
-    @ COMMAND all> combined.txt
-    @ COMMAND a> combined.txt
-    @ COMMAND &> combined.txt # included for POSIX compatibility
+    @ cmd all> combined.txt
 
-It is also possible to explicitly merge stderr into stdout so that error
-messages are reported to the same location as regular output.  You can do this
-with the following syntax:
+Merging stderr into stdout. The operators ``err>out``, ``err>o``, ``e>out``, ``e>o``, and
+``2>&1`` (POSIX) all explicitly merge stderr into stdout so that error
+messages are reported to the same location as regular output:
 
 .. code-block:: xonshcon
 
-    @ COMMAND err>out
-    @ COMMAND err>o
-    @ COMMAND e>out
-    @ COMMAND e>o
-    @ COMMAND 2>&1  # included for POSIX compatibility
+    @ cmd err>out
+    @ cmd err>out | cmd2
 
-This merge can be combined with other redirections, including pipes (see the
-section on `Pipes`_ above):
+
+Merging stdout into stderr. Similarly, the operators ``out>err``, ``out>e``, ``o>err``,
+``o>e``, and ``1>&2`` (POSIX) all send stdout to stderr:
 
 .. code-block:: xonshcon
 
-    @ COMMAND err>out | COMMAND2
-    @ COMMAND e>o > combined.txt
+    @ cmd out>err
 
-It is worth noting that this last example is equivalent to: ``COMMAND a> combined.txt``
-
-Similarly, you can also send stdout to stderr with the following syntax:
+Routing streams into a pipe. The operators ``a>p`` (``all>p``) and ``e>p`` (``err>p``)
+add stderr to the following ``|`` pipe. The pipe still carries stdout as
+usual, unless an explicit ``o> file`` diverts stdout elsewhere — which makes ``e>p``
+useful for the pattern of sending stdout to a file while stderr flows into the pipe.
+These operators require a following pipe.
 
 .. code-block:: xonshcon
 
-    @ COMMAND out>err
-    @ COMMAND out>e
-    @ COMMAND o>err
-    @ COMMAND o>e
-    @ COMMAND 1>&2  # included for POSIX compatibility
+    @ cmd a>p | cmd2                     # stdout + stderr into the pipe
+    @ cmd e>p | grep warning             # same — pipe carries both streams
+    @ cmd o> out.txt e>p | grep warning  # stdout to file, stderr into the pipe
 
 Redirecting ``stdin`` is also possible to have a command read its input from a file, rather
 than from ``stdin``.  The following examples demonstrate two ways to accomplish this:
 
 .. code-block:: xonshcon
 
-    @ COMMAND < input.txt
-    @ < input.txt COMMAND
+    @ cmd < input.txt
+    @ < input.txt cmd
 
 Combining I/O redirects is also possible.  Below is one example of a complicated redirect.
 
 .. code-block:: xonshcon
 
-    @ COMMAND1 e>o < input.txt | COMMAND2 > output.txt e>> errors.txt
+    @ cmd1 e>o < input.txt | cmd2 > output.txt e>> errors.txt
 
-This line will run ``COMMAND1`` with the contents of ``input.txt`` fed in on
-stdin, and will pipe all output (stdout and stderr) to ``COMMAND2``; the
+This line will run ``cmd1`` with the contents of ``input.txt`` fed in on
+stdin, and will pipe all output (stdout and stderr) to ``cmd2``; the
 regular output of this command will be redirected to ``output.txt``, and the
 error output will be appended to ``errors.txt``.
 
@@ -1504,7 +1489,7 @@ which will be replaced automatically:
 
     @ $PROMPT = '{user}@{hostname}:{cwd} @ '
     snail@home:~ @ # it works!
-    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
     snail@home:~ @> # so does that!
 
 See :ref:`customprompt_ref` in the Prompt Toolkit page for the full list of

@@ -5,8 +5,37 @@ import os
 
 import pytest
 
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.shells.base_shell import BaseShell, _TeeStdBuf
+
+
+@pytest.mark.parametrize(
+    "src, expected",
+    [
+        # single-line indented input
+        ("  echo 1\n", "echo 1\n"),
+        ("\techo 1\n", "echo 1\n"),
+        # no leading whitespace - untouched
+        ("echo 1\n", "echo 1\n"),
+        # multi-line block with common leading indent (Python paste case)
+        (
+            "    if True:\n        x = 1\n    print(x)\n",
+            "if True:\n    x = 1\nprint(x)\n",
+        ),
+        # multi-line subproc with common leading indent
+        ("  echo 1\n  echo 2\n", "echo 1\necho 2\n"),
+        # first line deeper than continuation -- line-continuation subproc
+        # paste: dedent alone leaves line 1 indented, so lstrip kicks in
+        ("        echo 1 \\\n    2\n", "echo 1 \\\n2\n"),
+        # first line deeper but no continuation -- lstrip does NOT fire,
+        # so the (already-broken) indent structure is preserved as-is
+        ("        echo 1\n    echo 2\n", "    echo 1\necho 2\n"),
+        # empty string
+        ("", ""),
+    ],
+)
+def test_deindent(src, expected):
+    assert deindent(src) == expected
 
 
 def test_pwd_tracks_cwd(xession, xonsh_execer, tmpdir_factory, monkeypatch):
@@ -88,6 +117,142 @@ def test_default_append_history(cmd, exp_append_history, xonsh_session, monkeypa
         assert len(append_history_calls) == 1
     else:
         assert len(append_history_calls) == 0
+
+
+def test_prompt_subproc_does_not_leak_rtn(xonsh_session):
+    """A subprocess run during prompt rendering must not pollute
+    hist.last_cmd_rtn for the next pure-Python command.
+
+    Regression test for #4912.
+    """
+    hist = xonsh_session.history
+
+    # Simulate a prompt field that ran a failing subprocess:
+    # CommandPipeline._apply_to_history() would have done this.
+    hist.last_cmd_rtn = 222
+
+    # Now the user executes a pure-Python expression.
+    xonsh_session.shell.default("2+2")
+
+    # The env var must reflect success, not the prompt field's code.
+    assert xonsh_session.env["LAST_RETURN_CODE"] == 0
+
+
+def test_precmd_does_not_strip(xession, xonsh_execer):
+    """precmd() must preserve leading whitespace."""
+    shell = BaseShell(xonsh_execer, None)
+    assert shell.precmd("  echo test") == "  echo test"
+    assert shell.precmd("\techo test") == "\techo test"
+    assert shell.precmd("echo test") == "echo test"
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    ["", "  ", "\t", " \t "],
+)
+def test_on_precommand_preserves_leading_whitespace(prefix, xonsh_session):
+    """on_precommand must receive the command with original leading whitespace."""
+    fired = []
+
+    @xonsh_session.builtins.events.on_precommand
+    def capture(cmd, **_):
+        fired.append(cmd)
+
+    xonsh_session.shell.default(prefix + "print('test')")
+    assert len(fired) == 1
+    assert fired[0].startswith(prefix + "print")
+
+
+def test_on_postcommand_receives_dedented_command(xonsh_session):
+    """on_postcommand must receive the command in the form that was executed:
+    post-transform and post-dedent — i.e. what was actually compiled and run.
+    This is the counterpart to on_precommand, which sees the original input.
+    """
+    fired = []
+
+    @xonsh_session.builtins.events.on_postcommand
+    def capture(cmd, **_):
+        fired.append(cmd)
+
+    xonsh_session.shell.default("  print('test')")
+    assert len(fired) == 1
+    assert fired[0].startswith("print")
+
+
+def test_event_chain_transform_precommand_dedent_postcommand(xonsh_session):
+    """The full command chain: ``on_transform_command`` (may modify) →
+    ``on_precommand`` (reacts to the transformed input, whitespace preserved)
+    → dedent + execute → ``on_postcommand`` (sees what was actually run).
+    Each stage receives a different, correctly-progressed form of the command.
+    """
+    transformed = []
+    precommand = []
+    postcommand = []
+
+    @xonsh_session.builtins.events.on_transform_command
+    def transform(cmd, **_):
+        transformed.append(cmd)
+        return cmd.replace("echo 1", "echo 2")
+
+    @xonsh_session.builtins.events.on_precommand
+    def precmd(cmd, **_):
+        precommand.append(cmd)
+
+    @xonsh_session.builtins.events.on_postcommand
+    def postcmd(cmd, **_):
+        postcommand.append(cmd)
+
+    xonsh_session.shell.default("   echo 1")
+
+    # on_transform_command sees the raw input on its first firing
+    assert transformed[0] == "   echo 1\n"
+    # on_precommand sees the post-transform command with leading whitespace
+    assert precommand == ["   echo 2\n"]
+    # on_postcommand sees the dedented form that was actually executed
+    assert postcommand == ["echo 2\n"]
+
+
+def test_on_postcommand_dedents_block_with_comment_backslash(xonsh_session):
+    """on_postcommand must see the dedented block even when a line ends with a
+    ``\\`` *inside a comment*. The backslash in a comment is not a line
+    continuation, so the whole ``if``-block compiles as one unit and the
+    dedented form reaches the event.
+    """
+    fired = []
+
+    @xonsh_session.builtins.events.on_postcommand
+    def capture(cmd, **_):
+        fired.append(cmd)
+
+    xonsh_session.shell.default("   if 1: # \\\n     echo 1")
+    assert len(fired) == 1
+    assert fired[0] == "if 1: # \\\n  echo 1\n"
+
+
+def test_on_transform_command_receives_leading_whitespace(xonsh_session):
+    """on_transform_command must receive the original command with whitespace."""
+    received = []
+
+    @xonsh_session.builtins.events.on_transform_command
+    def capture(cmd, **_):
+        received.append(cmd)
+        return cmd
+
+    xonsh_session.shell.default("  print('test')")
+    assert len(received) >= 1
+    assert received[0].startswith("  print")
+
+
+def test_src_starts_with_space_without_raw_line(xonsh_session):
+    """src_starts_with_space must detect leading whitespace (readline path)."""
+    xonsh_session.shell.default("  print('test')")
+    assert xonsh_session.shell.src_starts_with_space is True
+
+
+def test_src_starts_with_space_no_prefix(xonsh_session):
+    """src_starts_with_space must be False when there is no leading whitespace."""
+    xonsh_session.shell.default("print('test')")
+    assert xonsh_session.shell.src_starts_with_space is False
 
 
 class TestTeeStdBuf:

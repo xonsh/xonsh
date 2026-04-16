@@ -73,7 +73,7 @@ def _boot_time_beos() -> "float|None":
 
 
 def _boot_time_bsd() -> "float|None":
-    """Returns uptime in seconds or None, on BSD (including OS X)."""
+    """Returns uptime in seconds or None, on BSD (including macOS)."""
     # https://docs.python.org/3/library/time.html#time.CLOCK_UPTIME
     with contextlib.suppress(Exception):
         ut_flag = getattr(time, "CLOCK_UPTIME", None)
@@ -94,7 +94,7 @@ def _boot_time_bsd() -> "float|None":
     buf = ctypes.create_string_buffer(sz.value)
     xp.LIBC.sysctlbyname(b"kern.boottime", buf, ctypes.byref(sz), None, 0)
     sec, usec = struct.unpack_from("@LL", buf.raw)
-    # OS X disagrees what that second value is.
+    # macOS disagrees what that second value is.
     if usec > 1000000:
         usec = 0.0
     return sec + usec / 1000000.0

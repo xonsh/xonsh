@@ -6,6 +6,7 @@ import typing as tp
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
+    RICH_COMPLETION_DEFAULTS,
     Completion,
     RichCompletion,
     apply_lprefix,
@@ -175,6 +176,44 @@ class Completer:
 
         return completion, lprefix
 
+    # Renames applied to ``RichCompletion`` attribute names in trace
+    # output only; the Python attributes themselves are unchanged.
+    _TRACE_ATTR_ALIASES = {
+        "append_closing_quote": "close_quote",
+    }
+
+    @staticmethod
+    def _format_trace_item(comp, lprefix, source: str, exclusive: bool) -> str:
+        """Render one completion as a single ``$XONSH_COMPLETER_TRACE`` line.
+
+        Format::
+
+            "value": src=<completer>, pvd=<sub-source>, type=<exclusive|non-exclusive>, <non-default RichCompletion attrs>
+
+        ``pvd`` (provider) is placed right after ``src`` (source) when
+        set, so the two origin fields stay visually adjacent. Other
+        non-default ``RichCompletion`` fields (``prefix_len``,
+        ``display``, ``description``, ``append_space``, ``close_quote``
+        — short for ``append_closing_quote`` — and ``style``) are
+        appended afterwards. Plain ``str`` completions fall back to
+        showing the pipeline's ``lprefix``.
+        """
+        parts = [f"src={source}"]
+        if isinstance(comp, RichCompletion) and comp.provider is not None:
+            parts.append(f"pvd={comp.provider!r}")
+        parts.append(f"type={'exclusive' if exclusive else 'non-exclusive'}")
+        if isinstance(comp, RichCompletion):
+            for name, default in RICH_COMPLETION_DEFAULTS:
+                if name == "provider":
+                    continue  # already placed right after ``src``
+                val = getattr(comp, name)
+                if val != default:
+                    label = Completer._TRACE_ATTR_ALIASES.get(name, name)
+                    parts.append(f"{label}={val!r}")
+        else:
+            parts.append(f"prefix_len={lprefix}")
+        return f"{str(comp)!r}: {', '.join(parts)}"
+
     @staticmethod
     def generate_completions(
         completion_context, old_completer_args, trace: bool
@@ -233,39 +272,68 @@ class Completer:
             else:
                 res = out
 
-            if res is None:
-                continue
+            # Completer was invoked (didn't raise, wasn't skipped by the
+            # contextual gate). Process its output into ``items``; note
+            # that ``res is None`` is valid — it just yields an empty
+            # ``items``, and trace will report ``Got 0 results``.
+            items: list = []
+            if res is not None:
+                for comp in res:
+                    if (not is_filtered) and (not filter_func(comp, prefix)):
+                        continue
+                    # Skip empty or whitespace-only completions as if the
+                    # completer had not returned them. Without this an
+                    # exclusive completer that yields only blanks (e.g. a
+                    # subprocess-based completer returning spurious empty
+                    # lines) would short-circuit the pipeline and hide
+                    # the fallback ``python``/``path`` completers. See #5810.
+                    if not str(comp).strip():
+                        continue
+                    comp = Completer._format_completion(
+                        comp,
+                        completion_context,
+                        completing_contextual_command,
+                        lprefix or 0,
+                        custom_lprefix,
+                    )
+                    items.append(comp)
+                    yield comp
 
-            items = []
-            for comp in res:
-                if (not is_filtered) and (not filter_func(comp, prefix)):
-                    continue
-                comp = Completer._format_completion(
-                    comp,
-                    completion_context,
-                    completing_contextual_command,
-                    lprefix or 0,
-                    custom_lprefix,
-                )
-                items.append(comp)
-                yield comp
+            exclusive = is_exclusive_completer(func)
+
+            if trace:
+                exclusivity = "exclusive" if exclusive else "non-exclusive"
+                if not items:
+                    # Completer was invoked but produced nothing usable —
+                    # still report it so the user can see which completers
+                    # ran. Trailing ``.`` since no list follows.
+                    print(
+                        f"TRACE COMPLETIONS: Got 0"
+                        f" from {exclusivity} '{name}'"
+                        f" for {prefix!r}."
+                    )
+                else:
+                    print(
+                        f"TRACE COMPLETIONS: Got {len(items)}"
+                        f" from {exclusivity} '{name}'"
+                        f" for {prefix!r}:"
+                    )
+                    for item_comp, item_lprefix in items:
+                        print(
+                            Completer._format_trace_item(
+                                item_comp, item_lprefix, name, exclusive
+                            )
+                        )
 
             if not items:  # empty completion
                 continue
 
-            if trace:
-                print(
-                    f"TRACE COMPLETIONS: Got {len(items)} results"
-                    f" from {'' if is_exclusive_completer(func) else 'non-'}exclusive completer '{name}':"
-                )
-                sys.displayhook(items)
-
-            if is_exclusive_completer(func):
+            if exclusive:
                 # we got completions for an exclusive completer
                 break
 
     def complete_from_context(self, completion_context, old_completer_args=None):
-        trace = XSH.env.get("XONSH_TRACE_COMPLETIONS")
+        trace = XSH.env.get("XONSH_COMPLETER_TRACE")
         if trace:
             print("\nTRACE COMPLETIONS: Getting completions with context:")
             sys.displayhook(completion_context)

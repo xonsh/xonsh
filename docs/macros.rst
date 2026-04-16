@@ -578,7 +578,8 @@ to each line of input. ``@!()`` is a natural fit:
 
     @ ls | pl @!(line.upper())
 
-    @ cat data.json | pl @!(json.loads(line))
+    @ import json  # import any library
+      cat data.json | pl @!(json.loads(line))  # process using that library
 
 Without ``@!()``, you would need to quote the expression manually, which
 is error-prone when the expression itself contains quotes:

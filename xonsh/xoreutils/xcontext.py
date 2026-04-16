@@ -2,27 +2,59 @@
 
 import errno
 import os
+import subprocess
 import sys
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
 from xonsh.platform import IN_APPIMAGE
-from xonsh.procs.executables import locate_executable
+from xonsh.procs.executables import locate_executable, locate_relative_path
 from xonsh.tools import print_color
 
 
 def _get_version(binary, arg_ver="--version"):
-    """Helper to get version string from a python/xonsh/pip binary."""
-    version = ""
+    """Return ``(version_string, ok)`` for a python/xonsh/pip binary.
+
+    ``ok`` is False when the spawn itself failed — the binary "exists"
+    on disk but couldn't be executed. The canonical Windows trigger is
+    the "Microsoft Store" App Execution Alias at
+    ``%LOCALAPPDATA%\\Microsoft\\WindowsApps\\python.exe``: a zero-byte
+    reparse point present in ``$PATH`` by default on Windows 11, which
+    :func:`locate_executable` happily finds but :class:`subprocess.Popen`
+    rejects with ``OSError: [WinError 1920] The file cannot be accessed
+    by the system``. The caller uses ``ok=False`` to mark the row red.
+
+    We deliberately use :mod:`subprocess` directly instead of
+    ``XSH.subproc_captured_stdout``. The xonsh pipeline framework
+    (``xonsh/procs/pipelines.py``) catches spawn errors and calls
+    ``print_exception()`` unconditionally, which would leak a full
+    traceback into the ``xcontext`` output for this exact case.
+    Going through :func:`subprocess.run` lets us swallow the error
+    silently (unless ``$DEBUG`` is set).
+    """
+    if isinstance(binary, str):
+        cmd = [binary, arg_ver]
+    elif isinstance(binary, list):
+        cmd = list(binary) + [arg_ver]
+    else:
+        return "", True
     try:
-        if isinstance(binary, str):
-            version = XSH.subproc_captured_stdout([binary, arg_ver])
-        elif isinstance(binary, list):
-            version = XSH.subproc_captured_stdout(binary + [arg_ver])
-    except Exception:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
         if XSH.env.get("DEBUG", False):
             raise
-    return (version.split("from")[0] if "from" in version else version).strip()
+        return "", False
+    # Some tools (pip) print version on stdout, others (older python)
+    # on stderr — fall back to stderr when stdout is empty.
+    version = result.stdout or result.stderr or ""
+    cleaned = (version.split("from")[0] if "from" in version else version).strip()
+    return cleaned, True
 
 
 def _has_symlink_cycle(path, max_depth=40):
@@ -108,7 +140,11 @@ def _resolve_one(value, resolve):
     if not value:
         return value, False
 
-    # ----- Resolution phase ------------------------------------------------
+    if not os.path.exists(value):
+        located = locate_relative_path(value, use_pathext=True, check_executable=True)
+        if located:
+            value = located
+
     if resolve:
         try:
             resolved = os.path.realpath(value, strict=True)
@@ -176,7 +212,8 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     xpy, xpython_bad = _resolve_path(
         appimage_python if appimage_python else sys.executable, resolve
     )
-    xpy_ver = _get_version(xpy)
+    xpy_ver, xpy_ver_ok = _get_version(xpy)
+    xpython_bad = xpython_bad or not xpy_ver_ok
 
     # Pre-resolve the PATH-visible binaries once so we can both display them
     # in the "commands environment" section and compare them against the
@@ -186,7 +223,7 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     # Windows < 3.12), and xonsh's version is the recommended replacement.
     path_resolved = {}
     path_bad: dict[str, bool] = {}
-    for cmd in ("xonsh", "python", "pip", "pytest"):
+    for cmd in ("xonsh", "python", "pip", "pytest", "uv"):
         path, bad = _resolve_path(locate_executable(cmd), resolve)
         path_resolved[cmd] = path
         path_bad[cmd] = bad
@@ -227,6 +264,7 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
         "pip": pip_color,
         "xpip": pip_color,
         "pytest": YELLOW,
+        "uv": YELLOW,
     }
 
     def _format_row(name, value, ver="", bad=False):
@@ -265,20 +303,30 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     cmds = ["xonsh", "python", "pip"]
     if path_resolved["pytest"]:
         cmds.append("pytest")
+    if path_resolved["uv"]:
+        cmds.append("uv")
     for cmd in cmds:
         path = path_resolved[cmd]
         bad = path_bad[cmd]
         if path:
-            ver = f"  # {_get_version(path)}" if cmd == "python" else ""
+            ver = ""
+            if cmd == "python":
+                ver_str, ver_ok = _get_version(path)
+                ver = f"  # {ver_str}"
+                # Spawn failure (e.g. Windows Store ``python.exe``
+                # alias) → flag the whole row as bad even though the
+                # file technically "exists".
+                bad = bad or not ver_ok
             print_color(_format_row(cmd, path, ver=ver, bad=bad), file=stdout)
         else:
             print_color(_format_row(cmd, "not found"), file=stdout)
-    print("", file=stdout)
-    print_color(f"{PURPLE}[Current environment]{RESET}", file=stdout)
     envs = ["CONDA_DEFAULT_ENV", "VIRTUAL_ENV"]
-    for ev in envs:
-        val = XSH.env.get(ev)
-        if val:
+    env_rows = [(ev, XSH.env.get(ev)) for ev in envs]
+    env_rows = [(ev, val) for ev, val in env_rows if val]
+    if env_rows:
+        print("", file=stdout)
+        print_color(f"{PURPLE}[Current environment]{RESET}", file=stdout)
+        for ev, val in env_rows:
             print_color(_format_row(ev, val), file=stdout)
     return 0
 

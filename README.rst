@@ -5,7 +5,7 @@ xonsh
 
     <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="left" width="100px">
 
-**Xonsh** (sounds like "consh") is a modern, full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands. It works on all major systems including Linux, OSX, and Windows. Xonsh is meant for the daily use of experts and novices.
+**Xonsh** (sounds like "consh") is a modern, full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands. It works on all major systems including Linux, macOS, and Windows. Xonsh is meant for the daily use of experts and novices.
 
 .. raw:: html
 
@@ -70,9 +70,11 @@ xonsh
             $PATH
             # ['/bin', '/sbin']           # Linux
             # ['/homebrew/bin']           # macOS
-            # ['/nix/store/0-python/bin'] # Nix
             # ['/mnt/c/Windows/System32'] # WSL
             # [r'c:\Windows\System32']    # Windows
+            # ['/nix/store/0-python/bin'] # Nix
+            # ['/tmp/.mount_x/usr/bin/']  # AppImage
+            # ['/app/bin']                # Flatpak
 
             $PATH = ['/my/own/path']
 
@@ -152,7 +154,7 @@ If you like xonsh, :star: the repo and spread the word about xonsh.
 First steps
 ***********
 
-- `Installation <https://github.com/xonsh/xonsh/blob/refactor_install_docs/docs/install.rst>`_ - isolated environment, package, container or portable AppImage.
+- `Installation <https://github.com/xonsh/xonsh/blob/main/docs/install.rst>`_ - isolated environment, package, container or portable AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
 - `Cheat sheet <https://github.com/anki-code/xonsh-cheatsheet>`_ - some beginners may find this a helpful place to start.
 
