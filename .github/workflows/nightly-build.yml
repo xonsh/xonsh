@@ -91,7 +91,6 @@ jobs:
             --include-package-data=xonsh \
             --include-package-data=xontrib \
             --include-package-data=xompletions \
-            --include-data-files=xonsh/parsers/ply/=xonsh/parsers/ply/ \
             --include-package=pip --include-package=setuptools --include-package=wheel \
             --include-package=certifi --include-package-data=certifi \
             --include-module=ujson \
