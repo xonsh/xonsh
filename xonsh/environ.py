@@ -123,8 +123,8 @@ def histcontrol_csv_to_set(x):
 
         warnings.warn(
             "'erasedups' in $HISTCONTROL is deprecated. "
-            "Use the 'history erasedups' command instead.",
-            FutureWarning,
+            "Remove it and use the 'history erasedups' command.",
+            DeprecationWarning,
             stacklevel=2,
         )
     return result
