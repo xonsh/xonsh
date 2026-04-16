@@ -392,15 +392,19 @@ def _check_subproc_helper_raise(in_boolop):
     cp = XSH.lastcmd
     if cp is None:
         return
-    rtn = getattr(cp, "returncode", None)
-    if rtn is None or rtn == 0:
-        return
     spec = getattr(cp, "spec", None)
     if spec is None:
+        return
+    # Background job: pipeline is still running; reading .returncode would
+    # block on the blocking_property until the child exits.
+    if getattr(spec, "background", False):
         return
     if getattr(spec, "captured", None) == "object":
         return
     if getattr(spec, "raise_subproc_error", None) is False:
+        return
+    rtn = getattr(cp, "returncode", None)
+    if rtn is None or rtn == 0:
         return
 
     import subprocess
@@ -527,6 +531,10 @@ def subproc_check_boolop(value):
         return value
     # Try to get the pipeline from the value first (BoolOp result, ![...]).
     spec = getattr(value, "spec", None)
+    # Background job: pipeline is still running; reading .returncode would
+    # block on the blocking_property until the child exits.
+    if spec is not None and getattr(spec, "background", False):
+        return value
     rtn = getattr(value, "returncode", None)
     cp_for_output = value
     if spec is None or rtn is None:
@@ -537,6 +545,8 @@ def subproc_check_boolop(value):
         if last is None:
             return value
         spec = getattr(last, "spec", None)
+        if spec is not None and getattr(spec, "background", False):
+            return value
         rtn = getattr(last, "returncode", None)
         cp_for_output = last
     if spec is None or rtn is None or rtn == 0:
