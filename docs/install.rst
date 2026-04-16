@@ -259,21 +259,16 @@ executable that runs the current xonsh session:
    @ xpip install --upgrade xonsh  # install the latest release
    @ xpip install -U --force-reinstall git+https://github.com/xonsh/xonsh  # install from the repository
 
-.. warning::
+**On Windows** the running ``xonsh.exe`` is locked by the OS, so pip cannot
+replace it from inside xonsh itself. Grab the interpreter path with
+:ref:`xcontext <aliases-xcontext>`, leave the shell, then run pip from
+another terminal (``cmd``, PowerShell, etc.):
 
-   **Windows:** do not run the self-update from inside the running xonsh
-   process. Windows holds an exclusive lock on the executable of every
-   running process, so pip cannot replace ``xonsh.exe`` while it is the
-   current shell. The upgrade aborts mid-way with
-   ``ERROR: Could not install packages due to an OSError: [WinError 32]
-   The process cannot access the file because it is being used by another
-   process: '...\\Scripts\\xonsh.exe'`` — by that point pip has already
-   uninstalled the old version, so you are left with **no working
-   xonsh** until you reinstall it from another shell (``cmd``,
-   PowerShell, or ``python -m pip install xonsh``).
+.. code-block:: xonshcon
 
-   Run the upgrade from a non-xonsh shell instead, or upgrade via the
-   package manager that installed xonsh.
+   @ xcontext            # note the "xpython" path
+   @ exit                # release the lock on xonsh.exe
+   > <xpython> -m pip install --upgrade xonsh
 
 **xonsh installed via a package manager**
 
