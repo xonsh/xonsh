@@ -2117,7 +2117,7 @@ class AutoCompletionSetting(Xettings):
     ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT = Var.with_default(
         doc="""\
 If True, :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions
-will show options (e.g. -h, ...) without requesting explicitly with option prefix (e.g. '-').""",
+will show options (e.g. ``--help``) without requesting explicitly with option prefix ``-``.""",
         default=False,
     )
     ALIAS_COMPLETIONS_OPTIONS_LONGEST = Var.with_default(

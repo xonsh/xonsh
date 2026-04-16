@@ -530,8 +530,8 @@ to ``None`` to disable the corresponding completer.
 
 .. _select_completion_result:
 
-Selecting a tab completion result without executing the line
-============================================================
+Selecting a tab completion result
+=================================
 
 In the ``prompt_toolkit`` shell, you can cycle through possible
 tab-completion results using the TAB key and use ENTER to select the
@@ -544,6 +544,13 @@ if you're constructing a long pathname), you can set
    $COMPLETIONS_CONFIRM = True
 
 in your `xonsh RC <xonshrc.html>`_.
+
+By default, TABs cycle through the full list. Set
+``$COMPLETION_MODE = "menu-complete"`` to instead insert the first whole
+completion on the first TAB and cycle through the rest on further TABs.
+This is only one of many knobs; see
+`Tab Completion Behavior <https://xon.sh/envvars.html#tab-completion-behavior>`_
+for the full list (display style, menu rows, threading, trace output, and more).
 
 
 Legacy Completers Support
