@@ -290,6 +290,13 @@ class Execer:
                     lines = input.splitlines()
                     if input.endswith("\n"):
                         lines.append("")
+                    if idx >= len(lines):
+                        # Parser reports an error past EOF (e.g. "unexpected
+                        # dedent" right after the last statement). There is
+                        # no source there to wrap as a subprocess command,
+                        # so recovery cannot help — surface the original
+                        # SyntaxError instead of crashing in get_logical_line.
+                        raise original_error from None
                     line, nlogical, idx = get_logical_line(lines, idx)
                     if nlogical > 1 and not logical_input:
                         _, sbpline = self._parse_ctx_free(
