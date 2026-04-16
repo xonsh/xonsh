@@ -44,15 +44,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete nightly-build --cleanup-tag --yes || true
+          NOTES="xonsh ${{ github.sha }}"
+          gh release edit nightly-build \
+            --title "Nightly build" \
+            --notes "$NOTES" \
+            --prerelease 2>/dev/null || \
           gh release create nightly-build \
             --title "Nightly build" \
-            --notes "$(cat <<'EOF'
-          xonsh ${{ github.sha }}
-          EOF
-          )" \
-            --prerelease \
-            xonsh-nightly.AppImage
+            --notes "$NOTES" \
+            --prerelease
+          gh release upload nightly-build xonsh-nightly.AppImage --clobber
 
   nuitka:
     runs-on: ubuntu-latest
