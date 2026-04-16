@@ -136,7 +136,7 @@ jobs:
           python-version: "3.12"
 
       - name: install dependencies
-        run: pip install ./winget
+        run: pip install 'xonsh[full]' click jinja2
 
       - name: install inno setup 6
         run: choco install innosetup -y --no-progress
@@ -183,7 +183,7 @@ jobs:
           python-version: "3.12"
 
       - name: install dependencies
-        run: pip install ./winget
+        run: pip install 'xonsh[full]' click jinja2
 
       - name: install inno setup 5
         shell: pwsh
