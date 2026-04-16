@@ -1,6 +1,7 @@
 """Implements the xonsh history backend via sqlite3."""
 
 import collections
+import contextlib
 import json
 import os
 import re
@@ -26,10 +27,16 @@ def _xh_sqlite_get_file_name():
     return xt.expanduser_abs_path(file_name)
 
 
+@contextlib.contextmanager
 def _xh_sqlite_get_conn(filename=None):
     if filename is None:
         filename = _xh_sqlite_get_file_name()
-    return sqlite3.connect(str(filename))
+    conn = sqlite3.connect(str(filename))
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 
 def _xh_sqlite_create_history_table(cursor):
