@@ -108,7 +108,7 @@ The docstring of a completer should contain a brief description of its
 functionality, which will be displayed by ``completer list``.
 
 Some simple examples follow.  For real-world examples, see
-``xonsh.completers.git`` (subprocess-based, uses ``--git-completion-helper``)
+``xompletions.git`` (subprocess-based, uses ``--git-completion-helper``)
 and ``xonsh.completers.man`` (man page parsing with disk cache).
 
 .. code-block:: xonshcon

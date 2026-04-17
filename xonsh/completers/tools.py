@@ -21,19 +21,33 @@ def _filter_with_func(text, prefix, func):
     return func(text, prefix)
 
 
-def _filter_ignorecase(text, prefix):
+def _filter_substring(text, prefix):
     func = lambda txt, pre: pre.lower() in txt.lower()
     return _filter_with_func(text, prefix, func)
 
 
-def get_filter_function():
-    """Return a case-insensitive filtering function for completions.
+def _filter_prefix(text, prefix):
+    func = lambda txt, pre: txt.lower().startswith(pre.lower())
+    return _filter_with_func(text, prefix, func)
 
-    Completions are always filtered case-insensitively; the sort order
-    (see ``Completer.complete_from_context``) already ranks exact-case
-    matches above case-insensitive ones.
+
+def get_filter_function():
+    """Return the completion filter function based on ``$XONSH_COMPLETER_MODE``.
+
+    Modes:
+
+    * ``"substring_tier"`` (default) — completions are filtered by
+      case-insensitive substring match.  The pipeline's tier-based sort
+      ranks prefix matches above substring matches.
+    * ``"prefix"`` — only completions that start with the prefix are
+      shown (case-insensitive).
     """
-    return _filter_ignorecase
+    from xonsh.built_ins import XSH
+
+    mode = (XSH.env or {}).get("XONSH_COMPLETER_MODE", "substring_tier")
+    if mode == "prefix":
+        return _filter_prefix
+    return _filter_substring
 
 
 def justify(s, max_length, left_pad=0):

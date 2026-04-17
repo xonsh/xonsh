@@ -180,9 +180,12 @@ class PromptToolkitCompleter(Completer):
                 plen = len(prefix)
                 completions = (sug_comp,)
             else:
-                completions = set(completions)
-                completions.discard(sug_comp)
-                completions = (sug_comp,) + tuple(sorted(completions))
+                # Preserve the sort order from complete_from_context
+                # (tier-based: prefix > substring > no match) while
+                # moving the auto-suggest entry to the front.
+                completions = (sug_comp,) + tuple(
+                    c for c in completions if c != sug_comp
+                )
         # reserve space, if needed.
         if len(completions) <= 1:
             pass

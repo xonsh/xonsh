@@ -306,17 +306,33 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     env = XSH.env
     glob_sorted = env.get("GLOB_SORTED")
     prefix = glob.escape(prefix)
+    _prefix_is_dir_listing = prefix.endswith(os.sep) or (
+        os.altsep and prefix.endswith(os.altsep)
+    )
     for s in xt.iglobpath(
         prefix + "*", ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
     ):
         paths.add(s)
-    # When the prefix ends with a path separator we are listing directory
-    # contents, not matching a partial name.  If the glob above found nothing
-    # the directory is simply empty — skip subsequence and fuzzy matching
-    # which would incorrectly match unrelated paths.
-    _prefix_is_dir_listing = prefix.endswith(os.sep) or (
-        os.altsep and prefix.endswith(os.altsep)
-    )
+    # Substring matches: *prefix* catches files containing the prefix
+    # anywhere in their name.  The pipeline's tier-based sort ensures
+    # prefix matches rank above substring matches.
+    if (
+        prefix
+        and not _prefix_is_dir_listing
+        and env.get("XONSH_COMPLETER_MODE", "substring_tier") == "substring_tier"
+    ):
+        dirpart = os.path.dirname(prefix)
+        namepart = os.path.basename(prefix)
+        if namepart:
+            pattern = (
+                os.path.join(dirpart, "*" + namepart + "*")
+                if dirpart
+                else "*" + namepart + "*"
+            )
+            for s in xt.iglobpath(
+                pattern, ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
+            ):
+                paths.add(s)
     if (
         len(paths) == 0
         and env.get("SUBSEQUENCE_PATH_COMPLETION")
