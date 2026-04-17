@@ -423,9 +423,19 @@ def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None
     # ``_complete_path_raw`` may add opening quotes:
     prefix = command.raw_prefix
 
+    # When the cursor is inside a closed string (before the closing quote),
+    # append the closing quote to the line so ``_complete_path_raw`` can
+    # detect it and set ``append_end = False``.  The completion will NOT
+    # include a closing quote, and lprefix will NOT cover the original
+    # closing quote — so the existing quote stays in place.
+    if command.closing_quote and not command.is_after_closing_quote:
+        line = prefix + command.closing_quote
+    else:
+        line = prefix
+
     completions, lprefix = _complete_path_raw(
         prefix,
-        prefix,
+        line,
         0,
         len(prefix),
         ctx={},
