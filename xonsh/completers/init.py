@@ -14,7 +14,6 @@ from xonsh.completers.commands import (
 )
 from xonsh.completers.emoji import complete_emoji
 from xonsh.completers.environment import complete_environment_vars
-from xonsh.completers.git import complete_git
 from xonsh.completers.imports import complete_import
 from xonsh.completers.man import complete_from_man
 from xonsh.completers.path import complete_path
@@ -33,7 +32,6 @@ def default_completers(cmd_cache):
         ("skip", complete_skipper),
         ("alias", complete_aliases),
         ("xompleter", complete_xompletions),
-        ("git", complete_git),
         ("import", complete_import),
     ]
 

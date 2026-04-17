@@ -28,6 +28,51 @@ def test_complete_path(xession, completion_context_parse):
     xcp.complete_path(completion_context_parse("[1-0.1]", 7))
 
 
+def test_complete_path_substring(xession, completion_context_parse):
+    """Path completer should return both prefix and substring matches.
+
+    Verifies that all tiers are present and sorted by substring position
+    within each tier.
+    """
+    xession.env = {
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        # tier 0: case-sensitive prefix — pos 0
+        # tier 2: case-sensitive substring — various positions
+        # no match
+        for name in (
+            "test1",  # tier 0, pos 0
+            "test2",  # tier 0, pos 0
+            "test3",  # tier 0, pos 0
+            "a_test4",  # tier 2, pos 2
+            "bb_test5",  # tier 2, pos 3
+            "ccc_test6",  # tier 2, pos 4
+            "unrelated.txt",  # no match
+        ):
+            open(os.path.join(td, name), "w").close()
+
+        prefix = os.path.join(td, "test")
+        line = f"ls {prefix}"
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        basenames = {os.path.basename(str(c).rstrip()) for c in out[0]}
+
+        # Prefix matches included
+        assert "test1" in basenames
+        assert "test2" in basenames
+        assert "test3" in basenames
+        # Substring matches included, sorted by position
+        assert "a_test4" in basenames
+        assert "bb_test5" in basenames
+        assert "ccc_test6" in basenames
+        # Non-match excluded
+        assert "unrelated.txt" not in basenames
+
+
 @pytest.mark.parametrize(
     "char, escape",
     [

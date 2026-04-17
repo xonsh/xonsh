@@ -2,10 +2,7 @@
 
 import subprocess
 
-from xonsh.completers.tools import (
-    RichCompletion,
-    contextual_command_completer_for,
-)
+from xonsh.completers.tools import RichCompletion
 from xonsh.parsers.completion_context import CommandContext
 
 _REF_SUBCMDS = frozenset(
@@ -51,8 +48,7 @@ def _run_git(*args) -> "str | None":
         return None
 
 
-@contextual_command_completer_for("git")
-def complete_git(context: CommandContext):
+def xonsh_complete(context: CommandContext):
     """Complete git subcommands, options, and branch/tag refs."""
     if context.arg_index == 0:
         return
@@ -62,8 +58,7 @@ def complete_git(context: CommandContext):
         out = _run_git("--list-cmds=main,others")
         if out is None:
             return
-        comps = {RichCompletion(s, append_space=True) for s in out.split()}
-        return comps, False
+        return {RichCompletion(s, append_space=True) for s in out.split()}, False
 
     subcmd = context.args[1].value
 
@@ -72,8 +67,7 @@ def complete_git(context: CommandContext):
         out = _run_git(subcmd, "--git-completion-helper")
         if out is None:
             return
-        comps = {RichCompletion(o) for o in out.split() if o.startswith("-")}
-        return comps, False
+        return {RichCompletion(o) for o in out.split() if o.startswith("-")}, False
 
     # git <subcmd> <ref><Tab>
     if subcmd in _REF_SUBCMDS:
@@ -86,5 +80,4 @@ def complete_git(context: CommandContext):
         )
         if out is None:
             return
-        comps = {RichCompletion(r, append_space=True) for r in out.split()}
-        return comps, False
+        return {RichCompletion(r, append_space=True) for r in out.split()}, False
