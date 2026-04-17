@@ -106,8 +106,8 @@ def cmd_header(args: argparse.Namespace) -> None:
 
 
 def cmd_line(args: argparse.Namespace) -> None:
-    line = f"* {args.file} - xonsh {args.sha}"
-    pattern = re.compile(rf"^\* {re.escape(args.file)} - xonsh .*$", re.M)
+    line = f"* `{args.file}` - xonsh {args.sha}"
+    pattern = re.compile(rf"^\* `?{re.escape(args.file)}`? - xonsh .*$", re.M)
     exact = re.compile(rf"^{re.escape(line)}$", re.M)
 
     def transform(b: str) -> str:
