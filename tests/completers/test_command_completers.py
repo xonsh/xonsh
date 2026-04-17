@@ -114,7 +114,5 @@ def test_filter_function_substring(xession):
     assert not _filter_substring("ls", "longprefix")
 
     # RichCompletion with display text
-    assert _filter_substring(
-        RichCompletion("val", display="Foo, Bar-Deploy"), "deploy"
-    )
+    assert _filter_substring(RichCompletion("val", display="Foo, Bar-Deploy"), "deploy")
     assert not _filter_substring(RichCompletion("val", display="foo, bar"), "xyz")
