@@ -1230,6 +1230,10 @@ Or implement logic to run the right command:
     @ vi file
 
 
+See `Return Command Aliases <https://xon.sh/dev/callable_aliases.html#return-command-aliases>`_
+for the full reference.
+
+
 Callable Aliases
 ================
 
