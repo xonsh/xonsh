@@ -136,7 +136,7 @@ def _normalize_return_command_result(val, alias_repr):
     if not isinstance(val, list) or not val:
         raise ValueError(
             f"return_command alias {alias_repr}: wrong return value {val!r}, "
-            f"expected a non-empty list or dict with 'cmd' (non-empty list)."
+            f"expected a non-empty list or dict with command."
         )
     return val, returned_env
 
