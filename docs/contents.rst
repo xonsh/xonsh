@@ -22,7 +22,6 @@ step by step and helps you build a solid foundation for working in the shell.
 .. toctree::
     :titlesonly:
     :maxdepth: 1
-    :hidden:
 
     tutorial
     strings
@@ -43,7 +42,6 @@ and streamline your command-line experience.
 .. toctree::
     :titlesonly:
     :maxdepth: 1
-    :hidden:
 
     xonshrc
     envvars
@@ -70,7 +68,6 @@ developer tools.
 .. toctree::
     :titlesonly:
     :maxdepth: 1
-    :hidden:
 
     editors
     python_virtual_environments
