@@ -107,8 +107,9 @@ appropriate completions, and ``prefixlength`` is the number of characters in
 The docstring of a completer should contain a brief description of its
 functionality, which will be displayed by ``completer list``.
 
-Some simple examples follow.  For more examples, see the source code of the completers
-xonsh actually uses, in the ``xonsh.completers`` module.
+Some simple examples follow.  For real-world examples, see
+``xonsh.completers.git`` (subprocess-based, uses ``--git-completion-helper``)
+and ``xonsh.completers.man`` (man page parsing with disk cache).
 
 .. code-block:: xonshcon
 
