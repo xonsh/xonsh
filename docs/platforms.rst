@@ -86,6 +86,21 @@ Unset the affected functions in your ``~/.bashrc``:
     $ unset module
     $ unset scl
 
+
+"Open Terminal Here" action in Thunar (XFCE)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you use Thunar and the "Open Terminal Here" action does not work with
+xonsh, you can replace the command for this action:
+
+.. code-block:: sh
+
+    exo-open --working-directory %f --launch TerminalEmulator xonsh --shell-type=best
+
+Open ``Edit > Configure custom actions...``, select ``Open Terminal Here``,
+and click ``Edit currently selected action``.
+
+
 macOS
 -----
 
@@ -432,18 +447,6 @@ To debug command resolution, enable:
 
 .. _open_terminal_here:
 
-"Open Terminal Here" action in Thunar (XFCE)
-============================================
-
-If you use Thunar and the "Open Terminal Here" action does not work with
-xonsh, you can replace the command for this action:
-
-.. code-block:: sh
-
-    exo-open --working-directory %f --launch TerminalEmulator xonsh --shell-type=best
-
-Open ``Edit > Configure custom actions...``, select ``Open Terminal Here``,
-and click ``Edit currently selected action``.
 
 
 See Also
