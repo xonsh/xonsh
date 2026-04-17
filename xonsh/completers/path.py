@@ -324,7 +324,11 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
         dirpart = os.path.dirname(prefix)
         namepart = os.path.basename(prefix)
         if namepart:
-            pattern = os.path.join(dirpart, "*" + namepart + "*") if dirpart else "*" + namepart + "*"
+            pattern = (
+                os.path.join(dirpart, "*" + namepart + "*")
+                if dirpart
+                else "*" + namepart + "*"
+            )
             for s in xt.iglobpath(
                 pattern, ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
             ):

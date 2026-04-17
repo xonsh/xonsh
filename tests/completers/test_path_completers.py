@@ -46,12 +46,12 @@ def test_complete_path_substring(xession, completion_context_parse):
         # tier 2: case-sensitive substring — various positions
         # no match
         for name in (
-            "test1",          # tier 0, pos 0
-            "test2",          # tier 0, pos 0
-            "test3",          # tier 0, pos 0
-            "a_test4",        # tier 2, pos 2
-            "bb_test5",       # tier 2, pos 3
-            "ccc_test6",      # tier 2, pos 4
+            "test1",  # tier 0, pos 0
+            "test2",  # tier 0, pos 0
+            "test3",  # tier 0, pos 0
+            "a_test4",  # tier 2, pos 2
+            "bb_test5",  # tier 2, pos 3
+            "ccc_test6",  # tier 2, pos 4
             "unrelated.txt",  # no match
         ):
             open(os.path.join(td, name), "w").close()

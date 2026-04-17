@@ -210,13 +210,13 @@ def test_sortkey_substring_position(completer, completers_mock):
             "TEST5",
             "TEST6",
             # tier 2: case-sensitive substring (various pos)
-            "a_test7",       # pos 2
-            "bb_test8",      # pos 3
-            "ccc_test9",     # pos 4
+            "a_test7",  # pos 2
+            "bb_test8",  # pos 3
+            "ccc_test9",  # pos 4
             # tier 3: case-insensitive substring (various pos)
-            "a_TEST10",      # pos 2
-            "bb_TEST11",     # pos 3
-            "ccc_TEST12",    # pos 4
+            "a_TEST10",  # pos 2
+            "bb_TEST11",  # pos 3
+            "ccc_TEST12",  # pos 4
             # tier 4: no match
             "zzz_no_match",
             "aaa_no_match",
@@ -239,13 +239,13 @@ def test_sortkey_substring_position(completer, completers_mock):
         "TEST5",
         "TEST6",
         # tier 2: case-sensitive substring, by position then alphabetical
-        "a_test7",       # pos 2
-        "bb_test8",      # pos 3
-        "ccc_test9",     # pos 4
+        "a_test7",  # pos 2
+        "bb_test8",  # pos 3
+        "ccc_test9",  # pos 4
         # tier 3: case-insensitive substring, by position then alphabetical
-        "a_TEST10",      # pos 2
-        "bb_TEST11",     # pos 3
-        "ccc_TEST12",    # pos 4
+        "a_TEST10",  # pos 2
+        "bb_TEST11",  # pos 3
+        "ccc_TEST12",  # pos 4
         # tier 4: no match, alphabetical
         "aaa_no_match",
         "mmm_no_match",
