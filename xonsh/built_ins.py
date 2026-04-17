@@ -1244,44 +1244,53 @@ class DynamicAccessProxy:
         super().__setattr__("refname", refname)
         super().__setattr__("objname", objname)
 
-    @property
-    def obj(self):
-        """Dynamically grabs object"""
-        names = self.objname.split(".")
+    def _obj(self):
+        """Dynamically grabs object.
+
+        This is a method instead of a ``@property`` as a workaround for
+        a Nuitka bug: https://github.com/Nuitka/Nuitka/issues/3859
+        When the bug is fixed upstream, this can be reverted to
+        ``@property def obj(self)``.
+
+        Uses ``object.__getattribute__`` to read *objname* so that the
+        lookup never falls through to ``__getattr__`` — which would
+        create an infinite loop under Nuitka-compiled builds.
+        """
+        names = object.__getattribute__(self, "objname").split(".")
         obj = builtins
         for name in names:
             obj = getattr(obj, name)
         return obj
 
     def __getattr__(self, name):
-        return getattr(self.obj, name)
+        return getattr(self._obj(), name)
 
     def __setattr__(self, name, value):
-        return setattr(self.obj, name, value)
+        return setattr(self._obj(), name, value)
 
     def __delattr__(self, name):
-        return delattr(self.obj, name)
+        return delattr(self._obj(), name)
 
     def __getitem__(self, item):
-        return self.obj.__getitem__(item)
+        return self._obj().__getitem__(item)
 
     def __setitem__(self, item, value):
-        return self.obj.__setitem__(item, value)
+        return self._obj().__setitem__(item, value)
 
     def __delitem__(self, item):
-        del self.obj[item]
+        del self._obj()[item]
 
     def __call__(self, *args, **kwargs):
-        return self.obj.__call__(*args, **kwargs)
+        return self._obj().__call__(*args, **kwargs)
 
     def __dir__(self):
-        return self.obj.__dir__()
+        return self._obj().__dir__()
 
     def __repr__(self):
-        return repr(self.obj)
+        return repr(self._obj())
 
     def __str__(self):
-        return str(self.obj)
+        return str(self._obj())
 
 
 # singleton
