@@ -1249,7 +1249,9 @@ class DynamicAccessProxy:
         """Dynamically grabs object.
 
         This is a method instead of a ``@property`` as a workaround for
-        a Nuitka bug: https://github.com/Nuitka/Nuitka/issues/3859
+        a Nuitka bugs.
+        - https://github.com/Nuitka/Nuitka/issues/3859
+        - https://github.com/Nuitka/Nuitka/issues/3860
         When the bug is fixed upstream, this can be reverted to
         ``@property def obj(self)``.
 
