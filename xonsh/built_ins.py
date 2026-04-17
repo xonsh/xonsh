@@ -22,6 +22,7 @@ import uuid
 import warnings
 from ast import AST
 from collections.abc import Iterator
+from operator import attrgetter as _attrgetter
 
 from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
@@ -1255,12 +1256,15 @@ class DynamicAccessProxy:
         Uses ``object.__getattribute__`` to read *objname* so that the
         lookup never falls through to ``__getattr__`` — which would
         create an infinite loop under Nuitka-compiled builds.
+
+        Uses :func:`operator.attrgetter` instead of an explicit ``getattr``
+        loop: the loop form compiled under Nuitka 4.0 produces wrong
+        results for ``getattr(builtins, "__xonsh__")`` (it doesn't advance
+        ``obj`` on the first iteration), yielding ``AttributeError:
+        module 'builtins' has no attribute 'builtins'``. ``attrgetter``
+        delegates the whole walk to a C builtin and sidesteps the bug.
         """
-        names = object.__getattribute__(self, "objname").split(".")
-        obj = builtins
-        for name in names:
-            obj = getattr(obj, name)
-        return obj
+        return _attrgetter(object.__getattribute__(self, "objname"))(builtins)
 
     def __getattr__(self, name):
         return getattr(self._obj(), name)
