@@ -84,6 +84,7 @@ Work in progress:
 `binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_,
 `running in RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_,
 `xonsh Flatpak <https://github.com/xonsh/xonsh-flatpak>`_.
+Check out `Nightly build <https://github.com/xonsh/xonsh/releases/tag/nightly-build>`_ page.
 
 Independent install
 ========================
