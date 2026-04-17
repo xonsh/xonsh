@@ -316,7 +316,11 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     # Substring matches: *prefix* catches files containing the prefix
     # anywhere in their name.  The pipeline's tier-based sort ensures
     # prefix matches rank above substring matches.
-    if prefix and not _prefix_is_dir_listing:
+    if (
+        prefix
+        and not _prefix_is_dir_listing
+        and env.get("XONSH_COMPLETER_MODE", "substring_tier") == "substring_tier"
+    ):
         dirpart = os.path.dirname(prefix)
         namepart = os.path.basename(prefix)
         if namepart:

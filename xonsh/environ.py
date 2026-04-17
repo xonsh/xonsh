@@ -2118,6 +2118,17 @@ class AutoCompletionSetting(Xettings):
         "This is to reduce the noise in generated completions.",
         default=False,
     )
+    XONSH_COMPLETER_MODE = Var.with_default(
+        "substring_tier",
+        "Controls how completions are filtered.\n\n"
+        "``'substring_tier'`` (default) — shows all completions that "
+        "contain the typed text as a substring.  Results are sorted by "
+        "match quality: case-sensitive prefix > case-insensitive prefix "
+        "> case-sensitive substring > case-insensitive substring, then "
+        "by substring position.\n"
+        "``'prefix'`` — shows only completions that start with the "
+        "typed text (case-insensitive).",
+    )
     CMD_COMPLETIONS_SHOW_DESC = Var.with_default(
         doc="If True, command completions will show description part with path to the binary and alias in case of "
         "xonsh functions.",
