@@ -42,7 +42,7 @@ def _get_man_page(cmd: str):
 @functools.cache
 def _man_option_string_regex():
     return re.compile(
-        r"(?:(,\s?)|^|(\sor\s))(?P<option>-[\w]|--[\w-]+)(?=\[?(\s|,|=\w+|$))"
+        r"(?:(,\s?)|^|(\sor\s))(?P<option>-[\w]|--[\w-]+)(?=\[?(\s|,|=|$))"
     )
 
 
@@ -57,7 +57,7 @@ def generate_options_of(cmd: str):
             return
         header = ""
         body = []
-        for line in textwrap.dedent(text.replace("\n\t", "\n    ")).splitlines():
+        for line in textwrap.dedent(text.expandtabs(8)).splitlines():
             if not line.strip():
                 continue
             if line.startswith((" ", "\t")):
@@ -90,6 +90,7 @@ def generate_options_of(cmd: str):
         for head in (
             "options",
             "command options",
+            "command line options",
             "description",
         ):  # prefer sections in this order
             if head in small_names:
@@ -154,10 +155,20 @@ def complete_from_man(context: CommandContext):
         return
     cmd = context.args[0].value
 
+    # Tools like cargo, docker use per-subcommand man pages
+    # (e.g. cargo-build). Try the hyphenated form first.
+    if context.arg_index >= 2:
+        subcmd_man = f"{cmd}-{context.args[1].value}"
+        if _man_page_path(subcmd_man) is not None:
+            cmd = subcmd_man
+
     def completions():
         for desc, opts in _parse_man_page_options(cmd).items():
             yield RichCompletion(
-                value=opts[-1], display=", ".join(opts), description=desc
+                value=opts[-1],
+                display=", ".join(opts),
+                description=desc,
+                provider=f"man:{cmd}",
             )
 
     return completions(), False
