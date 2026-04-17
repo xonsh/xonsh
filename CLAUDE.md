@@ -304,7 +304,9 @@ When writing xonsh code — in `.xsh` files, rc files, xontribs, docs, and examp
 
     Reach for this when the integration has state, several related operations, or needs to expose a small API to the user. For a single helper function, a plain alias or callable is still fine.
 
-11. **Working with LLMs — research first, code second** — when using an LLM to change this codebase, first ask it to investigate the code it's about to touch: read the relevant module, search for every caller, map the surrounding invariants, and return a written plan of the proposed changes. Only after you've reviewed that plan should you let it implement. Skipping the research step — the "I want to fix this, just do it" prompt — pushes the model toward the shortest patch that compiles, which routinely breaks callers, skips edge cases, and produces integration bugs. Xonsh is a concurrent, multi-process system with many subtle interactions (parser, procs, events, prompt, completion), so a change that looks local often isn't. Don't skip the plan.
+11. **Environment variable naming** — new environment variables must follow the pattern `$XONSH_<COMPONENT>_<SETTING>`, e.g. `$XONSH_COMMANDS_CACHE_TRACE`, `$XONSH_HISTORY_SIZE`. Not all existing variables follow this convention yet — they will be renamed over time — but every newly added variable must use it.
+
+12. **Working with LLMs — research first, code second** — when using an LLM to change this codebase, first ask it to investigate the code it's about to touch: read the relevant module, search for every caller, map the surrounding invariants, and return a written plan of the proposed changes. Only after you've reviewed that plan should you let it implement. Skipping the research step — the "I want to fix this, just do it" prompt — pushes the model toward the shortest patch that compiles, which routinely breaks callers, skips edge cases, and produces integration bugs. Xonsh is a concurrent, multi-process system with many subtle interactions (parser, procs, events, prompt, completion), so a change that looks local often isn't. Don't skip the plan.
 
 ## CI
 
