@@ -258,6 +258,29 @@ def test_complete_path_raw_string_with_backslash(
                 )
 
 
+def test_complete_path_no_double_closing_quote(xession, completion_context_parse):
+    """Completing inside a closed string should not duplicate the closing quote.
+
+    cd './tm<cursor>' + TAB → cd './tmp/' (not cd './tmp/'')
+    """
+    xession.env = {
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        os.makedirs(os.path.join(td, "tmp"))
+        line = f"cd '{td}/tm'"
+        cursor = len(line) - 1  # before closing quote
+        ctx = completion_context_parse(line, cursor)
+        comps, lprefix = xcp.contextual_complete_path(ctx.command)
+        completions = {str(c) for c in comps}
+        for c in completions:
+            assert not c.endswith("''"), f"Double closing quote: {c!r}"
+
+
 @pytest.mark.skipif(os.sep != "\\", reason="Backslash separator is Windows-only")
 def test_empty_dir_no_spurious_completion(xession):
     """Completing inside an empty directory should return nothing, not a
