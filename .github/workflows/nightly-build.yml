@@ -44,7 +44,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NOTES="xonsh ${{ github.sha }}"
+          COMMIT_DATE=$(git log -1 --format='%ci')
+          NOTES="xonsh ${{ github.sha }} ($COMMIT_DATE)"
           gh release edit nightly-build \
             --title "Nightly build" \
             --notes "$NOTES" \
@@ -145,7 +146,7 @@ jobs:
         shell: bash
         working-directory: winget
         run: |
-          xonsh build.xsh build --git --version nightly --python-version 3.14
+          xonsh build.xsh build --git --version nightly --python-version 3.14.3
           xonsh build.xsh installer --version nightly --inno-version 6 --include-inno-tag
 
       - name: collect artifact
