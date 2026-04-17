@@ -84,9 +84,9 @@ def test_cursor_after_closing_quote_override(completer, completers_mock):
         "", "", 0, 0, {}, multiline_text="'test'", cursor_index=6
     ) == (
         (
-            "a",
             "test1'",
             "test_no_quote",
+            "a",
         ),
         5,
     )
@@ -95,9 +95,9 @@ def test_cursor_after_closing_quote_override(completer, completers_mock):
         "", "", 0, 0, {}, multiline_text="'''test'''", cursor_index=10
     ) == (
         (
-            "a",
             "test1'''",
             "test_no_quote",
+            "a",
         ),
         7,
     )
@@ -171,7 +171,16 @@ def test_env_completer_sort(completer, completers_mock):
 
 
 def test_sortkey_tiers(completer, completers_mock):
-    """Completions should be ranked by match quality tier."""
+    """Completions should be ranked by match quality tier.
+
+    Sort order:
+      tier 0 — case-sensitive prefix match
+      tier 1 — case-insensitive prefix match
+      tier 2 — case-sensitive substring match
+      tier 3 — case-insensitive substring match
+      tier 4 — no match
+    Within a tier: _-prefixed last, then by match position, then alphabetically.
+    """
 
     @contextual_command_completer
     def comp(context: CommandContext):
@@ -183,14 +192,37 @@ def test_sortkey_tiers(completer, completers_mock):
         "dec", "dec", 0, 3, {}, multiline_text="dec", cursor_index=3
     )
     result = comps[0]
-    # Tier 0 (case-sensitive prefix) before tier 1 (case-insensitive prefix)
-    assert result.index("decoder") < result.index("Decoder")
-    # Tier 1 (case-insensitive prefix) before tier 2 (case-sensitive substring)
-    assert result.index("Decoder") < result.index("jsondecoder")
-    # Tier 2 (case-sensitive substring) before tier 3 (case-insensitive substring)
-    assert result.index("jsondecoder") < result.index("JSONDecoder")
-    # All matches before non-matches
-    assert result.index("JSONDecoder") < result.index("foobar")
+    assert result == ("decoder", "Decoder", "jsondecoder", "JSONDecoder", "foobar")
+
+
+def test_sortkey_substring_position(completer, completers_mock):
+    """Within the same tier, earlier substring position sorts first."""
+
+    @contextual_command_completer
+    def comp(context: CommandContext):
+        return {
+            "patch-1",           # tier 0: prefix match, pos 0
+            "origin/patch-1",    # tier 2: substring, pos 7
+            "anki-code-patch",   # tier 2: substring, pos 10
+            "x-patch-2",         # tier 2: substring, pos 2
+            "PATCH-3",           # tier 1: case-insensitive prefix, pos 0
+            "unrelated",         # tier 4: no match
+        }
+
+    completers_mock["a"] = comp
+
+    comps = completer.complete(
+        "patch", "patch", 0, 5, {}, multiline_text="patch", cursor_index=5
+    )
+    result = comps[0]
+    assert result == (
+        "patch-1",           # tier 0
+        "PATCH-3",           # tier 1
+        "x-patch-2",         # tier 2, pos 2
+        "origin/patch-1",    # tier 2, pos 7
+        "anki-code-patch",   # tier 2, pos 10
+        "unrelated",         # tier 4
+    )
 
 
 def test_deduplicate_trailing_space(completer, completers_mock):
