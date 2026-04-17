@@ -201,12 +201,12 @@ def test_sortkey_substring_position(completer, completers_mock):
     @contextual_command_completer
     def comp(context: CommandContext):
         return {
-            "patch-1",           # tier 0: prefix match, pos 0
-            "origin/patch-1",    # tier 2: substring, pos 7
-            "anki-code-patch",   # tier 2: substring, pos 10
-            "x-patch-2",         # tier 2: substring, pos 2
-            "PATCH-3",           # tier 1: case-insensitive prefix, pos 0
-            "unrelated",         # tier 4: no match
+            "patch-1",  # tier 0: prefix match, pos 0
+            "origin/patch-1",  # tier 2: substring, pos 7
+            "anki-code-patch",  # tier 2: substring, pos 10
+            "x-patch-2",  # tier 2: substring, pos 2
+            "PATCH-3",  # tier 1: case-insensitive prefix, pos 0
+            "unrelated",  # tier 4: no match
         }
 
     completers_mock["a"] = comp
@@ -216,12 +216,12 @@ def test_sortkey_substring_position(completer, completers_mock):
     )
     result = comps[0]
     assert result == (
-        "patch-1",           # tier 0
-        "PATCH-3",           # tier 1
-        "x-patch-2",         # tier 2, pos 2
-        "origin/patch-1",    # tier 2, pos 7
-        "anki-code-patch",   # tier 2, pos 10
-        "unrelated",         # tier 4
+        "patch-1",  # tier 0
+        "PATCH-3",  # tier 1
+        "x-patch-2",  # tier 2, pos 2
+        "origin/patch-1",  # tier 2, pos 7
+        "anki-code-patch",  # tier 2, pos 10
+        "unrelated",  # tier 4
     )
 
 
