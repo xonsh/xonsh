@@ -28,6 +28,102 @@ def test_complete_path(xession, completion_context_parse):
     xcp.complete_path(completion_context_parse("[1-0.1]", 7))
 
 
+def test_complete_path_substring(xession, completion_context_parse):
+    """Path completer should return both prefix and substring matches.
+
+    Verifies that all tiers are present and sorted by substring position
+    within each tier.
+    """
+    xession.env = {
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        # tier 0: case-sensitive prefix — pos 0
+        # tier 2: case-sensitive substring — various positions
+        # no match
+        for name in (
+            "test1",  # tier 0, pos 0
+            "test2",  # tier 0, pos 0
+            "test3",  # tier 0, pos 0
+            "a_test4",  # tier 2, pos 2
+            "bb_test5",  # tier 2, pos 3
+            "ccc_test6",  # tier 2, pos 4
+            "unrelated.txt",  # no match
+        ):
+            open(os.path.join(td, name), "w").close()
+
+        prefix = os.path.join(td, "test")
+        line = f"ls {prefix}"
+        out = xcp.complete_path(completion_context_parse(line, len(line)))
+        basenames = {os.path.basename(str(c).rstrip()) for c in out[0]}
+
+        # Prefix matches included
+        assert "test1" in basenames
+        assert "test2" in basenames
+        assert "test3" in basenames
+        # Substring matches included, sorted by position
+        assert "a_test4" in basenames
+        assert "bb_test5" in basenames
+        assert "ccc_test6" in basenames
+        # Non-match excluded
+        assert "unrelated.txt" not in basenames
+
+
+@pytest.mark.parametrize(
+    "char, escape",
+    [(chr(c), r) for c, r in xcp._CONTROL_CHAR_ESCAPE.items()],
+)
+@pytest.mark.parametrize("position", ["start", "middle", "end"])
+def test_complete_path_control_chars(char, escape, position, xession):
+    """Filenames with control characters should be completed as quoted
+    strings with proper escape sequences at any position.
+    """
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
+    with tempfile.TemporaryDirectory() as td:
+        if position == "start":
+            fname = f"{char}file_ctrl"
+            search = f"{char}file"
+        elif position == "middle":
+            fname = f"ctrl{char}file"
+            search = "ctrl"
+        else:
+            fname = f"ctrl_file{char}"
+            search = "ctrl"
+        fpath = os.path.join(td, fname)
+        try:
+            open(fpath, "w").close()
+            if not os.path.exists(fpath):
+                raise OSError("file not created")
+        except OSError:
+            pytest.skip(f"filesystem cannot create file with {escape}")
+
+        prefix = os.path.join(td, search)
+        line = f"ls {prefix}"
+        paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
+        completions = {str(c).rstrip() for c in paths}
+        assert any(escape in c for c in completions), (
+            f"No completion with {escape!r} for position={position}: {completions}"
+        )
+        for c in completions:
+            if escape in c:
+                evaled = eval(c)
+                assert char in evaled, (
+                    f"{c!r} does not eval to contain the control char"
+                )
+
+
 @patch("xonsh.completers.path._add_cdpaths")
 def test_cd_path_no_cd(mock_add_cdpaths, xession, completion_context_parse):
     xession.env = {
