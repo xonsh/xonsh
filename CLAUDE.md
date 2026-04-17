@@ -155,6 +155,10 @@ Before making changes, research the surrounding code thoroughly — understand h
 
 Every change must be accompanied by tests.
 
+- **Displaying messages from UI components** — completers, prompt formatters, and other interactive subsystems must use `xonsh.tools.print_above_prompt()` to display errors and diagnostics. Plain `print()` or `sys.stderr.write()` corrupts the prompt-toolkit display. `print_above_prompt` injects text above the current prompt line without breaking the terminal state.
+
+- **Naming: completer, not completion** — the module that provides tab-completion for a command is called a **completer** (like **parser**), not a "completion". Use "completer" in module names, class names, variable names, and documentation.
+
 ## Code Style
 
 - **Formatter/linter**: ruff (line length 88, rules: B, D, E, F, I, T10, TID, YTT, W, UP)
