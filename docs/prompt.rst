@@ -147,8 +147,8 @@ Here is an example — a random emoji before the prompt character:
 
 .. code-block:: python
 
-    from xonsh.completers.emoji import _get_emoji_cache
-    $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(_get_emoji_cache())[0]
+    from xonsh.completers.emoji import get_emoji_cache
+    $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(get_emoji_cache())[0]
     $PROMPT = $PROMPT.replace("{prompt_end}", "{random_emoji}{prompt_end}")
 
     snail@home ~ 🥗 @  # It helps to visually
