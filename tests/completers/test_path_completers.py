@@ -75,23 +75,22 @@ def test_complete_path_substring(xession, completion_context_parse):
 
 @pytest.mark.parametrize(
     "char, escape",
-    [
-        (chr(c), r)
-        for c, r in xcp._CONTROL_CHAR_ESCAPE.items()
-    ],
+    [(chr(c), r) for c, r in xcp._CONTROL_CHAR_ESCAPE.items()],
 )
 @pytest.mark.parametrize("position", ["start", "middle", "end"])
 def test_complete_path_control_chars(char, escape, position, xession):
     """Filenames with control characters should be completed as quoted
     strings with proper escape sequences at any position.
     """
-    xession.env.update({
-        "GLOB_SORTED": True,
-        "SUBSEQUENCE_PATH_COMPLETION": False,
-        "FUZZY_PATH_COMPLETION": False,
-        "SUGGEST_THRESHOLD": 3,
-        "CDPATH": set(),
-    })
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
     with tempfile.TemporaryDirectory() as td:
         if position == "start":
             fname = f"{char}file_ctrl"
@@ -120,7 +119,9 @@ def test_complete_path_control_chars(char, escape, position, xession):
         for c in completions:
             if escape in c:
                 evaled = eval(c)
-                assert char in evaled, f"{c!r} does not eval to contain the control char"
+                assert char in evaled, (
+                    f"{c!r} does not eval to contain the control char"
+                )
 
 
 @patch("xonsh.completers.path._add_cdpaths")
