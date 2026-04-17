@@ -18,11 +18,11 @@ import re
 import signal
 import sys
 import types
-from operator import attrgetter as _attrgetter
 import uuid
 import warnings
 from ast import AST
 from collections.abc import Iterator
+from operator import attrgetter as _attrgetter
 
 from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
