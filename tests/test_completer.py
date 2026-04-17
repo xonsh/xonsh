@@ -196,32 +196,60 @@ def test_sortkey_tiers(completer, completers_mock):
 
 
 def test_sortkey_substring_position(completer, completers_mock):
-    """Within the same tier, earlier substring position sorts first."""
+    """Each tier has 3 entries sorted by substring position, then alphabetically."""
 
     @contextual_command_completer
     def comp(context: CommandContext):
         return {
-            "patch-1",           # tier 0: prefix match, pos 0
-            "origin/patch-1",    # tier 2: substring, pos 7
-            "anki-code-patch",   # tier 2: substring, pos 10
-            "x-patch-2",         # tier 2: substring, pos 2
-            "PATCH-3",           # tier 1: case-insensitive prefix, pos 0
-            "unrelated",         # tier 4: no match
+            # tier 0: case-sensitive prefix (pos 0)
+            "test1",
+            "test2",
+            "test3",
+            # tier 1: case-insensitive prefix (pos 0)
+            "TEST4",
+            "TEST5",
+            "TEST6",
+            # tier 2: case-sensitive substring (various pos)
+            "a_test7",       # pos 2
+            "bb_test8",      # pos 3
+            "ccc_test9",     # pos 4
+            # tier 3: case-insensitive substring (various pos)
+            "a_TEST10",      # pos 2
+            "bb_TEST11",     # pos 3
+            "ccc_TEST12",    # pos 4
+            # tier 4: no match
+            "zzz_no_match",
+            "aaa_no_match",
+            "mmm_no_match",
         }
 
     completers_mock["a"] = comp
 
     comps = completer.complete(
-        "patch", "patch", 0, 5, {}, multiline_text="patch", cursor_index=5
+        "test", "test", 0, 4, {}, multiline_text="test", cursor_index=4
     )
     result = comps[0]
     assert result == (
-        "patch-1",           # tier 0
-        "PATCH-3",           # tier 1
-        "x-patch-2",         # tier 2, pos 2
-        "origin/patch-1",    # tier 2, pos 7
-        "anki-code-patch",   # tier 2, pos 10
-        "unrelated",         # tier 4
+        # tier 0: case-sensitive prefix, alphabetical
+        "test1",
+        "test2",
+        "test3",
+        # tier 1: case-insensitive prefix, alphabetical
+        "TEST4",
+        "TEST5",
+        "TEST6",
+        # tier 2: case-sensitive substring, by position then alphabetical
+        "a_test7",       # pos 2
+        "bb_test8",      # pos 3
+        "ccc_test9",     # pos 4
+        # tier 3: case-insensitive substring, by position then alphabetical
+        "a_TEST10",      # pos 2
+        "bb_TEST11",     # pos 3
+        "ccc_TEST12",    # pos 4
+        # tier 4: no match, alphabetical
+        "aaa_no_match",
+        "mmm_no_match",
+        "zzz_no_match",
     )
 
 
