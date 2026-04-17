@@ -31,9 +31,8 @@ def test_complete_path(xession, completion_context_parse):
 @pytest.mark.parametrize(
     "char, escape",
     [
-        ("\n", "\\n"),
-        ("\t", "\\t"),
-        ("\r", "\\r"),
+        (chr(c), r)
+        for c, r in xcp._CONTROL_CHAR_ESCAPE.items()
     ],
 )
 @pytest.mark.parametrize("position", ["start", "middle", "end"])
@@ -58,10 +57,13 @@ def test_complete_path_control_chars(char, escape, position, xession):
         else:
             fname = f"ctrl_file{char}"
             search = "ctrl"
+        fpath = os.path.join(td, fname)
         try:
-            open(os.path.join(td, fname), "w").close()
+            open(fpath, "w").close()
+            if not os.path.exists(fpath):
+                raise OSError("file not created")
         except OSError:
-            pytest.skip(f"filesystem cannot create file with {escape!r}")
+            pytest.skip(f"filesystem cannot create file with {escape}")
 
         prefix = os.path.join(td, search)
         line = f"ls {prefix}"

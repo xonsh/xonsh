@@ -174,9 +174,6 @@ _CONTROL_CHAR_ESCAPE = str.maketrans(
         "\r": "\\r",
         "\f": "\\f",
         "\v": "\\v",
-        "\0": "\\0",
-        "\a": "\\a",
-        "\b": "\\b",
     }
 )
 
