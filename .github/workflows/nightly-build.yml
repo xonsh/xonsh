@@ -79,35 +79,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          COMMIT_DATE=$(git log -1 --format='%ci')
-          NOTES="xonsh ${{ github.sha }} ($COMMIT_DATE)"
-          gh release edit nightly-build \
-            --title "Nightly build" \
-            --notes "$NOTES" \
-            --prerelease 2>/dev/null || \
-          gh release create nightly-build \
-            --title "Nightly build" \
-            --notes "$NOTES" \
-            --prerelease
+          COMMIT_DATE=$(TZ=UTC git log -1 --date=format-local:'%Y-%m-%d %H:%M:%S UTC' --format='%cd')
+          python .github/scripts/update-nightly-release-descr.py header \
+            --sha "${{ github.sha }}" --date "$COMMIT_DATE"
           gh release upload nightly-build xonsh-nightly.AppImage --clobber
+          python .github/scripts/update-nightly-release-descr.py line \
+            --file xonsh-nightly.AppImage --sha "${{ github.sha }}"
 
-  nuitka:
+  nuitka-linux:
     needs: check
     if: needs.check.outputs.skip != 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            suffix: linux
-            sys-deps: |
-              sudo apt-get update -qq
-              sudo apt-get install -y curl git vim patchelf elfutils binutils-common binutils \
-                gcc ccache libpython3-dev
-          - os: macos-latest
-            suffix: macos
-            sys-deps: ""
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
@@ -119,8 +101,10 @@ jobs:
           cache-dependency-path: "pyproject.toml"
 
       - name: install system deps
-        if: matrix.sys-deps != ''
-        run: ${{ matrix.sys-deps }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y curl git vim patchelf elfutils binutils-common binutils \
+            gcc ccache libpython3-dev
 
       - name: install nuitka and deps
         run: |
@@ -136,7 +120,7 @@ jobs:
             --show-progress \
             --show-scons \
             --show-modules \
-            --output-filename=xonsh-nightly-nuitka-${{ matrix.suffix }}.bin \
+            --output-filename=xonsh-nightly-nuitka-linux.bin \
             --include-package=xonsh \
             --include-package=xontrib \
             --include-package=xompletions \
@@ -155,7 +139,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: nuitka-logs-${{ matrix.suffix }}
+          name: nuitka-logs-linux
           path: |
             nuitka-build.log
             nuitka-crash-report.xml
@@ -163,22 +147,96 @@ jobs:
 
 #       - name: smoke test
 #         run: |
-#           chmod +x xonsh-nightly-nuitka-${{ matrix.suffix }}.bin
-#           ./xonsh-nightly-nuitka-${{ matrix.suffix }}.bin -c 'echo "nuitka build ok"'
+#           chmod +x xonsh-nightly-nuitka-linux.bin
+#           ./xonsh-nightly-nuitka-linux.bin -c 'echo "nuitka build ok"'
 
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: xonsh-nightly-nuitka-${{ matrix.suffix }}.bin
-          path: xonsh-nightly-nuitka-${{ matrix.suffix }}.bin
+          name: xonsh-nightly-nuitka-linux.bin
+          path: xonsh-nightly-nuitka-linux.bin
 
       - name: upload to nightly-build release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
-          gh release upload nightly-build \
-            xonsh-nightly-nuitka-${{ matrix.suffix }}.bin --clobber
+          gh release upload nightly-build xonsh-nightly-nuitka-linux.bin --clobber
+          python .github/scripts/update-nightly-release-descr.py line \
+            --file xonsh-nightly-nuitka-linux.bin --sha "${{ github.sha }}"
+
+  nuitka-macos:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: setup-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+
+      - name: install nuitka and deps
+        run: |
+          pip install -U pip setuptools wheel certifi
+          pip install nuitka ordered-set zstandard
+          pip install -e '.[full]'
+
+      - name: build standalone onefile
+        run: |
+          XONSH_PKG=$(python -c "import xonsh; print(xonsh.__path__[0])")
+          python -m nuitka \
+            --onefile \
+            --show-progress \
+            --show-scons \
+            --show-modules \
+            --output-filename=xonsh-nightly-nuitka-macos.bin \
+            --include-package=xonsh \
+            --include-package=xontrib \
+            --include-package=xompletions \
+            --include-package-data=xonsh \
+            --include-package-data=xontrib \
+            --include-package-data=xompletions \
+            --include-package=pip --include-package=setuptools --include-package=wheel \
+            --include-package=certifi --include-package-data=certifi \
+            --include-module=ujson \
+            --include-package=pygments --include-package=prompt_toolkit \
+            --include-module=pyperclip --include-package=click \
+            --assume-yes-for-downloads \
+            "$XONSH_PKG" 2>&1 | tee nuitka-build.log
+
+      - name: upload build log and crash report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuitka-logs-macos
+          path: |
+            nuitka-build.log
+            nuitka-crash-report.xml
+          if-no-files-found: ignore
+
+#       - name: smoke test
+#         run: |
+#           chmod +x xonsh-nightly-nuitka-macos.bin
+#           ./xonsh-nightly-nuitka-macos.bin -c 'echo "nuitka build ok"'
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xonsh-nightly-nuitka-macos.bin
+          path: xonsh-nightly-nuitka-macos.bin
+
+      - name: upload to nightly-build release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          until gh release view nightly-build &>/dev/null; do sleep 5; done
+          gh release upload nightly-build xonsh-nightly-nuitka-macos.bin --clobber
+          python .github/scripts/update-nightly-release-descr.py line \
+            --file xonsh-nightly-nuitka-macos.bin --sha "${{ github.sha }}"
 
   windows-inno6:
     needs: check
@@ -228,6 +286,8 @@ jobs:
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
           gh release upload nightly-build xonsh-nightly-inno6-setup.exe --clobber
+          python .github/scripts/update-nightly-release-descr.py line \
+            --file xonsh-nightly-inno6-setup.exe --sha "${{ github.sha }}"
 
   windows-inno5:
     needs: check
@@ -282,6 +342,8 @@ jobs:
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
           gh release upload nightly-build xonsh-nightly-inno5-setup.exe --clobber
+          python .github/scripts/update-nightly-release-descr.py line \
+            --file xonsh-nightly-inno5-setup.exe --sha "${{ github.sha }}"
 
   flatpak:
     needs: check
@@ -330,3 +392,5 @@ jobs:
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
           gh release upload nightly-build xonsh-nightly.flatpak --clobber
+          python .github/scripts/update-nightly-release-descr.py line \
+            --file xonsh-nightly.flatpak --sha "${{ github.sha }}"
