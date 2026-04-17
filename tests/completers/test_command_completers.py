@@ -97,24 +97,24 @@ def test_filter_function_substring(xession):
     """Filter functions should use case-insensitive substring matching."""
     from xonsh.completers.tools import (
         RichCompletion,
-        _filter_ignorecase,
+        _filter_substring,
     )
 
     # case-insensitive substring match (middle of string)
-    assert _filter_ignorecase("Dev-Xonsh-Deploy", "deploy")
-    assert _filter_ignorecase("ASDFGH", "asd")
-    assert not _filter_ignorecase("asdfgh", "xyz")
+    assert _filter_substring("Dev-Xonsh-Deploy", "deploy")
+    assert _filter_substring("ASDFGH", "asd")
+    assert not _filter_substring("asdfgh", "xyz")
 
     # prefix match should still work
-    assert _filter_ignorecase("asdfgh", "asdf")
+    assert _filter_substring("asdfgh", "asdf")
 
     # empty prefix matches everything
-    assert _filter_ignorecase("anything", "")
+    assert _filter_substring("anything", "")
     # prefix longer than text
-    assert not _filter_ignorecase("ls", "longprefix")
+    assert not _filter_substring("ls", "longprefix")
 
     # RichCompletion with display text
-    assert _filter_ignorecase(
+    assert _filter_substring(
         RichCompletion("val", display="Foo, Bar-Deploy"), "deploy"
     )
-    assert not _filter_ignorecase(RichCompletion("val", display="foo, bar"), "xyz")
+    assert not _filter_substring(RichCompletion("val", display="foo, bar"), "xyz")
