@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  check:
+  check-new-commit:
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.head.outputs.sha }}
@@ -42,8 +42,8 @@ jobs:
           fi
 
   appimage:
-    needs: check
-    if: needs.check.outputs.skip != 'true'
+    needs: check-new-commit
+    if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -87,8 +87,8 @@ jobs:
             --file xonsh-nightly.AppImage --sha "${{ github.sha }}"
 
   nuitka-linux:
-    needs: check
-    if: needs.check.outputs.skip != 'true'
+    needs: check-new-commit
+    if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -166,8 +166,8 @@ jobs:
             --file xonsh-nightly-nuitka-linux.bin --sha "${{ github.sha }}"
 
   nuitka-macos:
-    needs: check
-    if: needs.check.outputs.skip != 'true'
+    needs: check-new-commit
+    if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
@@ -239,8 +239,8 @@ jobs:
             --file xonsh-nightly-nuitka-macos.bin --sha "${{ github.sha }}"
 
   windows-inno6:
-    needs: check
-    if: needs.check.outputs.skip != 'true'
+    needs: check-new-commit
+    if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
@@ -290,8 +290,8 @@ jobs:
             --file xonsh-nightly-inno6-setup.exe --sha "${{ github.sha }}"
 
   windows-inno5:
-    needs: check
-    if: needs.check.outputs.skip != 'true'
+    needs: check-new-commit
+    if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
@@ -346,8 +346,8 @@ jobs:
             --file xonsh-nightly-inno5-setup.exe --sha "${{ github.sha }}"
 
   flatpak:
-    needs: check
-    if: needs.check.outputs.skip != 'true'
+    needs: check-new-commit
+    if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
