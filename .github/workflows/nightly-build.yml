@@ -9,7 +9,41 @@ permissions:
   contents: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.head.outputs.sha }}
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: get HEAD SHA
+        id: head
+        run: |
+          SHA=$(gh api repos/${{ github.repository }}/commits/main --jq '.sha')
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: check if already built
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          BODY=$(gh release view nightly-build --json body --jq '.body' 2>/dev/null || echo "")
+          if echo "$BODY" | grep -q "${{ steps.head.outputs.sha }}"; then
+            echo "No new commit since last build — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
   appimage:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -58,7 +92,22 @@ jobs:
           gh release upload nightly-build xonsh-nightly.AppImage --clobber
 
   nuitka:
-    runs-on: ubuntu-latest
+    needs: check
+    if: needs.check.outputs.skip != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            suffix: linux
+            sys-deps: |
+              sudo apt-get update -qq
+              sudo apt-get install -y curl git vim patchelf elfutils binutils-common binutils \
+                gcc ccache libpython3-dev
+          - os: macos-latest
+            suffix: macos
+            sys-deps: ""
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
 
@@ -70,10 +119,8 @@ jobs:
           cache-dependency-path: "pyproject.toml"
 
       - name: install system deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y curl git vim patchelf elfutils binutils-common binutils \
-            gcc ccache libpython3-dev
+        if: matrix.sys-deps != ''
+        run: ${{ matrix.sys-deps }}
 
       - name: install nuitka and deps
         run: |
@@ -89,7 +136,7 @@ jobs:
             --show-progress \
             --show-scons \
             --show-modules \
-            --output-filename=xonsh-nightly-nuitka.bin \
+            --output-filename=xonsh-nightly-nuitka-${{ matrix.suffix }}.bin \
             --include-package=xonsh \
             --include-package=xontrib \
             --include-package=xompletions \
@@ -102,35 +149,40 @@ jobs:
             --include-package=pygments --include-package=prompt_toolkit \
             --include-module=pyperclip --include-package=click \
             --assume-yes-for-downloads \
-            "$XONSH_PKG"
+            "$XONSH_PKG" 2>&1 | tee nuitka-build.log
 
-      - name: upload crash report
+      - name: upload build log and crash report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: nuitka-crash-report
-          path: nuitka-crash-report.xml
+          name: nuitka-logs-${{ matrix.suffix }}
+          path: |
+            nuitka-build.log
+            nuitka-crash-report.xml
           if-no-files-found: ignore
 
 #       - name: smoke test
 #         run: |
-#           chmod +x xonsh-nightly-nuitka.bin
-#           ./xonsh-nightly-nuitka.bin -c 'echo "nuitka build ok"'
+#           chmod +x xonsh-nightly-nuitka-${{ matrix.suffix }}.bin
+#           ./xonsh-nightly-nuitka-${{ matrix.suffix }}.bin -c 'echo "nuitka build ok"'
 
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: xonsh-nightly-nuitka.bin
-          path: xonsh-nightly-nuitka.bin
+          name: xonsh-nightly-nuitka-${{ matrix.suffix }}.bin
+          path: xonsh-nightly-nuitka-${{ matrix.suffix }}.bin
 
       - name: upload to nightly-build release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
-          gh release upload nightly-build xonsh-nightly-nuitka.bin --clobber
+          gh release upload nightly-build \
+            xonsh-nightly-nuitka-${{ matrix.suffix }}.bin --clobber
 
   windows-inno6:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
@@ -178,6 +230,8 @@ jobs:
           gh release upload nightly-build xonsh-nightly-inno6-setup.exe --clobber
 
   windows-inno5:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
@@ -230,6 +284,8 @@ jobs:
           gh release upload nightly-build xonsh-nightly-inno5-setup.exe --clobber
 
   flatpak:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
