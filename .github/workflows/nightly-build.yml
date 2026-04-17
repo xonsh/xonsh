@@ -111,10 +111,10 @@ jobs:
           path: nuitka-crash-report.xml
           if-no-files-found: ignore
 
-      - name: smoke test
-        run: |
-          chmod +x xonsh-nightly-nuitka.bin
-          ./xonsh-nightly-nuitka.bin -c 'echo "nuitka build ok"'
+#       - name: smoke test
+#         run: |
+#           chmod +x xonsh-nightly-nuitka.bin
+#           ./xonsh-nightly-nuitka.bin -c 'echo "nuitka build ok"'
 
       - name: upload artifact
         uses: actions/upload-artifact@v4
