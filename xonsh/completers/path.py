@@ -96,7 +96,7 @@ def _normpath(p):
     """
     initial_dotslash = p.startswith(os.curdir + os.sep)
     initial_dotslash |= xp.ON_WINDOWS and p.startswith(os.curdir + os.altsep)
-    p = p.rstrip()
+    p = p.rstrip(" ")
     trailing_slash = p.endswith(os.sep)
     trailing_slash |= xp.ON_WINDOWS and p.endswith(os.altsep)
     p = os.path.normpath(p)
@@ -167,6 +167,21 @@ def _is_directory_in_cdpath(path):
     return False
 
 
+_CONTROL_CHAR_ESCAPE = str.maketrans(
+    {
+        "\n": "\\n",
+        "\t": "\\t",
+        "\r": "\\r",
+        "\f": "\\f",
+        "\v": "\\v",
+    }
+)
+
+
+def _has_control_chars(s):
+    return any(chr(c) in s for c in _CONTROL_CHAR_ESCAPE)
+
+
 def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     expand_path = XSH.expand_path
     out = set()
@@ -194,7 +209,10 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
             _tail = space
         else:
             _tail = ""
-        if start != "" and "r" not in start.lower() and backslash in s:
+        # Filenames with control characters (newline, tab, etc.) must use
+        # regular (non-raw) strings so the escape sequences are interpreted.
+        has_ctrl = _has_control_chars(s)
+        if start != "" and "r" not in start.lower() and backslash in s and not has_ctrl:
             start = f"r{start}"
         s = s + _tail
         # Raw strings can't end with \ before closing quote (e.g. r"path\" is
@@ -206,6 +224,10 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
                 s = s.replace(backslash, double_backslash)
         if end in s:
             s = s.replace(end, "".join(f"\\{i}" for i in end))
+        # Translate control chars AFTER all backslash escaping so the
+        # introduced backslashes are not doubled.
+        if has_ctrl:
+            s = s.translate(_CONTROL_CHAR_ESCAPE)
         s = start + s + end if append_end else start + s
         out.add(s)
     return out, need_quotes

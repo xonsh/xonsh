@@ -73,6 +73,57 @@ def test_complete_path_substring(xession, completion_context_parse):
         assert "unrelated.txt" not in basenames
 
 
+@pytest.mark.parametrize(
+    "char, escape",
+    [(chr(c), r) for c, r in xcp._CONTROL_CHAR_ESCAPE.items()],
+)
+@pytest.mark.parametrize("position", ["start", "middle", "end"])
+def test_complete_path_control_chars(char, escape, position, xession):
+    """Filenames with control characters should be completed as quoted
+    strings with proper escape sequences at any position.
+    """
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
+    with tempfile.TemporaryDirectory() as td:
+        if position == "start":
+            fname = f"{char}file_ctrl"
+            search = f"{char}file"
+        elif position == "middle":
+            fname = f"ctrl{char}file"
+            search = "ctrl"
+        else:
+            fname = f"ctrl_file{char}"
+            search = "ctrl"
+        fpath = os.path.join(td, fname)
+        try:
+            open(fpath, "w").close()
+            if not os.path.exists(fpath):
+                raise OSError("file not created")
+        except OSError:
+            pytest.skip(f"filesystem cannot create file with {escape}")
+
+        prefix = os.path.join(td, search)
+        line = f"ls {prefix}"
+        paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
+        completions = {str(c).rstrip() for c in paths}
+        assert any(escape in c for c in completions), (
+            f"No completion with {escape!r} for position={position}: {completions}"
+        )
+        for c in completions:
+            if escape in c:
+                evaled = eval(c)
+                assert char in evaled, (
+                    f"{c!r} does not eval to contain the control char"
+                )
+
+
 @patch("xonsh.completers.path._add_cdpaths")
 def test_cd_path_no_cd(mock_add_cdpaths, xession, completion_context_parse):
     xession.env = {
