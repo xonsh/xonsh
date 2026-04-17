@@ -1,4 +1,5 @@
 name: nightly-build
+
 on:
   schedule:
     - cron: "0 3 * * *"

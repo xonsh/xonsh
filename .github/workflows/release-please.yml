@@ -1,3 +1,5 @@
+name: release-please
+
 on:
   workflow_dispatch:
   push:
@@ -8,8 +10,6 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
-
-name: release-please
 
 jobs:
   release-please:
