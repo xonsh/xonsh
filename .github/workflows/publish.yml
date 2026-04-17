@@ -1,4 +1,4 @@
-name: publish
+name: ci-publish
 on:
   workflow_dispatch:
   release:
