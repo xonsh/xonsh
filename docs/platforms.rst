@@ -263,7 +263,7 @@ In Windows, there's a context menu support for opening a folder in a shell, such
 
 Usually it involves modifying registry to get it, but `a contributed script <https://gist.github.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055>`_ can be used for automating chores for you.
 
- .. code-block:: xonshcon
+.. code-block:: xonshcon
 
     # Open xonsh and copy-paste the following line:
     @ exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_register_right_click()
@@ -449,4 +449,4 @@ and click ``Edit currently selected action``.
 See Also
 -----------
 
- - `Bash to Xonsh <bash_to_xsh.html>`_
+- `Bash to Xonsh <bash_to_xsh.html>`_
