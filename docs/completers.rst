@@ -553,6 +553,51 @@ This is only one of many knobs; see
 for the full list (display style, menu rows, threading, trace output, and more).
 
 
+Man Page Completer
+==================
+
+When no dedicated completer exists for a command, xonsh falls back to
+parsing the command's **man page** to extract option names (``-v``,
+``--verbose``, etc.). This works automatically for most CLI tools.
+
+For commands that use per-subcommand man pages (``docker-run``,
+``cargo-build``, ``systemctl-start``, etc.), xonsh tries the hyphenated
+form ``man <cmd>-<subcmd>`` first and falls back to ``man <cmd>``.
+
+Parsed options are cached on disk under
+``$XONSH_DATA_DIR/generated_completions/man/``. The cache is invalidated
+automatically when the man page file is updated (e.g. after a package
+upgrade). To force a refresh — for example, after upgrading xonsh
+itself with an improved parser — clear the cache:
+
+.. code-block:: xonshcon
+
+   @ rm $XONSH_DATA_DIR/generated_completions/man/*
+
+Installing man pages for tools
+------------------------------
+
+Some tools (Docker, Podman, etc.) ship man pages in a separate package.
+If ``docker run -<TAB>`` returns no completions, the man page may not be
+installed. On macOS with Homebrew:
+
+.. code-block:: console
+
+   $ brew install docker
+
+On Linux, man pages are usually part of the main package, but some
+distributions split them out (e.g. ``docker-doc`` on Debian/Ubuntu).
+
+You can verify whether a man page is available:
+
+.. code-block:: console
+
+   $ man -w docker-run
+
+If this prints a path, completions will work. If it prints an error,
+install the corresponding package.
+
+
 Legacy Completers Support
 =========================
 
