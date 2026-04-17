@@ -2122,12 +2122,18 @@ class AutoCompletionSetting(Xettings):
         "substring_tier",
         "Controls how completions are filtered.\n\n"
         "``'substring_tier'`` (default) — shows all completions that "
-        "contain the typed text as a substring.  Results are sorted by "
-        "match quality: case-sensitive prefix > case-insensitive prefix "
-        "> case-sensitive substring > case-insensitive substring, then "
-        "by substring position.\n"
+        "contain the typed text as a substring, ranked in tiers "
+        "from best to worst match:\n\n"
+        "  1. Exact prefix (``test`` matches ``test_foo``)\n"
+        "  2. Case-insensitive prefix (``test`` matches ``TEST_FOO``)\n"
+        "  3. Substring (``test`` matches ``my_test_bar``)\n"
+        "  4. Case-insensitive substring (``test`` matches ``MY_TEST_BAR``)\n\n"
+        "Within each tier, results are sorted by the position of the "
+        "match, then alphabetically.  This gives a natural ranking where "
+        "the best matches appear first while still showing all "
+        "possibilities.\n\n"
         "``'prefix'`` — shows only completions that start with the "
-        "typed text (case-insensitive).",
+        "typed text (case-insensitive).  Substring matches are hidden.",
     )
     CMD_COMPLETIONS_SHOW_DESC = Var.with_default(
         doc="If True, command completions will show description part with path to the binary and alias in case of "
