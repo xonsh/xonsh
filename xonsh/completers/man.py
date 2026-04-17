@@ -90,6 +90,7 @@ def generate_options_of(cmd: str):
         for head in (
             "options",
             "command options",
+            "command line options",
             "description",
         ):  # prefer sections in this order
             if head in small_names:
