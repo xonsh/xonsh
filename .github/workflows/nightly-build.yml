@@ -103,6 +103,14 @@ jobs:
             --assume-yes-for-downloads \
             "$XONSH_PKG"
 
+      - name: upload crash report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuitka-crash-report
+          path: nuitka-crash-report.xml
+          if-no-files-found: ignore
+
       - name: smoke test
         run: |
           chmod +x xonsh-nightly-nuitka.bin
