@@ -1,4 +1,4 @@
-name: release-please
+name: ci-release-please
 
 on:
   workflow_dispatch:

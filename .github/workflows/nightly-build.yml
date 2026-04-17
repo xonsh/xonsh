@@ -1,4 +1,4 @@
-name: nightly-build
+name: ci-nightly-build
 
 on:
   schedule:
