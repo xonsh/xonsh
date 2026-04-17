@@ -8,12 +8,28 @@ from xonsh.completers.tools import (
 )
 from xonsh.parsers.completion_context import CommandContext
 
-_REF_SUBCMDS = frozenset({
-    "checkout", "switch", "merge", "rebase", "branch",
-    "cherry-pick", "log", "diff", "show", "reset",
-    "push", "pull", "fetch", "stash",
-    "bisect", "blame", "revert", "tag",
-})
+_REF_SUBCMDS = frozenset(
+    {
+        "checkout",
+        "switch",
+        "merge",
+        "rebase",
+        "branch",
+        "cherry-pick",
+        "log",
+        "diff",
+        "show",
+        "reset",
+        "push",
+        "pull",
+        "fetch",
+        "stash",
+        "bisect",
+        "blame",
+        "revert",
+        "tag",
+    }
+)
 
 
 def _run_git(*args) -> "str | None":
@@ -62,8 +78,11 @@ def complete_git(context: CommandContext):
     # git <subcmd> <ref><Tab>
     if subcmd in _REF_SUBCMDS:
         out = _run_git(
-            "for-each-ref", "--format=%(refname:short)",
-            "refs/heads/", "refs/tags/", "refs/remotes/",
+            "for-each-ref",
+            "--format=%(refname:short)",
+            "refs/heads/",
+            "refs/tags/",
+            "refs/remotes/",
         )
         if out is None:
             return
