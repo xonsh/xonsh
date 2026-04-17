@@ -1,11 +1,13 @@
 """Tests the xonsh history."""
 
 # pylint: disable=protected-access
+import gc
 import itertools
 import os
 import shlex
 import sys
 import time
+import warnings
 
 import pytest
 
@@ -32,8 +34,8 @@ def hist(tmpdir):
 
 
 def _clean_up(h):
-    conn = _xh_sqlite_get_conn(h.filename)
-    conn.close()
+    with _xh_sqlite_get_conn(h.filename):
+        pass
     filename = h.filename
     del h
     os.remove(filename)
@@ -453,3 +455,54 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
 
     hist_strings = ptk_shell[2].prompter.history.get_strings()
     assert hist_strings == ["a1", "b1", "a2", "b2"]
+
+
+@skipwin311
+def test_no_unclosed_sqlite_connection_warning(tmpdir, xession):
+    """Regression: every sqlite operation must close its connection.
+
+    `with sqlite3.connect(...) as conn` only commits/rolls back the
+    transaction; the connection itself stays open until GC, at which
+    point Python (3.12+) reports `ResourceWarning: unclosed database`
+    via `sys.unraisablehook` (it fires from Connection.__del__, not
+    via warnings.warn, so warnings filters don't see it).
+    `_xh_sqlite_get_conn` wraps sqlite3.connect in a contextmanager
+    that calls conn.close() in finally — this test catches a regression
+    of that wrapper.
+    """
+    xession.env["HISTCONTROL"] = set()
+    db_file = tmpdir / "xonsh-HISTORY-RES.sqlite"
+
+    unraisable = []
+    orig_hook = sys.unraisablehook
+    sys.unraisablehook = lambda args: unraisable.append(args)
+    try:
+        # Suppress the warning channel too, in case finalisation goes that route.
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", ResourceWarning)
+
+            h = SqliteHistory(filename=db_file, gc=False)
+            for i in range(5):
+                h.append({"inp": f"echo {i}", "rtn": 0, "ts": [i, i + 1]})
+            list(h.items())
+            list(h.all_items())
+            h.info()
+            h.append({"inp": "echo 0", "rtn": 0, "ts": [99, 100]})
+            h.erasedups()
+            h.delete("echo 1")
+            h.clear()
+
+            # Drop the instance and force GC — any leaked sqlite3.Connection
+            # will trigger __del__ and surface via the unraisable hook.
+            del h
+            gc.collect()
+    finally:
+        sys.unraisablehook = orig_hook
+
+    leaks = [
+        u
+        for u in unraisable
+        if isinstance(u.exc_value, ResourceWarning)
+        and "sqlite3.Connection" in str(u.exc_value)
+    ]
+    assert not leaks, f"sqlite3 connections leaked: {[str(u.exc_value) for u in leaks]}"

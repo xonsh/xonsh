@@ -38,7 +38,26 @@ _EMOJI_CACHE: list[tuple[str, str]] | None = None
 _SYMBOL_CACHE: list[tuple[str, str]] | None = None
 
 
-def _get_emoji_cache():
+def get_emoji_cache():
+    """Return the cached list of ``(char, unicode-name)`` pairs for colorful emoji.
+
+    The cache covers Unicode ranges for emoticons, misc pictographs, transport,
+    supplemental and extended-A symbols, filtered to double-width characters
+    (``wcwidth == 2``). It is built lazily on first call and reused thereafter;
+    callers can use it directly — e.g. to wire a random-emoji prompt field.
+
+    Returns
+    -------
+    list of tuple of (str, str)
+        Pairs ``(emoji_character, lowercased_unicode_name)``.
+
+    Examples
+    --------
+    >>> import random
+    >>> from xonsh.completers.emoji import get_emoji_cache
+    >>> random.choice(get_emoji_cache())[0]  # doctest: +SKIP
+    '🥗'
+    """
     global _EMOJI_CACHE
     if _EMOJI_CACHE is None:
         from wcwidth import wcwidth
@@ -56,7 +75,25 @@ def _get_emoji_cache():
     return _EMOJI_CACHE
 
 
-def _get_symbol_cache():
+def get_symbol_cache():
+    """Return the cached list of ``(char, unicode-name)`` pairs for simple symbols.
+
+    The cache covers Unicode ranges for arrows, mathematical operators, misc
+    technical symbols, geometric shapes, dingbats, and misc symbols+arrows,
+    filtered to single-width characters (``wcwidth == 1``). It is built lazily
+    on first call and reused thereafter.
+
+    Returns
+    -------
+    list of tuple of (str, str)
+        Pairs ``(symbol_character, lowercased_unicode_name)``.
+
+    Examples
+    --------
+    >>> from xonsh.completers.emoji import get_symbol_cache
+    >>> any(name == 'rightwards arrow' for _, name in get_symbol_cache())
+    True
+    """
     global _SYMBOL_CACHE
     if _SYMBOL_CACHE is None:
         from wcwidth import wcwidth
@@ -74,7 +111,38 @@ def _get_symbol_cache():
     return _SYMBOL_CACHE
 
 
-def _search(cache, query, prefix_len):
+def _search(cache, query, prefix_len=0):
+    """Search an emoji/symbol cache by query and return a set of completions.
+
+    The search is word-aware and case-insensitive against the lowercased
+    Unicode names stored in *cache*. An empty *query* yields up to 200
+    characters from the cache as-is. Non-empty *query* first collects
+    prefix matches on any whitespace-separated word of the name, then —
+    if fewer than 50 matches — appends substring matches.
+
+    Parameters
+    ----------
+    cache : list of tuple of (str, str)
+        Output of :func:`get_emoji_cache` or :func:`get_symbol_cache`.
+    query : str
+        Lowercased search query. Use ``""`` to browse the whole cache.
+    prefix_len : int, optional
+        Length of the completion prefix to replace in the line buffer.
+        Defaults to ``0`` (insertion mode).
+
+    Returns
+    -------
+    set of RichCompletion or None
+        Completion set ready to return from a completer, or ``None`` if
+        nothing matched.
+
+    Examples
+    --------
+    >>> from xonsh.completers.emoji import get_symbol_cache, _search
+    >>> hits = _search(get_symbol_cache(), "arrow")
+    >>> any("arrow" in c.description for c in hits)
+    True
+    """
     results = []
     seen = set()
 
@@ -136,13 +204,13 @@ def complete_emoji(ctx: CommandContext):
     # Check longer trigger first to avoid prefix conflict
     if len(symbol_trigger) >= len(emoji_trigger):
         triggers = [
-            (symbol_trigger, _get_symbol_cache),
-            (emoji_trigger, _get_emoji_cache),
+            (symbol_trigger, get_symbol_cache),
+            (emoji_trigger, get_emoji_cache),
         ]
     else:
         triggers = [
-            (emoji_trigger, _get_emoji_cache),
-            (symbol_trigger, _get_symbol_cache),
+            (emoji_trigger, get_emoji_cache),
+            (symbol_trigger, get_symbol_cache),
         ]
 
     for trigger, get_cache in triggers:

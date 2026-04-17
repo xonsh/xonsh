@@ -84,6 +84,7 @@ Work in progress:
 `binary build <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_,
 `running in RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_,
 `xonsh Flatpak <https://github.com/xonsh/xonsh-flatpak>`_.
+Check out `Nightly build <https://github.com/xonsh/xonsh/releases/tag/nightly-build>`_ page.
 
 Independent install
 ========================
@@ -258,6 +259,17 @@ executable that runs the current xonsh session:
 
    @ xpip install --upgrade xonsh  # install the latest release
    @ xpip install -U --force-reinstall git+https://github.com/xonsh/xonsh  # install from the repository
+
+**On Windows** the running ``xonsh.exe`` is locked by the OS, so pip cannot
+replace it from inside xonsh itself. Grab the interpreter path with
+:ref:`xcontext <aliases-xcontext>`, leave the shell, then run pip from
+another terminal (``cmd``, PowerShell, etc.):
+
+.. code-block:: xonshcon
+
+   @ xcontext            # note the "xpython" path
+   @ exit                # release the lock on xonsh.exe
+   > <xpython> -m pip install --upgrade xonsh
 
 **xonsh installed via a package manager**
 

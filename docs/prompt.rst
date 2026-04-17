@@ -4,9 +4,11 @@
 Prompt
 ******
 
-xonsh ships with two prompt engines:
+Xonsh ships with two REPL engines. Historically, they have been referred to in xonsh
+as “shells” or “prompts”, but they will likely be renamed in the future, as they are in fact
+REPL (read–eval–print loop) engines that power all user interaction with the terminal. These are:
 
-* **ptk** (``$SHELL_TYPE='prompt_toolkit'``) — the recommended, full-featured
+* **prompt-toolkit** or **ptk** (``$SHELL_TYPE='prompt_toolkit'``) — the recommended, full-featured
   engine built on `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_.
   It provides syntax highlighting, multi-line editing, completion menus, custom
   key bindings, and more. It is included when installing the full package
@@ -37,7 +39,7 @@ which will be replaced automatically:
 
     @ $PROMPT = '{user}@{hostname}:{cwd} @ '
     snail@home:~ @ # it works!
-    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
     snail@home:~ @> # so does that!
 
 By default, the following variables are available for use:
@@ -145,8 +147,8 @@ Here is an example — a random emoji before the prompt character:
 
 .. code-block:: python
 
-    from xonsh.completers.emoji import _get_emoji_cache
-    $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(_get_emoji_cache())[0]
+    from xonsh.completers.emoji import get_emoji_cache
+    $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(get_emoji_cache())[0]
     $PROMPT = $PROMPT.replace("{prompt_end}", "{random_emoji}{prompt_end}")
 
     snail@home ~ 🥗 @  # It helps to visually
@@ -199,22 +201,19 @@ When you enter a multi-line statement (``for`` loop, ``if`` block, etc.),
 xonsh displays a continuation prompt on each subsequent line.  The pattern
 is controlled by ``$MULTILINE_PROMPT`` (default ``" "``).
 
-The value is **repeated** to fill the width of the main prompt.  It can be a
+The value is repeated to fill the width of the main prompt.  It can be a
 plain string, a string with color markup, or a callable:
-
-.. code-block:: xonshcon
-
-    @ $MULTILINE_PROMPT = '   |'
-    @ for i in range(3):
-       |    print(i)
-       |
-
-Both xonsh color keywords (``{RED}``) and ANSI escape codes (``\033[31m``)
-are supported:
 
 .. code-block:: python
 
-    $MULTILINE_PROMPT = '{CYAN}   |{RESET} '
+    prompt @ $MULTILINE_PROMPT = '~*'
+    prompt @ for i in range(3):
+    ~*~*~*~*     print(i)
+    ~*~*~*~*
+
+Both xonsh color keywords (``{RED}``) and ANSI escape codes (``\033[31m``)
+are supported.
+
 
 Callable with ``line_number`` and ``width``
 -------------------------------------------
@@ -263,19 +262,15 @@ define keybindings and warns you about potential pitfalls.
 
 All of the code below can be entered into your :doc:`xonshrc`.
 
-.. warning:: This will let you hook directly into the ``prompt_toolkit``
-             keybinding manager. It will not stop you from rendering your
-             prompt completely unusable, so tread lightly.
+This will let you hook directly into the ``prompt_toolkit`` keybinding manager. It will not stop you from rendering your
+prompt completely unusable, so tread lightly.
 
 Control characters
 ------------------
 
-We can't and won't stop you from doing what you want, but in the interest of a
-functioning shell, you probably shouldn't mess with the following keystrokes.
-Some of them are `ASCII control characters
-<https://en.wikipedia.org/wiki/Control_character#In_ASCII>`_ and *really*
-shouldn't be used. The others are used by xonsh and will result in some loss of
-functionality (in less you take the time to rebind them elsewhere).
+Some `ASCII control characters <https://en.wikipedia.org/wiki/Control_character#In_ASCII>`_ are widely used,
+and it is generally not recommended to override them. Additionally, certain keybindings are used by xonsh
+and may affect functionality if changed.
 
 .. list-table::
     :widths: 2 2 2
@@ -326,15 +321,12 @@ We'll start with a toy example that just inserts the text "hi" into the current 
     @events.on_ptk_create
     def custom_keybindings(bindings, **kw):
 
-        @bindings.add(Keys.ControlW)
+        @bindings.add(Keys.ControlW)  # or just "c-w" string
         def say_hi(event):
             event.current_buffer.insert_text('hi')
 
 Put that in your :doc:`xonshrc`, restart xonsh and then see if
 pressing ``Ctrl-w`` does anything (it should!)
-
-.. note:: It is also possible to write ``Keys.ControlW`` like ``c-w``.
-
 
 What commands can keybindings run?
 ----------------------------------
@@ -358,22 +350,15 @@ hardly any effort at all. If we wanted to, say, have a command that runs ``ls
             run_in_terminal(_task)
 
 
-.. note:: ``run_in_terminal(func)`` (imported from
-          ``prompt_toolkit.application``) is the canonical
-          ``prompt_toolkit`` idiom for running code that writes to
-          ``STDOUT`` from a keybinding.  It temporarily hides the
-          prompt, runs your function (which can freely ``print`` or
-          launch subprocesses), then redraws the prompt — including
-          ``$RIGHT_PROMPT`` and ``$BOTTOM_TOOLBAR`` — above the
-          captured output.
-
-          Do **not** use ``event.cli.renderer.erase()`` for this
-          purpose: it resets the renderer's height bookkeeping and
-          ``$BOTTOM_TOOLBAR`` (and sometimes ``$RIGHT_PROMPT``) will
-          disappear until the next keypress.  See
-          `xonsh/xonsh#5084
-          <https://github.com/xonsh/xonsh/issues/5084>`_ for the
-          underlying ``prompt_toolkit`` quirk.
+``run_in_terminal(func)`` (imported from ``prompt_toolkit.application``)
+is the canonical ``prompt_toolkit`` idiom for running code that writes
+to ``STDOUT`` from a keybinding. It temporarily hides the prompt, runs
+your function (which can freely ``print`` or launch subprocesses), then
+redraws the prompt — including ``$RIGHT_PROMPT`` and ``$BOTTOM_TOOLBAR``
+— above the captured output. Do **not** use ``event.cli.renderer.erase()``
+for this purpose: it resets the renderer's height bookkeeping and
+``$BOTTOM_TOOLBAR`` (and sometimes ``$RIGHT_PROMPT``) will disappear
+until the next keypress.
 
 Restrict actions with filters
 -----------------------------
@@ -418,6 +403,40 @@ Now that the condition is defined, we can pass it as a ``filter`` keyword to a k
 With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
 contents of your current directory if there are fewer than 10 items in it.
 Useful? Debatable. Powerful? Yes.
+
+Edit-mode filter
+~~~~~~~~~~~~~~~~
+
+A common use of filters is restricting a binding to a specific editing
+mode — Emacs insert, Vi insert, or Vi navigation. ``prompt_toolkit``
+ships ready-made filters for each; pass them as ``filter`` to
+``bindings.add``:
+
+.. code-block:: python
+
+    from prompt_toolkit.filters import (
+        EmacsInsertMode, ViInsertMode, ViNavigationMode,
+    )
+
+    @events.on_ptk_create
+    def custom_keybindings(bindings, **kw):
+
+        @bindings.add('c-l', filter=EmacsInsertMode())
+        def ls_in_emacs_insert(event):
+            def _task():
+                ls -l
+            run_in_terminal(_task)
+
+        @bindings.add('c-l', filter=ViInsertMode() | ViNavigationMode())
+        def ls_in_any_vi_mode(event):
+            def _task():
+                ls -l
+            run_in_terminal(_task)
+
+The same key (``Ctrl-L``) can be bound to different actions per mode —
+``prompt_toolkit`` picks the binding whose ``filter`` is currently
+true. Combine with custom ``Condition`` filters using ``&``, ``|``, ``~``
+(as in ``ViInsertMode() & lt_ten_files``) for finer-grained rules.
 
 
 Pre-filling the next command
@@ -467,9 +486,11 @@ and place the cursor between the quotes.
 -------------------------------------
 
 Sets a greyed-out suggestion (like auto-suggest from history) for the next prompt.
-The user can accept it by pressing the right arrow key::
+The user can accept it by pressing the right arrow key:
 
-    $XONSH_PROMPT_NEXT_CMD_SUGGESTION = 'git push origin main'
+.. code-block:: xonshcon
+
+    @ $XONSH_PROMPT_NEXT_CMD_SUGGESTION = 'git push origin main'
 
 Unlike ``$XONSH_PROMPT_NEXT_CMD``, this does not pre-fill the input — it only
 shows a suggestion that the user can accept or ignore.
@@ -481,22 +502,28 @@ Virtual Environment in Prompt
 -----------------------------
 
 xonsh obeys the ``$VIRTUAL_ENV_DISABLE_PROMPT`` environment variable
-`as defined by virtualenv <https://virtualenv.pypa.io/en/latest/reference/
-#envvar-VIRTUAL_ENV_DISABLE_PROMPT>`__. If this variable is truthy, xonsh
-will *always* substitute an empty string for ``{env_name}``. Note that unlike
-other shells, ``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately*
-after being set --- it is not necessary to re-activate the environment.
+`as defined by virtualenv <https://virtualenv.pypa.io/en/latest/how-to/usage.html#customize-prompt>`__.
+If this variable is truthy, xonsh will *always* substitute an empty string
+for ``{env_name}``. Note that unlike other shells,
+``$VIRTUAL_ENV_DISABLE_PROMPT`` takes effect *immediately* after being set
+--- it is not necessary to re-activate the environment.
 
 xonsh also allows for an explicit override of the rendering of ``{env_name}``,
 via the ``$VIRTUAL_ENV_PROMPT`` environment variable. If this variable is
-defined and has any value other than ``None``, ``{env_name}`` will *always*
-render as ``str($VIRTUAL_ENV_PROMPT)`` when an environment is activated.
-It will still render as an empty string when no environment is active.
+set to a non-empty value, ``{env_name}`` will *always* render as its value,
+regardless of whether a virtual environment is active. The value is used
+as-is, without the usual ``{env_prefix}`` / ``{env_postfix}`` wrapping.
 ``$VIRTUAL_ENV_PROMPT`` is overridden by ``$VIRTUAL_ENV_DISABLE_PROMPT``.
+
+When neither variable is set, ``{env_name}`` falls back to the active
+environment's name --- determined, in order, from the ``prompt = ...`` field
+in ``<venv>/pyvenv.cfg``, from the venv directory name, or from
+``$CONDA_DEFAULT_ENV``. The detected name is wrapped in ``{env_prefix}`` and
+``{env_postfix}`` (``(`` and ``) `` by default).
 
 For example:
 
-.. code-block:: xonshcon
+.. code-block:: python
 
     @ $PROMPT = '{env_name}@ '
     @ source env/bin/activate.xsh
@@ -505,25 +532,6 @@ For example:
     @ del $VIRTUAL_ENV_PROMPT
     @ del $VIRTUAL_ENV_DISABLE_PROMPT
     (env) @
-
-
-OSC 7 — Working directory reporting
-====================================
-
-Xonsh automatically emits `OSC 7 <https://gitlab.freedesktop.org/terminal-wg/specifications/-/merge_requests/7>`_
-escape sequences on every directory change and at shell startup. This is an
-invisible signal that tells the terminal emulator what the current working
-directory is.
-
-Terminals use it for:
-
-* Opening new tabs/splits in the same directory
-* macOS Terminal.app session restoration after reboot
-* Showing the path in the terminal title bar or tab
-
-This works out of the box on most modern terminals including macOS Terminal.app,
-iTerm2, GNOME Terminal, Windows Terminal, WezTerm, and Kitty. No configuration
-is needed.
 
 
 .. _change_theme:
@@ -558,6 +566,25 @@ To do so, add something similar to your ``.xonshrc``:
    $XONSH_COLOR_STYLE = "mystyle"
 
 You can check ``xonfig colors`` for the token names. The ``base`` style will be used as a fallback for styles you don't set - pick one from ``xonfig styles`` (``default`` is used if omitted).
+
+
+OSC 7 — Working directory reporting
+====================================
+
+Xonsh automatically emits `OSC 7 <https://gitlab.freedesktop.org/terminal-wg/specifications/-/merge_requests/7>`_
+escape sequences on every directory change and at shell startup. This is an
+invisible signal that tells the terminal emulator what the current working
+directory is.
+
+Terminals use it for:
+
+* Opening new tabs/splits in the same directory
+* macOS Terminal.app session restoration after reboot
+* Showing the path in the terminal title bar or tab
+
+This works out of the box on most modern terminals including macOS Terminal.app,
+iTerm2, GNOME Terminal, Windows Terminal, WezTerm, and Kitty. No configuration
+is needed.
 
 
 See also

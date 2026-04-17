@@ -1,4 +1,4 @@
-name: Check PR title conforms to semantic-release
+name: ci-check-pr-title
 
 on:
   # runs on `pull_request_target` events so that commenting on the PR is allowed

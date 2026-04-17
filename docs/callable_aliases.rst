@@ -428,6 +428,46 @@ stream when piped into.  This is the one argument you **must** use explicitly
     HELLO
 
 
+**Binary data — bypassing universal newlines**
+
+``stdin``, ``stdout``, and ``stderr`` are text streams
+(``io.TextIOWrapper``). Reading them applies *universal newlines* to
+incoming bytes: ``\r\n`` and lone ``\r`` are translated to ``\n``. That
+is convenient for text but can corrupts binary data flowing through the
+alias — every CR is silently rewritten.
+
+To pass bytes through unchanged, use the underlying ``.buffer`` on both
+ends:
+
+.. code-block:: python
+
+    @aliases.register
+    def _passthru(args, stdin=None, stdout=None):
+        """Copy stdin to stdout byte-for-byte."""
+        if stdin is None:
+            return
+        for chunk in iter(lambda: stdin.buffer.read(65536), b""):
+            stdout.buffer.write(chunk)
+        stdout.buffer.flush()
+
+.. code-block:: xonshcon
+
+    @ cat /usr/bin/python | passthru > /tmp/copy
+    @ # bytes preserved exactly — diff /usr/bin/python /tmp/copy is empty
+
+This applies symmetrically: ``stdout.write(text)`` goes through the
+text layer (and on Windows translates ``\n`` to ``\r\n``), while
+``stdout.buffer.write(b"...")`` writes raw bytes. Reach for
+``.buffer`` whenever the alias is a passthrough or otherwise
+binary-aware — ``cat``-likes, hashing, compression, image/audio
+filters, ``ssh``-style streaming.
+
+Reading a file directly with ``open(path, "rb")`` is also unaffected:
+the text layer only applies to ``stdin``/``stdout``/``stderr``. So
+``mycat file > out`` (no upstream pipe) is safe; ``something | mycat
+> out`` needs ``stdin.buffer`` to stay byte-clean.
+
+
 Threading
 ---------
 

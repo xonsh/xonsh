@@ -22,6 +22,28 @@ own code. The public entry point for this is :func:`xonsh.main.setup`,
 documented in :mod:`xonsh.main`.
 
 
+Calling ``setup()`` Off the Main Thread
+=======================================
+
+:func:`xonsh.main.setup` is safe to call from a non-main thread. Python
+disallows installing signal handlers from worker threads, so xonsh skips
+that step when it detects it is not on the main thread. Historically this
+path raised ``ValueError: signal only works in main thread`` during load
+(see `xonsh#3689 <https://github.com/xonsh/xonsh/issues/3689>`_).
+
+Consequences for embedders:
+
+* ``setup()`` completes normally from any thread; the execer, session,
+  environment and aliases work as expected.
+* The :func:`atexit` history-flush registration still runs, so history is
+  flushed on normal interpreter shutdown.
+* Termination-signal handlers that would flush history on ``SIGTERM``,
+  ``SIGHUP``, ``SIGQUIT``, ``SIGTSTP`` etc. are **not** installed in this
+  case — the host process owns signals in embedded scenarios. If you need
+  signal-driven flushes, call ``setup()`` once on the main thread at
+  startup or install your own handlers there.
+
+
 Controlling Terminal Handshake for Embedded Interactive Shells
 ==============================================================
 
@@ -59,11 +81,10 @@ How to invoke it from embedded code
 -----------------------------------
 
 The helper currently lives in ``xonsh.main`` as a module-private
-function: ``_setup_controlling_terminal``. It is private by
-convention (leading underscore) but the implementation is stable and
-idempotent. A future release is expected to expose a public alias;
-until then, calling the private function directly is the supported
-path.
+function: ``_setup_controlling_terminal``. Its signature and name may
+change in future releases, so wrap the call in ``try`` / ``except`` —
+or reach out to the xonsh maintainers if you need a stable public
+entry point for your embedding scenario.
 
 Call it **before** you start your interactive shell loop — ideally as
 early in your program's startup as possible, so that any xonshrc or
@@ -73,13 +94,16 @@ xontrib code your embedder runs already has foreground ownership:
 
     # embedded_launcher.py
     from xonsh.main import setup
-    from xonsh.main import _setup_controlling_terminal
 
     # Acquire foreground of controlling TTY (idempotent, safe to
     # call multiple times — only the first call does real work).
     # No-op on Windows, in non-TTY contexts (pytest, piped input,
     # redirected stderr), and when XONSH_NO_FG_TAKEOVER=1 is set.
-    _setup_controlling_terminal()
+    try:
+        from xonsh.main import _setup_controlling_terminal
+        _setup_controlling_terminal()
+    except Exception:
+        pass
 
     # Your existing xonsh setup stays unchanged.
     setup(

@@ -1,9 +1,11 @@
 """Tests the xonsh.procs.specs"""
 
+import gc
 import itertools
 import os
 import signal
 import sys
+import warnings
 from subprocess import CalledProcessError, Popen
 
 import pytest
@@ -46,34 +48,40 @@ def test_cmds_to_specs_thread_subproc(xession):
     env = xession.env
     cmds = [["pwd"]]
 
+    def _check_cls(cmds, expected_cls):
+        # `cmds_to_specs` opens pipe wrappers for captured specs that this
+        # test never executes; close them so they don't leak as
+        # `ResourceWarning: unclosed file`.
+        specs = cmds_to_specs(cmds, captured="hiddenobject")
+        try:
+            assert specs[0].cls is expected_cls
+        finally:
+            for s in specs:
+                s.close()
+
     # XONSH_CAPTURE_ALWAYS=False should disable interactive threaded subprocs
     env["XONSH_CAPTURE_ALWAYS"] = False
     env["THREAD_SUBPROCS"] = True
-    specs = cmds_to_specs(cmds, captured="hiddenobject")
-    assert specs[0].cls is Popen
+    _check_cls(cmds, Popen)
 
     # Now for the other situations
     env["XONSH_CAPTURE_ALWAYS"] = True
 
     # First check that threadable subprocs become threadable
     env["THREAD_SUBPROCS"] = True
-    specs = cmds_to_specs(cmds, captured="hiddenobject")
-    assert specs[0].cls is PopenThread
+    _check_cls(cmds, PopenThread)
     # turn off threading and check we use Popen
     env["THREAD_SUBPROCS"] = False
-    specs = cmds_to_specs(cmds, captured="hiddenobject")
-    assert specs[0].cls is Popen
+    _check_cls(cmds, Popen)
 
     # now check the threadbility of callable aliases
     cmds = [[lambda: "Keras Selyrian"]]
     # check that threadable alias become threadable
     env["THREAD_SUBPROCS"] = True
-    specs = cmds_to_specs(cmds, captured="hiddenobject")
-    assert specs[0].cls is ProcProxyThread
+    _check_cls(cmds, ProcProxyThread)
     # turn off threading and check we use ProcProxy
     env["THREAD_SUBPROCS"] = False
-    specs = cmds_to_specs(cmds, captured="hiddenobject")
-    assert specs[0].cls is ProcProxy
+    _check_cls(cmds, ProcProxy)
 
 
 @pytest.mark.parametrize("thread_subprocs", [True, False])
@@ -84,8 +92,59 @@ def test_cmds_to_specs_capture_stdout_not_stderr(thread_subprocs, xonsh_session)
     env["THREAD_SUBPROCS"] = thread_subprocs
 
     specs = cmds_to_specs(cmds, captured="stdout")
-    assert specs[0].stdout is not None
-    assert specs[0].stderr is None
+    try:
+        assert specs[0].stdout is not None
+        assert specs[0].stderr is None
+    finally:
+        # The spec is never executed here; release its pipe wrappers so they
+        # don't surface as `ResourceWarning: unclosed file` at GC time.
+        for s in specs:
+            s.close()
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("captured", ["stdout", "object", "hiddenobject"])
+def test_subproc_spec_close_releases_pipe_wrappers(captured, xession):
+    """Regression: SubprocSpec.close() must release every pipe wrapper.
+
+    `cmds_to_specs` opens pipe wrappers via `PipeChannel.open_writer/
+    open_reader` (with `closefd=False`) for any captured spec. When the
+    spec is never executed, GC reaping the wrappers triggers
+    `ResourceWarning: unclosed file` (delivered via sys.unraisablehook,
+    invisible to ordinary warning filters). `SubprocSpec.close()` must
+    drop them deterministically.
+    """
+    xession.env["THREAD_SUBPROCS"] = True
+    if captured == "hiddenobject":
+        xession.env["XONSH_CAPTURE_ALWAYS"] = True
+
+    # Reap any garbage left over from earlier tests so its ResourceWarnings
+    # don't leak into our tracking window.
+    gc.collect()
+
+    unraisable = []
+    orig_hook = sys.unraisablehook
+    sys.unraisablehook = lambda args: unraisable.append(args)
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", ResourceWarning)
+
+            specs = cmds_to_specs([["pwd"]], captured=captured)
+            assert specs[0].pipe_channels, "test premise: spec must own pipes"
+            for s in specs:
+                s.close()
+            del specs
+            gc.collect()
+    finally:
+        sys.unraisablehook = orig_hook
+
+    leaks = [
+        u
+        for u in unraisable
+        if isinstance(u.exc_value, ResourceWarning)
+        and "unclosed file" in str(u.exc_value)
+    ]
+    assert not leaks, f"pipe wrappers leaked: {[str(u.exc_value) for u in leaks]}"
 
 
 @skip_if_on_windows
@@ -295,6 +354,45 @@ def test_run_subproc_background(captured, exp_is_none, xonsh_session):
     cmds = (["echo", "hello"], "&")
     return_val = run_subproc(cmds, captured)
     assert (return_val is None) == exp_is_none
+
+
+@pytest.mark.timeout(15)
+@pytest.mark.parametrize(
+    "wrap_boolop",
+    [False, True],
+    ids=["helper_only", "with_boolop_wrap"],
+)
+def test_subproc_uncaptured_background_does_not_block(wrap_boolop, xonsh_session):
+    # Background jobs must return immediately even when
+    # $XONSH_SUBPROC_RAISE_ERROR=True. The error-check helpers used
+    # to read the blocking `returncode` property on the still-running
+    # pipeline, stalling the shell until the child exited.
+    import time as _time
+
+    from xonsh.built_ins import XSH, subproc_check_boolop, subproc_uncaptured
+
+    xonsh_session.env["XONSH_INTERACTIVE"] = False
+    xonsh_session.env["XONSH_SUBPROC_RAISE_ERROR"] = True
+
+    long_running = [sys.executable, "-c", "import time; time.sleep(30)"]
+    cp = None
+    try:
+        t0 = _time.monotonic()
+        result = subproc_uncaptured(long_running, "&")
+        if wrap_boolop:
+            result = subproc_check_boolop(result)
+        elapsed = _time.monotonic() - t0
+        assert result is None
+        assert elapsed < 5, f"background subproc helper blocked for {elapsed:.1f}s"
+        cp = XSH.lastcmd
+    finally:
+        proc = getattr(cp, "proc", None) if cp is not None else None
+        if proc is not None and proc.poll() is None:
+            proc.kill()
+            try:
+                proc.wait(timeout=5)
+            except Exception:
+                pass
 
 
 def test_spec_decorator_alias_alone(xession):

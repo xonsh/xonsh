@@ -26,6 +26,7 @@ from xonsh.built_ins import (
     regexmatchsearch,
     regexsearch,
     reglob,
+    resetting_signal_handle,
     superhelper,
 )
 from xonsh.environ import Env
@@ -547,3 +548,23 @@ def test_xonshpathliteral_contextmanager(tmp_path):
             os.chdir(start_cwd)
         except Exception:
             pass
+
+
+def test_resetting_signal_handle_off_main_thread_is_noop():
+    """Regression for xonsh#3689: setup() called from a non-main thread must
+    not crash with ValueError('signal only works in main thread')."""
+    import signal
+    import threading
+
+    errors: list[BaseException] = []
+
+    def worker():
+        try:
+            resetting_signal_handle(signal.SIGTERM, lambda s, f: None)
+        except BaseException as exc:
+            errors.append(exc)
+
+    t = threading.Thread(target=worker)
+    t.start()
+    t.join()
+    assert errors == []

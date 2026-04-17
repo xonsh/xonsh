@@ -98,6 +98,7 @@ full = [
     "setproctitle; platform_system=='Windows'",
     "gnureadline; platform_system=='Darwin'",
     "ujson",
+    "click",
 ]
 bestshell = [
     "prompt-toolkit>=3.0.29",
@@ -139,6 +140,7 @@ doc = [
     "sphinx-autobuild",
     "sphinx-prompt",
     "sphinx-reredirects",
+    "sphinx-sitemap",
 ]
 
 

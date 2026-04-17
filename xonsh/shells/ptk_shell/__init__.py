@@ -28,9 +28,9 @@ from prompt_toolkit.styles.pygments import pygments_token_to_classname
 from xonsh.built_ins import XSH
 from xonsh.events import events
 from xonsh.lib.lazyimps import pyghooks, pygments, winutils
-from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS
+from xonsh.platform import HAS_PYGMENTS, ON_POSIX, ON_WINDOWS, win_ansi_support
 from xonsh.pygments_cache import get_all_styles
-from xonsh.shell import transform_command
+from xonsh.shell import deindent, transform_command
 from xonsh.shells.base_shell import BaseShell
 from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.shells.ptk_shell.formatter import PTKPromptFormatter
@@ -415,9 +415,14 @@ class PromptToolkitShell(BaseShell):
         # Enable xterm modifyOtherKeys mode so the terminal sends
         # distinct escape sequences for Shift+Enter, Ctrl+Enter, etc.
         # Mode 2 = all keys except those with well-known behavior.
+        # Skip on legacy Windows conhost (pre-Win10 build 14393) which
+        # does not interpret VT/ANSI and would render the bytes verbatim
+        # around every prompt — see issue #6325.
         output = self.prompter.app.output
-        output.write_raw("\x1b[>4;1m")
-        output.flush()
+        emit_modify_other_keys = not ON_WINDOWS or win_ansi_support()
+        if emit_modify_other_keys:
+            output.write_raw("\x1b[>4;1m")
+            output.flush()
         try:
             while True:
                 try:
@@ -433,9 +438,10 @@ class PromptToolkitShell(BaseShell):
                         continue
                     raise
         finally:
-            # Disable modifyOtherKeys to avoid affecting child processes.
-            output.write_raw("\x1b[>4;0m")
-            output.flush()
+            if emit_modify_other_keys:
+                # Disable modifyOtherKeys to avoid affecting child processes.
+                output.write_raw("\x1b[>4;0m")
+                output.flush()
         events.on_post_prompt.fire()
         return line
 
@@ -451,7 +457,11 @@ class PromptToolkitShell(BaseShell):
         src = transform_command(src)
         try:
             code = self.execer.compile(
-                src, mode="single", glbs=self.ctx, locs=None, compile_empty_tree=False
+                deindent(src),
+                mode="single",
+                glbs=self.ctx,
+                locs=None,
+                compile_empty_tree=False,
             )
             self.reset_buffer()
         except Exception:  # pylint: disable=broad-except
@@ -578,6 +588,9 @@ class PromptToolkitShell(BaseShell):
                 return prefixtoks + toks + suffixtoks
             else:
                 return toks
+        # Reserve the last column for a trailing space so the continuation
+        # aligns with the parent prompt, which is assumed to end with one.
+        width -= 1
         toks = list(basetoks) * (width // baselen)
         n = width % baselen
         count = 0
@@ -593,6 +606,7 @@ class PromptToolkitShell(BaseShell):
             count = newcount
             if n <= count:
                 break
+        toks.append(("", " "))
         if is_affix:
             return prefixtoks + toks + suffixtoks
         else:

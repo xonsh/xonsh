@@ -87,6 +87,13 @@ def emit_osc7(**kwargs) -> None:
     stdout = sys.__stdout__
     if stdout is None or not hasattr(stdout, "isatty") or not stdout.isatty():
         return
+    # On Windows the legacy conhost (pre-Win10 build 14393) does not
+    # interpret VT/ANSI sequences, so emitting OSC 7 there leaks raw bytes
+    # to the screen (see issue #6325). Skip if no ANSI support detected.
+    from xonsh.platform import ON_WINDOWS, win_ansi_support
+
+    if ON_WINDOWS and not win_ansi_support():
+        return
     import socket
     import urllib.parse
 

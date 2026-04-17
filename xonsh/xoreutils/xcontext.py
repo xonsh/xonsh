@@ -223,7 +223,7 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     # Windows < 3.12), and xonsh's version is the recommended replacement.
     path_resolved = {}
     path_bad: dict[str, bool] = {}
-    for cmd in ("xonsh", "python", "pip", "pytest"):
+    for cmd in ("xonsh", "python", "pip", "pytest", "uv"):
         path, bad = _resolve_path(locate_executable(cmd), resolve)
         path_resolved[cmd] = path
         path_bad[cmd] = bad
@@ -264,6 +264,7 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
         "pip": pip_color,
         "xpip": pip_color,
         "pytest": YELLOW,
+        "uv": YELLOW,
     }
 
     def _format_row(name, value, ver="", bad=False):
@@ -302,6 +303,8 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     cmds = ["xonsh", "python", "pip"]
     if path_resolved["pytest"]:
         cmds.append("pytest")
+    if path_resolved["uv"]:
+        cmds.append("uv")
     for cmd in cmds:
         path = path_resolved[cmd]
         bad = path_bad[cmd]

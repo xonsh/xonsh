@@ -539,6 +539,28 @@ def test_get_logical_line(src, idx, exp_line, exp_n, xession):
     assert exp_n == n
 
 
+@pytest.mark.parametrize(
+    "src, idx, exp_line, exp_n",
+    [
+        # A ``\`` inside a comment is NOT a line continuation -- the
+        # next physical line stands on its own. Regression for #6294
+        # follow-up where a comment ending in ``\`` would swallow the
+        # subproc line below it and produce ``no further code``.
+        ("# \\\necho 1", 1, "echo 1", 1),
+        ("if 1: # \\\n  echo 1", 1, "  echo 1", 1),
+        ("a = 1 # \\\necho 1", 1, "echo 1", 1),
+        # A ``#`` inside a string must not be confused with a comment,
+        # so the real continuation still fires.
+        ('x = "# in str" + \\\n    "y"', 0, 'x = "# in str" +     "y"', 2),
+    ],
+)
+def test_get_logical_line_comment_continuation(src, idx, exp_line, exp_n, xession):
+    lines = src.splitlines()
+    line, n, start = get_logical_line(lines, idx)
+    assert exp_line == line
+    assert exp_n == n
+
+
 @pytest.mark.parametrize("src, idx, exp_line, exp_n", LOGICAL_LINE_CASES)
 def test_replace_logical_line(src, idx, exp_line, exp_n, xession):
     lines = src.splitlines()

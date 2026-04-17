@@ -4,31 +4,25 @@ Platform-specific tips and tricks
 Linux
 ------
 
-Possible conflicts with Bash
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Colored man pages
+^^^^^^^^^^^^^^^^^
 
-Depending on how your installation of Bash is configured, Xonsh may show
-warnings when loading certain shell modules. If you see errors similar to this
-when launching Xonsh:
+You can add `man page color support`_ using ``less`` environment variables —
+these work on any POSIX system with ``less`` as the pager:
 
-.. code-block:: console
+.. code-block:: xonsh
 
-    bash: module: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_module'
-    bash: scl: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_scl'
-    bash: module: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_module'
-    bash: scl: line 1: syntax error: unexpected end of file
-    bash: error importing function definition for 'BASH_FUNC_scl'
+    # format is '\E[<brightness>;<colour>m'
+    $LESS_TERMCAP_mb = "\033[01;31m"     # begin blinking
+    $LESS_TERMCAP_md = "\033[01;31m"     # begin bold
+    $LESS_TERMCAP_me = "\033[0m"         # end mode
+    $LESS_TERMCAP_so = "\033[01;44;36m"  # begin standout-mode
+    $LESS_TERMCAP_se = "\033[0m"         # end standout-mode
+    $LESS_TERMCAP_us = "\033[00;36m"     # begin underline
+    $LESS_TERMCAP_ue = "\033[0m"         # end underline
 
-...You can correct the problem by unsetting the modules, by adding the following
-lines to your ``~/.bashrc file``:
-
-.. code-block:: console
-
-    $ unset module
-    $ unset scl
+.. _man page color support:
+    https://wiki.archlinux.org/index.php/Color_output_in_console#less
 
 .. _fix_libgcc_core_dump:
 
@@ -71,25 +65,26 @@ inherited the broken environment. Fix it at the OS level (``~/.pam_environment``
 ``Environment=`` directive). As a temporary workaround, ``PYTHONUTF8=1``
 forces Python into UTF-8 mode regardless of locale.
 
-Colored man pages
-^^^^^^^^^^^^^^^^^
+Bash module warnings on startup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can add `man page color support`_ using ``less`` environment variables —
-these work on any POSIX system with ``less`` as the pager:
+Depending on how your installation of Bash is configured, xonsh may show
+warnings when loading certain shell modules. If you see errors similar to
+this when launching xonsh:
 
-.. code-block:: xonsh
+.. code-block:: console
 
-    # format is '\E[<brightness>;<colour>m'
-    $LESS_TERMCAP_mb = "\033[01;31m"     # begin blinking
-    $LESS_TERMCAP_md = "\033[01;31m"     # begin bold
-    $LESS_TERMCAP_me = "\033[0m"         # end mode
-    $LESS_TERMCAP_so = "\033[01;44;36m"  # begin standout-mode
-    $LESS_TERMCAP_se = "\033[0m"         # end standout-mode
-    $LESS_TERMCAP_us = "\033[00;36m"     # begin underline
-    $LESS_TERMCAP_ue = "\033[0m"         # end underline
+    bash: module: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for 'BASH_FUNC_module'
+    bash: scl: line 1: syntax error: unexpected end of file
+    bash: error importing function definition for 'BASH_FUNC_scl'
 
-.. _man page color support:
-    https://wiki.archlinux.org/index.php/Color_output_in_console#less
+Unset the affected functions in your ``~/.bashrc``:
+
+.. code-block:: console
+
+    $ unset module
+    $ unset scl
 
 macOS
 -----
@@ -153,41 +148,53 @@ After this, ``ls``, ``grep``, ``sed``, etc. will be the GNU versions.
 Tab completion
 ^^^^^^^^^^^^^^
 
-First of all take a look `xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_ for a modern approach.
+First of all, take a look at
+`xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_
+for a modern approach.
 
-Xonsh has support for using bash completion files on the shell, to use it you need to install
-the bash-completion package.
-The regular bash-completion package uses v1 which mostly works, but we recommend using bash-completion v2`* <https://github.com/xonsh/xonsh/issues/2111>`_.
+Xonsh has support for using bash completion files on the shell. To use it
+you need to install the bash-completion package. The regular bash-completion
+package uses v1 which mostly works, but we recommend using
+`bash-completion v2 <https://github.com/xonsh/xonsh/issues/2111>`_.
 
-Bash completion comes from <https://github.com/scop/bash-completion> which suggests you use a package manager to install it, this manager will also install a new version of bash without affecting  /bin/bash. Xonsh also needs to be told where the bash shell file that builds the completions is, this has to be added to $BASH_COMPLETIONS. The package includes completions for many Unix commands.
+Bash completion comes from the
+`bash-completion project <https://github.com/scop/bash-completion>`_ which
+suggests you use a package manager to install it. The package manager will
+also install a new version of bash without affecting ``/bin/bash``. Xonsh
+also needs to be told where the bash completion file is — add it to
+``$BASH_COMPLETIONS``. The package includes completions for many Unix
+commands.
 
-Common packaging systems for macOS include
+Common packaging systems for macOS:
 
- -  Homebrew where the bash-completion2 package needs to be installed.
+- **Homebrew** — install the ``bash-completion2`` package:
 
-    .. code-block:: console
+  .. code-block:: xonshcon
 
-       @ brew install bash-completion2
+     @ brew install bash-completion2
 
-    This will install the bash_completion file in `/usr/local/share/bash-completion/bash_completion` which is in the current xonsh code and so should just work.
+  This will install the completion file to
+  ``/usr/local/share/bash-completion/bash_completion`` which is in the
+  default xonsh search path and should just work.
 
- - `MacPorts <https://trac.macports.org/wiki/howto/bash-completion>`_ where the bash-completion port needs to be installed.
+- **MacPorts** — install the ``bash-completion`` port
+  (`docs <https://trac.macports.org/wiki/howto/bash-completion>`_):
 
-   .. code-block:: console
+  .. code-block:: xonshcon
 
-    @ sudo port install bash-completion
+     @ sudo port install bash-completion
 
+  This includes a completion file that needs to be added to the environment:
 
+  .. code-block:: xonshcon
 
-   This includes a bash_completion file that needs to be added to the environment.
+     @ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
 
-   .. code-block:: console
+.. note::
 
-    @ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
-
-Note that the `bash completion project page <https://github.com/scop/bash-completion>`_ gives the script
-to be called as in ``.../profile.d/bash_completion.sh`` which will the call the script mentioned above
-and one in $XDG_CONFIG_HOME .
+   The `bash-completion project page <https://github.com/scop/bash-completion>`_
+   refers to ``.../profile.d/bash_completion.sh`` which in turn sources the
+   main completion script mentioned above and one in ``$XDG_CONFIG_HOME``.
 
 
 Windows
@@ -256,7 +263,7 @@ In Windows, there's a context menu support for opening a folder in a shell, such
 
 Usually it involves modifying registry to get it, but `a contributed script <https://gist.github.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055>`_ can be used for automating chores for you.
 
- .. code-block:: xonshcon
+.. code-block:: xonshcon
 
     # Open xonsh and copy-paste the following line:
     @ exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_register_right_click()
@@ -369,6 +376,32 @@ Although not recommended, to restore the behavior found in the
 Add that to ``~/.xonshrc`` to enable that as the default behavior.
 
 
+Updating xonsh
+^^^^^^^^^^^^^^
+
+On Windows the running ``xonsh.exe`` is locked by the OS, so pip cannot
+replace it from inside xonsh itself. Use
+:ref:`xcontext <aliases-xcontext>` to find the interpreter path, exit
+the shell, then run pip from another terminal (``cmd``, PowerShell, or
+Windows Terminal):
+
+.. code-block:: xonshcon
+
+   @ xcontext            # note the "xpython" path
+   @ exit                # release the lock on xonsh.exe
+
+.. code-block:: console
+
+   > <xpython> -m pip install --upgrade xonsh
+
+If you installed xonsh via the
+`WinGet installer <https://github.com/xonsh/xonsh-winget/releases>`_,
+download the latest installer and run it — it will upgrade in place.
+
+See also :ref:`Updating xonsh <updating_xonsh>` in the installation guide
+for more details.
+
+
 Commands Cache
 ^^^^^^^^^^^^^^
 
@@ -416,4 +449,4 @@ and click ``Edit currently selected action``.
 See Also
 -----------
 
- - `Bash to Xonsh <bash_to_xsh.html>`_
+- `Bash to Xonsh <bash_to_xsh.html>`_

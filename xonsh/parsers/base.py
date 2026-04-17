@@ -724,7 +724,18 @@ class BaseParser:
             self._yacc_loader.ready.wait()
             if self._yacc_loader.error is not None:
                 raise self._yacc_loader.error
-        tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
+        try:
+            tree = self.parser.parse(input=s, lexer=self.lexer, debug=debug_level)
+        except SyntaxError:
+            # PLY catches SyntaxError raised by action handlers as a
+            # parse-error signal, then enters error recovery and may
+            # die later on a structurally-related token (e.g. dedent
+            # after the malformed argument list).  When we set a
+            # specific user-friendly message via `_set_error`, surface
+            # it instead of whatever recovery eventually choked on.
+            if self._error is not None:
+                self._parse_error(self._error[0], self._error[1])
+            raise
         if self._error is not None:
             self._parse_error(self._error[0], self._error[1])
         if tree is not None:

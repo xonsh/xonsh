@@ -123,8 +123,8 @@ def histcontrol_csv_to_set(x):
 
         warnings.warn(
             "'erasedups' in $HISTCONTROL is deprecated. "
-            "Use the 'history erasedups' command instead.",
-            FutureWarning,
+            "Remove it and use the 'history erasedups' command.",
+            DeprecationWarning,
             stacklevel=2,
         )
     return result
@@ -1035,8 +1035,14 @@ def _commands_cache_read_dir_once_default():
     return []
 
 
-class GeneralSetting(Xettings):
-    """General"""
+class SystemSetting(Xettings):
+    """System Environment Variables
+
+    Common, well-known variables inherited from the surrounding OS / shell
+    (POSIX-standard and XDG Base Directory Specification). They are not
+    xonsh-specific — xonsh only provides sensible defaults and lets scripts
+    read/write them the same way any other shell would.
+    """
 
     HOSTNAME = Var.with_default(
         default=default_value(lambda env: platform.node()),
@@ -1113,12 +1119,6 @@ class GeneralSetting(Xettings):
         is_configurable=False,
     )
 
-    UPDATE_OS_ENVIRON = Var.with_default(
-        False,
-        "If True ``os_environ`` will always be updated "
-        "when the xonsh environment changes. The environment can be reset to "
-        "the default value by calling ``__xonsh__.env.undo_replace_env()``",
-    )
     XDG_CONFIG_HOME = Var.with_default(
         os.path.expanduser(os.path.join("~", ".config")),
         "Open desktop standard configuration home dir. This is the same "
@@ -1144,6 +1144,17 @@ class GeneralSetting(Xettings):
         xdg_data_dirs,
         "A list of directories where system level data files are stored.",
         type_str="env_path",
+    )
+
+
+class GeneralSetting(Xettings):
+    """General"""
+
+    UPDATE_OS_ENVIRON = Var.with_default(
+        False,
+        "If True ``os_environ`` will always be updated "
+        "when the xonsh environment changes. The environment can be reset to "
+        "the default value by calling ``__xonsh__.env.undo_replace_env()``",
     )
     XONSH_CONFIG_DIR = Var.with_default(
         xonsh_config_dir,
@@ -1387,18 +1398,14 @@ class SubprocessSetting(Xettings):
         "the trace output yourself — it is invoked instead of the default printer. "
         "``specs`` is the list of :class:`SubprocSpec` objects about to be executed; "
         "``CommandPipeline`` is not yet built at this point.",
-        doc_default="""\
-    By default it just prints ``cmds`` like below.
-
-    .. code-block:: python
-
-        def _tracer(cmds, captured, specs):
-            # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,
-            # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.
-            print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)
-
-        $XONSH_SUBPROC_TRACE = _tracer
-    """,
+        doc_default="By default it just prints ``cmds`` like below.\n\n"
+        ".. code-block:: python\n\n"
+        "    def _tracer(cmds, captured, specs):\n"
+        "        # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,\n"
+        "        # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.\n"
+        '        print(f"TRACE SUBPROC: {cmds}, captured={captured}", file=sys.stderr)\n'
+        "\n"
+        "    $XONSH_SUBPROC_TRACE = _tracer",
     )
 
 
@@ -1608,15 +1615,10 @@ class XontribSetting(Xettings):
     XONTRIBS_AUTOLOAD_DISABLED = Var.with_default(
         default=False,
         type_str="bool",
-        doc="""\
-    Controls auto-loading behaviour of xontrib packages at the startup.
-
-    * Set this to ``True`` to disable autoloading completely.
-    * Setting this to a list of xontrib names will block loading those specifically.
-    """,
-        doc_default="""\
-    Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.
-    """,
+        doc="Controls auto-loading behaviour of xontrib packages at the startup.\n\n"
+        "* Set this to ``True`` to disable autoloading completely.\n"
+        "* Setting this to a list of xontrib names will block loading those specifically.",
+        doc_default="Xontribs with ``xonsh.xontrib`` entrypoint will be loaded automatically by default.",
     )
 
 
@@ -2104,18 +2106,16 @@ class AutoCompletionSetting(Xettings):
     """Tab-completion behavior."""
 
     ALIAS_COMPLETIONS_OPTIONS_BY_DEFAULT = Var.with_default(
-        doc="""\
-If True, :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions
-will show options (e.g. -h, ...) without requesting explicitly with option prefix (e.g. '-').""",
+        doc="If True, :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions "
+        "will show options (e.g. ``--help``) without requesting explicitly with option prefix ``-``.",
         default=False,
     )
     ALIAS_COMPLETIONS_OPTIONS_LONGEST = Var.with_default(
-        doc="""\
-Whether to show all options or just the longest for
-the :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions.
-For example, with ``-h``, ``--help`` both denoting ``help`` action.
-If True, then only ``--help`` is shown.
-This is to reduce the noise in generated completions.""",
+        doc="Whether to show all options or just the longest for "
+        "the :py:class:`xonsh.completers.argparser.ArgparseCompleter` based completions. "
+        "For example, with ``-h``, ``--help`` both denoting ``help`` action. "
+        "If True, then only ``--help`` is shown. "
+        "This is to reduce the noise in generated completions.",
         default=False,
     )
     CMD_COMPLETIONS_SHOW_DESC = Var.with_default(
@@ -2301,14 +2301,22 @@ class WindowsSetting(Xettings):
     )
 
 
-class DeprecatedSetting(PromptSetting):  # sub-classing -> sub-group
+class DeprecatedSetting(Xettings):  # sub-classing -> sub-group
     """Deprecated settings."""
 
     AUTO_SUGGEST = PTKSetting.XONSH_PROMPT_AUTO_SUGGEST.set_attrs(
-        {"sync": "XONSH_PROMPT_AUTO_SUGGEST", "deprecated": True}
+        {
+            "sync": "XONSH_PROMPT_AUTO_SUGGEST",
+            "deprecated": True,
+            "doc": "Deprecated. Use XONSH_PROMPT_AUTO_SUGGEST.",
+        }
     )
     RAISE_SUBPROC_ERROR = SubprocessSetting.XONSH_SUBPROC_CMD_RAISE_ERROR.set_attrs(
-        {"sync": "XONSH_SUBPROC_CMD_RAISE_ERROR", "deprecated": True}
+        {
+            "sync": "XONSH_SUBPROC_CMD_RAISE_ERROR",
+            "deprecated": True,
+            "doc": "Deprecated. Use XONSH_SUBPROC_CMD_RAISE_ERROR.",
+        }
     )
 
 

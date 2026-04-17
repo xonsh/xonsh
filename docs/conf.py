@@ -66,11 +66,13 @@ extensions = [
     "sphinx.ext.autosummary",
     "numpydoc",
     "extensions.cmdhelp",
+    "extensions.softwaresourcecode",
     "runthis.sphinxext",
     "extensions.jinja_rst_ext",
     "myst_parser",  # *.md - https://myst-parser.readthedocs.io/
     "sphinx_prompt",
     "sphinx_reredirects",
+    "sphinx_sitemap",
 ]
 
 redirects = {
@@ -171,6 +173,13 @@ modindex_common_prefix = ["xonsh."]
 
 
 # -- Options for HTML output ---------------------------------------------------
+
+# Canonical site URL — required by sphinx_sitemap to emit absolute URLs
+# in sitemap.xml, and used by Sphinx itself for <link rel="canonical">.
+html_baseurl = "https://xon.sh/"
+# Pages are served at the site root (https://xon.sh/<page>.html), not under
+# a language/version prefix, so drop sphinx_sitemap's default {lang}/{version}/.
+sitemap_url_scheme = "{link}"
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.

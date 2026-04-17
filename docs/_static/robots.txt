@@ -2,3 +2,5 @@ User-agent: *
 Disallow: /dev/
 Disallow: /docs-ahundt-sphinx
 Disallow: /linux.html
+
+Sitemap: https://xon.sh/sitemap.xml

@@ -836,89 +836,64 @@ examples.
 .. note:: The target of the redirection should be separated by a space,
           otherwise xonsh will raise a SyntaxError.
 
-Redirecting ``stdout``. All of the following examples will execute ``cmd`` and write its regular
-output (stdout) to a file called ``output.txt``, creating it if it does not
-exist:
+Redirecting ``stdout``. The operators ``>``, ``out>``, ``o>``, and ``1>`` (POSIX) all
+execute ``cmd`` and write its regular output (stdout) to a file, creating it if it does
+not exist:
 
 .. code-block:: xonshcon
 
     @ cmd > output.txt
-    @ cmd out> output.txt
-    @ cmd o> output.txt
-    @ cmd 1> output.txt # included for POSIX compatibility
 
 These can be made to append to ``output.txt`` instead of overwriting its contents
 by replacing ``>`` with ``>>`` (note that ``>>`` will still create the file if it
 does not exist).
 
-Redirecting ``stderr``. All of the following examples will execute ``cmd`` and write its error
-output (stderr) to a file called ``errors.txt``, creating it if it does not
-exist:
+Redirecting ``stderr``. The operators ``err>``, ``e>``, and ``2>`` (POSIX)
+all execute ``cmd`` and write its error output (stderr) to a file, creating it if it does
+not exist:
 
 .. code-block:: xonshcon
 
     @ cmd err> errors.txt
-    @ cmd e> errors.txt
-    @ cmd 2> errors.txt # included for POSIX compatibility
 
 As above, replacing ``>`` with ``>>`` will cause the error output to be
 appended to ``errors.txt``, rather than replacing its contents.
 
-Combining streams is possible to send all of ``cmd``'s output (both regular output and
-error output) to the same location.  All of the following examples accomplish
-that task:
+Combining streams. The operators ``all>``, ``a>``, and ``&>`` (POSIX) all
+send both regular output and error output to the same location:
 
 .. code-block:: xonshcon
 
     @ cmd all> combined.txt
-    @ cmd a> combined.txt
-    @ cmd &> combined.txt # included for POSIX compatibility
 
-It is also possible to explicitly merge stderr into stdout so that error
-messages are reported to the same location as regular output.  You can do this
-with the following syntax:
+Merging stderr into stdout. The operators ``err>out``, ``err>o``, ``e>out``, ``e>o``, and
+``2>&1`` (POSIX) all explicitly merge stderr into stdout so that error
+messages are reported to the same location as regular output:
 
 .. code-block:: xonshcon
 
     @ cmd err>out
-    @ cmd err>o
-    @ cmd e>out
-    @ cmd e>o
-    @ cmd 2>&1  # included for POSIX compatibility
-
-This merge can be combined with other redirections, including pipes (see the
-section on `Pipes`_ above):
-
-.. code-block:: xonshcon
-
     @ cmd err>out | cmd2
-    @ cmd e>o > combined.txt
 
-It is worth noting that this last example is equivalent to: ``cmd a> combined.txt``
 
-Similarly, you can also send stdout to stderr with the following syntax:
+Merging stdout into stderr. Similarly, the operators ``out>err``, ``out>e``, ``o>err``,
+``o>e``, and ``1>&2`` (POSIX) all send stdout to stderr:
 
 .. code-block:: xonshcon
 
     @ cmd out>err
-    @ cmd out>e
-    @ cmd o>err
-    @ cmd o>e
-    @ cmd 1>&2  # included for POSIX compatibility
 
-Routing streams into a pipe. ``a>p`` and ``e>p`` both add stderr to the
-following ``|`` pipe. The pipe still carries stdout as usual, unless an
-explicit ``o> file`` diverts stdout elsewhere — which makes ``e>p`` useful
-for pattern: stdout to a file, stderr into the
-pipe. Both operators require a following pipe.
+Routing streams into a pipe. The operators ``a>p`` (``all>p``) and ``e>p`` (``err>p``)
+add stderr to the following ``|`` pipe. The pipe still carries stdout as
+usual, unless an explicit ``o> file`` diverts stdout elsewhere — which makes ``e>p``
+useful for the pattern of sending stdout to a file while stderr flows into the pipe.
+These operators require a following pipe.
 
 .. code-block:: xonshcon
 
     @ cmd a>p | cmd2                     # stdout + stderr into the pipe
     @ cmd e>p | grep warning             # same — pipe carries both streams
     @ cmd o> out.txt e>p | grep warning  # stdout to file, stderr into the pipe
-    @ cmd all>p | cmd2                   # aliases: all>p, err>p, 2>p
-    @ cmd err>p | cmd2
 
 Redirecting ``stdin`` is also possible to have a command read its input from a file, rather
 than from ``stdin``.  The following examples demonstrate two ways to accomplish this:
@@ -1255,6 +1230,10 @@ Or implement logic to run the right command:
     @ vi file
 
 
+See `Return Command Aliases <https://xon.sh/dev/callable_aliases.html#return-command-aliases>`_
+for the full reference.
+
+
 Callable Aliases
 ================
 
@@ -1514,7 +1493,7 @@ which will be replaced automatically:
 
     @ $PROMPT = '{user}@{hostname}:{cwd} @ '
     snail@home:~ @ # it works!
-    snail@home:~ @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
+    @ $PROMPT = lambda: '{user}@{hostname}:{cwd} @> '
     snail@home:~ @> # so does that!
 
 See :ref:`customprompt_ref` in the Prompt Toolkit page for the full list of

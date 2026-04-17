@@ -22,6 +22,7 @@ import uuid
 import warnings
 from ast import AST
 from collections.abc import Iterator
+from operator import attrgetter as _attrgetter
 
 from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
@@ -31,6 +32,7 @@ from xonsh.tools import (
     XonshError,
     expand_path,
     globpath,
+    on_main_thread,
     print_color,
 )
 
@@ -57,6 +59,13 @@ def resetting_signal_handle(sig, f):
     """Sets a new signal handle that will automatically restore the old value
     once the new handle is finished.
     """
+    # signal.signal() only works on the main thread; from a worker it raises
+    # ValueError. When xonsh is set up from a non-main thread (e.g. an embedded
+    # host calling xonsh.main.setup() off-main, like the 2020 virtualenv CI
+    # case in xonsh/xonsh#3689), skip registration rather than crash — the host
+    # owns process signals in that scenario. Same guard is used in procs/posix.py.
+    if not on_main_thread():
+        return
     prev_signal_handler = signal.getsignal(sig)
 
     def new_signal_handler(s=None, frame=None):
@@ -384,15 +393,19 @@ def _check_subproc_helper_raise(in_boolop):
     cp = XSH.lastcmd
     if cp is None:
         return
-    rtn = getattr(cp, "returncode", None)
-    if rtn is None or rtn == 0:
-        return
     spec = getattr(cp, "spec", None)
     if spec is None:
+        return
+    # Background job: pipeline is still running; reading .returncode would
+    # block on the blocking_property until the child exits.
+    if getattr(spec, "background", False):
         return
     if getattr(spec, "captured", None) == "object":
         return
     if getattr(spec, "raise_subproc_error", None) is False:
+        return
+    rtn = getattr(cp, "returncode", None)
+    if rtn is None or rtn == 0:
         return
 
     import subprocess
@@ -519,6 +532,10 @@ def subproc_check_boolop(value):
         return value
     # Try to get the pipeline from the value first (BoolOp result, ![...]).
     spec = getattr(value, "spec", None)
+    # Background job: pipeline is still running; reading .returncode would
+    # block on the blocking_property until the child exits.
+    if spec is not None and getattr(spec, "background", False):
+        return value
     rtn = getattr(value, "returncode", None)
     cp_for_output = value
     if spec is None or rtn is None:
@@ -529,6 +546,8 @@ def subproc_check_boolop(value):
         if last is None:
             return value
         spec = getattr(last, "spec", None)
+        if spec is not None and getattr(spec, "background", False):
+            return value
         rtn = getattr(last, "returncode", None)
         cp_for_output = last
     if spec is None or rtn is None or rtn == 0:
@@ -1226,44 +1245,58 @@ class DynamicAccessProxy:
         super().__setattr__("refname", refname)
         super().__setattr__("objname", objname)
 
-    @property
-    def obj(self):
-        """Dynamically grabs object"""
-        names = self.objname.split(".")
-        obj = builtins
-        for name in names:
-            obj = getattr(obj, name)
-        return obj
+    def _obj(self):
+        """Dynamically grabs object.
+
+        This is a method instead of a ``@property`` as a workaround for
+        a Nuitka bugs.
+        - https://github.com/Nuitka/Nuitka/issues/3859
+        - https://github.com/Nuitka/Nuitka/issues/3860
+        When the bug is fixed upstream, this can be reverted to
+        ``@property def obj(self)``.
+
+        Uses ``object.__getattribute__`` to read *objname* so that the
+        lookup never falls through to ``__getattr__`` — which would
+        create an infinite loop under Nuitka-compiled builds.
+
+        Uses :func:`operator.attrgetter` instead of an explicit ``getattr``
+        loop: the loop form compiled under Nuitka 4.0 produces wrong
+        results for ``getattr(builtins, "__xonsh__")`` (it doesn't advance
+        ``obj`` on the first iteration), yielding ``AttributeError:
+        module 'builtins' has no attribute 'builtins'``. ``attrgetter``
+        delegates the whole walk to a C builtin and sidesteps the bug.
+        """
+        return _attrgetter(object.__getattribute__(self, "objname"))(builtins)
 
     def __getattr__(self, name):
-        return getattr(self.obj, name)
+        return getattr(self._obj(), name)
 
     def __setattr__(self, name, value):
-        return setattr(self.obj, name, value)
+        return setattr(self._obj(), name, value)
 
     def __delattr__(self, name):
-        return delattr(self.obj, name)
+        return delattr(self._obj(), name)
 
     def __getitem__(self, item):
-        return self.obj.__getitem__(item)
+        return self._obj().__getitem__(item)
 
     def __setitem__(self, item, value):
-        return self.obj.__setitem__(item, value)
+        return self._obj().__setitem__(item, value)
 
     def __delitem__(self, item):
-        del self.obj[item]
+        del self._obj()[item]
 
     def __call__(self, *args, **kwargs):
-        return self.obj.__call__(*args, **kwargs)
+        return self._obj().__call__(*args, **kwargs)
 
     def __dir__(self):
-        return self.obj.__dir__()
+        return self._obj().__dir__()
 
     def __repr__(self):
-        return repr(self.obj)
+        return repr(self._obj())
 
     def __str__(self):
-        return str(self.obj)
+        return str(self._obj())
 
 
 # singleton
