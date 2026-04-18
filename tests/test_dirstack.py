@@ -136,3 +136,19 @@ def test_cd_home(xession, tmpdir):
     dirstack.popd([])
 
     xession.env.update(dict(HOME=old_home))
+
+
+def test_cd_literal_tilde_dir(xession, tmpdir):
+    """cd should not expand ~ when the argument is a literal string.
+
+    A directory literally named ``~`` in cwd should be reachable via
+    ``cd r'~'`` (raw string prevents tilde expansion at the parser level).
+    ``dirstack.cd`` must not call ``expanduser`` on the argument.
+    """
+    tilde_dir = os.path.join(str(tmpdir), "~")
+    os.mkdir(tilde_dir)
+    xession.env.update(dict(PWD=str(tmpdir)))
+    os.chdir(str(tmpdir))
+
+    dirstack.cd(["~"])
+    assert os.getcwd() == os.path.realpath(tilde_dir)
