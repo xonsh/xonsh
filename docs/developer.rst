@@ -189,6 +189,50 @@ the default Python and ``prompt_toolkit`` versions with ``--python`` and
 Ensure your cwd is the root directory of the project (i.e., the one containing the
 .git directory).
 
+Nix
+^^^^
+
+If you have Nix package manager installed on your system, you can use it instead
+of Docker to build and run your "work in progress version". If Nix is configured
+with experimental features ``nix-command`` and ``flakes`` enabled, it is as simple
+as running this in the project directory:
+
+.. code-block:: bash
+
+    # build and run with a single command
+    nix run
+
+    # or build and then run
+    nix build  # this builds the package and creates a `result` symlink
+    ./result/bin/xonsh
+
+This will build and run the current state of the repository with Nix. Optionally add
+``-L`` to the Nix commands to see detailed output when building. If you have
+new files created and need them to build, make sure they're added to Git (e.g. using
+``git add``), or Nix won't be aware of them when building the package from flake.
+
+If you prefer not to use flakes, it can also be done in a legacy way:
+
+.. code-block:: bash
+
+    nix-build nix/ -A xonsh
+    ./result/bin/xonsh
+
+The default Python version used follows the default of ``nixpkgs-unstable`` (it is
+3.13 at the time of writing this). There are variants using different Python versions
+declared in ``nix/default.nix``. For example, to use Python 3.14:
+
+.. code-block:: bash
+
+    # build and run
+    nix run '.#xonsh-py314'
+
+    # build only
+    nix build '.#xonsh-py314'
+
+    # build with legacy nix
+    nix-build nix/ -A xonsh-py314
+
 Dependencies
 ^^^^^^^^^^^^^
 
