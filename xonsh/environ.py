@@ -2171,9 +2171,11 @@ class AutoCompletionSetting(Xettings):
         doc_default="True",
     )
     COMPLETION_QUERY_LIMIT = Var.with_default(
-        100,
-        "The number of completions to display before the user is asked "
-        "for confirmation.",
+        1000,
+        "Maximum number of completions to collect. In prompt_toolkit the "
+        "list is truncated at this value and a notice is shown above the "
+        "prompt; in readline the user is asked 'Display all N "
+        "possibilities?'.",
     )
     FUZZY_PATH_COMPLETION = Var.with_default(
         True,

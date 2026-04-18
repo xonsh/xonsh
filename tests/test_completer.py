@@ -477,6 +477,93 @@ def test_trace_completions_uses_close_quote_alias(
     assert "append_closing_quote" not in captured
 
 
+def test_query_limit_warns_above_prompt(
+    completer, completers_mock, xession, monkeypatch
+):
+    """Hitting ``$COMPLETION_QUERY_LIMIT`` must surface a notice via
+    ``print_above_prompt`` so the user sees that the list was truncated.
+    """
+    monkeypatch.setitem(xession.env, "COMPLETION_QUERY_LIMIT", 3)
+
+    completers_mock["a"] = lambda *a: {f"c{i}" for i in range(10)}
+
+    messages = []
+    monkeypatch.setattr(
+        "xonsh.completer.print_above_prompt", lambda msg: messages.append(msg)
+    )
+
+    result, _ = completer.complete(
+        "c", "c", 0, 1, {}, multiline_text="c", cursor_index=1
+    )
+
+    assert len(result) == 3
+    assert messages == ["List truncated by $COMPLETION_QUERY_LIMIT = 3"]
+
+
+def test_query_limit_silent_when_not_hit(
+    completer, completers_mock, xession, monkeypatch
+):
+    """No warning when the number of completions stays under the limit."""
+    monkeypatch.setitem(xession.env, "COMPLETION_QUERY_LIMIT", 10)
+
+    completers_mock["a"] = lambda *a: {"x", "y", "z"}
+
+    messages = []
+    monkeypatch.setattr(
+        "xonsh.completer.print_above_prompt", lambda msg: messages.append(msg)
+    )
+
+    completer.complete("", "", 0, 0)
+
+    assert messages == []
+
+
+def test_query_limit_silent_for_empty_line(
+    completer, completers_mock, xession, monkeypatch
+):
+    """Bare Tab on a completely empty line always yields a large list;
+    the truncation notice would be noise, so it must be suppressed even
+    when the limit is hit.
+    """
+    monkeypatch.setitem(xession.env, "COMPLETION_QUERY_LIMIT", 3)
+
+    completers_mock["a"] = lambda *a: {f"c{i}" for i in range(10)}
+
+    messages = []
+    monkeypatch.setattr(
+        "xonsh.completer.print_above_prompt", lambda msg: messages.append(msg)
+    )
+
+    result, _ = completer.complete("", "", 0, 0, {}, multiline_text="", cursor_index=0)
+
+    assert len(result) == 3
+    assert messages == []
+
+
+def test_query_limit_warns_for_empty_prefix_with_command(
+    completer, completers_mock, xession, monkeypatch
+):
+    """Typing ``ls <Tab>`` — empty arg prefix but a real command line —
+    must still surface the truncation notice. Suppression is only for a
+    fully empty line.
+    """
+    monkeypatch.setitem(xession.env, "COMPLETION_QUERY_LIMIT", 3)
+
+    completers_mock["a"] = lambda *a: {f"c{i}" for i in range(10)}
+
+    messages = []
+    monkeypatch.setattr(
+        "xonsh.completer.print_above_prompt", lambda msg: messages.append(msg)
+    )
+
+    result, _ = completer.complete(
+        "", "ls ", 3, 3, {}, multiline_text="ls ", cursor_index=3
+    )
+
+    assert len(result) == 3
+    assert messages == ["List truncated by $COMPLETION_QUERY_LIMIT = 3"]
+
+
 def test_trace_completions_reports_zero_results(
     completer, completers_mock, xession, monkeypatch, capsys
 ):
