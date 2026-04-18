@@ -96,10 +96,11 @@ def test_complete_path_literal_tilde(is_dir, xession):
             raw_entries = {p for p in paths if p.startswith("r'")}
             assert raw_entries, f"Expected r'~' entry, got: {paths}"
             raw = raw_entries.pop()
+            inner = raw[2:-1]  # strip r' and '
             if is_dir:
-                assert raw.rstrip("'").endswith("/"), f"Dir should have trailing slash: {raw}"
+                assert inner.endswith(os.sep), f"Dir should have trailing sep: {raw}"
             else:
-                assert not raw.rstrip("'").endswith("/"), f"File should not have trailing slash: {raw}"
+                assert not inner.endswith(os.sep), f"File should not have trailing sep: {raw}"
         finally:
             os.chdir(old_cwd)
 
@@ -127,10 +128,11 @@ def test_complete_path_literal_dollar(is_dir, xession):
         assert raw_entries, f"Expected r'$VAR' entry, got: {paths}"
         raw = raw_entries.pop()
         assert "$VAR" in raw, f"Expected $VAR in completion: {raw}"
+        inner = raw[2:-1]  # strip r' and '
         if is_dir:
-            assert raw.rstrip("'").endswith("/"), f"Dir should have trailing slash: {raw}"
+            assert inner.endswith(os.sep), f"Dir should have trailing sep: {raw}"
         else:
-            assert not raw.rstrip("'").endswith("/"), f"File should not have trailing slash: {raw}"
+            assert not inner.endswith(os.sep), f"File should not have trailing sep: {raw}"
 
 
 @pytest.mark.parametrize(
