@@ -206,7 +206,9 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         # isdir — expand_path("$HOME") and expand_path("~") resolve to
         # the home directory (always a dir), masking literal files.
         check_path = s if ("$" in s or s.startswith("~")) else expand_path(s)
-        if os.path.isdir(check_path) or (cdpath and _is_directory_in_cdpath(check_path)):
+        if os.path.isdir(check_path) or (
+            cdpath and _is_directory_in_cdpath(check_path)
+        ):
             _tail = slash
         elif end == "":
             _tail = space
@@ -340,7 +342,9 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     )
     if is_raw_string and prefix.startswith(tilde):
         # Use glob.glob directly to avoid iglobpath's expanduser
-        for s in sorted(glob.glob(prefix + "*")) if glob_sorted else glob.iglob(prefix + "*"):
+        for s in (
+            sorted(glob.glob(prefix + "*")) if glob_sorted else glob.iglob(prefix + "*")
+        ):
             paths.add(s)
     else:
         for s in xt.iglobpath(
@@ -478,9 +482,7 @@ def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None
                 RichCompletion(comp, display=comp, append_closing_quote=False)
             )
         else:
-            rich_completions.add(
-                RichCompletion(comp, append_closing_quote=False)
-            )
+            rich_completions.add(RichCompletion(comp, append_closing_quote=False))
 
     return rich_completions, lprefix
 
