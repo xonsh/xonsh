@@ -15,7 +15,7 @@ from xonsh.completers.tools import (
     is_exclusive_completer,
 )
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
-from xonsh.tools import print_exception
+from xonsh.tools import print_above_prompt, print_exception
 
 
 class Completer:
@@ -344,6 +344,21 @@ class Completer:
 
         query_limit = XSH.env.get("COMPLETION_QUERY_LIMIT")
 
+        # Whether there is any typed content at all. Bare Tab on a
+        # completely empty line always yields a huge candidate list, so
+        # the truncation notice would be pure noise there. For anything
+        # else (including ``ls <Tab>`` — empty arg prefix but a real
+        # command line) we want the notice to surface.
+        has_line_content = False
+        if old_completer_args and len(old_completer_args) >= 2:
+            has_line_content = bool(old_completer_args[1])
+        elif completion_context is not None:
+            if completion_context.command is not None:
+                cmd = completion_context.command
+                has_line_content = bool(cmd.args or cmd.prefix)
+            elif completion_context.python is not None:
+                has_line_content = bool(completion_context.python.prefix)
+
         for comp in self.generate_completions(
             completion_context,
             old_completer_args,
@@ -355,6 +370,10 @@ class Completer:
                 if trace:
                     print(
                         "TRACE COMPLETIONS: Stopped after $COMPLETION_QUERY_LIMIT reached."
+                    )
+                if has_line_content:
+                    print_above_prompt(
+                        f"List truncated by $COMPLETION_QUERY_LIMIT = {query_limit}"
                     )
                 break
 
