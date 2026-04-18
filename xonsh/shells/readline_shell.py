@@ -63,6 +63,24 @@ _RL_STATE_ISEARCH = 0x0000080
 _RL_PREV_COMPLETION_CASE_SENSITIVE = "to-be-set"
 
 
+def _parse_dsr_cursor_column(resp: bytes) -> "int | None":
+    """Return the column number from a DSR cursor-position reply.
+
+    A DSR reply has the form ``ESC [ <row> ; <col> R``.  Returns ``None``
+    when the reply is incomplete or malformed.
+    """
+    end = resp.find(b"R")
+    if end < 0:
+        return None
+    semi = resp.rfind(b";", 0, end)
+    if semi < 0:
+        return None
+    try:
+        return int(resp[semi + 1 : end])
+    except ValueError:
+        return None
+
+
 def _ensure_newline():
     """Print a newline if the cursor is not at column 1.
 
@@ -84,27 +102,30 @@ def _ensure_newline():
         # Ask the terminal: "where is the cursor?"
         sys.stdout.write("\033[6n")
         sys.stdout.flush()
-        # Read response: ESC [ row ; col R
-        import select
-
-        resp = ""
-        while True:
-            ready, _, _ = select.select([sys.stdin], [], [], 0.5)
+        # Read the reply straight from the file descriptor.  Going through
+        # sys.stdin would route bytes via a TextIOWrapper buffer: a single
+        # read(1) can pull several bytes into that buffer, then select()
+        # on the fd reports "not ready" and the tail of the reply leaks
+        # into the next input() call as phantom user input (issue #6344).
+        resp = b""
+        timeout = 0.5
+        while b"R" not in resp:
+            ready, _, _ = select.select([fd], [], [], timeout)
             if not ready:
                 break
-            ch = sys.stdin.read(1)
-            resp += ch
-            if ch == "R":
+            try:
+                chunk = os.read(fd, 32)
+            except OSError:
                 break
-        # Parse ";col" from the response  e.g. "\033[42;1R"
-        if ";" not in resp or not resp.endswith("R"):
-            return
-        semi = resp.index(";")
-        col = int(resp[semi + 1 : -1])  # between ";" and "R"
-        if col > 1:
+            if not chunk:
+                break
+            resp += chunk
+            timeout = 0.05  # the rest of a reply arrives back-to-back
+        col = _parse_dsr_cursor_column(resp)
+        if col is not None and col > 1:
             sys.stdout.write("\n")
             sys.stdout.flush()
-    except (ValueError, IndexError, OSError, termios.error):
+    except (OSError, termios.error):
         pass
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
