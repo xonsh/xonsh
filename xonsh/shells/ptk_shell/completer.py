@@ -140,7 +140,13 @@ class PromptToolkitCompleter(Completer):
         line = document.current_line
 
         endidx = document.cursor_position_col
-        line_ex = XSH.aliases.expand_alias(line, endidx)
+        try:
+            line_ex = XSH.aliases.expand_alias(line, endidx)
+        except Exception as e:
+            from xonsh.tools import print_above_prompt
+
+            print_above_prompt(f"completer: {e}")
+            return
 
         begidx = line[:endidx].rfind(" ") + 1 if line[:endidx].rfind(" ") >= 0 else 0
         prefix = line[begidx:endidx]
