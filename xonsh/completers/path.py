@@ -202,8 +202,13 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         end = orig_end
         if start == "" and need_quotes:
             start = end = _quote_to_use(s)
-        expanded = expand_path(s)
-        if os.path.isdir(expanded) or (cdpath and _is_directory_in_cdpath(expanded)):
+        # For paths with $ or starting with ~ use the literal path for
+        # isdir — expand_path("$HOME") and expand_path("~") resolve to
+        # the home directory (always a dir), masking literal files.
+        check_path = s if ("$" in s or s.startswith("~")) else expand_path(s)
+        if os.path.isdir(check_path) or (
+            cdpath and _is_directory_in_cdpath(check_path)
+        ):
             _tail = slash
         elif end == "":
             _tail = space
@@ -212,7 +217,8 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         # Filenames with control characters (newline, tab, etc.) must use
         # regular (non-raw) strings so the escape sequences are interpreted.
         has_ctrl = _has_control_chars(s)
-        if start != "" and "r" not in start.lower() and backslash in s and not has_ctrl:
+        needs_raw = (backslash in s or "$" in s) and not has_ctrl
+        if start != "" and "r" not in start.lower() and needs_raw:
             start = f"r{start}"
         s = s + _tail
         # Raw strings can't end with \ before closing quote (e.g. r"path\" is
@@ -324,6 +330,9 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
         if len(line) >= end + 1 and line[end] == path_str_end:
             append_end = False
     tilde = "~"
+    # Raw strings (r'...') treat ~ literally — skip tilde expansion
+    # so that r'~/' completes inside a directory named ~ in cwd.
+    is_raw_string = "r" in path_str_start.lower() if path_str_start else False
     paths = set()
     env = XSH.env
     glob_sorted = env.get("GLOB_SORTED")
@@ -331,10 +340,17 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     _prefix_is_dir_listing = prefix.endswith(os.sep) or (
         os.altsep and prefix.endswith(os.altsep)
     )
-    for s in xt.iglobpath(
-        prefix + "*", ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
-    ):
-        paths.add(s)
+    if is_raw_string and prefix.startswith(tilde):
+        # Use glob.glob directly to avoid iglobpath's expanduser
+        for s in (
+            sorted(glob.glob(prefix + "*")) if glob_sorted else glob.iglob(prefix + "*")
+        ):
+            paths.add(s)
+    else:
+        for s in xt.iglobpath(
+            prefix + "*", ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
+        ):
+            paths.add(s)
     # Substring matches: *prefix* catches files containing the prefix
     # anywhere in their name.  The pipeline's tier-based sort ensures
     # prefix matches rank above substring matches.
@@ -402,6 +418,19 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     paths, _ = _quote_paths(
         {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
     )
+    # When a literal file/directory named ~ exists in cwd and the prefix
+    # starts with ~, add r'~...' completions so the user can select the
+    # local file instead of $HOME.  The bare ~/... entries are kept for
+    # home directory access.
+    if prefix.startswith(tilde) and not is_raw_string and os.path.exists(tilde):
+        tilde_local = set()
+        for p in list(paths):
+            raw = p.rstrip()
+            if raw.startswith(tilde) and not raw.startswith("r"):
+                quoted = "r'" + raw + "'"
+                tilde_local.add(quoted)
+        if tilde_local:
+            paths |= tilde_local
     paths.update(filter(filtfunc, _dots(prefix)))
     return paths, lprefix
 
@@ -443,10 +472,17 @@ def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None
         filtfunc=filtfunc,
     )
 
-    # ``_complete_path_raw`` may have added closing quotes:
-    rich_completions = {
-        RichCompletion(comp, append_closing_quote=False) for comp in completions
-    }
+    # r'...' entries (for literal ~ or $VAR files) get an explicit
+    # display so the ptk menu shows them distinctly from their
+    # expanded counterparts.
+    rich_completions = set()
+    for comp in completions:
+        if comp.startswith("r'") or comp.startswith('r"'):
+            rich_completions.add(
+                RichCompletion(comp, display=comp, append_closing_quote=False)
+            )
+        else:
+            rich_completions.add(RichCompletion(comp, append_closing_quote=False))
 
     return rich_completions, lprefix
 
