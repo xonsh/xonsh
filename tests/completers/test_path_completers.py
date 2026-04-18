@@ -73,6 +73,66 @@ def test_complete_path_substring(xession, completion_context_parse):
         assert "unrelated.txt" not in basenames
 
 
+@pytest.mark.parametrize("is_dir", [True, False], ids=["dir", "file"])
+def test_complete_path_literal_tilde(is_dir, xession):
+    """A file/dir literally named ~ must appear as r'~' in completions."""
+    xession.env.update({
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    })
+    with tempfile.TemporaryDirectory() as td:
+        tilde_path = os.path.join(td, "~")
+        if is_dir:
+            os.mkdir(tilde_path)
+        else:
+            open(tilde_path, "w").close()
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            paths, _ = xcp._complete_path_raw("~", "ls ~", 3, 4, {})
+            raw_entries = {p for p in paths if p.startswith("r'")}
+            assert raw_entries, f"Expected r'~' entry, got: {paths}"
+            raw = raw_entries.pop()
+            if is_dir:
+                assert raw.rstrip("'").endswith("/"), f"Dir should have trailing slash: {raw}"
+            else:
+                assert not raw.rstrip("'").endswith("/"), f"File should not have trailing slash: {raw}"
+        finally:
+            os.chdir(old_cwd)
+
+
+@pytest.mark.parametrize("is_dir", [True, False], ids=["dir", "file"])
+def test_complete_path_literal_dollar(is_dir, xession):
+    """A file/dir literally named $VAR must appear as r'$VAR' in completions."""
+    xession.env.update({
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    })
+    with tempfile.TemporaryDirectory() as td:
+        path = os.path.join(td, "$VAR")
+        if is_dir:
+            os.mkdir(path)
+        else:
+            open(path, "w").close()
+        prefix = os.path.join(td, "$VA")
+        line = f"ls {prefix}"
+        paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
+        raw_entries = {p for p in paths if p.startswith("r'")}
+        assert raw_entries, f"Expected r'$VAR' entry, got: {paths}"
+        raw = raw_entries.pop()
+        assert "$VAR" in raw, f"Expected $VAR in completion: {raw}"
+        if is_dir:
+            assert raw.rstrip("'").endswith("/"), f"Dir should have trailing slash: {raw}"
+        else:
+            assert not raw.rstrip("'").endswith("/"), f"File should not have trailing slash: {raw}"
+
+
 @pytest.mark.parametrize(
     "char, escape",
     [(chr(c), r) for c, r in xcp._CONTROL_CHAR_ESCAPE.items()],
