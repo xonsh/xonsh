@@ -226,7 +226,7 @@ def cd(args, stdin=None):
     if len(args) == 0:
         d = env.get("HOME", os.path.expanduser("~"))
     elif len(args) == 1:
-        d = os.path.expanduser(args[0])
+        d = args[0]
         if not os.path.isdir(d):
             if d == "-":
                 if oldpwd is not None:
