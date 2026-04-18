@@ -76,13 +76,15 @@ def test_complete_path_substring(xession, completion_context_parse):
 @pytest.mark.parametrize("is_dir", [True, False], ids=["dir", "file"])
 def test_complete_path_literal_tilde(is_dir, xession):
     """A file/dir literally named ~ must appear as r'~' in completions."""
-    xession.env.update({
-        "GLOB_SORTED": True,
-        "SUBSEQUENCE_PATH_COMPLETION": False,
-        "FUZZY_PATH_COMPLETION": False,
-        "SUGGEST_THRESHOLD": 3,
-        "CDPATH": set(),
-    })
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
     with tempfile.TemporaryDirectory() as td:
         tilde_path = os.path.join(td, "~")
         if is_dir:
@@ -100,7 +102,9 @@ def test_complete_path_literal_tilde(is_dir, xession):
             if is_dir:
                 assert inner.endswith(os.sep), f"Dir should have trailing sep: {raw}"
             else:
-                assert not inner.endswith(os.sep), f"File should not have trailing sep: {raw}"
+                assert not inner.endswith(os.sep), (
+                    f"File should not have trailing sep: {raw}"
+                )
         finally:
             os.chdir(old_cwd)
 
@@ -108,13 +112,15 @@ def test_complete_path_literal_tilde(is_dir, xession):
 @pytest.mark.parametrize("is_dir", [True, False], ids=["dir", "file"])
 def test_complete_path_literal_dollar(is_dir, xession):
     """A file/dir literally named $VAR must appear as r'$VAR' in completions."""
-    xession.env.update({
-        "GLOB_SORTED": True,
-        "SUBSEQUENCE_PATH_COMPLETION": False,
-        "FUZZY_PATH_COMPLETION": False,
-        "SUGGEST_THRESHOLD": 3,
-        "CDPATH": set(),
-    })
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
     with tempfile.TemporaryDirectory() as td:
         path = os.path.join(td, "$VAR")
         if is_dir:
@@ -132,7 +138,9 @@ def test_complete_path_literal_dollar(is_dir, xession):
         if is_dir:
             assert inner.endswith(os.sep), f"Dir should have trailing sep: {raw}"
         else:
-            assert not inner.endswith(os.sep), f"File should not have trailing sep: {raw}"
+            assert not inner.endswith(os.sep), (
+                f"File should not have trailing sep: {raw}"
+            )
 
 
 @pytest.mark.parametrize(
