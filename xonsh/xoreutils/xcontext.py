@@ -1,9 +1,12 @@
 """The xontext command."""
 
 import errno
+import functools
+import json
 import os
 import subprocess
 import sys
+from dataclasses import dataclass
 
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import ArgParserAlias
@@ -185,7 +188,166 @@ def _resolve_path(value, resolve):
     return value, False
 
 
-def xcontext_main(no_resolve: bool = False, _stdout=None):
+@dataclass(frozen=True)
+class Resolved:
+    """A resolved binary path probed by :class:`XContext`.
+
+    ``path`` may be a string (resolved file path), a list (alias args
+    where ``path[0]`` is the executable), or ``None`` (not found / no
+    such alias). ``bad`` is True when the entry is unusable: symlink
+    loop, missing file, not a regular file, lacks ``+x``, or its
+    ``--version`` probe failed (Windows Store ``python.exe`` alias).
+    ``version`` is the trimmed ``--version`` output, populated only
+    for python-family entries.
+
+    The :attr:`display` property renders the entry as a single string —
+    list paths are space-joined the way the CLI shows them, plain
+    strings pass through, and ``None`` becomes ``None`` so callers can
+    detect "not found" without re-checking ``path``.
+    """
+
+    path: object = None
+    bad: bool = False
+    version: str = ""
+
+    @property
+    def display(self):
+        if isinstance(self.path, list) and all(isinstance(x, str) for x in self.path):
+            return " ".join(self.path)
+        return str(self.path) if self.path else None
+
+
+def _cached_method(method):
+    """Per-instance, opt-in memoization for no-arg instance methods.
+
+    Stores the result in ``self._cache`` keyed by the method name when
+    caching is enabled, so the cache is bounded to the lifetime of the
+    instance — a plain :func:`functools.cache` on bound methods would
+    leak ``self`` references at the class level. When the holder
+    instance has ``self._cache is None`` (the default constructor mode),
+    every call re-runs the underlying probe so callers that hold onto an
+    :class:`XContext` see fresh ``$PATH`` / alias state on each read.
+    """
+    name = method.__name__
+
+    @functools.wraps(method)
+    def wrapper(self):
+        if self._cache is None:
+            return method(self)
+        if name not in self._cache:
+            self._cache[name] = method(self)
+        return self._cache[name]
+
+    return wrapper
+
+
+class XContext:
+    """Lazy collector of every value displayed by ``xcontext``.
+
+    Each ``get_*`` method computes its value and returns a
+    :class:`Resolved` (or, for env getters, a plain string / ``None``).
+    Construct with ``resolve=False`` to skip symlink resolution — the
+    accessibility / ``+x`` check still runs, matching the
+    ``--no-resolve`` CLI flag.
+
+    Caching is **off by default** so a long-lived instance always
+    reflects the current ``$PATH`` and alias state — callers that read a
+    getter twice after mutating the environment get the new value, not a
+    stale snapshot. Pass ``cache=True`` to enable per-instance memoization
+    for the lifetime of the report; ``xcontext_main`` does this so each
+    ``--version`` subprocess runs at most once per invocation.
+    """
+
+    def __init__(self, resolve=True, cache=False):
+        self._resolve = resolve
+        self._cache: dict | None = {} if cache else None
+
+    # ---- session: what the running xonsh process actually uses --------
+
+    @_cached_method
+    def get_session_xxonsh(self) -> Resolved:
+        """Return the path to the currently running xonsh interpreter."""
+        # Local import: ``xonsh.main`` pulls in heavy modules.
+        from xonsh.main import get_current_xonsh
+
+        path, bad = _resolve_path(get_current_xonsh(), self._resolve)
+        return Resolved(path=path, bad=bad)
+
+    @_cached_method
+    def get_session_xpython(self) -> Resolved:
+        """Return the python interpreter that's running this xonsh.
+
+        Inside an AppImage, ``sys.executable`` points at the AppImage
+        bootstrap rather than the bundled python — fall back to ``$_``
+        so the displayed binary is something the user can actually
+        invoke.
+        """
+        appimage_python = XSH.env.get("_") if IN_APPIMAGE else None
+        path, bad = _resolve_path(
+            appimage_python if appimage_python else sys.executable, self._resolve
+        )
+        ver, ver_ok = _get_version(path)
+        return Resolved(path=path, bad=bad or not ver_ok, version=ver)
+
+    @_cached_method
+    def get_session_xpip(self) -> Resolved:
+        """Return the ``xpip`` alias value (typically ``[python, -m, pip]``)."""
+        path, bad = _resolve_path(XSH.aliases.get("xpip"), self._resolve)
+        return Resolved(path=path, bad=bad)
+
+    # ---- commands: what ``$PATH`` lookup currently resolves to --------
+
+    def _get_command(self, name: str) -> Resolved:
+        path, bad = _resolve_path(locate_executable(name), self._resolve)
+        return Resolved(path=path, bad=bad)
+
+    @_cached_method
+    def get_commands_xonsh(self) -> Resolved:
+        """Return the ``xonsh`` binary that ``$PATH`` resolves to."""
+        return self._get_command("xonsh")
+
+    @_cached_method
+    def get_commands_python(self) -> Resolved:
+        """Return the ``python`` binary on ``$PATH``, with version probed.
+
+        The version probe doubles as a spawn check — a Windows Store
+        ``python.exe`` App Execution Alias can be located on ``$PATH``
+        but raises WinError 1920 on execution. Such entries get
+        ``bad=True`` so the row renders red.
+        """
+        base = self._get_command("python")
+        if not base.path:
+            return base
+        ver, ver_ok = _get_version(base.path)
+        return Resolved(path=base.path, bad=base.bad or not ver_ok, version=ver)
+
+    @_cached_method
+    def get_commands_pip(self) -> Resolved:
+        """Return the ``pip`` binary that ``$PATH`` resolves to."""
+        return self._get_command("pip")
+
+    @_cached_method
+    def get_commands_pytest(self) -> Resolved:
+        """Return the ``pytest`` binary that ``$PATH`` resolves to."""
+        return self._get_command("pytest")
+
+    @_cached_method
+    def get_commands_uv(self) -> Resolved:
+        """Return the ``uv`` binary that ``$PATH`` resolves to."""
+        return self._get_command("uv")
+
+    # ---- env: virtualenv / conda flags --------------------------------
+
+    def get_env_conda_default_env(self):
+        """Return ``$CONDA_DEFAULT_ENV`` or ``None`` if unset."""
+        return XSH.env.get("CONDA_DEFAULT_ENV")
+
+    def get_env_virtual_env(self):
+        """Return ``$VIRTUAL_ENV`` or ``None`` if unset."""
+        return XSH.env.get("VIRTUAL_ENV")
+
+
+def xcontext_main(no_resolve: bool = False, as_json: bool = False, _stdout=None):
     """Report information about the current xonsh environment.
 
     By default, all displayed binary paths (xxonsh, xpython, xpip and the
@@ -200,42 +362,61 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     no_resolve : -n, --no-resolve
         Show raw paths as-is without following symlinks (turns off the
         default resolution).
+    as_json : -j, --json
+        Emit the resolved paths as a JSON object on stdout instead of the
+        colored text report. Top-level keys mirror the text sections
+        (``session``, ``commands``, ``env``); ``commands`` always
+        includes every probed name with ``null`` for entries not on
+        ``$PATH``; ``env`` only contains variables that are set.
     """
-    # Local import: xonsh.main pulls in heavy modules, keep the dependency lazy.
-    from xonsh.main import get_current_xonsh
-
     stdout = _stdout or sys.stdout
-    resolve = not no_resolve
+    # cache=True so each ``--version`` subprocess runs at most once
+    # across the color-check + row-print + match comparisons.
+    xc = XContext(resolve=not no_resolve, cache=True)
 
-    current_xonsh, xxonsh_bad = _resolve_path(get_current_xonsh(), resolve)
-    appimage_python = XSH.env.get("_") if IN_APPIMAGE else None
-    xpy, xpython_bad = _resolve_path(
-        appimage_python if appimage_python else sys.executable, resolve
-    )
-    xpy_ver, xpy_ver_ok = _get_version(xpy)
-    xpython_bad = xpython_bad or not xpy_ver_ok
+    session_xxonsh = xc.get_session_xxonsh()
+    session_xpython = xc.get_session_xpython()
+    session_xpip = xc.get_session_xpip()
+    cmd_xonsh = xc.get_commands_xonsh()
+    cmd_pip = xc.get_commands_pip()
+    cmd_pytest = xc.get_commands_pytest()
+    cmd_uv = xc.get_commands_uv()
 
-    # Pre-resolve the PATH-visible binaries once so we can both display them
-    # in the "commands environment" section and compare them against the
-    # session-specific values (xxonsh/xpython/xpip) to decide coloring.
-    # Uses xonsh's own ``locate_executable`` rather than ``shutil.which``
-    # because the stdlib one is flagged (deprecated for ``PathLike`` args on
-    # Windows < 3.12), and xonsh's version is the recommended replacement.
-    path_resolved = {}
-    path_bad: dict[str, bool] = {}
-    for cmd in ("xonsh", "python", "pip", "pytest", "uv"):
-        path, bad = _resolve_path(locate_executable(cmd), resolve)
-        path_resolved[cmd] = path
-        path_bad[cmd] = bad
+    if as_json:
+        # Skip color/version probes — JSON consumers want raw paths only.
+        # ``commands`` keeps every probed key (None for not-on-PATH) so the
+        # shape is predictable; ``env`` mirrors the text section and omits
+        # unset variables. Use ``_get_command`` for python here so we don't
+        # spawn a subprocess just to throw the version away.
+        cmd_python_raw = xc._get_command("python")
+        report = {
+            "session": {
+                "xxonsh": session_xxonsh.path,
+                "xpython": session_xpython.path,
+                "xpip": session_xpip.display,
+            },
+            "commands": {
+                "xonsh": cmd_xonsh.path,
+                "python": cmd_python_raw.path,
+                "pip": cmd_pip.path,
+                "pytest": cmd_pytest.path,
+                "uv": cmd_uv.path,
+            },
+            "env": {
+                ev: val
+                for ev, val in (
+                    ("CONDA_DEFAULT_ENV", xc.get_env_conda_default_env()),
+                    ("VIRTUAL_ENV", xc.get_env_virtual_env()),
+                )
+                if val
+            },
+        }
+        print(json.dumps(report, indent=2), file=stdout)
+        return 0
 
-    # xpip alias value as a single string (for display AND for match check).
-    xpip, xpip_bad = _resolve_path(XSH.aliases.get("xpip"), resolve)
-    if isinstance(xpip, list) and all(isinstance(x, str) for x in xpip):
-        xpip_display = " ".join(xpip)
-    elif xpip:
-        xpip_display = str(xpip)
-    else:
-        xpip_display = None
+    # The version-probing variant only runs in the colored path, where
+    # the version string is actually displayed.
+    cmd_python = xc.get_commands_python()
 
     # Color tokens: section headers are purple; within a family (xonsh/xxonsh,
     # python/xpython, pip/xpip) both labels go GREEN when the session binary
@@ -252,9 +433,9 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     RED = "{RED}"
     RESET = "{RESET}"
 
-    xonsh_color = GREEN if current_xonsh == path_resolved["xonsh"] else BLUE
-    python_color = GREEN if xpy == path_resolved["python"] else BLUE
-    pip_color = GREEN if xpip_display == path_resolved["pip"] else BLUE
+    xonsh_color = GREEN if session_xxonsh.path == cmd_xonsh.path else BLUE
+    python_color = GREEN if session_xpython.path == cmd_python.path else BLUE
+    pip_color = GREEN if session_xpip.display == cmd_pip.path else BLUE
 
     label_color = {
         "xonsh": xonsh_color,
@@ -283,16 +464,21 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
 
     print_color(f"{PURPLE}[Current xonsh session]{RESET}", file=stdout)
     print_color(
-        _format_row("xxonsh", current_xonsh, bad=xxonsh_bad),
+        _format_row("xxonsh", session_xxonsh.path, bad=session_xxonsh.bad),
         file=stdout,
     )
     print_color(
-        _format_row("xpython", xpy, ver=f"  # {xpy_ver}", bad=xpython_bad),
+        _format_row(
+            "xpython",
+            session_xpython.path,
+            ver=f"  # {session_xpython.version}",
+            bad=session_xpython.bad,
+        ),
         file=stdout,
     )
-    if xpip_display is not None:
+    if session_xpip.display is not None:
         print_color(
-            _format_row("xpip", xpip_display, bad=xpip_bad),
+            _format_row("xpip", session_xpip.display, bad=session_xpip.bad),
             file=stdout,
         )
     else:
@@ -300,29 +486,30 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
 
     print("", file=stdout)
     print_color(f"{PURPLE}[Current commands environment]{RESET}", file=stdout)
-    cmds = ["xonsh", "python", "pip"]
-    if path_resolved["pytest"]:
-        cmds.append("pytest")
-    if path_resolved["uv"]:
-        cmds.append("uv")
-    for cmd in cmds:
-        path = path_resolved[cmd]
-        bad = path_bad[cmd]
-        if path:
-            ver = ""
-            if cmd == "python":
-                ver_str, ver_ok = _get_version(path)
-                ver = f"  # {ver_str}"
-                # Spawn failure (e.g. Windows Store ``python.exe``
-                # alias) → flag the whole row as bad even though the
-                # file technically "exists".
-                bad = bad or not ver_ok
-            print_color(_format_row(cmd, path, ver=ver, bad=bad), file=stdout)
+    cmd_rows: list[tuple[str, Resolved]] = [
+        ("xonsh", cmd_xonsh),
+        ("python", cmd_python),
+        ("pip", cmd_pip),
+    ]
+    if cmd_pytest.path:
+        cmd_rows.append(("pytest", cmd_pytest))
+    if cmd_uv.path:
+        cmd_rows.append(("uv", cmd_uv))
+    for name, r in cmd_rows:
+        if r.path:
+            ver = f"  # {r.version}" if r.version else ""
+            print_color(_format_row(name, r.path, ver=ver, bad=r.bad), file=stdout)
         else:
-            print_color(_format_row(cmd, "not found"), file=stdout)
-    envs = ["CONDA_DEFAULT_ENV", "VIRTUAL_ENV"]
-    env_rows = [(ev, XSH.env.get(ev)) for ev in envs]
-    env_rows = [(ev, val) for ev, val in env_rows if val]
+            print_color(_format_row(name, "not found"), file=stdout)
+
+    env_rows = [
+        (ev, val)
+        for ev, val in (
+            ("CONDA_DEFAULT_ENV", xc.get_env_conda_default_env()),
+            ("VIRTUAL_ENV", xc.get_env_virtual_env()),
+        )
+        if val
+    ]
     if env_rows:
         print("", file=stdout)
         print_color(f"{PURPLE}[Current environment]{RESET}", file=stdout)
