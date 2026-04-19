@@ -1,6 +1,64 @@
 Platform-specific tips and tricks
 ==================================
 
+\*nix
+-----
+
+Tips that apply to Unix-like systems in general (Linux, macOS, BSD, WSL).
+Platform-specific notes live in their own sections below.
+
+Tab completion
+^^^^^^^^^^^^^^
+
+Xonsh has support for using bash completion files on the shell. To use it
+you need to install the bash-completion package. The regular bash-completion
+package uses v1 which mostly works, but we recommend using
+`bash-completion v2 <https://github.com/xonsh/xonsh/issues/2111>`_.
+
+Bash completion comes from the
+`bash-completion project <https://github.com/scop/bash-completion>`_ which
+suggests you use a package manager to install it. The package manager will
+also install a new version of bash without affecting ``/bin/bash``. Xonsh
+also needs to be told where the bash completion file is — add it to
+``$BASH_COMPLETIONS``. The package includes completions for many Unix
+commands.
+
+Common packaging systems for macOS:
+
+- **Homebrew** — install the ``bash-completion2`` package:
+
+  .. code-block:: xonshcon
+
+     @ brew install bash-completion2
+
+  This will install the completion file to
+  ``/usr/local/share/bash-completion/bash_completion`` (Intel Mac) or
+  ``/opt/homebrew/share/bash-completion/bash_completion`` (Apple Silicon)
+  — both are in the default xonsh search path and should just work.
+
+- **MacPorts** — install the ``bash-completion`` port
+  (`docs <https://trac.macports.org/wiki/howto/bash-completion>`_):
+
+  .. code-block:: xonshcon
+
+     @ sudo port install bash-completion
+
+  This includes a completion file that needs to be added to the environment:
+
+  .. code-block:: xonshcon
+
+     @ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
+
+
+The `bash-completion project page <https://github.com/scop/bash-completion>`_
+refers to ``.../profile.d/bash_completion.sh`` which in turn sources the
+main completion script mentioned above and one in ``$XDG_CONFIG_HOME``.
+
+Alternatively, take a look at
+`xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_
+for a modern fish-style approach.
+
+
 Linux
 ------
 
@@ -158,58 +216,6 @@ To use them without the prefix, add the GNU paths to your ``$PATH`` in
             $PATH.insert(0, p)
 
 After this, ``ls``, ``grep``, ``sed``, etc. will be the GNU versions.
-
-
-Tab completion
-^^^^^^^^^^^^^^
-
-First of all, take a look at
-`xontrib-fish-completer <https://github.com/xonsh/xontrib-fish-completer>`_
-for a modern approach.
-
-Xonsh has support for using bash completion files on the shell. To use it
-you need to install the bash-completion package. The regular bash-completion
-package uses v1 which mostly works, but we recommend using
-`bash-completion v2 <https://github.com/xonsh/xonsh/issues/2111>`_.
-
-Bash completion comes from the
-`bash-completion project <https://github.com/scop/bash-completion>`_ which
-suggests you use a package manager to install it. The package manager will
-also install a new version of bash without affecting ``/bin/bash``. Xonsh
-also needs to be told where the bash completion file is — add it to
-``$BASH_COMPLETIONS``. The package includes completions for many Unix
-commands.
-
-Common packaging systems for macOS:
-
-- **Homebrew** — install the ``bash-completion2`` package:
-
-  .. code-block:: xonshcon
-
-     @ brew install bash-completion2
-
-  This will install the completion file to
-  ``/usr/local/share/bash-completion/bash_completion`` which is in the
-  default xonsh search path and should just work.
-
-- **MacPorts** — install the ``bash-completion`` port
-  (`docs <https://trac.macports.org/wiki/howto/bash-completion>`_):
-
-  .. code-block:: xonshcon
-
-     @ sudo port install bash-completion
-
-  This includes a completion file that needs to be added to the environment:
-
-  .. code-block:: xonshcon
-
-     @ $BASH_COMPLETIONS.insert(0, '/opt/local/share/bash-completion/bash_completion')
-
-.. note::
-
-   The `bash-completion project page <https://github.com/scop/bash-completion>`_
-   refers to ``.../profile.d/bash_completion.sh`` which in turn sources the
-   main completion script mentioned above and one in ``$XDG_CONFIG_HOME``.
 
 
 Windows

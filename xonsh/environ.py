@@ -2143,13 +2143,23 @@ class AutoCompletionSetting(Xettings):
         "control file.",
         default=BASH_COMPLETIONS_DEFAULT,
         doc_default=(
-            "Normally this is:\n\n"
-            "    ``('/usr/share/bash-completion/bash_completion', )``\n\n"
-            "But, on Mac it is:\n\n"
-            "    ``('/usr/local/share/bash-completion/bash_completion', "
-            "'/usr/local/etc/bash_completion', "
-            "'/opt/homebrew/share/bash-completion/bash_completion'),``\n\n"
-            "Other OS-specific defaults may be added in the future."
+            "Platform-dependent. The list probes every known install "
+            "prefix for the bash-completion framework script and the "
+            "first existing file is sourced:\n\n"
+            "* **Linux / Cygwin / MSYS** — the standard FHS path "
+            "``/usr/share/bash-completion/bash_completion``, plus "
+            "Linuxbrew (``/home/linuxbrew/.linuxbrew/...``) and Nix "
+            "(``/run/current-system/sw/...``, ``~/.nix-profile/...``).\n"
+            "* **macOS** — Homebrew on Intel "
+            "(``/usr/local/...``) and Apple Silicon "
+            "(``/opt/homebrew/...``), MacPorts (``/opt/local/...``), "
+            "and Nix.\n"
+            "* **Windows** — Git for Windows installation prefix "
+            "(both bash-completion and the bundled "
+            "``git-completion.bash``).\n\n"
+            "Each entry covers both v1.x and v2.x of bash-completion "
+            "where applicable; v2.x is preferred for performance "
+            "(lazy per-command loading)."
         ),
         type_str="env_path",
     )
