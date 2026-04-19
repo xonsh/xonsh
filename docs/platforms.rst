@@ -445,6 +445,54 @@ To debug command resolution, enable:
     @ $XONSH_COMMANDS_CACHE_TRACE = True
 
 
+Drive letter shortcut for path completion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Windows paths are long. You can define a short environment variable for a
+drive root and use it with tab completion to navigate quickly:
+
+.. code-block:: xonsh
+
+    # Simple assignment
+    $C = 'c:\\'
+
+    # Or register with a description
+    @.env.register('C', type='str', default='c:\\', doc='Drive C root')
+
+Now ``cd $C\<Tab>`` expands ``$C`` and completes paths on the ``C:\`` drive —
+the same way ``cd ~/`` completes paths in the home directory.
+
+To register all drives present on the system at once:
+
+.. code-block:: xonsh
+
+    for letter in @.imp.string.ascii_uppercase:
+        root = f'{letter}:\\'
+        if @.imp.os.path.isdir(root):
+            @.env.register(letter, type='str', default=root,
+                           doc=f'Drive {letter} root')
+
+Add this to your `xonsh RC <xonshrc.rst>`_ to have drive shortcuts available
+in every session.
+
+
+Forward-slash paths (``$FORCE_POSIX_PATHS``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set ``$FORCE_POSIX_PATHS = True`` to make xonsh display and complete paths
+with forward slashes (``/``) instead of backslashes (``\``):
+
+.. code-block:: xonsh
+
+    $FORCE_POSIX_PATHS = True
+    cd ~/Documents
+    # prompt shows: C:/Users/me/Documents
+
+Most modern Windows applications accept forward-slash paths, but not all do
+(notably ``cmd.exe`` does not). In practice Git, Python, VS Code, and many
+other tools work fine with ``/``.
+
+
 .. _open_terminal_here:
 
 
