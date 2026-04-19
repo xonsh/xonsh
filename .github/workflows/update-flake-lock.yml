@@ -1,4 +1,4 @@
-name: Update flake.lock
+name: ci-flake-update-lock
 
 on:
   schedule:
