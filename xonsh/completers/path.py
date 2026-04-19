@@ -182,6 +182,18 @@ def _has_control_chars(s):
     return any(chr(c) in s for c in _CONTROL_CHAR_ESCAPE)
 
 
+def _raw_quote(s):
+    """Wrap *s* in r'...' with a trailing-backslash fix.
+
+    Raw strings can't end with an odd number of backslashes before the
+    closing quote (``r'path\\'`` is valid, ``r'path\\'`` is not).  Double
+    a lone trailing backslash so the result is always valid syntax.
+    """
+    if s.endswith("\\") and not s.endswith("\\\\"):
+        s += "\\"
+    return "r'" + s + "'"
+
+
 def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     expand_path = XSH.expand_path
     out = set()
@@ -424,19 +436,33 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     paths, _ = _quote_paths(
         {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
     )
-    # When a literal file/directory named ~ exists in cwd and the prefix
-    # starts with ~, add r'~...' completions so the user can select the
-    # local file instead of $HOME.  The bare ~/... entries are kept for
-    # home directory access.
-    if prefix.startswith(tilde) and not is_raw_string and os.path.exists(tilde):
-        tilde_local = set()
+    # When a literal file/directory named ~ exists in cwd, add r'~...'
+    # completions so the user can select the local file instead of $HOME.
+    # This handles both "cd ~<Tab>" (prefix starts with ~) and "cd <Tab>"
+    # (empty prefix, ~ found by glob in cwd).
+    if not is_raw_string and os.path.exists(tilde):
+        tilde_remove = set()
         for p in list(paths):
             raw = p.rstrip()
-            if raw.startswith(tilde) and not raw.startswith("r"):
-                quoted = "r'" + raw + "'"
-                tilde_local.add(quoted)
-        if tilde_local:
-            paths |= tilde_local
+            # Skip entries already wrapped as r'...'.
+            if raw.startswith(("r'", 'r"')):
+                continue
+            # Strip optional quotes to inspect the path content.
+            inner = raw
+            if inner[:1] in ("'", '"'):
+                inner = inner[1:]
+            if inner[-1:] in ("'", '"'):
+                inner = inner[:-1]
+            # Unescape and strip trailing separator to compare.
+            inner = inner.replace("\\\\", "\\").rstrip("\\/ ")
+            if inner == tilde:
+                tilde_remove.add(p)
+        # Add the correct r'~...' entry for the literal ~ path.
+        if not filtfunc or filtfunc(tilde):
+            slash = xt.get_sep()
+            entry = tilde + slash if os.path.isdir(tilde) else tilde
+            paths -= tilde_remove
+            paths.add(_raw_quote(entry))
     paths.update(filter(filtfunc, _dots(prefix)))
     return paths, lprefix
 
