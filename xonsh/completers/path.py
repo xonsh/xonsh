@@ -341,7 +341,12 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     # a trailing separator).  Append os.sep so that iglobpath lists the
     # home directory contents, matching the behavior of ~\ and ~/.
     # Skip when a literal file/dir named ~ exists in cwd (PR #6339).
-    if xp.ON_WINDOWS and prefix == tilde and not is_raw_string and not os.path.exists(tilde):
+    if (
+        xp.ON_WINDOWS
+        and prefix == tilde
+        and not is_raw_string
+        and not os.path.exists(tilde)
+    ):
         prefix = tilde + os.sep
     _prefix_is_dir_listing = prefix.endswith(os.sep) or (
         os.altsep and prefix.endswith(os.altsep)
