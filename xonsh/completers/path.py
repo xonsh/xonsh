@@ -182,6 +182,18 @@ def _has_control_chars(s):
     return any(chr(c) in s for c in _CONTROL_CHAR_ESCAPE)
 
 
+def _raw_quote(s):
+    """Wrap *s* in r'...' with a trailing-backslash fix.
+
+    Raw strings can't end with an odd number of backslashes before the
+    closing quote (``r'path\\'`` is valid, ``r'path\\'`` is not).  Double
+    a lone trailing backslash so the result is always valid syntax.
+    """
+    if s.endswith("\\") and not s.endswith("\\\\"):
+        s += "\\"
+    return "r'" + s + "'"
+
+
 def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     expand_path = XSH.expand_path
     out = set()
@@ -337,6 +349,17 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     env = XSH.env
     glob_sorted = env.get("GLOB_SORTED")
     prefix = glob.escape(prefix)
+    # On Windows, bare ~ is not expanded by windows_expanduser (it requires
+    # a trailing separator).  Append os.sep so that iglobpath lists the
+    # home directory contents, matching the behavior of ~\ and ~/.
+    # Skip when a literal file/dir named ~ exists in cwd (PR #6339).
+    if (
+        xp.ON_WINDOWS
+        and prefix == tilde
+        and not is_raw_string
+        and not os.path.exists(tilde)
+    ):
+        prefix = tilde + os.sep
     _prefix_is_dir_listing = prefix.endswith(os.sep) or (
         os.altsep and prefix.endswith(os.altsep)
     )
@@ -412,25 +435,39 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     if cdpath and cd_in_command(line):
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
-    if tilde in prefix:
+    if tilde in prefix and not xp.ON_WINDOWS:
         home = os.path.expanduser(tilde)
         paths = {s.replace(home, tilde) for s in paths}
     paths, _ = _quote_paths(
         {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
     )
-    # When a literal file/directory named ~ exists in cwd and the prefix
-    # starts with ~, add r'~...' completions so the user can select the
-    # local file instead of $HOME.  The bare ~/... entries are kept for
-    # home directory access.
-    if prefix.startswith(tilde) and not is_raw_string and os.path.exists(tilde):
-        tilde_local = set()
+    # When a literal file/directory named ~ exists in cwd, add r'~...'
+    # completions so the user can select the local file instead of $HOME.
+    # This handles both "cd ~<Tab>" (prefix starts with ~) and "cd <Tab>"
+    # (empty prefix, ~ found by glob in cwd).
+    if not is_raw_string and os.path.exists(tilde):
+        tilde_remove = set()
         for p in list(paths):
             raw = p.rstrip()
-            if raw.startswith(tilde) and not raw.startswith("r"):
-                quoted = "r'" + raw + "'"
-                tilde_local.add(quoted)
-        if tilde_local:
-            paths |= tilde_local
+            # Skip entries already wrapped as r'...'.
+            if raw.startswith(("r'", 'r"')):
+                continue
+            # Strip optional quotes to inspect the path content.
+            inner = raw
+            if inner[:1] in ("'", '"'):
+                inner = inner[1:]
+            if inner[-1:] in ("'", '"'):
+                inner = inner[:-1]
+            # Unescape and strip trailing separator to compare.
+            inner = inner.replace("\\\\", "\\").rstrip("\\/ ")
+            if inner == tilde:
+                tilde_remove.add(p)
+        # Add the correct r'~...' entry for the literal ~ path.
+        if not filtfunc or filtfunc(tilde):
+            slash = xt.get_sep()
+            entry = tilde + slash if os.path.isdir(tilde) else tilde
+            paths -= tilde_remove
+            paths.add(_raw_quote(entry))
     paths.update(filter(filtfunc, _dots(prefix)))
     return paths, lprefix
 
@@ -472,17 +509,24 @@ def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None
         filtfunc=filtfunc,
     )
 
-    # r'...' entries (for literal ~ or $VAR files) get an explicit
-    # display so the ptk menu shows them distinctly from their
-    # expanded counterparts.
+    # Set an explicit display on completions whose text no longer
+    # starts with the typed prefix (e.g. expanded tilde on Windows:
+    # prefix "~" → completion "C:/Users/...").  Without this, the ptk
+    # completer strips ``len(prefix)`` chars from the front of the
+    # display, eating the drive letter.
     rich_completions = set()
     for comp in completions:
-        if comp.startswith("r'") or comp.startswith('r"'):
-            rich_completions.add(
-                RichCompletion(comp, display=comp, append_closing_quote=False)
-            )
-        else:
-            rich_completions.add(RichCompletion(comp, append_closing_quote=False))
+        # Strip quote prefix (r', r", ', ") to get the path content.
+        inner = comp
+        if inner[:2] in ("r'", 'r"', "R'", 'R"'):
+            inner = inner[2:]
+        elif inner[:1] in ("'", '"'):
+            inner = inner[1:]
+        needs_display = not inner.startswith(prefix)
+        display = comp if needs_display else None
+        rich_completions.add(
+            RichCompletion(comp, display=display, append_closing_quote=False)
+        )
 
     return rich_completions, lprefix
 

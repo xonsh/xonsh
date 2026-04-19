@@ -73,6 +73,84 @@ def test_complete_path_substring(xession, completion_context_parse):
         assert "unrelated.txt" not in basenames
 
 
+@pytest.mark.skipif(not xcp.xp.ON_WINDOWS, reason="Windows-only tilde expansion")
+@pytest.mark.parametrize(
+    "prefix_fmt",
+    ["~{sep}{dirname}{sep}", "~"],
+    ids=["tilde-subdir", "bare-tilde"],
+)
+def test_complete_path_tilde_expanded_on_windows(prefix_fmt, xession):
+    """On Windows, ~ should be expanded to the full home path in completions."""
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
+    home = os.path.expanduser("~")
+    with tempfile.TemporaryDirectory(dir=home) as td:
+        subdir = os.path.join(td, "subdir")
+        os.mkdir(subdir)
+        dirname = os.path.basename(td)
+        prefix = prefix_fmt.format(sep=os.sep, dirname=dirname)
+        line = f"cd {prefix}"
+        paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
+        # Completions should contain the full expanded home path, not ~
+        for p in paths:
+            assert "~" not in p, f"Expected expanded home path, got tilde: {p}"
+        assert paths, "Expected non-empty completions"
+
+
+@pytest.mark.parametrize(
+    "prefix, line, start, end, filtfunc, extra_files",
+    [
+        ("~", "cd ~", 3, 4, os.path.isdir, []),
+        ("", "cd ", 3, 3, os.path.isdir, []),
+        ("", "rm ", 3, 3, None, ["has space.txt"]),
+    ],
+    ids=["cd-tilde", "cd-empty", "rm-empty-need-quotes"],
+)
+def test_complete_path_literal_tilde_with_cd(
+    prefix, line, start, end, filtfunc, extra_files, xession
+):
+    """Literal ~ dir must appear only as r'~', never as bare ~ or '~'."""
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
+    with tempfile.TemporaryDirectory() as td:
+        os.mkdir(os.path.join(td, "~"))
+        for f in extra_files:
+            open(os.path.join(td, f), "w").close()
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            paths, _ = xcp._complete_path_raw(
+                prefix, line, start, end, {}, filtfunc=filtfunc
+            )
+            raw_entries = {p for p in paths if p.startswith("r'")}
+            assert raw_entries, f"Expected r'~' entry, got: {paths}"
+            # No bare or non-raw tilde entries should remain.
+            bad = {p for p in paths if "~" in p and not p.startswith("r'")}
+            assert not bad, f"Non-raw tilde entries should be removed: {bad}"
+            # All r'...' entries must be valid syntax (no r'path\')
+            for r in raw_entries:
+                try:
+                    compile(r, "<test>", "eval")
+                except SyntaxError:
+                    pytest.fail(f"Invalid raw string syntax: {r}")
+        finally:
+            os.chdir(old_cwd)
+
+
 @pytest.mark.parametrize("is_dir", [True, False], ids=["dir", "file"])
 def test_complete_path_literal_tilde(is_dir, xession):
     """A file/dir literally named ~ must appear as r'~' in completions."""
