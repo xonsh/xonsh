@@ -11,7 +11,6 @@ import pprint
 import re
 import subprocess
 import sys
-import textwrap
 import threading
 import typing as tp
 import warnings
@@ -218,16 +217,6 @@ def str_to_env_path(x):
     """
     # splitting will be done implicitly in EnvPath's __init__
     return EnvPath(x)
-
-
-@lazyobject
-def HELP_TEMPLATE():
-    return (
-        "{{INTENSE_RED}}{envvar}{{RESET}}:\n\n"
-        "{{INTENSE_YELLOW}}{docstr}{{RESET}}\n\n"
-        "default: {{CYAN}}{default}{{RESET}}\n"
-        "configurable: {{CYAN}}{configurable}{{RESET}}"
-    )
 
 
 def _rst_inline_to_color(s):
@@ -2590,38 +2579,27 @@ class Env(cabc.MutableMapping):
 
     def help(self, key, short=False):
         """Get information about a specific environment variable."""
-        vardocs = self.get_docs(key)
-        try:
-            width = min(79, os.get_terminal_size()[0])
-        except OSError:
-            width = 79
         if short:
-            docstr = vardocs.doc.strip()
-            doc_default = vardocs.doc_default
-            if isinstance(doc_default, str):
-                doc_default = doc_default.strip()
-            # If value starts with a list, put it on the next line
-            if docstr.startswith(("- ", "* ")):
-                docstr = "\n" + docstr
-            doc_default_str = str(doc_default) if doc_default is not None else ""
-            if doc_default_str.startswith(("- ", "* ")):
-                doc_default = "\n" + doc_default_str
-            template = HELP_TEMPLATE_SHORT.format(
-                envvar=key,
-                docstr=docstr,
-                default=doc_default,
-                configurable=vardocs.is_configurable,
-            )
-            template = _rst_inline_to_color(template)
-        else:
-            docstr = "\n".join(textwrap.wrap(vardocs.doc, width=width))
-            template = HELP_TEMPLATE.format(
-                envvar=key,
-                docstr=docstr,
-                default=vardocs.doc_default,
-                configurable=vardocs.is_configurable,
-            )
-            template = _rst_inline_to_color(template)
+            # Keep for future.
+            pass
+
+        vardocs = self.get_docs(key)
+        docstr = vardocs.doc.strip()
+        doc_default = vardocs.doc_default
+        if isinstance(doc_default, str):
+            doc_default = doc_default.strip()
+        if docstr.startswith(("- ", "* ")):
+            docstr = "\n" + docstr
+        doc_default_str = str(doc_default) if doc_default is not None else ""
+        if doc_default_str.startswith(("- ", "* ")):
+            doc_default = "\n" + doc_default_str
+        template = HELP_TEMPLATE_SHORT.format(
+            envvar=key,
+            docstr=docstr,
+            default=doc_default,
+            configurable=vardocs.is_configurable,
+        )
+        template = _rst_inline_to_color(template)
         print_color(template)
 
     def is_manually_set(self, varname):
