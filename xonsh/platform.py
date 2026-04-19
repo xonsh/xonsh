@@ -493,15 +493,37 @@ def bash_command():
 def BASH_COMPLETIONS_DEFAULT():
     """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
+
+    The bridge picks the first existing file from this list, so order
+    doesn't affect coverage — only which framework gets sourced when
+    several are installed side by side. Distro/package-manager prefixes
+    are listed alongside the standard FHS path so users don't have to
+    extend ``$BASH_COMPLETIONS`` manually after installing
+    bash-completion via Homebrew, MacPorts, Linuxbrew, Nix, etc.
     """
     if ON_LINUX or ON_CYGWIN or ON_MSYS:
-        bcd = ("/usr/share/bash-completion/bash_completion",)
+        bcd = (
+            "/usr/share/bash-completion/bash_completion",  # FHS, all major distros
+            "/home/linuxbrew/.linuxbrew/share/bash-completion/bash_completion",  # Linuxbrew
+            "/run/current-system/sw/share/bash-completion/bash_completion",  # NixOS
+            os.path.expanduser(  # nix-env single-user profile
+                "~/.nix-profile/share/bash-completion/bash_completion"
+            ),
+        )
     elif ON_DARWIN:
         bcd = (
+            # Homebrew, Intel
             "/usr/local/share/bash-completion/bash_completion",  # v2.x
             "/usr/local/etc/bash_completion",  # v1.x
-            "/opt/homebrew/share/bash-completion/bash_completion",  # v2.x on M1
-            "/opt/homebrew/etc/bash_completion",  # v1.x on M1
+            # Homebrew, Apple Silicon
+            "/opt/homebrew/share/bash-completion/bash_completion",  # v2.x
+            "/opt/homebrew/etc/bash_completion",  # v1.x
+            # MacPorts
+            "/opt/local/share/bash-completion/bash_completion",  # v2.x
+            "/opt/local/etc/bash_completion",  # v1.x
+            # Nix (nix-darwin shared and per-user profiles)
+            "/run/current-system/sw/share/bash-completion/bash_completion",
+            os.path.expanduser("~/.nix-profile/share/bash-completion/bash_completion"),
         )
     elif ON_WINDOWS and git_for_windows_path():
         bcd = (

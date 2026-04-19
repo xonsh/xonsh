@@ -27,12 +27,17 @@ def test_bridge_fallback_delegates_to_canonical_default():
     )
 
 
-def test_canonical_darwin_default_includes_apple_silicon():
-    """The Homebrew Apple Silicon path must appear in the canonical
-    Darwin default. Regression for the original bug where
-    ``$BASH_COMPLETIONS`` had no entry pointing at
-    ``/opt/homebrew``-installed bash-completion frameworks, so brew
-    completions silently never loaded on M-series Macs.
+def test_canonical_darwin_default_covers_all_install_prefixes():
+    """All four mac install prefixes (Homebrew Intel + Apple Silicon,
+    MacPorts, Nix) must appear so the bridge auto-discovers
+    bash-completion regardless of which package manager the user
+    chose. Regression for two distinct bugs:
+
+    * ``/opt/homebrew/...`` was missing — broke Apple Silicon
+      Homebrew users.
+    * MacPorts paths were never in the defaults despite an explicit
+      docs section (``docs/platforms.rst``) telling MacPorts users to
+      add them by hand.
     """
     if not plat_mod.ON_DARWIN:
         # The lazyobject realises platform-conditionally at import
@@ -42,5 +47,26 @@ def test_canonical_darwin_default_includes_apple_silicon():
 
         pytest.skip("Darwin-only assertion")
     paths = tuple(plat_mod.BASH_COMPLETIONS_DEFAULT)
-    assert "/opt/homebrew/share/bash-completion/bash_completion" in paths
+    # Homebrew Intel + Apple Silicon
     assert "/usr/local/share/bash-completion/bash_completion" in paths
+    assert "/opt/homebrew/share/bash-completion/bash_completion" in paths
+    # MacPorts
+    assert "/opt/local/share/bash-completion/bash_completion" in paths
+    # Nix shared profile (nix-darwin)
+    assert "/run/current-system/sw/share/bash-completion/bash_completion" in paths
+
+
+def test_canonical_linux_default_covers_brew_and_nix():
+    """Linux defaults probe more than just the FHS path: Linuxbrew
+    (servers/CI commonly use it) and Nix (NixOS, single-user nix-env)
+    are first-class. Without this, users on either get zero
+    completion auto-discovery.
+    """
+    if not plat_mod.ON_LINUX:
+        import pytest
+
+        pytest.skip("Linux-only assertion")
+    paths = tuple(plat_mod.BASH_COMPLETIONS_DEFAULT)
+    assert "/usr/share/bash-completion/bash_completion" in paths
+    assert "/home/linuxbrew/.linuxbrew/share/bash-completion/bash_completion" in paths
+    assert "/run/current-system/sw/share/bash-completion/bash_completion" in paths
