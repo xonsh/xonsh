@@ -244,6 +244,21 @@ falls back to installing ``SIG_IGN`` for ``SIGTTIN`` and ``SIGTTOU``.
     XONSH_NO_FG_TAKEOVER=1 xonsh
 
 
+Tips
+====
+
+When passing multi-statement commands to ``xonsh -c``, the
+:ref:`subprocess expression macro <macros>` ``@!()`` lets you avoid
+manual quoting — it captures its content as a literal string and passes
+it as a single argument:
+
+.. code-block:: xonsh
+
+    $(@lines xonsh -c @!(echo hello; echo world))
+
+See :ref:`macros` for more on ``@!()``.
+
+
 See also
 ========
 
