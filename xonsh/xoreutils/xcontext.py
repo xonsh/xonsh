@@ -1,6 +1,7 @@
 """The xontext command."""
 
 import errno
+import json
 import os
 import subprocess
 import sys
@@ -185,7 +186,7 @@ def _resolve_path(value, resolve):
     return value, False
 
 
-def xcontext_main(no_resolve: bool = False, _stdout=None):
+def xcontext_main(no_resolve: bool = False, as_json: bool = False, _stdout=None):
     """Report information about the current xonsh environment.
 
     By default, all displayed binary paths (xxonsh, xpython, xpip and the
@@ -200,6 +201,12 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
     no_resolve : -n, --no-resolve
         Show raw paths as-is without following symlinks (turns off the
         default resolution).
+    as_json : -j, --json
+        Emit the resolved paths as a JSON object on stdout instead of the
+        colored text report. Top-level keys mirror the text sections
+        (``session``, ``commands``, ``env``); ``commands`` always
+        includes every probed name with ``null`` for entries not on
+        ``$PATH``; ``env`` only contains variables that are set.
     """
     # Local import: xonsh.main pulls in heavy modules, keep the dependency lazy.
     from xonsh.main import get_current_xonsh
@@ -236,6 +243,27 @@ def xcontext_main(no_resolve: bool = False, _stdout=None):
         xpip_display = str(xpip)
     else:
         xpip_display = None
+
+    if as_json:
+        # Skip color/version probes — JSON consumers want raw paths only.
+        # ``commands`` keeps every probed key (None for not-on-PATH) so the
+        # shape is predictable; ``env`` mirrors the text section and omits
+        # unset variables.
+        report = {
+            "session": {
+                "xxonsh": current_xonsh,
+                "xpython": xpy,
+                "xpip": xpip_display,
+            },
+            "commands": {cmd: path_resolved[cmd] for cmd in path_resolved},
+            "env": {
+                ev: XSH.env.get(ev)
+                for ev in ("CONDA_DEFAULT_ENV", "VIRTUAL_ENV")
+                if XSH.env.get(ev)
+            },
+        }
+        print(json.dumps(report, indent=2), file=stdout)
+        return 0
 
     # Color tokens: section headers are purple; within a family (xonsh/xxonsh,
     # python/xpython, pip/xpip) both labels go GREEN when the session binary
