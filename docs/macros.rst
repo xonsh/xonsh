@@ -592,6 +592,8 @@ is error-prone when the expression itself contains quotes:
     # @!() just works:
     @ echo 123 | pl @!(line + '!!!')
 
+    @ $(@lines xonsh -c @!(echo hello; echo world))
+
 
 Take Away
 =========
