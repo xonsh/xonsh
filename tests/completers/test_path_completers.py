@@ -100,9 +100,7 @@ def test_complete_path_tilde_expanded_on_windows(prefix_fmt, xession):
         paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
         # Completions should contain the full expanded home path, not ~
         for p in paths:
-            assert "~" not in p, (
-                f"Expected expanded home path, got tilde: {p}"
-            )
+            assert "~" not in p, f"Expected expanded home path, got tilde: {p}"
         assert paths, "Expected non-empty completions"
 
 
