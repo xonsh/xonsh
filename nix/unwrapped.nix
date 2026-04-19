@@ -137,7 +137,7 @@ buildPythonPackage {
 
   meta = {
     homepage = "https://xon.sh/";
-    description = "Python-ish, BASHwards-compatible shell";
+    description = "Xonsh is a Python-powered shell.";
     changelog = "https://github.com/xonsh/xonsh/blob/main/CHANGELOG.md";
     license = with lib.licenses; [ bsd3 ];
     mainProgram = "xonsh";
