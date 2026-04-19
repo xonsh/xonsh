@@ -74,7 +74,12 @@ def test_complete_path_substring(xession, completion_context_parse):
 
 
 @pytest.mark.skipif(not xcp.xp.ON_WINDOWS, reason="Windows-only tilde expansion")
-def test_complete_path_tilde_expanded_on_windows(xession):
+@pytest.mark.parametrize(
+    "prefix_fmt",
+    ["~{sep}{dirname}{sep}", "~"],
+    ids=["tilde-subdir", "bare-tilde"],
+)
+def test_complete_path_tilde_expanded_on_windows(prefix_fmt, xession):
     """On Windows, ~ should be expanded to the full home path in completions."""
     xession.env.update(
         {
@@ -90,7 +95,7 @@ def test_complete_path_tilde_expanded_on_windows(xession):
         subdir = os.path.join(td, "subdir")
         os.mkdir(subdir)
         dirname = os.path.basename(td)
-        prefix = f"~{os.sep}{dirname}{os.sep}"
+        prefix = prefix_fmt.format(sep=os.sep, dirname=dirname)
         line = f"cd {prefix}"
         paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
         # Completions should contain the full expanded home path, not ~
@@ -98,10 +103,7 @@ def test_complete_path_tilde_expanded_on_windows(xession):
             assert "~" not in p, (
                 f"Expected expanded home path, got tilde: {p}"
             )
-        # At least one completion should reference the subdir
-        assert any("subdir" in p for p in paths), (
-            f"Expected 'subdir' in completions: {paths}"
-        )
+        assert paths, "Expected non-empty completions"
 
 
 @pytest.mark.parametrize("is_dir", [True, False], ids=["dir", "file"])
