@@ -509,17 +509,24 @@ def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None
         filtfunc=filtfunc,
     )
 
-    # r'...' entries (for literal ~ or $VAR files) get an explicit
-    # display so the ptk menu shows them distinctly from their
-    # expanded counterparts.
+    # Set an explicit display on completions whose text no longer
+    # starts with the typed prefix (e.g. expanded tilde on Windows:
+    # prefix "~" → completion "C:/Users/...").  Without this, the ptk
+    # completer strips ``len(prefix)`` chars from the front of the
+    # display, eating the drive letter.
     rich_completions = set()
     for comp in completions:
-        if comp.startswith("r'") or comp.startswith('r"'):
-            rich_completions.add(
-                RichCompletion(comp, display=comp, append_closing_quote=False)
-            )
-        else:
-            rich_completions.add(RichCompletion(comp, append_closing_quote=False))
+        # Strip quote prefix (r', r", ', ") to get the path content.
+        inner = comp
+        if inner[:2] in ("r'", 'r"', "R'", 'R"'):
+            inner = inner[2:]
+        elif inner[:1] in ("'", '"'):
+            inner = inner[1:]
+        needs_display = not inner.startswith(prefix)
+        display = comp if needs_display else None
+        rich_completions.add(
+            RichCompletion(comp, display=display, append_closing_quote=False)
+        )
 
     return rich_completions, lprefix
 
