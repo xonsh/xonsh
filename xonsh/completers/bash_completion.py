@@ -12,7 +12,6 @@ import re
 import shlex
 import shutil
 import subprocess
-import sys
 import typing as tp
 
 from xonsh.lib.string import commonprefix
@@ -76,29 +75,18 @@ def _bash_command(env=None):
 def _bash_completion_paths_default():
     """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
+
+    Delegates to :data:`xonsh.platform.BASH_COMPLETIONS_DEFAULT` — the
+    canonical default surfaced via ``$BASH_COMPLETIONS``. We had two
+    parallel copies in the past; they drifted and one platform
+    (Apple Silicon Macs) silently lost its Homebrew paths. The import
+    is intentionally lazy to honour this module's "no action on
+    import" rule — the path list is only computed when something
+    actually asks for the fallback.
     """
-    platform_sys = platform.system()
-    if platform_sys == "Linux" or sys.platform == "cygwin":
-        bcd = ("/usr/share/bash-completion/bash_completion",)
-    elif platform_sys == "Darwin":
-        bcd = (
-            "/usr/local/share/bash-completion/bash_completion",  # v2.x
-            "/usr/local/etc/bash_completion",
-        )  # v1.x
-    elif platform_sys == "Windows":
-        gfwp = _git_for_windows_path()
-        if gfwp:
-            bcd = (
-                os.path.join(gfwp, "usr\\share\\bash-completion\\bash_completion"),
-                os.path.join(
-                    gfwp, "mingw64\\share\\git\\completion\\git-completion.bash"
-                ),
-            )
-        else:
-            bcd = ()
-    else:
-        bcd = ()
-    return bcd
+    from xonsh.platform import BASH_COMPLETIONS_DEFAULT
+
+    return tuple(BASH_COMPLETIONS_DEFAULT)
 
 
 _BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
