@@ -412,7 +412,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     if cdpath and cd_in_command(line):
         _add_cdpaths(paths, prefix)
     paths = set(filter(filtfunc, paths))
-    if tilde in prefix:
+    if tilde in prefix and not xp.ON_WINDOWS:
         home = os.path.expanduser(tilde)
         paths = {s.replace(home, tilde) for s in paths}
     paths, _ = _quote_paths(

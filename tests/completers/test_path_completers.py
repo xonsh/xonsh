@@ -73,6 +73,37 @@ def test_complete_path_substring(xession, completion_context_parse):
         assert "unrelated.txt" not in basenames
 
 
+@pytest.mark.skipif(not xcp.xp.ON_WINDOWS, reason="Windows-only tilde expansion")
+def test_complete_path_tilde_expanded_on_windows(xession):
+    """On Windows, ~ should be expanded to the full home path in completions."""
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
+    home = os.path.expanduser("~")
+    with tempfile.TemporaryDirectory(dir=home) as td:
+        subdir = os.path.join(td, "subdir")
+        os.mkdir(subdir)
+        dirname = os.path.basename(td)
+        prefix = f"~{os.sep}{dirname}{os.sep}"
+        line = f"cd {prefix}"
+        paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
+        # Completions should contain the full expanded home path, not ~
+        for p in paths:
+            assert "~" not in p, (
+                f"Expected expanded home path, got tilde: {p}"
+            )
+        # At least one completion should reference the subdir
+        assert any("subdir" in p for p in paths), (
+            f"Expected 'subdir' in completions: {paths}"
+        )
+
+
 @pytest.mark.parametrize("is_dir", [True, False], ids=["dir", "file"])
 def test_complete_path_literal_tilde(is_dir, xession):
     """A file/dir literally named ~ must appear as r'~' in completions."""
