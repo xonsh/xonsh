@@ -70,7 +70,7 @@ jobs:
         run: mv xonsh-x86_64.AppImage xonsh-nightly.AppImage
 
       - name: upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: xonsh-nightly.AppImage
           path: xonsh-nightly.AppImage
@@ -137,7 +137,7 @@ jobs:
 
       - name: upload build log and crash report
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: nuitka-logs-linux
           path: |
@@ -151,7 +151,7 @@ jobs:
 #           ./xonsh-nightly-nuitka-linux.bin -c 'echo "nuitka build ok"'
 
       - name: upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: xonsh-nightly-nuitka-linux.bin
           path: xonsh-nightly-nuitka-linux.bin
@@ -210,7 +210,7 @@ jobs:
 
       - name: upload build log and crash report
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: nuitka-logs-macos
           path: |
@@ -224,7 +224,7 @@ jobs:
 #           ./xonsh-nightly-nuitka-macos.bin -c 'echo "nuitka build ok"'
 
       - name: upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: xonsh-nightly-nuitka-macos.bin
           path: xonsh-nightly-nuitka-macos.bin
@@ -274,7 +274,7 @@ jobs:
           mv winget/dist/*.exe xonsh-nightly-inno6-setup.exe
 
       - name: upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: xonsh-nightly-inno6-setup.exe
           path: xonsh-nightly-inno6-setup.exe
@@ -330,7 +330,7 @@ jobs:
           mv winget/dist/*.exe xonsh-nightly-inno5-setup.exe
 
       - name: upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: xonsh-nightly-inno5-setup.exe
           path: xonsh-nightly-inno5-setup.exe
@@ -381,7 +381,7 @@ jobs:
         run: mv flatpak-build/xonsh.flatpak xonsh-nightly.flatpak
 
       - name: upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: xonsh-nightly.flatpak
           path: xonsh-nightly.flatpak
