@@ -1,6 +1,6 @@
 # Xonsh Change Log
 
-## [0.23.0](https://github.com/xonsh/xonsh/compare/0.22.8...0.23.0) (2026-04-19)
+## [0.23.0](https://github.com/xonsh/xonsh/compare/0.22.8...0.23.0) (2026-04-20)
 
 
 ### ⚠ BREAKING CHANGES
