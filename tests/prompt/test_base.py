@@ -256,6 +256,30 @@ def test_custom_env_overrides_default(formatter, xession, live_fields, disable):
     assert formatter("{env_name}", fields=live_fields) == exp
 
 
+def test_virtual_env_prompt_matching_basename_is_wrapped(
+    formatter, xession, live_fields, tmp_path
+):
+    """Regression: activate.xsh sets VIRTUAL_ENV_PROMPT to the bare venv name.
+
+    When the value of $VIRTUAL_ENV_PROMPT matches the name derived from
+    $VIRTUAL_ENV (directory basename or pyvenv.cfg ``prompt=``), it is
+    auto-populated by activate.xsh and must be wrapped with
+    env_prefix/env_postfix. Otherwise the prompt collapses into e.g.
+    ``vvv1pc@pc`` instead of ``(vvv1) pc@pc``.
+    """
+    venv = tmp_path / "vvv1"
+    venv.mkdir()
+    prompt_env._determine_env_name.cache_clear()
+    xession.shell.prompt_formatter = formatter
+    xession.env.update(
+        dict(
+            VIRTUAL_ENV=str(venv),
+            VIRTUAL_ENV_PROMPT="vvv1",
+        )
+    )
+    assert formatter("{env_name}", fields=live_fields) == "(vvv1) "
+
+
 def test_promptformatter_cache(formatter):
     spam = Mock()
     template = "{spam} and {spam}"

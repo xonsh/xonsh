@@ -29,14 +29,21 @@ def find_env_name() -> str | None:
 def env_name() -> str:
     """Build env_name based on different sources. Respect order of precedence.
 
-    Name from VIRTUAL_ENV_PROMPT will be used as-is.
-    Names from other sources are surrounded with ``{env_prefix}`` and
-    ``{env_postfix}`` fields.
+    Name from ``$VIRTUAL_ENV_PROMPT`` is used as-is — so users can override
+    the prompt verbatim. As an exception, if the value matches the name
+    derived from ``$VIRTUAL_ENV`` (via the ``prompt=`` field in
+    ``pyvenv.cfg`` or the directory basename), it is treated as a value
+    auto-populated by ``activate.xsh`` and wrapped with ``{env_prefix}`` /
+    ``{env_postfix}`` like the other sources. Names from other sources are
+    always surrounded with ``{env_prefix}`` and ``{env_postfix}``.
     """
     if XSH.env.get("VIRTUAL_ENV_DISABLE_PROMPT"):
         return ""
     virtual_env_prompt = XSH.env.get("VIRTUAL_ENV_PROMPT")
     if virtual_env_prompt:
+        virtual_env = XSH.env.get("VIRTUAL_ENV")
+        if virtual_env and virtual_env_prompt == _determine_env_name(virtual_env):
+            return _surround_env_name(virtual_env_prompt)
         return virtual_env_prompt
     found_envname = find_env_name()
     return _surround_env_name(found_envname) if found_envname else ""
