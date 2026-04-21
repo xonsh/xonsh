@@ -405,8 +405,8 @@ def xcontext_main(no_resolve: bool = False, as_json: bool = False, _stdout=None)
             "env": {
                 ev: val
                 for ev, val in (
-                    ("CONDA_DEFAULT_ENV", xc.get_env_conda_default_env()),
                     ("VIRTUAL_ENV", xc.get_env_virtual_env()),
+                    ("CONDA_DEFAULT_ENV", xc.get_env_conda_default_env()),
                 )
                 if val
             },
@@ -505,8 +505,8 @@ def xcontext_main(no_resolve: bool = False, as_json: bool = False, _stdout=None)
     env_rows = [
         (ev, val)
         for ev, val in (
-            ("CONDA_DEFAULT_ENV", xc.get_env_conda_default_env()),
             ("VIRTUAL_ENV", xc.get_env_virtual_env()),
+            ("CONDA_DEFAULT_ENV", xc.get_env_conda_default_env()),
         )
         if val
     ]

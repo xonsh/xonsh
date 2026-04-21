@@ -512,7 +512,12 @@ xonsh also allows for an explicit override of the rendering of ``{env_name}``,
 via the ``$VIRTUAL_ENV_PROMPT`` environment variable. If this variable is
 set to a non-empty value, ``{env_name}`` will *always* render as its value,
 regardless of whether a virtual environment is active. The value is used
-as-is, without the usual ``{env_prefix}`` / ``{env_postfix}`` wrapping.
+as-is, without the usual ``{env_prefix}`` / ``{env_postfix}`` wrapping ---
+*except* when it matches the name derived from ``$VIRTUAL_ENV`` (the
+``prompt = ...`` field in ``<venv>/pyvenv.cfg`` or the venv directory
+basename). In that case it is treated as an auto-populated value from
+``activate.xsh`` and wrapped like the other sources, so the prompt reads
+``(venv) user@host`` instead of ``venvuser@host``.
 ``$VIRTUAL_ENV_PROMPT`` is overridden by ``$VIRTUAL_ENV_DISABLE_PROMPT``.
 
 When neither variable is set, ``{env_name}`` falls back to the active
