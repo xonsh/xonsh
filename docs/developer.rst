@@ -166,73 +166,6 @@ xonsh follows `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ for all Python
 How to Test
 ------------
 
-Container
-^^^^^^^^^
-
-If you want to run your "work in progress version" without installing
-and in a fresh environment you can use Docker. If Docker is installed
-you just have to run this:
-
-.. code-block:: bash
-
-    python xonsh-in-docker.py
-
-This will build and run the current state of the repository in an isolated
-container (it may take a while the first time you run it). You can override
-the default Python and ``prompt_toolkit`` versions with ``--python`` and
-``--ptk``:
-
-.. code-block:: bash
-
-    python xonsh-in-docker.py --python 3.13 --ptk 3.0.52
-
-Ensure your cwd is the root directory of the project (i.e., the one containing the
-.git directory).
-
-Nix
-^^^^
-
-If you have Nix package manager installed on your system, you can use it instead
-of Docker to build and run your "work in progress version". If Nix is configured
-with experimental features ``nix-command`` and ``flakes`` enabled, it is as simple
-as running this in the project directory:
-
-.. code-block:: bash
-
-    # build and run with a single command
-    nix run
-
-    # or build and then run
-    nix build  # this builds the package and creates a `result` symlink
-    ./result/bin/xonsh
-
-This will build and run the current state of the repository with Nix. Optionally add
-``-L`` to the Nix commands to see detailed output when building. If you have
-new files created and need them to build, make sure they're added to Git (e.g. using
-``git add``), or Nix won't be aware of them when building the package from flake.
-
-If you prefer not to use flakes, it can also be done in a legacy way:
-
-.. code-block:: bash
-
-    nix-build nix/ -A xonsh
-    ./result/bin/xonsh
-
-The default Python version used follows the default of ``nixpkgs-unstable`` (it is
-3.13 at the time of writing this). There are variants using different Python versions
-declared in ``nix/default.nix``. For example, to use Python 3.14:
-
-.. code-block:: bash
-
-    # build and run
-    nix run '.#xonsh-py314'
-
-    # build only
-    nix build '.#xonsh-py314'
-
-    # build with legacy nix
-    nix-build nix/ -A xonsh-py314
-
 Dependencies
 ^^^^^^^^^^^^^
 
@@ -481,8 +414,77 @@ validate a change against a pristine setup. The recipes below use
 rootless ``podman`` containers; ``docker`` would work just as well if
 you prefer it.
 
-NixOS
-^^^^^
+
+Nix
+^^^
+
+If you have Nix package manager installed on your system, you can use it instead
+of Docker to build and run your "work in progress version". If Nix is configured
+with experimental features ``nix-command`` and ``flakes`` enabled, it is as simple
+as running this in the project directory:
+
+.. code-block:: bash
+
+    # build and run with a single command
+    nix run
+
+    # or build and then run
+    nix build  # this builds the package and creates a `result` symlink
+    ./result/bin/xonsh
+
+This will build and run the current state of the repository with Nix. Optionally add
+``-L`` to the Nix commands to see detailed output when building. If you have
+new files created and need them to build, make sure they're added to Git (e.g. using
+``git add``), or Nix won't be aware of them when building the package from flake.
+
+If you prefer not to use flakes, it can also be done in a legacy way:
+
+.. code-block:: bash
+
+    nix-build nix/ -A xonsh
+    ./result/bin/xonsh
+
+The default Python version used follows the default of ``nixpkgs-unstable`` (it is
+3.13 at the time of writing this). There are variants using different Python versions
+declared in ``nix/default.nix``. For example, to use Python 3.14:
+
+.. code-block:: bash
+
+    # build and run
+    nix run '.#xonsh-py314'
+
+    # build only
+    nix build '.#xonsh-py314'
+
+    # build with legacy nix
+    nix-build nix/ -A xonsh-py314
+
+
+Container
+^^^^^^^^^
+
+If you want to run your "work in progress version" without installing
+and in a fresh environment you can use Docker. If Docker is installed
+you just have to run this:
+
+.. code-block:: bash
+
+    python xonsh-in-docker.py
+
+This will build and run the current state of the repository in an isolated
+container (it may take a while the first time you run it). You can override
+the default Python and ``prompt_toolkit`` versions with ``--python`` and
+``--ptk``:
+
+.. code-block:: bash
+
+    python xonsh-in-docker.py --python 3.13 --ptk 3.0.52
+
+Ensure your cwd is the root directory of the project (i.e., the one containing the
+.git directory).
+
+Nix Container
+~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -491,8 +493,8 @@ NixOS
     xonsh
     xcontext
 
-Arch Linux
-^^^^^^^^^^
+Arch Linux Container
+~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
