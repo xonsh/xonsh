@@ -244,7 +244,7 @@ Summary table
       - no
       - no
       - yes
-      - no for threadable
+      - no for thread
       - yes
       - :class:`~xonsh.procs.pipelines.HiddenCommandPipeline`
     * - ``$[cmd]``
