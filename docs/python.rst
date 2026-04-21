@@ -151,7 +151,7 @@ command. Classic collisions: ``id``, ``zip``, ``dir``, ``import``.
 Workarounds:
 
 * **Flip the experimental toggle**
-  `$XONSH_BUILTINS_TO_CMD <envvars.html#envvar-XONSH_BUILTINS_TO_CMD>`_ — when
+  `$XONSH_BUILTINS_TO_CMD <envvars.html#XONSH_BUILTINS_TO_CMD>`_ — when
   set, bare built-in names are run as subprocess commands if a matching
   alias or executable exists, falling back to the Python built-in
   otherwise. The same switch is also useful on Windows for ``dir`` (see
