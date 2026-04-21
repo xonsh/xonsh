@@ -1,5 +1,15 @@
 # Xonsh Change Log
 
+## [0.23.1](https://github.com/xonsh/xonsh/compare/0.23.0...0.23.1) (2026-04-21)
+
+
+### Fixes
+
+* avoid error when output dir is not `_build` ([#6357](https://github.com/xonsh/xonsh/issues/6357)) ([6ba2b3e](https://github.com/xonsh/xonsh/commit/6ba2b3ecba547cce731acb4373a5fdb797c9a284))
+* **chore:** Fixed release-please depth to avoid reace with nightly build ([#6351](https://github.com/xonsh/xonsh/issues/6351)) ([3d9eb6a](https://github.com/xonsh/xonsh/commit/3d9eb6ad687ec70d7d35a54f27b8984b8f80ffb6))
+* **parser:** preserve "func()[subscript]" at statement level ([#6355](https://github.com/xonsh/xonsh/issues/6355)) ([aa7383a](https://github.com/xonsh/xonsh/commit/aa7383a06a1129e317fea8c0f540bf5a07c817f4))
+* virtualenv name now has smarter formatting ([#6353](https://github.com/xonsh/xonsh/issues/6353)) ([014715e](https://github.com/xonsh/xonsh/commit/014715ecf5adde6a71e341763aad2fb18a4e13c6))
+
 ## [0.23.0](https://github.com/xonsh/xonsh/compare/0.22.8...0.23.0) (2026-04-19)
 
 
