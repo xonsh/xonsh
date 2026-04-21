@@ -2,9 +2,9 @@
 
 .. _python_virtual_environments:
 
-===========================
-Python Virtual Environments
-===========================
+====================
+Virtual Environments
+====================
 
 Python virtual environments let you isolate a project's dependencies from
 the system Python, and xonsh works with the usual tools for creating them.
