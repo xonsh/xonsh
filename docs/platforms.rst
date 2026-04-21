@@ -346,7 +346,7 @@ Name space shadowing
 ^^^^^^^^^^^^^^^^^^^^
 
 Due to ambiguity with the Python ``dir`` builtin, to list the current directory
-you must explicitly request the ``dir .``, create an alias 
+you must explicitly request the ``dir .``, create an alias
 or set `$XONSH_BUILTINS_TO_CMD <envvars.html#XONSH_BUILTINS_TO_CMD>`_.
 
 Many people create a ``d`` alias for the ``dir`` command to save
