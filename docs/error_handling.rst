@@ -212,12 +212,12 @@ Putting it all together: resolution order
 When a subprocess finishes with a non-zero exit, xonsh walks a small
 decision tree to decide whether to raise:
 
-1. **``rc == 0``** → never raise.
-2. **``@error_ignore``** was applied (``spec.raise_subproc_error is False``)
+1. ``rc == 0`` → never raise.
+2. ``@error_ignore`` was applied (``spec.raise_subproc_error is False``)
    → never raise.
-3. **``@error_raise``** was applied (``spec.raise_subproc_error is True``)
+3. ``@error_raise`` was applied (``spec.raise_subproc_error is True``)
    → raise immediately, overriding everything.
-4. **Inside an ``&&``/``||`` chain** (``spec.in_boolop is True``) → do
+4. Inside an ``&&``/``||`` chain (``spec.in_boolop is True``) → do
    not raise at the pipeline level; let the chain short-circuit and
    let the chain wrapper decide based on the *final* chain result.
 5. **``$XONSH_SUBPROC_CMD_RAISE_ERROR is True``** → raise on this
