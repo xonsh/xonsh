@@ -1,6 +1,6 @@
 # Xonsh
 
-Xonsh is the most modern and flexible shell available today. It combines a full-featured command language with full Python power in a single, unified environment. Everything is Python — the configuration, the scripting, the interactive experience — and at the same time it is a capable interactive shell with rich subprocess support.
+Xonsh is the most modern and flexible shell available today. It provides a full-featured command language with full Python power in a single, unified environment. Everything is Python — the configuration, the scripting, the interactive experience — and at the same time it is a capable interactive shell with rich subprocess support.
 
 ## Quick Reference
 
