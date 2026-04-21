@@ -186,7 +186,7 @@ Example of running an interactive xonsh session in a container:
 
 .. code-block:: console
 
-    $ docker run --rm -it xonsh/interactive
+    $ podman run --rm -it xonsh/xonsh-interactive
 
 Learn more: `Containers <containers.html>`_.
 
