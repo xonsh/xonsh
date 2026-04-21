@@ -4,8 +4,8 @@ Container
 Xonsh publishes a handful of containers, primarily targeting CI and automation use cases. All of them are published on `Docker Hub <https://hub.docker.com/u/xonsh>`__.
 
 * ``xonsh/xonsh``: A base container providing basic xonsh
-* ``xonsh/interactive``: xonsh with additions for people
-* ``xonsh/action``: xonsh with additions for GitHub Actions
+* ``xonsh/xonsh-interactive``: xonsh with additions for people
+* ``xonsh/xonsh-github-action``: xonsh with additions for GitHub Actions
 
 All containers use the same tagging scheme:
 
@@ -27,18 +27,18 @@ The container source can be found in the `container project <https://github.com/
 A basic container, including Python itself, xonsh, and the linux extras. This container is deliberately kept minimal.
 
 
-``xonsh/interactive``
+``xonsh/xonsh-interactive``
 ---------------------
 
-(`Docker Hub <https://hub.docker.com/r/xonsh/interactive>`__)
+(`Docker Hub <https://hub.docker.com/r/xonsh/xonsh-interactive>`__)
 
 A container made for humans (such as getting a shell inside of a pod). It includes prompt toolkit and pygments so that xonsh is more usable interactively.
 
 
-``xonsh/action``
+``xonsh/xonsh-github-action``
 ----------------
 
-(`Docker Hub <https://hub.docker.com/r/xonsh/action>`__)
+(`Docker Hub <https://hub.docker.com/r/xonsh/xonsh-github-action>`__)
 
 A container with extras for GitHub Actions.
 
