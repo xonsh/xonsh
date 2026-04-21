@@ -479,6 +479,17 @@ def subproc_toks(
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
+    # A statement that starts with an f-string token (``f"..."``) is a
+    # Python expression, not a subprocess command — e.g. ``f"{q()[0]}"``
+    # at statement level must stay Python.  Before the GH-6354 fix the
+    # same line produced a broken wrap that happened to re-parse as a
+    # SyntaxError and therefore round-tripped back to Python; now that
+    # the wrap is syntactically clean we have to decline it explicitly,
+    # otherwise ``try_subproc_toks`` would substitute the f-string as a
+    # subprocess command.  (``echo f"hi"`` still wraps: the f-string is
+    # not the first collected token there.)
+    if toks[0].type == "FSTRING_START":
+        return
     elif saw_macro or greedy:
         end_offset = len(toks[-1].value.rstrip()) + 1
     if toks[0].lineno != toks[-1].lineno:
