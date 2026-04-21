@@ -43,7 +43,9 @@ def rstjinja(app, docname, source):
         source[0] = rendered
 
         # for debugging purpose write output
-        Path(utils.docs_dir / "_build" / f"{docname}.rst.out").write_text(rendered)
+        out_path = Path(utils.docs_dir / "_build" / f"{docname}.rst.out")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(rendered)
 
 
 class FixEnvVarSectionIds(SphinxTransform):
