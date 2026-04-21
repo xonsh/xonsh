@@ -226,3 +226,61 @@ def test_exec_scope_reuse(xonsh_execer_exec):
     assert xonsh_execer_exec("x = 0")
     with pytest.raises(NameError):
         xonsh_execer_exec("print(x)")
+
+
+# Regression tests for GH-6354: when a function call followed by a
+# subscript appears at statement level and its name is not yet tracked
+# in scope (e.g. forward-referenced), CtxAwareTransformer used to hand
+# the expression to try_subproc_toks, whose subproc_toks helper dropped
+# the call and produced ``![[subscript]]``.  With ``$XONSH_SUBPROC_RAISE_ERROR``
+# defaulting to True in 0.23 the resulting failed subprocess surfaces
+# as a CalledProcessError; before 0.23 the bug was silent and the
+# Python call was just never executed.  Either way the fix is that
+# these expressions must stay as Python subscripts on calls.
+@pytest.mark.parametrize(
+    "expr",
+    [
+        "q()[0]",
+        'q()["rows"]',
+        "obj.method()[0]",
+        "f(g())[0]",
+        'pprint(q()["rows"])',
+        "foo(bar()[0])",
+    ],
+)
+def test_call_subscript_preserved_at_stmt_level(expr, xonsh_execer_parse):
+    """Forward-referenced ``call()[subscript]`` must not collapse to a subproc."""
+    tree = xonsh_execer_parse(expr + "\n")
+    unparsed = pyast_unparse(tree)
+    assert "subproc_captured_hiddenobject" not in unparsed, (
+        f"{expr!r} was silently turned into a subproc call: {unparsed!r}"
+    )
+
+
+def test_forward_ref_call_subscript_in_function(xonsh_execer_parse):
+    """Mirrors kafka-demo.xsh: the call is defined *after* the user (#6354)."""
+    import ast as pyast
+
+    code = (
+        "def display():\n"
+        "    from pprint import pprint\n"
+        "    pprint(query_cratedb('SELECT 1;')['rows'])\n"
+        "\n"
+        "def query_cratedb(sql):\n"
+        "    return {'rows': [1, 2, 3]}\n"
+    )
+    tree = xonsh_execer_parse(code)
+    display = tree.body[0]
+    assert isinstance(display, pyast.FunctionDef)
+    # The display body should still contain a plain Python Expr with a
+    # ``pprint(...)`` Call, not a subproc_captured_hiddenobject.
+    stmts = pyast_unparse(display)
+    assert "subproc_captured_hiddenobject" not in stmts
+    assert "pprint(" in stmts
+
+
+def pyast_unparse(tree):
+    """Return ast.unparse on the tree (helper for the tests above)."""
+    import ast as pyast
+
+    return pyast.unparse(tree)

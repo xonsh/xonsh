@@ -485,6 +485,40 @@ def test_subproc_toks_greedy_parens_statements_with_grep():
     assert exp == obs
 
 
+# Regression tests for GH-6354: subproc_toks used to treat ``)`` that
+# closes a function-call LPAREN as a statement terminator and clear all
+# previously collected tokens, so ``q()[0]`` yielded ``![[0]]`` and lost
+# the call entirely.  The corrected behaviour keeps the full expression
+# in the wrap; re-parsing the result fails (it is not a valid subproc
+# command) and ``try_subproc_toks`` falls back to the original Python
+# node, preserving ``q()[0]`` as a subscript on a call.
+@pytest.mark.parametrize(
+    "line",
+    [
+        "q()[0]",
+        'q()["rows"]',
+        "obj.method()[0]",
+        "f(g())[0]",
+        "f(g(h()))[0]",
+        'pprint(q()["rows"])',
+        "foo(bar()[0])",
+        "q()[0][1]",
+    ],
+)
+def test_subproc_toks_call_subscript_does_not_drop_call(line):
+    """The wrap must not drop the call and re-wrap just the subscript."""
+    obs = subproc_toks(line, lexer=LEXER, returnline=False)
+    # The buggy output used to be ``![[...]]`` with only the bracket
+    # part, having silently discarded the function call prefix.
+    assert obs != "![[0]]"
+    assert obs != '![["rows"]]'
+    # Either the function declines to wrap (None) or the wrap covers
+    # the full expression.  The latter is not valid xonsh syntax and
+    # will trigger the ``try_subproc_toks`` SyntaxError fallback.
+    if obs is not None:
+        assert line in obs, f"expected full expression in {obs!r}"
+
+
 LOGICAL_LINE_CASES = [
     ("""x = 14 + 2""", 0, "x = 14 + 2", 1),
     (
