@@ -74,6 +74,8 @@ Manages xonsh configuration information.
 Manages xonsh extensions. More information is available at :doc:`xontrib`
 
 
+.. _aliases-xcontext:
+
 ``xcontext``
 --------------------
 
