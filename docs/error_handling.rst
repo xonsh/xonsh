@@ -188,8 +188,10 @@ settings or chain position:
     # no exception
 
     @ echo 1 && @error_ignore ls /no && echo 2
+      echo 3
     1
     ls: cannot access '/no': No such file or directory
+    3
     # no exception; the `@error_ignore` also makes the chain
     # treat the failing ls as "don't raise on this final operand"
 
