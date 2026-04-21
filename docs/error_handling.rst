@@ -206,51 +206,6 @@ contribute to the chain's return code but **not** its error behavior:
     # wc happily prints 0
 
 
-Putting it all together: resolution order
-------------------------------------------
-
-When a subprocess finishes with a non-zero exit, xonsh walks a small
-decision tree to decide whether to raise:
-
-1. ``rc == 0`` → never raise.
-2. ``@error_ignore`` was applied (``spec.raise_subproc_error is False``)
-   → never raise.
-3. ``@error_raise`` was applied (``spec.raise_subproc_error is True``)
-   → raise immediately, overriding everything.
-4. Inside an ``&&``/``||`` chain (``spec.in_boolop is True``) → do
-   not raise at the pipeline level; let the chain short-circuit and
-   let the chain wrapper decide based on the *final* chain result.
-5. **``$XONSH_SUBPROC_CMD_RAISE_ERROR is True``** → raise on this
-   command immediately (fail-fast on every command).
-6. Otherwise defer to the **chain wrapper**
-   (``subproc_check_boolop``) which consults
-   ``$XONSH_SUBPROC_RAISE_ERROR``:
-
-   * If the final chain value is ``!(...)`` (``spec.captured ==
-     'object'``) → never raise.
-   * If the flag is ``False`` → never raise.
-   * Else if the final chain pipeline has ``rc != 0`` (and ``@error_ignore``
-     wasn't applied) → raise ``subprocess.CalledProcessError``.
-
-The same wrapper is placed around standalone subproc statements at
-parse time (by
-``xonsh.parsers.base.wrap_subproc_raise_checks``), so *every* subproc
-statement — single, pipe, or logical chain — goes through the same
-final-result check.
-
-Once the exception is raised, display is a separate concern:
-
-* **Non-interactive** (script from file / stdin / ``-c``): the
-  exception propagates and is printed via ``print_exception`` as any
-  other Python exception would be.  ``$XONSH_SHOW_TRACEBACK`` decides
-  whether to include a full Python traceback.
-* **Interactive prompt**: ``BaseShell.default()`` catches
-  ``subprocess.CalledProcessError`` and consults
-  ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR`` (with ``@error_raise`` always
-  winning) before deciding whether to print the exception.  Either
-  way ``$LAST_RETURN_CODE`` is updated.
-
-
 Catching the exception
 ----------------------
 
@@ -326,59 +281,6 @@ With ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR = True``:
     @ @error_raise ls /no
     ls: cannot access '/no': No such file or directory
     subprocess.CalledProcessError: Command '['@error_raise', 'ls', '/no']' returned non-zero exit status 2.
-    @
-
-
-Frequently asked questions
---------------------------
-
-**Why did ``ls /no`` just raise in my script?  It used to keep
-going.**
-    The default changed.  ``$XONSH_SUBPROC_RAISE_ERROR`` is now
-    ``True``, which means a failing command is treated like a Python
-    exception by default so failures can't silently slip past and run
-    later code with bad assumptions.  If you want the old "keep
-    going" behavior, set ``$XONSH_SUBPROC_RAISE_ERROR = False`` in
-    your ``.xonshrc``.
-
-**My ``||`` fallback isn't running — I get an exception on the first
-command instead.**
-    You probably have ``$XONSH_SUBPROC_CMD_RAISE_ERROR = True`` (or
-    the legacy ``$RAISE_SUBPROC_ERROR = True``).  That raises on
-    *every* failing command and short-circuits chain evaluation.  The
-    new semantics put rescue logic on
-    ``$XONSH_SUBPROC_RAISE_ERROR`` instead — leave that at its
-    default ``True`` and set ``$XONSH_SUBPROC_CMD_RAISE_ERROR = False``.
-
-**I want one specific command to be fatal even though the rest of the
-script tolerates failures.**
-    Prefix it with ``@error_raise``.  It overrides every other
-    setting.
-
-**I want one specific command to be ignored even when
-``$XONSH_SUBPROC_RAISE_ERROR = True``.**
-    Prefix it with ``@error_ignore``, or wrap it in
-    ``!(...)`` which is exempt by default, or rescue it with
-    ``|| true``.
-
-**At the interactive prompt I want to see the exception like before.**
-    Add ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR = True`` to your
-    ``.xonshrc``.
-
-**My script inside the interactive shell (``source script.xsh``)
-fails silently.**
-    ``source`` runs the script in the current interactive context.
-    The prompt-suppression logic applies to the whole command,
-    including sourced code.  Wrap the risky section with
-    ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR = True`` or run the script
-    standalone via ``./script.xsh``.
-
-**Will setting ``$XONSH_SHOW_TRACEBACK = True`` show the exception
-even when ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR = False``?**
-    No.  ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR`` decides **whether** the
-    exception is shown, ``$XONSH_SHOW_TRACEBACK`` decides **how much**
-    of it is shown once it *is* displayed.  Interactive suppression
-    wins for this particular class of exception.
 
 
 See also
