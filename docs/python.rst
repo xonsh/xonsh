@@ -155,7 +155,7 @@ Workarounds:
   set, bare built-in names are run as subprocess commands if a matching
   alias or executable exists, falling back to the Python built-in
   otherwise. The same switch is also useful on Windows for ``dir`` (see
-  `platforms.rst <platforms.html#name-space-conflicts>`_).
+  `platforms <platforms.html#name-space-conflicts>`_).
 * **Change the case**: ``Zip`` or ``ZIP`` — Python names are case-sensitive,
   so ``Zip`` misses the built-in and falls through to a command lookup.
   On case-insensitive filesystems (macOS default, Windows) ``Zip`` then
