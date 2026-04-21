@@ -479,6 +479,23 @@ def subproc_toks(
             end_offset = len(el)
     if len(toks) == 0:
         return  # handle comment lines
+    # A statement that starts with a string literal — f-string or
+    # otherwise — is a Python expression, not a subprocess command.
+    # On Python 3.12+ with PEP 701 an f-string begins with FSTRING_START;
+    # on 3.11 the whole f-string collapses into a single STRING token
+    # with an ``f`` prefix.  Either way, ``f"{q()[0]}"`` at statement
+    # level must stay Python.  Before the GH-6354 fix the same line
+    # produced a broken wrap that round-tripped back to Python via a
+    # SyntaxError in re-parse; now that the wrap is syntactically clean
+    # we have to decline it explicitly, otherwise ``try_subproc_toks``
+    # would substitute the f-string as a subprocess command.  Plain
+    # string statements (``"hi"``) don't reach this path because
+    # ``CtxAwareTransformer.is_in_scope`` returns True when there are
+    # no Load names — but being defensive here costs nothing and keeps
+    # the intent explicit.  ``echo "x"`` / ``echo f"x"`` still wrap:
+    # the STRING token is not the first collected token in those lines.
+    if toks[0].type in ("FSTRING_START", "STRING"):
+        return
     elif saw_macro or greedy:
         end_offset = len(toks[-1].value.rstrip()) + 1
     if toks[0].lineno != toks[-1].lineno:

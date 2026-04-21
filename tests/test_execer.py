@@ -279,6 +279,28 @@ def test_forward_ref_call_subscript_in_function(xonsh_execer_parse):
     assert "pprint(" in stmts
 
 
+# The GH-6354 fix tightened subproc_toks on ``func()[subscript]``.  A
+# side-effect was that ``f"{q()[0]}"`` at statement level produced a
+# now-valid ``![f"{q()[0]}"]`` wrap and was mistakenly turned into a
+# subprocess (before the fix it produced a broken wrap that silently
+# fell back).  subproc_toks declines to wrap any statement whose first
+# collected token is FSTRING_START — those are always Python
+# expressions, never subprocess commands.
+@pytest.mark.parametrize(
+    "expr",
+    [
+        'f"{q()[0]}"',
+        'f"{q()}"',
+        'f"hi {x} {y}"',
+    ],
+)
+def test_fstring_statement_stays_python(expr, xonsh_execer_parse):
+    tree = xonsh_execer_parse(expr + "\n")
+    assert "subproc_captured_hiddenobject" not in pyast_unparse(tree), (
+        f"{expr!r} was turned into a subprocess"
+    )
+
+
 def pyast_unparse(tree):
     """Return ast.unparse on the tree (helper for the tests above)."""
     import ast as pyast
