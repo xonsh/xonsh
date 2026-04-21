@@ -135,7 +135,8 @@ Package
 
 **pip:**
 
-You can install xonsh package from PyPi using an existing installation of ``pip``, ``pipx``, ``rye``, etc.
+You can install the xonsh package from PyPI with any pip-compatible installer
+(``pip``, ``pipx``, ``uv``, ``rye``, ``poetry``, etc.).
 
 .. code-block:: console
 

@@ -408,13 +408,6 @@ but they should not in any way violate the Github Action policies.
 Testing xonsh on Different Operating Systems
 ---------------------------------------------
 
-It is often useful to try xonsh in a clean environment on a distribution
-other than your own — for example to reproduce a bug report or to
-validate a change against a pristine setup. The recipes below use
-rootless ``podman`` containers; ``docker`` would work just as well if
-you prefer it.
-
-
 Nix
 ^^^
 
@@ -463,6 +456,15 @@ declared in ``nix/default.nix``. For example, to use Python 3.14:
 Container
 ^^^^^^^^^
 
+It is often useful to try xonsh in a clean environment on a distribution
+other than your own — for example to reproduce a bug report or to
+validate a change against a pristine setup. The recipes below use
+rootless ``podman`` containers; ``docker`` would work just as well if
+you prefer it.
+
+Script to run in Container
+""""""""""""""""""""""""""
+
 If you want to run your "work in progress version" without installing
 and in a fresh environment you can use Docker. If Docker is installed
 you just have to run this:
@@ -484,7 +486,7 @@ Ensure your cwd is the root directory of the project (i.e., the one containing t
 .git directory).
 
 Nix Container
-~~~~~~~~~~~~~
+"""""""""""""
 
 .. code-block:: bash
 
@@ -494,7 +496,7 @@ Nix Container
     xcontext
 
 Arch Linux Container
-~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""
 
 .. code-block:: bash
 

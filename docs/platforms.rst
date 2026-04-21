@@ -1,5 +1,5 @@
-Platform-specific tips and tricks
-==================================
+Platform notes
+==============
 
 \*nix
 -----

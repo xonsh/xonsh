@@ -28,7 +28,7 @@ step by step and helps you build a solid foundation for working in the shell.
     subprocess
     python
     error_handling
-    Extensions (xontribs) on Github <https://github.com/topics/xontrib>
+    Extensions on Github <https://github.com/topics/xontrib>
     Ask question <https://github.com/xonsh/xonsh/discussions>
 
 Regular User
@@ -79,7 +79,7 @@ developer tools.
     xontrib
     embedding
     api/index
-    Create an extension using template <https://github.com/xonsh/xontrib-template>
+    Create an extension <https://github.com/xonsh/xontrib-template>
 
 Contributor
 -----------
