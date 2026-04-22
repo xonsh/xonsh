@@ -8,7 +8,7 @@
     <meta name="darkreader-lock">
 
     <!-- This is SEO section. Don't change if you don't know how it will affect Google and other search engines. -->
-        <title>Xonsh — Python-powered shell for Linux, macOS, Windows</title>
+        <title>{% trans %}Xonsh — Python-powered shell for Linux, macOS, Windows{% endtrans %}</title>
         <meta name="description" content="The Xonsh shell is a Python-powered shell. Full-featured, cross-platform and AI-friendly. It works on Linux, macOS, and Windows.">
         <meta name="keywords" content="command shell, python shell, terminal, console, linux, macos, windows, bash alternative, zsh alternative, fish alternative, nushell alternative, devops tools, hacking tools, ai, llm, data science">
 
@@ -171,34 +171,28 @@
                 <div class="navbar-collapse collapse justify-content-between align-items-center w-100" id="NavbarContent">
                     <ul class="navbar-nav mx-auto text-center">
                         <li class="nav-item">
-                            <a class="nav-link active" href="#home-area" data-scroll-nav="0">Home</a>
+                            <a class="nav-link active" href="#home-area" data-scroll-nav="0">{% trans %}Home{% endtrans %}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#about-area" data-scroll-nav="1">What is Xonsh?</a>
-                        </li>
-                        <!-- <li class="nav-item">
-                            <a class="nav-link" href="#features-area" data-scroll-nav="2">Features</a>
-                        </li> -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="install.html" target="_blank">Install</a>
+                            <a class="nav-link" href="#about-area" data-scroll-nav="1">{% trans %}What is Xonsh?{% endtrans %}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#product-area" data-scroll-nav="4">Extensions</a>
-                        </li>
-                        <!-- <li class="nav-item">
-                            <a class="nav-link" href="#blog-area" data-scroll-nav="5">Talks</a>
-                        </li> -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="contents.html" target="_blank">Docs</a>
+                            <a class="nav-link" href="install.html" target="_blank">{% trans %}Install{% endtrans %}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="https://github.com/xonsh/xonsh" target="_blank">Code</a>
+                            <a class="nav-link" href="#product-area" data-scroll-nav="4">{% trans %}Extensions{% endtrans %}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="https://github.com/sponsors/xonsh" target="_blank">Sponsor</a>
+                            <a class="nav-link" href="contents.html" target="_blank">{% trans %}Docs{% endtrans %}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="https://www.hellotux.com/xonsh" target="_blank">Merch</a>
+                            <a class="nav-link" href="https://github.com/xonsh/xonsh" target="_blank">{% trans %}Code{% endtrans %}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://github.com/sponsors/xonsh" target="_blank">{% trans %}Sponsor{% endtrans %}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.hellotux.com/xonsh" target="_blank">{% trans %}Merch{% endtrans %}</a>
                         </li>
                     </ul>
                 </div>
@@ -223,14 +217,17 @@
                 <div class="col-lg-6 col-md-7">
                     <div class="caption d-table">
                         <div class="d-table-cell align-middle" >
-                            <h1 style="color:white; font-size: 30px; line-height: 40px; font-weight: 400; margin-bottom: 0;"><b>XONSH</b> is a Python-powered shell</h1>
+                            <h1 style="color:white; font-size: 30px; line-height: 40px; font-weight: 400; margin-bottom: 0;">{% trans %}<b>XONSH</b> is a Python-powered shell{% endtrans %}</h1>
                             <br>
-                            <p style="font-size: 20px; font-weight: 1;">Xonsh <span style="color:#CCC;">(sounds like "consh")</span> is a modern, full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands.
-                                It works on all major systems including Linux, macOS, and Windows. Xonsh is meant for the daily use of experts and novices.</p>
-                            <a href="install.html" target="_blank"><i class="icofont-download"></i> Install</a>
-                            <a href="contents.html" target="_blank"><i class="icofont-ui-note"></i> Docs</a>
-                            <a href="https://github.com/xonsh/xonsh" target="_blank"><i class="icofont-code-alt"></i> Code</a>
-                            <a href="https://github.com/sponsors/xonsh" target="_blank"><i class="icofont-people"></i> Sponsor</a>
+                            <p style="font-size: 20px; font-weight: 1;">
+                              {% trans -%}
+                              Xonsh <span style="color:#CCC;">(sounds like "consh")</span> is a modern, full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands. It works on all major systems including Linux, macOS, and Windows. Xonsh is meant for the daily use of experts and novices.
+                              {%- endtrans %}
+                            </p>
+                            <a href="install.html" target="_blank"><i class="icofont-download"></i> {% trans %}Install{% endtrans %}</a>
+                            <a href="contents.html" target="_blank"><i class="icofont-ui-note"></i> {% trans %}Docs{% endtrans %}</a>
+                            <a href="https://github.com/xonsh/xonsh" target="_blank"><i class="icofont-code-alt"></i> {% trans %}Code{% endtrans %}</a>
+                            <a href="https://github.com/sponsors/xonsh" target="_blank"><i class="icofont-people"></i> {% trans %}Sponsor{% endtrans %}</a>
                         </div>
                     </div>
                 </div>
@@ -241,16 +238,24 @@
     <section id="about-area" class="dark-content" data-scroll-index="1">
 
         <div class="container text-center section-heading">
-            <h2>What is Xonsh?</h2>
-            <p>Xonsh (sounds like "consh") is a Python-based shell that seamlessly extends Python with powerful command-line functionality and integration with the operating system.</p>
+            <h2>{% trans %}What is Xonsh?{% endtrans %}</h2>
+            <p>
+              {% trans -%}
+              Xonsh (sounds like "consh") is a Python-based shell that seamlessly extends Python with powerful command-line functionality and integration with the operating system.
+              {%- endtrans %}
+            </p>
         </div>
 
         <div class="container" style="margin-top: 30px">
             <div class="row">
                 <div class="col-lg-6 col-md-7">
                     <div class="about-content">
-                        <h3>Xonsh is the Shell</h3>
-                        <p>The xonsh language provides the shell primitives commonly found in traditional Unix shells, including interaction with standard utilities, pipelines, and input/output streams. <a href="tutorial.html" target="_blank">Read more →</a></p>
+                        <h3>{% trans %}Xonsh is the Shell{% endtrans %}</h3>
+                        <p>
+                          {% trans -%}
+                          The xonsh language provides the shell primitives commonly found in traditional Unix shells, including interaction with standard utilities, pipelines, and input/output streams. <a href="tutorial.html" target="_blank">Read more →</a>
+                          {%- endtrans %}
+                        </p>
                     </div>
                 </div>
 
@@ -278,9 +283,13 @@
 
                 <div class="col-lg-6 col-md-7">
                     <div class="about-content">
-                        <h3>Xonsh is Python</h3>
+                        <h3>{% trans %}Xonsh is Python{% endtrans %}</h3>
 
-                        <p>The xonsh language is a superset of Python 3, allowing you to execute Python code directly, install and use third-party libraries, import modules, and take advantage of the broader Python ecosystem and tooling.</p>
+                        <p>
+                          {% trans -%}
+                          The xonsh language is a superset of Python 3, allowing you to execute Python code directly, install and use third-party libraries, import modules, and take advantage of the broader Python ecosystem and tooling.
+                          {%- endtrans %}
+                        </p>
                     </div>
                 </div>
 
@@ -309,9 +318,13 @@
             <div class="row">
                 <div class="col-lg-6 col-md-7">
                     <div class="about-content">
-                        <h3>Xonsh is the Shell in Python</h3>
+                        <h3>{% trans %}Xonsh is the Shell in Python{% endtrans %}</h3>
 
-                        <p>Xonsh provides a unified environment where shell functionality and Python code work together naturally.</p>
+                        <p>
+                          {% trans -%}
+                          Xonsh provides a unified environment where shell functionality and Python code work together naturally.
+                          {%- endtrans %}
+                        </p>
                     </div>
                 </div>
 
@@ -344,9 +357,13 @@
 
                 <div class="col-lg-6 col-md-7">
                     <div class="about-content">
-                        <h3>Xonsh is Python in the Shell</h3>
+                        <h3>{% trans %}Xonsh is Python in the Shell{% endtrans %}</h3>
 
-                        <p>Xonsh shell session builtins allow xonsh to function as a fully featured shell, tightly integrated with the operating system and its environment.</p>
+                        <p>
+                          {% trans -%}
+                          Xonsh shell session builtins allow xonsh to function as a fully featured shell, tightly integrated with the operating system and its environment.
+                          {%- endtrans %}
+                        </p>
                     </div>
                 </div>
 
@@ -375,10 +392,11 @@
           <div class="row">
             <div class="col-lg-6 col-md-7">
               <div class="about-content">
-                <h3>Xonsh is a Meta-Shell</h3>
+                <h3>{% trans %}Xonsh is a Meta-Shell{% endtrans %}</h3>
                 <p>
-                  Xonsh can orchestrate and unify other shells and tools, allowing you to combine
-                    external programs into a single programmable environment.
+                  {% trans -%}
+                  Xonsh can orchestrate and unify other shells and tools, allowing you to combine external programs into a single programmable environment.
+                  {%- endtrans %}
                 </p>
               </div>
             </div>
@@ -408,10 +426,11 @@
   <div class="row">
     <div class="col-lg-6 col-md-7">
       <div class="about-content">
-        <h3>Xonsh is an Ecosystem</h3>
+        <h3>{% trans %}Xonsh is an Ecosystem{% endtrans %}</h3>
         <p>
-          Xonsh extends beyond a shell through xontribs — community-driven plugins that integrate
-          frameworks, developer tools, AI assistants, themes, and system features into a cohesive ecosystem.
+          {% trans -%}
+          Xonsh extends beyond a shell through xontribs — community-driven plugins that integrate frameworks, developer tools, AI assistants, themes, and system features into a cohesive ecosystem.
+          {%- endtrans %}
         </p>
       </div>
     </div>
@@ -439,11 +458,11 @@
   <div class="row">
     <div class="col-lg-6 col-md-7">
       <div class="about-content">
-        <h3>Xonsh is Everywhere</h3>
+        <h3>{% trans %}Xonsh is Everywhere{% endtrans %}</h3>
         <p>
-        Xonsh is designed to adapt seamlessly to any platform, enabling the same workflows to run seamlessly
-        across macOS, Linux, Windows, so scripts, aliases, and tools
-        behave consistently across different environments and package managers.
+          {% trans -%}
+          Xonsh is designed to adapt seamlessly to any platform, enabling the same workflows to run seamlessly across macOS, Linux, Windows, so scripts, aliases, and tools behave consistently across different environments and package managers.
+          {%- endtrans %}
         </p>
       </div>
     </div>
@@ -469,81 +488,23 @@
 
             <div class="col-lg-12">
                 <div class="load-more-btn text-center">
-                    <a href="contents.html" target="_blank"><i class="icofont-ui-note"></i> Learn more →</a>
+                    <a href="contents.html" target="_blank"><i class="icofont-ui-note"></i> {% trans %}Learn more →{% endtrans %}</a>
                 </div>
             </div>
     </section>
 
-    <!-- <section id="features-area" data-scroll-index="2">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
-                    <div class="section-heading text-center">
-                        <h2>Xonsh Features</h2>
-                        <p>Xonsh is a super-charged shell that enables you to work quickly and effectively! Some of the features that help set xonsh apart are:</p>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="features-single">
-                        <div class="icon">
-                            <i class="icofont-terminal"></i>
-                        </div>
-                        <div class="content">
-                            <h4>Combine shell commands with Python or vice versa.</h4>
-                            <p>The language is a superset of Python 3 with seamless integration of shell functionality and commands.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="features-single">
-                        <div class="icon">
-                            <i class="icofont-light-bulb"></i>
-                        </div>
-                        <div class="content">
-                            <h4>Xontribs - the 3rd-party extension system.</h4>
-                            <p>Xontributions, or xontribs, are a set of tools and conventions for extending the functionality of xonsh.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="features-single">
-                        <div class="icon">
-                            <i class="icofont-history"></i>
-                        </div>
-                        <div class="content">
-                            <h4>Rich interface to discover history</h4>
-                            <p>The xonsh shell creates history files with rich structure and metadata and an API for interacting with them.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="features-single">
-                        <div class="icon">
-                            <i class="icofont-fix-tools"></i>
-                        </div>
-                        <div class="content">
-                            <h4>Powerful prompt customisation</h4>
-                            <p>Customisable tab completion, key bindings, color styles are on board by default.</p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section> -->
 
     <section id="product-area" class="dark-content" data-scroll-index="4">
         <div class="container">
             <div class="row">
                 <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
                     <div class="section-heading text-center">
-                        <h2>Extensions</h2>
-                        <p>Extensions in the Xonsh ecosystem are called xontribs (short for “contributions”) — a set of tools and conventions for extending the functionality of xonsh.</p>
+                        <h2>{% trans %}Extensions{% endtrans %}</h2>
+                        <p>
+                          {% trans -%}
+                          Extensions in the Xonsh ecosystem are called xontribs (short for “contributions”) — a set of tools and conventions for extending the functionality of xonsh.
+                          {%- endtrans %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -554,7 +515,11 @@
                             <p>
                             <a href="https://github.com/anki-code/xontrib-pipeliner" target="_blank">pipeliner</a>
                             </p>
-                            <p>Let your pipe lines from the standard output flow thru the Python code in the xonsh shell. </p>
+                            <p>
+                              {% trans -%}
+                              Let your pipe lines from the standard output flow thru the Python code in the xonsh shell.
+                              {%- endtrans %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -565,7 +530,11 @@
                             <p>
                             <a href="https://github.com/anki-code/xontrib-output-search" target="_blank">output-search</a>
                             </p>
-                            <p>Get identifiers, paths, URLs and words from the previous command output and use them for the next command in the xonsh shell. </p>
+                            <p>
+                              {% trans -%}
+                              Get identifiers, paths, URLs and words from the previous command output and use them for the next command in the xonsh shell.
+                              {%- endtrans %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -576,7 +545,11 @@
                             <p>
                             <a href="https://github.com/anki-code/xontrib-back2dir" target="_blank">back2dir</a>
                             </p>
-                            <p>Return to the most recently used directory when starting the xonsh shell.</p>
+                            <p>
+                              {% trans -%}
+                              Return to the most recently used directory when starting the xonsh shell.
+                              {%- endtrans %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -587,7 +560,11 @@
                             <p>
                             <a href="https://github.com/anki-code/xontrib-argcomplete" target="_blank">argcomplete</a>
                             </p>
-                            <p>Argcomplete support to tab completion of python and xonsh scripts in the xonsh shell. </p>
+                            <p>
+                              {% trans -%}
+                              Argcomplete support to tab completion of python and xonsh scripts in the xonsh shell.
+                              {%- endtrans %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -599,61 +576,13 @@
 
             <div class="col-lg-12">
                 <div class="load-more-btn text-center">
-                    <a href="https://github.com/topics/xontrib" target="_blank"><i class="icofont-download"></i> More xontribs →</a>
+                    <a href="https://github.com/topics/xontrib" target="_blank"><i class="icofont-download"></i> {% trans %}More xontribs →{% endtrans %}</a>
                 </div>
             </div>
 
         </div>
     </section>
 
-    <!-- <section id="blog-area" data-scroll-index="5">
-        <div class="container">
-            <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
-                <div class="section-heading text-center">
-                    <h2>Talks about xonsh</h2>
-                    <p>Some interesting publications around xonsh.</p>
-                </div>
-            </div>
-
-            <div class="row">
-
-                <div class="col-md-4">
-                    <div class="blog-single">
-                        <a href="https://analyticsindiamag.com/top-10-trending-python-projects-on-github-2020/" target="_blank"><img src="_static/landing2/images/blog-1.jpg" class="img-fluid" alt=""></a>
-                        <div class="post-content">
-                            <a href="">25 Aug, 2020</a>
-                            <h3 class="m-0"><a href="https://analyticsindiamag.com/top-10-trending-python-projects-on-github-2020/" target="_blank">Xonsh in TOP10 trending projects</a></h3>
-                            <p>We're listing down the top 10 trending open-source projects In Python on GitHub and the xonsh shell is one of these projects.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="blog-single">
-                        <a href="https://www.youtube.com/watch?v=ujo9sbqHFqw" target="_blank"><img src="_static/landing2/images/blog-3.jpg" class="img-fluid" alt=""></a>
-                        <div class="post-content">
-                            <a href="">11 Jul, 2019</a>
-                            <h3 class="m-0"><a href="https://www.youtube.com/watch?v=ujo9sbqHFqw" target="_blank">Xonsh on Scipy 2019 conference</a></h3>
-                            <p>A. Scopatz and G. Forsyth gave a two hour presentation of xonsh.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="blog-single">
-                        <a href="https://www.youtube.com/watch?v=uaje5I22kgE" target="_blank"><img src="_static/landing2/images/blog-2.jpg" class="img-fluid" alt=""></a>
-                        <div class="post-content">
-                            </small><a href="">01 Jun, 2016</a>
-                            <h3 class="m-0"><a href="https://www.youtube.com/watch?v=uaje5I22kgE" target="_blank">Xonsh on PyCon 2016 </a></h3>
-                            <p>The first big presentation of Xonsh from Anthony Scopatz!</p>
-                        </div>
-                    </div>
-                </div>
-
-
-            </div>
-        </div>
-    </section> -->
 
     <section id="contact-area" style="position: relative;">
         <div class="contact-bg" style="position:absolute; inset:0; z-index:0; background-image:url(_static/landing2/images/banner-2.png); background-repeat:no-repeat; background-size:cover;"></div>
@@ -670,76 +599,76 @@
                 <div class="row footer_inner ">
                     <div class="col-lg-3 col-sm-6 ">
                             <div class="f_title">
-                                <h4>Xonsh</h4>
+                                <h4>{% trans %}Xonsh{% endtrans %}</h4>
                             </div>
                         <p>
-                            <a href="https://xon.sh/" target="_blank">Xonsh Website</a>
+                            <a href="https://xon.sh/" target="_blank">{% trans %}Xonsh Website{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="contents.html" target="_blank">Xonsh Documentation</a>
+                            <a href="contents.html" target="_blank">{% trans %}Xonsh Documentation{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh/releases" target="_blank">Xonsh Releases</a>
+                            <a href="https://github.com/xonsh/xonsh/releases" target="_blank">{% trans %}Xonsh Releases{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="https://hub.docker.com/u/xonsh" target="_blank">Xonsh Docker Hub</a>
+                            <a href="https://hub.docker.com/u/xonsh" target="_blank">{% trans %}Xonsh Docker Hub{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh/issues" target="_blank">Xonsh Issue Tracker</a>
-                        </p>
-                    </div>
-                    <div class="col-lg-3 col-sm-6">
-                        <div class="f_title">
-                            <h4>Community</h4>
-                        </div>
-                        <p>
-                            <a href="https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/" target="_blank">Xonsh Community</a>
-                        </p>
-                        <p>
-                            <a href="https://github.com/xonsh/xonsh/discussions" target="_blank">Xonsh Discussions</a>
-                        </p>
-                        <p>
-                            <a href="https://mastodon.online/@xonsh" target="_blank">Xonsh Fediverse</a>
-                        </p>
-                        <p>
-                            <a href="https://matrix.to/#/#xonsh:matrix.org" target="_blank">Xonsh Matrix</a>
-                        </p>
-                        <p>
-                            <a href="https://www.hellotux.com/xonsh" target="_blank">Xonsh Merch</a>
+                            <a href="https://github.com/xonsh/xonsh/issues" target="_blank">{% trans %}Xonsh Issue Tracker{% endtrans %}</a>
                         </p>
                     </div>
                     <div class="col-lg-3 col-sm-6">
                         <div class="f_title">
-                            <h4>Extensions</h4>
+                            <h4>{% trans %}Community{% endtrans %}</h4>
                         </div>
                         <p>
-                            <a href="https://github.com/topics/xontrib" target="_blank">Github Xontribs</a>
+                            <a href="https://xonsh.zulipchat.com/join/hbvue5rimpdkwkdjuiqfs7tv/" target="_blank">{% trans %}Xonsh Community{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/awesome-xontribs#awesome-xontribs" target="_blank">Awesome Xontribs</a>
+                            <a href="https://github.com/xonsh/xonsh/discussions" target="_blank">{% trans %}Xonsh Discussions{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="xontrib.html" target="_blank">Xontrib Tutorial</a>
+                            <a href="https://mastodon.online/@xonsh" target="_blank">{% trans %}Xonsh Fediverse{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xontrib-template" target="_blank">Xontrib Template</a>
+                            <a href="https://matrix.to/#/#xonsh:matrix.org" target="_blank">{% trans %}Xonsh Matrix{% endtrans %}</a>
+                        </p>
+                        <p>
+                            <a href="https://www.hellotux.com/xonsh" target="_blank">{% trans %}Xonsh Merch{% endtrans %}</a>
                         </p>
                     </div>
                     <div class="col-lg-3 col-sm-6">
                         <div class="f_title">
-                            <h4>Open Source</h4>
+                            <h4>{% trans %}Extensions{% endtrans %}</h4>
                         </div>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh" target="_blank">Xonsh Source Code</a>
+                            <a href="https://github.com/topics/xontrib" target="_blank">{% trans %}Github Xontribs{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="https://github.com/xonsh/xonsh/blob/main/license" target="_blank">Xonsh License</a>
+                            <a href="https://github.com/xonsh/awesome-xontribs#awesome-xontribs" target="_blank">{% trans %}Awesome Xontribs{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="developer.html" target="_blank">Xonsh Developer’s Guide</a>
+                            <a href="xontrib.html" target="_blank">{% trans %}Xontrib Tutorial{% endtrans %}</a>
                         </p>
                         <p>
-                            <a href="https://github.com/sponsors/xonsh" target="_blank">Xonsh Sponsor</a>
+                            <a href="https://github.com/xonsh/xontrib-template" target="_blank">{% trans %}Xontrib Template{% endtrans %}</a>
+                        </p>
+                    </div>
+                    <div class="col-lg-3 col-sm-6">
+                        <div class="f_title">
+                            <h4>{% trans %}Open Source{% endtrans %}</h4>
+                        </div>
+                        <p>
+                            <a href="https://github.com/xonsh/xonsh" target="_blank">{% trans %}Xonsh Source Code{% endtrans %}</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/xonsh/xonsh/blob/main/license" target="_blank">{% trans %}Xonsh License{% endtrans %}</a>
+                        </p>
+                        <p>
+                            <a href="developer.html" target="_blank">{% trans %}Xonsh Developer's Guide{% endtrans %}</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/sponsors/xonsh" target="_blank">{% trans %}Xonsh Sponsor{% endtrans %}</a>
                         </p>
                     </div>
                 </div>
