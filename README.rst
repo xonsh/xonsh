@@ -173,7 +173,7 @@ Projects that use xonsh or compatible
 
 - `Assistant <https://gitlab.com/waser-technologies/technologies/assistant>`_: An AI-powered shell with a full Xonsh terminal and a multi-agent LLM system.
 - `CrateDB <https://github.com/crate>`_: The Database for Real-Time Analytics and Hybrid Search.
-- `conda <https://conda.io/projects/conda/en/latest/>`_ and `mamba <https://mamba.readthedocs.io/en/latest/>`_: Modern package managers.
+- `conda <https://conda.io/projects/conda/en/latest/>`_ and `mamba <https://mamba.readthedocs.io/en/latest/>`_: Cross-platform package managers.
 - `Starship <https://starship.rs/>`_: Cross-shell prompt.
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
