@@ -7,7 +7,7 @@
 }:
 
 let
-  pythonEnv = python3.withPackages (ps: [ ps.xonsh ] ++ extraPackages ps);
+  pythonEnv = python3.withPackages (ps: [ xonsh ] ++ extraPackages ps);
   xonsh = python3.pkgs.callPackage ./unwrapped.nix { };
 in
 runCommand "xonsh-${xonsh.version}"
