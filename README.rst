@@ -5,7 +5,7 @@ xonsh
 
     <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="left" width="100px">
 
-**Xonsh** (sounds like "consh") is a modern, full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands. It works on all major systems including Linux, macOS, and Windows. Xonsh is meant for the daily use of experts and novices.
+**Xonsh** (sounds like "consh") is a full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands. It works on all major systems including Linux, macOS, and Windows. Xonsh is meant for the daily use of experts and novices.
 
 .. raw:: html
 
@@ -172,7 +172,7 @@ Projects that use xonsh or compatible
 *************************************
 
 - `Assistant <https://gitlab.com/waser-technologies/technologies/assistant>`_: An AI-powered shell with a full Xonsh terminal and a multi-agent LLM system.
-- `conda <https://conda.io/projects/conda/en/latest/>`_ and `mamba <https://mamba.readthedocs.io/en/latest/>`_: Modern package managers.
+- `conda <https://conda.io/projects/conda/en/latest/>`_ and `mamba <https://mamba.readthedocs.io/en/latest/>`_: Cross-platform package managers.
 - `Starship <https://starship.rs/>`_: Cross-shell prompt.
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
