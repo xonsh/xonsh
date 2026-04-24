@@ -395,4 +395,4 @@ See also
 
 * :doc:`callable_aliases` -- writing callable aliases in depth
 * :doc:`subprocess` -- subprocess operators and capturing modes
-* :doc:`xonshrc` -- defining aliases in RC files
+* :doc:`xonsh RC <xonshrc>` -- defining aliases in RC files

@@ -65,7 +65,7 @@ in a Comint buffer. This way you keep all the Emacs editing power
 in the shell, but you lose xonsh's completion feature.
 
 Make sure you install xonsh with readline support and in your
-``.xonshrc`` file define
+:doc:`xonsh RC <xonshrc>` define
 
 .. code-block:: xonsh
 

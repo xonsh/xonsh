@@ -117,7 +117,7 @@ stripped SSH sessions, systemd units, or cron jobs where ``LANG`` / ``LC_ALL``
 are set to ``C`` or ``POSIX``.
 
 The locale must be set **before** xonsh starts — setting ``$LC_ALL`` from
-your `xonsh RC <xonshrc.html>`_ is too late for subprocesses that already
+your :doc:`xonsh RC <xonshrc>` is too late for subprocesses that already
 inherited the broken environment. Fix it at the OS level (``~/.pam_environment``,
 ``/etc/locale.conf``, the container image's base layer, or the systemd unit's
 ``Environment=`` directive). As a temporary workaround, ``PYTHONUTF8=1``
@@ -199,7 +199,7 @@ install GNU coreutils and grep via Homebrew:
 
 Homebrew installs GNU tools with a ``g`` prefix (e.g. ``gls``, ``ggrep``).
 To use them without the prefix, add the GNU paths to your ``$PATH`` in
-``~/.xonshrc``:
+your :doc:`xonsh RC <xonshrc>`:
 
 .. code-block:: python
 
@@ -335,7 +335,7 @@ back-end. To enable that behaviour run the following:
 
    @ xpip install xontrib-free-cwd
 
-Add this line to your ``~/.xonshrc`` file to have it always enabled.
+Add this line to your :doc:`xonsh RC <xonshrc>` to have it always enabled.
 
 .. code-block:: xonshcon
 
@@ -356,7 +356,7 @@ typing and avoid the ambiguity altogether:
 
    @ aliases['d'] = ['cmd', '/c', 'dir']
 
-You can add aliases to your `xonshrc <xonshrc.rst>`_ to have it always
+You can add aliases to your :doc:`xonsh RC <xonshrc>` to have it always
 available when xonsh starts.
 
 Alternatively, the experimental ``$XONSH_BUILTINS_TO_CMD`` setting makes bare
@@ -395,7 +395,7 @@ Although not recommended, to restore the behavior found in the
 
     @ $PATH.append('.')
 
-Add that to ``~/.xonshrc`` to enable that as the default behavior.
+Add that to your :doc:`xonsh RC <xonshrc>` to enable that as the default behavior.
 
 
 Updating xonsh
@@ -479,7 +479,7 @@ To register all drives present on the system at once:
             @.env.register(letter, type='str', default=root,
                            doc=f'Drive {letter} root')
 
-Add this to your `xonsh RC <xonshrc.rst>`_ to have drive shortcuts available
+Add this to your :doc:`xonsh RC <xonshrc>` to have drive shortcuts available
 in every session.
 
 

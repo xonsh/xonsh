@@ -87,8 +87,8 @@ or reach out to the xonsh maintainers if you need a stable public
 entry point for your embedding scenario.
 
 Call it **before** you start your interactive shell loop — ideally as
-early in your program's startup as possible, so that any xonshrc or
-xontrib code your embedder runs already has foreground ownership:
+early in your program's startup as possible, so that any :doc:`xonsh RC <xonshrc>`
+or xontrib code your embedder runs already has foreground ownership:
 
 .. code-block:: python
 

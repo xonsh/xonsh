@@ -118,7 +118,7 @@ Use cases:
     # Pipe a Python value into a subprocess
     echo @(@.imp.uuid.uuid4()) | tr - _
 
-    # Useful in xonshrc to keep startup imports tidy
+    # Handy for startup aliases — no upfront import needed
     aliases['epoch'] = lambda args: print(int(@.imp.time.time()))
 
 For repeated use of the same module, a regular ``import`` is faster and
@@ -172,7 +172,7 @@ Useful fields
 -------------
 
 The following attributes are the most commonly used by hooks,
-completers, and ``xonshrc`` automation. They are listed roughly in the
+completers, and :doc:`xonsh RC <xonshrc>` automation. They are listed roughly in the
 order you are likely to need them.
 
 * ``__xonsh__.env`` — same :class:`xonsh.environ.Env` as ``@.env``;
@@ -182,7 +182,7 @@ order you are likely to need them.
 
 * ``__xonsh__.aliases`` — the live :class:`xonsh.aliases.Aliases`
   mapping. Setting ``__xonsh__.aliases['ll'] = 'ls -la'`` from
-  ``xonshrc`` is the canonical way to define an alias. The property
+  your :doc:`xonsh RC <xonshrc>` is the canonical way to define an alias. The property
   delegates to ``commands_cache.aliases`` and is read-only on the
   session itself; mutate the mapping in place.
 
@@ -218,7 +218,7 @@ order you are likely to need them.
 * ``__xonsh__.sessionid`` — UUID of the current session, used in
   history filenames and similar.
 
-* ``__xonsh__.rc_files`` — list of ``xonshrc`` files actually loaded.
+* ``__xonsh__.rc_files`` — list of :doc:`xonsh RC <xonshrc>` files actually loaded.
 
 * ``__xonsh__.builtins.events`` — the
   :class:`xonsh.events.events` registry; how you subscribe to
