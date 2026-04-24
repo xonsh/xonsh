@@ -4,14 +4,31 @@
 Debug
 *****
 
-Xonsh ships a debugging helper attached to every session as ``@.debug``.
-Its main job is to drop into a debugger at the exact call site — like
-Python's builtin ``breakpoint()``, but with automatic engine selection,
-session-aware fallbacks, and a xonsh-syntax REPL when no external
-debugger is installed.
+Xonsh supports two complementary ways to debug xonsh code:
+
+* **Debug in IDE** — attach a full graphical debugger from an editor like
+  VS Code.
+* **Instant debugging** — drop into a debugger at the exact call site with
+  ``@.debug``, with automatic engine selection and a xonsh-syntax REPL
+  when no external debugger is installed.
+
+Debug in IDE
+============
+
+Xonsh extension for VS Code provides syntax highlighting and basic language support for ``.xsh`` files.
+Install via the extensions menu.
+
+Instant debugging
+=================
+
+When you need to stop execution at a specific call site without wiring up
+an IDE, xonsh ships a debugging helper attached to every session as
+``@.debug``. It works like Python's builtin ``breakpoint()``, but with
+automatic engine selection, session-aware fallbacks, and a xonsh-syntax
+REPL when no external debugger is installed.
 
 Quick Start
-===========
+-----------
 
 Drop into a debugger at any point in your xonsh code:
 
@@ -35,7 +52,7 @@ To force a specific engine for a single call:
     @.debug.breakpoint(engine='eval')     # plain-Python REPL
 
 Setting the Default Engine
-==========================
+--------------------------
 
 Set ``$XONSH_DEBUG_BREAKPOINT_ENGINE`` in your ``.xonshrc`` to change the
 default used when ``engine`` is not passed (or is ``'auto'``):
@@ -50,7 +67,7 @@ Allowed values: ``'auto'`` (default), ``'pdbp'``, ``'ipdb'``, ``'pdb'``,
 An explicit argument to ``breakpoint()`` always beats the env var.
 
 Engines
-=======
+-------
 
 .. list-table::
    :header-rows: 1
@@ -82,7 +99,7 @@ banner identifying the choice and a one-line hint about how to continue or
 abort, then drops into that engine.
 
 REPL Commands (execer and eval engines)
-=======================================
+---------------------------------------
 
 Both ``execer`` and ``eval`` engines start a small REPL at the caller's
 frame. The REPL accepts any Python/xonsh expression or statement, and
@@ -118,7 +135,7 @@ modifiable:
     execer> c
 
 Routing Python's builtin ``breakpoint()`` Through ``@.debug``
-============================================================
+-------------------------------------------------------------
 
 PEP 553 makes Python's builtin ``breakpoint()`` go through
 ``sys.breakpointhook``. ``@.debug`` can install a hook that routes every
@@ -139,4 +156,3 @@ at the call site. To restore Python's default behavior:
 
     import sys
     sys.breakpointhook = sys.__breakpointhook__
-
