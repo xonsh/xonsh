@@ -294,7 +294,10 @@ def attr_complete(prefix, ctx, filter_func):
     expr = xt.subexpr_from_unbalanced(expr, "(", ")")
     expr = xt.subexpr_from_unbalanced(expr, "[", "]")
     expr = xt.subexpr_from_unbalanced(expr, "{", "}")
-    if expr.startswith("@") and len(expr) > 1:
+    if expr.startswith("@."):
+        # @.sub -> __xonsh__.interface.sub
+        expr = "__xonsh__.interface" + expr[1:]
+    elif expr.startswith("@") and len(expr) > 1:
         expr = expr[1:]
     val, _ctx = _safe_eval(expr, ctx)
     if val is None and _ctx is None:

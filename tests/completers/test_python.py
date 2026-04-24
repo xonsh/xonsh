@@ -251,3 +251,53 @@ class TestAtSignCompletion:
         assert res is not None
         comps, _ = res
         assert "@MyDecorator" in comps
+
+    def test_at_dot_env_completes_methods(self):
+        """@.env.<TAB> completes attributes of the session env."""
+        res = complete_python(
+            CompletionContext(python=PythonContext("@.env.", 6, ctx={}))
+        )
+        assert res is not None
+        comps, _ = res
+        assert "@.env.get(" in comps
+        assert "@.env.swap(" in comps
+        assert "@.env.keys(" in comps
+
+    def test_at_dot_env_partial_match(self):
+        """@.env.sw<TAB> narrows completions by prefix."""
+        res = complete_python(
+            CompletionContext(python=PythonContext("@.env.sw", 8, ctx={}))
+        )
+        assert res is not None
+        comps, _ = res
+        assert "@.env.swap(" in comps
+        assert "@.env.get(" not in comps
+
+    def test_at_dot_history_completes_methods(self, xession, monkeypatch):
+        """@.history.<TAB> completes attributes of the session history."""
+        from xonsh.pytest.tools import DummyHistory
+
+        monkeypatch.setattr(xession.interface, "history", DummyHistory())
+        res = complete_python(
+            CompletionContext(python=PythonContext("@.history.", 10, ctx={}))
+        )
+        assert res is not None
+        comps, _ = res
+        assert "@.history.append(" in comps
+        assert "@.history.flush(" in comps
+
+    def test_at_dot_lastcmd_completes_attrs(self, xession, monkeypatch):
+        """@.lastcmd.<TAB> completes attributes of the last command pipeline."""
+
+        class FakePipeline:
+            rtn = 0
+            out = ""
+
+        monkeypatch.setattr(xession.interface, "lastcmd", FakePipeline())
+        res = complete_python(
+            CompletionContext(python=PythonContext("@.lastcmd.", 10, ctx={}))
+        )
+        assert res is not None
+        comps, _ = res
+        assert "@.lastcmd.rtn" in comps
+        assert "@.lastcmd.out[" in comps
