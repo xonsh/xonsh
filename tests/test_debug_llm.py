@@ -447,9 +447,7 @@ def test_intermediate_frames_are_tracebackhidden(dbg, monkeypatch):
     assert captured.get("_start_debugger") is True
 
 
-def test_hook_frame_is_tracebackhidden(
-    dbg, restore_breakpointhook, monkeypatch
-):
+def test_hook_frame_is_tracebackhidden(dbg, restore_breakpointhook, monkeypatch):
     """The sys.breakpointhook closure is also a wrapper frame — it must
     be tracebackhidden so pdbp's `where` skips it too.
     """
