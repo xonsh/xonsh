@@ -460,6 +460,37 @@ def test_complete_path_no_double_closing_quote(xession, completion_context_parse
             assert not c.endswith("''"), f"Double closing quote: {c!r}"
 
 
+def test_complete_path_per_path_quoting(xession, completion_context_parse):
+    """Only quote paths that actually need it. A plain ``file`` should
+    appear unquoted even when a sibling ``fi$le`` requires ``r'…'``.
+    """
+    xession.env = {
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        open(os.path.join(td, "file"), "w").close()
+        open(os.path.join(td, "fi$le"), "w").close()
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            line = "ls fi"
+            ctx = completion_context_parse(line, len(line))
+            comps, _ = xcp.contextual_complete_path(ctx.command)
+            completions = {str(c) for c in comps}
+            assert "file " in completions, (
+                f"Plain 'file' should be unquoted, got: {completions}"
+            )
+            assert "r'fi$le' " in completions, (
+                f"'fi$le' should be raw-quoted, got: {completions}"
+            )
+        finally:
+            os.chdir(old_cwd)
+
+
 @pytest.mark.parametrize("quote", ("'", '"'))
 @pytest.mark.parametrize(
     "closed",

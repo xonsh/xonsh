@@ -203,16 +203,22 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     slash = xt.get_sep()
     orig_start = start
     orig_end = end
-    # quote on all or none, to make readline completes to max prefix
-    need_quotes = any(
-        re.search(PATTERN_NEED_QUOTES, x) or (backslash in x and slash != backslash)
-        for x in paths
-    )
+    # Decide per-path whether quoting is needed: a plain ``file`` should
+    # appear unquoted even when a sibling ``fi$le`` requires ``r'…'``.
+    # Prompt-toolkit's completion menu shows both forms side by side, so
+    # the historical "quote all or none" rule (needed for readline's
+    # longest-common-prefix) is no longer warranted.
+    need_quotes = False
 
     for s in paths:
         start = orig_start
         end = orig_end
-        if start == "" and need_quotes:
+        path_needs_quotes = bool(re.search(PATTERN_NEED_QUOTES, s)) or (
+            backslash in s and slash != backslash
+        )
+        if path_needs_quotes:
+            need_quotes = True
+        if start == "" and path_needs_quotes:
             start = end = _quote_to_use(s)
         # For a bare ``~`` or ``$VAR`` use the literal path for isdir —
         # expand_path("$HOME") and expand_path("~") resolve to the home
