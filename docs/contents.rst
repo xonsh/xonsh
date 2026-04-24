@@ -78,6 +78,7 @@ developer tools.
     completers
     xontrib
     embedding
+    debug
     api/index
     Create an extension <https://github.com/xonsh/xontrib-template>
 
