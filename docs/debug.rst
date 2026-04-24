@@ -140,13 +140,3 @@ at the call site. To restore Python's default behavior:
     import sys
     sys.breakpointhook = sys.__breakpointhook__
 
-
-Python API Reference
-====================
-
-.. currentmodule:: xonsh.debug
-
-.. autoclass:: XonshDebug
-   :members: breakpoint, replace_builtin_breakpoint
-
-.. autoexception:: XonshDebugQuit
