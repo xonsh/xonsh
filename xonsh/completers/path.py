@@ -1,23 +1,13 @@
 import ast
 import glob
 import os
-import re
 
-import xonsh.lib.lazyasd as xl
 import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion, contextual_completer
+from xonsh.lib.completion_quoting import name_needs_quotes
 from xonsh.parsers.completion_context import CommandContext
-
-
-@xl.lazyobject
-def PATTERN_NEED_QUOTES():
-    pattern = r'\s`\$\{\}\[\]\,\*\(\)"\'\?&#'
-    if xp.ON_WINDOWS:
-        pattern += "%"
-    pattern = "[" + pattern + "]" + r"|\band\b|\bor\b"
-    return re.compile(pattern)
 
 
 def cd_in_command(line):
@@ -213,9 +203,7 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     for s in paths:
         start = orig_start
         end = orig_end
-        path_needs_quotes = bool(re.search(PATTERN_NEED_QUOTES, s)) or (
-            backslash in s and slash != backslash
-        )
+        path_needs_quotes = name_needs_quotes(s, sep=slash)
         if path_needs_quotes:
             need_quotes = True
         if start == "" and path_needs_quotes:

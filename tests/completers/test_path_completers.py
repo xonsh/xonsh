@@ -12,9 +12,12 @@ def xonsh_execer_autouse(xession, xonsh_execer):
     return xonsh_execer
 
 
-def test_pattern_need_quotes():
-    # just make sure the regex compiles
-    xcp.PATTERN_NEED_QUOTES.match("")
+def test_name_needs_quotes_smoke():
+    # sanity check on the shared helper used by both path and bash completers
+    from xonsh.lib.completion_quoting import name_needs_quotes
+
+    assert name_needs_quotes("fi$le") is True
+    assert name_needs_quotes("file") is False
 
 
 def test_complete_path(xession, completion_context_parse):

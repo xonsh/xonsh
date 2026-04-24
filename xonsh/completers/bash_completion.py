@@ -8,12 +8,11 @@ import functools
 import os
 import pathlib
 import platform
-import re
 import shlex
 import shutil
 import subprocess
-import typing as tp
 
+from xonsh.lib.completion_quoting import name_needs_quotes
 from xonsh.lib.string import commonprefix
 
 __version__ = "0.2.8"
@@ -114,21 +113,6 @@ def _bash_get_sep():
         return os.sep
 
 
-_BASH_PATTERN_NEED_QUOTES: tp.Pattern | None = None
-
-
-def _bash_pattern_need_quotes():
-    global _BASH_PATTERN_NEED_QUOTES
-    if _BASH_PATTERN_NEED_QUOTES is not None:
-        return _BASH_PATTERN_NEED_QUOTES
-    pattern = r'\s`\$\{\}\,\*\(\)"\'\?&'
-    if platform.system() == "Windows":
-        pattern += "%"
-    pattern = "[" + pattern + "]" + r"|\band\b|\bor\b"
-    _BASH_PATTERN_NEED_QUOTES = re.compile(pattern)
-    return _BASH_PATTERN_NEED_QUOTES
-
-
 def _bash_expand_path(s):
     """Takes a string path and expands ~ to home and environment vars."""
     # expand ~ according to Bash unquoted rules "Each variable assignment is
@@ -161,19 +145,22 @@ def _bash_quote_paths(paths, start, end):
     slash = _bash_get_sep()
     orig_start = start
     orig_end = end
-    # quote on all or none, to make readline completes to max prefix
-    need_quotes = any(
-        re.search(_bash_pattern_need_quotes(), x)
-        or (backslash in x and slash != backslash)
-        for x in paths
-    )
+    # Decide per-path whether to quote: a plain ``file`` should stay
+    # unquoted even when a sibling ``fi$le`` needs ``'fi$le'``. The
+    # prompt-toolkit menu renders mixed quote/no-quote entries fine.
+    need_quotes = False
 
     for s in paths:
+        orig_s = s
         start = orig_start
         end = orig_end
-        if start == "" and need_quotes:
+        path_needs_quotes = name_needs_quotes(s, sep=slash)
+        if path_needs_quotes:
+            need_quotes = True
+        if start == "" and path_needs_quotes:
             start = end = _bash_quote_to_use(s)
-        if os.path.isdir(_bash_expand_path(s)):
+        is_dir = os.path.isdir(_bash_expand_path(s))
+        if is_dir:
             _tail = slash
         elif end == "" and not s.endswith("="):
             _tail = space
@@ -189,7 +176,14 @@ def _bash_quote_paths(paths, start, end):
                 s += backslash
         if end in s:
             s = s.replace(end, "".join(f"\\{i}" for i in end))
-        out.add(start + s + end)
+        s = start + s + end
+        # Append a trailing space AFTER the closing quote for file
+        # completions so ``ls 'f<Tab>`` advances to the next arg just
+        # like ``ls f<Tab>``. Skip option-value args (``--opt=``) so the
+        # user can continue typing the value inline.
+        if not is_dir and end != "" and not orig_s.endswith("="):
+            s = s + space
+        out.add(s)
     return out, need_quotes
 
 
