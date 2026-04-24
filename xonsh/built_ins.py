@@ -954,10 +954,6 @@ class XonshSessionInterface:
 
     Attributes
     ----------
-    debug : xonsh.debug.XonshDebug
-        Debug helpers for the running session e.g.
-        ``@.debug.breakpoint()`` to drop into a debugger.
-
     env : xonsh.environ.Env
         A xonsh environment e.g. `@.env.get('HOME', '/tmp')`.
 
@@ -973,6 +969,10 @@ class XonshSessionInterface:
     lastcmd : xonsh.procs.pipelines.CommandPipeline
         Last executed subprocess-mode command pipeline
         e.g. `@.lastcmd.rtn` returns exit code.
+
+    debug : xonsh.debug.XonshDebug
+        Debug helpers for the running session e.g.
+        ``@.debug.breakpoint()`` to drop into a debugger.
     """
 
     debug = None  # type: ignore
