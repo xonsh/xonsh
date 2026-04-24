@@ -24,6 +24,7 @@ from ast import AST
 from collections.abc import Iterator
 from operator import attrgetter as _attrgetter
 
+from xonsh.debug import XonshDebug
 from xonsh.lib.inspectors import Inspector
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_POSIX, ON_WINDOWS
@@ -968,8 +969,13 @@ class XonshSessionInterface:
     lastcmd : xonsh.procs.pipelines.CommandPipeline
         Last executed subprocess-mode command pipeline
         e.g. `@.lastcmd.rtn` returns exit code.
+
+    debug : xonsh.debug.XonshDebug
+        Debug helpers for the running session e.g.
+        ``@.debug.breakpoint()`` to drop into a debugger.
     """
 
+    debug = None  # type: ignore
     env = None  # type: ignore
     history = None  # type: ignore
     imp: InlineImporter = InlineImporter()
@@ -1002,6 +1008,8 @@ class XonshSession:
         self.shell = None
         self.env = None
         self.imp = InlineImporter()
+        self.debug = XonshDebug()
+        self.interface.debug = self.debug
         self.rc_files = None
 
         # AST-invoked functions

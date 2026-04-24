@@ -28,6 +28,7 @@ from xonsh.ansi_colors import (
 )
 from xonsh.built_ins import XSH
 from xonsh.codecache import run_script_with_cache
+from xonsh.debug import is_breakpoint_engine, to_breakpoint_engine
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
 from xonsh.lib.lazyasd import LazyBool, lazyobject
@@ -1195,6 +1196,18 @@ class GeneralSetting(Xettings):
         "With ``2`` or a higher number will make more debugging information "
         "presented, like PLY parsing messages.",
         is_configurable=False,
+    )
+    XONSH_DEBUG_BREAKPOINT_ENGINE = Var(
+        is_breakpoint_engine,
+        to_breakpoint_engine,
+        str,
+        "auto",
+        "Default engine used by ``@.debug.breakpoint()`` when called "
+        "without an explicit ``engine=`` argument. One of ``'auto'``, "
+        "``'pdbp'``, ``'ipdb'``, ``'pdb'``, ``'eval'``. When set to "
+        "``'auto'``, the first importable debugger is used, in priority "
+        "order ``pdbp`` -> ``ipdb`` -> ``pdb``, falling back to the "
+        "``'eval'`` REPL if none are available.",
     )
     XONSH_DATA_DIR = Var.with_default(
         xonsh_data_dir,
