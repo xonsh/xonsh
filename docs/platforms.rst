@@ -1,8 +1,8 @@
-Platform notes
+Cross-platform
 ==============
 
-Cross-platform xonsh
---------------------
+Cross-platform xonsh RC
+-----------------------
 
 First of all because a :doc:`xonsh RC <xonshrc>` is plain xonsh code, you can ship a single
 file across Linux, macOS, and Windows and gate snippets on platform and
