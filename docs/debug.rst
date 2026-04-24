@@ -62,8 +62,8 @@ Engines
      - `pdbp <https://github.com/mdmintz/pdbp>`_ — enhanced pdb (sticky mode,
        syntax highlighting, ``where``/``u``/``d`` frame hiding). Install with
        ``xpip install pdbp``.
-   * - `ipdb <https://github.com/gotcha/ipdb>`_
-     - IPython-flavored pdb. Install with ``xpip install ipdb``.
+   * - ``ipdb``
+     - `ipdb <https://github.com/gotcha/ipdb>`_ - IPython-flavored pdb. Install with ``xpip install ipdb``.
    * - ``pdb``
      - Stdlib ``pdb``. Always available.
    * - ``execer``
