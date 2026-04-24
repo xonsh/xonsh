@@ -1,6 +1,55 @@
 Platform notes
 ==============
 
+Cross-platform xonsh
+--------------------
+
+First of all because a :doc:`xonsh RC <xonshrc>` is plain xonsh code, you can ship a single
+file across Linux, macOS, and Windows and gate snippets on platform and
+execution-mode flags.
+
+Platform flags are lazy booleans exposed by :mod:`xonsh.platform`:
+
+* ``ON_LINUX`` — Linux
+* ``ON_DARWIN`` — macOS
+* ``ON_WINDOWS`` — native Windows
+* ``ON_POSIX``, ``ON_CYGWIN``, ``ON_MSYS``, ``ON_FREEBSD``, ``ON_DRAGONFLY`` —
+  other OS families
+* ``IN_APPIMAGE`` — running inside an AppImage bundle
+* ``IN_FLATPAK`` — running inside a Flatpak sandbox
+
+Execution-mode flags live in the environment:
+
+* ``$XONSH_INTERACTIVE`` — ``True`` when xonsh is running an interactive
+  shell. Use it to gate anything that only makes sense with a live terminal
+  (aliases you type, key bindings, prompt colors, xontribs that hook the
+  REPL). Safe to use inside an RC that is ``source``-d at runtime, because
+  it reflects the current session.
+* ``$XONSH_MODE`` — the startup mode as a string: ``interactive``,
+  ``script_from_file``, ``source``, ``single_command``, ``script_from_stdin``.
+  Useful to distinguish "started as a shell" from "invoked to run one
+  command" or "executed as a script". For gating logic inside an RC,
+  prefer ``$XONSH_INTERACTIVE`` — ``$XONSH_MODE`` reflects the original
+  startup mode, not the context the RC is currently running in.
+
+Typical pattern:
+
+.. code-block:: xonsh
+
+    from xonsh.platform import ON_LINUX, ON_DARWIN, ON_WINDOWS
+
+    # Only in a live terminal — skipped when the RC is run as a script
+    if $XONSH_INTERACTIVE:
+        aliases['ll'] = 'ls -la'
+        $PROMPT = '{BOLD_GREEN}{user}@{hostname}{RESET} {cwd}$ '
+
+    if ON_LINUX:
+        $LS_COLORS = 'di=1;34:ln=35'
+    elif ON_DARWIN:
+        aliases['ls'] = 'ls -G'
+    elif ON_WINDOWS:
+        $PATHEXT.append('.PY')
+
 \*nix
 -----
 
