@@ -203,24 +203,38 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     slash = xt.get_sep()
     orig_start = start
     orig_end = end
-    # quote on all or none, to make readline completes to max prefix
-    need_quotes = any(
-        re.search(PATTERN_NEED_QUOTES, x) or (backslash in x and slash != backslash)
-        for x in paths
-    )
+    # Decide per-path whether quoting is needed: a plain ``file`` should
+    # appear unquoted even when a sibling ``fi$le`` requires ``r'…'``.
+    # Prompt-toolkit's completion menu shows both forms side by side, so
+    # the historical "quote all or none" rule (needed for readline's
+    # longest-common-prefix) is no longer warranted.
+    need_quotes = False
 
     for s in paths:
         start = orig_start
         end = orig_end
-        if start == "" and need_quotes:
+        path_needs_quotes = bool(re.search(PATTERN_NEED_QUOTES, s)) or (
+            backslash in s and slash != backslash
+        )
+        if path_needs_quotes:
+            need_quotes = True
+        if start == "" and path_needs_quotes:
             start = end = _quote_to_use(s)
-        # For paths with $ or starting with ~ use the literal path for
-        # isdir — expand_path("$HOME") and expand_path("~") resolve to
-        # the home directory (always a dir), masking literal files.
-        check_path = s if ("$" in s or s.startswith("~")) else expand_path(s)
-        if os.path.isdir(check_path) or (
+        # For a bare ``~`` or ``$VAR`` use the literal path for isdir —
+        # expand_path("$HOME") and expand_path("~") resolve to the home
+        # directory (always a dir), masking a local file with that exact
+        # name. Compound paths like ``~/git`` or ``$HOME/bin`` are
+        # unambiguous (a separator means it's a subpath, not a literal
+        # filename), so fall through to ``expand_path`` — otherwise
+        # ``os.path.isdir("~/git")`` is False and the trailing-sep
+        # detection for directories breaks.
+        has_sep = os.sep in s or (bool(os.altsep) and os.altsep in s)
+        ambiguous_literal = not has_sep and ("$" in s or s.startswith("~"))
+        check_path = s if ambiguous_literal else expand_path(s)
+        is_dir = os.path.isdir(check_path) or (
             cdpath and _is_directory_in_cdpath(check_path)
-        ):
+        )
+        if is_dir:
             _tail = slash
         elif end == "":
             _tail = space
@@ -247,6 +261,13 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         if has_ctrl:
             s = s.translate(_CONTROL_CHAR_ESCAPE)
         s = start + s + end if append_end else start + s
+        # For a non-directory completion inside quotes, append the trailing
+        # separator space AFTER the closing quote so `ls 'f<Tab>` advances
+        # to the next arg just like `ls f<Tab>` does. Skip when
+        # ``append_end=False``: the closing quote is already in the line
+        # after the cursor, and a space here would fall inside it.
+        if not is_dir and end != "" and append_end:
+            s = s + space
         out.add(s)
     return out, need_quotes
 
