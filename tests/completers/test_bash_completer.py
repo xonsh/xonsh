@@ -44,7 +44,7 @@ def setup(monkeypatch, tmp_path, xession):
         ),
         (
             CommandContext(args=(CommandArg("ls"),), arg_index=1, prefix=""),
-            {"'testdir/'", "'spaced dir/'"},
+            {"testdir/", "'spaced dir/'"},
             0,
         ),
         # tar replaces "~/" with "/home/user/", the change should be rolledback by us.
