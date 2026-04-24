@@ -225,9 +225,10 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         has_sep = os.sep in s or (bool(os.altsep) and os.altsep in s)
         ambiguous_literal = not has_sep and ("$" in s or s.startswith("~"))
         check_path = s if ambiguous_literal else expand_path(s)
-        if os.path.isdir(check_path) or (
+        is_dir = os.path.isdir(check_path) or (
             cdpath and _is_directory_in_cdpath(check_path)
-        ):
+        )
+        if is_dir:
             _tail = slash
         elif end == "":
             _tail = space
@@ -254,6 +255,13 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         if has_ctrl:
             s = s.translate(_CONTROL_CHAR_ESCAPE)
         s = start + s + end if append_end else start + s
+        # For a non-directory completion inside quotes, append the trailing
+        # separator space AFTER the closing quote so `ls 'f<Tab>` advances
+        # to the next arg just like `ls f<Tab>` does. Skip when
+        # ``append_end=False``: the closing quote is already in the line
+        # after the cursor, and a space here would fall inside it.
+        if not is_dir and end != "" and append_end:
+            s = s + space
         out.add(s)
     return out, need_quotes
 

@@ -331,7 +331,8 @@ def test_complete_path_when_prefix_is_raw_path_string(
         prefix = f"pr{quote}{prefix_file_name}"
         line = f"ls {prefix}"
         out = xcp.complete_path(completion_context_parse(line, len(line)))
-        expected = f"pr{quote}{tmp.name}{quote}"
+        # File completion gets a trailing space AFTER the closing quote.
+        expected = f"pr{quote}{tmp.name}{quote} "
         assert expected == out[0].pop()
 
 
@@ -457,6 +458,100 @@ def test_complete_path_no_double_closing_quote(xession, completion_context_parse
         completions = {str(c) for c in comps}
         for c in completions:
             assert not c.endswith("''"), f"Double closing quote: {c!r}"
+
+
+@pytest.mark.parametrize("quote", ("'", '"'))
+@pytest.mark.parametrize(
+    "closed",
+    [False, True],
+    ids=["unclosed", "closed-cursor-at-end"],
+)
+def test_complete_path_quoted_file_appends_trailing_space(
+    quote, closed, xession, completion_context_parse
+):
+    """File completion inside quotes must add a trailing space AFTER the
+    closing quote, so `ls 'f<Tab>` advances to the next arg just like
+    `ls f<Tab>` does (issue #6362)."""
+    xession.env = {
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        open(os.path.join(td, "file"), "w").close()
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            arg = f"{quote}f{quote}" if closed else f"{quote}f"
+            line = f"ls {arg}"
+            ctx = completion_context_parse(line, len(line))
+            comps, _ = xcp.contextual_complete_path(ctx.command)
+            completions = {str(c) for c in comps}
+            expected = f"{quote}file{quote} "
+            assert expected in completions, (
+                f"Expected {expected!r} in completions, got: {completions}"
+            )
+        finally:
+            os.chdir(old_cwd)
+
+
+def test_complete_path_quoted_dir_no_trailing_space(xession, completion_context_parse):
+    """Directory completion inside quotes keeps the trailing sep, no space —
+    so a second Tab can drill deeper."""
+    xession.env = {
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        os.makedirs(os.path.join(td, "sub"))
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            line = "ls 's"
+            ctx = completion_context_parse(line, len(line))
+            comps, _ = xcp.contextual_complete_path(ctx.command)
+            completions = {str(c) for c in comps}
+            for c in completions:
+                assert not c.endswith("' "), (
+                    f"Dir completion should not have trailing space: {c!r}"
+                )
+        finally:
+            os.chdir(old_cwd)
+
+
+def test_complete_path_cursor_before_closing_quote_no_inside_space(
+    xession, completion_context_parse
+):
+    """When the cursor sits before an existing closing quote, the trailing
+    space must NOT be added — it would fall inside the quotes."""
+    xession.env = {
+        "GLOB_SORTED": True,
+        "SUBSEQUENCE_PATH_COMPLETION": False,
+        "FUZZY_PATH_COMPLETION": False,
+        "SUGGEST_THRESHOLD": 3,
+        "CDPATH": set(),
+    }
+    with tempfile.TemporaryDirectory() as td:
+        open(os.path.join(td, "file"), "w").close()
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            line = "ls 'f'"
+            cursor = len(line) - 1  # before closing quote
+            ctx = completion_context_parse(line, cursor)
+            comps, _ = xcp.contextual_complete_path(ctx.command)
+            completions = {str(c) for c in comps}
+            for c in completions:
+                assert not c.endswith(" "), (
+                    f"No space when cursor is before closing quote: {c!r}"
+                )
+        finally:
+            os.chdir(old_cwd)
 
 
 @pytest.mark.skipif(os.sep != "\\", reason="Backslash separator is Windows-only")
