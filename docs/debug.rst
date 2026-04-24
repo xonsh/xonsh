@@ -1,8 +1,8 @@
 .. _debug:
 
-***************
-Debug Utilities
-***************
+*****
+Debug
+*****
 
 Xonsh ships a debugging helper attached to every session as ``@.debug``.
 Its main job is to drop into a debugger at the exact call site — like
@@ -59,17 +59,17 @@ Engines
    * - Engine
      - Description
    * - ``pdbp``
-     - `pdbp <https://pypi.org/project/pdbp/>`_ — enhanced pdb (sticky mode,
+     - `pdbp <https://github.com/mdmintz/pdbp>`_ — enhanced pdb (sticky mode,
        syntax highlighting, ``where``/``u``/``d`` frame hiding). Install with
        ``xpip install pdbp``.
-   * - ``ipdb``
+   * - `ipdb <https://github.com/gotcha/ipdb>`_
      - IPython-flavored pdb. Install with ``xpip install ipdb``.
    * - ``pdb``
      - Stdlib ``pdb``. Always available.
    * - ``execer``
      - A REPL at the caller's frame backed by the session's
        :class:`~xonsh.execer.Execer`. Full xonsh syntax is available —
-       subprocesses (``ls``, ``$(ls)``), env lookups (``@.env.HOME``),
+       subprocesses (``ls``, ``$(ls)``), env lookups (``@.env['HOME']``),
        aliases, and ``@.`` attribute access. Raises ``RuntimeError`` if no
        execer is attached to the session.
    * - ``eval``
@@ -108,7 +108,7 @@ modifiable:
 
 .. code-block:: xonsh
 
-    execer> @.env.HOME
+    execer> @.env['HOME']
     '/Users/you'
     execer> ls *.py | head -3
     debug.py
