@@ -1527,7 +1527,7 @@ When started with the ``-c`` flag and a command, xonsh will execute that command
 and exit, instead of entering the command loop.
 
 .. note::
-    When executing commands this way :doc:`the run control ("xonshrc") files </xonshrc>` are not applied.
+    When executing commands this way your :doc:`xonsh RC <xonshrc>` files are not applied.
 
 .. code-block:: xonshcon
 
@@ -1816,4 +1816,4 @@ See also
 * :doc:`subprocess` -- subprocess operators and capturing modes
 * :doc:`env` -- environment variable types and patterns
 * :doc:`aliases` -- built-in aliases and command decorators
-* :doc:`xonshrc` -- configuration snippets and tips
+* :doc:`xonsh RC <xonshrc>` -- configuration snippets and tips

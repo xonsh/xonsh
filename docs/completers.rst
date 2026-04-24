@@ -451,7 +451,7 @@ so ``gh.exe`` will find ``gh.py``.
 
 However, if a command has other name variants (e.g. ``pip3.11``, ``python3.12``),
 the exact file name won't match. For these cases, you can register regex patterns
-from your ``xonshrc`` or xontrib:
+from your :doc:`xonsh RC <xonshrc>` or a xontrib:
 
 .. code-block:: python
 
@@ -469,7 +469,7 @@ Completing ``python -m <module>``
 When an alias resolves to ``python -m <module>`` (e.g. ``xpip`` → ``python -m pip``),
 xonsh uses the ``xompletions/python.py`` completer to delegate to the module's completer.
 
-The mapping is stored in ``PYTHON_MODULE_COMPLETERS`` and can be extended from xonshrc:
+The mapping is stored in ``PYTHON_MODULE_COMPLETERS`` and can be extended from your :doc:`xonsh RC <xonshrc>`:
 
 .. code-block:: python
 
@@ -544,7 +544,7 @@ if you're constructing a long pathname), you can set
 
    $COMPLETIONS_CONFIRM = True
 
-in your `xonsh RC <xonshrc.html>`_.
+in your :doc:`xonsh RC <xonshrc>`.
 
 By default, TABs cycle through the full list. Set
 ``$COMPLETION_MODE = "menu-complete"`` to instead insert the first whole

@@ -337,4 +337,4 @@ See also
 * :doc:`envvars` -- full list of environment variables
 * :doc:`strings` -- environment variable substitution in strings
 * :doc:`launch` -- passing variables via ``-D`` at startup
-* :doc:`xonshrc` -- setting variables in RC files
+* :doc:`xonsh RC <xonshrc>` -- setting variables in RC files

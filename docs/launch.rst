@@ -39,7 +39,7 @@ Arguments Reference
     Run as a login shell.
 
 ``--rc RC [RC ...]``
-    The xonshrc files to load. These may be either xonsh files or
+    The :doc:`xonsh RC <xonshrc>` files to load. These may be either xonsh files or
     directories containing xonsh files.
 
 ``--no-rc``
@@ -187,7 +187,7 @@ At startup xonsh performs the industry-standard handshake used by interactive sh
 to install itself as the foreground process group of its controlling terminal.
 
 On POSIX, the first thing :func:`xonsh.main.main` does — before argument
-parsing, xontrib loading, or xonshrc execution — is call
+parsing, xontrib loading, or :doc:`xonsh RC <xonshrc>` execution — is call
 :func:`xonsh.main._setup_controlling_terminal`. This function installs a
 Python-level no-op handler for ``SIGTTIN`` and ``SIGTTOU`` on every POSIX
 invocation. If ``os.isatty(stderr)`` is true, it then calls
@@ -262,6 +262,6 @@ See :ref:`macros` for more on ``@!()``.
 See also
 ========
 
-* :doc:`xonshrc` -- RC file loading and configuration snippets
+* :doc:`xonsh RC <xonshrc>` -- RC file loading and configuration snippets
 * :doc:`env` -- environment variables and type system
 * :doc:`envvars` -- full list of environment variables

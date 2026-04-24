@@ -54,8 +54,8 @@ To force a specific engine for a single call:
 Setting the Default Engine
 --------------------------
 
-Set ``$XONSH_DEBUG_BREAKPOINT_ENGINE`` in your ``.xonshrc`` to change the
-default used when ``engine`` is not passed (or is ``'auto'``):
+Set ``$XONSH_DEBUG_BREAKPOINT_ENGINE`` in your :doc:`xonsh RC <xonshrc>` to
+change the default used when ``engine`` is not passed (or is ``'auto'``):
 
 .. code-block:: xonsh
 
@@ -140,11 +140,11 @@ Routing Python's builtin ``breakpoint()`` Through ``@.debug``
 PEP 553 makes Python's builtin ``breakpoint()`` go through
 ``sys.breakpointhook``. ``@.debug`` can install a hook that routes every
 builtin ``breakpoint()`` call through the same engine as
-``@.debug.breakpoint()``:
+``@.debug.breakpoint()``. Add the following to your
+:doc:`xonsh RC <xonshrc>`:
 
 .. code-block:: xonsh
 
-    # In ~/.xonshrc
     $XONSH_DEBUG_BREAKPOINT_ENGINE = 'pdbp'
     @.debug.replace_builtin_breakpoint()
 

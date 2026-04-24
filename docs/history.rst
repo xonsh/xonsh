@@ -435,7 +435,7 @@ Note that this does not affect startup time, but the amount of time before
 all history is available for searching.
 
 To use sqlite history backend, set ``$XONSH_HISTORY_BACKEND = 'sqlite'`` in
-your ``~/.xonshrc`` file. To switch back to JSON version, remove this line,
+your :doc:`xonsh RC <xonshrc>`. To switch back to JSON version, remove this line,
 or set it to ``'json'``.
 
 .. note:: SQLite history backend currently only supports ``commands`` as
@@ -464,5 +464,5 @@ See also
 ========
 
 * :doc:`envvars` -- history-related environment variables (``$XONSH_HISTORY_*``)
-* :doc:`xonshrc` -- configuring history backend in RC files
+* :doc:`xonsh RC <xonshrc>` -- configuring history backend in RC files
 * :doc:`tutorial` -- introduction to xonsh

@@ -312,6 +312,27 @@ When writing xonsh code — in `.xsh` files, rc files, xontribs, docs, and examp
 
 12. **Working with LLMs — research first, code second** — when using an LLM to change this codebase, first ask it to investigate the code it's about to touch: read the relevant module, search for every caller, map the surrounding invariants, and return a written plan of the proposed changes. Only after you've reviewed that plan should you let it implement. Skipping the research step — the "I want to fix this, just do it" prompt — pushes the model toward the shortest patch that compiles, which routinely breaks callers, skips edge cases, and produces integration bugs. Xonsh is a concurrent, multi-process system with many subtle interactions (parser, procs, events, prompt, completion), so a change that looks local often isn't. Don't skip the plan.
 
+### Documentation Preferences
+
+1. **Linking the xonsh RC file in docs** — in `.rst` files, instead of bare `~/.xonshrc`, `.xonshrc`, or an inline `xonshrc` code span, write the phrase **xonsh RC** and render it as a link to `xonshrc.rst` via `:doc:`xonsh RC <xonshrc>``. This gives a uniform, readable hyperlink to the RC-file guide and avoids mixing the path, the filename, and the concept. If the mention has to appear inside a `code-block::` (where Sphinx roles don't render), lift it into the surrounding prose and keep the code sample itself free of that filename.
+
+   ```rst
+   # Good
+   Add this snippet to your :doc:`xonsh RC <xonshrc>`:
+
+   .. code-block:: xonsh
+
+       $XONSH_DEBUG_BREAKPOINT_ENGINE = 'pdbp'
+
+   # Bad — bare filename, no link
+   Add this snippet to your ``~/.xonshrc``:
+
+   .. code-block:: xonsh
+
+       # In ~/.xonshrc
+       $XONSH_DEBUG_BREAKPOINT_ENGINE = 'pdbp'
+   ```
+
 ## CI
 
 GitHub Actions matrix: Ubuntu/macOS/Windows x Python 3.11/3.12/3.13/3.14. Tests run with 600s timeout. Coverage collected on Python 3.12. Package manager: `uv`.

@@ -260,7 +260,7 @@ binding.
 This section walks you through how to do this using ``prompt_toolkit`` tools to
 define keybindings and warns you about potential pitfalls.
 
-All of the code below can be entered into your :doc:`xonshrc`.
+All of the code below can be entered into your :doc:`xonsh RC <xonshrc>`.
 
 This will let you hook directly into the ``prompt_toolkit`` keybinding manager. It will not stop you from rendering your
 prompt completely unusable, so tread lightly.
@@ -325,7 +325,7 @@ We'll start with a toy example that just inserts the text "hi" into the current 
         def say_hi(event):
             event.current_buffer.insert_text('hi')
 
-Put that in your :doc:`xonshrc`, restart xonsh and then see if
+Put that in your :doc:`xonsh RC <xonshrc>`, restart xonsh and then see if
 pressing ``Ctrl-w`` does anything (it should!)
 
 What commands can keybindings run?
@@ -400,7 +400,7 @@ Now that the condition is defined, we can pass it as a ``filter`` keyword to a k
                 ls -l
             run_in_terminal(_task)
 
-With both of those in your ``.xonshrc``, pressing ``Control L`` will list the
+With both of those in your :doc:`xonsh RC <xonshrc>`, pressing ``Control L`` will list the
 contents of your current directory if there are fewer than 10 items in it.
 Useful? Debatable. Powerful? Yes.
 
@@ -557,7 +557,7 @@ Registering custom styles
 
 If you aren't happy with the styles provided by us (and ``pygments``), you can create and register custom styles.
 
-To do so, add something similar to your ``.xonshrc``:
+To do so, add something similar to your :doc:`xonsh RC <xonshrc>`:
 
 .. code-block:: python
 
