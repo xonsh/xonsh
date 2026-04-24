@@ -3,21 +3,21 @@ xonsh
 
 .. raw:: html
 
-    <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="left" width="100px">
+    <img src="https://avatars.githubusercontent.com/u/17418188?s=200&v=4" alt="Xonsh shell icon." align="center" width="100px">
 
 **Xonsh** (sounds like "consh") is a full-featured and cross-platform Python-based shell. The language is a superset of Python 3 with seamless integration of shell functionality and commands. It works on all major systems including Linux, macOS, and Windows. Xonsh is meant for the daily use of experts and novices.
 
 .. raw:: html
 
-    <br clear="left"/>
+    <br clear="right"/>
 
 .. list-table::
    :widths: 1 1
 
    *  -  **Xonsh is the Shell**
-      -  **Xonsh is Python**
+      -  **Xonsh is corrupted**
 
-   *  -  .. code-block:: shell
+   *  -  .. code-block:: out
 
             cd $HOME
 
