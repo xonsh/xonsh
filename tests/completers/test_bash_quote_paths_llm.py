@@ -18,7 +18,7 @@ path completer (``xonsh.completers.path._quote_paths``):
 import os
 import tempfile
 
-from xonsh.completers.bash_completion import _bash_quote_paths
+from xonsh.completers.bash_completion import _bash_get_sep, _bash_quote_paths
 
 
 def test_per_path_quoting_leaves_plain_file_unquoted():
@@ -67,7 +67,11 @@ def test_quoted_dir_keeps_sep_no_trailing_space():
             out, _ = _bash_quote_paths({"di$r"}, "", "")
         finally:
             os.chdir(old_cwd)
-    sep = os.sep
+    # Mirror the helper's own separator choice — on Windows it uses
+    # ``/`` (``os.altsep``), not ``os.sep``, because bash itself speaks
+    # forward slashes. Using ``os.sep`` here would be a tautology-free
+    # assert only on POSIX and would fail on Windows CI.
+    sep = _bash_get_sep()
     assert out == {f"'di$r{sep}'"}, f"expected dir ending with sep, no space: {out}"
 
 
