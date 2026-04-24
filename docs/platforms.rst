@@ -38,17 +38,21 @@ Typical pattern:
 
     from xonsh.platform import ON_LINUX, ON_DARWIN, ON_WINDOWS
 
-    # Only in a live terminal — skipped when the RC is run as a script
     if $XONSH_INTERACTIVE:
+        # Only in a live terminal — skipped when the RC is run as a script
         aliases['ll'] = 'ls -la'
-        $PROMPT = '{BOLD_GREEN}{user}@{hostname}{RESET} {cwd}$ '
+        $PROMPT = $PROMPT.replace('{prompt_end}', 'myproject {prompt_end}')
 
-    if ON_LINUX:
-        $LS_COLORS = 'di=1;34:ln=35'
-    elif ON_DARWIN:
-        aliases['ls'] = 'ls -G'
-    elif ON_WINDOWS:
-        $PATHEXT.append('.PY')
+        if ON_LINUX:
+            $LS_COLORS = 'di=1;34:ln=35'
+        elif ON_DARWIN:
+            aliases['ls'] = 'ls -G'
+        elif ON_WINDOWS:
+            $PATHEXT.append('.PY')
+    else:
+        # Script / non-interactive mode — fail fast
+        $XONSH_SHOW_TRACEBACK = True
+        $XONSH_SUBPROC_CMD_RAISE_ERROR = True
 
 \*nix
 -----

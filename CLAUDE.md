@@ -333,6 +333,27 @@ When writing xonsh code — in `.xsh` files, rc files, xontribs, docs, and examp
        $XONSH_DEBUG_BREAKPOINT_ENGINE = 'pdbp'
    ```
 
+2. **Use `@` as the xonsh prompt in examples** — whenever you show an interactive xonsh command line (typically inside ``.. code-block:: xonshcon``), prefix the command with `@ `. `@` is the default rendering of `{prompt_end}` in `$PROMPT` and xonsh's most recognizable visual cue — readers spot an `@ ` and know it's a xonsh session. Never use `$` or `>` as the prompt marker for xonsh commands: `$` reads as a bash/sh prompt, `>` as a generic REPL, and both blur the line between shells. Reserve `$` for code-blocks that genuinely show a bash/sh prompt (e.g. a system-level command run *before* xonsh starts).
+
+   ```rst
+   # Good — xonsh session, marked with @
+   .. code-block:: xonshcon
+
+       @ ls | grep py
+       @ $PATH.append('/opt/bin')
+
+   # Bad — looks like bash, ambiguous
+   .. code-block:: xonshcon
+
+       $ ls | grep py
+       > $PATH.append('/opt/bin')
+
+   # Fine — an explicitly-bash prelude
+   .. code-block:: bash
+
+       $ env LD_PRELOAD=libgcc_s.so.1 xonsh
+   ```
+
 ## CI
 
 GitHub Actions matrix: Ubuntu/macOS/Windows x Python 3.11/3.12/3.13/3.14. Tests run with 600s timeout. Coverage collected on Python 3.12. Package manager: `uv`.
