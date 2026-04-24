@@ -6,11 +6,10 @@ env["PATH"].append("/home/snail/sandbox/bin")
 env["LD_LIBRARY_PATH"] = ["/home/snail/.local/lib", "/home/snail/miniconda3/lib"]
 
 # alias to quit AwesomeWM from the terminal
+@XSH.aliases.register("qa")
 def _quit_awesome(args, stdin=None):
     print("awesome python code")
 
-
-XSH.aliases["qa"] = _quit_awesome
 # setting aliases as list are faster since they don't involve parser.
 XSH.aliases["gc"] = ["git", "commit"]
 
