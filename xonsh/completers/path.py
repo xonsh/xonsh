@@ -214,10 +214,17 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         end = orig_end
         if start == "" and need_quotes:
             start = end = _quote_to_use(s)
-        # For paths with $ or starting with ~ use the literal path for
-        # isdir — expand_path("$HOME") and expand_path("~") resolve to
-        # the home directory (always a dir), masking literal files.
-        check_path = s if ("$" in s or s.startswith("~")) else expand_path(s)
+        # For a bare ``~`` or ``$VAR`` use the literal path for isdir —
+        # expand_path("$HOME") and expand_path("~") resolve to the home
+        # directory (always a dir), masking a local file with that exact
+        # name. Compound paths like ``~/git`` or ``$HOME/bin`` are
+        # unambiguous (a separator means it's a subpath, not a literal
+        # filename), so fall through to ``expand_path`` — otherwise
+        # ``os.path.isdir("~/git")`` is False and the trailing-sep
+        # detection for directories breaks.
+        has_sep = os.sep in s or (bool(os.altsep) and os.altsep in s)
+        ambiguous_literal = not has_sep and ("$" in s or s.startswith("~"))
+        check_path = s if ambiguous_literal else expand_path(s)
         if os.path.isdir(check_path) or (
             cdpath and _is_directory_in_cdpath(check_path)
         ):

@@ -104,6 +104,36 @@ def test_complete_path_tilde_expanded_on_windows(prefix_fmt, xession):
         assert paths, "Expected non-empty completions"
 
 
+@pytest.mark.skipif(xcp.xp.ON_WINDOWS, reason="POSIX tilde expansion")
+def test_complete_path_tilde_subdir_trailing_sep(xession):
+    """``~/<subdir>`` completion must end with the path separator so that
+    a second Tab keeps drilling into the directory. Regression from
+    PR #6339 which made ``_quote_paths`` use the literal path for any
+    ``~``-prefixed string, breaking ``isdir("~/git")``.
+    """
+    xession.env.update(
+        {
+            "GLOB_SORTED": True,
+            "SUBSEQUENCE_PATH_COMPLETION": False,
+            "FUZZY_PATH_COMPLETION": False,
+            "SUGGEST_THRESHOLD": 3,
+            "CDPATH": set(),
+        }
+    )
+    home = os.path.expanduser("~")
+    with tempfile.TemporaryDirectory(dir=home) as td:
+        name = os.path.basename(td)
+        prefix = f"~/{name[:3]}"
+        line = f"ls {prefix}"
+        paths, _ = xcp._complete_path_raw(prefix, line, 3, len(line), {})
+        match = {p for p in paths if name in p}
+        assert match, f"Expected completion for ~/{name[:3]}, got: {paths}"
+        for p in match:
+            assert p.rstrip().endswith(os.sep), (
+                f"Expected trailing sep for ~/<dir>, got: {p!r}"
+            )
+
+
 @pytest.mark.parametrize(
     "prefix, line, start, end, filtfunc, extra_files",
     [
