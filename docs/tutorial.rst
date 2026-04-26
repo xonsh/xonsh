@@ -312,7 +312,7 @@ Running subprocess commands should work like in any other shell.
     @ cd xonsh
     @ ls
     build  docs     README.rst  setup.py  xonsh           __pycache__
-    dist   license  scripts     tests     xonsh.egg-info
+    dist   LICENSE  scripts     tests     xonsh.egg-info
     @ dir scripts
     xonsh  xonsh.bat
     @ git status

@@ -16,7 +16,6 @@
 *.yaml text
 *.yml text
 CONTRIBUTING text
-license text
 LICENSE text
 Makefile text
 README text
