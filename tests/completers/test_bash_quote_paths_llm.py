@@ -18,7 +18,11 @@ path completer (``xonsh.completers.path._quote_paths``):
 import os
 import tempfile
 
-from xonsh.completers.bash_completion import _bash_get_sep, _bash_quote_paths
+from xonsh.completers.bash_completion import (
+    _bash_get_sep,
+    _bash_quote_paths,
+    _bash_unescape,
+)
 
 
 def test_per_path_quoting_leaves_plain_file_unquoted():
@@ -104,3 +108,60 @@ def test_user_supplied_quotes_preserved_across_all_paths():
     assert any("'fi$le'" in c and "\\" not in c[:-1] for c in out), (
         f"user quote preserved for fi$le: {out}"
     )
+
+
+def test_bash_unescape_strips_backslash_pairs():
+    """``\\<char>`` is bash's COMPREPLY escape, not a literal backslash."""
+    assert _bash_unescape(r"foo\ bar") == "foo bar"
+    assert _bash_unescape(r"foo\$bar") == "foo$bar"
+    assert _bash_unescape(r"foo\'bar") == "foo'bar"
+    # Two real backslashes in the source represent one literal backslash.
+    assert _bash_unescape(r"foo\\bar") == r"foo\bar"
+    # No-op for paths without escapes.
+    assert _bash_unescape("plain/path") == "plain/path"
+
+
+def test_bash_escaped_space_is_unescaped_then_quoted_plainly():
+    """Bash returns ``foo\\ bar/target`` for a path containing a space.
+
+    Wrapping that string verbatim in ``r'...'`` produced a path with a
+    literal backslash on the command line, breaking ``ls``. The fix is
+    to undo bash's escape first; the space then survives via single
+    quotes alone, no raw-string prefix needed.
+
+    Regression: user reported ``ls 'foo bar/'<TAB>`` completing to
+    ``ls r'foo\\ bar/target'``, which then failed with "No such file
+    or directory".
+    """
+    with tempfile.TemporaryDirectory() as td:
+        os.makedirs(os.path.join(td, "foo bar"))
+        open(os.path.join(td, "foo bar", "target"), "w").close()
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            out, _ = _bash_quote_paths({r"foo\ bar/target"}, "'", "'")
+        finally:
+            os.chdir(old_cwd)
+    # The completion must be a valid xonsh single-quoted string with the
+    # actual filesystem path inside — no leftover backslash, no ``r``
+    # prefix, since single quotes already handle the space.
+    assert out == {"'foo bar/target' "}, (
+        f"escape must be decoded so the path on the command line "
+        f"matches the actual filesystem entry: {out}"
+    )
+
+
+def test_bash_escaped_space_without_user_quotes_auto_quotes():
+    """Even without an opening quote from the user, bash's ``\\ `` escape
+    must decode to a real space and the completer must add its own
+    quotes around the resulting path."""
+    with tempfile.TemporaryDirectory() as td:
+        os.makedirs(os.path.join(td, "foo bar"))
+        open(os.path.join(td, "foo bar", "target"), "w").close()
+        old_cwd = os.getcwd()
+        os.chdir(td)
+        try:
+            out, _ = _bash_quote_paths({r"foo\ bar/target"}, "", "")
+        finally:
+            os.chdir(old_cwd)
+    assert out == {"'foo bar/target' "}, out
