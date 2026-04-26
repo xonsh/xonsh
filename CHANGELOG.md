@@ -1,5 +1,31 @@
 # Xonsh Change Log
 
+## [0.23.2](https://github.com/xonsh/xonsh/compare/0.23.1...0.23.2) (2026-04-26)
+
+
+### Features
+
+* Added `@.debug` with `breakpoint` and `replace_builtin_breakpoint` ([#6363](https://github.com/xonsh/xonsh/issues/6363)) ([f092a8c](https://github.com/xonsh/xonsh/commit/f092a8ca0c99bffcd69044c61de109e0ceb2ceb4))
+* **completer:** Use quotation only if needed - bash completer ([#6367](https://github.com/xonsh/xonsh/issues/6367)) ([9cca19e](https://github.com/xonsh/xonsh/commit/9cca19efe7c6f6c2761bfb237667ec5ed3b049ab))
+* **completer:** Use quotation only if needed + some fixes ([#6366](https://github.com/xonsh/xonsh/issues/6366)) ([4fd3667](https://github.com/xonsh/xonsh/commit/4fd36675945c11deb881aee115b3d03581c5d8dc))
+
+
+### Fixes
+
+* **completer:** Fix `@.<obj>.<tab>` completion ([#6364](https://github.com/xonsh/xonsh/issues/6364)) ([23e4652](https://github.com/xonsh/xonsh/commit/23e46520e2fbd906eefcf366c1400466f49db43d))
+* **completer:** Fix bash completer quotation ([#6370](https://github.com/xonsh/xonsh/issues/6370)) ([b711c4a](https://github.com/xonsh/xonsh/commit/b711c4a51754d61173b19a49e984b6316d17abe1))
+* **completer:** Hide syntax and private methods if line is empty ([#6372](https://github.com/xonsh/xonsh/issues/6372)) ([94d7753](https://github.com/xonsh/xonsh/commit/94d775348f672b756816ea6f3c241e7fc89d317e))
+* Nix: Now flake uses the package built from source ([#6361](https://github.com/xonsh/xonsh/issues/6361)) ([f6d458c](https://github.com/xonsh/xonsh/commit/f6d458c641da5d87374e02ff68e56aa25719eb6d))
+
+
+### Documentation
+
+* Add Github Actions ([c27c97e](https://github.com/xonsh/xonsh/commit/c27c97e02ff7f1c6943777548055d0402c608ed6))
+* fix dockerhub container name ([8b323de](https://github.com/xonsh/xonsh/commit/8b323def0ffebffc73937c1aac3b1d09ef081657))
+* fix dockerhub container name ([0d929c9](https://github.com/xonsh/xonsh/commit/0d929c96f365d3dd10f44cb7d525d06dd6f7f2a2))
+* Replace xonshrc mentions to the link with xonshrc.rst ([#6365](https://github.com/xonsh/xonsh/issues/6365)) ([6032abc](https://github.com/xonsh/xonsh/commit/6032abc2665a0fd57d0625691b1d39c4464c9ce0))
+* update index.html for i18n support ([#6359](https://github.com/xonsh/xonsh/issues/6359)) ([cac1476](https://github.com/xonsh/xonsh/commit/cac1476cb845a9ec751bf4aa1c1a894c0eb91a62))
+
 ## [0.23.1](https://github.com/xonsh/xonsh/compare/0.23.0...0.23.1) (2026-04-21)
 
 
