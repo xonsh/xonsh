@@ -301,3 +301,58 @@ class TestAtSignCompletion:
         comps, _ = res
         assert "@.lastcmd.rtn" in comps
         assert "@.lastcmd.out[" in comps
+
+
+def test_complete_python_empty_prefix_hides_noise():
+    """Bare Tab on a completely empty prefix must not surface
+    xonsh-syntax tokens (``!(``, ``@(``, ``$(``, …), Python operators
+    and keywords from ``XONSH_TOKENS``, or underscore-prefixed builtins
+    (dunders, private names). Without filtering every entry would match
+    and bury actually useful completions.
+    """
+    res = complete_python(CompletionContext(python=PythonContext("", 0, ctx={})))
+    assert res is not None
+    comps, _ = res
+    comps_str = {str(c) for c in comps}
+
+    # xonsh-specific syntax — explicitly named in the user request.
+    for tok in ("!(", "@(", "$(", "${", "$[", "![", "@$(", "@", "?", "??"):
+        assert tok not in comps_str, f"{tok!r} leaked into bare-Tab menu"
+    # Operators / keywords from XONSH_TOKENS — also noise on bare Tab.
+    for tok in ("+", "==", "if", "for", "lambda"):
+        assert tok not in comps_str, f"{tok!r} leaked into bare-Tab menu"
+    # No underscore-prefixed names (dunders or private).
+    leaked_underscore = sorted(s for s in comps_str if s.startswith("_"))
+    assert not leaked_underscore, (
+        f"underscore-prefixed names leaked into bare-Tab menu: {leaked_underscore}"
+    )
+    # Sanity: the menu is not empty — common builtins still come through.
+    assert "print" in comps_str
+    assert "len" in comps_str
+
+
+def test_complete_python_dunder_prefix_still_shows_dunders():
+    """The bare-Tab filter must only kick in for an empty prefix —
+    if the user actually typed ``__``, dunder builtins must appear.
+    """
+    res = complete_python(CompletionContext(python=PythonContext("__", 2, ctx={})))
+    assert res is not None
+    comps, _ = res
+    comps_str = {str(c) for c in comps}
+    assert any(s.startswith("__") for s in comps_str), (
+        "expected dunder builtins to be offered for prefix '__'"
+    )
+
+
+def test_complete_python_empty_prefix_hides_underscore_ctx():
+    """Underscore-prefixed names from the local context must also be
+    hidden on bare Tab (same noise rule as for builtins).
+    """
+    ctx = {"_hidden": 1, "visible": 2, "__dunder__": 3}
+    res = complete_python(CompletionContext(python=PythonContext("", 0, ctx=ctx)))
+    assert res is not None
+    comps, _ = res
+    comps_str = {str(c) for c in comps}
+    assert "visible" in comps_str
+    assert "_hidden" not in comps_str
+    assert "__dunder__" not in comps_str

@@ -6,7 +6,7 @@ Please do this:
 2. Add the documentation to `/docs/`.
 3. Add the example of usage or before-after behavior.
 4. Mention the issue that this PR is addressing e.g. `Closes #1234`.
-5. 🤖 Ask AI/LLM about using instructions from `CLAUDE.md`. 
+5. 🤖 Ask AI/LLM about using instructions from `CLAUDE.md`.
 
 -->
 
