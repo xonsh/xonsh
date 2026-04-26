@@ -586,3 +586,38 @@ def test_trace_completions_reports_zero_results(
     assert "TRACE COMPLETIONS: Got 1 from exclusive 'third' for 'pre':" in captured
     # 0-result header ends with "." and has no body lines.
     assert "from non-exclusive 'first' for 'pre'.\n" in captured
+
+
+def test_trace_completions_when_query_limit_hit_midstream(
+    completer, completers_mock, xession, monkeypatch, capsys
+):
+    """When ``$COMPLETION_QUERY_LIMIT`` cuts the consumer mid-completer,
+    the trace must still show the items that were yielded — and the
+    ``"Stopped..."`` line must come *after* them, not before. Previously
+    a ``break`` on the consumer side raised ``GeneratorExit`` at the
+    suspended ``yield`` and the per-completer trace block was skipped,
+    so users saw only the names of completers that had already finished.
+    """
+    monkeypatch.setitem(xession.env, "XONSH_COMPLETER_TRACE", True)
+    monkeypatch.setitem(xession.env, "COMPLETION_QUERY_LIMIT", 3)
+
+    completers_mock["env"] = non_exclusive_completer(lambda *a: set())
+    completers_mock["big"] = lambda *a: {f"c{i}" for i in range(10)}
+
+    completer.complete("", "ls ", 3, 3, {}, multiline_text="ls ", cursor_index=3)
+    captured = capsys.readouterr().out
+
+    # The non-exclusive completer that produced nothing is still reported.
+    assert "TRACE COMPLETIONS: Got 0 from non-exclusive 'env' for ''." in captured
+    # The interrupted completer is reported with the items that were
+    # actually yielded before the break (i.e. the limit count).
+    assert "TRACE COMPLETIONS: Got 3 from exclusive 'big' for '':" in captured
+    # Three per-line entries for the three yielded items (set order isn't
+    # stable so we don't pin specific names — only the count and tag).
+    assert captured.count("src=big, type=exclusive") == 3
+    # The "Stopped" line follows the items, not precedes them.
+    big_idx = captured.index("Got 3 from exclusive 'big'")
+    stopped_idx = captured.index(
+        "TRACE COMPLETIONS: Stopped after $COMPLETION_QUERY_LIMIT reached."
+    )
+    assert big_idx < stopped_idx

@@ -277,53 +277,57 @@ class Completer:
             # that ``res is None`` is valid — it just yields an empty
             # ``items``, and trace will report ``Got 0 results``.
             items: list = []
-            if res is not None:
-                for comp in res:
-                    if (not is_filtered) and (not filter_func(comp, prefix)):
-                        continue
-                    # Skip empty or whitespace-only completions as if the
-                    # completer had not returned them. Without this an
-                    # exclusive completer that yields only blanks (e.g. a
-                    # subprocess-based completer returning spurious empty
-                    # lines) would short-circuit the pipeline and hide
-                    # the fallback ``python``/``path`` completers. See #5810.
-                    if not str(comp).strip():
-                        continue
-                    comp = Completer._format_completion(
-                        comp,
-                        completion_context,
-                        completing_contextual_command,
-                        lprefix or 0,
-                        custom_lprefix,
-                    )
-                    items.append(comp)
-                    yield comp
-
             exclusive = is_exclusive_completer(func)
-
-            if trace:
-                exclusivity = "exclusive" if exclusive else "non-exclusive"
-                if not items:
-                    # Completer was invoked but produced nothing usable —
-                    # still report it so the user can see which completers
-                    # ran. Trailing ``.`` since no list follows.
-                    print(
-                        f"TRACE COMPLETIONS: Got 0"
-                        f" from {exclusivity} '{name}'"
-                        f" for {prefix!r}."
-                    )
-                else:
-                    print(
-                        f"TRACE COMPLETIONS: Got {len(items)}"
-                        f" from {exclusivity} '{name}'"
-                        f" for {prefix!r}:"
-                    )
-                    for item_comp, item_lprefix in items:
-                        print(
-                            Completer._format_trace_item(
-                                item_comp, item_lprefix, name, exclusive
-                            )
+            try:
+                if res is not None:
+                    for comp in res:
+                        if (not is_filtered) and (not filter_func(comp, prefix)):
+                            continue
+                        # Skip empty or whitespace-only completions as if the
+                        # completer had not returned them. Without this an
+                        # exclusive completer that yields only blanks (e.g. a
+                        # subprocess-based completer returning spurious empty
+                        # lines) would short-circuit the pipeline and hide
+                        # the fallback ``python``/``path`` completers. See #5810.
+                        if not str(comp).strip():
+                            continue
+                        comp = Completer._format_completion(
+                            comp,
+                            completion_context,
+                            completing_contextual_command,
+                            lprefix or 0,
+                            custom_lprefix,
                         )
+                        items.append(comp)
+                        yield comp
+            finally:
+                # Trace lives in ``finally`` so it still runs when the
+                # consumer breaks mid-completer (``GeneratorExit`` at the
+                # ``yield``) — otherwise the items that triggered
+                # ``$COMPLETION_QUERY_LIMIT`` would never be printed.
+                if trace:
+                    exclusivity = "exclusive" if exclusive else "non-exclusive"
+                    if not items:
+                        # Completer was invoked but produced nothing usable —
+                        # still report it so the user can see which completers
+                        # ran. Trailing ``.`` since no list follows.
+                        print(
+                            f"TRACE COMPLETIONS: Got 0"
+                            f" from {exclusivity} '{name}'"
+                            f" for {prefix!r}."
+                        )
+                    else:
+                        print(
+                            f"TRACE COMPLETIONS: Got {len(items)}"
+                            f" from {exclusivity} '{name}'"
+                            f" for {prefix!r}:"
+                        )
+                        for item_comp, item_lprefix in items:
+                            print(
+                                Completer._format_trace_item(
+                                    item_comp, item_lprefix, name, exclusive
+                                )
+                            )
 
             if not items:  # empty completion
                 continue
@@ -359,23 +363,32 @@ class Completer:
             elif completion_context.python is not None:
                 has_line_content = bool(completion_context.python.prefix)
 
-        for comp in self.generate_completions(
+        gen = self.generate_completions(
             completion_context,
             old_completer_args,
             trace,
-        ):
-            completion, lprefix = comp
-            completions[completion] = None
-            if query_limit and len(completions) >= query_limit:
-                if trace:
-                    print(
-                        "TRACE COMPLETIONS: Stopped after $COMPLETION_QUERY_LIMIT reached."
-                    )
-                if has_line_content:
-                    print_above_prompt(
-                        f"List truncated by $COMPLETION_QUERY_LIMIT = {query_limit}"
-                    )
-                break
+        )
+        limit_reached = False
+        try:
+            for comp in gen:
+                completion, lprefix = comp
+                completions[completion] = None
+                if query_limit and len(completions) >= query_limit:
+                    limit_reached = True
+                    if has_line_content:
+                        print_above_prompt(
+                            f"List truncated by $COMPLETION_QUERY_LIMIT = {query_limit}"
+                        )
+                    break
+        finally:
+            # Force the generator's ``finally`` (the per-completer trace
+            # block) to run before any post-loop output, so the items of
+            # the completer that was interrupted by the query-limit
+            # ``break`` actually get printed.
+            gen.close()
+
+        if trace and limit_reached:
+            print("TRACE COMPLETIONS: Stopped after $COMPLETION_QUERY_LIMIT reached.")
 
         # Deduplicate completions that differ only by a trailing space.
         # For example, ``_cd`` (from Python name completions) and ``_cd ``
