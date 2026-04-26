@@ -137,6 +137,35 @@ def _bash_quote_to_use(x):
         return single
 
 
+def _bash_unescape(s):
+    """Strip bash-style ``\\<char>`` escapes from a COMPREPLY entry.
+
+    Bash completion functions emit shell-special characters (spaces, ``$``,
+    ``'``, ...) escaped with a leading backslash regardless of the user's
+    quoting context. xonsh's own quoting (single quotes, raw strings) makes
+    those escapes redundant, and the escape *survives* into the rendered
+    completion when we wrap the entry in ``r'...'`` — yielding a path with
+    a literal backslash that the filesystem doesn't have.
+
+    Decoding the bash escapes here lets the surrounding quote-decision logic
+    pick the simplest valid form (``'foo bar'``) and reserves the ``r``
+    prefix for paths that genuinely contain a backslash (e.g. Windows
+    separators).
+    """
+    out = []
+    i = 0
+    n = len(s)
+    while i < n:
+        c = s[i]
+        if c == "\\" and i + 1 < n:
+            out.append(s[i + 1])
+            i += 2
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
 def _bash_quote_paths(paths, start, end):
     out = set()
     space = " "
@@ -151,6 +180,7 @@ def _bash_quote_paths(paths, start, end):
     need_quotes = False
 
     for s in paths:
+        s = _bash_unescape(s)
         orig_s = s
         start = orig_start
         end = orig_end
