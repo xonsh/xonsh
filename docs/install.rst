@@ -306,3 +306,51 @@ to add xonsh to ``/etc/shells`` and switch:
     $ chsh -s $(which xonsh)
 
 You will have to log out and log back in before the changes take effect.
+
+
+GitHub Actions
+========================
+
+The `xonsh/actions <https://github.com/xonsh/actions>`_ repository provides a composite
+action that installs xonsh on a GitHub Actions runner, so subsequent steps can run xonsh
+code natively. Tested on ``ubuntu-latest``, ``macos-latest``, and ``windows-latest``.
+
+Declare ``defaults.run.shell: xonsh {0}`` once for the whole job and every ``run:``
+block in that job executes as xonsh:
+
+.. code-block:: yaml
+
+    jobs:
+      my-job:
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            shell: xonsh {0}
+        steps:
+          - uses: actions/checkout@v4
+          - uses: xonsh/actions@v1
+
+          - run: |
+              echo "hello from xonsh"
+              $PATH.append('/mypath')
+
+Or set ``shell: xonsh {0}`` on individual steps when only some should run as xonsh:
+
+.. code-block:: yaml
+
+    jobs:
+      my-job:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - uses: xonsh/actions@v1
+
+          - name: Run xonsh
+            shell: xonsh {0}
+            run: |
+              echo "hello from xonsh"
+              $PATH.append('/mypath')
+              print($PATH)
+
+See the `xonsh/actions README <https://github.com/xonsh/actions>`_ for inputs, outputs,
+and reusable workflows for testing xontribs.
