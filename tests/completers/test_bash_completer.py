@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import pytest
 
@@ -14,6 +15,16 @@ from xonsh.pytest.tools import skip_if_on_bsd, skip_if_on_darwin, skip_if_on_win
 if os.path.exists("/nix"):
     pytest.skip(
         "Skipping bash completion tests on Nix systems for future fixing. PR with fix is welcome!",
+        allow_module_level=True,
+    )
+
+if shutil.which("bash") is None:
+    # Every test in this module shells out to bash to drive bash-completion;
+    # without the binary on PATH they all collapse into "set() == expected"
+    # noise. Skip the module entirely on stripped build environments
+    # (e.g. FreeBSD poudriere jails that don't install bash).
+    pytest.skip(
+        "bash not found on PATH — bash-completion tests need a real bash.",
         allow_module_level=True,
     )
 
