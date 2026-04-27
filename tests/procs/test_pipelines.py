@@ -191,8 +191,16 @@ def test_callable_alias_redirect_e2o(xonsh_session):
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.timeout(30)
 def test_callable_alias_redirect_o2e(xonsh_session):
-    """Callable alias with o>e should merge stdout into stderr."""
+    """Callable alias with o>e should merge stdout into stderr.
+
+    Hard timeout: this test has been observed to hang indefinitely in
+    FreeBSD-CURRENT poudriere build jails (issue #6374). Without
+    ``--timeout``, a hang in CI consumes the whole job before pytest
+    notices; the explicit mark turns the hang into a quick failure
+    with a stacktrace pointing at the deadlock so it can be diagnosed.
+    """
 
     def _alias():
         print("OUT")
