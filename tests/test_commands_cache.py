@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import stat
 import time
 from pathlib import Path
@@ -180,9 +181,21 @@ class Test_is_only_functional_alias:
             is False
         )
 
-    def test_bash_and_is_alias_is_only_functional_alias(self, xession):
-        xession.aliases["git"] = lambda args: os.chdir(args[0])
-        assert xession.commands_cache.is_only_functional_alias("git") is False
+    def test_alias_shadowing_real_binary_is_not_only_functional(self, xession):
+        # Find a real executable on PATH; the test wants "alias name that
+        # *also* exists as a binary", so the chosen name is incidental.
+        # Hardcoding ``git`` (the original spelling) was a footgun on
+        # stripped build envs (FreeBSD ports / poudriere) that don't ship
+        # it. ``ls`` / ``sh`` are POSIX-mandated and present even in
+        # minimal jails; we still skip cleanly if neither is found.
+        for candidate in ("ls", "sh", "cat", "cp"):
+            if shutil.which(candidate):
+                name = candidate
+                break
+        else:
+            pytest.skip("no probe binary on PATH for the shadowing check")
+        xession.aliases[name] = lambda args: os.chdir(args[0])
+        assert xession.commands_cache.is_only_functional_alias(name) is False
 
 
 def test_update_cache(xession, tmp_path):
