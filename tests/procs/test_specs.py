@@ -41,8 +41,13 @@ pytestmark = pytest.mark.skipif(
 
 
 def cmd_sig(sig):
+    # ``sys.executable`` resolves to the running interpreter (e.g.
+    # ``/usr/local/bin/python3.11``). A bare ``"python"`` would fail on
+    # build environments that only ship versioned binaries — FreeBSD
+    # ports / poudriere jails being the canonical example — turning every
+    # test that uses this helper into a ``command not found``.
     return [
-        "python",
+        sys.executable,
         "-c",
         f"import os, signal; os.kill(os.getpid(), signal.{sig})",
     ]
