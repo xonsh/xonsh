@@ -579,6 +579,19 @@ def PATH_DEFAULT():
 
     elif ON_DARWIN:
         pd = ("/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin")
+    elif ON_BSD:
+        # FreeBSD's /etc/login.conf default; also matches the layout NetBSD,
+        # OpenBSD and DragonFly use, with /usr/local/{s,}bin coming from
+        # ports / pkgsrc.
+        pd = (
+            "/sbin",
+            "/bin",
+            "/usr/sbin",
+            "/usr/bin",
+            "/usr/local/sbin",
+            "/usr/local/bin",
+            os.path.expanduser("~/bin"),
+        )
     elif ON_WINDOWS:
         import winreg
 
