@@ -19,6 +19,8 @@ VER_FULL = sys.version_info[:3]
 ON_DARWIN = platform.system() == "Darwin"
 ON_WINDOWS = platform.system() == "Windows"
 ON_LINUX = platform.system() == "Linux"
+ON_FREEBSD = sys.platform.startswith("freebsd")
+ON_BSD = ON_FREEBSD or sys.platform.startswith(("netbsd", "openbsd", "dragonfly"))
 ON_MSYS = sys.platform == "msys"
 ON_CONDA = True in [
     conda in pytest.__file__.lower() for conda in ["conda", "anaconda", "miniconda"]
@@ -42,6 +44,8 @@ skip_if_on_unix = pytest.mark.skipif(not ON_WINDOWS, reason="Windows stuff")
 skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason="not Mac friendly")
 
 skip_if_not_on_darwin = pytest.mark.skipif(not ON_DARWIN, reason="Mac only")
+
+skip_if_on_bsd = pytest.mark.skipif(ON_BSD, reason="not BSD friendly")
 
 skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason="not Travis CI friendly")
 

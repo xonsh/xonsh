@@ -535,6 +535,15 @@ def BASH_COMPLETIONS_DEFAULT():
                 "mingw64\\share\\git\\completion\\git-completion.bash",
             ),
         )
+    elif ON_BSD:
+        # FreeBSD/DragonFly install bash-completion via ports/pkg under
+        # /usr/local; NetBSD/OpenBSD use the same prefix via pkgsrc, plus
+        # NetBSD's /usr/pkg fallback.
+        bcd = (
+            "/usr/local/share/bash-completion/bash_completion",  # v2.x
+            "/usr/local/etc/bash_completion",  # v1.x
+            "/usr/pkg/share/bash-completion/bash_completion",  # pkgsrc
+        )
     else:
         bcd = ()
     return bcd
