@@ -70,9 +70,11 @@ xonsh
             $PATH
             # ['/bin', '/sbin']           # Linux
             # ['/homebrew/bin']           # macOS
+            # ['/usr/local/bin']          # FreeBSD
             # ['/mnt/c/Windows/System32'] # WSL
             # [r'c:\Windows\System32']    # Windows
             # ['/nix/store/0-python/bin'] # Nix
+            # ['/data/termux/usr/bin']    # Termux
             # ['/tmp/.mount_x/usr/bin/']  # AppImage
             # ['/app/bin']                # Flatpak
 
