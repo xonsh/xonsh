@@ -24,6 +24,7 @@ from xonsh.pytest.tools import (
     ON_TRAVIS,
     ON_WINDOWS,
     VER_FULL,
+    skip_if_on_bsd,
     skip_if_on_darwin,
     skip_if_on_msys,
     skip_if_on_unix,
@@ -1077,7 +1078,12 @@ def test_single_command_return_code(cmd, exp_rtn):
 @skip_if_on_msys
 @skip_if_on_windows
 @skip_if_on_darwin
+@skip_if_on_bsd
 def test_argv0():
+    # The check script uses /proc/<pid>/cmdline, which is only available on
+    # Linux's procfs. macOS and the BSDs have no /proc by default (and
+    # FreeBSD's optional linprocfs is rarely mounted), so the helper has no
+    # portable way to read argv[0] there.
     check_run_xonsh("checkargv0.xsh", None, "OK\n")
 
 
