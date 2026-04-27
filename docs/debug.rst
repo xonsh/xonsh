@@ -66,6 +66,28 @@ Allowed values: ``'auto'`` (default), ``'pdbp'``, ``'ipdb'``, ``'pdb'``,
 
 An explicit argument to ``breakpoint()`` always beats the env var.
 
+Wrapping breakpoint() in a helper
+---------------------------------
+
+If you build your own dev-helper that calls ``@.debug.breakpoint()`` for
+you, the debugger would normally stop *inside* the helper, which is
+rarely what you want. Pass an explicit ``frame=`` to relocate the stop
+site to any frame on the stack — typically the helper's caller. This
+mirrors ``pdbp.set_trace(frame=...)``.
+
+.. code-block:: xonshcon
+
+    @ def my_dev_helper():
+         print("dropping in…")
+         @.debug.breakpoint(frame=@.imp.sys._getframe().f_back)
+    @ my_dev_helper()
+    dropping in…
+    BREAKPOINT WITH 'pdbp'
+    # …debugger now sits at my_dev_helper's caller, not inside the helper.
+
+When ``frame=`` is omitted (the default), the debugger uses the
+immediate caller's frame, exactly as before.
+
 Engines
 -------
 
