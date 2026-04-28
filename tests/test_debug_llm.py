@@ -638,3 +638,74 @@ def test_env_var_validator_rejects_invalid(xession):
     with pytest.warns(RuntimeWarning):
         xession.env["XONSH_DEBUG_BREAKPOINT_ENGINE"] = "nonsense"
     assert xession.env["XONSH_DEBUG_BREAKPOINT_ENGINE"] == "auto"
+
+
+# ---------------------------------------------------------------------------
+# worker-thread guard
+#
+# CPython's readline integration in ``input()`` is only fully active in the
+# main thread. xonsh runs callable aliases in worker threads, so ``pdbp``,
+# ``ipdb``, and ``pdb`` lose tab completion in that context. ``@.debug``
+# auto-walks past those engines and warns when the user picked one
+# explicitly.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def in_worker_thread(monkeypatch):
+    """Pretend the debugger is being invoked off the main thread."""
+    monkeypatch.setattr(XonshDebug, "_is_main_thread", staticmethod(lambda: False))
+
+
+def test_resolve_auto_in_worker_falls_to_eval_without_execer(
+    dbg, fake_specs, isolate_env, in_worker_thread
+):
+    fake_specs({"pdbp", "ipdb", "pdb"})  # all available but skipped
+    assert dbg._resolve_engine("auto") == "eval"
+
+
+def test_resolve_auto_in_worker_prefers_execer_when_session_has_one(
+    dbg, fake_specs, monkeypatch, in_worker_thread
+):
+    fake_specs({"pdbp", "ipdb", "pdb"})
+    _install_session_with_execer(monkeypatch, _ExecerStub())
+    assert dbg._resolve_engine("auto") == "execer"
+
+
+@pytest.mark.parametrize("engine", ["pdbp", "ipdb", "pdb"])
+def test_resolve_explicit_readline_engine_in_worker_warns(
+    dbg, isolate_env, in_worker_thread, engine
+):
+    with pytest.warns(UserWarning, match="non-main thread"):
+        assert dbg._resolve_engine(engine) == engine
+
+
+@pytest.mark.parametrize("engine", ["execer", "eval"])
+def test_resolve_explicit_repl_engine_in_worker_does_not_warn(
+    dbg, isolate_env, in_worker_thread, engine, recwarn
+):
+    assert dbg._resolve_engine(engine) == engine
+    assert not [w for w in recwarn if issubclass(w.category, UserWarning)]
+
+
+@pytest.mark.parametrize("engine", ["pdbp", "ipdb", "pdb"])
+def test_resolve_explicit_readline_engine_in_main_thread_no_warning(
+    dbg, isolate_env, engine, recwarn
+):
+    # Default _is_main_thread returns True under the test runner.
+    assert dbg._resolve_engine(engine) == engine
+    assert not [w for w in recwarn if issubclass(w.category, UserWarning)]
+
+
+def test_resolve_auto_via_env_var_in_worker_warns(
+    dbg, xession, fake_specs, in_worker_thread
+):
+    # Env var pins a readline engine; auto-resolution honours it but warns.
+    xession.env["XONSH_DEBUG_BREAKPOINT_ENGINE"] = "pdbp"
+    fake_specs({"pdbp"})
+    with pytest.warns(UserWarning, match="non-main thread"):
+        assert dbg._resolve_engine("auto") == "pdbp"
+
+
+def test_is_main_thread_returns_true_under_pytest(dbg):
+    assert dbg._is_main_thread() is True
