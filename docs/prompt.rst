@@ -149,7 +149,7 @@ Here is an example — a random emoji before the prompt character:
 
     from xonsh.completers.emoji import get_emoji_cache
     $PROMPT_FIELDS['random_emoji'] = lambda: @.imp.random.choice(get_emoji_cache())[0]
-    $PROMPT = $PROMPT.replace("{prompt_end}", "{random_emoji}{prompt_end}")
+    $PROMPT = $PROMPT.replace("{prompt_end}", "{random_emoji} {prompt_end}")
 
     snail@home ~ 🥗 @  # It helps to visually
     snail@home ~ 🍎 @  # identify lines
