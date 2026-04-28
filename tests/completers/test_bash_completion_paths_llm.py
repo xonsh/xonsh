@@ -78,11 +78,21 @@ def test_canonical_bsd_default_covers_ports_prefix():
     ``/usr/pkg`` (NetBSD pkgsrc). Without these the default is empty
     and the bridge has nothing to source — bash completion silently
     breaks for every user on BSD.
+
+    Both naming conventions must be covered: the library file
+    ``bash_completion`` (no extension, used by older bash-completion
+    1.x / 2.x) and the wrapper ``bash_completion.sh`` (introduced in
+    2.17 and what FreeBSD 16's pkg-message tells users to source).
+    Either filename can be on the system depending on port version.
     """
     if not plat_mod.ON_BSD:
         import pytest
 
         pytest.skip("BSD-only assertion")
     paths = tuple(plat_mod.BASH_COMPLETIONS_DEFAULT)
+    # /usr/local — FreeBSD ports / pkg, OpenBSD pkg
     assert "/usr/local/share/bash-completion/bash_completion" in paths
+    assert "/usr/local/share/bash-completion/bash_completion.sh" in paths
+    # /usr/pkg — NetBSD pkgsrc
     assert "/usr/pkg/share/bash-completion/bash_completion" in paths
+    assert "/usr/pkg/share/bash-completion/bash_completion.sh" in paths

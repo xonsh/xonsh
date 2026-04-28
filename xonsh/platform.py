@@ -539,9 +539,15 @@ def BASH_COMPLETIONS_DEFAULT():
         # FreeBSD/DragonFly install bash-completion via ports/pkg under
         # /usr/local; NetBSD/OpenBSD use the same prefix via pkgsrc, plus
         # NetBSD's /usr/pkg fallback.
+        # bash-completion 2.17 (FreeBSD 16+) ships both the library
+        # ``bash_completion`` (no ext) and a user-facing wrapper
+        # ``bash_completion.sh`` — sourcing either works; we list both
+        # so the bridge keeps finding it if the layout shifts again.
         bcd = (
-            "/usr/local/share/bash-completion/bash_completion",  # v2.x
+            "/usr/local/share/bash-completion/bash_completion.sh",  # v2.17+ wrapper
+            "/usr/local/share/bash-completion/bash_completion",  # v2.x library
             "/usr/local/etc/bash_completion",  # v1.x
+            "/usr/pkg/share/bash-completion/bash_completion.sh",  # pkgsrc 2.17+
             "/usr/pkg/share/bash-completion/bash_completion",  # pkgsrc
         )
     else:
