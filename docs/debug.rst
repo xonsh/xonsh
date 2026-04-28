@@ -120,6 +120,29 @@ When ``engine='auto'`` resolves to an engine, ``@.debug`` prints a short
 banner identifying the choice and a one-line hint about how to continue or
 abort, then drops into that engine.
 
+Tab completion in callable aliases
+----------------------------------
+
+xonsh runs callable aliases (registered via ``@aliases.register``) in
+worker threads. CPython only wires ``readline`` into the main thread, so
+the ``pdbp``, ``ipdb``, and ``pdb`` engines lose tab completion when
+invoked from inside an alias — the ``TAB`` key inserts a literal tab
+into the underlying ``input()`` call instead of triggering completion.
+
+When ``engine='auto'`` is resolved from a non-main thread, ``@.debug``
+auto-walks past the readline-based engines and selects ``execer`` (or
+``eval`` if no session is attached). Both REPLs use ``input()`` directly
+with no completion, so the missing ``TAB`` matches the prompt and there
+is no false expectation.
+
+If you set ``$XONSH_DEBUG_BREAKPOINT_ENGINE`` or pass ``engine=`` to one
+of the readline-based engines, ``@.debug`` still honours your choice
+from a worker thread but prints a :class:`UserWarning` so the broken
+``TAB`` is not surprising. The warning is informational — pdbp/ipdb/pdb
+still work, just without tab completion.
+
+This is a CPython limitation, not a xonsh bug.
+
 REPL Commands (execer and eval engines)
 ---------------------------------------
 

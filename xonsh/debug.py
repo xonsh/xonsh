@@ -9,6 +9,7 @@ import builtins
 import importlib
 import importlib.util
 import sys
+import threading
 import traceback
 import warnings
 
@@ -169,6 +170,8 @@ class XonshDebug:
 
         sys.breakpointhook = hook
 
+    READLINE_ENGINES = ("pdbp", "ipdb", "pdb")
+
     def _resolve_engine(self, engine: str) -> str:
         if engine not in CANONIC_BREAKPOINT_ENGINES:
             raise ValueError(
@@ -180,7 +183,22 @@ class XonshDebug:
             if env_engine != "auto":
                 engine = env_engine
         if engine != "auto":
+            if engine in self.READLINE_ENGINES and not self._is_main_thread():
+                warnings.warn(
+                    f"Debug breakpoint (engine={engine!r}) was invoked from "
+                    "a non-main thread (e.g. inside a callable alias). "
+                    "External debuggers cannot tab-complete in this context "
+                    "due to a CPython readline limitation. Use "
+                    "engine='execer' or engine='eval' for a working REPL.",
+                    UserWarning,
+                    stacklevel=2,
+                )
             return engine
+        # Auto-walk: in worker threads readline-based engines lose tab
+        # completion (CPython only wires readline into the main thread),
+        # so skip straight to a session-aware REPL.
+        if not self._is_main_thread():
+            return "execer" if self._has_execer() else "eval"
         for name in self.AUTO_ENGINES:
             if importlib.util.find_spec(name) is not None:
                 return name
@@ -189,6 +207,10 @@ class XonshDebug:
         if self._has_execer():
             return "execer"
         return "eval"
+
+    @staticmethod
+    def _is_main_thread() -> bool:
+        return threading.current_thread() is threading.main_thread()
 
     @staticmethod
     def _has_execer() -> bool:
