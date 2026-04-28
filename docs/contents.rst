@@ -87,7 +87,7 @@ Contributor
 
 The internal architecture of Xonsh and how to work with its API.
 It also guides you through contributing to the project, understanding the codebase,
-and collaborating with others
+and collaborating with others.
 
 .. toctree::
     :titlesonly:
