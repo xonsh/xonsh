@@ -170,11 +170,20 @@ def test_remove_hide_escape(cmdline, stdout, stderr, raw_stdout, xonsh_execer):
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.timeout(30, method="thread")
 def test_callable_alias_redirect_e2o(xonsh_session):
     """Callable alias with e>o should merge stderr into stdout.
 
     Regression test: previously captured_stderr was set to the same pipe reader
     as captured_stdout, causing two NonBlockingFDReaders to race on one fd.
+
+    Hard timeout: this test (and its ``o2e`` sibling below) has been
+    observed to hang indefinitely on FreeBSD-CURRENT — including
+    *outside* poudriere jails — while waiting on a pipe reader that
+    never sees EOF (issue #6374). ``method="thread"`` is required:
+    pytest-timeout's default ``signal`` mode is delivered to the main
+    thread, but xonsh installs its own SIGALRM/SIGINT handlers around
+    pipeline reads and silently swallows the wakeup.
     """
 
     def _alias():
@@ -191,15 +200,12 @@ def test_callable_alias_redirect_e2o(xonsh_session):
 
 @skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(30, method="thread")
 def test_callable_alias_redirect_o2e(xonsh_session):
     """Callable alias with o>e should merge stdout into stderr.
 
-    Hard timeout: this test has been observed to hang indefinitely in
-    FreeBSD-CURRENT poudriere build jails (issue #6374). Without
-    ``--timeout``, a hang in CI consumes the whole job before pytest
-    notices; the explicit mark turns the hang into a quick failure
-    with a stacktrace pointing at the deadlock so it can be diagnosed.
+    See ``test_callable_alias_redirect_e2o`` above for why the hard
+    thread-mode timeout is here.
     """
 
     def _alias():
