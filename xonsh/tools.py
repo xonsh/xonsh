@@ -423,7 +423,6 @@ def subproc_toks(
                     pass
                 elif not greedy:
                     toks.clear()
-                    lparens.clear()
                     leading_paren_skipped = False
                 if tok.type in BEG_TOK_SKIPS:
                     if tok.type == "LPAREN":
