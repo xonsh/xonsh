@@ -5,6 +5,7 @@ This requires Xonsh installed in venv or otherwise available on PATH
 import os
 import re
 import subprocess as sp
+import sys
 import tempfile
 from pathlib import Path
 
@@ -246,7 +247,7 @@ with open(temp_path, 'w') as fp:
 pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
 
-![python @(pathcat) @(temp_path) | python @(pathwc)]
+![{sys.executable} @(pathcat) @(temp_path) | {sys.executable} @(pathwc)]
 """,
         " 1  2 10 <stdin>\n" if ON_WINDOWS else " 1  2 9 <stdin>\n",
         0,
@@ -263,7 +264,7 @@ with open(temp_path, 'w') as fp:
 pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
 
-![python @(pathcat) @(temp_path) | python @(pathwc) | python @(pathwc)]
+![{sys.executable} @(pathcat) @(temp_path) | {sys.executable} @(pathwc) | {sys.executable} @(pathwc)]
 """,
         " 1  4 18 <stdin>\n" if ON_WINDOWS else " 1  4 16 <stdin>\n",
         0,
@@ -417,7 +418,7 @@ temp_path = tempfile.mktemp()
 
 pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 echo Just the place for a snark. >@(temp_path)
-python @(pathcat) @(temp_path)
+{sys.executable} @(pathcat) @(temp_path)
 """,
         "Just the place for a snark.\n",
         0,
@@ -610,7 +611,7 @@ a | a | b | b
     ),
     # test $SHLVL
     (
-        """
+        f"""
 # test parsing of $SHLVL
 
 $SHLVL = "1"
@@ -642,33 +643,37 @@ echo $SHLVL # == 5
 # creating a subshell should increment the child's $SHLVL and maintain the parents $SHLVL
 
 $SHLVL = 5
-xonsh --no-rc -c r'echo $SHLVL' # == 6
+{sys.executable} -m xonsh --no-rc -c r'echo $SHLVL' # == 6
 echo $SHLVL # == 5
 
 # replacing the current process with another process should derease $SHLVL
 # (so that if the new process is a shell, $SHLVL is maintained)
 
 $SHLVL = 5
-xexec python3 -c 'import os; print(os.environ["SHLVL"])' # == 4
+xexec {sys.executable} -c 'import os; print(os.environ["SHLVL"])' # == 4
 """,
-        """1
-1
-0
-0
-999
-1
-5
-6
-5
-4
-""",
+        # The script's ``source-bash temp_shlvl_test.sh`` step is incidental
+        # to the $SHLVL test and emits an xonsh ``Source failed`` warning on
+        # systems where ``source-bash`` actually invokes a real Bash (the
+        # touched file is empty/syntax-invalid). On systems without Bash on
+        # PATH (FreeBSD poudriere build jails, slim CI containers) the
+        # warning never appears. Strip those incidental warning lines before
+        # comparing so the test exercises only what its name says: SHLVL
+        # parsing and inheritance.
+        lambda out: (
+            "\n".join(
+                ln for ln in out.splitlines() if not ln.startswith("xonsh: error:")
+            )
+            + "\n"
+            == "1\n1\n0\n0\n999\n1\n5\n6\n5\n4\n"
+        ),
         0,
     ),
     # test $() inside piped callable alias
     (
-        r"""
+        rf"""
 def _callme(args):
-    result = $(python -c 'print("tree");print("car")')
+    result = $({sys.executable} -c 'print("tree");print("car")')
     print(result[::-1])
     print('one\ntwo\nthree')
 
@@ -683,9 +688,9 @@ three
     ),
     # test ![] inside piped callable alias
     (
-        r"""
+        rf"""
 def _callme(args):
-    python -c 'print("tree");print("car")'
+    {sys.executable} -c 'print("tree");print("car")'
     print('one\ntwo\nthree')
 
 aliases['callme'] = _callme
@@ -806,14 +811,14 @@ def test_stdin_script_reopens_tty_for_children():
     """
     # Guard: can a piped child open /dev/tty at all?
     probe = sp.run(
-        ["python", "-c", "import os; os.open('/dev/tty', os.O_RDONLY)"],
+        [sys.executable, "-c", "import os; os.open('/dev/tty', os.O_RDONLY)"],
         stdin=sp.PIPE,
         capture_output=True,
     )
     if probe.returncode != 0:
         pytest.skip("/dev/tty not available in this environment")
 
-    script = "python -c 'import os; print(os.isatty(0))'\n"
+    script = f"{sys.executable} -c 'import os; print(os.isatty(0))'\n"
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert out.strip() == "True", f"expected child stdin to be a TTY, got: {out!r}"
     assert rtn == 0
@@ -1415,10 +1420,13 @@ def test_forwarding_sighup(tmpdir):
     that file to ensure that the Bash process really did get SIGHUP."""
     outfile = tmpdir.mkdir("xonsh_test_dir").join("sighup_test.out")
 
+    # Use ``sh -c`` rather than ``bash -c``: ``trap '…' HUP`` is POSIX
+    # so /bin/sh works, and bash isn't guaranteed on every install (e.g.
+    # FreeBSD poudriere build jails ship only the base system).
     stdin_cmd = f"""
 sleep 0.2
 (sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
-bash -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
+sh -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
 """
     proc = run_xonsh(
         cmd=None,
@@ -1446,7 +1454,7 @@ def postcmd_hook(**kwargs):
     touch {outdir}/sighup_test_postcommand
 
 (sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
-bash -c "trap '' HUP; sleep 30"
+sh -c "trap '' HUP; sleep 30"
 """
     proc = run_xonsh(
         cmd=None,
@@ -1462,7 +1470,7 @@ bash -c "trap '' HUP; sleep 30"
 @skip_if_on_windows
 def test_suspended_captured_process_pipeline():
     """See also test_specs.py:test_specs_with_suspended_captured_process_pipeline"""
-    stdin_cmd = "!(python -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
+    stdin_cmd = f"!({sys.executable} -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
     )
