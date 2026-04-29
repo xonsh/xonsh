@@ -1,4 +1,4 @@
-"""Tests the xonsh lexer. """
+"""Tests the xonsh lexer."""
 
 import os
 
