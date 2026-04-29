@@ -291,14 +291,29 @@ class CommandPipeline:
             stdout is None or spec.stdout is None or not safe_readable(stdout)
         ) and spec.captured_stdout is not None:
             stdout = spec.captured_stdout
+        # Callable-alias ``o>e`` redirect leaves ``proc.stdout`` pointing at
+        # the *write* end of the merged pipe (not a separate reader), with
+        # ``captured_stdout`` cleared. Spawning a NonBlockingFDReader on
+        # that fd would deadlock: ``os.read(write_fd, …)`` blocks
+        # indefinitely on FreeBSD instead of failing with ``EBADF`` like
+        # Linux. The merged output is read via ``captured_stderr`` below,
+        # so just skip the bogus stdout reader here.
+        if stdout is not None and not safe_readable(stdout):
+            stdout = None
         if hasattr(stdout, "buffer"):
             stdout = stdout.buffer
         if stdout is not None and not isinstance(stdout, self.nonblocking):
             stdout = NonBlockingFDReader(stdout.fileno(), timeout=timeout)
+        # Threadable specs that legitimately have no readable stdout
+        # (callable-alias ``o>e`` captures output through ``captured_stderr``
+        # only, so the stdout side was zeroed out above) still need to fall
+        # through to the dual-reader loop below to drain stderr — they
+        # must not take the synchronous early-return path that's intended
+        # for plain ``Popen`` and ``$()`` capture.
         if (
-            not stdout
+            (not stdout and not spec.threadable)
             or self.captured == "stdout"
-            or not safe_readable(stdout)
+            or (stdout is not None and not safe_readable(stdout))
             or not spec.threadable
         ):
             # we get here if the process is not threadable or the
@@ -334,6 +349,11 @@ class CommandPipeline:
             stderr is None or spec.stderr is None or not safe_readable(stderr)
         ) and spec.captured_stderr is not None:
             stderr = spec.captured_stderr
+        # Mirror the stdout guard above: callable-alias ``e>o`` leaves
+        # ``proc.stderr`` as a write-end with ``captured_stderr=None``;
+        # reading it would deadlock on FreeBSD.
+        if stderr is not None and not safe_readable(stderr):
+            stderr = None
         if hasattr(stderr, "buffer"):
             stderr = stderr.buffer
         if stderr is not None and not isinstance(stderr, self.nonblocking):
