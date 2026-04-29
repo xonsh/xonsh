@@ -301,6 +301,19 @@ def test_fstring_statement_stays_python(expr, xonsh_execer_parse):
     )
 
 
+@pytest.mark.parametrize(
+    "line",
+    [
+        "git fetch && @(x) && git branch",
+        "git fetch || @(x) || git branch",
+        "ls && @(['a', 'b']) && echo done",
+    ],
+)
+def test_pyeval_in_andor_chain(line, xonsh_execer_parse):
+    """``cmd && @(...) && cmd`` must parse without a SyntaxError."""
+    assert xonsh_execer_parse(line + "\n")
+
+
 def pyast_unparse(tree):
     """Return ast.unparse on the tree (helper for the tests above)."""
     import ast as pyast
