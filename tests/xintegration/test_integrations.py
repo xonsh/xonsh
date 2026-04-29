@@ -788,7 +788,7 @@ def test_script_stderr(case):
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
         (
-            "$FOO='foo' $BAR=2 xonsh --no-rc -c r'echo -n $FOO$BAR'",
+            f"$FOO='foo' $BAR=2 {sys.executable} -m xonsh --no-rc -c r'echo -n $FOO$BAR'",
             None,
             "foo2",
         ),
