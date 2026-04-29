@@ -145,6 +145,35 @@ Xonsh also supports `.xsh` test files — collected via custom `XshFile`/`XshFun
 
 **Test dependencies**: pytest-mock, pytest-timeout, pytest-subprocess, pytest-rerunfailures, pytest-cov, pyte (terminal emulation), virtualenv
 
+### Integration tests — invoking Python and xonsh subprocesses
+
+Integration tests under `tests/xintegration/` (and stress / shebang tests under `tests/xoreutils/`, `tests/api/`, etc.) spawn real subprocesses. The host they run on is *not* guaranteed to have a bare `python` or `xonsh` on `$PATH` — FreeBSD ports / poudriere build jails ship only `python3.11`, slim Linux containers strip `python` and the `xonsh` console script, fresh venvs may not register the launcher. Two rules keep these tests portable.
+
+1. **For Python: use `sys.executable`, never the literal `"python"` (or `"python3"`).** Bake it into f-strings inside scripts the test sends to xonsh and into `subprocess.run([…])` lists the test runs directly. The bare name resolves at PATH lookup time, in the *child* process — by then it's far too late to debug, and the failure shows up as a confusing `xonsh: command not found: 'python'` or `TypeError: expected str, bytes or os.PathLike object, not NoneType` from deep in `subprocess._execute_child`.
+
+   ```python
+   import sys
+   # Good — explicit interpreter, works on any install layout
+   script = f"$({sys.executable} -c 'print(\"tree\")')"
+   sp.run([sys.executable, "-c", "import os; ..."])
+
+   # Bad — relies on a PATH-resolvable launcher
+   script = "$(python -c 'print(\"tree\")')"
+   sp.run(["python", "-c", "..."])
+   ```
+
+2. **For xonsh: use `[sys.executable, "-m", "xonsh"]`, never the literal `"xonsh"` binary.** Same reasoning, plus xonsh's console-script entry point is sometimes absent (editable installs without `pip install -e .`, or `python -m xonsh` invocations on hosts without the wrapper). Helpers like `tests/xintegration/conftest.py::run_xonsh` already default to this — when extending them or writing scripts that re-invoke xonsh recursively (e.g. for ``xonsh --no-rc -c '…'`` inside an embedded test script), spell it out the same way.
+
+   ```python
+   # Good
+   stdin_cmd = f"{sys.executable} -m xonsh --no-rc -c 'echo $SHLVL'"
+
+   # Bad — fails in any environment where the `xonsh` launcher isn't on PATH
+   stdin_cmd = "xonsh --no-rc -c 'echo $SHLVL'"
+   ```
+
+   The xonsh parser already does this for `(...)` subshells (see `xonsh/parsers/base.py::p_subproc_atoms_subshell`); follow the same convention in tests.
+
 ## Development Discipline
 
 Before making changes, research the surrounding code thoroughly — understand how the module works, what calls it, and what it depends on. Xonsh is a concurrent, multi-process environment, so pay close attention to:
