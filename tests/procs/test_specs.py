@@ -308,6 +308,16 @@ def _check_suspended_pipeline(xonsh_session, suspended_pipeline):
     xonsh_session.env["XONSH_INTERACTIVE"] = True
     specs = cmds_to_specs(suspended_pipeline, captured="object")
     p = _run_command_pipeline(specs, suspended_pipeline)
+    # The child needs time to actually receive its self-sent stop signal
+    # *and* to let xonsh's reader thread call ``waitpid(WUNTRACED)`` at
+    # least once — otherwise the child races through SIGSTOP → SIGCONT
+    # → exit before xonsh observes ``WIFSTOPPED`` and ``p.suspended``
+    # never gets set. 100 ms is comfortably above the reader's polling
+    # cadence; this was tight enough on FreeBSD 16-CURRENT to flake
+    # roughly half the runs without the wait.
+    import time
+
+    time.sleep(0.1)
     p.proc.send_signal(signal.SIGCONT)
     p.end()
     assert p.suspended
