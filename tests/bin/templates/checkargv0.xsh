@@ -1,4 +1,3 @@
-#!/usr/bin/env xonsh
 res = True
 script = """import os
 path = "/proc/{}/cmdline".format(os.getpid())

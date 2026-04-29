@@ -17,7 +17,6 @@ from tests.xintegration.conftest import (
     run_xonsh,
     skip_if_no_make,
     skip_if_no_sleep,
-    skip_if_no_xonsh,
 )
 from xonsh.dirstack import with_pushd
 from xonsh.pytest.tools import (
@@ -736,7 +735,6 @@ if not ON_WINDOWS:
     ALL_PLATFORMS = tuple(ALL_PLATFORMS) + tuple(UNIX_TESTS)
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 @pytest.mark.flaky(reruns=4, reruns_delay=2)
 def test_script(case):
@@ -770,7 +768,6 @@ f o>e
 ]
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS_STDERR)
 def test_script_stderr(case):
     script, exp_err, exp_rtn = case
@@ -779,7 +776,6 @@ def test_script_stderr(case):
     assert exp_rtn == rtn
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
@@ -798,7 +794,6 @@ def test_single_command_no_windows(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 def test_stdin_script_reopens_tty_for_children():
     """When xonsh reads a script from stdin and /dev/tty is available,
@@ -824,7 +819,6 @@ def test_stdin_script_reopens_tty_for_children():
     assert rtn == 0
 
 
-@skip_if_no_xonsh
 def test_script_local_import(tmp_path):
     """xonsh script-file should add script dir to sys.path like CPython does."""
     pkg_dir = tmp_path / "pkg"
@@ -843,7 +837,6 @@ def test_script_local_import(tmp_path):
     assert out.strip() == "42"
 
 
-@skip_if_no_xonsh
 def test_eof_syntax_error():
     """Ensures syntax errors for EOF appear on last line."""
     script = "x = 1\na = (1, 0\n"
@@ -852,10 +845,9 @@ def test_eof_syntax_error():
     assert "EOF in multi-line statement" in err and "line 2" in err
 
 
-@skip_if_no_xonsh
 def test_open_quote_syntax_error():
     script = (
-        "#!/usr/bin/env xonsh\n\n"
+        "# header padding — keeps the unclosed quote on line 5\n\n"
         'echo "This is line 3"\n'
         'print ("This is line 4")\n'
         'x = "This is a string where I forget the closing quote on line 5\n'
@@ -872,7 +864,6 @@ _bad_case = pytest.mark.skipif(
 )
 
 
-@skip_if_no_xonsh
 def test_atdollar_no_output():
     # see issue 1521
     script = """
@@ -885,32 +876,27 @@ aliases['echo'] = _echo
     assert "command is empty" in err
 
 
-@skip_if_no_xonsh
 def test_empty_command():
     script = "$['']\n"
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert "command is empty" in err
 
 
-@skip_if_no_xonsh
 @_bad_case
 def test_printfile():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
-@skip_if_no_xonsh
 @_bad_case
 def test_printname():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
-@skip_if_no_xonsh
 @_bad_case
 def test_sourcefile():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
-@skip_if_no_xonsh
 @_bad_case
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
@@ -949,7 +935,6 @@ def test_subshells(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize("cmd, exp", [("pwd", lambda: os.getcwd() + "\n")])
 def test_redirect_out_to_file(cmd, exp, tmpdir):
@@ -963,7 +948,6 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
 
 
 @skip_if_no_make
-@skip_if_no_xonsh
 @skip_if_no_sleep
 @skip_if_on_windows
 @pytest.mark.xfail(strict=False)  # TODO: fixme (super flaky on OSX)
@@ -987,7 +971,6 @@ def test_xonsh_no_close_fds():
         assert "warning" not in out
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
     [
@@ -999,7 +982,6 @@ def test_pipe_between_subprocs(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 def test_negative_exit_codes_fail():
     # see issue 3309
@@ -1009,7 +991,6 @@ def test_negative_exit_codes_fail():
     assert "OK" != err
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, exp",
     [
@@ -1021,7 +1002,6 @@ def test_negative_exit_codes_fail():
 )
 def test_ampersand_argument(cmd, exp):
     script = f"""
-#!/usr/bin/env xonsh
 def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
@@ -1031,7 +1011,6 @@ aliases['echo'] = _echo
     assert out == exp
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, exp",
     [
@@ -1042,7 +1021,6 @@ aliases['echo'] = _echo
 )
 def test_redirect_argument(cmd, exp):
     script = f"""
-#!/usr/bin/env xonsh
 def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
@@ -1053,7 +1031,6 @@ aliases['echo'] = _echo
 
 
 # issue 3402
-@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "cmd, exp_rtn",
@@ -1079,7 +1056,6 @@ def test_single_command_return_code(cmd, exp_rtn):
     assert rtn == exp_rtn
 
 
-@skip_if_no_xonsh
 @skip_if_on_msys
 @skip_if_on_windows
 @skip_if_on_darwin
@@ -1111,7 +1087,6 @@ def test_loading_correctly(monkeypatch, interactive):
     assert f"AAA {our_xonsh} BBB" in out  # ignore tty warnings/prompt text
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd",
     [
@@ -1614,16 +1589,21 @@ def test_xonshrc(tmpdir, cmd, exp):
     ), f"Case: xonsh {cmd},\nExpected: {exp!r},\nResult: {out!r},\nargs={args!r}"
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 def test_shebang_cr(tmpdir):
     testdir = tmpdir.mkdir("xonsh_test_dir")
     testfile = "shebang_cr.xsh"
     expected_out = "I'm xonsh with shebang␍"
     (f := testdir / testfile).write_text(
-        f"""#!/usr/bin/env xonsh\r\nprint("{expected_out}")""", encoding="utf8"
+        f"""#!/usr/bin/env -S {sys.executable} -m xonsh\r\nprint("{expected_out}")""",
+        encoding="utf8",
     )
     os.chmod(f, 0o777)
     command = f"cd {testdir}; ./{testfile}\n"
-    out, err, rtn = run_xonsh(command)
+    # The shebang spawns a fresh ``python -m xonsh`` whose cwd is ``testdir``.
+    # That subprocess can't import xonsh from a source-tree layout unless we
+    # forward the repo root via PYTHONPATH (CI / dev setups without a global
+    # ``pip install`` would fail otherwise).
+    xonsh_root = str(Path(__file__).resolve().parents[2])
+    out, err, rtn = run_xonsh(command, env={"PYTHONPATH": xonsh_root})
     assert out == f"{expected_out}\n"

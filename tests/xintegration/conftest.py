@@ -13,9 +13,6 @@ PATH = (
     + os.environ["PATH"]
 )
 
-skip_if_no_xonsh = pytest.mark.skipif(
-    shutil.which("xonsh") is None, reason="xonsh not on PATH"
-)
 skip_if_no_make = pytest.mark.skipif(
     shutil.which("make") is None, reason="make command not on PATH"
 )

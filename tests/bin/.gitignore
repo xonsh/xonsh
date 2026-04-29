@@ -2,3 +2,7 @@
 /cat
 /wc
 /pwd
+/checkargv0.xsh
+/printfile.xsh
+/printname.xsh
+/sourcefile.xsh
