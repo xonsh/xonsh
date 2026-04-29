@@ -70,6 +70,19 @@ IN_APPIMAGE = LazyBool(
     "IN_APPIMAGE",
 )
 """``True`` if in AppImage, else ``False``."""
+ON_TERMUX = LazyBool(
+    lambda: "TERMUX_VERSION" in os.environ,
+    globals(),
+    "ON_TERMUX",
+)
+"""``True`` if running inside Termux on Android, else ``False``.
+
+Detected via the ``TERMUX_VERSION`` environment variable, which Termux
+sets unconditionally in every shell it spawns. Termux is a Linux-userland
+emulator on Android, so ``ON_LINUX`` is also true there — ``ON_TERMUX``
+is additive and identifies the Android sandbox specifically (no
+``/usr``-style FHS, restricted ``tcsetpgrp``, no ``os.link``, etc.).
+"""
 IN_FLATPAK = LazyBool(
     lambda: "FLATPAK_ID" in os.environ,
     globals(),
