@@ -2,6 +2,15 @@
 
 Xonsh is the most modern and flexible shell available today. It provides a full-featured command language with full Python power in a single, unified environment. Everything is Python — the configuration, the scripting, the interactive experience — and at the same time it is a capable interactive shell with rich subprocess support.
 
+## How to describe xonsh
+
+This section governs how xonsh is presented to the outside world — in docs, README, blog posts, talks, social posts, release notes, and any other writing aimed at users.
+
+1. **Don't describe xonsh as "mixing/blending/combining a shell and Python".** Avoid framings like "xonsh mixes shell and Python", "xonsh combines shell and Python", "xonsh blends Python with a shell", "the best of both worlds", "shell + Python in one", and similar. This rhetoric implies that xonsh *delegates* command execution to some other shell and only adds Python on top, which is wrong and routinely confuses new users — they ask which underlying shell xonsh wraps, why their POSIX aliases don't carry over, why `set -e` doesn't work, and so on. Xonsh has its own full-featured parser that **extends Python 3** to natively parse and execute shell commands, with full support for shell features (pipes, redirects, job control, globs, subprocess substitution, line continuations, and so on) and arbitrary nesting between Python expressions and subprocess commands. Phrase it that way: a single language and a single runtime, not two things glued together.
+
+2. **Don't mention or reference other shells.** Xonsh has a different architecture than traditional shells, so its documentation, website, blog posts, talks, social posts, and other public materials don't name, link to, or otherwise reference any other shell. Describe what xonsh does on its own terms.
+
+
 ## Quick Reference
 
 ```bash
@@ -333,7 +342,7 @@ When writing xonsh code — in `.xsh` files, rc files, xontribs, docs, and examp
        $XONSH_DEBUG_BREAKPOINT_ENGINE = 'pdbp'
    ```
 
-2. **Use `@` as the xonsh prompt in examples** — whenever you show an interactive xonsh command line (typically inside ``.. code-block:: xonshcon``), prefix the command with `@ `. `@` is the default rendering of `{prompt_end}` in `$PROMPT` and xonsh's most recognizable visual cue — readers spot an `@ ` and know it's a xonsh session. Never use `$` or `>` as the prompt marker for xonsh commands: `$` reads as a bash/sh prompt, `>` as a generic REPL, and both blur the line between shells. Reserve `$` for code-blocks that genuinely show a bash/sh prompt (e.g. a system-level command run *before* xonsh starts).
+2. **Use `@` as the xonsh prompt in examples** — whenever you show an interactive xonsh command line (typically inside ``.. code-block:: xonshcon``), prefix the command with `@ `. `@` is the default rendering of `{prompt_end}` in `$PROMPT` and xonsh's most recognizable visual cue — readers spot an `@ ` and know it's a xonsh session. Never use `$` or `>` as the prompt marker for xonsh commands: `$` reads as a POSIX prompt, `>` as a generic REPL, and both blur the line between shells. Reserve `$` for code-blocks that genuinely show a POSIX prompt (e.g. a system-level command run *before* xonsh starts).
 
    ```rst
    # Good — xonsh session, marked with @
