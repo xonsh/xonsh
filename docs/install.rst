@@ -191,6 +191,23 @@ Example of running an interactive xonsh session in a container:
 Learn more: `Containers <containers.html>`_.
 
 
+Android / Termux
+========================
+
+On Android, install xonsh inside `Termux <https://termux.dev>`_:
+
+.. code-block:: console
+
+    $ pkg install python git bash-completion
+    $ pip install 'xonsh[full]'
+    $ xonsh
+
+Also works inside UserLAnd, proot-distro, Linux Deploy, and similar
+Android-userland sandboxes. See :doc:`Cross-platform <platforms>` for
+the Android-specific section, including ``ON_ANDROID`` / ``ON_TERMUX``
+flags and known sandbox limitations.
+
+
 System package
 ========================
 

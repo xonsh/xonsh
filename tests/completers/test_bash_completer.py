@@ -11,9 +11,9 @@ from xonsh.parsers.completion_context import (
     CompletionContext,
 )
 from xonsh.pytest.tools import (
+    skip_if_on_android,
     skip_if_on_bsd,
     skip_if_on_darwin,
-    skip_if_on_termux,
     skip_if_on_windows,
 )
 
@@ -125,7 +125,7 @@ def test_bash_completer(command_context, completions, lprefix):
             CommandContext(args=(CommandArg("ls"),), arg_index=1, prefix="/pro"),
             {"/proc/"},
             4,
-            marks=skip_if_on_termux,
+            marks=skip_if_on_android,
         ),
         # ls '/pro<TAB>  ->  ls '/proc/'
         pytest.param(
@@ -134,7 +134,7 @@ def test_bash_completer(command_context, completions, lprefix):
             ),
             {"'/proc/'"},
             5,
-            marks=skip_if_on_termux,
+            marks=skip_if_on_android,
         ),
         # ls '/pro<TAB>'  ->  ls '/proc/'
         pytest.param(
@@ -147,7 +147,7 @@ def test_bash_completer(command_context, completions, lprefix):
             ),
             {"'/proc/"},
             5,
-            marks=skip_if_on_termux,
+            marks=skip_if_on_android,
         ),
         # ls '/pro'<TAB>  ->  ls '/proc/'
         pytest.param(
@@ -161,7 +161,7 @@ def test_bash_completer(command_context, completions, lprefix):
             ),
             {"'/proc/'"},
             6,
-            marks=skip_if_on_termux,
+            marks=skip_if_on_android,
         ),
         # ls """/pro"""<TAB>  ->  ls """/proc/"""
         pytest.param(
@@ -175,7 +175,7 @@ def test_bash_completer(command_context, completions, lprefix):
             ),
             {'"""/proc/"""'},
             10,
-            marks=skip_if_on_termux,
+            marks=skip_if_on_android,
         ),
         # Completions that have to be quoted:
         # ls ./sp  ->  ls './spaced dir/'
@@ -278,7 +278,7 @@ def test_bash_completer_empty_prefix():
             {"/etc/"},
             3,
             False,
-            marks=skip_if_on_termux,
+            marks=skip_if_on_android,
         ),
         # dd of=/dev/nul -> dd of=/dev/null
         (

@@ -70,18 +70,43 @@ IN_APPIMAGE = LazyBool(
     "IN_APPIMAGE",
 )
 """``True`` if in AppImage, else ``False``."""
+ON_ANDROID = LazyBool(
+    lambda: sys.platform == "android"
+    or platform.system() == "Android"
+    or "ANDROID_ROOT" in os.environ
+    or os.path.isfile("/system/build.prop"),
+    globals(),
+    "ON_ANDROID",
+)
+"""``True`` on any Android userland — Termux, UserLAnd, proot-distro,
+Linux Deploy chroot, etc.
+
+Detection is layered: PEP 738 sets ``sys.platform == "android"`` and
+``platform.system() == "Android"`` on Python 3.13+; for older Python
+versions and proot/chroot setups where those checks miss, we fall back
+to the presence of the ``ANDROID_ROOT`` environment variable (always
+exported by the Android init) and finally to ``/system/build.prop``.
+
+Implies the Android app sandbox: ``/`` is typically unlistable,
+``os.tcsetpgrp`` and ``os.link`` are restricted, the filesystem is
+non-FHS. Code that needs Android-wide behaviour (e.g. ``skipif`` on
+tests that walk the FS root) should key off this flag rather than
+``ON_TERMUX`` so non-Termux Android shells (UserLAnd, …) are covered.
+"""
 ON_TERMUX = LazyBool(
     lambda: "TERMUX_VERSION" in os.environ,
     globals(),
     "ON_TERMUX",
 )
-"""``True`` if running inside Termux on Android, else ``False``.
+"""``True`` specifically inside the Termux app (and forks that keep its
+``TERMUX_VERSION`` env var).
 
-Detected via the ``TERMUX_VERSION`` environment variable, which Termux
-sets unconditionally in every shell it spawns. Termux is a Linux-userland
-emulator on Android, so ``ON_LINUX`` is also true there — ``ON_TERMUX``
-is additive and identifies the Android sandbox specifically (no
-``/usr``-style FHS, restricted ``tcsetpgrp``, no ``os.link``, etc.).
+Detected via ``TERMUX_VERSION`` which Termux exports in every shell it
+spawns. Implies :data:`ON_ANDROID`, plus the Termux userland layout
+under ``$PREFIX = /data/data/com.termux/files/usr``. Use this flag for
+Termux-specific path defaults (``$PREFIX/bin``, completion script
+locations, etc.); use :data:`ON_ANDROID` for sandbox/bionic concerns
+that apply to any Android userland.
 """
 IN_FLATPAK = LazyBool(
     lambda: "FLATPAK_ID" in os.environ,
@@ -580,6 +605,19 @@ def BASH_COMPLETIONS_DEFAULT():
 
 @lazyobject
 def PATH_DEFAULT():
+    if ON_TERMUX:
+        # Android sandbox: there is no /usr; everything userland-installed
+        # lives under $PREFIX (= /data/data/com.termux/files/usr by default).
+        # Without this branch ON_LINUX is False on Termux (Python 3.13+ has
+        # ``platform.system() == "Android"`` per PEP 738) so the generic
+        # else-branch returns an empty tuple, leaving completers and the
+        # syntax highlighter unable to recognize any external command.
+        prefix = os.environ.get("PREFIX", "/data/data/com.termux/files/usr")
+        return (
+            os.path.expanduser("~/bin"),
+            os.path.join(prefix, "bin"),
+            os.path.join(prefix, "sbin"),
+        )
     if ON_LINUX or ON_CYGWIN or ON_MSYS:
         if linux_distro() == "arch":
             pd = (

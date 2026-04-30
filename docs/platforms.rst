@@ -16,6 +16,13 @@ Platform flags are lazy booleans exposed by :mod:`xonsh.platform`:
 * ``ON_POSIX``, ``ON_CYGWIN``, ``ON_MSYS``, ``ON_FREEBSD``, ``ON_NETBSD``,
   ``ON_OPENBSD``, ``ON_DRAGONFLY``, ``ON_BSD`` (any of the four) — other
   OS families
+* ``ON_ANDROID`` — any Android userland: Termux, UserLAnd, proot-distro,
+  Linux Deploy chroot, and so on. Note that ``ON_LINUX`` is **False** on
+  Android with Python 3.13+ (see PEP 738), so gate Android-aware code on
+  ``ON_ANDROID`` rather than ``ON_LINUX``.
+* ``ON_TERMUX`` — specifically the Termux app (and forks that keep its
+  ``$TERMUX_VERSION`` env var). Implies ``ON_ANDROID`` plus the Termux
+  ``$PREFIX = /data/data/com.termux/files/usr`` userland layout.
 * ``IN_APPIMAGE`` — running inside an AppImage bundle
 * ``IN_FLATPAK`` — running inside a Flatpak sandbox
 
@@ -270,6 +277,82 @@ your :doc:`xonsh RC <xonshrc>`:
             $PATH.insert(0, p)
 
 After this, ``ls``, ``grep``, ``sed``, etc. will be the GNU versions.
+
+
+Android / Termux
+----------------
+
+Xonsh runs on Android via `Termux <https://termux.dev>`_ and similar
+sandboxes (UserLAnd, proot-distro, Linux Deploy). The Android userland
+is Linux-kernel-based but uses bionic libc, a non-FHS layout under
+``$PREFIX``, and the per-app filesystem sandbox — a few quirks follow
+from that.
+
+Installing
+^^^^^^^^^^
+
+In a fresh Termux install, set up xonsh and a working bash completion
+framework:
+
+.. code-block:: xonshcon
+
+    @ pkg install python git bash-completion man
+    @ pip install 'xonsh[full]'
+    @ xonsh
+
+:doc:`xonsh RC <xonshrc>` lives at the usual ``~/.xonshrc``; everything
+else (history, data dir, completions cache) lands under
+``$XDG_DATA_HOME`` inside ``$PREFIX``.
+
+Sandbox limitations
+^^^^^^^^^^^^^^^^^^^
+
+Android disallows a few syscalls that desktop Linux takes for granted:
+
+* ``os.listdir("/")`` — denied. Globs that have to enumerate the FS
+  root return empty (e.g. ``ls /e<TAB>`` will not find ``/etc/``).
+  Locate items by absolute literal path (``/data/data/com.termux/...``)
+  or relative paths under ``$HOME`` / ``$PREFIX`` instead.
+* ``os.tcsetpgrp`` — restricted, returns ``EACCES``. xonsh's pipeline
+  manager handles this gracefully (no controlling terminal handover),
+  so subprocesses still work; you just don't get bash-style job
+  control on Android-only sessions.
+* ``os.link`` — not exposed in Python on bionic. xonsh xoreutils
+  ``cp -l`` and similar features fall back to copying.
+
+Detecting Android in xonshrc
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: xonsh
+
+    from xonsh.platform import ON_ANDROID, ON_TERMUX
+
+    if ON_ANDROID:
+        # Anything that should be tweaked for the Android sandbox in
+        # general — runs in Termux, UserLAnd, proot-distro alike.
+        $XONSH_HISTORY_BACKEND = 'json'   # sqlite is fine but json
+                                          # avoids the WAL lock on /sdcard
+
+    if ON_TERMUX:
+        # Termux-specific niceties.
+        aliases['open'] = 'termux-open'
+        aliases['share'] = 'termux-share'
+
+Use ``ON_ANDROID`` for sandbox/bionic-aware code that should also fire
+under non-Termux Android shells. Reserve ``ON_TERMUX`` for things that
+genuinely depend on Termux's path layout.
+
+Tab completion
+^^^^^^^^^^^^^^
+
+After ``pkg install bash-completion``, completions for git, pip, ssh,
+``--`` long options, and so on work out of the box — xonsh probes
+``$PREFIX/share/bash-completion/bash_completion`` by default.
+
+For commands xonsh itself provides (``cd``, ``rmdir``, …) and
+filesystem path completion, the same case-insensitive, subsequence- and
+fuzzy-tier behaviour described in :doc:`completers <completers>`
+applies on Android.
 
 
 Windows
