@@ -86,6 +86,12 @@ def skip_if_not_has(exe: str):
     return pytest.mark.skipif(not has_exe, reason=f"{exe} is not available.")
 
 
+# Common ``skip_if_not_has(...)`` aliases for utilities the test suite
+# reaches for repeatedly.  Naming mirrors ``skip_if_no_make`` /
+# ``skip_if_no_sleep`` already declared in ``tests/xintegration/conftest.py``.
+skip_if_no_man = skip_if_not_has("man")
+
+
 def sp(cmd):
     return subprocess.check_output(cmd, text=True, shell=ON_WINDOWS)
 
