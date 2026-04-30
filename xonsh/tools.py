@@ -2677,19 +2677,144 @@ def globpath(
     return o if len(o) != 0 else no_match
 
 
+_GLOB_META = "*?["
+
+
+def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False):
+    """Case-insensitive glob, tolerant of unreadable parent directories.
+
+    Walks ``pattern`` segment by segment. At each segment:
+
+    1. ``os.listdir`` the current directory and match case-insensitively
+       (via :mod:`fnmatch` so wildcards still work). Listing returns the
+       on-disk casing, so matched paths reflect the real filesystem
+       even on case-insensitive volumes.
+    2. If ``os.listdir`` raises ``OSError`` (typically ``PermissionError``
+       on sandboxed setups like Android/Termux), fall back to literal:
+       yield the user-typed name if it exists on disk, otherwise drop
+       this branch silently. This is what lets ``cd /data/data/...``
+       complete on Termux even though ``/`` itself isn't enumerable.
+
+    The ``**`` recursive segment is handled when ``recursive=True`` —
+    it expands to zero or more intermediate directories before the
+    next segment, again with PermissionError tolerance.
+
+    On Windows this helper is bypassed (see ``_iglobpath``) because
+    drive-letter and UNC handling is non-trivial; the original
+    ``expand_case_matching`` + ``glob.iglob`` path stays in use there.
+    """
+    import fnmatch
+
+    if not pattern:
+        return
+    if os.path.isabs(pattern):
+        cur = [os.sep]
+        parts = pattern[len(os.sep) :].split(os.sep)
+        strip_dot_prefix = False
+    else:
+        cur = ["."]
+        parts = pattern.split(os.sep)
+        # Match glob.iglob: only emit a leading './' when the pattern
+        # itself started with one.
+        strip_dot_prefix = not pattern.startswith("." + os.sep)
+
+    def _entries(d):
+        try:
+            entries = os.listdir(d)
+        except OSError:
+            return None
+        if not include_dotfiles:
+            entries = [e for e in entries if not e.startswith(".")]
+        return entries
+
+    def _join(d, e):
+        return (os.sep + e) if d == os.sep else os.path.join(d, e)
+
+    for idx, part in enumerate(parts):
+        is_last = idx == len(parts) - 1
+        # '.' and empty segments are no-ops (e.g. './foo' splits to
+        # ['.', 'foo'] — we should stay in cwd rather than look for an
+        # entry literally named '.').
+        if part in ("", ".") and not is_last:
+            continue
+        nxt = []
+        if recursive and part == "**":
+            stack = list(cur)
+            seen = set()
+            while stack:
+                d = stack.pop()
+                if d in seen:
+                    continue
+                seen.add(d)
+                nxt.append(d)
+                entries = _entries(d)
+                if entries is None:
+                    continue
+                for e in entries:
+                    full = _join(d, e)
+                    if os.path.isdir(full):
+                        stack.append(full)
+            cur = nxt
+            continue
+        has_meta = any(c in part for c in _GLOB_META)
+        for d in cur:
+            entries = _entries(d)
+            if entries is None:
+                # Parent unreadable (sandbox, EACCES) — keep the literal
+                # name if it actually exists on disk, otherwise drop
+                # this branch silently.
+                literal = _join(d, part)
+                if not has_meta and os.path.lexists(literal):
+                    nxt.append(literal)
+                continue
+            part_cf = part.casefold()
+            for e in entries:
+                full = _join(d, e)
+                if has_meta:
+                    if fnmatch.fnmatch(e.casefold(), part_cf):
+                        nxt.append(full)
+                elif e.casefold() == part_cf:
+                    nxt.append(full)
+            if not is_last:
+                nxt = [p for p in nxt if os.path.isdir(p)]
+        cur = nxt
+        if not cur:
+            return
+    if strip_dot_prefix:
+        prefix = "." + os.sep
+        for p in cur:
+            yield p[len(prefix) :] if p.startswith(prefix) else p
+    else:
+        yield from cur
+
+
 def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     s = xsh.expand_path(s)
     if sort_result is None:
         sort_result = xsh.env.get("GLOB_SORTED")
     if include_dotfiles is None:
         include_dotfiles = xsh.env.get("DOTGLOB")
-    if ignore_case:
-        s = expand_case_matching(s)
-    kwargs = {"recursive": True, "include_hidden": include_dotfiles or False}
-    if sort_result:
-        paths = iter(sorted(glob.glob(s, **kwargs)))
+    if ignore_case and not ON_WINDOWS:
+        # Walk the path manually so we don't have to listdir parents
+        # that the FS may refuse (e.g. '/' on Android/Termux). Also
+        # gracefully handles the user typing a wrong-case parent on
+        # listable filesystems.
+        paths = _case_insensitive_iglob(
+            s,
+            include_dotfiles=bool(include_dotfiles),
+            recursive=True,
+        )
     else:
+        if ignore_case:
+            s = expand_case_matching(s)
+        kwargs = {"recursive": True, "include_hidden": include_dotfiles or False}
+        if sort_result:
+            paths = iter(sorted(glob.glob(s, **kwargs)))
+            return paths, s
         paths = glob.iglob(s, **kwargs)
+        return paths, s
+    if sort_result:
+        paths = iter(sorted(paths))
     return paths, s
 
 
