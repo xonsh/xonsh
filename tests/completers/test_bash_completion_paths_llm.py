@@ -70,3 +70,34 @@ def test_canonical_linux_default_covers_brew_and_nix():
     assert "/usr/share/bash-completion/bash_completion" in paths
     assert "/home/linuxbrew/.linuxbrew/share/bash-completion/bash_completion" in paths
     assert "/run/current-system/sw/share/bash-completion/bash_completion" in paths
+
+
+def test_canonical_bsd_default_covers_ports_prefix():
+    """BSD installs bash-completion outside the base system, under
+    ``/usr/local`` (FreeBSD/DragonFly ports & pkg, OpenBSD pkg) or
+    ``/usr/pkg`` (NetBSD pkgsrc). Without these the default is empty
+    and the bridge has nothing to source — bash completion silently
+    breaks for every user on BSD.
+
+    Only the library file ``bash_completion`` (no extension) is listed
+    — the user-facing wrapper ``bash_completion.sh`` shipped by
+    bash-completion 2.17+ short-circuits in non-interactive bash, so
+    sourcing it from xonsh's ``bash -c`` bridge produces empty
+    completions. Pin both behaviours so a future regression that adds
+    the wrapper back in front gets caught.
+    """
+    if not plat_mod.ON_BSD:
+        import pytest
+
+        pytest.skip("BSD-only assertion")
+    paths = tuple(plat_mod.BASH_COMPLETIONS_DEFAULT)
+    # /usr/local — FreeBSD ports / pkg, OpenBSD pkg
+    assert "/usr/local/share/bash-completion/bash_completion" in paths
+    # /usr/pkg — NetBSD pkgsrc
+    assert "/usr/pkg/share/bash-completion/bash_completion" in paths
+    # The interactive-only wrapper must NOT be listed — it produces
+    # empty completions when sourced from xonsh's non-interactive bash.
+    for path in paths:
+        assert not path.endswith("bash_completion.sh"), (
+            f"interactive-only wrapper leaked into BASH_COMPLETIONS_DEFAULT: {path!r}"
+        )

@@ -5,6 +5,7 @@ This requires Xonsh installed in venv or otherwise available on PATH
 import os
 import re
 import subprocess as sp
+import sys
 import tempfile
 from pathlib import Path
 
@@ -16,7 +17,6 @@ from tests.xintegration.conftest import (
     run_xonsh,
     skip_if_no_make,
     skip_if_no_sleep,
-    skip_if_no_xonsh,
 )
 from xonsh.dirstack import with_pushd
 from xonsh.pytest.tools import (
@@ -24,6 +24,7 @@ from xonsh.pytest.tools import (
     ON_TRAVIS,
     ON_WINDOWS,
     VER_FULL,
+    skip_if_on_bsd,
     skip_if_on_darwin,
     skip_if_on_msys,
     skip_if_on_unix,
@@ -245,7 +246,7 @@ with open(temp_path, 'w') as fp:
 pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
 
-![python @(pathcat) @(temp_path) | python @(pathwc)]
+![{sys.executable} @(pathcat) @(temp_path) | {sys.executable} @(pathwc)]
 """,
         " 1  2 10 <stdin>\n" if ON_WINDOWS else " 1  2 9 <stdin>\n",
         0,
@@ -262,7 +263,7 @@ with open(temp_path, 'w') as fp:
 pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 pathwc = str(p{tests_path!r}.absolute() / 'bin' / 'wc')
 
-![python @(pathcat) @(temp_path) | python @(pathwc) | python @(pathwc)]
+![{sys.executable} @(pathcat) @(temp_path) | {sys.executable} @(pathwc) | {sys.executable} @(pathwc)]
 """,
         " 1  4 18 <stdin>\n" if ON_WINDOWS else " 1  4 16 <stdin>\n",
         0,
@@ -416,7 +417,7 @@ temp_path = tempfile.mktemp()
 
 pathcat = str(p{tests_path!r}.absolute() / 'bin' / 'cat')
 echo Just the place for a snark. >@(temp_path)
-python @(pathcat) @(temp_path)
+{sys.executable} @(pathcat) @(temp_path)
 """,
         "Just the place for a snark.\n",
         0,
@@ -609,7 +610,7 @@ a | a | b | b
     ),
     # test $SHLVL
     (
-        """
+        f"""
 # test parsing of $SHLVL
 
 $SHLVL = "1"
@@ -641,33 +642,37 @@ echo $SHLVL # == 5
 # creating a subshell should increment the child's $SHLVL and maintain the parents $SHLVL
 
 $SHLVL = 5
-xonsh --no-rc -c r'echo $SHLVL' # == 6
+{sys.executable} -m xonsh --no-rc -c r'echo $SHLVL' # == 6
 echo $SHLVL # == 5
 
 # replacing the current process with another process should derease $SHLVL
 # (so that if the new process is a shell, $SHLVL is maintained)
 
 $SHLVL = 5
-xexec python3 -c 'import os; print(os.environ["SHLVL"])' # == 4
+xexec {sys.executable} -c 'import os; print(os.environ["SHLVL"])' # == 4
 """,
-        """1
-1
-0
-0
-999
-1
-5
-6
-5
-4
-""",
+        # The script's ``source-bash temp_shlvl_test.sh`` step is incidental
+        # to the $SHLVL test and emits an xonsh ``Source failed`` warning on
+        # systems where ``source-bash`` actually invokes a real Bash (the
+        # touched file is empty/syntax-invalid). On systems without Bash on
+        # PATH (FreeBSD poudriere build jails, slim CI containers) the
+        # warning never appears. Strip those incidental warning lines before
+        # comparing so the test exercises only what its name says: SHLVL
+        # parsing and inheritance.
+        lambda out: (
+            "\n".join(
+                ln for ln in out.splitlines() if not ln.startswith("xonsh: error:")
+            )
+            + "\n"
+            == "1\n1\n0\n0\n999\n1\n5\n6\n5\n4\n"
+        ),
         0,
     ),
     # test $() inside piped callable alias
     (
-        r"""
+        rf"""
 def _callme(args):
-    result = $(python -c 'print("tree");print("car")')
+    result = $({sys.executable} -c 'print("tree");print("car")')
     print(result[::-1])
     print('one\ntwo\nthree')
 
@@ -682,9 +687,9 @@ three
     ),
     # test ![] inside piped callable alias
     (
-        r"""
+        rf"""
 def _callme(args):
-    python -c 'print("tree");print("car")'
+    {sys.executable} -c 'print("tree");print("car")'
     print('one\ntwo\nthree')
 
 aliases['callme'] = _callme
@@ -730,7 +735,6 @@ if not ON_WINDOWS:
     ALL_PLATFORMS = tuple(ALL_PLATFORMS) + tuple(UNIX_TESTS)
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS)
 @pytest.mark.flaky(reruns=4, reruns_delay=2)
 def test_script(case):
@@ -764,7 +768,6 @@ f o>e
 ]
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize("case", ALL_PLATFORMS_STDERR)
 def test_script_stderr(case):
     script, exp_err, exp_rtn = case
@@ -773,7 +776,6 @@ def test_script_stderr(case):
     assert exp_rtn == rtn
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
@@ -782,7 +784,7 @@ def test_script_stderr(case):
         ("echo WORKING", None, "WORKING\n"),
         ("ls -f", lambda out: out.splitlines().sort(), os.listdir().sort()),
         (
-            "$FOO='foo' $BAR=2 xonsh --no-rc -c r'echo -n $FOO$BAR'",
+            f"$FOO='foo' $BAR=2 {sys.executable} -m xonsh --no-rc -c r'echo -n $FOO$BAR'",
             None,
             "foo2",
         ),
@@ -792,7 +794,6 @@ def test_single_command_no_windows(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 def test_stdin_script_reopens_tty_for_children():
     """When xonsh reads a script from stdin and /dev/tty is available,
@@ -805,20 +806,19 @@ def test_stdin_script_reopens_tty_for_children():
     """
     # Guard: can a piped child open /dev/tty at all?
     probe = sp.run(
-        ["python", "-c", "import os; os.open('/dev/tty', os.O_RDONLY)"],
+        [sys.executable, "-c", "import os; os.open('/dev/tty', os.O_RDONLY)"],
         stdin=sp.PIPE,
         capture_output=True,
     )
     if probe.returncode != 0:
         pytest.skip("/dev/tty not available in this environment")
 
-    script = "python -c 'import os; print(os.isatty(0))'\n"
+    script = f"{sys.executable} -c 'import os; print(os.isatty(0))'\n"
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert out.strip() == "True", f"expected child stdin to be a TTY, got: {out!r}"
     assert rtn == 0
 
 
-@skip_if_no_xonsh
 def test_script_local_import(tmp_path):
     """xonsh script-file should add script dir to sys.path like CPython does."""
     pkg_dir = tmp_path / "pkg"
@@ -837,7 +837,6 @@ def test_script_local_import(tmp_path):
     assert out.strip() == "42"
 
 
-@skip_if_no_xonsh
 def test_eof_syntax_error():
     """Ensures syntax errors for EOF appear on last line."""
     script = "x = 1\na = (1, 0\n"
@@ -846,10 +845,9 @@ def test_eof_syntax_error():
     assert "EOF in multi-line statement" in err and "line 2" in err
 
 
-@skip_if_no_xonsh
 def test_open_quote_syntax_error():
     script = (
-        "#!/usr/bin/env xonsh\n\n"
+        "# header padding — keeps the unclosed quote on line 5\n\n"
         'echo "This is line 3"\n'
         'print ("This is line 4")\n'
         'x = "This is a string where I forget the closing quote on line 5\n'
@@ -866,7 +864,6 @@ _bad_case = pytest.mark.skipif(
 )
 
 
-@skip_if_no_xonsh
 def test_atdollar_no_output():
     # see issue 1521
     script = """
@@ -879,32 +876,27 @@ aliases['echo'] = _echo
     assert "command is empty" in err
 
 
-@skip_if_no_xonsh
 def test_empty_command():
     script = "$['']\n"
     out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
     assert "command is empty" in err
 
 
-@skip_if_no_xonsh
 @_bad_case
 def test_printfile():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
-@skip_if_no_xonsh
 @_bad_case
 def test_printname():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
-@skip_if_no_xonsh
 @_bad_case
 def test_sourcefile():
     check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
 
 
-@skip_if_no_xonsh
 @_bad_case
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
@@ -943,7 +935,6 @@ def test_subshells(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize("cmd, exp", [("pwd", lambda: os.getcwd() + "\n")])
 def test_redirect_out_to_file(cmd, exp, tmpdir):
@@ -957,7 +948,6 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
 
 
 @skip_if_no_make
-@skip_if_no_xonsh
 @skip_if_no_sleep
 @skip_if_on_windows
 @pytest.mark.xfail(strict=False)  # TODO: fixme (super flaky on OSX)
@@ -981,7 +971,6 @@ def test_xonsh_no_close_fds():
         assert "warning" not in out
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
     [
@@ -993,7 +982,6 @@ def test_pipe_between_subprocs(cmd, fmt, exp):
     check_run_xonsh(cmd, fmt, exp)
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 def test_negative_exit_codes_fail():
     # see issue 3309
@@ -1003,7 +991,6 @@ def test_negative_exit_codes_fail():
     assert "OK" != err
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, exp",
     [
@@ -1015,7 +1002,6 @@ def test_negative_exit_codes_fail():
 )
 def test_ampersand_argument(cmd, exp):
     script = f"""
-#!/usr/bin/env xonsh
 def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
@@ -1025,7 +1011,6 @@ aliases['echo'] = _echo
     assert out == exp
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd, exp",
     [
@@ -1036,7 +1021,6 @@ aliases['echo'] = _echo
 )
 def test_redirect_argument(cmd, exp):
     script = f"""
-#!/usr/bin/env xonsh
 def _echo(args):
     print(' '.join(args))
 aliases['echo'] = _echo
@@ -1047,7 +1031,6 @@ aliases['echo'] = _echo
 
 
 # issue 3402
-@skip_if_no_xonsh
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "cmd, exp_rtn",
@@ -1073,11 +1056,15 @@ def test_single_command_return_code(cmd, exp_rtn):
     assert rtn == exp_rtn
 
 
-@skip_if_no_xonsh
 @skip_if_on_msys
 @skip_if_on_windows
 @skip_if_on_darwin
+@skip_if_on_bsd
 def test_argv0():
+    # The check script uses /proc/<pid>/cmdline, which is only available on
+    # Linux's procfs. macOS and the BSDs have no /proc by default (and
+    # FreeBSD's optional linprocfs is rarely mounted), so the helper has no
+    # portable way to read argv[0] there.
     check_run_xonsh("checkargv0.xsh", None, "OK\n")
 
 
@@ -1100,7 +1087,6 @@ def test_loading_correctly(monkeypatch, interactive):
     assert f"AAA {our_xonsh} BBB" in out  # ignore tty warnings/prompt text
 
 
-@skip_if_no_xonsh
 @pytest.mark.parametrize(
     "cmd",
     [
@@ -1409,10 +1395,13 @@ def test_forwarding_sighup(tmpdir):
     that file to ensure that the Bash process really did get SIGHUP."""
     outfile = tmpdir.mkdir("xonsh_test_dir").join("sighup_test.out")
 
+    # Use ``sh -c`` rather than ``bash -c``: ``trap '…' HUP`` is POSIX
+    # so /bin/sh works, and bash isn't guaranteed on every install (e.g.
+    # FreeBSD poudriere build jails ship only the base system).
     stdin_cmd = f"""
 sleep 0.2
 (sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
-bash -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
+sh -c "trap 'echo SIGHUP > {outfile}; exit 0' HUP; sleep 30 & wait $!"
 """
     proc = run_xonsh(
         cmd=None,
@@ -1440,7 +1429,7 @@ def postcmd_hook(**kwargs):
     touch {outdir}/sighup_test_postcommand
 
 (sleep 1 && kill -SIGHUP @(__import__('os').getppid())) &
-bash -c "trap '' HUP; sleep 30"
+sh -c "trap '' HUP; sleep 30"
 """
     proc = run_xonsh(
         cmd=None,
@@ -1456,7 +1445,7 @@ bash -c "trap '' HUP; sleep 30"
 @skip_if_on_windows
 def test_suspended_captured_process_pipeline():
     """See also test_specs.py:test_specs_with_suspended_captured_process_pipeline"""
-    stdin_cmd = "!(python -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
+    stdin_cmd = f"!({sys.executable} -c 'import os, signal, time; time.sleep(0.2); os.kill(os.getpid(), signal.SIGTTIN)')\n"
     out, err, ret = run_xonsh(
         cmd=None, stdin_cmd=stdin_cmd, interactive=True, single_command=False, timeout=5
     )
@@ -1600,16 +1589,21 @@ def test_xonshrc(tmpdir, cmd, exp):
     ), f"Case: xonsh {cmd},\nExpected: {exp!r},\nResult: {out!r},\nargs={args!r}"
 
 
-@skip_if_no_xonsh
 @skip_if_on_windows
 def test_shebang_cr(tmpdir):
     testdir = tmpdir.mkdir("xonsh_test_dir")
     testfile = "shebang_cr.xsh"
     expected_out = "I'm xonsh with shebang␍"
     (f := testdir / testfile).write_text(
-        f"""#!/usr/bin/env xonsh\r\nprint("{expected_out}")""", encoding="utf8"
+        f"""#!/usr/bin/env -S {sys.executable} -m xonsh\r\nprint("{expected_out}")""",
+        encoding="utf8",
     )
     os.chmod(f, 0o777)
     command = f"cd {testdir}; ./{testfile}\n"
-    out, err, rtn = run_xonsh(command)
+    # The shebang spawns a fresh ``python -m xonsh`` whose cwd is ``testdir``.
+    # That subprocess can't import xonsh from a source-tree layout unless we
+    # forward the repo root via PYTHONPATH (CI / dev setups without a global
+    # ``pip install`` would fail otherwise).
+    xonsh_root = str(Path(__file__).resolve().parents[2])
+    out, err, rtn = run_xonsh(command, env={"PYTHONPATH": xonsh_root})
     assert out == f"{expected_out}\n"

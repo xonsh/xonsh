@@ -23,7 +23,12 @@ from xonsh.procs.specs import (
     run_subproc,
     safe_close,
 )
-from xonsh.pytest.tools import ON_WINDOWS, VER_MAJOR_MINOR, skip_if_on_windows
+from xonsh.pytest.tools import (
+    ON_WINDOWS,
+    VER_MAJOR_MINOR,
+    skip_if_on_bsd,
+    skip_if_on_windows,
+)
 from xonsh.tools import XonshError, chdir
 
 # TODO: track down which pipeline + spec test is hanging CI
@@ -36,8 +41,13 @@ pytestmark = pytest.mark.skipif(
 
 
 def cmd_sig(sig):
+    # ``sys.executable`` resolves to the running interpreter (e.g.
+    # ``/usr/local/bin/python3.11``). A bare ``"python"`` would fail on
+    # build environments that only ship versioned binaries — FreeBSD
+    # ports / poudriere jails being the canonical example — turning every
+    # test that uses this helper into a ``command not found``.
     return [
-        "python",
+        sys.executable,
         "-c",
         f"import os, signal; os.kill(os.getpid(), signal.{sig})",
     ]
@@ -294,7 +304,27 @@ def test_proc_raise_subproc_error(xonsh_session):
     assert isinstance(exception, CalledProcessError)
 
 
+def _check_suspended_pipeline(xonsh_session, suspended_pipeline):
+    xonsh_session.env["XONSH_INTERACTIVE"] = True
+    specs = cmds_to_specs(suspended_pipeline, captured="object")
+    p = _run_command_pipeline(specs, suspended_pipeline)
+    # The child needs time to actually receive its self-sent stop signal
+    # *and* to let xonsh's reader thread call ``waitpid(WUNTRACED)`` at
+    # least once — otherwise the child races through SIGSTOP → SIGCONT
+    # → exit before xonsh observes ``WIFSTOPPED`` and ``p.suspended``
+    # never gets set. 100 ms is comfortably above the reader's polling
+    # cadence; this was tight enough on FreeBSD 16-CURRENT to flake
+    # roughly half the runs without the wait.
+    import time
+
+    time.sleep(0.1)
+    p.proc.send_signal(signal.SIGCONT)
+    p.end()
+    assert p.suspended
+
+
 @skip_if_on_windows
+@skip_if_on_bsd
 @pytest.mark.parametrize(
     "suspended_pipeline",
     [
@@ -304,15 +334,41 @@ def test_proc_raise_subproc_error(xonsh_session):
     ],
 )
 @pytest.mark.flaky(reruns=3, reruns_delay=1)
-def test_specs_with_suspended_captured_process_pipeline(
+def test_specs_with_suspended_captured_process_pipeline_sigttin(
     xonsh_session, suspended_pipeline
 ):
-    xonsh_session.env["XONSH_INTERACTIVE"] = True
-    specs = cmds_to_specs(suspended_pipeline, captured="object")
-    p = _run_command_pipeline(specs, suspended_pipeline)
-    p.proc.send_signal(signal.SIGCONT)
-    p.end()
-    assert p.suspended
+    """Realistic case: child sends itself SIGTTIN (the "background process
+    tried to read from tty" signal), gets stopped, parent resumes via SIGCONT.
+
+    Skipped on BSD: FreeBSD's kernel silently drops a self-sent SIGTTIN /
+    SIGTTOU / SIGTSTP even when the child's process group has ``pg_jobc > 0``
+    (i.e. the PG is *not* orphaned per POSIX), so the child never enters the
+    stopped state. Externally-sent SIGTTIN does work on FreeBSD, and SIGSTOP
+    works in either direction — see the ``_sigstop`` companion test for
+    portable coverage.
+    """
+    _check_suspended_pipeline(xonsh_session, suspended_pipeline)
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "suspended_pipeline",
+    [
+        [cmd_sig("SIGSTOP")],
+        [["echo", "1"], "|", cmd_sig("SIGSTOP")],
+        [["echo", "1"], "|", cmd_sig("SIGSTOP"), "|", ["head"]],
+    ],
+)
+@pytest.mark.flaky(reruns=3, reruns_delay=1)
+def test_specs_with_suspended_captured_process_pipeline_sigstop(
+    xonsh_session, suspended_pipeline
+):
+    """Portable variant: SIGSTOP is uncatchable and stops the child on every
+    POSIX kernel xonsh supports. The xonsh code path under test is the same —
+    detection of ``WIFSTOPPED`` via ``waitpid`` — so this is what guarantees
+    suspended-pipeline detection is exercised on FreeBSD too.
+    """
+    _check_suspended_pipeline(xonsh_session, suspended_pipeline)
 
 
 @skip_if_on_windows

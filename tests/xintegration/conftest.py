@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess as sp
+import sys
 
 import pytest
 
@@ -12,9 +13,6 @@ PATH = (
     + os.environ["PATH"]
 )
 
-skip_if_no_xonsh = pytest.mark.skipif(
-    shutil.which("xonsh") is None, reason="xonsh not on PATH"
-)
 skip_if_no_make = pytest.mark.skipif(
     shutil.which("make") is None, reason="make command not on PATH"
 )
@@ -47,7 +45,7 @@ def run_xonsh(
     timeout=20,
     env=None,
     blocking=True,
-    xonsh_cmd="python -m xonsh",
+    xonsh_cmd=None,
 ):
     # Env
     popen_env = dict(os.environ)
@@ -57,9 +55,25 @@ def run_xonsh(
     if env:
         popen_env |= env
 
-    # Args
-    xonsh_cmd = xonsh_cmd.split()
-    xonsh_cmd[0] = shutil.which(xonsh_cmd[0], path=PATH)
+    # Args.
+    # Default to ``<sys.executable> -m xonsh`` so the subprocess uses the
+    # same interpreter that's running pytest. A bare ``"python"`` would
+    # fail on build environments that only ship versioned binaries —
+    # FreeBSD ports / poudriere jails being the canonical example, where
+    # ``shutil.which("python")`` returns ``None`` and Popen later trips
+    # over ``executable=None`` with a confusing ``TypeError`` from
+    # ``os.fsencode``.
+    if xonsh_cmd is None:
+        xonsh_cmd = [sys.executable, "-m", "xonsh"]
+    else:
+        xonsh_cmd = xonsh_cmd.split()
+        resolved = shutil.which(xonsh_cmd[0], path=PATH)
+        if resolved is None:
+            raise FileNotFoundError(
+                f"run_xonsh: cannot resolve {xonsh_cmd[0]!r} on PATH; "
+                f"pass an absolute path or use the default xonsh_cmd."
+            )
+        xonsh_cmd[0] = resolved
     popen_args = xonsh_cmd
 
     if not args:

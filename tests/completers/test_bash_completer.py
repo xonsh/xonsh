@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import pytest
 
@@ -9,11 +10,21 @@ from xonsh.parsers.completion_context import (
     CommandContext,
     CompletionContext,
 )
-from xonsh.pytest.tools import skip_if_on_darwin, skip_if_on_windows
+from xonsh.pytest.tools import skip_if_on_bsd, skip_if_on_darwin, skip_if_on_windows
 
 if os.path.exists("/nix"):
     pytest.skip(
         "Skipping bash completion tests on Nix systems for future fixing. PR with fix is welcome!",
+        allow_module_level=True,
+    )
+
+if shutil.which("bash") is None:
+    # Every test in this module shells out to bash to drive bash-completion;
+    # without the binary on PATH they all collapse into "set() == expected"
+    # noise. Skip the module entirely on stripped build environments
+    # (e.g. FreeBSD poudriere jails that don't install bash).
+    pytest.skip(
+        "bash not found on PATH — bash-completion tests need a real bash.",
         allow_module_level=True,
     )
 
@@ -48,10 +59,13 @@ def setup(monkeypatch, tmp_path, xession):
             0,
         ),
         # tar replaces "~/" with "/home/user/", the change should be rolledback by us.
-        (
+        # Skipped on BSD: bsdtar's option set is a subset of GNU tar's, so the
+        # expected list doesn't match what bash-completion produces there.
+        pytest.param(
             CommandContext(args=(CommandArg("tar"),), arg_index=1, prefix="~/"),
             {"~/c", "~/u", "~/t", "~/d", "~/A", "~/r", "~/x"},
             2,
+            marks=skip_if_on_bsd,
         ),
         (
             CommandContext(
@@ -202,11 +216,14 @@ def test_bash_completer_empty_prefix():
             False,
         ),
         # date --u  ->  date --utc
-        (
+        # Skipped on BSD: BSD `date` doesn't accept GNU long options like
+        # --utc, so the platform's bash-completion offers nothing here.
+        pytest.param(
             CommandContext(args=(CommandArg("date"),), arg_index=1, prefix="--u"),
             {"--utc"},
             3,
             True,
+            marks=skip_if_on_bsd,
         ),
         # dd status=pr -> dd status=progress
         (

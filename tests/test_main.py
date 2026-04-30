@@ -633,9 +633,27 @@ def test_script_normal_file(xession, monkeypatch, capsys, tmpdir):
     assert "Hello, World!" in stdout
 
 
+def _has_dev_fd_n():
+    """True iff ``/dev/fd/<N>`` resolves for an arbitrary open fd (N > 2).
+
+    Linux always exposes this via procfs; macOS exposes it via devfs;
+    FreeBSD only does so when ``fdescfs`` is explicitly mounted at
+    ``/dev/fd`` (the default install only populates 0/1/2). Windows
+    has no equivalent at all.
+    """
+    if ON_WINDOWS:
+        return False
+    try:
+        with TemporaryFile() as probe:
+            return os.path.exists(f"/dev/fd/{probe.fileno()}")
+    except OSError:
+        return False
+
+
 @pytest.mark.skipif(
-    ON_WINDOWS,
-    reason="Windows does not support specifying file descriptors as paths",
+    not _has_dev_fd_n(),
+    reason="Platform does not expose /dev/fd/<N> for arbitrary fds "
+    "(Windows, or FreeBSD without fdescfs mounted).",
 )
 def test_script_file_descriptor(xession, monkeypatch, capsys):
     with TemporaryFile("w+t") as script:
