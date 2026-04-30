@@ -69,20 +69,23 @@ class TestDotglob:
     """Test that $DOTGLOB is respected uniformly by all globbing forms."""
 
     @pytest.fixture(autouse=True)
-    def glob_tree(self, tmp_path, xession):
+    def glob_tree(self, tmp_path, xession, monkeypatch):
+        # chdir into the tmp dir and use relative patterns so reglob does
+        # not have to walk from the filesystem root — '/' is not listable
+        # on sandboxed Linux setups like Android/Termux.
         (tmp_path / "visible").touch()
         (tmp_path / ".hidden").touch()
-        self.tmp = tmp_path
+        monkeypatch.chdir(tmp_path)
         self.xession = xession
 
     def _basenames(self, paths):
         return {os.path.basename(p) for p in paths}
 
     def _glob(self):
-        return self._basenames(globsearch(str(self.tmp / "*")))
+        return self._basenames(globsearch("*"))
 
     def _reglob(self):
-        results = regexsearch(str(self.tmp / ".*"))
+        results = regexsearch(".*")
         return self._basenames(results)
 
     def test_glob_excludes_dotfiles_by_default(self):
@@ -118,47 +121,65 @@ def home_env(xession):
 
 
 @skip_if_on_windows
-def test_repath_backslash(home_env, tmp_path):
-    path = tmp_path / "test_repath_backslash"
+def test_repath_backslash(home_env, tmp_path, monkeypatch):
+    # chdir + relative path so reglob never has to walk through '/' (the
+    # root isn't listable on sandboxed Linux setups like Android/Termux).
+    monkeypatch.chdir(tmp_path)
+    path = Path("test_repath_backslash")
     path.mkdir(exist_ok=True, parents=True)
     (path / ".git").touch()
     (path / "dir").touch()
     (path / "file").touch()
     exp = os.listdir(path)
     exp = {p for p in exp if re.match(r"\w\w.*", p)}
-    exp = {os.path.join(path, p) for p in exp}
+    exp = {os.path.join(str(path), p) for p in exp}
     obs = set(pathsearch(regexsearch, rf"{path}{os.sep}\w\w.*"))
     assert exp == obs
 
 
+def _set_relative_home(xession, tmp_path, monkeypatch):
+    """Point HOME at a relative tmp dir under CWD so reglob/pathsearch
+    can resolve '~' without traversing from the filesystem root."""
+    monkeypatch.chdir(tmp_path)
+    home_rel = "fake_home"
+    os.makedirs(home_rel)
+    monkeypatch.setenv("HOME", home_rel)
+    xession.env["HOME"] = home_rel
+    return home_rel
+
+
 @skip_if_on_windows
-def test_repath_HOME_PATH_itself(home_env):
-    exp = HOME_PATH
+def test_repath_HOME_PATH_itself(home_env, tmp_path, monkeypatch):
+    exp = _set_relative_home(home_env, tmp_path, monkeypatch)
     obs = pathsearch(regexsearch, "~")
     assert 1 == len(obs)
     assert exp == obs[0]
 
 
 @skip_if_on_windows
-def test_repath_HOME_PATH_contents(home_env):
+def test_repath_HOME_PATH_contents(home_env, tmp_path, monkeypatch):
+    home_rel = _set_relative_home(home_env, tmp_path, monkeypatch)
     home_env.env["DOTGLOB"] = True
-    exp = os.listdir(HOME_PATH)
-    exp = {os.path.join(HOME_PATH, p) for p in exp}
+    (Path(home_rel) / "a").touch()
+    (Path(home_rel) / "b").touch()
+    (Path(home_rel) / ".dotfile").touch()
+    exp = os.listdir(home_rel)
+    exp = {os.path.join(home_rel, p) for p in exp}
     obs = set(pathsearch(regexsearch, "~/.*"))
     assert exp == obs
 
 
 @skip_if_on_windows
-def test_repath_HOME_PATH_var(home_env):
-    exp = HOME_PATH
+def test_repath_HOME_PATH_var(home_env, tmp_path, monkeypatch):
+    exp = _set_relative_home(home_env, tmp_path, monkeypatch)
     obs = pathsearch(regexsearch, "$HOME")
     assert 1 == len(obs)
     assert exp == obs[0]
 
 
 @skip_if_on_windows
-def test_repath_HOME_PATH_var_brace(home_env):
-    exp = HOME_PATH
+def test_repath_HOME_PATH_var_brace(home_env, tmp_path, monkeypatch):
+    exp = _set_relative_home(home_env, tmp_path, monkeypatch)
     obs = pathsearch(regexsearch, '${"HOME"}')
     assert 1 == len(obs)
     assert exp == obs[0]
@@ -203,38 +224,41 @@ def test_repath_containing_plus_sign(path, pattern):
 class TestRegexMatchSearch:
     """Test m`` modifier — regex glob returning capture groups."""
 
-    def test_returns_tuples(self, tmp_path, xession):
-        (tmp_path / "data" / "train" / "images").mkdir(parents=True)
-        (tmp_path / "data" / "train" / "images" / "cat.png").touch()
-        pattern = str(tmp_path / "data/(.*)/(.*)/(.*)\\.png")
-        results = regexmatchsearch(pattern)
+    @pytest.fixture(autouse=True)
+    def _cd_tmp(self, tmp_path, monkeypatch):
+        # chdir + relative patterns so reglob doesn't have to walk from
+        # '/' (not listable on sandboxed Linux setups like Termux).
+        monkeypatch.chdir(tmp_path)
+
+    def test_returns_tuples(self, xession):
+        Path("data/train/images").mkdir(parents=True)
+        Path("data/train/images/cat.png").touch()
+        results = regexmatchsearch("data/(.*)/(.*)/(.*)\\.png")
         assert ("train", "images", "cat") in results
 
-    def test_single_group_returns_strings(self, tmp_path, xession):
-        (tmp_path / "main.py").touch()
-        (tmp_path / "utils.py").touch()
-        pattern = str(tmp_path / "(.*)\\.py")
-        results = regexmatchsearch(pattern)
+    def test_single_group_returns_strings(self, xession):
+        Path("main.py").touch()
+        Path("utils.py").touch()
+        results = regexmatchsearch("./(.*)\\.py")
         assert "main" in results
         assert "utils" in results
         assert all(isinstance(r, str) for r in results)
 
-    def test_no_groups_returns_paths(self, tmp_path, xession):
-        (tmp_path / "hello.txt").touch()
-        pattern = str(tmp_path / "hello\\.txt")
-        results = regexmatchsearch(pattern)
-        assert str(tmp_path / "hello.txt") in results
+    def test_no_groups_returns_paths(self, xession):
+        Path("subdir").mkdir()
+        Path("subdir/hello.txt").touch()
+        results = regexmatchsearch("subdir/hello\\.txt")
+        assert "subdir/hello.txt" in results
         assert all(isinstance(r, str) for r in results)
 
-    def test_respects_dotglob(self, tmp_path, xession):
-        (tmp_path / ".hidden").touch()
-        (tmp_path / "visible").touch()
-        pattern = str(tmp_path / "(.*)")
+    def test_respects_dotglob(self, xession):
+        Path(".hidden").touch()
+        Path("visible").touch()
         xession.env["DOTGLOB"] = False
-        results = regexmatchsearch(pattern)
+        results = regexmatchsearch("./(.*)")
         assert ".hidden" not in results
         xession.env["DOTGLOB"] = True
-        results = regexmatchsearch(pattern)
+        results = regexmatchsearch("./(.*)")
         assert ".hidden" in results
 
 
