@@ -3686,14 +3686,44 @@ class BaseParser:
         c = p1.lexpos + 1
         subcmd = self._source_slice((l, c), (p3.lineno, p3.lexpos))
         subcmd = subcmd.strip() + "\n"
-        p0 = [
-            ast.const_str(s="xonsh", lineno=l, col_offset=c),
-            ast.const_str(s="-c", lineno=l, col_offset=c),
-            ast.const_str(s=subcmd, lineno=l, col_offset=c),
-        ]
-        for arg in p0:
-            arg._cliarg_action = "append"
-        p[0] = p0
+        # Spawn the subshell using the same interpreter that's running
+        # *this* xonsh, expressed as ``[sys.executable, "-m", "xonsh"]``.
+        # The literal ``"xonsh"`` we used to emit here required the
+        # ``xonsh`` console-script to be on PATH; that breaks every
+        # ``(...)`` subshell when xonsh is reachable only as
+        # ``python -m xonsh`` (FreeBSD jails, ad-hoc venvs, ``pipx run
+        # xonsh``, …). Resolve at runtime via ``__import__('sys')``
+        # rather than baking ``sys.executable`` into the AST so a cached
+        # bytecode doesn't pin the interpreter path forever.
+        sys_exec = ast.Attribute(
+            value=ast.Call(
+                func=ast.Name(id="__import__", ctx=ast.Load(), lineno=l, col_offset=c),
+                args=[ast.const_str(s="sys", lineno=l, col_offset=c)],
+                keywords=[],
+                lineno=l,
+                col_offset=c,
+            ),
+            attr="executable",
+            ctx=ast.Load(),
+            lineno=l,
+            col_offset=c,
+        )
+        self_argv = ast.List(
+            elts=[
+                sys_exec,
+                ast.const_str(s="-m", lineno=l, col_offset=c),
+                ast.const_str(s="xonsh", lineno=l, col_offset=c),
+            ],
+            ctx=ast.Load(),
+            lineno=l,
+            col_offset=c,
+        )
+        self_argv._cliarg_action = "extend"
+        cmd_flag = ast.const_str(s="-c", lineno=l, col_offset=c)
+        cmd_flag._cliarg_action = "append"
+        cmd_body = ast.const_str(s=subcmd, lineno=l, col_offset=c)
+        cmd_body._cliarg_action = "append"
+        p[0] = [self_argv, cmd_flag, cmd_body]
 
     def p_envvar_assign_subproc_atoms(self, p):
         """

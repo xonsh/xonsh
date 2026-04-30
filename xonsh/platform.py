@@ -535,6 +535,22 @@ def BASH_COMPLETIONS_DEFAULT():
                 "mingw64\\share\\git\\completion\\git-completion.bash",
             ),
         )
+    elif ON_BSD:
+        # FreeBSD/DragonFly install bash-completion via ports/pkg under
+        # /usr/local; NetBSD/OpenBSD use the same prefix via pkgsrc, plus
+        # NetBSD's /usr/pkg fallback.
+        # Note: bash-completion 2.17 (FreeBSD 16+) also ships a
+        # ``bash_completion.sh`` wrapper next to the library. We do not
+        # list it because it bails out in non-interactive bash
+        # (``[[ "$-" =~ i ]] || return 0``) — and xonsh's bridge runs
+        # bash with ``-c``, i.e. non-interactively. The wrapper would
+        # silently no-op and produce empty completions; the library
+        # file below works in either mode.
+        bcd = (
+            "/usr/local/share/bash-completion/bash_completion",  # v2.x library
+            "/usr/local/etc/bash_completion",  # v1.x
+            "/usr/pkg/share/bash-completion/bash_completion",  # pkgsrc
+        )
     else:
         bcd = ()
     return bcd
@@ -579,6 +595,19 @@ def PATH_DEFAULT():
 
     elif ON_DARWIN:
         pd = ("/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin")
+    elif ON_BSD:
+        # FreeBSD's /etc/login.conf default; also matches the layout NetBSD,
+        # OpenBSD and DragonFly use, with /usr/local/{s,}bin coming from
+        # ports / pkgsrc.
+        pd = (
+            "/sbin",
+            "/bin",
+            "/usr/sbin",
+            "/usr/bin",
+            "/usr/local/sbin",
+            "/usr/local/bin",
+            os.path.expanduser("~/bin"),
+        )
     elif ON_WINDOWS:
         import winreg
 

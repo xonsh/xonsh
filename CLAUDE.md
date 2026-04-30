@@ -154,6 +154,92 @@ Xonsh also supports `.xsh` test files — collected via custom `XshFile`/`XshFun
 
 **Test dependencies**: pytest-mock, pytest-timeout, pytest-subprocess, pytest-rerunfailures, pytest-cov, pyte (terminal emulation), virtualenv
 
+### Integration tests — invoking Python and xonsh subprocesses
+
+Integration tests under `tests/xintegration/` (and stress / shebang tests under `tests/xoreutils/`, `tests/api/`, etc.) spawn real subprocesses. The host they run on is *not* guaranteed to have a bare `python` or `xonsh` on `$PATH` — FreeBSD ports / poudriere build jails ship only `python3.11`, slim Linux containers strip `python` and the `xonsh` console script, fresh venvs may not register the launcher. The rules below keep these tests portable.
+
+1. **For Python: use `sys.executable`, never the literal `"python"` (or `"python3"`).** Bake it into f-strings inside scripts the test sends to xonsh and into `subprocess.run([…])` lists the test runs directly. The bare name resolves at PATH lookup time, in the *child* process — by then it's far too late to debug, and the failure shows up as a confusing `xonsh: command not found: 'python'` or `TypeError: expected str, bytes or os.PathLike object, not NoneType` from deep in `subprocess._execute_child`.
+
+   ```python
+   import sys
+   # Good — explicit interpreter, works on any install layout
+   script = f"$({sys.executable} -c 'print(\"tree\")')"
+   sp.run([sys.executable, "-c", "import os; ..."])
+
+   # Bad — relies on a PATH-resolvable launcher
+   script = "$(python -c 'print(\"tree\")')"
+   sp.run(["python", "-c", "..."])
+   ```
+
+2. **For xonsh: use `[sys.executable, "-m", "xonsh"]`, never the literal `"xonsh"` binary.** Same reasoning, plus xonsh's console-script entry point is sometimes absent (editable installs without `pip install -e .`, or `python -m xonsh` invocations on hosts without the wrapper). Helpers like `tests/xintegration/conftest.py::run_xonsh` already default to this — when extending them or writing scripts that re-invoke xonsh recursively (e.g. for ``xonsh --no-rc -c '…'`` inside an embedded test script), spell it out the same way.
+
+   ```python
+   # Good
+   stdin_cmd = f"{sys.executable} -m xonsh --no-rc -c 'echo $SHLVL'"
+
+   # Bad — fails in any environment where the `xonsh` launcher isn't on PATH
+   stdin_cmd = "xonsh --no-rc -c 'echo $SHLVL'"
+   ```
+
+   The xonsh parser already does this for `(...)` subshells (see `xonsh/parsers/base.py::p_subproc_atoms_subshell`); follow the same convention in tests.
+
+3. **Helper scripts under `tests/bin/` come from `tests/bin/templates/`.** A hardcoded shebang like `#!/usr/bin/env python3` or `#!/usr/bin/env xonsh` would fail in the same minimal environments described above. The top-level `conftest.py` reads each file in `tests/bin/templates/` at module-load time and writes the rendered script into `tests/bin/<name>`, prepending a shebang that points at the active pytest interpreter:
+
+   - Plain Python scripts (`cat`, `wc`, `pwd`, …) get `#!{sys.executable}`.
+   - xonsh scripts (`*.xsh`) get `#!/usr/bin/env -S {sys.executable} -m xonsh` — `env -S` splits the multi-arg shebang on Linux/FreeBSD/macOS 10.15+ so xonsh runs as a Python module, with no dependency on the `xonsh` console script being on `$PATH`.
+
+   When adding a new helper script, put the body (no shebang) in `tests/bin/templates/<name>`, and add `<name>` to `tests/bin/.gitignore`. The rendered file is regenerated on every pytest invocation, including narrow ones like `pytest tests/foo.py::test_bar`. Never commit a rendered `tests/bin/<name>` — the template is the source of truth.
+
+### Running tests in a FreeBSD poudriere jail
+
+The xonsh FreeBSD port is built and tested by the maintainer inside a poudriere jail — a clean, reproducible chroot tied to a specific FreeBSD release. Reproducing that environment locally lets you verify port-relevant fixes (PATH, shebangs, missing `python3` symlink, `os.read` on pipe writers, etc.) before sending a patch upstream. The recipe below targets `15.0-RELEASE` because that's the maintainer's current target; bump the version as needed.
+
+All commands run on a FreeBSD host (the steps inside the jail are tagged).
+
+```sh
+# --- 1) Host: install poudriere (one-time) -----------------------------------
+sudo pkg install -y poudriere git
+
+# --- 2) Host: minimal /usr/local/etc/poudriere.conf (one-time) ---------------
+sudo tee /usr/local/etc/poudriere.conf > /dev/null <<'EOF'
+NO_ZFS=yes
+FREEBSD_HOST=https://download.freebsd.org
+BASEFS=/usr/local/poudriere
+USE_TMPFS=yes
+RESOLV_CONF=/etc/resolv.conf
+EOF
+
+# --- 3) Host: create a 15.0-RELEASE jail and a ports tree (one-time) ---------
+sudo poudriere jail -c -j r150 -v 15.0-RELEASE -a "$(uname -p)"
+sudo poudriere ports -c -p default
+
+# --- 4) Host: start the jail and bind-mount the source tree ------------------
+sudo poudriere jail -s -j r150 -p default
+JAIL_NAME=$(sudo jls -h name | awk '/r150/ {print $1; exit}')
+JAIL_ROOT=/usr/local/poudriere/data/.m/${JAIL_NAME}/ref
+sudo mkdir -p "${JAIL_ROOT}/home/xonsh"
+sudo mount_nullfs ~/xonsh "${JAIL_ROOT}/home/xonsh"
+
+# --- 5) Jail: install Python 3.11 and run the test suite ---------------------
+sudo jexec "${JAIL_NAME}" sh -c '
+    pkg install -y python311 py311-pip
+    cd /home/xonsh
+    python3.11 -m pip install --break-system-packages -e ".[dev]"
+    python3.11 -m pytest --timeout=120
+'
+
+# --- 6) Host: tear the jail down when finished -------------------------------
+sudo umount "${JAIL_ROOT}/home/xonsh"
+sudo poudriere jail -k -j r150 -p default
+```
+
+Notes:
+
+- The jail name printed by `jls` is something like `r150-default`; the `awk` line picks the first match.
+- `mount_nullfs` is FreeBSD's bind-mount equivalent — changes inside the jail are reflected back in the host source tree, so you can iterate on a fix without copying files in and out. Always `umount` before `poudriere jail -k`.
+- `--break-system-packages` is needed because Python 3.11 from pkg is marked PEP 668 externally-managed; the jail is throwaway, so it's safe.
+- The maintainer's actual port build (`SHEBANG_FILES=` in the port Makefile) is not exercised here — this just runs the test suite under the same FreeBSD/Python combination the port targets. Port-build issues need to be reproduced with `poudriere testport -j r150 -p default -o shells/xonsh` instead.
+
 ## Development Discipline
 
 Before making changes, research the surrounding code thoroughly — understand how the module works, what calls it, and what it depends on. Xonsh is a concurrent, multi-process environment, so pay close attention to:

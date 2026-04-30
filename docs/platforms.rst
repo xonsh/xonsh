@@ -13,8 +13,9 @@ Platform flags are lazy booleans exposed by :mod:`xonsh.platform`:
 * ``ON_LINUX`` — Linux
 * ``ON_DARWIN`` — macOS
 * ``ON_WINDOWS`` — native Windows
-* ``ON_POSIX``, ``ON_CYGWIN``, ``ON_MSYS``, ``ON_FREEBSD``, ``ON_DRAGONFLY`` —
-  other OS families
+* ``ON_POSIX``, ``ON_CYGWIN``, ``ON_MSYS``, ``ON_FREEBSD``, ``ON_NETBSD``,
+  ``ON_OPENBSD``, ``ON_DRAGONFLY``, ``ON_BSD`` (any of the four) — other
+  OS families
 * ``IN_APPIMAGE`` — running inside an AppImage bundle
 * ``IN_FLATPAK`` — running inside a Flatpak sandbox
 

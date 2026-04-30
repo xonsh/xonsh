@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 
 from xonsh.api.os import indir, rmtree
@@ -30,6 +31,11 @@ def test_indir():
 def test_rmtree():
     if ON_WINDOWS:
         pytest.skip("On Windows")
+    if shutil.which("git") is None:
+        # The test seeds the temp dir with a .git/ to exercise rmtree on
+        # a real working tree; without git on PATH (e.g. FreeBSD poudriere
+        # build env) the seeding step aborts before rmtree is ever called.
+        pytest.skip("git not on PATH — needed to seed the rmtree fixture")
     with tempfile.TemporaryDirectory() as tmpdir:
         with indir(tmpdir):
             mkdir rmtree_test
