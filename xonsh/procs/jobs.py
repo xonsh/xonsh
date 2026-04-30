@@ -342,6 +342,13 @@ else:
                 # real TTY, even though we may be run in interactive
                 # mode. See issue #2267 for an example with emacs
                 return False
+            elif e.errno == 13:  # [Errno 13] Permission denied
+                # Some sandboxed environments (Termux/Android, restricted
+                # containers, chroots, certain SELinux/AppArmor policies)
+                # forbid tcsetpgrp on the inherited pty. Treat the same as
+                # "no controlling terminal available" rather than failing
+                # the whole pipeline.
+                return False
             else:
                 raise
         finally:
