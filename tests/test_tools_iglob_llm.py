@@ -167,9 +167,7 @@ def test_dotfiles_included_when_requested(tree):
 
 @skip_on_windows
 def test_recursive_glob_finds_nested(tree):
-    out = sorted(
-        _case_insensitive_iglob("nested/**/*.txt", recursive=True)
-    )
+    out = sorted(_case_insensitive_iglob("nested/**/*.txt", recursive=True))
     # Both the top-level top.txt and the deep one must be found.
     assert "nested/top.txt" in out
     assert os.path.join("nested", "sub", "deep.txt") in out
@@ -212,9 +210,7 @@ def test_permission_error_falls_back_to_literal(tree, mocker):
 @skip_on_windows
 def test_permission_error_with_missing_literal_returns_empty(tree, mocker):
     # listdir denied AND the literal path doesn't exist → empty.
-    mocker.patch(
-        "os.listdir", side_effect=PermissionError(13, "Permission denied")
-    )
+    mocker.patch("os.listdir", side_effect=PermissionError(13, "Permission denied"))
     out = list(_case_insensitive_iglob(str(tree / "no_such_file.xyz")))
     assert out == []
 
@@ -225,9 +221,7 @@ def test_permission_error_with_wildcard_returns_empty(tree, mocker):
     # no literal candidate to fall back to, so result must be empty
     # (we must not invent matches). Important: confirms we do not
     # silently leak a casefold attempt that would forge a path.
-    mocker.patch(
-        "os.listdir", side_effect=PermissionError(13, "Permission denied")
-    )
+    mocker.patch("os.listdir", side_effect=PermissionError(13, "Permission denied"))
     out = list(_case_insensitive_iglob(str(tree / "Foo" / "*.txt")))
     assert out == []
 
