@@ -238,6 +238,11 @@ else:
         "mh": "hard_link",
     }
 
+# Android (bionic libc) does not expose os.link — drop the hard-link case
+# rather than letting the fixture crash and ERROR every parametrization.
+if not hasattr(os, "link"):
+    _cf["mh"] = None
+
 
 @pytest.fixture(scope="module")
 def colorizable_files():

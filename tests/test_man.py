@@ -4,10 +4,15 @@ import subprocess
 import pytest  # noqa F401
 
 from xonsh.completers.man import complete_from_man
-from xonsh.pytest.tools import skip_if_not_on_darwin, skip_if_on_windows
+from xonsh.pytest.tools import (
+    skip_if_no_man,
+    skip_if_not_on_darwin,
+    skip_if_on_windows,
+)
 
 
 @skip_if_on_windows
+@skip_if_no_man
 @pytest.mark.parametrize(
     "cmd,exp",
     [

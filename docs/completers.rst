@@ -499,6 +499,30 @@ a ready-made helper is available:
     PYTHON_MODULE_COMPLETERS['my_argcomplete_tool'] = _complete_argcomplete
 
 
+Shortcut Path Completion
+========================
+
+When typing long paths, xonsh can complete each segment from a one- or
+two-character hint instead of the full directory name — every
+slash-separated segment is matched as a *subsequence* of an actual
+entry, similar to fish and zsh.
+
+.. code-block:: xonshcon
+
+    @ cd /u/lo/b<TAB>             # → cd /usr/local/bin/
+    @ cat ~/p/g/x/READ<TAB>       # → cat ~/Projects/git/xonsh/README.rst
+
+Hits are tried in order: exact prefix → substring → subsequence →
+fuzzy (Levenshtein), so a regular full prefix still wins when one is
+available. Both subsequence and fuzzy matching are on by default and
+can be turned off via ``$SUBSEQUENCE_PATH_COMPLETION = False`` or
+``$FUZZY_PATH_COMPLETION = False`` in your :doc:`xonsh RC <xonshrc>`.
+
+Path completion is also case-insensitive on POSIX — typing
+``/USR/lo<TAB>`` resolves to ``/usr/local/`` even on case-sensitive
+filesystems like ext4.
+
+
 Emoji & Symbols
 ================
 

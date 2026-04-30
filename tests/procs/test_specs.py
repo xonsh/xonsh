@@ -883,22 +883,22 @@ def test_alias_return_command_eval_inside(xession):
         {"threadable": True, "force_threadable": True}
     )
 
-    @xession.aliases.register("xsudo")
+    @xession.aliases.register("xwrap")
     @xession.aliases.return_command
     def _midground(args, decorators=None):
         return [
-            "sudo",
+            "wrapper",
             *xession.aliases.eval_alias(args, decorators=decorators),
         ]
 
     xession.aliases["cmd"] = "xthread echo 1"
 
     cmds = [
-        ["xsudo", "cmd"],
+        ["xwrap", "cmd"],
     ]
     spec = cmds_to_specs(cmds, captured="object")[-1]
-    assert spec.cmd == ["sudo", "echo", "1"]
-    assert spec.alias_name == "xsudo"
+    assert spec.cmd == ["wrapper", "echo", "1"]
+    assert spec.alias_name == "xwrap"
     assert spec.threadable is True
 
 
