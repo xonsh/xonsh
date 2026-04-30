@@ -10,7 +10,12 @@ from xonsh.parsers.completion_context import (
     CommandContext,
     CompletionContext,
 )
-from xonsh.pytest.tools import skip_if_on_bsd, skip_if_on_darwin, skip_if_on_windows
+from xonsh.pytest.tools import (
+    skip_if_on_bsd,
+    skip_if_on_darwin,
+    skip_if_on_termux,
+    skip_if_on_windows,
+)
 
 if os.path.exists("/nix"):
     pytest.skip(
@@ -37,6 +42,28 @@ def setup(monkeypatch, tmp_path, xession):
             "BASH_COMPLETIONS",
             ["/usr/share/bash-completion/bash_completion"],
         )
+
+    # The bash subprocess needs a working environment to find ``bash``
+    # and the helper utilities the completion scripts call. The mocked
+    # session env starts empty; on glibc Linux ``execvp`` falls back to
+    # ``confstr(_CS_PATH)`` so PATH-less subprocesses work by accident,
+    # but on bionic (Android/Termux) there is no such fallback — and
+    # additionally exec on Termux requires ``LD_PRELOAD=libtermux-exec``
+    # to be set, otherwise binaries fail with EACCES.
+    #
+    # Pass through a small set of runtime-essential vars (PATH/HOME plus
+    # LD_*/TERMUX_*/ANDROID_*) without leaking PWD/OLDPWD/SHLVL — those
+    # interfere with the per-test ``monkeypatch.chdir`` below.
+    _passthrough_keys = ("PATH", "HOME", "LD_PRELOAD", "LD_LIBRARY_PATH")
+    for key in _passthrough_keys:
+        if xession.env.get(key):  # already set to something truthy
+            continue
+        value = os.environ.get(key)
+        if value is None:
+            continue
+        if key == "PATH":
+            value = value.split(os.pathsep)
+        monkeypatch.setitem(xession.env, key, value)
 
     (tmp_path / "testdir").mkdir()
     (tmp_path / "spaced dir").mkdir()
@@ -88,22 +115,29 @@ def test_bash_completer(command_context, completions, lprefix):
 @pytest.mark.parametrize(
     "command_context, completions, lprefix",
     (
+        # The /proc/ scenarios below depend on bash being able to glob
+        # entries under '/' — Android/Termux's sandbox refuses to list
+        # the FS root, so ``compgen`` returns nothing there. Skip them
+        # on that one platform; the './spaced dir/' cases below stay,
+        # they only need the tmp_path which is listable.
         # ls /pro<TAB>  ->  ls /proc/
-        (
+        pytest.param(
             CommandContext(args=(CommandArg("ls"),), arg_index=1, prefix="/pro"),
             {"/proc/"},
             4,
+            marks=skip_if_on_termux,
         ),
         # ls '/pro<TAB>  ->  ls '/proc/'
-        (
+        pytest.param(
             CommandContext(
                 args=(CommandArg("ls"),), arg_index=1, prefix="/pro", opening_quote="'"
             ),
             {"'/proc/'"},
             5,
+            marks=skip_if_on_termux,
         ),
         # ls '/pro<TAB>'  ->  ls '/proc/'
-        (
+        pytest.param(
             CommandContext(
                 args=(CommandArg("ls"),),
                 arg_index=1,
@@ -113,9 +147,10 @@ def test_bash_completer(command_context, completions, lprefix):
             ),
             {"'/proc/"},
             5,
+            marks=skip_if_on_termux,
         ),
         # ls '/pro'<TAB>  ->  ls '/proc/'
-        (
+        pytest.param(
             CommandContext(
                 args=(CommandArg("ls"),),
                 arg_index=1,
@@ -126,9 +161,10 @@ def test_bash_completer(command_context, completions, lprefix):
             ),
             {"'/proc/'"},
             6,
+            marks=skip_if_on_termux,
         ),
         # ls """/pro"""<TAB>  ->  ls """/proc/"""
-        (
+        pytest.param(
             CommandContext(
                 args=(CommandArg("ls"),),
                 arg_index=1,
@@ -139,6 +175,7 @@ def test_bash_completer(command_context, completions, lprefix):
             ),
             {'"""/proc/"""'},
             10,
+            marks=skip_if_on_termux,
         ),
         # Completions that have to be quoted:
         # ls ./sp  ->  ls './spaced dir/'
@@ -233,11 +270,15 @@ def test_bash_completer_empty_prefix():
             True,
         ),
         # dd if=/et -> dd if=/etc/
-        (
+        # Termux: bash needs to glob /et* under '/' which the Android
+        # sandbox refuses to list. The companion case below (/dev/nul →
+        # /dev/null) still passes because /dev is listable.
+        pytest.param(
             CommandContext(args=(CommandArg("dd"),), arg_index=1, prefix="if=/et"),
             {"/etc/"},
             3,
             False,
+            marks=skip_if_on_termux,
         ),
         # dd of=/dev/nul -> dd of=/dev/null
         (

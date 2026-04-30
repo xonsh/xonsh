@@ -514,7 +514,7 @@ def BASH_COMPLETIONS_DEFAULT():
     extend ``$BASH_COMPLETIONS`` manually after installing
     bash-completion via Homebrew, MacPorts, Linuxbrew, Nix, etc.
     """
-    if ON_LINUX or ON_CYGWIN or ON_MSYS:
+    if ON_LINUX or ON_CYGWIN or ON_MSYS or ON_TERMUX:
         bcd = (
             "/usr/share/bash-completion/bash_completion",  # FHS, all major distros
             "/home/linuxbrew/.linuxbrew/share/bash-completion/bash_completion",  # Linuxbrew
@@ -523,6 +523,15 @@ def BASH_COMPLETIONS_DEFAULT():
                 "~/.nix-profile/share/bash-completion/bash_completion"
             ),
         )
+        # Non-FHS userland prefix: Termux on Android sets $PREFIX to its
+        # sandboxed /usr-equivalent (/data/data/com.termux/files/usr);
+        # custom ./configure --prefix builds may also set it. Pick up
+        # bash-completion under that prefix when present.
+        _prefix = os.environ.get("PREFIX")
+        if _prefix:
+            bcd = bcd + (
+                os.path.join(_prefix, "share/bash-completion/bash_completion"),
+            )
     elif ON_DARWIN:
         bcd = (
             # Homebrew, Intel

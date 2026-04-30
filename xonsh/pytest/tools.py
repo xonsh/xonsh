@@ -26,6 +26,7 @@ ON_CONDA = True in [
     conda in pytest.__file__.lower() for conda in ["conda", "anaconda", "miniconda"]
 ]
 ON_TRAVIS = "TRAVIS" in os.environ and "CI" in os.environ
+ON_TERMUX = "TERMUX_VERSION" in os.environ
 TEST_DIR = os.path.dirname(__file__)
 
 # pytest skip decorators
@@ -46,6 +47,12 @@ skip_if_on_darwin = pytest.mark.skipif(ON_DARWIN, reason="not Mac friendly")
 skip_if_not_on_darwin = pytest.mark.skipif(not ON_DARWIN, reason="Mac only")
 
 skip_if_on_bsd = pytest.mark.skipif(ON_BSD, reason="not BSD friendly")
+
+skip_if_on_termux = pytest.mark.skipif(
+    ON_TERMUX,
+    reason="Termux/Android sandbox restricts certain syscalls (tcsetpgrp, "
+    "listdir of '/' etc.) which some tests rely on",
+)
 
 skip_if_on_travis = pytest.mark.skipif(ON_TRAVIS, reason="not Travis CI friendly")
 
