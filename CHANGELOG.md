@@ -1,5 +1,20 @@
 # Xonsh Change Log
 
+## [0.23.3](https://github.com/xonsh/xonsh/compare/0.23.2...0.23.3) (2026-04-30)
+
+
+### Features
+
+* Add frame to `@.debug.breakpoint()` ([#6376](https://github.com/xonsh/xonsh/issues/6376)) ([8e17615](https://github.com/xonsh/xonsh/commit/8e176151831c4552804426c9657f72ca0c82692e))
+* Better Android/Termux support ([#6382](https://github.com/xonsh/xonsh/issues/6382)) ([c3aefaf](https://github.com/xonsh/xonsh/commit/c3aefafb351caabbea0874217abeebe47e8afb0a))
+* Better FreeBSD support: defaults, jail tests and fixes ([#6375](https://github.com/xonsh/xonsh/issues/6375)) ([ced252e](https://github.com/xonsh/xonsh/commit/ced252e399ef0bf035658e8771eab4aebbcdb28b))
+
+
+### Fixes
+
+* Debug: Show debug warning in case of worker thread ([#6378](https://github.com/xonsh/xonsh/issues/6378)) ([58b66d5](https://github.com/xonsh/xonsh/commit/58b66d5a360eb26684d270adedd9d15fb7f1c288))
+* **parser:** Fix SyntaxError in case `cmd && @() && cmd` ([#6380](https://github.com/xonsh/xonsh/issues/6380)) ([759f9bb](https://github.com/xonsh/xonsh/commit/759f9bbec7dfa60a76f327b067e0d048c6353964))
+
 ## [0.23.2](https://github.com/xonsh/xonsh/compare/0.23.1...0.23.2) (2026-04-26)
 
 
