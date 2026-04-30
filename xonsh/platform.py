@@ -71,10 +71,12 @@ IN_APPIMAGE = LazyBool(
 )
 """``True`` if in AppImage, else ``False``."""
 ON_ANDROID = LazyBool(
-    lambda: sys.platform == "android"
-    or platform.system() == "Android"
-    or "ANDROID_ROOT" in os.environ
-    or os.path.isfile("/system/build.prop"),
+    lambda: (
+        sys.platform == "android"
+        or platform.system() == "Android"
+        or "ANDROID_ROOT" in os.environ
+        or os.path.isfile("/system/build.prop")
+    ),
     globals(),
     "ON_ANDROID",
 )
