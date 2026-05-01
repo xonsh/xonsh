@@ -1645,7 +1645,10 @@ def _command_is_valid(cmd):
         return False
     if cmd in _cmd_valid_cache:
         return _cmd_valid_cache[cmd]
-    if cmd in XSH.aliases:
+    # ``XSH.aliases`` is None when the lexer is imported as a pygments
+    # plugin (e.g. by nbconvert or jupyter console outside an active
+    # xonsh session), since the singleton has no commands_cache yet.
+    if cmd in (XSH.aliases or {}):
         _cmd_valid_cache[cmd] = True
         return True
     # Need locate_executable — check if we can defer to bg thread
