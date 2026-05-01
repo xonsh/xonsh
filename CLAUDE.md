@@ -122,6 +122,7 @@ The project follows consistent, well-organized patterns throughout the codebase 
 - **Session singleton** — `XSH` global provides access to session state from anywhere
 - **Inheritance chain for parsers** — each Python version extends the previous, adding new syntax rules (walrus operator, match/case, etc.)
 - **Entry point plugins** — xontribs, pygments lexers, virtualenv activator, pytest plugin all discovered via entry points
+- **Bare-XSH safety in plugin code paths** — code reachable from entry-point plugins (most notably `xonsh/pyghooks.py`, loaded by `nbconvert`, `jupyter console`, Sphinx, etc., outside an active xonsh session) must not assume that the singleton has been bootstrapped. `XSH.env`, `XSH.aliases`, `XSH.commands_cache`, `XSH.shell`, `XSH.history` are all `None` until `xonsh.main.setup()` (or the interactive entry point) runs. Guard every dereference with a `getattr` / `or {}` fallback (see the existing `XSH.aliases or {}` pattern in `built_ins.py:577` and `pyghooks.py:_command_is_valid`), or seed a minimal default in the plugin's `__init__` (as `XonshLexer.__init__` does for `XSH.env`). A bare `if cmd in XSH.aliases:` will raise `TypeError: argument of type 'NoneType' is not iterable` on the very first token from a non-xonsh client.
 
 ## Testing
 
