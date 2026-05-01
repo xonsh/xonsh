@@ -3,6 +3,7 @@ include LICENSE
 include CHANGELOG.md
 include README.rst
 include run-tests.xsh
+include conftest.py
 recursive-include tests *
 exclude tests/test_news.py
 global-exclude *.pyc
