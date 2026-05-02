@@ -14,7 +14,6 @@ import pytest
 
 from xonsh.xoreutils import umask
 
-
 # --- umask helpers -----------------------------------------------------------
 
 
