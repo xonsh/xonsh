@@ -383,8 +383,34 @@ def subproc_toks(
     # call or sub-expression) and must stay in the wrap.
     leading_paren_skipped = False
     end_offset = 0
+    # Depth of an already-wrapped uncaptured-subproc block (``![…]`` or
+    # ``$[…]``) we are skipping.  A line passed to subproc_toks may have
+    # been partially wrapped by an earlier parse pass (e.g. xonsh phase 1
+    # turning ``echo && echo hi`` into ``echo && ![echo hi]`` before
+    # phase 2 needs to wrap the remaining bare ``echo`` on the left).
+    # Re-wrapping such a block would produce ``![![…]]``, which is not
+    # valid xonsh syntax — neither ``![…]`` nor ``&&``/``||`` may appear
+    # inside ``![…]``.  Treat the whole already-wrapped block as a single
+    # opaque token so we never include it in a fresh wrap window.
+    skip_depth = 0
+    # Snapshot of the most-recent collectable region (the tokens just
+    # before an ``&&``/``||`` cleared ``toks``).  If the *next* region
+    # turns out to be entirely an already-wrapped ``![…]``/``$[…]`` and
+    # gets skipped, we restore this snapshot so the bare side preceding
+    # the skip still gets wrapped.  Without it ``subproc_toks`` would
+    # return ``None`` for ``echo && ![echo hi]`` and the caller's bare
+    # ``Name('echo')`` would survive untransformed (GH-6386).
+    saved_toks = None
+    saved_lparens = None
+    saved_leading_paren_skipped = False
     for tok in lexer:
         pos = tok.lexpos
+        if skip_depth > 0:
+            if tok.type in ("BANG_LBRACKET", "DOLLAR_LBRACKET", "LBRACKET"):
+                skip_depth += 1
+            elif tok.type == "RBRACKET":
+                skip_depth -= 1
+            continue
         if tok.type not in END_TOK_TYPES and pos >= maxcol:
             break
         if tok.type == "BANG":
@@ -422,6 +448,14 @@ def subproc_toks(
                 ):
                     pass
                 elif not greedy:
+                    # Save the tokens we are about to drop (everything up
+                    # to but not including the END_TOK) as a fallback in
+                    # case the next region is an already-wrapped block we
+                    # end up skipping.  See GH-6386.
+                    if len(toks) > 1:
+                        saved_toks = toks[:-1]
+                        saved_lparens = list(lparens)
+                        saved_leading_paren_skipped = leading_paren_skipped
                     toks.clear()
                     leading_paren_skipped = False
                 if tok.type in BEG_TOK_SKIPS:
@@ -430,6 +464,15 @@ def subproc_toks(
                     continue
             else:
                 break
+        # An ``![…]`` / ``$[…]`` opens an uncaptured subproc block that
+        # is already complete.  Skip it without wrapping (and without
+        # including its tokens in any other wrap).  Only honour this at
+        # window start — a bracket appearing after collected tokens is
+        # part of an expression (e.g. ``foo[0]``) and falls through to
+        # the normal token append below.
+        if len(toks) == 0 and tok.type in ("BANG_LBRACKET", "DOLLAR_LBRACKET"):
+            skip_depth = 1
+            continue
         if pos < mincol:
             continue
         toks.append(tok)
@@ -467,8 +510,29 @@ def subproc_toks(
                 pass
             else:
                 toks.pop()
+        # If everything from the last END_TOK onwards was an already-wrapped
+        # ``![…]``/``$[…]`` block we skipped, ``toks`` is now empty even
+        # though the bare side preceding the skip is wrappable.  Restore
+        # the snapshot we took before the END_TOK clear so that side
+        # gets the wrap (GH-6386).
+        if len(toks) == 0 and saved_toks is not None:
+            toks = saved_toks
+            lparens = saved_lparens
+            leading_paren_skipped = saved_leading_paren_skipped
         if len(toks) == 0:
             return  # handle comment lines
+        tok = toks[-1]
+        pos = tok.lexpos
+        if isinstance(tok.value, str):
+            end_offset = len(tok.value.rstrip())
+        else:
+            el = line[pos:].split("#")[0].rstrip()
+            end_offset = len(el)
+    if len(toks) == 0 and saved_toks is not None:
+        # Same recovery for the ``break``-out-of-loop path.
+        toks = saved_toks
+        lparens = saved_lparens
+        leading_paren_skipped = saved_leading_paren_skipped
         tok = toks[-1]
         pos = tok.lexpos
         if isinstance(tok.value, str):
