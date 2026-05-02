@@ -7,7 +7,6 @@ are skipped here. These tests cover the pure helpers (``_xonfig_format_*``,
 """
 
 import json
-import re
 
 import pytest
 
@@ -28,7 +27,6 @@ from xonsh.xonfig import (
     make_envvar,
     make_xonfig_wizard,
 )
-
 
 # --- _xonfig_format_human / _xonfig_format_json ----------------------------
 
@@ -128,16 +126,12 @@ def test_dump_xonfig_env_emits_assignment(xession):
 
 
 def test_dump_xonfig_foreign_shell_basic_bash():
-    out = _dump_xonfig_foreign_shell(
-        "/foreign_shells/0/", {"shell": "bash"}
-    )
+    out = _dump_xonfig_foreign_shell("/foreign_shells/0/", {"shell": "bash"})
     assert out.startswith("source-bash")
 
 
 def test_dump_xonfig_foreign_shell_unknown_appends_shell_name():
-    out = _dump_xonfig_foreign_shell(
-        "/foreign_shells/0/", {"shell": "tcsh"}
-    )
+    out = _dump_xonfig_foreign_shell("/foreign_shells/0/", {"shell": "tcsh"})
     assert out.startswith("source-foreign tcsh")
 
 

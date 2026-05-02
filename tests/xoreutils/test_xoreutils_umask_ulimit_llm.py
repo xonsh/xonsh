@@ -12,7 +12,6 @@ import pytest
 
 from xonsh.xoreutils import ulimit, umask
 
-
 # --- umask helpers -----------------------------------------------------------
 
 
@@ -58,7 +57,15 @@ def test_umask_get_numeric_rep_single(rep, expected):
 
 
 @pytest.mark.parametrize(
-    "arg,ok", [("000", True), ("777", True), ("700", True), ("888", False), ("12", False), ("hello", False)]
+    "arg,ok",
+    [
+        ("000", True),
+        ("777", True),
+        ("700", True),
+        ("888", False),
+        ("12", False),
+        ("hello", False),
+    ],
 )
 def test_umask_valid_numeric_argument(arg, ok):
     assert umask.valid_numeric_argument(arg) is ok

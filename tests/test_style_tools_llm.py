@@ -19,7 +19,6 @@ from xonsh.style_tools import (
     style_as_faded,
 )
 
-
 # --- _TokenType algebra ------------------------------------------------------
 
 
@@ -123,7 +122,7 @@ def test_color_by_name_simple_background():
     tok, fg, bg = color_by_name("BACKGROUND_BLUE")
     assert fg is None
     assert bg == "BACKGROUND_BLUE"
-    assert tok is getattr(Color, "BACKGROUND_BLUE")
+    assert tok is Color.BACKGROUND_BLUE
 
 
 def test_color_by_name_combines_existing_fg_with_new_bg():
@@ -132,7 +131,7 @@ def test_color_by_name_combines_existing_fg_with_new_bg():
     tok, fg, bg = color_by_name("BACKGROUND_GREEN", fg="RED", bg=None)
     assert fg == "RED"
     assert bg == "BACKGROUND_GREEN"
-    assert tok is getattr(Color, "RED__BACKGROUND_GREEN")
+    assert tok is Color.RED__BACKGROUND_GREEN
 
 
 # --- partial_color_tokenize -------------------------------------------------

@@ -154,7 +154,9 @@ def test_aliases_page_renders_table_with_no_aliases(xession, make_route):
 
 
 def test_aliases_page_renders_table_with_aliases(xession, make_route):
-    xession.commands_cache.aliases.update({"foo_xyz": "echo foo", "bar_xyz": "echo bar"})
+    xession.commands_cache.aliases.update(
+        {"foo_xyz": "echo foo", "bar_xyz": "echo bar"}
+    )
     try:
         page = make_route(r.AliasesPage)
         rows = list(page.get_rows())

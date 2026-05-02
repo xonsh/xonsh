@@ -12,7 +12,6 @@ import pytest
 
 from xonsh.xoreutils import echo, pwd, tee, tty, yes
 
-
 # --- echo -------------------------------------------------------------------
 
 
@@ -261,7 +260,9 @@ def test_yes_with_custom_string():
     # Iterating multiple lines: each *complete* line (every line except
     # possibly the last truncated one) must equal "hello world".
     lines = buf.getvalue().splitlines()
-    complete = lines[:-1] if buf.getvalue() and not buf.getvalue().endswith("\n") else lines
+    complete = (
+        lines[:-1] if buf.getvalue() and not buf.getvalue().endswith("\n") else lines
+    )
     assert complete  # at least one complete line was written
     for line in complete:
         assert line == "hello world"

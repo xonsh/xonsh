@@ -38,7 +38,6 @@ from xonsh.wizard import (
     ensure_str_or_int,
 )
 
-
 # --- Node tree construction -------------------------------------------------
 
 

@@ -45,9 +45,7 @@ def thread_local_jobs(monkeypatch):
     fresh_jobs: dict = {}
     fresh_tasks: collections.deque = collections.deque()
     monkeypatch.setattr(jobs._jobs_thread_local, "jobs", fresh_jobs, raising=False)
-    monkeypatch.setattr(
-        jobs._jobs_thread_local, "tasks", fresh_tasks, raising=False
-    )
+    monkeypatch.setattr(jobs._jobs_thread_local, "tasks", fresh_tasks, raising=False)
     return fresh_jobs, fresh_tasks
 
 
@@ -181,8 +179,18 @@ def test_get_next_job_number_skips_existing(thread_local_jobs):
 
 def test_clear_dead_jobs_removes_finished_jobs(thread_local_jobs):
     fresh_jobs, fresh_tasks = thread_local_jobs
-    fresh_jobs[1] = {"obj": _FakeProc(returncode=0), "bg": False, "status": "done", "cmds": [["a"]]}
-    fresh_jobs[2] = {"obj": _FakeProc(returncode=None), "bg": False, "status": "running", "cmds": [["b"]]}
+    fresh_jobs[1] = {
+        "obj": _FakeProc(returncode=0),
+        "bg": False,
+        "status": "done",
+        "cmds": [["a"]],
+    }
+    fresh_jobs[2] = {
+        "obj": _FakeProc(returncode=None),
+        "bg": False,
+        "status": "running",
+        "cmds": [["b"]],
+    }
     fresh_tasks.extend([1, 2])
     jobs._clear_dead_jobs()
     assert 1 not in fresh_jobs
