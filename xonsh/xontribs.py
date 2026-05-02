@@ -125,12 +125,27 @@ def _get_installed_xontribs(pkg_name="xontrib"):
         yield entry.name, Xontrib(entry.value, distribution=entry.dist)
 
 
+def _find_xontrib_entrypoint(name):
+    """Return the ``xonsh.xontribs`` entry point for ``name`` or ``None``.
+
+    Reads the live setuptools entry-point registry rather than the
+    ``XSH.builtins.autoloaded_xontribs`` cache, so xontribs whose only
+    Python-visible name is an entry point (the wheel ships no
+    ``xontrib/<name>.py``) are discoverable even when autoload did not
+    run — e.g. ``xonsh --no-rc`` or ``$XONTRIBS_AUTOLOAD_DISABLED``.
+    """
+    for entry in _get_xontrib_entrypoints():
+        if entry.name == name:
+            return entry
+    return None
+
+
 def find_xontrib(name, full_module=False):
     """Finds a xontribution from its name."""
     _patch_in_userdir()
 
-    # here the order is important. We try to run the correct cases first and then later trial cases
-    # that will likely fail
+    # Order matters. Try the cheap, exact paths first; fall through to
+    # broader matches only when the previous lookup did not find anything.
 
     if name.startswith("."):
         return importlib.util.find_spec(name, package="xontrib")
@@ -138,13 +153,36 @@ def find_xontrib(name, full_module=False):
     if full_module:
         return importlib.util.find_spec(name)
 
+    # 1. Cache populated by ``auto_load_xontribs_from_entrypoints`` at
+    #    startup.  This is the common interactive-shell path.
     autoloaded = getattr(XSH.builtins, "autoloaded_xontribs", None) or {}
     if name in autoloaded:
         return importlib.util.find_spec(autoloaded[name])
 
-    with contextlib.suppress(ValueError):
-        return importlib.util.find_spec("." + name, package="xontrib")
+    # 2. Live entry-point lookup.  Required when autoload did not run
+    #    (``--no-rc``, ``$XONTRIBS_AUTOLOAD_DISABLED``, embedded use,
+    #    xontrib installed mid-session): without this step the only
+    #    Python-visible mapping for entry-point-only xontribs (the
+    #    ``coconut`` xontrib being the canonical example — its loader
+    #    lives in ``coconut.integrations`` and the wheel ships no
+    #    ``xontrib/coconut.py``) is unreachable from ``xontrib load``.
+    entry = _find_xontrib_entrypoint(name)
+    if entry is not None:
+        return importlib.util.find_spec(entry.value)
 
+    # 3. Legacy ``xontrib.<name>`` namespace-package layout.  ``find_spec``
+    #    only raises ``ValueError`` when ``xontrib`` is not a package at
+    #    all; otherwise it returns ``None`` for an absent submodule, in
+    #    which case we must continue to the top-level fallback rather
+    #    than returning that ``None``.  (The pre-fix code returned ``None``
+    #    here and never reached step 4.)
+    spec = None
+    with contextlib.suppress(ValueError):
+        spec = importlib.util.find_spec("." + name, package="xontrib")
+    if spec is not None:
+        return spec
+
+    # 4. Top-level module fallback (``import <name>``).
     return importlib.util.find_spec(name)
 
 
