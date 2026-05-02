@@ -20,7 +20,15 @@ def _url(path):
 
 @pytest.fixture
 def make_route(xession):
-    """Factory that constructs a route instance with the right deps."""
+    """Factory that constructs a route instance with the right deps.
+
+    On Windows, ``xonsh.pyghooks`` reads ``XSH.shell.shell_type`` while
+    constructing a ``XonshStyle`` (used by the prompt renderer). The
+    ``DummyShell`` from ``xonsh.pytest`` does not set that attribute, so
+    we set a sane default here to keep the route renderers working
+    cross-platform.
+    """
+    xession.shell.shell_type = "prompt_toolkit"
 
     def _factory(cls, params=None, path=None):
         return cls(

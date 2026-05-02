@@ -268,6 +268,9 @@ def test_render_xontribs_yields_pairs():
 
 def test_html_format_returns_html_string(xession):
     """``html_format`` produces inline-styled HTML for a color template."""
+    # On Windows pyghooks dereferences ``XSH.shell.shell_type`` while
+    # constructing the XonshStyle; DummyShell doesn't set it.
+    xession.shell.shell_type = "prompt_toolkit"
     out = xonsh_data.html_format("hello world")
     assert "<" in out and ">" in out
 

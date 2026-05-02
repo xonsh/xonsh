@@ -46,6 +46,8 @@ def test_tracer_color_output_toggles_attribute():
 
 def test_tracer_start_and_stop_round_trip(tmp_path):
     """start() registers ``self.trace``; stop() restores the previous tracer."""
+    import os
+
     f = tmp_path / "watch_me.py"
     f.write_text("# placeholder\n")
     prev = sys.gettrace()
@@ -55,9 +57,10 @@ def test_tracer_start_and_stop_round_trip(tmp_path):
         # ``sys.gettrace`` returns the same bound method, but bound methods
         # are not identity-equal across attribute lookups — compare via ==.
         assert sys.gettrace() == t.trace
-        assert str(f) in {p for p in t.files} or any(
-            str(f).endswith(p.split("/")[-1]) for p in t.files
-        )
+        # Tracer normalizes paths via ``normabspath`` which lower-cases on
+        # Windows (case-insensitive filesystem), so compare normcased forms.
+        target = os.path.normcase(str(f))
+        assert any(os.path.normcase(p) == target for p in t.files)
         t.stop(str(f))
     finally:
         sys.settrace(prev)
