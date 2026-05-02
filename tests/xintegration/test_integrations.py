@@ -889,12 +889,12 @@ def test_printfile():
 
 @_bad_case
 def test_printname():
-    check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
+    check_run_xonsh("printname.xsh", None, "__main__\n")
 
 
 @_bad_case
 def test_sourcefile():
-    check_run_xonsh("printfile.xsh", None, "printfile.xsh\n")
+    check_run_xonsh("sourcefile.xsh", None, "printfile.xsh\n")
 
 
 @_bad_case
