@@ -6,8 +6,6 @@ tests here cover the safe-to-call wrappers without actually pulling up an
 IPython-style ``?`` UI.
 """
 
-import inspect
-
 import pytest
 
 from xonsh.lib.inspectors import (
@@ -23,7 +21,6 @@ from xonsh.lib.inspectors import (
     is_simple_callable,
     object_info,
 )
-
 
 # --- object_info ------------------------------------------------------------
 

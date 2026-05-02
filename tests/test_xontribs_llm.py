@@ -30,7 +30,6 @@ from xonsh.xontribs import (
     xontribs_unload,
 )
 
-
 # --- Xontrib NamedTuple -----------------------------------------------------
 
 

@@ -4,15 +4,10 @@ Both modules support the introspection / Python-script handling pieces that
 the rest of xonsh leans on for source-code reading and module discovery.
 """
 
-import io
-import os
-import sys
-
 import pytest
 
 from xonsh.lib import modules as xmodules
 from xonsh.lib import openpy
-
 
 # --- openpy.source_to_unicode ----------------------------------------------
 

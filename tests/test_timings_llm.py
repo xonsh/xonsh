@@ -7,18 +7,15 @@ tests target the pure helpers — ``format_time``, the lazy clock objects, and
 
 import time
 
-import pytest
-
 from xonsh.timings import (
-    Timer,
     _HAVE_RESOURCE,
+    Timer,
     clock,
     clock2,
     clocks,
     clocku,
     format_time,
 )
-
 
 # --- format_time ------------------------------------------------------------
 

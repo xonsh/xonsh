@@ -12,7 +12,6 @@ import pytest
 
 from xonsh.webconfig import file_writes, tags, xonsh_data
 
-
 # --- tags.Elem --------------------------------------------------------------
 
 

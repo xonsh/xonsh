@@ -8,8 +8,6 @@ never leave a global tracer installed.
 
 import sys
 
-import pytest
-
 from xonsh.tracer import (
     COLORLESS_LINE,
     TracerType,
@@ -17,7 +15,6 @@ from xonsh.tracer import (
     tracer,
     tracer_format_line,
 )
-
 
 # --- TracerType singleton ---------------------------------------------------
 

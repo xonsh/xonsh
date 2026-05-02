@@ -6,8 +6,6 @@ The module backs the public completer-author API: ``RichCompletion``, the
 before it reaches the UI.
 """
 
-import pytest
-
 from xonsh.completers.tools import (
     RichCompletion,
     _filter_prefix,
@@ -24,7 +22,6 @@ from xonsh.completers.tools import (
     non_exclusive_completer,
     tag_provider,
 )
-
 
 # --- RichCompletion ---------------------------------------------------------
 
