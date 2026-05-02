@@ -1,9 +1,21 @@
-"""Tests for bg validation in pyghooks — _run_bg_validation must always
-populate _cmd_valid_cache, even when the generation token is stale."""
+"""LLM-generated tests for ``xonsh/pyghooks.py``.
+
+Currently covers:
+
+* bg-validation state machine — ``_run_bg_validation`` must always
+  populate ``_cmd_valid_cache``, even when the generation token is stale.
+* PTK-only style modifier sanitization — regression for
+  https://github.com/xonsh/xonsh/issues/6387 (``LS_COLORS`` carrying ANSI
+  blink/reverse/hidden/strike codes used to crash pygments' ``StyleMeta``
+  with ``AssertionError: wrong color format 'blink'`` at shell startup).
+"""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from xonsh.environ import LsColors
+from xonsh.pyghooks import XonshStyle
 
 
 @pytest.fixture(autouse=True)
@@ -74,3 +86,71 @@ def test_current_gen_caches_and_invalidates():
 
     assert ph._cmd_valid_cache["ls"] is True
     mock_app.invalidate.assert_called_once()
+
+
+# --- PTK-only style modifier sanitization (#6387) ---------------------------
+
+
+@pytest.fixture
+def xs_LS_COLORS(xession, os_env, monkeypatch):
+    """Xonsh environment including default LS_COLORS."""
+    monkeypatch.setattr(xession, "env", os_env)
+    xession.env["LS_COLORS"] = LsColors(LsColors.default_settings)
+    xession.env["INTENSIFY_COLORS_ON_WIN"] = False
+    xession.shell.shell_type = "prompt_toolkit"
+    xession.shell.shell.styler = XonshStyle()
+    yield xession
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("blink", ""),
+        ("blink ansired", "ansired"),
+        ("bold blink ansired", "bold ansired"),
+        ("bold reverse hidden ansired", "bold ansired"),
+        ("bold strike ansired", "bold ansired"),
+        ("bold ansired", "bold ansired"),
+        ("", ""),
+        ("noinherit", "noinherit"),
+    ],
+)
+def test_strip_ptk_specific_modifiers(value, expected):
+    from xonsh.pyghooks import _strip_ptk_specific_modifiers
+
+    assert _strip_ptk_specific_modifiers(value) == expected
+
+
+def test_xonsh_style_proxy_strips_ptk_modifiers_from_ls_colors(xs_LS_COLORS):
+    """``xonsh_style_proxy`` must sanitize PTK-only modifiers so pygments'
+    ``StyleMeta`` does not raise ``AssertionError: wrong color format``.
+    """
+    from xonsh.pyghooks import (
+        PTK_SPECIFIC_VALUES,
+        color_token_by_name,
+        xonsh_style_proxy,
+    )
+
+    xs = XonshStyle()
+    # ANSI codes 5 (slow blink), 7 (reverse), 8 (hidden), 9 (strike) on red fg
+    blink_token = color_token_by_name(("SLOWBLINK_RED",), xs.styles)
+    reverse_token = color_token_by_name(("INVERT_RED",), xs.styles)
+    hidden_token = color_token_by_name(("CONCEAL_RED",), xs.styles)
+    strike_token = color_token_by_name(("STRIKETHROUGH_RED",), xs.styles)
+
+    # Pre-condition: the live style cache does carry PTK-only modifiers
+    assert "blink" in xs.styles[blink_token]
+
+    # Building the proxy must not raise ``AssertionError`` from
+    # pygments.style.colorformat — this is the actual bug.
+    proxy = xonsh_style_proxy(xs)
+
+    for token in (blink_token, reverse_token, hidden_token, strike_token):
+        sanitized = proxy.styles[token]
+        for modifier in PTK_SPECIFIC_VALUES:
+            assert modifier not in sanitized.split(), (
+                f"PTK-only modifier {modifier!r} leaked into pygments styles "
+                f"for {token}: {sanitized!r}"
+            )
+        # Color information must be preserved
+        assert "ansired" in sanitized

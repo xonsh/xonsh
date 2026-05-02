@@ -73,7 +73,16 @@ NON_PYGMENTS_RULES: dict[str, dict[str, str]] = {}
 
 # style modifiers not handled by pygments (but supported by ptk)
 PTK_SPECIFIC_VALUES = frozenset(
-    {"reverse", "noreverse", "hidden", "nohidden", "blink", "noblink"}
+    {
+        "reverse",
+        "noreverse",
+        "hidden",
+        "nohidden",
+        "blink",
+        "noblink",
+        "strike",
+        "nostrike",
+    }
 )
 
 # Generate fallback style dict from non-pygments styles
@@ -450,6 +459,16 @@ class XonshStyle(Style):
             self.trap.update(newcolors)
 
 
+def _strip_ptk_specific_modifiers(value):
+    """Drop PTK-specific modifiers (blink, reverse, hidden, strike, ...)
+    from a style string so pygments' ``colorformat`` does not reject it.
+    """
+    if not isinstance(value, str) or not value:
+        return value
+    parts = [p for p in value.split() if p not in PTK_SPECIFIC_VALUES]
+    return " ".join(parts)
+
+
 def xonsh_style_proxy(styler):
     """Factory for a proxy class to a xonsh style."""
     # Monky patch pygments' list of known ansi colors
@@ -458,11 +477,21 @@ def xonsh_style_proxy(styler):
     if pygments_version_info() and pygments_version_info() < (2, 4, 0):
         pygments.style.ansicolors.update(ANSICOLOR_NAMES_MAP)
 
+    # Pygments' StyleMeta validates each style value via ``colorformat`` at
+    # class-creation time and raises AssertionError on PTK-only modifiers
+    # (blink/reverse/hidden/strike), which can leak into ``styler.styles``
+    # via ``LS_COLORS`` entries that carry ANSI codes 5/6/7/8/9. Hand pygments
+    # a sanitized copy; the live ChainMap stays intact for the PTK path.
+    sanitized_styles = {
+        token: _strip_ptk_specific_modifiers(value)
+        for token, value in styler.styles.items()
+    }
+
     class XonshStyleProxy(Style):
         """Simple proxy class to fool prompt toolkit."""
 
         target = styler
-        styles = styler.styles
+        styles = sanitized_styles
         highlight_color = styler.highlight_color
         background_color = styler.background_color
 
