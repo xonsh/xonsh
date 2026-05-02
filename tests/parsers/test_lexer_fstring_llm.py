@@ -197,6 +197,49 @@ class TestFStringFormatSpecLexer:
         spec_middles = [t for t in toks('f"{x:0>10d}"') if t[0] == "FSTRING_MIDDLE"]
         assert spec_middles[0][1] == "0>10d"
 
+    def test_format_spec_followed_by_field(self):
+        """Regression test for issue #6389.
+
+        After a format-spec replacement field, the closing '}' must
+        bring the f-string brace_depth back to 0 so the next '{...}'
+        field opens cleanly and the trailing quote is recognized as
+        FSTRING_END (not ERRORTOKEN).
+        """
+        result = toks('f"{5:02d}{6}"')
+        types = [t[0] for t in result]
+        assert types == [
+            "FSTRING_START",
+            "LBRACE",
+            "NUMBER",
+            "COLON",
+            "FSTRING_MIDDLE",
+            "RBRACE",
+            "LBRACE",
+            "NUMBER",
+            "RBRACE",
+            "FSTRING_END",
+        ]
+        assert "ERRORTOKEN" not in types
+
+    def test_two_format_spec_fields(self):
+        """Two adjacent format-spec fields must both close cleanly."""
+        result = toks('f"{5:02d}{6:03d}"')
+        types = [t[0] for t in result]
+        assert types == [
+            "FSTRING_START",
+            "LBRACE",
+            "NUMBER",
+            "COLON",
+            "FSTRING_MIDDLE",
+            "RBRACE",
+            "LBRACE",
+            "NUMBER",
+            "COLON",
+            "FSTRING_MIDDLE",
+            "RBRACE",
+            "FSTRING_END",
+        ]
+
 
 # ---- conversions ----
 

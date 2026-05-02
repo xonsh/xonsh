@@ -1160,6 +1160,11 @@ def _tokenize(
                                 line,
                             )
                         fs["in_format_spec"] = False
+                        # The matching '{' that opened this replacement
+                        # field bumped brace_depth in the OP handler;
+                        # closing it here must mirror that decrement so
+                        # subsequent fields start clean.
+                        fs["brace_depth"] -= 1
                         # Emit } as OP to close the replacement field
                         yield TokenInfo(
                             OP,

@@ -76,6 +76,22 @@ class TestPEP701FStrings:
         """f"{x:{w}.{d}f}" — multiple sub-expressions in format spec."""
         check_ast('f"{3.14159:{10}.{3}f}"', run=False)
 
+    def test_format_spec_followed_by_field(self, check_ast):
+        """f"{a:02d}{b}" — format spec field followed by a plain field (issue #6389)."""
+        check_ast('f"{5:02d}{6}"', run=False)
+
+    def test_two_format_spec_fields(self, check_ast):
+        """f"{a:02d}{b:03d}" — two consecutive format-spec fields (issue #6389)."""
+        check_ast('f"{5:02d}{6:03d}"', run=False)
+
+    def test_format_spec_then_text_then_field(self, check_ast):
+        """f"{a:02d}lit{b}" — format spec, literal text, then a plain field."""
+        check_ast('f"{5:02d}lit{6}"', run=False)
+
+    def test_nested_format_spec_followed_by_field(self, check_ast):
+        """f"{a:>{w}d}{b}" — nested-expr format spec followed by another field."""
+        check_ast('f"{5:>{3}d}{6}"', run=False)
+
     # -- conversions --
 
     def test_conversion_r(self, check_ast):
