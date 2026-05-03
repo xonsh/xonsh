@@ -1,5 +1,18 @@
 # Xonsh Change Log
 
+## [0.23.4](https://github.com/xonsh/xonsh/compare/0.23.3...0.23.4) (2026-05-03)
+
+
+### Fixes
+
+* AssertionError: wrong color format 'blink' ([#6391](https://github.com/xonsh/xonsh/issues/6391)) ([a31a53e](https://github.com/xonsh/xonsh/commit/a31a53ec610c75782f5b52fb2eaa9c1aae09c550))
+* **chore:** Added smoke tests ([#6393](https://github.com/xonsh/xonsh/issues/6393)) ([c5c2a3f](https://github.com/xonsh/xonsh/commit/c5c2a3fb3b82423318c0690fe2d350bc320c0b47))
+* Cross-platform: Jupyter: pyghooks lexer crash when XSH.aliases is None ([#6384](https://github.com/xonsh/xonsh/issues/6384)) ([dc16ca6](https://github.com/xonsh/xonsh/commit/dc16ca691007d436ca2339ad122a976a631ac51c))
+* f-strings: SyntaxError with int formatting ([#6390](https://github.com/xonsh/xonsh/issues/6390)) ([f5ca787](https://github.com/xonsh/xonsh/commit/f5ca7878f089bec57ff5a975f736544a6dfc5d9d))
+* **nix:** fix nix build ([#6388](https://github.com/xonsh/xonsh/issues/6388)) ([5831959](https://github.com/xonsh/xonsh/commit/5831959d066c5d0411f626d749e00eecc58ce2aa))
+* **parser:** Fix lost LHS in `cmd && ![…]` chain wrap ([#6392](https://github.com/xonsh/xonsh/issues/6392)) ([4daff85](https://github.com/xonsh/xonsh/commit/4daff85ebe45c69679639239bb20730a5bc642c3))
+* Xontrib load using entrypoint e.g. coconut ([#6394](https://github.com/xonsh/xonsh/issues/6394)) ([d68e39c](https://github.com/xonsh/xonsh/commit/d68e39ce711b308e10d526e183e6d563ee379de4))
+
 ## [0.23.3](https://github.com/xonsh/xonsh/compare/0.23.2...0.23.3) (2026-04-30)
 
 
