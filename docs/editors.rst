@@ -22,7 +22,7 @@ There is a `xonsh package`_ for **Sublime Text 4** (build > 4075). To install:
 
 Visual Studio Code (VS Code)
 ============================
-There is `xonsh extension for VS Code`_. To install search "xonsh" using extensions
+There is a `xonsh extension for VS Code`_. To install search "xonsh" using extensions
 menu or just press ``F1`` and run without `>` preceding:
 
 .. code-block::
@@ -38,18 +38,14 @@ Since version 1.86 of VS Code, the editor also supports loading the environment 
 
 JetBrains (IntelliJ IDEA, PyCharm, etc.)
 ========================================
-There is `xonsh plugin for JetBrains IDEs`_. For now it has to be installed from sources:
+There is a `xonsh plugin for JetBrains IDEs`_. For now it has to be installed from GitHub:
 
-.. code-block:: xonsh
-
-    uv tool install 'xonsh-lsp[jedi]'  # or pipx install 'xonsh-lsp[jedi]'  # Dependency
-    git clone https://github.com/nahoj/xonsh-jetbrains.git && cd xonsh-jetbrains
-    ./gradlew buildPlugin
-
-Then in your IDE, Settings > Plugins > ⋮ > Install Plugin from Disk > ``.../xonsh-jetbrains/build/distributions/*.zip``
+- First, install the language server: ``uv tool install 'xonsh-lsp[jedi]'`` or ``pipx install 'xonsh-lsp[jedi]'``.
+- Get the latest release (or build from source) from the repo.
+- In your IDE, install the LSP4IJ plugin if you don't have it already.
+- Then in Settings > Plugins > ⋮ > Install Plugin from Disk > ``xonsh-jetbrains-x.y.z.zip``
 
 .. _xonsh plugin for JetBrains IDEs: https://github.com/nahoj/xonsh-jetbrains
-
 
 Emacs
 =====
