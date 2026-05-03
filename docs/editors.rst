@@ -45,7 +45,7 @@ There is `xonsh plugin for JetBrains IDEs`_. For now it has to be installed from
     uv tool install 'xonsh-lsp[jedi]'  # or pipx install 'xonsh-lsp[jedi]'  # Dependency
     git clone https://github.com/nahoj/xonsh-jetbrains.git && cd xonsh-jetbrains
     ./gradlew buildPlugin
-    
+
 Then in your IDE, Settings > Plugins > ⋮ > Install Plugin from Disk > ``.../xonsh-jetbrains/build/distributions/*.zip``
 
 .. _xonsh plugin for JetBrains IDEs: https://github.com/nahoj/xonsh-jetbrains
