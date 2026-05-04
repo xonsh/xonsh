@@ -237,14 +237,7 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
     func = getattr(alias, "func", None)
 
     # Docstring is shown for both ``?`` and ``??``.
-    # Read from the underlying function — FuncAlias instance falls through
-    # to the class docstring when the function has no doc.
-    if func is not None:
-        doc = getattr(func, "__doc__", "") or ""
-    elif isinstance(alias, (list, str)):
-        doc = ""
-    else:
-        doc = getattr(alias, "__doc__", "") or ""
+    doc = XSH.aliases.get_doc(name)
     if doc:
         from xonsh.environ import _rst_inline_to_color
 
@@ -541,6 +534,36 @@ class Aliases(cabc.MutableMapping):
         else:
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
+
+    def get_doc(self, name: str) -> str:
+        """Return the cleaned docstring of an alias.
+
+        For ``FuncAlias`` instances the docstring is read from the wrapped
+        function (``alias.func.__doc__``) — never from the ``FuncAlias``
+        instance, which inherits ``FuncAlias.__doc__`` from the class when
+        the wrapped function has no docstring of its own and would otherwise
+        leak the placeholder ``"Provides a callable alias for xonsh
+        commands."`` into UIs that surface this text.
+
+        List- and string-aliases carry no docstring and yield ``""``. For
+        any other alias object (e.g. ``ArgParserAlias``, ``ExecAlias``)
+        the object's own ``__doc__`` is used.
+
+        The returned string is run through :func:`inspect.cleandoc` so
+        multi-line docstrings have shared indentation removed.
+        """
+        try:
+            alias = self._raw[name]
+        except KeyError:
+            return ""
+        func = getattr(alias, "func", None)
+        if func is not None:
+            doc = getattr(func, "__doc__", None)
+        elif isinstance(alias, (list, str)):
+            return ""
+        else:
+            doc = getattr(alias, "__doc__", None)
+        return inspect.cleandoc(doc) if doc else ""
 
     def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
