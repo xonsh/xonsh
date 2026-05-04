@@ -10,12 +10,25 @@ from urllib import parse
 
 import pytest
 
+from xonsh.webconfig import file_writes
 from xonsh.webconfig import routes as r
 from xonsh.webconfig import tags as t
 
 
 def _url(path):
     return parse.urlparse(path)
+
+
+@pytest.fixture(autouse=True)
+def rc_file(tmp_path, monkeypatch):
+    """Redirect webconfig RC writes to a temp path.
+
+    Without this, ``ColorsPage.post`` / ``PromptsPage.post`` / ``XontribsPage.post``
+    write to the user's real ``~/.xonshrc`` via ``insert_into_xonshrc``.
+    """
+    file = tmp_path / "xonshrc"
+    monkeypatch.setattr(file_writes, "RC_FILE", str(file))
+    return file
 
 
 @pytest.fixture
