@@ -1093,6 +1093,19 @@ def _failback_to_other_shells(args, err):
 
 
 def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
+    # Subcommand dispatch. ``xonsh format ...`` does not need a shell
+    # session, xontribs, rc files, or even a TTY handshake — bypass
+    # premain entirely and hand off to the formatter CLI. Add new
+    # subcommands here when their lifecycle differs from the regular
+    # shell entry point.
+    if argv and argv[0] == "format":
+        from xonsh.formatter.cli import main as format_main
+
+        sys.exit(format_main(argv[1:]))
+
     # Run the TTY startup handshake *before* premain so that xontrib
     # loading and xonshrc execution happen with xonsh already as the
     # foreground process group. rc files are arbitrary user code and
