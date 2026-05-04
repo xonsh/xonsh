@@ -147,18 +147,43 @@ def test_empty_pattern_returns_empty():
 
 
 @skip_on_windows
-def test_dotfiles_excluded_by_default(tree):
-    # '.*' matches nothing because dotfiles are filtered out before
-    # the casefold compare. (Note: this differs from glob.iglob, which
-    # includes dotfiles when explicitly anchored at '.'; the helper
-    # follows xonsh's $DOTGLOB semantics.)
-    out = sorted(_case_insensitive_iglob(".*"))
+def test_bare_wildcard_excludes_dotfiles_by_default(tree):
+    # Bare '*' (no leading '.') hides dotfiles by default — matches
+    # stdlib glob with include_hidden=False.
+    out = sorted(_case_insensitive_iglob("*"))
     assert ".hidden" not in out
+    assert "README.md" in out
+
+
+@skip_on_windows
+def test_explicit_dot_wildcard_matches_dotfiles(tree):
+    # A wildcard segment whose pattern starts with '.' is an explicit
+    # request for hidden names, so the dotfile filter is bypassed even
+    # with include_dotfiles=False. Mirrors stdlib glob, where
+    # glob.glob('.*', include_hidden=False) returns dotfile entries.
+    out = sorted(_case_insensitive_iglob(".*"))
+    assert ".hidden" in out
+
+
+@skip_on_windows
+def test_literal_hidden_segment_is_traversed(tmp_path):
+    # A literal segment that happens to start with '.' (no glob meta)
+    # must always be traversed — otherwise paths like '~/.config/<Tab>'
+    # cannot be completed without flipping a global flag.
+    hidden = tmp_path / ".foo"
+    hidden.mkdir()
+    (hidden / "a.txt").touch()
+    (hidden / "b.txt").touch()
+    pattern = str(hidden / "*")
+    out = sorted(_case_insensitive_iglob(pattern, include_dotfiles=False))
+    assert out == [str(hidden / "a.txt"), str(hidden / "b.txt")]
 
 
 @skip_on_windows
 def test_dotfiles_included_when_requested(tree):
-    out = sorted(_case_insensitive_iglob(".*", include_dotfiles=True))
+    # include_dotfiles=True shows hidden names even when the wildcard
+    # itself doesn't anchor at '.'.
+    out = sorted(_case_insensitive_iglob("*", include_dotfiles=True))
     assert ".hidden" in out
 
 

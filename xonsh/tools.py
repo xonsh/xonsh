@@ -2782,12 +2782,16 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
         # itself started with one.
         strip_dot_prefix = not pattern.startswith("." + os.sep)
 
-    def _entries(d):
+    def _entries(d, part):
         try:
             entries = os.listdir(d)
         except OSError:
             return None
-        if not include_dotfiles:
+        # Mirror stdlib glob: a segment that starts with '.' is treated as
+        # an explicit request for hidden names (literal '.foo' or wildcard
+        # '.x*'), so the dotfile filter does not apply. Bare wildcards
+        # ('*', '**', 'foo*') still hide dotfiles unless include_dotfiles.
+        if not include_dotfiles and not part.startswith("."):
             entries = [e for e in entries if not e.startswith(".")]
         return entries
 
@@ -2811,7 +2815,7 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
                     continue
                 seen.add(d)
                 nxt.append(d)
-                entries = _entries(d)
+                entries = _entries(d, part)
                 if entries is None:
                     continue
                 for e in entries:
@@ -2822,7 +2826,7 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
             continue
         has_meta = any(c in part for c in _GLOB_META)
         for d in cur:
-            entries = _entries(d)
+            entries = _entries(d, part)
             if entries is None:
                 # Parent unreadable (sandbox, EACCES) — keep the literal
                 # name if it actually exists on disk, otherwise drop
