@@ -390,6 +390,61 @@ that poly fills the "run as Admin" behavior with the help of ``ShellExecuteEx`` 
 command to run.
 
 
+User Aliases with Descriptions
+==============================
+
+Every alias can carry a one-line description. It surfaces in the tab-completion
+dropdown next to the alias name, and in the ``cmd?`` / ``cmd??`` help output.
+
+For callable aliases, the function's docstring is used automatically:
+
+.. code-block:: xonshcon
+
+    @ @aliases.register('qwe')
+      def _qwe():
+          """List files in long format."""
+          ls -la
+
+    @ qw<TAB>
+    qwe  List files in long format.
+
+For string and list aliases — which have nowhere to attach a docstring —
+use the dict form:
+
+.. code-block:: xonshcon
+
+    @ aliases['qwe'] = {'alias': 'ls -la', 'doc': 'List files'}
+    @ aliases |= {
+          'psg':  {'alias': ['ps', 'aux'], 'doc': 'Process list'},
+          'g':    {'alias': 'git',         'doc': 'Git wrapper'},
+      }
+
+The dict form recognises two keys: ``'alias'`` (required, the alias value
+itself — string, list, or callable) and ``'doc'`` (optional, the one-line
+description). Other keys are reserved for future use and currently ignored.
+
+When ``'doc'`` is set on a callable alias, it overrides the function's own
+``__doc__`` — handy for showing a shorter summary in completions while
+keeping a longer docstring in the source:
+
+.. code-block:: xonshcon
+
+    @ def _bar():
+          """Long, detailed description of bar..."""
+          echo bar
+    @ aliases['bar'] = {'alias': _bar, 'doc': 'Short summary'}
+    @ ba<TAB>
+    bar  Short summary
+
+Reassigning an alias without a ``'doc'`` clears the previous description, so
+descriptions never accidentally stick to a different value bound under the
+same name.
+
+By default, the description shows in the dropdown only when the alias has a
+docstring (or an explicit ``'doc'``). To also show the binary path for
+non-alias commands, set ``$CMD_COMPLETIONS_SHOW_DESC = True``.
+
+
 See also
 ========
 
