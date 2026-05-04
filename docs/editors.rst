@@ -22,7 +22,7 @@ There is a `xonsh package`_ for **Sublime Text 4** (build > 4075). To install:
 
 Visual Studio Code (VS Code)
 ============================
-There is `xonsh extension for VS Code`_. To install search "xonsh" using extensions
+There is a `xonsh extension for VS Code`_. To install search "xonsh" using extensions
 menu or just press ``F1`` and run without `>` preceding:
 
 .. code-block::
@@ -35,6 +35,10 @@ Since version 1.86 of VS Code, the editor also supports loading the environment 
 
 .. _xonsh extension for VS Code: https://marketplace.visualstudio.com/items?itemName=jnoortheen.xonsh
 
+
+JetBrains: IntelliJ IDEA, PyCharm
+========================================
+There is a `xonsh-jetbrains <https://github.com/nahoj/xonsh-jetbrains>`_ plugin for JetBrains products.
 
 Emacs
 =====
