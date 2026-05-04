@@ -96,3 +96,16 @@ There is `xonsh syntax file for vim`_. To install run:
     git clone --depth 1 https://github.com/linkinpark342/xonsh-vim ~/.vim
 
 .. _xonsh syntax file for vim: https://github.com/linkinpark342/xonsh-vim
+
+
+Formatting xonsh code
+=====================
+
+Xonsh ships a built-in code formatter accessible as the ``xonsh format``
+subcommand. It can be wired into any editor that lets you pipe the
+current buffer through an external command — point the editor at
+``xonsh format -`` to read the buffer from stdin and replace it with
+the formatted output.
+
+See :ref:`formatting_xonsh_code` for the full set of invocations and
+flags.

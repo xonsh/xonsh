@@ -65,3 +65,47 @@ above, the session setup is as follows:
     del setup
 
 Enjoy!
+
+.. _formatting_xonsh_code:
+
+Formatting xonsh code
+=====================
+Xonsh ships a built-in formatter, available as the ``xonsh format``
+subcommand. It re-emits the source with normalized indentation,
+spacing and blank-line rules while preserving every xonsh-specific
+construct.
+
+Format a single file in place:
+
+.. code-block:: console
+
+    @ xonsh format mypkg/tell.xsh
+
+Format several files at once — every path that needs reformatting is
+rewritten on disk, and a status line is printed for each:
+
+.. code-block:: console
+
+    @ xonsh format mypkg/tell.xsh mypkg/subpkg/b.xsh
+
+Read from standard input and write the result to standard output —
+the canonical way to produce a separate output file or to plug the
+formatter into an editor / pipeline:
+
+.. code-block:: console
+
+    @ xonsh format - < 1.xsh > 2.xsh
+
+Useful flags:
+
+* ``--check`` — don't touch any files. Exits with code ``1`` if at
+  least one file would be reformatted, ``0`` otherwise. Handy for CI.
+* ``--diff`` — print a unified diff for each file that would change,
+  again without touching disk.
+* ``-q`` / ``--quiet`` — suppress per-file status messages on stderr.
+
+For example, to fail a CI job when any file needs reformatting:
+
+.. code-block:: console
+
+    @ xonsh format --check mypkg
