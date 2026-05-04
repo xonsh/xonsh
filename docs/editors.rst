@@ -38,7 +38,7 @@ Since version 1.86 of VS Code, the editor also supports loading the environment 
 
 JetBrains: IntelliJ IDEA, PyCharm
 ========================================
-There is a `xonsh-jetbrains <https://github.com/nahoj/xonsh-jetbrains>`_ plugin for JetBrains products. 
+There is a `xonsh-jetbrains <https://github.com/nahoj/xonsh-jetbrains>`_ plugin for JetBrains products.
 
 Emacs
 =====
