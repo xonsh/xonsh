@@ -77,14 +77,14 @@ construct.
 
 Format a single file in place:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh format mypkg/tell.xsh
 
 Format several files at once — every path that needs reformatting is
 rewritten on disk, and a status line is printed for each:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh format mypkg/tell.xsh mypkg/subpkg/b.xsh
 
@@ -92,7 +92,7 @@ Read from standard input and write the result to standard output —
 the canonical way to produce a separate output file or to plug the
 formatter into an editor / pipeline:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh format - < 1.xsh > 2.xsh
 
@@ -106,6 +106,6 @@ Useful flags:
 
 For example, to fail a CI job when any file needs reformatting:
 
-.. code-block:: console
+.. code-block:: xonshcon
 
     @ xonsh format --check mypkg
