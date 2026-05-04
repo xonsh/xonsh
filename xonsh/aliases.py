@@ -237,14 +237,7 @@ def print_alias_help(name: str, superhelp: bool = False) -> None:
     func = getattr(alias, "func", None)
 
     # Docstring is shown for both ``?`` and ``??``.
-    # Read from the underlying function — FuncAlias instance falls through
-    # to the class docstring when the function has no doc.
-    if func is not None:
-        doc = getattr(func, "__doc__", "") or ""
-    elif isinstance(alias, (list, str)):
-        doc = ""
-    else:
-        doc = getattr(alias, "__doc__", "") or ""
+    doc = XSH.aliases.get_doc(name)
     if doc:
         from xonsh.environ import _rst_inline_to_color
 
@@ -289,6 +282,13 @@ class Aliases(cabc.MutableMapping):
 
     def __init__(self, *args, **kwargs):
         self._raw = {}
+        # Per-alias docstring registry. Populated when an alias is assigned
+        # via the dict-form ``aliases[k] = {"alias": ..., "doc": "..."}``
+        # (which lets list/string aliases carry a description), and consumed
+        # by :meth:`get_doc` with priority over the alias object's own
+        # ``__doc__``. Cleared on overwrite/delete so a stale doc never
+        # sticks to a different value bound under the same name.
+        self._docs: dict[str, str] = {}
         self.update(*args, **kwargs)
 
     def __dir__(self):
@@ -542,6 +542,43 @@ class Aliases(cabc.MutableMapping):
             msg = "alias of {!r} has an inappropriate type: {!r}"
             raise TypeError(msg.format(key, val))
 
+    def get_doc(self, name: str) -> str:
+        """Return the cleaned docstring of an alias.
+
+        Resolution order:
+
+        1. An explicit doc set via the dict-form
+           ``aliases[k] = {"alias": ..., "doc": "..."}`` takes priority
+           over everything else — it's the only way to attach a description
+           to a list/string alias and an intentional override for callable
+           aliases.
+        2. For ``FuncAlias`` instances, the wrapped function's
+           ``__doc__`` (read from ``alias.func`` directly to avoid falling
+           back to ``FuncAlias.__doc__``, which would otherwise leak the
+           class placeholder ``"Provides a callable alias for xonsh
+           commands."``).
+        3. For any other alias object (e.g. ``ArgParserAlias``,
+           ``ExecAlias``), the object's own ``__doc__``.
+        4. List- and string-aliases without an explicit doc yield ``""``.
+
+        The returned string is run through :func:`inspect.cleandoc` so
+        multi-line docstrings have shared indentation removed.
+        """
+        if name in self._docs:
+            return inspect.cleandoc(self._docs[name])
+        try:
+            alias = self._raw[name]
+        except KeyError:
+            return ""
+        func = getattr(alias, "func", None)
+        if func is not None:
+            doc = getattr(func, "__doc__", None)
+        elif isinstance(alias, (list, str)):
+            return ""
+        else:
+            doc = getattr(alias, "__doc__", None)
+        return inspect.cleandoc(doc) if doc else ""
+
     def expand_alias(self, line: str, cursor_index: int) -> str:
         """Expands any aliases present in line if alias does not point to a
         builtin function and if alias is only a single command.
@@ -565,6 +602,18 @@ class Aliases(cabc.MutableMapping):
         return self._raw[key]
 
     def __setitem__(self, key, val):
+        # Dict-form: ``aliases[k] = {"alias": <value>, "doc": "..."}``.
+        # Lets list/string aliases (which carry no ``__doc__``) advertise a
+        # description for tab-completion and ``cmd?``. Also overrides the
+        # ``__doc__`` of a function/FuncAlias when the user wants a
+        # different one-line summary than the function's docstring.
+        # Recognised keys: "alias" (required), "doc" (optional). Any other
+        # keys are reserved for future use and currently ignored.
+        explicit_doc: str | None = None
+        if isinstance(val, dict) and "alias" in val:
+            explicit_doc = val.get("doc") or None
+            val = val["alias"]
+
         if isinstance(val, str):
             f = "<exec-alias:" + key + ">"
             if EXEC_ALIAS_RE.search(val) is not None:
@@ -582,11 +631,32 @@ class Aliases(cabc.MutableMapping):
         else:
             self._raw[key] = val
 
+        # Update the per-alias doc registry. Always clear first so a
+        # rewrite without ``"doc"`` doesn't leave a stale description from
+        # a prior dict-form assignment.
+        self._docs.pop(key, None)
+        if explicit_doc:
+            self._docs[key] = explicit_doc
+
     def _common_or(self, other):
         new_dict = self._raw.copy()
         for key in dict(other):
             new_dict[key] = other[key]
-        return Aliases(new_dict)
+        result = Aliases(new_dict)
+        # ``Aliases(new_dict)`` re-feeds every entry through ``__setitem__``,
+        # which clears any per-key doc — so docs that came from ``self._docs``
+        # or from ``other._docs`` (when ``other`` is itself an ``Aliases``)
+        # need to be re-applied here. Keys whose values came from ``other``
+        # surrender their old doc unless ``other`` supplies a new one,
+        # mirroring ``__ior__`` semantics.
+        other_keys = set(dict(other))
+        for key, doc in self._docs.items():
+            if key not in other_keys:
+                result._docs.setdefault(key, doc)
+        if isinstance(other, Aliases):
+            for key, doc in other._docs.items():
+                result._docs[key] = doc
+        return result
 
     def __or__(self, other):
         return self._common_or(other)
@@ -597,10 +667,18 @@ class Aliases(cabc.MutableMapping):
     def __ior__(self, other):
         for key in dict(other):
             self[key] = other[key]
+        # When ``other`` is an ``Aliases``, ``other[key]`` returns the raw
+        # alias (FuncAlias / list / string) — its dict-form is gone, so any
+        # docs in ``other._docs`` were not propagated through __setitem__.
+        # Apply them now so an Aliases-to-Aliases merge keeps descriptions.
+        if isinstance(other, Aliases):
+            for key, doc in other._docs.items():
+                self._docs[key] = doc
         return self
 
     def __delitem__(self, key):
         del self._raw[key]
+        self._docs.pop(key, None)
 
     def update(self, *args, **kwargs):
         for key, val in dict(*args, **kwargs).items():

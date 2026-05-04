@@ -22,6 +22,27 @@ END_PROC_TOKENS = ("|", ";", "&&")  # includes ||
 END_PROC_KEYWORDS = {"and", "or"}
 
 
+def _alias_completion_description(aliases, name: str) -> str:
+    """Return the first non-empty line of the alias docstring, or ``""``.
+
+    The completion dropdown's ``display_meta`` is rendered as a single line
+    (prompt-toolkit replaces newlines with spaces in
+    ``PromptToolkitCompleter.get_completions``), so a multi-line docstring is
+    summarised down to its first non-empty line — typically the docstring's
+    one-line summary in PEP 257 style.
+    """
+    if aliases is None:
+        return ""
+    doc = aliases.get_doc(name)
+    if not doc:
+        return ""
+    for line in doc.splitlines():
+        line = line.strip()
+        if line:
+            return line
+    return ""
+
+
 def complete_command(command: CommandContext):
     """
     Returns a list of valid commands starting with the first argument
@@ -29,9 +50,22 @@ def complete_command(command: CommandContext):
 
     cmd = command.prefix
     show_desc = (XSH.env or {}).get("CMD_COMPLETIONS_SHOW_DESC", False)
+    aliases = XSH.aliases
     for s, (path, is_alias) in XSH.commands_cache.iter_commands():
         if get_filter_function()(s, cmd):
-            description = ("Alias" if is_alias else path) if show_desc else ""
+            description = ""
+            if is_alias:
+                # Surface the alias docstring as the dropdown description
+                # whenever the user wrote one — the docstring is an explicit
+                # opt-in, so showing it doesn't depend on
+                # ``$CMD_COMPLETIONS_SHOW_DESC``. Fall back to the static
+                # ``"Alias"`` label only when descriptions are explicitly
+                # enabled and there is no docstring to show.
+                description = _alias_completion_description(aliases, s)
+                if not description and show_desc:
+                    description = "Alias"
+            elif show_desc:
+                description = path
             yield RichCompletion(
                 s,
                 append_space=True,
