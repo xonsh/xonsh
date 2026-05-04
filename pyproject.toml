@@ -38,6 +38,7 @@ packages = [
     "xonsh.lib",
     "xonsh.webconfig",
     "xonsh.virtualenv",
+    "xonsh.formatter",
     "xompletions",
 ]
 platforms = ["Cross Platform"]
