@@ -36,16 +36,9 @@ Since version 1.86 of VS Code, the editor also supports loading the environment 
 .. _xonsh extension for VS Code: https://marketplace.visualstudio.com/items?itemName=jnoortheen.xonsh
 
 
-JetBrains (IntelliJ IDEA, PyCharm, etc.)
+JetBrains: IntelliJ IDEA, PyCharm
 ========================================
-There is a `xonsh plugin for JetBrains IDEs`_. For now it has to be installed from GitHub:
-
-- First, install the language server: ``uv tool install 'xonsh-lsp[jedi]'`` or ``pipx install 'xonsh-lsp[jedi]'``.
-- Get the latest release (or build from source) from the repo.
-- In your IDE, install the LSP4IJ plugin if you don't have it already.
-- Then in Settings > Plugins > ⋮ > Install Plugin from Disk > ``xonsh-jetbrains-x.y.z.zip``
-
-.. _xonsh plugin for JetBrains IDEs: https://github.com/nahoj/xonsh-jetbrains
+There is a `xonsh-jetbrains <https://github.com/nahoj/xonsh-jetbrains>`_ plugin for JetBrains products. 
 
 Emacs
 =====
