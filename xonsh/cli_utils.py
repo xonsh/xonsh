@@ -552,6 +552,12 @@ class ArgparseCompleter:
             self.remaining_args = self.remaining_args[1:]
             act, *_, value = act_res
 
+            if act is None:
+                # argparse returns ``(None, arg_string, ...)`` when the token
+                # looks like an option (starts with a prefix char) but does
+                # not match any known option in this parser. Skip it.
+                continue
+
             # remove the found option
             # todo: not remove if append/extend
             options.pop(act, None)

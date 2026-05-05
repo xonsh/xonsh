@@ -85,6 +85,18 @@ def test_argparse_completer_after_option(check_completer, tmp_path):
     assert check_completer("xonsh --no-rc", prefix)
 
 
+def test_argparse_completer_unknown_option(check_completer):
+    """Completer must not crash on an unknown option that looks like a flag.
+
+    Regression: ``xontrib load -p <TAB>`` raised
+    ``AttributeError: 'NoneType' object has no attribute 'nargs'`` because
+    ``argparse._parse_optional`` returns ``(None, arg, None, None)`` when the
+    token starts with a prefix char but matches no known option.
+    """
+    # Should not raise. Result may be empty — we only assert no crash.
+    check_completer("xontrib load -p", prefix="")
+
+
 @skip_if_on_windows
 def test_complete_command_substring(completion_context_parse):
     """Completers should match by substring, not just prefix (xonsh#6082)."""
