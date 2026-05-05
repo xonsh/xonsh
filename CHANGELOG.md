@@ -1,5 +1,25 @@
 # Xonsh Change Log
 
+## [0.23.5](https://github.com/xonsh/xonsh/compare/0.23.4...0.23.5) (2026-05-05)
+
+
+### Features
+
+* Show alias description in completion menu ([#6399](https://github.com/xonsh/xonsh/issues/6399)) ([cf6db23](https://github.com/xonsh/xonsh/commit/cf6db2352949b8d630dc22ed67d9673d9999cfc9))
+* Xonsh code formatter alpha version. Run `xonsh format file.xsh` ([#6401](https://github.com/xonsh/xonsh/issues/6401)) ([8c3191e](https://github.com/xonsh/xonsh/commit/8c3191eee70295e6d840d2031092af6444a2e1b0))
+
+
+### Fixes
+
+* **completer:** Allow completion of explicit dot-dirs ([#6402](https://github.com/xonsh/xonsh/issues/6402)) ([343f5fd](https://github.com/xonsh/xonsh/commit/343f5fd9bbea3c143b6bc5ec6e0816d78a1e8b17))
+* **completer:** Fix parent directory completion ([#6404](https://github.com/xonsh/xonsh/issues/6404)) ([0d5a2fc](https://github.com/xonsh/xonsh/commit/0d5a2fc7c130314dcfe8f3a873cf6e3346a163d6))
+* Fix webconfig test with prevent adding tail to global xonsh RC ([#6400](https://github.com/xonsh/xonsh/issues/6400)) ([a94eb6a](https://github.com/xonsh/xonsh/commit/a94eb6ad77a4a0741d9d589bb63ce79ca18b1035))
+
+
+### Documentation
+
+* **editors:** Add JetBrains plugin ([#6396](https://github.com/xonsh/xonsh/issues/6396)) ([6d6640b](https://github.com/xonsh/xonsh/commit/6d6640b689ba305e9ef4da5d0ee9d05d472738d8))
+
 ## [0.23.4](https://github.com/xonsh/xonsh/compare/0.23.3...0.23.4) (2026-05-03)
 
 
