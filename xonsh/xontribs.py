@@ -73,7 +73,40 @@ def get_module_docstring(module: str) -> str:
     spec = importlib.util.find_spec(module)
     if spec and spec.has_location and spec.origin:
         return ast.get_docstring(ast.parse(Path(spec.origin).read_text())) or ""
+    # Fall back for ``xontrib.<name>`` modules that ship as ``.xsh`` files —
+    # importlib's standard finders don't know about ``.xsh`` and return
+    # ``None`` here.
+    path = _find_xontrib_file(module)
+    if path is not None and path.suffix == ".py":
+        with contextlib.suppress(SyntaxError, OSError):
+            return ast.get_docstring(ast.parse(path.read_text())) or ""
     return ""
+
+
+def _find_xontrib_file(module: str) -> "Path | None":
+    """Locate the source file for a ``xontrib.<name>`` module.
+
+    Handles ``.py``, ``.xsh``, and package-style xontribs by scanning the
+    physical locations of the ``xontrib`` namespace package directly. Used
+    as a fallback for cases that ``importlib.util.find_spec`` cannot
+    resolve — most notably ``.xsh`` xontribs (the standard import
+    machinery doesn't recognize the extension).
+    """
+    if not module.startswith("xontrib."):
+        return None
+    name = module.removeprefix("xontrib.")
+    spec = importlib.util.find_spec("xontrib")
+    if spec is None or spec.submodule_search_locations is None:
+        return None
+    for loc in spec.submodule_search_locations:
+        base = Path(loc)
+        for candidate in (base / f"{name}.py", base / f"{name}.xsh"):
+            if candidate.exists():
+                return candidate
+        pkg = base / name / "__init__.py"
+        if pkg.exists():
+            return pkg
+    return None
 
 
 def get_xontribs() -> dict[str, Xontrib]:
@@ -250,6 +283,13 @@ def xontrib_unload_completer(**_):
     yield from _xontrib_name_completions(loaded=True)
 
 
+def xontrib_any_completer(**_):
+    for name, xontrib in get_xontribs().items():
+        yield RichCompletion(
+            name, append_space=True, description=xontrib.get_description()
+        )
+
+
 def xontribs_load(
     names: Annotated[
         tp.Sequence[str],
@@ -355,6 +395,70 @@ def xontribs_reload(
         xontribs_load([name])
 
 
+def xontribs_info(
+    name: Annotated[str, Arg(completer=xontrib_any_completer)],
+    _stdout=None,
+):
+    """Show details about an installed xontrib.
+
+    Parameters
+    ----------
+    name
+        name of the xontrib
+    """
+    xontribs = get_xontribs()
+    xontrib = xontribs.get(name)
+
+    if xontrib is None:
+        # Fall back to a direct module lookup so users can inspect xontribs
+        # that aren't surfaced via the ``xontrib`` package or the
+        # ``xonsh.xontribs`` entry-point group (e.g. ``xontrib info
+        # some.module --full`` style lookups in the future).
+        spec = find_xontrib(name)
+        if spec is None:
+            print_color(
+                "{RED}Xontrib " + name + " is not installed.{RESET}", file=_stdout
+            )
+            return ExitCode.NOT_FOUND
+        xontrib = Xontrib(spec.name)
+
+    spec = importlib.util.find_spec(xontrib.module)
+    origin = spec.origin if spec is not None else None
+    if not origin:
+        # ``.xsh`` xontribs (and other non-importable modules) are not
+        # surfaced by ``find_spec`` — fall back to scanning the namespace
+        # package locations directly.
+        path = _find_xontrib_file(xontrib.module)
+        origin = str(path) if path is not None else "(builtin)"
+
+    source = xontrib.module
+    if xontrib.distribution is not None:
+        dist_name = xontrib.distribution.metadata.get("Name", "") or ""
+        dist_version = xontrib.distribution.metadata.get("Version", "") or ""
+        if dist_name:
+            source += f" ({dist_name} {dist_version})".rstrip()
+    source += f" at {origin}"
+
+    description = xontrib.get_description() or ""
+
+    lines = [
+        "{PURPLE}Name{RESET}: " + name,
+        "{PURPLE}Source{RESET}: " + source,
+        "{PURPLE}Description{RESET}: " + description,
+    ]
+    if xontrib.url:
+        lines.append("{PURPLE}URL{RESET}: " + xontrib.url)
+    if xontrib.license:
+        lines.append("{PURPLE}License{RESET}: " + xontrib.license)
+    lines.append(
+        "{PURPLE}Loaded{RESET}: "
+        + ("{GREEN}yes{RESET}" if xontrib.is_loaded else "{RED}no{RESET}")
+        + (" {GREEN}(auto){RESET}" if xontrib.is_auto_loaded else "")
+    )
+    print_color("\n".join(lines), file=_stdout)
+    return ExitCode.OK
+
+
 def xontrib_data():
     """Collects and returns the data about installed xontribs."""
     data = {}
@@ -454,6 +558,7 @@ class XontribAlias(ArgParserAlias):
         parser.add_command(xontribs_unload, prog="unload")
         parser.add_command(xontribs_reload, prog="reload")
         parser.add_command(xontribs_list, prog="list", default=True)
+        parser.add_command(xontribs_info, prog="info")
         return parser
 
 

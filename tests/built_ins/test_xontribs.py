@@ -163,3 +163,33 @@ def test_xontrib_list(xession, capsys):
     xontribs_main(["list"])
     out, err = capsys.readouterr()
     assert "coreutils" in out
+
+
+def test_xontrib_info(xession, capsys):
+    xontribs_main(["info", "coreutils"])
+    out, _ = capsys.readouterr()
+    assert "Name" in out and "coreutils" in out
+    assert "Source" in out and "xontrib.coreutils" in out
+    assert "coreutils.py" in out  # file path
+    assert "Description" in out
+    assert "Loaded" in out
+
+
+def test_xontrib_info_unknown(xession, capsys):
+    rc = xontribs_main(["info", "nope-this-xontrib-does-not-exist"])
+    out, _ = capsys.readouterr()
+    assert "not installed" in out
+    assert rc == 1
+
+
+def test_xontrib_info_xsh_file(tmpmod, xession, capsys):
+    """`.xsh` xontribs aren't visible to ``importlib.util.find_spec``.
+    ``xontrib info`` must fall back to scanning the namespace package's
+    physical locations and report the actual file path — not "(builtin)".
+    """
+    tmpmod.mkdir("xontrib").join("xshmod.xsh").write("echo hi\n")
+
+    xontribs_main(["info", "xshmod"])
+    out, _ = capsys.readouterr()
+    assert "xshmod.xsh" in out
+    assert "(builtin)" not in out
