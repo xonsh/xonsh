@@ -2800,10 +2800,23 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
 
     for idx, part in enumerate(parts):
         is_last = idx == len(parts) - 1
-        # '.' and empty segments are no-ops (e.g. './foo' splits to
-        # ['.', 'foo'] — we should stay in cwd rather than look for an
-        # entry literally named '.').
-        if part in ("", ".") and not is_last:
+        # '.' / '' / '..' are never returned by os.listdir, so handle
+        # them as literal path-walking segments to match stdlib glob:
+        # '.' / '' stay in the current directory, '..' moves up. Without
+        # this branch, patterns like '../*', '/tmp/../etc' or a bare
+        # 'cd ../' (which expands to '../*') would yield zero matches.
+        # A trailing '' (empty) segment also preserves the trailing
+        # separator on the result, so 'foo/' yields 'foo/' rather than
+        # 'foo'.
+        if part in ("", ".", ".."):
+            if part in ("", ".") and not is_last:
+                continue
+            nxt = [_join(d, part) for d in cur]
+            if not is_last:
+                nxt = [p for p in nxt if os.path.isdir(p)]
+            cur = nxt
+            if not cur:
+                return
             continue
         nxt = []
         if recursive and part == "**":
