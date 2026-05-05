@@ -169,18 +169,42 @@ def test_docstring_shows_regardless_of_show_desc(xession, completion_context_par
         assert completion.description == "always shown"
 
 
-def test_string_and_list_aliases_have_no_description(xession, completion_context_parse):
-    """Plain string and list aliases carry no docstring; description falls
-    back to the legacy behaviour."""
+def test_string_and_list_aliases_show_contents(xession, completion_context_parse):
+    """Plain string and list aliases without a docstring fall back to
+    showing the alias *contents* — so users can recall what an alias
+    expands to without typing ``which`` or ``cmd?``."""
 
     xession.aliases["lsx"] = ["ls", "-G"]
     xession.aliases["greppy"] = "echo hi"
+    # Single-line ``ExecAlias`` (pipe forces ExecAlias path).
+    xession.aliases["pyg"] = "ls -la | grep py"
 
-    xession.env["CMD_COMPLETIONS_SHOW_DESC"] = True
     comps = list(complete_command(completion_context_parse("ls", 2).command))
-    assert _completion(comps, "lsx").description == "Alias"
+    assert _completion(comps, "lsx").description == "ls -G"
     comps = list(complete_command(completion_context_parse("gre", 3).command))
-    assert _completion(comps, "greppy").description == "Alias"
+    assert _completion(comps, "greppy").description == "echo hi"
+    comps = list(complete_command(completion_context_parse("py", 2).command))
+    assert _completion(comps, "pyg").description == "ls -la | grep py"
+
+
+def test_multiline_string_alias_uses_repr(xession, completion_context_parse):
+    """Multi-line aliases can't be displayed verbatim on a single
+    ``display_meta`` line, so fall back to ``repr`` of the source — the
+    user still sees the full content with ``\\n``/``\\t`` escapes."""
+
+    xession.aliases["multil"] = "echo a\necho b"
+
+    comps = list(complete_command(completion_context_parse("mu", 2).command))
+    assert _completion(comps, "multil").description == "echo a\\necho b"
+
+
+def test_explicit_doc_overrides_contents_fallback(xession, completion_context_parse):
+    """When the user attaches an explicit ``doc`` via the dict-form,
+    the docstring wins over the contents fallback."""
+
+    xession.aliases["ll"] = {"alias": "ls -la", "doc": "long listing"}
+    comps = list(complete_command(completion_context_parse("ll", 2).command))
+    assert _completion(comps, "ll").description == "long listing"
 
 
 def test_alias_completion_description_helper_handles_missing_aliases():

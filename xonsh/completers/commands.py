@@ -23,23 +23,54 @@ END_PROC_KEYWORDS = {"and", "or"}
 
 
 def _alias_completion_description(aliases, name: str) -> str:
-    """Return the first non-empty line of the alias docstring, or ``""``.
+    """Return a one-line description for an alias entry in the dropdown.
 
     The completion dropdown's ``display_meta`` is rendered as a single line
     (prompt-toolkit replaces newlines with spaces in
     ``PromptToolkitCompleter.get_completions``), so a multi-line docstring is
     summarised down to its first non-empty line — typically the docstring's
     one-line summary in PEP 257 style.
+
+    When the alias has no docstring, fall back to the alias *contents* for
+    plain string-/list-form aliases — `aliases['ll'] = 'ls -la'` should show
+    ``ls -la`` next to ``ll`` in the menu so the user remembers what it
+    expands to. Only single-line content is shown; multi-line / callable /
+    Click aliases keep an empty description (their behaviour can't be
+    meaningfully summarised in one line without a docstring).
     """
     if aliases is None:
         return ""
     doc = aliases.get_doc(name)
-    if not doc:
+    if doc:
+        for line in doc.splitlines():
+            line = line.strip()
+            if line:
+                return line
         return ""
-    for line in doc.splitlines():
-        line = line.strip()
-        if line:
-            return line
+    # No docstring — fall back to alias contents.
+    try:
+        raw = aliases[name]
+    except KeyError:
+        return ""
+    if isinstance(raw, list):
+        # Plain string aliases (``aliases['ll'] = 'ls -la'``) are stored as
+        # a token list after being run through the lexer. Re-join for
+        # display; lists by construction have no newlines.
+        return " ".join(str(tok) for tok in raw)
+    src = getattr(raw, "src", None)
+    if isinstance(src, str):
+        # ``ExecAlias`` — the original source string is on ``.src``. For
+        # single-line sources show the source as-is; for multi-line ones
+        # fall back to ``repr`` so newlines/tabs render as ``\n`` / ``\t``
+        # and the whole body can still fit on one ``display_meta`` line.
+        src = src.strip()
+        if not src:
+            return ""
+        if "\n" in src:
+            # ``repr`` to surface ``\n``/``\t`` as visible escapes, then
+            # strip the outer quotes — they're noise in a description slot.
+            return repr(src)[1:-1]
+        return src
     return ""
 
 
