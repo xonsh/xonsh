@@ -573,7 +573,12 @@ class Aliases(cabc.MutableMapping):
         func = getattr(alias, "func", None)
         if func is not None:
             doc = getattr(func, "__doc__", None)
-        elif isinstance(alias, (list, str)):
+        elif isinstance(alias, (list, str, ExecAlias)):
+            # ``ExecAlias`` has a class docstring ("Provides an exec alias
+            # for xonsh source code.") that would otherwise leak through as
+            # the description for every plain string alias with shell
+            # syntax — same pitfall as ``FuncAlias`` above. Treat it like
+            # list/str: no implicit description.
             return ""
         else:
             doc = getattr(alias, "__doc__", None)
