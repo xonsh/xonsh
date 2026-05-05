@@ -692,7 +692,16 @@ def _setup_controlling_terminal():
 
 @lazyobject
 def parser():
-    p = argparse.ArgumentParser(description="xonsh", add_help=False)
+    p = argparse.ArgumentParser(
+        description="xonsh",
+        add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "subcommands:\n"
+            "  format          Format xonsh source files. "
+            "Run `xonsh format --help` for options.\n"
+        ),
+    )
     p.add_argument(
         "-h",
         "--help",
