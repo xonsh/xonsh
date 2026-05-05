@@ -525,13 +525,17 @@ class ArgparseCompleter:
                 return
 
         # in the end after positionals show remaining unfilled options
+        # Use a plain HelpFormatter for descriptions: the parser's own
+        # formatter may be ``RstHelpFormatter``, which wraps text in ANSI
+        # color escapes — those leak as literal escape codes into the
+        # prompt-toolkit completion menu.
+        plain_formatter = ap.HelpFormatter(self.parser.prog)
         for act in options:
             for flag in sorted(act.option_strings, key=len, reverse=True):
                 desc = ""
                 if act.help:
-                    formatter = self.parser._get_formatter()
                     try:
-                        desc = formatter._expand_help(act)
+                        desc = plain_formatter._expand_help(act)
                     except KeyError:
                         desc = act.help
                 yield RichCompletion(flag, description=desc)
@@ -551,6 +555,12 @@ class ArgparseCompleter:
             # it is a valid option and advance
             self.remaining_args = self.remaining_args[1:]
             act, *_, value = act_res
+
+            if act is None:
+                # argparse returns ``(None, arg_string, ...)`` when the token
+                # looks like an option (starts with a prefix char) but does
+                # not match any known option in this parser. Skip it.
+                continue
 
             # remove the found option
             # todo: not remove if append/extend

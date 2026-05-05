@@ -73,9 +73,7 @@ def test_cd_dotdot_slash_lists_parent_subdirs(completer_env, monkeypatch):
         monkeypatch.chdir(work)
 
         results, _ = cd_xonsh_complete(_cd_command_ctx("../"))
-        basenames = {
-            os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results
-        }
+        basenames = {os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results}
         assert {"sib1", "sib2", "work"}.issubset(basenames)
         # Plain files in the parent must not appear — cd filters to dirs.
         assert "file.txt" not in basenames
@@ -93,9 +91,7 @@ def test_cd_dotdot_dotdot_slash_lists_grandparent(completer_env, monkeypatch):
         monkeypatch.chdir(ab)
 
         results, _ = cd_xonsh_complete(_cd_command_ctx("../../"))
-        basenames = {
-            os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results
-        }
+        basenames = {os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results}
         # Both the grandparent's children must show up.
         assert {"a", "sib_of_a"}.issubset(basenames)
 
@@ -115,9 +111,7 @@ def test_path_completer_dotdot_lists_files_too(completer_env, monkeypatch):
         prefix = "../"
         line = f"cat {prefix}"
         paths, _ = xcp._complete_path_raw(prefix, line, 4, len(line), {})
-        basenames = {
-            os.path.basename(str(p).rstrip().rstrip(os.sep)) for p in paths
-        }
+        basenames = {os.path.basename(str(p).rstrip().rstrip(os.sep)) for p in paths}
         # Both file and dir siblings should be offered.
         assert "sib" in basenames
         assert "note.txt" in basenames
@@ -135,9 +129,7 @@ def test_cd_dotdot_in_absolute_path(completer_env, monkeypatch):
         prefix = os.path.join(target, "..", "target") + os.sep
 
         results, _ = cd_xonsh_complete(_cd_command_ctx(prefix))
-        basenames = {
-            os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results
-        }
+        basenames = {os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results}
         assert {"child_a", "child_b"}.issubset(basenames)
 
 
@@ -156,7 +148,5 @@ def test_cd_dotdot_does_not_break_pipeline(completer_env, monkeypatch):
 
         # 'subdir/../' must list cwd's directories.
         results, _ = cd_xonsh_complete(_cd_command_ctx("subdir/../"))
-        basenames = {
-            os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results
-        }
+        basenames = {os.path.basename(str(r).rstrip().rstrip(os.sep)) for r in results}
         assert "subdir" in basenames

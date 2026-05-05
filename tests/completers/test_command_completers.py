@@ -85,6 +85,34 @@ def test_argparse_completer_after_option(check_completer, tmp_path):
     assert check_completer("xonsh --no-rc", prefix)
 
 
+def test_argparse_completer_description_no_ansi(check_completer, xession):
+    """Completion descriptions must be plain text — no ANSI escape codes.
+
+    Regression: ``xontrib load -<TAB>`` returned descriptions formatted by
+    ``RstHelpFormatter`` (the parser's own help formatter), which wraps
+    ``code`` spans in pygments ANSI color escapes. Those escapes leak as
+    literal characters into the prompt-toolkit completion menu.
+    """
+    xession.env["XONSH_INTERACTIVE"] = True
+    completions = check_completer("xontrib load", prefix="-")
+    assert completions
+    for comp in completions:
+        desc = getattr(comp, "description", "") or ""
+        assert "\x1b[" not in desc, f"ANSI escape leaked into description: {desc!r}"
+
+
+def test_argparse_completer_unknown_option(check_completer):
+    """Completer must not crash on an unknown option that looks like a flag.
+
+    Regression: ``xontrib load -p <TAB>`` raised
+    ``AttributeError: 'NoneType' object has no attribute 'nargs'`` because
+    ``argparse._parse_optional`` returns ``(None, arg, None, None)`` when the
+    token starts with a prefix char but matches no known option.
+    """
+    # Should not raise. Result may be empty — we only assert no crash.
+    check_completer("xontrib load -p", prefix="")
+
+
 @skip_if_on_windows
 def test_complete_command_substring(completion_context_parse):
     """Completers should match by substring, not just prefix (xonsh#6082)."""
