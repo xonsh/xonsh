@@ -107,3 +107,6 @@ result
 repl-result-out
 
 .codspeed/
+
+# Claude settings
+.claude
