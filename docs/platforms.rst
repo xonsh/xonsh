@@ -358,6 +358,73 @@ applies on Android.
 Windows
 -------
 
+Coreutils
+^^^^^^^^^
+
+Windows ships none of the familiar Unix command-line utilities (``ls``,
+``grep``, ``cat``, ``cp``, ``find``, ``sed``, …) by default. The options
+below give you a working set, ordered roughly from most lightweight and
+xonsh-native to most comprehensive.
+
+- **xonsh built-in coreutils.** A pure-Python xontrib that ships with
+  xonsh registers ``cat``, ``echo``, ``pwd``, ``tee``, ``tty``,
+  ``umask``, ``uname``, ``uptime``, ``yes`` as aliases — no install,
+  identical behaviour on every platform:
+
+  .. code-block:: xonshcon
+
+      @ xontrib load coreutils
+
+  ``which`` is already wired by default. Add the line above to your
+  :doc:`xonsh RC <xonshrc>` to load it on every session.
+
+- `cmdix <https://pypi.org/project/cmdix>`_ — pure-Python implementation
+  of a much larger GNU-style set: ``ls``, ``cp``, ``mv``, ``rm``,
+  ``find``, ``grep``, ``head``, ``tail``, ``wc``, ``sort``, ``uniq``,
+  ``du``, ``df``, ``date``, ``base64``, and many more. Because it's
+  Python it installs into the same interpreter as xonsh and behaves
+  identically across Windows, macOS, and Linux:
+
+  .. code-block:: xonshcon
+
+      @ xpip install cmdix
+
+- `uutils/coreutils <https://github.com/uutils/coreutils>`_ — modern
+  Rust port of GNU coreutils as a single multi-call binary
+  (``coreutils.exe``) plus per-command shims. Stays very close to the
+  GNU originals, including locale and Unicode handling:
+
+  .. code-block:: xonshcon
+
+      @ winget install uutils.coreutils
+
+- `MSYS2 <https://www.msys2.org>`_ — pacman-based distribution shipping
+  full GNU coreutils, findutils, grep, sed, awk, tar, gzip, openssl,
+  make, gcc/clang, and thousands of other packages. The most
+  comprehensive option. After the base install, add the relevant
+  ``usr/bin`` directory (e.g. ``C:\msys64\usr\bin``) to ``$PATH`` in your
+  :doc:`xonsh RC <xonshrc>`.
+
+- `Git for Windows <https://gitforwindows.org>`_ ``usr/bin``. If Git is
+  already installed, ``C:\Program Files\Git\usr\bin`` already contains a
+  curated MinGW-w64 toolset (``ls``, ``grep``, ``sed``, ``awk``,
+  ``find``, ``ssh``, ``curl``, ``tar``, ``gzip``, ``less``, …). The
+  fastest way to get a working Unix toolchain without installing
+  anything extra:
+
+  .. code-block:: xonsh
+
+      git_usr_bin = r'C:\Program Files\Git\usr\bin'
+      if @.imp.os.path.isdir(git_usr_bin):
+          $PATH.append(git_usr_bin)
+
+- `busybox-w32 <https://frippery.org/busybox>`_ — single-binary BusyBox
+  port covering 300+ commands in roughly 1 MB. Drop ``busybox.exe`` on
+  ``$PATH`` and call commands as ``busybox ls`` / ``busybox grep ...``,
+  or symlink each applet to ``busybox.exe`` so they resolve as bare
+  names. Ideal for portable USB or air-gapped setups.
+
+
 Windows Terminal
 ^^^^^^^^^^^^^^^^
 
@@ -424,10 +491,12 @@ Usually it involves modifying registry to get it, but `a contributed script <htt
 .. code-block:: xonshcon
 
     # Open xonsh and copy-paste the following line:
-    @ exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_register_right_click()
+    @ exec(@.imp.urllib.request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read()) \
+       && xonsh_register_right_click()
 
     # To remove the menu, use following line instead:
-    @ exec(__import__('urllib.request').request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read());xonsh_unregister_right_click()
+    @ exec(@.imp.urllib.request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read()) \
+       && xonsh_unregister_right_click()
 
 
 Nice colors
