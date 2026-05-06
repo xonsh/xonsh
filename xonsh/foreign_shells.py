@@ -481,7 +481,11 @@ class ForeignShellBaseAlias:
         env = XSH.env
         denv = env.detype()
         if streaming:
-            subprocess.check_call(cmd, env=denv)
+            # Pass the alias's stdout/stderr through to the foreign shell so
+            # subprocess captures (e.g. ``$(foo)``) work. Without this, the
+            # foreign shell inherits xonsh's terminal fds and writes around
+            # the pipe xonsh set up for capture (issue #5043).
+            subprocess.check_call(cmd, env=denv, stdout=stdout, stderr=stderr)
             out = None
         else:
             out = subprocess.check_output(cmd, env=denv, stderr=subprocess.STDOUT)
@@ -502,9 +506,16 @@ class ForeignShellBaseAlias:
 
     @staticmethod
     def _is_streaming(args):
-        """Test and modify args if --xonsh-stream is present."""
+        """Test and modify args if ``--xonsh-nostream`` is present."""
         if "--xonsh-nostream" not in args:
             return args, True
+        warnings.warn(
+            "--xonsh-nostream is deprecated and will be removed in a future "
+            "release. Streaming mode (the default) now captures correctly "
+            "via $(...) and !(...) — drop the flag.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
         args = list(args)
         args.remove("--xonsh-nostream")
         return args, False
