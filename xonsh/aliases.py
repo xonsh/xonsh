@@ -1560,6 +1560,55 @@ def _find_cmd_exe() -> str:
     return str(canonical) if canonical.is_file() else os.environ["COMSPEC"]
 
 
+WINDOWS_CMD_ALIASES = frozenset(
+    {
+        "cls",
+        "copy",
+        "del",
+        "dir",
+        "echo",
+        "erase",
+        "md",
+        "mkdir",
+        "mklink",
+        "move",
+        "rd",
+        "ren",
+        "rename",
+        "rmdir",
+        "time",
+        "type",
+        "vol",
+    }
+)
+"""Built-in commands of ``cmd.exe`` that xonsh borrows on Windows."""
+
+
+def win_sudo(args):
+    """Run a command with Windows UAC elevation.
+
+    Registered as the ``sudo`` alias on Windows only when no ``sudo`` binary
+    is found on ``$PATH`` (see issue #5706). Resolves the target via
+    :func:`xonsh.environ.locate_binary` and re-launches it through
+    ``ShellExecuteEx`` with the ``runas`` verb; ``cmd.exe`` built-ins
+    (``dir``, ``copy``, ...) are dispatched via ``cmd /D /C`` from the
+    current working directory. The elevated process opens in a new console
+    and does not inherit standard streams, so its output is not piped back.
+    """
+    import xonsh.platforms.winutils as winutils
+
+    if not args:
+        return ("", "sudo: missing executable to run as Administrator\n", 1)
+    cmd = args[0]
+    if (resolved := locate_binary(cmd)) is not None:
+        return winutils.sudo(os.path.normpath(resolved), args[1:])
+    elif cmd.lower() in WINDOWS_CMD_ALIASES:
+        cmd_args = ["/D", "/C", "CD", _get_cwd(), "&&"] + args
+        return winutils.sudo(_find_cmd_exe(), cmd_args)
+    else:
+        return ("", f'sudo: cannot find executable "{cmd}"\n', 127)
+
+
 def _output_to_path_object(lines):
     """Transform first output line into single path. Return None if the output is empty."""
     if lines and (path_str := lines[0].strip()):
@@ -1664,26 +1713,7 @@ def make_default_aliases():
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
-        windows_cmd_aliases = {
-            "cls",
-            "copy",
-            "del",
-            "dir",
-            "echo",
-            "erase",
-            "md",
-            "mkdir",
-            "mklink",
-            "move",
-            "rd",
-            "ren",
-            "rename",
-            "rmdir",
-            "time",
-            "type",
-            "vol",
-        }
-        for alias in windows_cmd_aliases:
+        for alias in WINDOWS_CMD_ALIASES:
             default_aliases[alias] = [_find_cmd_exe(), "/c", alias]
         default_aliases["call"] = ["source-cmd"]
         default_aliases["source-bat"] = ["source-cmd"]
@@ -1692,25 +1722,8 @@ def make_default_aliases():
             # Add aliases specific to the Anaconda python distribution.
             default_aliases["activate"] = ["source-cmd", "activate.bat"]
             default_aliases["deactivate"] = ["source-cmd", "deactivate.bat"]
-        if shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
-            # XSH.commands_cache is not available during setup
-            import xonsh.platforms.winutils as winutils
-
-            def sudo(args):
-                if len(args) < 1:
-                    print("You need to provide an executable to run as Administrator.")
-                    return
-                cmd = args[0]
-                if locate_binary(cmd):
-                    return winutils.sudo(cmd, args[1:])
-                elif cmd.lower() in windows_cmd_aliases:
-                    args = ["/D", "/C", "CD", _get_cwd(), "&&"] + args
-                    return winutils.sudo("cmd", args)
-                else:
-                    msg = 'Cannot find the path for executable "{0}".'
-                    print(msg.format(cmd))
-
-            default_aliases["sudo"] = sudo
+        if not shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
+            default_aliases["sudo"] = win_sudo
     elif ON_DARWIN:
         default_aliases["ls"] = ["ls", "-G"]
     elif ON_FREEBSD or ON_DRAGONFLY:
