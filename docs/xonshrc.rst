@@ -1,8 +1,11 @@
 Run Control File
 =========================
 Xonsh allows you to customize your shell behavior with run control files, called "xonshrc" files.
-These files are written either in the Xonsh language (a superset of Python) or in Python and are executed
+These files are written either in the Xonsh language or in Python and are executed
 exactly once at startup.
+
+Xonsh RC Basics
+---------------
 
 The control file usually contains:
 
