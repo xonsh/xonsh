@@ -1,2 +1,2 @@
-#! /bin/bash -i
-{{ python-executable }} -u "${APPDIR}/opt/python{{ python-version }}/bin/xonsh" "$@"
+#! /bin/bash
+exec {{ python-executable }} -u "${APPDIR}/opt/python{{ python-version }}/bin/xonsh" "$@"
