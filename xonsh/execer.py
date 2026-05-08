@@ -16,6 +16,7 @@ from xonsh.tools import (
     get_logical_line,
     replace_logical_line,
     starting_whitespace,
+    strip_continuation_comments,
     subproc_toks,
 )
 
@@ -247,6 +248,7 @@ class Execer:
             filename = self.filename
         if mode != "eval" and not input.endswith("\n"):
             input += "\n"
+        input = strip_continuation_comments(input)
 
         def _try_parse(input, greedy):
             last_error_line = last_error_col = -1
