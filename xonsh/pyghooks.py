@@ -1654,6 +1654,24 @@ _ptk_app: object | None = None  # Captured on the main thread for bg invalidatio
 _validation_gen: int = 0  # Generation token — incremented on each new input
 
 
+def _is_plugin_mode():
+    """True when XonshLexer runs without a live xonsh session.
+
+    The lexer is registered as a pygments entry point and gets imported by
+    Sphinx, nbconvert, jupyter console, and other tools that never call
+    ``xonsh.main.setup()``.  In those contexts the singleton is bare —
+    ``XSH.commands_cache`` is None, ``XSH.env`` is the mock ``{}`` set by
+    ``XonshLexer.__init__``, ``XSH.ctx`` is None — so runtime checks
+    against env / commands cache / context return False for everything
+    and would mark every ``$VAR``, every subprocess command, and every
+    ``@()``-substituted name as Error.  When this returns True, callbacks
+    emit the optimistic token (``Name.Variable`` / ``Name.Builtin`` /
+    ``Name``) instead of Error, so rendered xonsh code reads as plain
+    syntax highlighting rather than a sea of red error markers.
+    """
+    return getattr(XSH, "commands_cache", None) is None
+
+
 @events.on_pre_prompt
 def _clear_cmd_caches(**kwargs):
     global _validation_gen
@@ -1830,6 +1848,9 @@ def _at_bracket_name_cb(_, match):
     name = match.group()
     if _at_bracket_check:
         _at_bracket_check = False
+        if _is_plugin_mode():
+            yield match.start(), Name, name
+            return
         ctx = getattr(XSH, "ctx", None) or {}
         found = name in ctx or hasattr(builtins, name) or iskeyword(name)
         yield match.start(), Name if found else Error, name
@@ -1849,7 +1870,7 @@ def _env_var_cb(_, match):
     text = match.group()
     name = text[1:]  # strip leading $
     env = getattr(XSH, "env", None)
-    found = env is not None and name in env
+    found = (env is not None and name in env) or _is_plugin_mode()
     yield match.start(), Name.Variable if found else Error, text
 
 
@@ -1858,7 +1879,8 @@ def subproc_cmd_callback(_, match):
     otherwise fallback to fallback lexer.
     """
     cmd = match.group()
-    yield match.start(), Name.Builtin if _command_is_valid(cmd) else Error, cmd
+    valid = _is_plugin_mode() or _command_is_valid(cmd)
+    yield match.start(), Name.Builtin if valid else Error, cmd
 
 
 def subproc_arg_callback(_, match):
@@ -2062,7 +2084,18 @@ class XonshLexer(Python3Lexer):
 
     def get_tokens_unprocessed(self, text, **_):
         """Check first command, then call super.get_tokens_unprocessed
-        with root or subproc state"""
+        with root or subproc state.
+
+        Plugin mode (no live session — Sphinx, nbconvert, jupyter) keeps
+        the original strict check here on purpose: ``_command_is_valid``
+        rejects keywords, so a Python source line like ``from foo import
+        bar`` correctly falls through to root state and is highlighted as
+        Python.  Treating *every* leading token as a valid command would
+        switch the lexer into ``subproc`` state for any input whose first
+        non-whitespace character matches ``COMMAND_TOKEN_RE`` (including
+        ``#`` for plain comments), wrecking highlighting for the rest of
+        the file.
+        """
         start = 0
         state = ("root",)
         m = re.match(rf"(\s*)({COMMAND_TOKEN_RE})", text)

@@ -8,6 +8,12 @@ Currently covers:
   https://github.com/xonsh/xonsh/issues/6387 (``LS_COLORS`` carrying ANSI
   blink/reverse/hidden/strike codes used to crash pygments' ``StyleMeta``
   with ``AssertionError: wrong color format 'blink'`` at shell startup).
+* Plugin-mode lenient highlighting — when ``XonshLexer`` is loaded as a
+  pygments entry point outside a live xonsh session (Sphinx,
+  nbconvert, jupyter), runtime checks for ``$VAR`` / subprocess
+  commands / ``@()`` names cannot succeed, so the lexer must emit the
+  optimistic token instead of flooding rendered output with Error
+  markers.
 """
 
 from unittest.mock import MagicMock, patch
@@ -15,7 +21,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from xonsh.environ import LsColors
-from xonsh.pyghooks import XonshStyle
+from xonsh.pyghooks import Token, XonshLexer, XonshStyle
 
 
 @pytest.fixture(autouse=True)
@@ -154,3 +160,63 @@ def test_xonsh_style_proxy_strips_ptk_modifiers_from_ls_colors(xs_LS_COLORS):
             )
         # Color information must be preserved
         assert "ansired" in sanitized
+
+
+@pytest.fixture
+def plugin_mode_lexer(xession, monkeypatch):
+    """Reproduce the state the lexer sees when loaded as a pygments
+    plugin outside a live xonsh session (Sphinx, nbconvert, jupyter):
+    ``XSH.commands_cache`` is None, ``XSH.env`` is the empty mock, and
+    ``XSH.ctx`` is None. ``_is_plugin_mode`` keys off
+    ``commands_cache is None``."""
+    monkeypatch.setattr(xession, "commands_cache", None)
+    monkeypatch.setattr(xession, "env", None)
+    monkeypatch.setattr(xession, "ctx", None)
+    return XonshLexer()
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "$THIS_VAR_DOES_NOT_EXIST = 1",
+        "$ANOTHER_UNKNOWN.append('/x')",
+        "$(unknown_cmd_xyz arg1 arg2)",
+        "echo @(undefined_name)",
+    ],
+)
+def test_plugin_mode_no_error_tokens(plugin_mode_lexer, code):
+    """Without a live session, runtime checks for ``$VAR`` / subprocess
+    commands / ``@()`` names cannot succeed (no env, no commands cache,
+    no ctx).  In that mode the lexer must fall back to the optimistic
+    token instead of marking everything as Error — otherwise rendered
+    docs / notebooks are flooded with red error markers around tokens
+    that are perfectly valid xonsh code (regression for Sphinx-rendered
+    ``.xsh`` snippets in the docs build)."""
+    tokens = list(plugin_mode_lexer.get_tokens(code))
+    err_values = [v for t, v in tokens if t is Token.Error]
+    assert err_values == [], f"{code!r}: unexpected Error tokens {err_values!r}"
+
+
+def test_plugin_mode_keeps_python_lexing(plugin_mode_lexer):
+    """Plugin-mode lenience must not switch the lexer into ``subproc``
+    state for plain Python source.  The leading ``#`` of a comment
+    matches ``COMMAND_TOKEN_RE`` and would otherwise be promoted to
+    ``Name.Builtin``, leaving the rest of the file lexed as a
+    subprocess command line (brackets become Error, etc.)."""
+    code = "# adjust some paths\n$PATH.append('/foo')\n"
+    tokens = list(plugin_mode_lexer.get_tokens(code))
+    assert any(t is Token.Comment.Single for t, _ in tokens), (
+        f"comment was not preserved: {tokens!r}"
+    )
+    assert all(t is not Token.Error for t, _ in tokens), tokens
+
+
+def test_unknown_env_var_still_error_in_live_session(xession):
+    """In a real session ``XSH.commands_cache`` is set, so the lexer
+    keeps the strict check — a typo in a ``$VAR`` reference is still
+    surfaced as Error.  Regression guard for the plugin-mode fix."""
+    assert getattr(xession, "commands_cache", None) is not None
+    lexer = XonshLexer()
+    tokens = list(lexer.get_tokens("$THIS_VAR_DOES_NOT_EXIST = 1\n"))
+    err_values = [v for t, v in tokens if t is Token.Error]
+    assert "$THIS_VAR_DOES_NOT_EXIST" in err_values
