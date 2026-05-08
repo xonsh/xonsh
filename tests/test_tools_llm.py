@@ -162,4 +162,10 @@ def test_subproc_toks_already_wrapped_chain(line, expected):
     ],
 )
 def test_strip_continuation_comments(src, exp, xession):
+    # Pin the line-continuation marker to ``\\`` so expectations stay
+    # platform-agnostic. On Windows, ``get_line_continuation()`` returns
+    # ``" \\"`` whenever ``XONSH_INTERACTIVE`` is true, which the preprocessor
+    # would faithfully use as the replacement marker — but the unit-test
+    # expectations encode the non-interactive shape.
+    xession.env["XONSH_INTERACTIVE"] = False
     assert strip_continuation_comments(src) == exp
