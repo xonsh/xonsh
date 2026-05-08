@@ -3,7 +3,7 @@
 import pytest
 
 
-def test_singleline_eoferror_propagates(ptk_shell, xession):
+def test_singleline_eoferror_propagates(ptk_shell):
     """Regression test for https://github.com/xonsh/xonsh/issues/6412
 
     ``EOFError().args`` is ``()`` (an empty tuple, not ``None``), so the
@@ -23,7 +23,7 @@ def test_singleline_eoferror_propagates(ptk_shell, xession):
         shell.singleline()
 
 
-def test_singleline_retries_on_eintr(ptk_shell, xession):
+def test_singleline_retries_on_eintr(ptk_shell):
     """``InterruptedError`` (``OSError`` with ``errno==EINTR``) raised
     by prompt_toolkit's ``raw_mode()`` ``tcsetattr`` call when a signal
     arrives during terminal setup must be retried transparently — this
