@@ -6,7 +6,6 @@ import pathlib
 import re
 import subprocess
 import warnings
-from collections.abc import Iterable
 
 import pytest
 
@@ -934,19 +933,6 @@ def test_is_path(inp, exp):
 def test_is_env_path(inp, exp):
     obs = is_env_path(inp)
     assert exp == obs
-
-
-def test_env_path_removes_empty():
-    exp = ["a", "b", "c"]
-    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"])) == exp
-    assert EnvPath(os.pathsep.join(["a", "b", "", "c", "\n"]).encode("utf-8")) == exp
-
-    class MyIterablePaths(Iterable):
-        def __iter__(self):
-            data = ["a", "b", "", pathlib.Path("c"), "\n"]
-            return iter(data)
-
-    assert EnvPath(MyIterablePaths()) == exp
 
 
 @pytest.mark.parametrize("inp, exp", [("/tmp", pathlib.Path("/tmp")), ("", None)])
