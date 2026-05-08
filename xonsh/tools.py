@@ -667,6 +667,56 @@ def _ends_with_line_continuation(line, linecont):
     return True
 
 
+def strip_continuation_comments(src):
+    """Strip comment-only lines that fall inside a backslash-continuation chain.
+
+    Within a multi-line command joined by ``\\<NL>``, a physical line that
+    consists only of optional whitespace followed by a ``#`` comment is
+    transparent: the continuation extends through it to the next physical
+    line. This mirrors fish-shell behaviour (see issue #6414)::
+
+        echo 1 \\
+            # comment
+            2 \\
+            3
+
+    yields ``echo 1 2 3``. Each such comment-only line is replaced by a
+    bare ``\\<NL>`` continuation marker, preserving line numbers so error
+    locations remain accurate.
+
+    A ``#`` inside a string literal does not start a comment, and a line
+    inside an open triple-quoted string is left untouched. Comment-only
+    lines that are NOT preceded by an active backslash continuation are
+    also left untouched, so a top-level ``# comment`` keeps its current
+    semantics.
+    """
+    if "\n" not in src and "\r" not in src:
+        return src
+    linecont = get_line_continuation()
+    out = []
+    in_cont = False  # previous "active" line ended with continuation
+    accumulated = ""  # used only to track open triple-quoted strings
+    in_triple = False
+    for raw in src.splitlines(keepends=True):
+        if raw.endswith("\r\n"):
+            body, eol = raw[:-2], "\r\n"
+        elif raw[-1:] in ("\n", "\r"):
+            body, eol = raw[:-1], raw[-1:]
+        else:
+            body, eol = raw, ""
+        is_comment_only = not in_triple and body.lstrip(" \t\f").startswith("#")
+        if in_cont and is_comment_only:
+            replacement = linecont + eol
+            out.append(replacement)
+            accumulated += replacement
+            continue
+        out.append(raw)
+        accumulated += raw
+        in_triple = bool(_have_open_triple_quotes(accumulated))
+        in_cont = False if in_triple else _ends_with_line_continuation(body, linecont)
+    return "".join(out)
+
+
 def get_logical_line(lines, idx):
     """Returns a single logical line (i.e. one without line continuations)
     from a list of lines.  This line should begin at index idx. This also
