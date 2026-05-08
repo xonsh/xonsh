@@ -2412,6 +2412,16 @@ class Env(cabc.MutableMapping):
             path_key = next((k for k in self._d if k.upper() == "PATH"), None)
             if path_key is not None:
                 self["PATH"] = self._d.pop(path_key)
+            # A trailing ``;`` in ``%PATH%`` is common on Windows and would
+            # otherwise produce a phantom "current directory" entry. Empty
+            # entries have no documented meaning for Windows ``PATH``, so we
+            # drop them here — only for ``PATH``, only on Windows. Empty
+            # entries are preserved everywhere else (e.g. ``MANPATH``,
+            # ``INFOPATH``, ``PYTHONPATH``) where they are semantically
+            # meaningful.
+            path_val = self._d.get("PATH")
+            if isinstance(path_val, EnvPath):
+                path_val._l = [p for p in path_val._l if str(p).strip()]
         if "PATH" not in self._d:
             # this is here so the PATH is accessible to subprocs and so that
             # it can be modified in-place in the xonshrc file
@@ -3205,18 +3215,22 @@ class EnvPath(cabc.MutableSequence):
             self._l = []
         else:
             if isinstance(args, str):
-                self._l = [i for i in args.split(os.pathsep) if i.strip()]
+                # Empty entries are preserved: programs like ``man``/``info``
+                # treat them as "insert default list here", and POSIX shells
+                # treat them as the current directory in ``PATH``/``PYTHONPATH``.
+                # Windows-PATH-specific stripping happens in ``Env.__init__``.
+                self._l = args.split(os.pathsep)
             elif isinstance(args, pathlib.Path):
                 self._l = [args]
             elif isinstance(args, bytes):
                 # decode bytes to a string and then split based on
                 # the default path separator
-                self._l = [i for i in decode_bytes(args).split(os.pathsep) if i.strip()]
+                self._l = decode_bytes(args).split(os.pathsep)
             elif isinstance(args, cabc.Iterable):
                 # put everything in a list -before- performing the type check
                 # in order to be able to retrieve it later, for cases such as
                 # when a generator expression was passed as an argument
-                args = [i for i in list(args) if str(i).strip()]
+                args = list(args)
                 if not all(isinstance(i, str | bytes | pathlib.Path) for i in args):
                     # make TypeError's message as informative as possible
                     # when given an invalid initialization sequence
