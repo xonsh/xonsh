@@ -29,6 +29,10 @@ In addition:
 
 The options set per user override settings in the system-wide control file.
 
+xonsh RC also lets you account for the operating system, so you can ship a single
+file across systems and gate snippets by platform and execution mode —
+see :ref:`Cross-platform xonsh RC <cross_platform_xonshrc>`.
+
 Xonsh provides 2 wizards to create your own "xonshrc".  ``xonfig web`` provides basic settings, and ``xonfig wizard``
 steps you through all the available options.
 
@@ -65,103 +69,11 @@ xonfig wizard
 
 This imports settings and tools you have defined in your existing (POSIX) shell.
 It also walks you through setting all known environment variables and xontribs
-in a question-and-answer format:
+in a question-and-answer format. Run it from a xonsh prompt:
 
 .. code-block:: xonshcon
 
     @ xonfig wizard
-
-              Welcome to the xonsh configuration wizard!
-              ------------------------------------------
-    This will present a guided tour through setting up the xonsh static
-    config file. Xonsh will automatically ask you if you want to run this
-    wizard if the configuration file does not exist. However, you can
-    always rerun this wizard with the xonfig command:
-
-        @ xonfig wizard
-
-    This wizard will load an existing configuration, if it is available.
-    Also never fear when this wizard saves its results! It will create
-    a backup of any existing configuration automatically.
-
-    This wizard has two main phases: foreign shell setup and environment
-    variable setup. Each phase may be skipped in its entirety.
-
-    For the configuration to take effect, you will need to restart xonsh.
-
-    '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'``-.,_,.-*'
-
-    To exit the wizard at any time, press Ctrl-C.
-
-
-    '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'
-
-                          Foreign Shell Setup
-                          -------------------
-    The xonsh shell has the ability to interface with foreign shells such
-    as Bash, or zsh (fish not yet implemented).
-
-    For configuration, this means that xonsh can load the environment,
-    aliases, and functions specified in the config files of these shells.
-    Naturally, these shells must be available on the system to work.
-    Being able to share configuration (and source) from foreign shells
-    makes it easier to transition to and from xonsh.
-
-    Add a new foreign shell, yes or no [default: no]? yes
-    shell name (e.g. bash): bash
-    interactive shell [bool, default=True]:
-    login shell [bool, default=False]:
-    env command [str, default='env']:
-    alias command [str, default='alias']:
-    extra command line arguments [list of str, default=[]]:
-    safely handle exceptions [bool, default=True]:
-    pre-command [str, default='']:
-    post-command [str, default='']:
-    foreign function command [str, default=None]:
-    source command [str, default=None]: source
-    Foreign shell added.
-
-    Add a new foreign shell, yes or no [default: no]? no
-
-    '`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'`-.,_,.-*'``-.,_,.-*'
-
-                      Environment Variable Setup
-                      --------------------------
-    The xonsh shell also allows you to setup environment variables from
-    the static configuration file. Any variables set in this way are
-    superseded by the definitions in the xonshrc or on the command line.
-    Still, setting environment variables in this way can help define
-    options that are global to the system or user.
-
-    The following lists the environment variable name, its documentation,
-    the default value, and the current value. The default and current
-    values are presented as pretty repr strings of their Python types.
-
-    Note: Simply hitting enter for any environment variable
-    will accept the default value for that entry.
-
-    Would you like to set env vars now, yes or no [default: no]? yes
-
-    $ALLUSERSPROFILE
-
-    default value:
-    current value: 'C:\\ProgramData'
-    >>>
-
-    $APPDATA
-
-    default value:
-    current value: 'C:\\Users\\bobhy\\AppData\\Roaming'
-    >>>
-
-    $AUTO_CD
-    Flag to enable changing to a directory by entering the dirname or
-    full path only (without the cd command).
-    default value: False
-    current value: False
-    >>>
-
-    . . .
 
 
 Real world sample xonshrc
@@ -257,6 +169,7 @@ For a compact shell prompts, some people prefer a very condensed time format. Bu
 See also
 --------
 
+* :ref:`Cross-platform xonsh RC <cross_platform_xonshrc>` -- writing one cross-platform RC
 * :doc:`env` -- environment variable types, patterns, and ``swap``
 * :doc:`aliases` -- defining aliases
 * :doc:`prompt` -- prompt customization

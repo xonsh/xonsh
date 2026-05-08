@@ -1,6 +1,8 @@
 Cross-platform
 ==============
 
+.. _cross_platform_xonshrc:
+
 Cross-platform xonsh RC
 -----------------------
 
