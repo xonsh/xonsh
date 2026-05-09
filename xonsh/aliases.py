@@ -1732,8 +1732,14 @@ def make_default_aliases():
         default_aliases["call"] = ["source-cmd"]
         default_aliases["source-bat"] = ["source-cmd"]
         default_aliases["clear"] = "cls"
-        if ON_ANACONDA:
-            # Add aliases specific to the Anaconda python distribution.
+        if ON_ANACONDA or shutil.which(
+            "conda", path=XSH.env.get_detyped("PATH")
+        ):
+            # ON_ANACONDA only fires when xonsh itself is installed inside the
+            # conda env (sys.prefix has conda-meta/). Pip-installed xonsh +
+            # standalone Miniconda3 leaves it False, so also probe $PATH for
+            # a `conda` launcher to give those users a working fallback while
+            # `conda init xonsh` on Windows is broken — see xonsh/xonsh#3676.
             default_aliases["activate"] = ["source-cmd", "activate.bat"]
             default_aliases["deactivate"] = ["source-cmd", "deactivate.bat"]
         if not shutil.which("sudo", path=XSH.env.get_detyped("PATH")):
