@@ -1655,21 +1655,33 @@ _validation_gen: int = 0  # Generation token — incremented on each new input
 
 
 def _is_plugin_mode():
-    """True when XonshLexer runs without a live xonsh session.
+    """True when XonshLexer should fall back to optimistic tokens
+    instead of marking unknown ``$VAR`` / commands / ``@()`` names as
+    Error.
 
-    The lexer is registered as a pygments entry point and gets imported by
-    Sphinx, nbconvert, jupyter console, and other tools that never call
-    ``xonsh.main.setup()``.  In those contexts the singleton is bare —
-    ``XSH.commands_cache`` is None, ``XSH.env`` is the mock ``{}`` set by
-    ``XonshLexer.__init__``, ``XSH.ctx`` is None — so runtime checks
-    against env / commands cache / context return False for everything
-    and would mark every ``$VAR``, every subprocess command, and every
-    ``@()``-substituted name as Error.  When this returns True, callbacks
-    emit the optimistic token (``Name.Variable`` / ``Name.Builtin`` /
-    ``Name``) instead of Error, so rendered xonsh code reads as plain
-    syntax highlighting rather than a sea of red error markers.
+    Two triggers:
+
+    * **No live session** — the lexer is loaded as a pygments entry
+      point by Sphinx, nbconvert, jupyter console, etc., none of which
+      call ``xonsh.main.setup()``.  ``XSH.commands_cache`` is None,
+      ``XSH.env`` is the mock ``{}`` set by ``XonshLexer.__init__``,
+      ``XSH.ctx`` is None — every runtime check fails by default and
+      the rendered output ends up flooded with red Error markers.
+
+    * **Explicit opt-in via** ``XonshLexer.docs_mode`` — covers the
+      case where xonsh *is* fully bootstrapped (so ``commands_cache``
+      is set) but the lexer is still being used for offline rendering
+      rather than a live prompt: typically a Sphinx ``conf.py`` that
+      imports xonsh modules during configuration, after which
+      ``XSH.env`` is the build host's environment and any ``$VAR``
+      not present there (``$LD_LIBRARY_PATH``, project-specific vars,
+      …) would otherwise be marked as Error in the rendered docs.
+
+    Typo-detection Error tokens are an interactive-shell feature; when
+    the renderer is offline there is no user to react to the red
+    underline, so the markers add visual noise without value.
     """
-    return getattr(XSH, "commands_cache", None) is None
+    return XonshLexer.docs_mode or getattr(XSH, "commands_cache", None) is None
 
 
 @events.on_pre_prompt
@@ -1906,6 +1918,12 @@ class XonshLexer(Python3Lexer):
     name = "Xonsh lexer"
     aliases = ["xonsh", "xsh"]
     filenames = ["*.xsh", "*xonshrc"]
+
+    # Class-level opt-in for offline renderers (Sphinx conf.py,
+    # nbconvert wrappers, …): when True, callbacks bypass the live-env
+    # checks and emit the optimistic token instead of Error.  See
+    # ``_is_plugin_mode`` for the full rationale.
+    docs_mode: bool = False
 
     def __init__(self, *args, **kwargs):
         # If the lexer is loaded as a pygment plugin, we have to mock
