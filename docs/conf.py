@@ -392,7 +392,13 @@ make_events()
 
 
 def setup(app: Sphinx):
-    from xonsh.pyghooks import XonshConsoleLexer
+    from xonsh.pyghooks import XonshConsoleLexer, XonshLexer
+
+    # Offline rendering — typo-detection Error tokens for unknown
+    # ``$VAR`` / commands / ``@()`` names have no audience here, so flip
+    # the lexer into its lenient (optimistic) mode for the whole build.
+    XonshLexer.docs_mode = True
+    XonshConsoleLexer.docs_mode = True
 
     app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")

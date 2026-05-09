@@ -86,8 +86,8 @@ The following is a real-world example of such a file.
 
 :download:`Download xonshrc <xonshrc.xsh>`
 
-.. include:: xonshrc.xsh
-    :code: xonsh
+.. literalinclude:: xonshrc.xsh
+    :language: xonsh
 
 See also `xontrib-rc-awesome <https://github.com/anki-code/xontrib-rc-awesome>`_.
 
@@ -99,8 +99,8 @@ This can be set by ``env XONSHRC=rc.py xonsh`` or ``xonsh --rc=rc.py``
 
 :download:`Download rc.py <xonshrc.py>`
 
-.. include:: xonshrc.py
-    :code: xonsh
+.. literalinclude:: xonshrc.py
+    :language: xonsh
 
 
 Snippets for xonshrc
