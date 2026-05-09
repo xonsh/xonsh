@@ -99,6 +99,7 @@ def test_source_foreign_fn_parser(alias, xession):
         "overwrite_aliases",
         "suppress_skip_message",
         "show",
+        "show_output",
         "dryrun",
         "interactive",
     ]
