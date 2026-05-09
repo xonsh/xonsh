@@ -1002,6 +1002,7 @@ def source_foreign_fn(
     overwrite_aliases=False,
     suppress_skip_message=False,
     show=False,
+    show_output=False,
     dryrun=False,
     _stderr=None,
 ):
@@ -1046,7 +1047,12 @@ def source_foreign_fn(
     suppress_skip_message : --suppress-skip-message
         flag for whether or not skip messages should be suppressed.
     show : --show
-        show the script output.
+        show the generated shell command that will be sent to the foreign
+        shell (does not show what the sourced script prints — see
+        ``--show-output`` for that).
+    show_output : --show-output
+        forward stdout and stderr produced by the sourced script to the
+        xonsh terminal. By default they are silently discarded.
     dryrun : -d, --dry-run
         Will not actually source the file.
     """
@@ -1091,6 +1097,7 @@ def source_foreign_fn(
         seterrprevcmd=seterrprevcmd,
         seterrpostcmd=seterrpostcmd,
         show=show,
+        show_output=show_output,
         dryrun=dryrun,
         files=files,
     )
@@ -1235,6 +1242,7 @@ def source_cmd_fn(
     overwrite_aliases=False,
     suppress_skip_message=False,
     show=False,
+    show_output=False,
     dryrun=False,
     _stderr=None,
 ):
@@ -1266,7 +1274,12 @@ def source_cmd_fn(
     suppress_skip_message : --suppress-skip-message
         flag for whether or not skip messages should be suppressed.
     show : --show
-        show the script output.
+        show the generated shell command that will be sent to cmd.exe
+        (does not show what the sourced script prints — see
+        ``--show-output`` for that).
+    show_output : --show-output
+        forward stdout and stderr produced by the sourced script to the
+        xonsh terminal. By default they are silently discarded.
     dryrun : -d, --dry-run
         Will not actually source the file.
     """
@@ -1299,6 +1312,7 @@ def source_cmd_fn(
             overwrite_aliases=overwrite_aliases,
             suppress_skip_message=suppress_skip_message,
             show=show,
+            show_output=show_output,
             dryrun=dryrun,
         )
 

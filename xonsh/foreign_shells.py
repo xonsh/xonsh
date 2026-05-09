@@ -108,6 +108,30 @@ def DEFAULT_SETERRPOSTCMD():
     return {"bash": "", "zsh": "", "cmd": "if errorlevel 1 exit 1"}
 
 
+_FOREIGN_OUTPUT_FIRST_MARKER = "__XONSH_ENV_BEG__"
+
+
+def _emit_foreign_script_output(stdout_str, stderr_str):
+    """Write the sourced script's own stdout/stderr to xonsh's terminal.
+
+    The captured stdout from the foreign shell contains both the script's
+    own writes and the xonsh marker output (``__XONSH_ENV_BEG__`` and
+    onwards). Strip everything from the first marker so only what the
+    script itself printed is surfaced. Stderr is forwarded as-is.
+    """
+    pre_marker = stdout_str or ""
+    if pre_marker:
+        idx = pre_marker.find(_FOREIGN_OUTPUT_FIRST_MARKER)
+        if idx != -1:
+            pre_marker = pre_marker[:idx]
+        if pre_marker:
+            sys.stdout.write(pre_marker)
+            sys.stdout.flush()
+    if stderr_str:
+        sys.stderr.write(stderr_str)
+        sys.stderr.flush()
+
+
 @functools.lru_cache
 def foreign_shell_data(
     shell,
@@ -128,6 +152,7 @@ def foreign_shell_data(
     seterrprevcmd=None,
     seterrpostcmd=None,
     show=False,
+    show_output=False,
     dryrun=False,
     files=(),
 ):
@@ -189,6 +214,12 @@ def foreign_shell_data(
         empty string.
     show : bool, optional
         Whether or not to display the script that will be run.
+    show_output : bool, optional
+        Whether to forward the sourced script's own stdout/stderr to xonsh's
+        terminal. When False (the default) the script's writes are silently
+        discarded — only the xonsh-injected env/alias/func dumps are parsed
+        out and applied. Useful when sourcing scripts that print banners or
+        diagnostic messages, or for debugging a failing source.
     dryrun : bool, optional
         Whether or not to actually run and process the command.
     files : tuple of str, optional
@@ -255,22 +286,34 @@ def foreign_shell_data(
     elif currenv is not None:
         currenv = dict(currenv)
     try:
-        s = subprocess.check_output(
+        proc = subprocess.run(
             cmd,
-            stderr=subprocess.PIPE,
+            capture_output=True,
+            check=True,
             env=currenv,
             # start new session to avoid hangs
             # (doesn't work on Cygwin though)
             start_new_session=((not ON_CYGWIN) and (not ON_MSYS)),
             encoding=locale.getpreferredencoding(False),
         )
-    except (subprocess.CalledProcessError, FileNotFoundError):
+        s = proc.stdout
+        captured_stderr = proc.stderr or ""
+    except subprocess.CalledProcessError as e:
+        # Surface output even on failure — that's where users most need it.
+        if show_output:
+            _emit_foreign_script_output(e.stdout or "", e.stderr or "")
+        if not safe:
+            raise
+        return None, None
+    except FileNotFoundError:
         if not safe:
             raise
         return None, None
     finally:
         if use_tmpfile:
             os.remove(tmpfile.name)
+    if show_output:
+        _emit_foreign_script_output(s, captured_stderr)
     env = parse_env(s)
     aliases = parse_aliases(
         s,
