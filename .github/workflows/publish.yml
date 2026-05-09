@@ -59,8 +59,10 @@ jobs:
       - name: build xonsh AppImage
         run: |
           python -m python_appimage build app -p 3.14 ./appimage  # Unpin python after fix https://github.com/xonsh/xonsh/issues/5166
+      - name: generate checksum
+        run: sha256sum xonsh-x86_64.AppImage > xonsh-x86_64.AppImage.sha256
       - name: upload xonsh AppImage to release
         if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref_name }} ./xonsh-x86_64.AppImage
+        run: gh release upload ${{ github.ref_name }} ./xonsh-x86_64.AppImage ./xonsh-x86_64.AppImage.sha256
