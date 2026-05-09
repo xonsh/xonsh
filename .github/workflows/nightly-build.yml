@@ -82,7 +82,8 @@ jobs:
           COMMIT_DATE=$(TZ=UTC git log -1 --date=format-local:'%Y-%m-%d %H:%M:%S UTC' --format='%cd')
           python .github/scripts/update-nightly-release-descr.py header \
             --sha "${{ github.sha }}" --date "$COMMIT_DATE"
-          gh release upload nightly-build xonsh-nightly.AppImage --clobber
+          sha256sum xonsh-nightly.AppImage > xonsh-nightly.AppImage.sha256
+          gh release upload nightly-build xonsh-nightly.AppImage xonsh-nightly.AppImage.sha256 --clobber
           python .github/scripts/update-nightly-release-descr.py line \
             --file xonsh-nightly.AppImage --sha "${{ github.sha }}"
 
@@ -161,7 +162,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
-          gh release upload nightly-build xonsh-nightly-nuitka-linux.bin --clobber
+          sha256sum xonsh-nightly-nuitka-linux.bin > xonsh-nightly-nuitka-linux.bin.sha256
+          gh release upload nightly-build xonsh-nightly-nuitka-linux.bin xonsh-nightly-nuitka-linux.bin.sha256 --clobber
           python .github/scripts/update-nightly-release-descr.py line \
             --file xonsh-nightly-nuitka-linux.bin --sha "${{ github.sha }}"
 
@@ -234,7 +236,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
-          gh release upload nightly-build xonsh-nightly-nuitka-macos.bin --clobber
+          shasum -a 256 xonsh-nightly-nuitka-macos.bin > xonsh-nightly-nuitka-macos.bin.sha256
+          gh release upload nightly-build xonsh-nightly-nuitka-macos.bin xonsh-nightly-nuitka-macos.bin.sha256 --clobber
           python .github/scripts/update-nightly-release-descr.py line \
             --file xonsh-nightly-nuitka-macos.bin --sha "${{ github.sha }}"
 
@@ -285,7 +288,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
-          gh release upload nightly-build xonsh-nightly-inno6-setup.exe --clobber
+          sha256sum xonsh-nightly-inno6-setup.exe > xonsh-nightly-inno6-setup.exe.sha256
+          gh release upload nightly-build xonsh-nightly-inno6-setup.exe xonsh-nightly-inno6-setup.exe.sha256 --clobber
           python .github/scripts/update-nightly-release-descr.py line \
             --file xonsh-nightly-inno6-setup.exe --sha "${{ github.sha }}"
 
@@ -341,7 +345,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
-          gh release upload nightly-build xonsh-nightly-inno5-setup.exe --clobber
+          sha256sum xonsh-nightly-inno5-setup.exe > xonsh-nightly-inno5-setup.exe.sha256
+          gh release upload nightly-build xonsh-nightly-inno5-setup.exe xonsh-nightly-inno5-setup.exe.sha256 --clobber
           python .github/scripts/update-nightly-release-descr.py line \
             --file xonsh-nightly-inno5-setup.exe --sha "${{ github.sha }}"
 
@@ -391,6 +396,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           until gh release view nightly-build &>/dev/null; do sleep 5; done
-          gh release upload nightly-build xonsh-nightly.flatpak --clobber
+          sha256sum xonsh-nightly.flatpak > xonsh-nightly.flatpak.sha256
+          gh release upload nightly-build xonsh-nightly.flatpak xonsh-nightly.flatpak.sha256 --clobber
           python .github/scripts/update-nightly-release-descr.py line \
             --file xonsh-nightly.flatpak --sha "${{ github.sha }}"
