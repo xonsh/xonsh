@@ -1732,9 +1732,7 @@ def make_default_aliases():
         default_aliases["call"] = ["source-cmd"]
         default_aliases["source-bat"] = ["source-cmd"]
         default_aliases["clear"] = "cls"
-        if ON_ANACONDA or shutil.which(
-            "conda", path=XSH.env.get_detyped("PATH")
-        ):
+        if ON_ANACONDA or shutil.which("conda", path=XSH.env.get_detyped("PATH")):
             # ON_ANACONDA only fires when xonsh itself is installed inside the
             # conda env (sys.prefix has conda-meta/). Pip-installed xonsh +
             # standalone Miniconda3 leaves it False, so also probe $PATH for
