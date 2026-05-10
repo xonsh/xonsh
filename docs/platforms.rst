@@ -620,7 +620,7 @@ Windows Terminal):
    @ xcontext            # note the "xpython" path
    @ exit                # release the lock on xonsh.exe
 
-.. code-block:: console
+.. code-block:: doscon
 
    > <xpython> -m pip install --upgrade xonsh
 
