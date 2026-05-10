@@ -23,6 +23,13 @@ The following table lists built in features and capabilities that various tools 
           <td align="center">🟢</td>
         </tr>
         <tr>
+          <th class="stub"><p>Nice prompt</p></th>
+          <td align="center">◯</td>
+          <td align="center">🟢</td>
+          <td align="center"></td>
+          <td align="center">🟢</td>
+        </tr>
+        <tr>
           <th class="stub"><p>First-class objects</p></th>
           <td align="center"></td>
           <td align="center">◯</td>
