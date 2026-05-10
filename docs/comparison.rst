@@ -26,7 +26,7 @@ The following table lists built in features and capabilities that various tools 
           <th class="stub"><p>Nice prompt</p></th>
           <td align="center">◯</td>
           <td align="center">🟢</td>
-          <td align="center"></td>
+          <td align="center">🟢</td>
           <td align="center">🟢</td>
         </tr>
         <tr>
