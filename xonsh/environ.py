@@ -2366,6 +2366,39 @@ def DEFAULT_VARS():
 #
 
 
+class _DeleteVarSentinel:
+    """Singleton marker used as a value to mask an environment variable.
+
+    Storing this value in :class:`Env` (directly, via :meth:`Env.swap`, via
+    a ``$VAR=<sentinel> cmd`` inline prefix, or via ``spec.env`` inside an
+    ``on_pre_spec_run`` handler) is treated as "this variable is unset" on
+    every read path: ``__getitem__``, ``__contains__``, ``get``, iteration,
+    and ``detype``. The original value reappears when the masking scope
+    ends (e.g. on ``swap`` exit). Exposed publicly as ``XSH.env.DELETE_VAR``.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __repr__(self):
+        return "<XSH.env.DELETE_VAR>"
+
+    def __reduce__(self):
+        # Pickle-safe: re-resolves to the same singleton on unpickle.
+        return (_resolve_delete_var, ())
+
+
+def _resolve_delete_var():
+    return DELETE_VAR
+
+
+DELETE_VAR = _DeleteVarSentinel()
+
+
 class Env(cabc.MutableMapping):
     """A xonsh environment, whose variables have limited typing.
     Most variables are, by default, strings.
@@ -2379,6 +2412,12 @@ class Env(cabc.MutableMapping):
     An Env instance may be converted to an untyped version suitable for
     use in a subprocess.
     """
+
+    # Public sentinel: assigning this value to a key (directly, via swap,
+    # inline `$VAR=@.env.DELETE_VAR cmd`, or `spec.env[k] = ...` in an
+    # `on_pre_spec_run` handler) hides the variable for the duration of
+    # the surrounding scope. See `_DeleteVarSentinel` for details.
+    DELETE_VAR = DELETE_VAR
 
     def __init__(self, *args, **kwargs):
         """If no initial environment is given, os_environ is used."""
@@ -2446,6 +2485,10 @@ class Env(cabc.MutableMapping):
         for overlay in self._overlay_stack:
             items.update(overlay)
         for key, val in items.items():
+            # Skip variables masked by DELETE_VAR — they must not reach
+            # subprocess.Popen as a stringified sentinel.
+            if val is DELETE_VAR:
+                continue
             if not isinstance(key, str):
                 key = str(key)
             detyper = self.get_detyper(key)
@@ -2476,7 +2519,11 @@ class Env(cabc.MutableMapping):
                 continue
             if not isinstance(key, str):
                 key = str(key)
-            val = self.__getitem__(key)
+            try:
+                val = self.__getitem__(key)
+            except KeyError:
+                # Masked by DELETE_VAR in `_d` or in an overlay.
+                continue
             detyper = self.get_detyper(key)
             if detyper is not None:
                 val = detyper(val)
@@ -2641,6 +2688,21 @@ class Env(cabc.MutableMapping):
         """
         return varname in self._d
 
+    def _capture_for_swap(self, key, local):
+        """Capture `key`'s pre-swap state so the outer scope can be
+        restored on exit. We probe the thread-local layer directly
+        instead of going through ``get`` so that a DELETE_VAR mask
+        survives a nested ``swap`` that overrides the same key with
+        a value — otherwise the mask would be silently dropped when
+        the inner ``swap`` exits.
+        """
+        if key in local:
+            return local[key]
+        try:
+            return self[key]
+        except KeyError:
+            return NotImplemented
+
     @contextlib.contextmanager
     def swap(self, other=None, overlay=None, **kwargs):
         """Provides a context manager for temporarily swapping out certain
@@ -2654,14 +2716,15 @@ class Env(cabc.MutableMapping):
         Callable aliases use this to provide scoped ``env`` variables.
         """
         old = {}
+        local = self._d._local
         # single positional argument should be a dict-like object
         if other is not None:
             for k, v in other.items():
-                old[k] = self.get(k, NotImplemented)
+                old[k] = self._capture_for_swap(k, local)
                 self._set_item(k, v, thread_local=True)
         # kwargs could also have been sent in
         for k, v in kwargs.items():
-            old[k] = self.get(k, NotImplemented)
+            old[k] = self._capture_for_swap(k, local)
             self._set_item(k, v, thread_local=True)
 
         if overlay is not None:
@@ -2704,12 +2767,21 @@ class Env(cabc.MutableMapping):
     def __getitem__(self, key):
         if key is Ellipsis:
             return self
-        # Check overlay stack top-down (most recent first)
+        # Check overlay stack top-down (most recent first). A DELETE_VAR
+        # in an overlay masks the key entirely — don't fall through to
+        # deeper overlays or to `_d`/defaults.
         for overlay in reversed(self._overlay_stack):
             if key in overlay:
-                return overlay[key]
+                val = overlay[key]
+                if val is DELETE_VAR:
+                    raise KeyError(
+                        f"Environment variable ${key} is masked by DELETE_VAR"
+                    )
+                return val
         if key in self._d:
             val = self._d[key]
+            if val is DELETE_VAR:
+                raise KeyError(f"Environment variable ${key} is masked by DELETE_VAR")
         elif key in self._vars and self._vars[key].default is not DefaultNotGiven:
             val = self.get_default(key)
             if is_callable_default(val):
@@ -2734,6 +2806,20 @@ class Env(cabc.MutableMapping):
         return self._d[key]
 
     def _set_item(self, key, val, thread_local=False, check_sync=True):
+        if val is DELETE_VAR:
+            # Bypass validator/converter/detyper — none of them accept
+            # the sentinel. Two modes:
+            #   - thread_local (swap): store the sentinel in the local
+            #     layer so swap's restore step can put the original
+            #     value back when the scope ends.
+            #   - direct: equivalent to ``del env[key]``; if the key
+            #     was not set, silently no-op (matches "absent" intent).
+            if thread_local:
+                self._d.set_locally(key, DELETE_VAR)
+                self._detyped = None
+            elif key in self._d:
+                self._del_item(key)
+            return
         if check_sync and key in self._vars:
             if self._vars[key].deprecated:
                 sync_txt = (
@@ -2802,6 +2888,14 @@ class Env(cabc.MutableMapping):
                     os_environ[key] = deval
         if old_value is self._no_value:
             events.on_envvar_new.fire(name=key, value=val)
+        elif old_value is DELETE_VAR:
+            # No observable transition for the event API — DELETE_VAR is
+            # an internal masking state, not a user-visible value, so
+            # `on_envvar_change` would surface a sentinel to handlers
+            # that are not prepared for it. Stay silent here; the most
+            # common path (swap exit restoring the original value)
+            # really is a no-op from the user's point of view.
+            pass
         elif old_value != val:
             events.on_envvar_change.fire(name=key, oldvalue=old_value, newvalue=val)
 
@@ -2825,11 +2919,9 @@ class Env(cabc.MutableMapping):
         """The environment will look up default values from its own defaults if a
         default is not given here.
         """
-        if key in self._d or (
-            key in self._vars and self._vars[key].default is not DefaultNotGiven
-        ):
+        try:
             return self[key]
-        else:
+        except KeyError:
             return default
 
     def get_stringified(self, key, default=None):
@@ -2851,17 +2943,30 @@ class Env(cabc.MutableMapping):
         )
 
     def __iter__(self):
+        # Compute the set of keys masked by DELETE_VAR. An overlay layer
+        # may mask either an underlying overlay or `_d`/defaults; `_d`
+        # itself may also hold the sentinel (set via swap thread-local).
+        masked = set()
+        for overlay in reversed(self._overlay_stack):
+            for k, v in overlay.items():
+                if v is DELETE_VAR and k not in masked:
+                    masked.add(k)
         for key in self.rawkeys():
-            if isinstance(key, str):
-                yield key
+            if not isinstance(key, str):
+                continue
+            if key in masked:
+                continue
+            if key in self._d and self._d[key] is DELETE_VAR:
+                continue
+            yield key
 
     def __contains__(self, item):
         for overlay in reversed(self._overlay_stack):
             if item in overlay:
-                return True
-        return item in self._d or (
-            item in self._vars and self._vars[item].default is not DefaultNotGiven
-        )
+                return overlay[item] is not DELETE_VAR
+        if item in self._d:
+            return self._d[item] is not DELETE_VAR
+        return item in self._vars and self._vars[item].default is not DefaultNotGiven
 
     def __len__(self):
         # Counts only explicitly-set vars (not defaults from self._vars).

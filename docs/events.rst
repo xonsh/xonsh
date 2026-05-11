@@ -28,6 +28,17 @@ if we wanted to intercept all specs, we could write:
     def print_when_ls(spec=None, **kwargs):
         print("Running a command")
 
+To mask an environment variable for the subprocess this spec is about to
+run, set ``spec.env[name] = @.env.DELETE_VAR``. The variable will not
+appear in the environment passed to the child process, even if it is set
+in the session env:
+
+.. code-block:: python
+
+    @events.on_pre_spec_run
+    def strip_secrets(spec, **_):
+        spec.env = (spec.env or {}) | {'SECRET_TOKEN': @.env.DELETE_VAR}
+
 
 ``on_pre_spec_run_<cmd-name>(spec: SubprocSpec) -> None``
 .........................................................
