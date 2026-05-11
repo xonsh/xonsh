@@ -1,5 +1,29 @@
 # Xonsh Change Log
 
+## [0.23.6](https://github.com/xonsh/xonsh/compare/0.23.5...0.23.6) (2026-05-11)
+
+
+### Features
+
+* Add `--show-output` to source foreign ([#6421](https://github.com/xonsh/xonsh/issues/6421)) ([23e26b8](https://github.com/xonsh/xonsh/commit/23e26b8983b877e816b6021f811c97b21c520cea))
+* Add `xontrib info <xontrib_name>` ([#6407](https://github.com/xonsh/xonsh/issues/6407)) ([6fe1e11](https://github.com/xonsh/xonsh/commit/6fe1e114f1b956bee30bb7d74377a059210eb81d))
+* Add checksums for artifacts on release page and on nightly build page ([#6420](https://github.com/xonsh/xonsh/issues/6420)) ([cf0ee6b](https://github.com/xonsh/xonsh/commit/cf0ee6b349469fee0dc7184f32eb0ba3a561b9b4))
+* **Completer:** Show alias body in description if no docstring ([#6408](https://github.com/xonsh/xonsh/issues/6408)) ([fe6472e](https://github.com/xonsh/xonsh/commit/fe6472ef603d9dc896cdab017db308c13fcf1835))
+* Parser: Allow comments in multiline commands ([#6417](https://github.com/xonsh/xonsh/issues/6417)) ([081deeb](https://github.com/xonsh/xonsh/commit/081deebfbcef640d03cf25568374ada1f2f5cead))
+
+
+### Fixes
+
+* AppImage: Remove legacy logic from entrypoint ([#6415](https://github.com/xonsh/xonsh/issues/6415)) ([ab26546](https://github.com/xonsh/xonsh/commit/ab26546f27df5cacc5a202fbeb40763fa70a930b))
+* **Completer:** Fix completer in case of xontrib load with unknown arg ([#6405](https://github.com/xonsh/xonsh/issues/6405)) ([68c234a](https://github.com/xonsh/xonsh/commit/68c234a740fea5999fe098b3b2249ac2db436af9))
+* Conda on Windows: `conda init xonsh` produces TypeError. Also fixed conda activate/deactivate aliases when conda is on $PATH ([#6423](https://github.com/xonsh/xonsh/issues/6423)) ([6708eee](https://github.com/xonsh/xonsh/commit/6708eeedcd77d7bc70eb8795125b8608b4d89195))
+* **docs:** Fix code highlighting ([#6418](https://github.com/xonsh/xonsh/issues/6418)) ([b009635](https://github.com/xonsh/xonsh/commit/b0096358e97aadd1933558199e7baf062dafb8be))
+* **Docs:** Highlight xonsh code block in docs/xonshrc ([#6419](https://github.com/xonsh/xonsh/issues/6419)) ([bfb4667](https://github.com/xonsh/xonsh/commit/bfb46672489599ac58f70847e6dd98b4210aaf0d))
+* Environ: EnvPath should preserve empty values in the general case ([#6416](https://github.com/xonsh/xonsh/issues/6416)) ([3e63379](https://github.com/xonsh/xonsh/commit/3e63379a65089f9f5c9703f8eadce38e1c260e2f))
+* Foreign shell function aliases now stream their output through the caller-supplied stdout/stderr instead of inheriting xonsh's terminal fds ([#6409](https://github.com/xonsh/xonsh/issues/6409)) ([c40cfc5](https://github.com/xonsh/xonsh/commit/c40cfc5574fe9ad122d25a04a09c4ec7b9349abd))
+* **Prompt:** Fix exception in case IGNOREEOF + ^D ([#6413](https://github.com/xonsh/xonsh/issues/6413)) ([03cd547](https://github.com/xonsh/xonsh/commit/03cd547406ef9b7b06119634c37c3f967f754089))
+* Windows: Aliases: Fix sudo shadowing and significantly improve win_sudo logic ([#6410](https://github.com/xonsh/xonsh/issues/6410)) ([58b835b](https://github.com/xonsh/xonsh/commit/58b835b265d37ef90641b6955510d5afd73fa2ef))
+
 ## [0.23.5](https://github.com/xonsh/xonsh/compare/0.23.4...0.23.5) (2026-05-05)
 
 
