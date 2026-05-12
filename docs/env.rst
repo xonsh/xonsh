@@ -193,6 +193,48 @@ Multiple variables can be swapped at once:
     with @.env.swap(LANG='C', LC_ALL='C'):
         sort data.txt
 
+Unsetting a Variable
+--------------------
+
+Sometimes you need to remove an environment variable for a single command
+or a single scope, not just override it. Assigning the sentinel
+``@.env.DELETE_VAR`` does exactly that — the variable behaves as if it
+was never set for the duration of the surrounding scope:
+
+.. code-block:: xonshcon
+
+    @ $HOSTNAME='myhost'
+    @ $HOSTNAME=@.env.DELETE_VAR env | grep -c '^HOSTNAME='
+    0
+    @ echo $HOSTNAME
+    myhost
+
+The sentinel works on every path where a variable can be set:
+
+.. code-block:: xonsh
+
+    # Inline prefix for a single subprocess
+    $HTTPS_PROXY=@.env.DELETE_VAR curl https://example.com
+
+    # `swap` block — mask a variable for a multi-statement scope
+    with @.env.swap(LD_PRELOAD=@.env.DELETE_VAR):
+        # Run something that misbehaves with LD_PRELOAD
+
+    # Inside a callable alias — mask for any subprocess it spawns
+    @aliases.register
+    def _clean_env(env):
+        env['HOSTNAME'] = @.env.DELETE_VAR
+        # ...
+
+    # In an `on_pre_spec_run` handler — mask per-spec at runtime
+    @events.on_pre_spec_run
+    def _strip_secrets(spec, **_):
+        spec.env = (spec.env or {}) | {'SECRET_TOKEN': @.env.DELETE_VAR}
+
+Reading a masked variable raises ``KeyError``, ``in`` returns ``False``,
+and iteration / ``detype`` skip the key — so nothing leaks the sentinel
+into a subprocess as a stringified value.
+
 Callable Environment Variables
 ------------------------------
 

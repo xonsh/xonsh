@@ -795,6 +795,45 @@ def test_single_command_no_windows(cmd, fmt, exp):
 
 
 @skip_if_on_windows
+@pytest.mark.parametrize(
+    "script, expected",
+    [
+        # Inline `$VAR=@.env.DELETE_VAR cmd` masks the variable for the
+        # immediate subprocess even when it is set in the session env.
+        # The inline-prefix form requires no whitespace around `=`.
+        (
+            f"$XONSH_DELETE_VAR_TEST = 'leaked_value'\n"
+            f"$XONSH_DELETE_VAR_TEST=@.env.DELETE_VAR {sys.executable} -c "
+            f"\"import os; print('XONSH_DELETE_VAR_TEST' not in os.environ)\"\n",
+            "True\n",
+        ),
+        # A callable alias can mask a variable for any subprocess it
+        # spawns by writing the sentinel into its overlay `env`
+        # parameter — the canonical example from the issue.
+        # `@aliases.register` strips the leading underscore, so the
+        # registered alias name is `check`, not `_check`.
+        (
+            f"""
+$XONSH_DELETE_VAR_TEST = 'leaked_value'
+
+@aliases.register
+def _check(env):
+    env['XONSH_DELETE_VAR_TEST'] = @.env.DELETE_VAR
+    {sys.executable} -c "import os; print('XONSH_DELETE_VAR_TEST' not in os.environ)"
+
+check
+""",
+            "True\n",
+        ),
+    ],
+)
+def test_env_delete_var(script, expected):
+    out, err, rtn = run_xonsh(script)
+    assert out == expected, err
+    assert rtn == 0, err
+
+
+@skip_if_on_windows
 def test_stdin_script_reopens_tty_for_children():
     """When xonsh reads a script from stdin and /dev/tty is available,
     it should reopen fd 0 on /dev/tty so child processes see a real
@@ -1053,6 +1092,36 @@ aliases['echo'] = _echo
 )
 def test_single_command_return_code(cmd, exp_rtn):
     _, _, rtn = run_xonsh(cmd, single_command=True)
+    assert rtn == exp_rtn
+
+
+# issue 6426 — ``exit N`` must stop execution, not just record the rc.
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "cmd, exp_out, exp_rtn",
+    [
+        ("echo 1; exit 2; echo 3", "1\n", 2),
+        ("print(1); exit 2; print(3)", "1\n", 2),
+        ("exit 0; echo no", "", 0),
+        ("exit 2", "", 2),
+        ("echo 1 && exit 2 && echo 3", "1\n", 2),
+        ("__xonsh__.exit=5; echo no", "", 5),
+        (
+            "@aliases.register\n"
+            "def _a():\n"
+            "    print(1)\n"
+            "    exit 2\n"
+            "    print(2)\n"
+            "a\n"
+            "print(3)\n",
+            "1\n",
+            2,
+        ),
+    ],
+)
+def test_exit_aborts_execution(cmd, exp_out, exp_rtn):
+    out, _, rtn = run_xonsh(cmd, single_command=True)
+    assert out == exp_out
     assert rtn == exp_rtn
 
 
