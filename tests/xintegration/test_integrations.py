@@ -1067,6 +1067,17 @@ def test_single_command_return_code(cmd, exp_rtn):
         ("exit 2", "", 2),
         ("echo 1 && exit 2 && echo 3", "1\n", 2),
         ("__xonsh__.exit=5; echo no", "", 5),
+        (
+            "@aliases.register\n"
+            "def _a():\n"
+            "    print(1)\n"
+            "    exit 2\n"
+            "    print(2)\n"
+            "a\n"
+            "print(3)\n",
+            "1\n",
+            2,
+        ),
     ],
 )
 def test_exit_aborts_execution(cmd, exp_out, exp_rtn):
