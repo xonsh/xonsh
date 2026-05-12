@@ -974,7 +974,6 @@ def xonsh_exit(args, stdin=None):
     else:
         code = 0
     XSH.exit = code
-    print()  # gimme a newline
     return None, None
 
 

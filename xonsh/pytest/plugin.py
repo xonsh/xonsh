@@ -250,7 +250,7 @@ def mock_xonsh_session(monkeypatch, xonsh_events, xonsh_session, env):
             ("env", env),
             ("shell", DummyShell()),
             ("help", lambda x: x),
-            ("exit", False),
+            ("exit", None),
             ("history", DummyHistory()),
             (
                 "commands_cache",
