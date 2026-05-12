@@ -39,11 +39,21 @@ for more information all the history command and all of its sub-commands.
 Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
 
 
-``EOF``, ``exit``, and ``quit``
+``exit``, ``quit``, ``EOF``
 ----------------------------------
-The commands ``EOF``, ``exit``, and ``quit`` all alias the same action, which is to
+The commands ``exit``, ``EOF`` and ``quit`` all alias the same action, which is to
 leave xonsh in a safe manner. Typing ``Ctrl-d`` is the same as typing ``EOF`` and
 pressing enter.
+
+``exit N`` sets the shell's exit code to ``N`` and stops the rest of the
+current script:
+
+.. code-block:: xonshcon
+
+    @ xonsh -c 'echo 1; exit 42; echo 3'
+    1
+    @ @.lastcmd.rtn
+    42
 
 
 Xonsh-specific Aliases
@@ -83,6 +93,7 @@ Manages xonsh extensions. More information is available at :doc:`xontrib`
 
     @ xcontext
     [Current xonsh session]
+    xxonsh: /home/snail/.local/xonsh-env/bin/xonsh
     xpython: /home/snail/.local/xonsh-env/bin/python # Python 3.12.10
     xpip: /home/snail/.local/xonsh-env/bin/python -m pip
 
