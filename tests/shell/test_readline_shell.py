@@ -167,7 +167,10 @@ def test_rl_prompt_cmdloop(line, exp, readline_shell, capsys):
     shell.use_rawinput = False
     shell.stdin.write(f"{line}\nexit\n")  # note: terminate with '\n'
     shell.stdin.seek(0)
-    shell.cmdloop()
+    # ``exit`` now propagates SystemExit out of the loop (issue #6426); in
+    # production ``main_xonsh`` catches it.
+    with pytest.raises(SystemExit):
+        shell.cmdloop()
     # xonsh, doesn't write all its output to shell.stdout
     # so capture sys.stdout
     out, err = capsys.readouterr()

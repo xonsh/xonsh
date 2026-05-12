@@ -1095,6 +1095,36 @@ def test_single_command_return_code(cmd, exp_rtn):
     assert rtn == exp_rtn
 
 
+# issue 6426 — ``exit N`` must stop execution, not just record the rc.
+@skip_if_on_windows
+@pytest.mark.parametrize(
+    "cmd, exp_out, exp_rtn",
+    [
+        ("echo 1; exit 2; echo 3", "1\n", 2),
+        ("print(1); exit 2; print(3)", "1\n", 2),
+        ("exit 0; echo no", "", 0),
+        ("exit 2", "", 2),
+        ("echo 1 && exit 2 && echo 3", "1\n", 2),
+        ("__xonsh__.exit=5; echo no", "", 5),
+        (
+            "@aliases.register\n"
+            "def _a():\n"
+            "    print(1)\n"
+            "    exit 2\n"
+            "    print(2)\n"
+            "a\n"
+            "print(3)\n",
+            "1\n",
+            2,
+        ),
+    ],
+)
+def test_exit_aborts_execution(cmd, exp_out, exp_rtn):
+    out, _, rtn = run_xonsh(cmd, single_command=True)
+    assert out == exp_out
+    assert rtn == exp_rtn
+
+
 @skip_if_on_msys
 @skip_if_on_windows
 @skip_if_on_darwin

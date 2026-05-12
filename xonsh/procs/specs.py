@@ -1351,6 +1351,11 @@ def run_subproc(cmds, captured=False, envs=None, in_boolop=False):
     (e.g. let a non-zero return short-circuit instead of raising).
     """
 
+    # ``exit N`` only sets ``XSH.exit``; raise SystemExit on either side of
+    # the pipeline so subsequent statements (subproc *or* Python) do not run.
+    if XSH.exit is not None:
+        raise SystemExit(XSH.exit)
+
     specs = cmds_to_specs(cmds, captured=captured, envs=envs, in_boolop=in_boolop)
 
     if trace := XSH.env.get("XONSH_SUBPROC_TRACE", False):
@@ -1360,7 +1365,12 @@ def run_subproc(cmds, captured=False, envs=None, in_boolop=False):
         _flatten_cmd_redirects(cmd) if isinstance(cmd, list) else cmd for cmd in cmds
     ]
     _shell_set_title(cmds)
-    return _run_specs(specs, cmds)
+    result = _run_specs(specs, cmds)
+
+    if XSH.exit is not None:
+        raise SystemExit(XSH.exit)
+
+    return result
 
 
 def _run_command_pipeline(specs, cmds):
