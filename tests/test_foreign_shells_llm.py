@@ -117,9 +117,13 @@ def test_foreign_shell_data_show_output_forwards_script_stdout(capfd, xession):
         )
         script_name = script.name
     try:
+        # Forward ``$PATH`` so the bash subprocess can resolve itself, ``env``,
+        # and friends — Nix sandboxes have no ``/bin/bash`` fallback and the
+        # default ``_PATH_DEFPATH`` (``/bin:/usr/bin``) used when ``env`` lacks
+        # ``PATH`` doesn't exist there.
         env, aliases = foreign_shell_data(
             shell="bash",
-            currenv=(),
+            currenv=(("PATH", os.environ.get("PATH", "")),),
             interactive=False,
             sourcer="source",
             prevcmd=f"source {script_name}\n",
@@ -154,7 +158,7 @@ def test_foreign_shell_data_default_silently_swallows_script_output(capfd, xessi
     try:
         env, _ = foreign_shell_data(
             shell="bash",
-            currenv=(),
+            currenv=(("PATH", os.environ.get("PATH", "")),),
             interactive=False,
             sourcer="source",
             prevcmd=f"source {script_name}\n",
