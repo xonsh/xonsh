@@ -1207,7 +1207,10 @@ One of the most interesting application is expanding an alias:
       @aliases.return_command
       def _xsudo(args):
           """Sudo with expanding aliases."""
-          return ['sudo', '--', *aliases.eval_alias(args)]
+          if args:
+              return ['sudo', '--', *aliases.eval_alias(args)]
+          else:
+              return ['sudo', '--']  # Allows completion to work properly.
 
     @ aliases['install'] = "apt install cowsay"
     @ xsudo install

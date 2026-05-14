@@ -17,7 +17,10 @@ from xonsh.completers.tools import (
 from xonsh.lib.modules import ModuleFinder
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
 
-SKIP_TOKENS = {"sudo", "time", "timeit", "which", "showcmd", "man"}
+# Wrapper commands whose completions delegate to the inner command. ``sudo``
+# is intentionally absent — it has its own flag grammar (``-u root``,
+# ``VAR=value``, ``--``) handled by ``xompletions/sudo.py``.
+SKIP_TOKENS = {"time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||
 END_PROC_KEYWORDS = {"and", "or"}
 
