@@ -2430,6 +2430,21 @@ class Env(cabc.MutableMapping):
         # during alias execution. See push_overlay()/pop_overlay().
         self._overlay_local = threading.local()
         self._vars = {k: v for k, v in DEFAULT_VARS.items()}
+        # ``__THREAD_LOCAL__`` is an internal overlay used by ExecAlias to
+        # carry the alias return code out of the pipeline thread. Register it
+        # here with ``detype=None`` so it is excluded from ``Env.detype()``
+        # and never reaches a child process via ``subprocess.Popen(env=...)``
+        # or ``os.environ``. Not exposed through ``Xettings``:
+        # the ``__`` prefix already hides it from ``Xettings.get_settings``,
+        # so the docs generator won't pick it up.
+        self._vars["__THREAD_LOCAL__"] = Var(
+            validate=always_true,
+            convert=None,
+            detype=None,
+            default=DefaultNotGiven,
+            doc="",
+            is_configurable=False,
+        )
 
         if len(args) == 0 and len(kwargs) == 0:
             args = (os_environ,)
@@ -3282,6 +3297,7 @@ def default_env(env=None):
     # These can cause problems for programs (#2543)
     ctx.pop("LINES", None)
     ctx.pop("COLUMNS", None)
+    ctx.pop("__THREAD_LOCAL__", None)
     # other shells' PROMPT definitions generally don't work in XONSH:
     try:
         del ctx["PROMPT"]
