@@ -3282,6 +3282,7 @@ def default_env(env=None):
     # These can cause problems for programs (#2543)
     ctx.pop("LINES", None)
     ctx.pop("COLUMNS", None)
+    ctx.pop("__THREAD_LOCAL__", None)
     # other shells' PROMPT definitions generally don't work in XONSH:
     try:
         del ctx["PROMPT"]
