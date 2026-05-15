@@ -1723,6 +1723,10 @@ def make_default_aliases():
             {"output_format": lambda lines: XSH.imp.yaml.safe_load("\n".join(lines))},
             "Command decorator. Parses YAML and returns dict.",
         ),
+        "@toml": SpecAttrDecoratorAlias(
+            {"output_format": lambda lines: XSH.imp.tomllib.loads("\n".join(lines))},
+            "Command decorator. Parses TOML and returns dict.",
+        ),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.

@@ -259,6 +259,15 @@ Parses YAML and returns a dict.
     @ config = $(@yaml cat config.yaml)
 
 
+``@toml``
+----------
+Parses TOML and returns a dict.
+
+.. code-block:: xonshcon
+
+    @ config = $(@toml cat pyproject.toml)
+
+
 Directory Stack
 ====================
 
