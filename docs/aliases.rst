@@ -259,6 +259,17 @@ Parses YAML and returns a dict.
     @ config = $(@yaml cat config.yaml)
 
 
+``@xml``
+---------
+Parses XML and returns an :class:`xml.etree.ElementTree.Element`. Navigate it
+with ``.tag``, ``.attrib``, ``.text``, ``.find()``, ``.findall()``, etc.
+
+.. code-block:: xonshcon
+
+    @ root = $(@xml curl -s https://example.com/feed.xml)
+      [item.find('title').text for item in root.findall('.//item')]
+
+
 Directory Stack
 ====================
 

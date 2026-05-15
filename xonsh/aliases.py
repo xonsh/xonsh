@@ -1723,6 +1723,14 @@ def make_default_aliases():
             {"output_format": lambda lines: XSH.imp.yaml.safe_load("\n".join(lines))},
             "Command decorator. Parses YAML and returns dict.",
         ),
+        "@xml": SpecAttrDecoratorAlias(
+            {
+                "output_format": lambda lines: __import__(
+                    "xml.etree.ElementTree", fromlist=["fromstring"]
+                ).fromstring("\n".join(lines))
+            },
+            "Command decorator. Parses XML and returns ElementTree Element.",
+        ),
     }
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
