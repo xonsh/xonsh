@@ -121,6 +121,10 @@ after xonsh has started up.
 
     xontrib load myext mpl mypkg.show
 
+Pass ``-s`` (``--suppress-warnings``) to load every xontrib that is installed and
+silently skip any name that isn't. Useful in a :doc:`xonsh RC <xonshrc>` that is shared across machines
+where only a subset of xontribs is installed.
+
 The same can be done in Python as well
 
 .. code-block:: python
