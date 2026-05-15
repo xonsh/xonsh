@@ -413,6 +413,32 @@ def test_no_lines_columns():
         del os.environ["COLUMNS"]
 
 
+def test_no_thread_local_inherited_from_os_environ():
+    # If a parent xonsh leaked __THREAD_LOCAL__ into os.environ (stringified
+    # by detype), the child must strip it before populating XSH.env —
+    # otherwise CommandPipeline._apply_to_thread_local reads a str instead
+    # of a dict and every pipeline crashes.
+    os.environ["__THREAD_LOCAL__"] = "{}"
+    try:
+        env = default_env()
+        assert "__THREAD_LOCAL__" not in env
+    finally:
+        del os.environ["__THREAD_LOCAL__"]
+
+
+def test_thread_local_not_detyped():
+    # __THREAD_LOCAL__ is an internal overlay set by ExecAlias via env.swap.
+    # It must never appear in env.detype() — that dict is the env passed to
+    # subprocess.Popen, and stringifying the overlay (via ensure_string) is
+    # what leaks the bogus value to child processes in the first place.
+    env = Env()
+    env["__THREAD_LOCAL__"] = {"returncode": 0}
+    assert "__THREAD_LOCAL__" not in env.detype()
+    # Same for the swap path that ExecAlias actually uses.
+    with env.swap(__THREAD_LOCAL__={"returncode": 0}):
+        assert "__THREAD_LOCAL__" not in env.detype()
+
+
 def test_make_args_env():
     obs = make_args_env(["script", "1", "2", "3"])
     exp = {
