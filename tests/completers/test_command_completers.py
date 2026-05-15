@@ -35,7 +35,7 @@ def test_complete_command(completion_context_parse, tmp_path, xession):
 @skip_if_on_windows
 def test_skipper_command(completion_context_parse):
     assert "grep" in completions_from_result(
-        complete_skipper(completion_context_parse("sudo gre", 8))
+        complete_skipper(completion_context_parse("time gre", 8))
     )
 
 
@@ -48,7 +48,7 @@ def test_skipper_arg(completion_context_parse, xession, monkeypatch):
     bash_completer_mock.return_value = {"--count "}
 
     assert "--count " in completions_from_result(
-        complete_skipper(completion_context_parse("sudo grep --coun", 16))
+        complete_skipper(completion_context_parse("time grep --coun", 16))
     )
 
     call_args = bash_completer_mock.call_args[0]
