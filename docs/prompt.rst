@@ -8,12 +8,12 @@ Xonsh ships with two REPL engines. Historically, they have been referred to in x
 as “shells” or “prompts”, but they will likely be renamed in the future, as they are in fact
 REPL (read–eval–print loop) engines that power all user interaction with the terminal. These are:
 
-* **prompt-toolkit** or **ptk** (``$SHELL_TYPE='prompt_toolkit'``) — the recommended, full-featured
+* **prompt-toolkit** or **ptk** (``$SHELL_TYPE`` is ``prompt_toolkit``) — the recommended, full-featured
   engine built on `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_.
   It provides syntax highlighting, multi-line editing, completion menus, custom
   key bindings, and more. It is included when installing the full package
   (``pip install 'xonsh[full]'``).
-* **readline** (``$SHELL_TYPE='readline'``) — a minimal fallback used when
+* **readline** (``$SHELL_TYPE`` is ``readline``) — a minimal fallback used when
   ptk cannot be started for some reason (for example, when ``prompt_toolkit``
   is not installed).
 

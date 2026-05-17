@@ -88,7 +88,7 @@ But let's go through everything step by step.
 Xonsh Session Interface
 =======================
 
-Each session has a special global object ``@`` that provides instant functionality.
+Each session has a special global object ``@`` (we call this symbol the conch) that provides instant functionality.
 It gives you access to different parts of the current session.
 For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
 You will learn more about this in the following sections.
@@ -126,7 +126,7 @@ variable in Python.  The same is true for deleting them too.
     @ $EXT = $NUM + "456"
     @ $EXT
     '123456'
-    @ $FNUM = f"{$NUM}456" # Not working with Python 3.12+ (https://github.com/xonsh/xonsh/issues/5166).
+    @ $FNUM = f"{$NUM}456"
     @ $FNUM = "{FILLME}456".format(FILLME=$NUM)
     @ $FNUM
     '123456'
@@ -156,11 +156,15 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
    # True
 
 To get information about a specific environment variable you can use the
-:func:`~xonsh.environ.Env.help` method.
+:func:`~xonsh.environ.Env.help` method or just ``?`` at the end.
 
 .. code-block:: xonshcon
 
-   @ @.env.help('XONSH_DEBUG')
+   @ $AUTO_CD?
+   Name: $AUTO_CD
+   Description: Flag to enable changing to a directory by entering the dirname or full path only (without the cd command).
+   Default: False
+   @ @.env.help('AUTO_CD')
 
 One helpful method is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
@@ -271,19 +275,18 @@ the directories again.
 
 .. code-block:: xonshcon
 
-    @ # this will be in subproc-mode, because ls doesn't exist
-    @ ls -l
-    total 0
+    @ ls -l  # subproc-mode, because ls doesn't exist
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    @ # set ls and l variables to force python-mode
-    @ ls = 44
+
+    @ ls = 44  # set ls and l variables to force python-mode
     @ l = 2
     @ ls -l
     42
-    @ # deleting ls will return us to subproc-mode
-    @ del ls
+    @ $[ls -l]  # you can still use explicit mode in scripts
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+
+    @ del ls  # deleting ls will return us to subproc-mode
     @ ls -l
-    total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
 The determination between Python- and subprocess-modes is always done in the
@@ -294,7 +297,7 @@ impossible.
 
 .. note:: If you would like to explicitly run a subprocess command, you can always
           use the formal xonsh subprocess syntax that we will see in the following
-          sections. For example: ``![ls -l]``.
+          sections. For example: ``$[ls -l]``.
 
 
 Subprocess
@@ -1421,6 +1424,9 @@ In xonsh you can decorate the command to transform output into desired object:
     [{'a': 1}, {'b': 2}]
 
     @ $(@yaml echo 'a: 1')
+    {'a': 1}
+
+    @ $(@toml echo 'a = 1')
     {'a': 1}
 
     @ $(@xml echo '<a x="1"/>').attrib
