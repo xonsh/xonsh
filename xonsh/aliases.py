@@ -163,7 +163,8 @@ class FuncAlias:
             for attr in self.attributes_show
             if (val := getattr(self, attr, None)) is not None
         }
-        return f"FuncAlias({repr(r)})"
+        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        return f"{cls}({r!r})"
 
     def __call__(
         self,
@@ -739,7 +740,8 @@ class ExecAlias:
         return thread_local.get("returncode", 0)
 
     def __repr__(self):
-        return f"ExecAlias({self.src!r}, filename={self.filename!r})"
+        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        return f"{cls}({self.src!r}, filename={self.filename!r})"
 
 
 ALIAS_PARAMS_DEFAULT = {
