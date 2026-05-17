@@ -1426,6 +1426,9 @@ In xonsh you can decorate the command to transform output into desired object:
     @ $(@yaml echo 'a: 1')
     {'a': 1}
 
+    @ $(@toml echo 'a = 1')
+    {'a': 1}
+
 See the full list of command decorators in Aliases article or build the new one.
 
 Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can

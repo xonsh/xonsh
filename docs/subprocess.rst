@@ -40,7 +40,7 @@ Use :ref:`command decorators <aliases>` to change the return format:
     # {'key': 'value'}
 
 See `Command Decorators <aliases.html#command-decorators-decorator-aliases>`_
-for the full list (``@lines``, ``@json``, ``@jsonl``, etc.).
+for the full list (``@lines``, ``@json``, ``@jsonl``, ``@yaml``, ``@toml``, etc.).
 
 
 ``!(cmd)`` -- captured object
