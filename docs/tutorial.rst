@@ -1423,16 +1423,8 @@ In xonsh you can decorate the command to transform output into desired object:
     @ $(@jsonl echo '{"a":1}\n{"b":2}')
     [{'a': 1}, {'b': 2}]
 
-    @ $(@yaml echo 'a: 1')
-    {'a': 1}
 
-    @ $(@toml echo 'a = 1')
-    {'a': 1}
-
-    @ $(@xml echo '<a x="1"/>').attrib
-    {'x': '1'}
-
-See the full list of command decorators in Aliases article or build the new one.
+See the full list of :ref:`Command Decorators <command-decorators>` (``@yaml``, ``@toml``, ``@xml``, ``@lxml``, etc.) or build the new one.
 
 Using ``DecoratorAlias`` and ``SpecAttrDecoratorAlias`` and callable ``output_format`` you can
 convert subprocess command output into Python object with your own logic:

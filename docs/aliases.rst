@@ -183,6 +183,8 @@ Provides an interface to printing lines of source code prior to their execution.
 .. command-help:: xonsh.aliases.xexec
 
 
+.. _command-decorators:
+
 Command Decorators (Decorator Aliases)
 ======================================
 
