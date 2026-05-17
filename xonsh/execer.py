@@ -254,6 +254,7 @@ class Execer:
         if mode != "eval" and not input.endswith("\n"):
             input += "\n"
         input = strip_continuation_comments(input)
+
         def _try_parse(input, greedy):
             last_error_line = last_error_col = -1
             parsed = False
@@ -263,7 +264,7 @@ class Execer:
                 input = input[len(beg_spaces) :]
             max_retries = len(input.splitlines()) * 2 + 10
             while not parsed:
-                #Indicates if the error is because of the right hand side of the operator
+                # Indicates if the error is because of the right hand side of the operator
                 wrap_rhs_only = False
                 if max_retries <= 0:
                     # Prevent hanging e.g. #5839
@@ -285,9 +286,11 @@ class Execer:
                     # yet.  Only treat that as failure while the placeholder is
                     # still present; otherwise return the empty tree and let
                     # ``compile()`` handle it (``None`` / ``pass`` for comment-only).
-                    if _LOGICAL_NL in input and isinstance(
-                        tree, (ast.Interactive, ast.Module)
-                    ) and not tree.body:
+                    if (
+                        _LOGICAL_NL in input
+                        and isinstance(tree, (ast.Interactive, ast.Module))
+                        and not tree.body
+                    ):
                         continue
                     parsed = True
                 except IndentationError as e:
@@ -314,7 +317,9 @@ class Execer:
                     # Parser line numbers come from restored ``\n`` source; the
                     # recovery buffer may still be a single row with ``\x00``.
                     if _LOGICAL_NL in input and len(lines) <= 2:
-                        n_physical = len(lines) - (1 if lines and lines[-1] == "" else 0)
+                        n_physical = len(lines) - (
+                            1 if lines and lines[-1] == "" else 0
+                        )
                         if n_physical == 1 and last_error_line > 1:
                             idx = 0
                             last_error_line = 1
@@ -373,9 +378,7 @@ class Execer:
                             raise original_error from None
                     lexer = self.parser.lexer
                     wrap_line = (
-                        line.replace("\n", _LOGICAL_NL)
-                        if "\n" in line
-                        else line
+                        line.replace("\n", _LOGICAL_NL) if "\n" in line else line
                     )
                     if wrap_rhs_only:
                         maxcol = None
@@ -389,9 +392,14 @@ class Execer:
                             )
                         )
                         wrap_greedy = greedy
-                    if not wrap_rhs_only and not greedy and maxcol in (
-                        e.loc.column + 1,
-                        e.loc.column,
+                    if (
+                        not wrap_rhs_only
+                        and not greedy
+                        and maxcol
+                        in (
+                            e.loc.column + 1,
+                            e.loc.column,
+                        )
                     ):
                         # go greedy the first time if the syntax error was because
                         # we hit an end token out of place. This usually indicates
