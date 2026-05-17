@@ -63,3 +63,45 @@ jobs:
         if: ${{ startsWith(matrix.python-version, env.DEFAULT_PYTHON_VERSION) }}
         run: |
           python -m xonsh run-tests.xsh test --report-coverage -- --timeout=600
+
+  freebsd:
+    # FreeBSD has no GitHub-hosted runner; the VM is launched on a Linux
+    # host via vmactions/freebsd-vm (https://github.com/marketplace/actions/freebsd-vm).
+    # 15.0-RELEASE + python311 mirrors the target the FreeBSD port is built
+    # against (see CLAUDE.md "Running tests in a FreeBSD poudriere jail"
+    # and issue #6374).
+    runs-on: ubuntu-latest
+    name: Test FreeBSD 15.0 (Python 3.11)
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - name: Test in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "15.0"
+          usesh: true
+          copyback: false
+          # Package set mirrors the FreeBSD port's test recipe in #6374:
+          # - python311 / py311-pip: interpreter + installer
+          # - py311-sqlite3 / py311-cryptography: stdlib-adjacent extras the
+          #   FreeBSD base python ships unbundled
+          # - bash / bash-completion: drive test_bash_completer.py and the
+          #   foreign-shell bridge tests (skipped if missing, but we want
+          #   them to actually run on this matrix)
+          # - git: needed by tests/api/test_os.xsh and a few integration tests
+          # - gmake: GNU make for the one @skip_if_no_make integration test
+          prepare: |
+            pkg install -y \
+              python311 \
+              py311-pip \
+              py311-sqlite3 \
+              py311-cryptography \
+              bash \
+              bash-completion \
+              git \
+              gmake
+          run: |
+            # PEP 668 — the system Python is externally-managed; the VM is
+            # throwaway, so --break-system-packages is safe.
+            python3.11 -m pip install --break-system-packages -e ".[test,full]"
+            python3.11 -m pytest --timeout=600
