@@ -139,7 +139,7 @@ def RE_XONSH_IMP():
 @contextual_completer
 def complete_xonsh_imp(context: CompletionContext) -> CompleterResult:
     """
-    Completes module names for the inline xonsh importer (__xonsh__.imp.<module>).
+    Completes module names for the inline xonsh importer (@.imp.<module>).
     """
     if context.python is None:
         return None
