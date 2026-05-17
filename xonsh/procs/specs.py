@@ -366,6 +366,13 @@ class DecoratorAlias:
     """Decorator alias base class."""
 
     descr = "DecoratorAlias base."
+    name = ""
+
+    def __repr__(self):
+        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        if self.name:
+            return f"{cls}({self.name!r})"
+        return f"{cls}()"
 
     def __call__(
         self,
@@ -391,10 +398,11 @@ class DecoratorAlias:
 class SpecAttrDecoratorAlias(DecoratorAlias):
     """Decorator Alias for spec attributes."""
 
-    def __init__(self, set_attributes: dict, descr=""):
+    def __init__(self, set_attributes: dict, descr="", name=""):
         self.set_attributes = set_attributes
         self.descr = descr
         self.__doc__ = descr
+        self.name = name
         super().__init__()
 
     def decorate_spec(self, spec):

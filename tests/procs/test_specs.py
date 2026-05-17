@@ -532,6 +532,14 @@ def test_spec_decorator_alias_output_format(xession):
     assert p.output == ["1", "2", "3"]
 
 
+def test_spec_decorator_alias_repr():
+    named = SpecAttrDecoratorAlias({"raise_subproc_error": True}, name="@error_raise")
+    assert repr(named) == "xonsh.procs.specs.SpecAttrDecoratorAlias('@error_raise')"
+
+    unnamed = SpecAttrDecoratorAlias({"raise_subproc_error": True})
+    assert repr(unnamed) == "xonsh.procs.specs.SpecAttrDecoratorAlias()"
+
+
 @pytest.mark.parametrize("thread_subprocs", [False, True])
 def test_callable_alias_cls(thread_subprocs, xession):
     class Cls:

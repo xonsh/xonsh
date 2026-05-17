@@ -601,6 +601,15 @@ class ArgParserAlias:
         self.stdout = None
         self.stderr = None
 
+    def __repr__(self):
+        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        prog = self.kwargs.get("prog")
+        if prog is None and self._parser is not None:
+            prog = getattr(self._parser, "prog", None)
+        if prog:
+            return f"{cls}({prog!r})"
+        return f"{cls}()"
+
     def build(self) -> "ArgParser":
         """Sub-classes should return constructed ArgumentParser"""
         if self.kwargs:
