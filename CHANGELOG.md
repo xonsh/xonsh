@@ -1,5 +1,28 @@
 # Xonsh Change Log
 
+## [0.23.7](https://github.com/xonsh/xonsh/compare/0.23.6...0.23.7) (2026-05-17)
+
+
+### Features
+
+* Add `[@toml](https://github.com/toml)` command decorator e.g. `data = $([@toml](https://github.com/toml) cat pyproject.toml)` ([#6436](https://github.com/xonsh/xonsh/issues/6436)) ([97f701d](https://github.com/xonsh/xonsh/commit/97f701dfe8910585a85c16407b5f19cd719d86fc))
+* Add dedicated `sudo` completer ([#6433](https://github.com/xonsh/xonsh/issues/6433)) ([f7f2d27](https://github.com/xonsh/xonsh/commit/f7f2d2734df90bad335b0f9b1e2f0e17cb6656e2))
+* Add sentinel `@.env.DELETE_VAR` to removing env variables using env swap/layouts/specs ([#6427](https://github.com/xonsh/xonsh/issues/6427)) ([7e66501](https://github.com/xonsh/xonsh/commit/7e66501c89c8bae0c236a8bdaad26b51095f0d7d))
+
+
+### Fixes
+
+* `exit N` aborts execution immediately ([#6429](https://github.com/xonsh/xonsh/issues/6429)) ([eb916a0](https://github.com/xonsh/xonsh/commit/eb916a0ddf8d1c3faa21df881ba517c953a095ce))
+* Add repr to DecoratorAlias and ArgParserAlias ([#6443](https://github.com/xonsh/xonsh/issues/6443)) ([554b675](https://github.com/xonsh/xonsh/commit/554b675257a0f208eb33ead7192975b90e250448))
+* **environ:** pop __THREAD_LOCAL__ from inherited os.environ in default_env ([#6434](https://github.com/xonsh/xonsh/issues/6434)) ([4d966d2](https://github.com/xonsh/xonsh/commit/4d966d2b764d1571dbf0101d1d4f52c828b07392))
+* Proc: Fix alias with pipe backgrounding ([#6439](https://github.com/xonsh/xonsh/issues/6439)) ([208d359](https://github.com/xonsh/xonsh/commit/208d359a84bffd624942a365672d46a2baaebd18))
+* **tests:** forward $PATH in foreign shell tests so they work in Nix sandbox ([#6430](https://github.com/xonsh/xonsh/issues/6430)) ([#6431](https://github.com/xonsh/xonsh/issues/6431)) ([afb2eda](https://github.com/xonsh/xonsh/commit/afb2eda1ef4f4c59784a8c36db5bc3b18223cb74))
+
+
+### Documentation
+
+* Capitalize docs title ([#6441](https://github.com/xonsh/xonsh/issues/6441)) ([c458ba4](https://github.com/xonsh/xonsh/commit/c458ba4d940f78041f886b474991a94d37702d18))
+
 ## [0.23.6](https://github.com/xonsh/xonsh/compare/0.23.5...0.23.6) (2026-05-11)
 
 
