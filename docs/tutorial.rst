@@ -277,14 +277,14 @@ the directories again.
 
     @ ls -l  # subproc-mode, because ls doesn't exist
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    
+
     @ ls = 44  # set ls and l variables to force python-mode
     @ l = 2
     @ ls -l
     42
     @ $[ls -l]  # you can still use explicit mode in scripts
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    
+
     @ del ls  # deleting ls will return us to subproc-mode
     @ ls -l
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh

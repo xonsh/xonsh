@@ -71,7 +71,7 @@ jobs:
     # against (see CLAUDE.md "Running tests in a FreeBSD poudriere jail"
     # and issue #6374).
     runs-on: ubuntu-latest
-    name: Test FreeBSD 15.0 (Python 3.11)
+    name: Test Python 3.11 FreeBSD 15.0
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
