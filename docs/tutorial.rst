@@ -88,7 +88,7 @@ But let's go through everything step by step.
 Xonsh Session Interface
 =======================
 
-Each session has a special global object ``@`` that provides instant functionality.
+Each session has a special global object ``@`` (we call this symbol the conch) that provides instant functionality.
 It gives you access to different parts of the current session.
 For example, you can use ``@.env`` to change environment variables, or ``@.imp`` to import libraries.
 You will learn more about this in the following sections.
