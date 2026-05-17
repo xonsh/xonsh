@@ -156,11 +156,15 @@ session (say, in your awesome new ``xonsh`` script) you can use the membership o
    # True
 
 To get information about a specific environment variable you can use the
-:func:`~xonsh.environ.Env.help` method.
+:func:`~xonsh.environ.Env.help` method or just ``?`` at the end.
 
 .. code-block:: xonshcon
 
-   @ @.env.help('XONSH_DEBUG')
+   @ $AUTO_CD?
+   Name: $AUTO_CD
+   Description: Flag to enable changing to a directory by entering the dirname or full path only (without the cd command).
+   Default: False
+   @ @.env.help('AUTO_CD')
 
 One helpful method is :func:`~xonsh.environ.Env.swap`.
 It can be used to temporarily set an environment variable:
