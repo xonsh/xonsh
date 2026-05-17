@@ -1687,46 +1687,57 @@ def make_default_aliases():
         "@error_raise": SpecAttrDecoratorAlias(
             {"raise_subproc_error": True},
             "Command decorator. Raise an exception if the command returns a non-zero exit code.",
+            name="@error_raise",
         ),
         "@error_ignore": SpecAttrDecoratorAlias(
             {"raise_subproc_error": False},
             "Command decorator. Do not raise an exception if the command returns a non-zero exit code.",
+            name="@error_ignore",
         ),
         "@thread": SpecAttrDecoratorAlias(
             {"threadable": True, "force_threadable": True},
             "Command decorator. Mark current command as threadable.",
+            name="@thread",
         ),
         "@unthread": SpecAttrDecoratorAlias(
             {"threadable": False, "force_threadable": False},
             "Command decorator. Mark current command as unthreadable.",
+            name="@unthread",
         ),
         "@lines": SpecAttrDecoratorAlias(
             {"output_format": "list_lines"},
             "Command decorator. Return output as list of lines.",
+            name="@lines",
         ),
         "@path": SpecAttrDecoratorAlias(
             {"output_format": _output_to_path_object},
             "Command decorator. Return Path object for the first line in output.",
+            name="@path",
         ),
         "@paths": SpecAttrDecoratorAlias(
             {"output_format": _output_to_path_objects},
             "Command decorator. Return Path objects for the lines in output.",
+            name="@paths",
         ),
         "@json": SpecAttrDecoratorAlias(
             {"output_format": lambda lines: XSH.imp.json.loads("\n".join(lines))},
             "Command decorator. Parses JSON and returns JSON object.",
+            name="@json",
         ),
         "@jsonl": SpecAttrDecoratorAlias(
             {"output_format": lambda lines: [XSH.imp.json.loads(lj) for lj in lines]},
             "Command decorator. Parses JSON strings and returns list of JSON objects.",
+            name="@jsonl",
         ),
         "@yaml": SpecAttrDecoratorAlias(
             {"output_format": lambda lines: XSH.imp.yaml.safe_load("\n".join(lines))},
             "Command decorator. Parses YAML and returns dict.",
+            name="@yaml",
         ),
         "@toml": SpecAttrDecoratorAlias(
             {"output_format": lambda lines: XSH.imp.tomllib.loads("\n".join(lines))},
             "Command decorator. Parses TOML and returns dict.",
+            name="@toml",
         ),
         "@xml": SpecAttrDecoratorAlias(
             {
@@ -1735,6 +1746,7 @@ def make_default_aliases():
                 ).fromstring("\n".join(lines))
             },
             "Command decorator. Parses XML and returns ElementTree Element.",
+            name="@xml",
         ),
     }
 
@@ -1746,6 +1758,7 @@ def make_default_aliases():
                 ).fromstring("\n".join(lines).encode())
             },
             "Command decorator. Parses XML with lxml and returns lxml Element.",
+            name="@lxml",
         )
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
