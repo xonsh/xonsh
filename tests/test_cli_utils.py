@@ -89,3 +89,23 @@ def test_parser_default_func(mocker):
 
     mocker.patch.object(xx, "xontribs_list", func)
     assert alias([]) is True
+
+
+def test_repr():
+    from xonsh.completers._aliases import CompleterAlias
+
+    def _fn():
+        pass
+
+    alias = cli_utils.ArgParserAlias(func=_fn, has_args=True, prog="myprog")
+    assert repr(alias) == "xonsh.cli_utils.ArgParserAlias('myprog')"
+
+    bare = cli_utils.ArgParserAlias()
+    assert repr(bare) == "xonsh.cli_utils.ArgParserAlias()"
+
+    # Subclass without `prog` in kwargs falls back to the bare class form
+    # until its parser is built, then uses the parser's prog.
+    completer = CompleterAlias()
+    assert repr(completer) == "xonsh.completers._aliases.CompleterAlias()"
+    assert completer.parser is not None  # trigger lazy build
+    assert repr(completer) == "xonsh.completers._aliases.CompleterAlias('completer')"
