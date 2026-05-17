@@ -202,7 +202,9 @@ if not on_rtd:
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-# html_title = None
+# Drives the Furo sidebar brand text — capitalize "Xonsh" and "Documentation"
+# to match the project's documentation-style guidelines.
+html_title = f"Xonsh {release} Documentation"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 # html_short_title = None
