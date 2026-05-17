@@ -96,6 +96,26 @@ def test_andor_chain_eval_mode(line, xession):
     )
 
 
+# --- GH-6011: multiline @("""…""") with && --------------------------------
+
+
+def test_multiline_atlparen_triple_string_and_chain(xession):
+    """Phase-1 recovery must wrap both sides of ``&&`` on a logical line that
+    contains a multiline triple-quoted ``@()`` argument (issue #6011).
+    """
+    execer = xession.execer
+    ctx = {"__xonsh__": object()}
+    src = (
+        'echo @("""1\n'
+        '                                                             """) && echo 2\n'
+    )
+    tree = execer.parse(src, ctx=ctx, mode="single")
+    assert tree.body, "expected a non-empty AST"
+    unparsed = pyast.unparse(tree.body[0])
+    assert "BoolOp" in unparsed or "and" in unparsed.lower()
+    assert "subproc" in unparsed
+
+
 # --- GH-6414: fish-style continuation comments -------------------------
 
 

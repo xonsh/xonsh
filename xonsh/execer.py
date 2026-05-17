@@ -1,5 +1,6 @@
 """Implements the xonsh executer."""
 
+import ast
 import builtins
 import collections.abc as cabc
 import inspect
@@ -19,6 +20,10 @@ from xonsh.tools import (
     strip_continuation_comments,
     subproc_toks,
 )
+
+# Placeholder for newlines inside a joined logical line while phase-1 recovery
+# mutates ``input``.  Restored to ``\n`` before returning from ``_parse_ctx_free``.
+_LOGICAL_NL = "\x00"
 
 
 class Execer:
@@ -259,17 +264,34 @@ class Execer:
                 input = input[len(beg_spaces) :]
             max_retries = len(input.splitlines()) * 2 + 10
             while not parsed:
+                # Indicates if the error is because of the right hand side of the operator
+                wrap_rhs_only = False
                 if max_retries <= 0:
                     # Prevent hanging e.g. #5839
                     raise original_error from None
                 max_retries -= 1
                 try:
+                    # Parse real newlines; keep "\x00" only in input so
+                    # splitlines() does not tear multiline string literals.
+                    parse_input = input.replace(_LOGICAL_NL, "\n")
                     tree = self.parser.parse(
-                        input,
+                        parse_input,
                         filename=filename,
                         mode=mode,
                         debug_level=(self.debug_level >= 2),
                     )
+                    # During multiline recovery the buffer keeps ``\x00`` in place
+                    # of string newlines.  That can make ``parse`` return an empty
+                    # ``Interactive``/``Module`` even though wrapping is not done
+                    # yet.  Only treat that as failure while the placeholder is
+                    # still present; otherwise return the empty tree and let
+                    # ``compile()`` handle it (``None`` / ``pass`` for comment-only).
+                    if (
+                        _LOGICAL_NL in input
+                        and isinstance(tree, (ast.Interactive, ast.Module))
+                        and not tree.body
+                    ):
+                        continue
                     parsed = True
                 except IndentationError as e:
                     if original_error is None:
@@ -292,6 +314,24 @@ class Execer:
                     lines = input.splitlines()
                     if input.endswith("\n"):
                         lines.append("")
+                    # Parser line numbers come from restored ``\n`` source; the
+                    # recovery buffer may still be a single row with ``\x00``.
+                    if _LOGICAL_NL in input and len(lines) <= 2:
+                        n_physical = len(lines) - (
+                            1 if lines and lines[-1] == "" else 0
+                        )
+                        if n_physical == 1 and last_error_line > 1:
+                            idx = 0
+                            last_error_line = 1
+                            for sep in (" && ", " || "):
+                                op_at = lines[0].find(sep)
+                                if op_at < 0:
+                                    continue
+                                rhs = lines[0][op_at + len(sep) :].lstrip()
+                                if rhs and not rhs.startswith("!["):
+                                    last_error_col = op_at + len(sep)
+                                    wrap_rhs_only = True
+                                    break
                     if idx >= len(lines):
                         # Parser reports an error past EOF (e.g. "unexpected
                         # dedent" right after the last statement). There is
@@ -301,13 +341,22 @@ class Execer:
                         raise original_error from None
                     line, nlogical, idx = get_logical_line(lines, idx)
                     if nlogical > 1 and not logical_input:
-                        _, sbpline = self._parse_ctx_free(
-                            line, mode=mode, filename=filename, logical_input=True
+                        normalized = line.replace("\n", _LOGICAL_NL)
+                        lexer = self.parser.lexer
+                        maxcol = find_next_break(
+                            normalized, mincol=last_error_col, lexer=lexer
                         )
-                        self._print_debug_wrapping(
-                            line, sbpline, last_error_line, last_error_col, maxcol=None
+                        sbpline = subproc_toks(
+                            normalized,
+                            returnline=True,
+                            greedy=False,
+                            maxcol=maxcol,
+                            lexer=lexer,
                         )
-                        replace_logical_line(lines, sbpline, idx, nlogical)
+                        if sbpline is None:
+                            raise original_error from None
+                        lines[idx] = sbpline
+                        del lines[idx + 1 : idx + nlogical]
                         last_error_col += 3
                         input = "\n".join(lines)
                         continue
@@ -328,20 +377,43 @@ class Execer:
                         if prev_indent == curr_indent:
                             raise original_error from None
                     lexer = self.parser.lexer
-                    maxcol = (
-                        None
-                        if greedy
-                        else find_next_break(line, mincol=last_error_col, lexer=lexer)
+                    wrap_line = (
+                        line.replace("\n", _LOGICAL_NL) if "\n" in line else line
                     )
-                    if not greedy and maxcol in (e.loc.column + 1, e.loc.column):
+                    if wrap_rhs_only:
+                        maxcol = None
+                        wrap_greedy = True
+                    else:
+                        maxcol = (
+                            None
+                            if greedy
+                            else find_next_break(
+                                wrap_line, mincol=last_error_col, lexer=lexer
+                            )
+                        )
+                        wrap_greedy = greedy
+                    if (
+                        not wrap_rhs_only
+                        and not greedy
+                        and maxcol
+                        in (
+                            e.loc.column + 1,
+                            e.loc.column,
+                        )
+                    ):
                         # go greedy the first time if the syntax error was because
                         # we hit an end token out of place. This usually indicates
                         # a subshell or maybe a macro.
                         if not balanced_parens(line, maxcol=maxcol):
-                            greedy = True
+                            wrap_greedy = True
                             maxcol = None
                     sbpline = subproc_toks(
-                        line, returnline=True, greedy=greedy, maxcol=maxcol, lexer=lexer
+                        wrap_line,
+                        returnline=True,
+                        greedy=wrap_greedy,
+                        maxcol=maxcol,
+                        mincol=last_error_col if wrap_rhs_only else -1,
+                        lexer=lexer,
                     )
                     if sbpline is None:
                         # subprocess line had no valid tokens,
@@ -351,7 +423,8 @@ class Execer:
                             last_error_line = last_error_col = -1
                             input = "\n".join(lines)
                             continue
-                        elif not greedy:
+                        elif not wrap_greedy:
+                            wrap_greedy = True
                             greedy = True
                             continue
                         else:
@@ -363,7 +436,8 @@ class Execer:
                         # if we have already wrapped this in subproc tokens
                         # and it still doesn't work, adding more won't help
                         # anything
-                        if not greedy:
+                        if not wrap_greedy:
+                            wrap_greedy = True
                             greedy = True
                             continue
                         else:
@@ -377,6 +451,7 @@ class Execer:
                     input = "\n".join(lines)
             if logical_input:
                 input = beg_spaces + input
+            input = input.replace(_LOGICAL_NL, "\n")
             return tree, input
 
         try:
