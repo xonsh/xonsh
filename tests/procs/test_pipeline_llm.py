@@ -73,7 +73,11 @@ def test_exec_alias_with_inner_pipe_in_outer_pipe(xonsh_session):
     open and preventing the inner downstream from ever observing EOF.
     """
     xonsh_session.env["XONSH_SUBPROC_CMD_RAISE_ERROR"] = False
-    xonsh_session.aliases["aaa"] = "seq 1 100000 | grep 5"
+    # ``--color=never``: on FreeBSD (and Linux distros that ship grep as an
+    # alias to ``grep --color=auto``) the BSD grep auto-detects an
+    # interactive context inside the test PTY and wraps matches in ANSI
+    # escapes, breaking the equality assertion below.
+    xonsh_session.aliases["aaa"] = "seq 1 100000 | grep --color=never 5"
 
     # Early-close downstream
     out = xonsh_session.execer.eval("$(aaa | head -3)")
