@@ -275,19 +275,18 @@ the directories again.
 
 .. code-block:: xonshcon
 
-    @ # this will be in subproc-mode, because ls doesn't exist
-    @ ls -l
-    total 0
+    @ ls -l  # subproc-mode, because ls doesn't exist
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
-    @ # set ls and l variables to force python-mode
-    @ ls = 44
+    
+    @ ls = 44  # set ls and l variables to force python-mode
     @ l = 2
     @ ls -l
     42
-    @ # deleting ls will return us to subproc-mode
-    @ del ls
+    @ $[ls -l]  # you can still use explicit mode in scripts
+    -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
+    
+    @ del ls  # deleting ls will return us to subproc-mode
     @ ls -l
-    total 0
     -rw-rw-r-- 1 snail snail 0 Mar  8 15:46 xonsh
 
 The determination between Python- and subprocess-modes is always done in the
@@ -298,7 +297,7 @@ impossible.
 
 .. note:: If you would like to explicitly run a subprocess command, you can always
           use the formal xonsh subprocess syntax that we will see in the following
-          sections. For example: ``![ls -l]``.
+          sections. For example: ``$[ls -l]``.
 
 
 Subprocess
