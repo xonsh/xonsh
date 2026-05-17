@@ -450,6 +450,25 @@ When writing xonsh code — in `.xsh` files, rc files, xontribs, docs, and examp
        $ env LD_PRELOAD=libgcc_s.so.1 xonsh
    ```
 
+3. **Capitalize "Xonsh" in prose** — in `.rst` files (and any other user-facing documentation), write the project name as **Xonsh** when it appears in headings or as a noun in running text. Treat it as a proper brand name, like *Python* or *Linux*. Keep the lowercase form `xonsh` *only* when you are quoting an identifier verbatim — the package name, the `xonsh` CLI command, a code span (``xonsh``), a file path, a URL, or text inside a ``code-block::``. Mixing the two in the same paragraph reads as inconsistency; reserve the lowercase form for cases where it is literally a name the reader will type.
+
+   ```rst
+   # Good — proper noun in prose, identifier in code
+   Xonsh is a modern shell language.
+
+   Install it with ``pip install xonsh`` and launch ``xonsh`` from your terminal.
+
+   .. code-block:: console
+
+       $ xonsh
+
+   # Bad — lowercase project name in prose
+   xonsh is a modern shell language.
+
+   # Bad — capitalized identifier inside a code span / shell command
+   Install it with ``pip install Xonsh`` and launch ``Xonsh``.
+   ```
+
 ## CI
 
 GitHub Actions matrix: Ubuntu/macOS/Windows x Python 3.11/3.12/3.13/3.14. Tests run with 600s timeout. Coverage collected on Python 3.12. Package manager: `uv`.
