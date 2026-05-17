@@ -401,6 +401,10 @@ class CommandPipeline:
             if not prev_procs_closed and proc.poll() is not None:
                 self._close_prev_procs()
                 prev_procs_closed = True
+            # Drain pipe-writer fds of any upstream proc
+            # that has finished, so the downstream proc can observe EOF on
+            # its stdin.
+            all_prev_done = self._prev_procs_done()
             if not check_prev_done:
                 # if we are piping...
                 if stdout_lines or stderr_lines:
@@ -409,7 +413,7 @@ class CommandPipeline:
                 elif prev_end_time is None:
                     # or see if we already know that the next-to-last
                     # proc in the pipeline has ended.
-                    if self._prev_procs_done():
+                    if all_prev_done:
                         # if it has, record the time
                         prev_end_time = time.time()
                 elif time.time() - prev_end_time >= 0.1:
