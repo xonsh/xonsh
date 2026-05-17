@@ -183,6 +183,8 @@ Provides an interface to printing lines of source code prior to their execution.
 .. command-help:: xonsh.aliases.xexec
 
 
+.. _command-decorators:
+
 Command Decorators (Decorator Aliases)
 ======================================
 
@@ -266,6 +268,34 @@ Parses TOML and returns a dict.
 .. code-block:: xonshcon
 
     @ config = $(@toml cat pyproject.toml)
+
+
+``@xml``
+---------
+Parses XML and returns an :class:`xml.etree.ElementTree.Element`. Navigate it
+with ``.tag``, ``.attrib``, ``.text``, ``.find()``, ``.findall()``, etc.
+
+.. code-block:: xonshcon
+
+    @ feed = $(@xml curl -s https://github.com/xonsh/xonsh/releases.atom)
+      ns = {'a': 'http://www.w3.org/2005/Atom'}
+      [e.find('a:title', ns).text for e in feed.findall('a:entry', ns)[:5]]
+    ['v0.23.6', 'v0.23.5', 'v0.23.4', 'v0.23.3', 'v0.23.2']
+
+
+``@lxml``
+----------
+Parses XML with `lxml <https://lxml.de/>`_ and returns an ``lxml.etree._Element``.
+Adds full XPath, richer error messages, and faster parsing on top of the
+stdlib ``@xml``. Registered only when ``lxml`` is installed
+(``xpip install lxml``).
+
+.. code-block:: xonshcon
+
+    @ feed = $(@lxml curl -s https://github.com/xonsh/xonsh/releases.atom)
+      ns = {'a': 'http://www.w3.org/2005/Atom'}
+      feed.xpath('//a:entry/a:title/text()', namespaces=ns)[:5]
+    ['v0.23.6', 'v0.23.5', 'v0.23.4', 'v0.23.3', 'v0.23.2']
 
 
 Directory Stack

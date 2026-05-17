@@ -2,6 +2,7 @@
 
 import argparse
 import functools
+import importlib.util
 import inspect
 import operator
 import os
@@ -1727,7 +1728,25 @@ def make_default_aliases():
             {"output_format": lambda lines: XSH.imp.tomllib.loads("\n".join(lines))},
             "Command decorator. Parses TOML and returns dict.",
         ),
+        "@xml": SpecAttrDecoratorAlias(
+            {
+                "output_format": lambda lines: __import__(
+                    "xml.etree.ElementTree", fromlist=["fromstring"]
+                ).fromstring("\n".join(lines))
+            },
+            "Command decorator. Parses XML and returns ElementTree Element.",
+        ),
     }
+
+    if importlib.util.find_spec("lxml") is not None:
+        default_aliases["@lxml"] = SpecAttrDecoratorAlias(
+            {
+                "output_format": lambda lines: __import__(
+                    "lxml.etree", fromlist=["fromstring"]
+                ).fromstring("\n".join(lines).encode())
+            },
+            "Command decorator. Parses XML with lxml and returns lxml Element.",
+        )
     if ON_WINDOWS:
         # Borrow builtin commands from cmd.exe.
         for alias in WINDOWS_CMD_ALIASES:

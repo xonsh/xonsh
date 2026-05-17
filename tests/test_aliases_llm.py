@@ -1,8 +1,14 @@
-"""Unit tests for ``win_sudo`` — the Windows UAC sudo fallback alias.
+"""LLM-generated unit tests for :mod:`xonsh.aliases`.
 
-The function under test is platform-independent enough to exercise on any host:
-``xonsh.platforms.winutils.sudo`` is mocked out so the elevation API is never
-actually called. See issue #5706 for the original bug.
+Currently covers:
+
+* ``win_sudo`` — the Windows UAC sudo fallback alias. The function under
+  test is platform-independent enough to exercise on any host:
+  ``xonsh.platforms.winutils.sudo`` is mocked out so the elevation API is
+  never actually called. See issue #5706 for the original bug.
+* ``@lxml`` — the optional command decorator that is only registered in
+  ``make_default_aliases()`` when the third-party ``lxml`` package is
+  importable.
 """
 
 import os
@@ -10,7 +16,8 @@ import os
 import pytest
 
 from xonsh import aliases
-from xonsh.aliases import WINDOWS_CMD_ALIASES, win_sudo
+from xonsh.aliases import WINDOWS_CMD_ALIASES, make_default_aliases, win_sudo
+from xonsh.procs.specs import SpecAttrDecoratorAlias
 
 
 @pytest.fixture
@@ -95,3 +102,53 @@ def test_windows_cmd_aliases_is_frozen():
     assert isinstance(WINDOWS_CMD_ALIASES, frozenset)
     assert "dir" in WINDOWS_CMD_ALIASES
     assert "echo" in WINDOWS_CMD_ALIASES
+
+
+# ---------------------------------------------------------------------------
+# ``@lxml`` decorator — optional, gated on third-party ``lxml`` being present.
+# ---------------------------------------------------------------------------
+
+lxml_etree = pytest.importorskip("lxml.etree")
+
+
+def _lxml_output_format():
+    return make_default_aliases()["@lxml"].set_attributes["output_format"]
+
+
+def test_lxml_decorator_registered_when_lxml_available(xession):
+    aliases_ = make_default_aliases()
+    assert "@lxml" in aliases_
+    assert isinstance(aliases_["@lxml"], SpecAttrDecoratorAlias)
+
+
+def test_lxml_decorator_parses_and_supports_xpath(xession):
+    output_format = _lxml_output_format()
+    root = output_format(
+        [
+            '<root attr="v">',
+            "  <item>1</item>",
+            "  <item>2</item>",
+            "</root>",
+        ]
+    )
+
+    assert root.tag == "root"
+    assert dict(root.attrib) == {"attr": "v"}
+    assert [i.text for i in root.findall("item")] == ["1", "2"]
+    assert root.xpath("//item/text()") == ["1", "2"]
+
+
+def test_lxml_decorator_unavailable(xession, monkeypatch):
+    """When ``lxml`` cannot be located, ``@lxml`` is not registered."""
+    import importlib.util as _util
+
+    real_find_spec = _util.find_spec
+    monkeypatch.setattr(
+        _util,
+        "find_spec",
+        lambda name, *a, **kw: (
+            None if name == "lxml" else real_find_spec(name, *a, **kw)
+        ),
+    )
+    aliases_ = make_default_aliases()
+    assert "@lxml" not in aliases_
