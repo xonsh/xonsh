@@ -1,4 +1,4 @@
-xonsh
+Xonsh
 =====
 
 .. raw:: html
@@ -157,7 +157,7 @@ First steps
 ***********
 
 - `Installation <https://xon.sh/install.html>`_ - isolated environment, package, container or portable AppImage.
-- `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
+- `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in Xonsh.
 
 Extensions
 **********
@@ -169,7 +169,7 @@ Xonsh has an extension/plugin system.  We call these additions ``xontribs``.
 - `Core xontribs <https://xon.sh/api/_autosummary/xontribs/xontrib.html>`_
 - `Create a xontrib step by step from template <https://github.com/xonsh/xontrib-template>`_
 
-Projects that use xonsh or compatible
+Projects that use Xonsh or compatible
 *************************************
 
 - `Assistant <https://gitlab.com/waser-technologies/technologies/assistant>`_: An AI-powered shell with a full Xonsh terminal and a multi-agent LLM system.
@@ -178,10 +178,10 @@ Projects that use xonsh or compatible
 - `Starship <https://starship.rs/>`_: Cross-shell prompt.
 - `zoxide <https://github.com/ajeetdsouza/zoxide>`_: A smarter cd command.
 - `gitsome <https://github.com/donnemartin/gitsome>`_: Supercharged Git/shell autocompleter with GitHub integration.
-- `xxh <https://github.com/xxh/xxh>`_: Using xonsh wherever you go through the SSH.
+- `xxh <https://github.com/xxh/xxh>`_: Using Xonsh wherever you go through the SSH.
 - `kash <https://github.com/jlevy/kash>`_: The knowledge agent shell.
 - `Snakemake <https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#xonsh>`_: A workflow management system to create reproducible and scalable data analyses.
-- `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
+- `any-nix-shell <https://github.com/haslersn/any-nix-shell>`_: Xonsh support for the ``nix run`` and ``nix-shell`` environments of the Nix package manager.
 - `lix <https://github.com/lix-project/lix>`_: A modern, delicious implementation of the Nix package manager.
 - `x-cmd <https://www.x-cmd.com/>`_: x-cmd is a vast and interesting collection of tools guided by the Unix philosophy.
 - `rever <https://regro.github.io/rever-docs/>`_: Cross-platform software release tool.
@@ -193,35 +193,35 @@ Jupyter-based interactive notebooks via `xontrib-jupyter <https://github.com/xon
 - `Euporie <https://github.com/joouha/euporie>`_: Terminal based interactive computing environment.
 - `Jupytext <https://jupytext.readthedocs.io/>`_: Clear and meaningful diffs when doing Jupyter notebooks version control.
 
-Compiling, packaging, or accelerating xonsh:
+Compiling, packaging, or accelerating Xonsh:
 
 - `AppImage <https://github.com/appimage>`_ is a format for distributing Linux applications and can be used to `create a standalone xonsh package <https://xon.sh/appimage.html>`_.
-- `Nuitka <https://github.com/Nuitka/Nuitka>`_ is an optimizing Python compiler that can `build a native xonsh binary <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_.
+- `Nuitka <https://github.com/Nuitka/Nuitka>`_ is an optimizing Python compiler that can `build a native Xonsh binary <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_.
 - `RustPython <https://github.com/RustPython/RustPython/>`_ is a Python interpreter written in Rust that can `run xonsh on top of Rust <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_.
 
 
-Welcome to the xonsh shell community
+Welcome to the Xonsh shell community
 ************************************
 
-The xonsh shell is developed by a community of volunteers. There are a few ways to help out:
+The Xonsh shell is developed by a community of volunteers. There are a few ways to help out:
 
-- Write a note or an article about xonsh.
+- Write a note or an article about Xonsh.
 - Send a link to Xonsh to your favorite blogger.
-- Add xonsh support in third party tool: `package manager <https://github.com/topics/package-manager>`_, `terminal emulator <https://github.com/topics/terminal-emulators>`_, `console tool <https://github.com/topics/console>`_, `IDE <https://github.com/topics/ide>`_.
-- Give a star to xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
+- Add Xonsh support in third party tool: `package manager <https://github.com/topics/package-manager>`_, `terminal emulator <https://github.com/topics/terminal-emulators>`_, `console tool <https://github.com/topics/console>`_, `IDE <https://github.com/topics/ide>`_.
+- Give a star to Xonsh repository and to `xontribs <https://github.com/topics/xontrib>`_ you like.
 - Solve a `popular issue <https://github.com/xonsh/xonsh/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc>`_ or `high priority issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3Apriority-high+sort%3Areactions-%2B1-desc>`_ or a `good first issue <https://github.com/xonsh/xonsh/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+sort%3Areactions-%2B1-desc>`_. You can start with the `Developer guide <https://xon.sh/devguide.html>`_. Feel free to use LLM e.g. `Github Copilot <https://github.com/copilot>`_.
 - Take an `idea <https://github.com/xonsh/xontrib-template/issues?q=is%3Aopen+is%3Aissue+label%3Aidea+sort%3Areactions-%2B1-desc>`_ and `create a new xontrib <https://github.com/xonsh/xontrib-template#why-use-this-template>`_.
-- Contribute to `xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
-- Become xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
-- Test xonsh with compiler, interpreter, optimizer and report upstream issues (e.g. `Nuitka <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_, `RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_).
-- Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `xonsh website <https://xon.sh/>`_ (`src <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_).
-- `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
+- Contribute to `Xonsh API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
+- Become Xonsh core developer by deep diving into xonsh internals. E.g. we feel a lack of Windows support.
+- Test Xonsh with compiler, interpreter, optimizer and report upstream issues (e.g. `Nuitka <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_, `RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_).
+- Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, improve `Xonsh website <https://xon.sh/>`_ (`src <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_).
+- `Become a sponsor to Xonsh <https://github.com/sponsors/xonsh>`_.
 
 We welcome new contributors!
 
 Credits
 *******
 
-- Thanks to `Zulip <https://zulip.com/>`_ for supporting the `xonsh community <https://xonsh.zulipchat.com/>`_!
-- Thanks to `HELLOTUX <https://www.hellotux.com/>`_ for distributing the `xonsh t-shirts, backpacks and more <https://www.hellotux.com/xonsh>`_!
-- Thanks to ADS.FUND for supporting `xonsh token <https://ads.fund/token/0xadf7478450b69a349ed9634b18584d2d3da81464>`_!
+- Thanks to `Zulip <https://zulip.com/>`_ for supporting the `Xonsh community <https://xonsh.zulipchat.com/>`_!
+- Thanks to `HELLOTUX <https://www.hellotux.com/>`_ for distributing the `Xonsh t-shirts, backpacks and more <https://www.hellotux.com/xonsh>`_!
+- Thanks to ADS.FUND for supporting `Xonsh token <https://ads.fund/token/0xadf7478450b69a349ed9634b18584d2d3da81464>`_!
