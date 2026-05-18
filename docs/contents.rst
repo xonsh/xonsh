@@ -111,7 +111,7 @@ and collaborating with others.
 * Contribute to `Xonsh Public API <https://github.com/xonsh/xonsh/tree/main/xonsh/api>`_.
 * Test xonsh with compiler, interpreter, optimizer and report upstream issues e.g. `Nuitka <https://github.com/xonsh/xonsh/issues/2895#issuecomment-3665753657>`_, `RustPython <https://github.com/xonsh/xonsh/issues/5082#issue-1611837062>`_.
 * Use high quality LLMs with max effort and testing to dive into the core, suggest improvements, refactor and fix issues.
-* Design more `logos and images <https://github.com/anki-code/xonsh-logo>`_, `improve <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_ `xonsh website <https://xon.sh/>`_.
+* Design more `logos and images <https://github.com/xonsh/logo>`_, `improve <https://github.com/xonsh/xonsh/blob/12f12ce94f1b6c92218e22fbdaaa846e16ac8b2d/docs/_templates/index.html#L9>`_ `xonsh website <https://xon.sh/>`_.
 * `Become a sponsor to xonsh <https://github.com/sponsors/xonsh>`_.
 
 
