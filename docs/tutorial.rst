@@ -636,13 +636,13 @@ result is automatically converted to a string. For example,
     xonsh party
     @ echo @(2+2)
     4
-    @ echo @([42, 'yo'])
+    @ echo @([42, 'yo'])  # `echo` with two arguments.
     42 yo
-    echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + " world\n")
+    @ echo "hello" | @(lambda args, stdin=None: stdin.read().strip() + " world\n")
     hello world
-    @ @(['echo', 'hello', 'world'])
+    @ @(['echo', 'hello', 'world'])  # List of arguments.
     hello world
-    @ @('echo hello world')  # note that strings are not split automatically
+    @ @('echo hello world')  # Single argument.
     xonsh: subprocess mode: command not found: echo hello world
 
 This syntax can be used inside of a captured or uncaptured subprocess, and can
