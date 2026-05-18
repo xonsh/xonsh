@@ -51,7 +51,7 @@ and use other built-in Python functionality:
 
     @ xpip install requests
     @ import requests
-    @ requests.get("https://xon.sh").status_code
+      requests.get("https://xon.sh").status_code
 
     @ print(1 if True else 2)
 
