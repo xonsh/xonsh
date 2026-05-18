@@ -158,7 +158,6 @@ First steps
 
 - `Installation <https://xon.sh/install.html>`_ - isolated environment, package, container or portable AppImage.
 - `Tutorial <https://xon.sh/tutorial.html>`_ - step by step introduction in xonsh.
-- `Cheat sheet <https://github.com/anki-code/xonsh-cheatsheet>`_ - some beginners may find this a helpful place to start.
 
 Extensions
 **********
