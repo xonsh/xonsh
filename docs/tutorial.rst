@@ -1435,7 +1435,7 @@ convert subprocess command output into Python object with your own logic:
 
     aliases['@and'] = SpecAttrDecoratorAlias(
                         {"output_format": lambda lines: ' and '.join([l.strip() for l in lines])},
-                        "Join lines with 'and'.")
+                        descr="Join lines with 'and'.", name="@and")
 
 
 Now you can run:
