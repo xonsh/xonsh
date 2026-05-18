@@ -111,7 +111,7 @@ master_doc = "contents"
 
 # General information about the project.
 project = "xonsh"
-copyright = 'Xonsh Contributors / https://github.com/xonsh/xonsh/graphs/contributors'
+copyright = 'Xonsh Contributors / https://github.com/xonsh/xonsh/graphs/contributors?all=1'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
