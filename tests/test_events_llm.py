@@ -1,8 +1,10 @@
 """Tests for reload-safe event handler uniqueness (xonsh/xonsh#3276)."""
 
+import inspect
+
 import pytest
 
-from xonsh.events import EventManager, LoadEvent, _handler_key
+from xonsh.events import Event, EventManager, LoadEvent, _handler_key
 
 
 @pytest.fixture
@@ -255,3 +257,21 @@ def test_delayed_discard_by_key_during_fire(events):
     events.on_test.fire()  # remover schedules discard
     vals = events.on_test.fire()
     assert "target" not in vals
+
+
+# --- xonsh/xonsh#3837: no dynamic per-event subclass ---
+
+
+def test_event_is_direct_instance_not_synthetic_subclass(events):
+    """Events are plain Event/LoadEvent instances, not per-event dynamic subclasses."""
+    assert type(events.on_test) is Event
+    events.transmogrify("on_test", LoadEvent)
+    assert type(events.on_test) is LoadEvent
+
+
+def test_freshly_accessed_event_has_no_doc(events):
+    """A fresh event must report no docstring — `test_typos` relies on this to catch
+    name typos in `events.doc(...)` calls. Without the explicit `e.__doc__ = None`
+    in `_mkevent`, lookup would fall through to the class docstring and silence the check.
+    """
+    assert inspect.getdoc(events.on_brand_new) is None

@@ -61,9 +61,7 @@ class AbstractEvent(collections.abc.MutableSet, abc.ABC):
         """
         The species (basically, class) of the event
         """
-        return type(self).__bases__[
-            0
-        ]  # events.on_chdir -> <class on_chdir> -> <class Event>
+        return type(self)
 
     def __call__(self, handler):
         """
@@ -328,21 +326,14 @@ class EventManager:
         docstring : str
             The docstring to apply to the event
         """
-        type(getattr(self, name)).__doc__ = docstring
+        getattr(self, name).__doc__ = docstring
 
     @staticmethod
-    def _mkevent(name, species=Event, doc=None):
+    def _mkevent(species=Event, doc=None):
         # NOTE: Also used in `xonsh_events` test fixture
-        # (A little bit of magic to enable docstrings to work right)
-        return type(
-            name,
-            (species,),
-            {
-                "__doc__": doc,
-                "__module__": "xonsh.events",
-                "__qualname__": "events." + name,
-            },
-        )()
+        e = species()
+        e.__doc__ = doc
+        return e
 
     def transmogrify(self, name, species):
         """
@@ -364,7 +355,7 @@ class EventManager:
             raise ValueError("Invalid event class; must be a subclass of AbstractEvent")
 
         oldevent = getattr(self, name)
-        newevent = self._mkevent(name, species, type(oldevent).__doc__)
+        newevent = self._mkevent(species, oldevent.__doc__)
         setattr(self, name, newevent)
 
         for handler in oldevent:
@@ -382,7 +373,7 @@ class EventManager:
         if name.startswith("_"):
             raise AttributeError
         # This is only called if the attribute doesn't exist, so create the Event...
-        e = self._mkevent(name)
+        e = self._mkevent()
         # ... and save it.
         setattr(self, name, e)
         # Now it exists, and we won't be called again.

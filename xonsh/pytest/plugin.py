@@ -156,7 +156,7 @@ def xonsh_events():
     for name, oldevent in vars(events).items():
         # Heavily based on transmogrification
         species = oldevent.species
-        newevent = events._mkevent(name, species, species.__doc__)
+        newevent = events._mkevent(species, species.__doc__)
         setattr(events, name, newevent)
 
 
