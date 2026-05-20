@@ -317,6 +317,12 @@ def xontribs_load(
     stdout = None
     stderr = None
     bad_imports = []
+    # A xontrib file may have been created after the interpreter started
+    # (installed mid-session, or written by a test). importlib's path
+    # finders cache directory listings keyed by mtime, and on filesystems
+    # with coarse mtime resolution a freshly written file can be missed --
+    # drop those caches so discovery does not depend on that race.
+    importlib.invalidate_caches()
     for name in names:
         if verbose:
             print(f"loading xontrib {name!r}")
