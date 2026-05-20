@@ -47,9 +47,7 @@ where the user does not need bash-supplied completions:
 
     @events.on_completer_filter
     def _only_bash_for_some(completer, command, context, **_):
-        if completer != 'bash':
-            return True
-        return command in {'kubectl', 'docker'}
+        return command in {'kubectl', 'docker'} if completer == 'bash' else True
 
 Handlers run on the completion thread; exceptions raised inside a
 handler are logged and treated as if no value was returned (i.e. the
