@@ -1,6 +1,7 @@
 """A (tab-)completer for xonsh."""
 
 import collections.abc as cabc
+import os
 import sys
 import typing as tp
 
@@ -14,8 +15,47 @@ from xonsh.completers.tools import (
     is_contextual_completer,
     is_exclusive_completer,
 )
+from xonsh.events import events
 from xonsh.parsers.completion_context import CompletionContext, CompletionContextParser
 from xonsh.tools import print_above_prompt, print_exception
+
+events.doc(
+    "on_completer_filter",
+    """
+on_completer_filter(completer: str, command: str, context: CompletionContext) -> bool | None
+
+Fires once for every registered completer just before it is invoked,
+allowing handlers to veto the call. Return ``False`` to skip the
+completer; return ``True``, ``None`` (or nothing) to let it run. If any
+handler returns ``False``, the completer is skipped.
+
+Parameters:
+
+* ``completer``: the registered name of the completer about to run
+  (e.g. ``'bash'``, ``'path'``).
+* ``command``: the basename of the command being completed
+  (e.g. ``'kubectl'`` even when the user typed ``/usr/bin/kubectl``).
+  Empty string when no command has been typed yet, or when the
+  completion happens outside the command-line context.
+* ``context``: the full :class:`CompletionContext` for the current
+  completion request.
+
+Use this to short-circuit completers such as ``bash`` on commands
+where the user does not need bash-supplied completions:
+
+.. code-block:: xonsh
+
+    @events.on_completer_filter
+    def _only_bash_for_some(completer, command, context, **_):
+        if completer != 'bash':
+            return True
+        return command in {'kubectl', 'docker'}
+
+Handlers run on the completion thread; exceptions raised inside a
+handler are logged and treated as if no value was returned (i.e. the
+completer is still allowed to run).
+""",
+)
 
 
 class Completer:
@@ -220,7 +260,31 @@ class Completer:
     ) -> tp.Iterator[tuple[Completion, int]]:
         filter_func = get_filter_function()
 
+        if (
+            completion_context is not None
+            and completion_context.command is not None
+            and completion_context.command.args
+        ):
+            command = os.path.basename(completion_context.command.args[0].value)
+        else:
+            command = ""
+
         for name, func in XSH.completers.items():
+            veto_by = None
+            for handler, rv in events.on_completer_filter.fire_iter(
+                completer=name, command=command, context=completion_context
+            ):
+                if rv is False:
+                    veto_by = handler
+            if veto_by is not None:
+                if trace:
+                    hmod = getattr(veto_by, "__module__", "unknown")
+                    hname = getattr(veto_by, "__name__", repr(veto_by))
+                    print_above_prompt(
+                        f"TRACE COMPLETIONS: Skipped '{name}' by on_completer_filter "
+                        f"handler '{hmod}.{hname}'."
+                    )
+                continue
             try:
                 if is_contextual_completer(func):
                     if completion_context is None:

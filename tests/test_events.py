@@ -46,6 +46,37 @@ def test_event_returns(events):
     assert set(vals) == {1, 2}
 
 
+def test_fire_iter_yields_handler_and_result(events):
+    @events.on_test
+    def first(**_):
+        return "a"
+
+    @events.on_test
+    def second(**_):
+        return "b"
+
+    pairs = list(events.on_test.fire_iter())
+    handlers = {h for h, _ in pairs}
+    results = {rv for _, rv in pairs}
+
+    assert handlers == {first, second}
+    assert results == {"a", "b"}
+
+
+def test_fire_iter_skips_raising_handler(events):
+    @events.on_test
+    def good(**_):
+        return "ok"
+
+    @events.on_test
+    def bad(**_):
+        raise RuntimeError("boom")
+
+    pairs = list(events.on_test.fire_iter())
+
+    assert pairs == [(good, "ok")]
+
+
 def test_validator(events):
     called = None
 
