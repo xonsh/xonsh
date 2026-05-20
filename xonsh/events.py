@@ -199,7 +199,20 @@ class Event(AbstractEvent):
             Return values of each handler. If multiple handlers return the same value, it will
             appear multiple times.
         """
-        vals = []
+        return [rv for _h, rv in self.fire_iter(**kwargs)]
+
+    def fire_iter(self, **kwargs):
+        """Iterator variant of :meth:`fire`.
+
+        Yields ``(handler, return_value)`` lazily as each registered,
+        validation-passing handler runs. Mirrors :meth:`fire`'s
+        exception handling — handlers that raise are logged and
+        skipped (no pair is yielded for them).
+
+        Use this when the caller needs to correlate each result with
+        the handler that produced it (e.g. to trace which handler
+        vetoed in a scatter-gather event).
+        """
         self._firing_depth += 1
         try:
             for handler in self._filterhandlers(self._handlers.values(), **kwargs):
@@ -208,7 +221,7 @@ class Event(AbstractEvent):
                 except Exception:
                     print_exception("Exception raised in event handler; ignored.")
                 else:
-                    vals.append(rv)
+                    yield handler, rv
         finally:
             self._firing_depth -= 1
             if self._firing_depth == 0:
@@ -219,7 +232,6 @@ class Event(AbstractEvent):
                     for key in self._delayed_discards:
                         self._handlers.pop(key, None)
                     self._delayed_discards = None
-        return vals
 
 
 class LoadEvent(AbstractEvent):
