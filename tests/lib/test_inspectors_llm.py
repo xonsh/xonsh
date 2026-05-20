@@ -332,5 +332,8 @@ def test_inspector_noinfo_without_oname(capsys):
 def test_inspector_format_fields_str_smoke():
     insp = Inspector()
     out = insp._format_fields_str([("Title", "value")])
-    assert "Title" in out
-    assert "value" in out
+    # ``format_color`` yields a token list when pygments is installed and a
+    # plain string otherwise; normalise to text before asserting.
+    text = out if isinstance(out, str) else "".join(tok[1] for tok in out)
+    assert "Title" in text
+    assert "value" in text

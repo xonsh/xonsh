@@ -127,10 +127,10 @@ def test_xontribs_list_json(xession):
     assert isinstance(parsed, dict)
 
 
-def test_xontribs_list_human_format(capsys):
+def test_xontribs_list_human_format(capfd):
     """The non-JSON branch prints colored lines for each xontrib."""
     xontribs_list(to_json=False)
-    captured = capsys.readouterr().out
+    captured = capfd.readouterr().out
     # we got at least one printed line and it mentions "loaded" or "not-loaded"
     assert "loaded" in captured.lower() or "not-loaded" in captured.lower()
 
