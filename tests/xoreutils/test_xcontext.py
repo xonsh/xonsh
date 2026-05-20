@@ -38,13 +38,17 @@ def _make_unexecutable(path):
 @skip_if_on_windows
 def test_resolve_one_passthrough_when_disabled(tmp_path):
     """``resolve=False`` never follows symlinks. The accessibility check
-    still runs, so an executable symlink target returns ``bad=False``."""
+    still runs, so an executable symlink target returns ``bad=False``,
+    and ``original == resolved`` so the colored output collapses to a
+    single line.
+    """
     target = tmp_path / "target"
     _make_executable(target)
     link = tmp_path / "link"
     link.symlink_to(target)
 
-    resolved, bad = _resolve_one(str(link), resolve=False)
+    original, resolved, bad = _resolve_one(str(link), resolve=False)
+    assert original == str(link)
     assert resolved == str(link)  # not resolved
     assert bad is False  # but still passes the executable check
 
@@ -52,13 +56,16 @@ def test_resolve_one_passthrough_when_disabled(tmp_path):
 @skip_if_on_windows
 def test_resolve_one_follows_symlink(tmp_path):
     """A non-cyclic symlink pointing at an executable file is followed to
-    its real target and reported as NOT bad."""
+    its real target and reported as NOT bad. The input is preserved on
+    ``original`` so the colored renderer can show both rows.
+    """
     target = tmp_path / "target"
     _make_executable(target)
     link = tmp_path / "link"
     link.symlink_to(target)
 
-    resolved, bad = _resolve_one(str(link), resolve=True)
+    original, resolved, bad = _resolve_one(str(link), resolve=True)
+    assert original == str(link)
     assert resolved == os.path.realpath(str(link))
     assert resolved == os.path.realpath(str(target))
     assert bad is False
@@ -67,14 +74,15 @@ def test_resolve_one_follows_symlink(tmp_path):
 def test_resolve_one_nonexistent_is_bad(tmp_path):
     """Dangling / missing paths can't be executed — bad=True."""
     missing = tmp_path / "does_not_exist"
-    resolved, bad = _resolve_one(str(missing), resolve=True)
+    original, resolved, bad = _resolve_one(str(missing), resolve=True)
+    assert original == str(missing)
     assert resolved == os.path.realpath(str(missing))
     assert bad is True
 
 
 def test_resolve_one_directory_is_bad(tmp_path):
     """A directory is not a runnable file — bad=True."""
-    resolved, bad = _resolve_one(str(tmp_path), resolve=True)
+    _, _, bad = _resolve_one(str(tmp_path), resolve=True)
     assert bad is True
 
 
@@ -90,7 +98,8 @@ def test_resolve_one_not_executable_is_bad(tmp_path):
     """
     f = tmp_path / "foo.py"
     _make_unexecutable(f)
-    resolved, bad = _resolve_one(str(f), resolve=True)
+    original, resolved, bad = _resolve_one(str(f), resolve=True)
+    assert original == str(f)
     assert resolved == os.path.realpath(str(f))
     assert bad is True
 
@@ -106,7 +115,8 @@ def test_resolve_one_main_py_is_not_bad(tmp_path):
     main = pkg / "__main__.py"
     _make_unexecutable(main)  # not +x, as __main__.py conventionally is
 
-    resolved, bad = _resolve_one(str(main), resolve=True)
+    original, resolved, bad = _resolve_one(str(main), resolve=True)
+    assert original == str(main)
     assert resolved == os.path.realpath(str(main))
     assert bad is False
 
@@ -115,7 +125,7 @@ def test_resolve_one_missing_main_py_is_bad(tmp_path):
     """A non-existent ``__main__.py`` is still bad — the ``+x`` exemption
     only applies when the file actually exists."""
     missing = tmp_path / "nopkg" / "__main__.py"
-    _, bad = _resolve_one(str(missing), resolve=True)
+    _, _, bad = _resolve_one(str(missing), resolve=True)
     assert bad is True
 
 
@@ -123,7 +133,8 @@ def test_resolve_one_executable_file_is_ok(tmp_path):
     """An existing, accessible, ``+x`` file is not bad."""
     f = tmp_path / "runnable"
     _make_executable(f)
-    resolved, bad = _resolve_one(str(f), resolve=True)
+    original, resolved, bad = _resolve_one(str(f), resolve=True)
+    assert original == str(f)
     assert resolved == os.path.realpath(str(f))
     assert bad is False
 
@@ -136,7 +147,7 @@ def test_resolve_one_not_executable_bad_even_without_resolve(tmp_path):
     """
     f = tmp_path / "foo.py"
     _make_unexecutable(f)
-    _, bad = _resolve_one(str(f), resolve=False)
+    _, _, bad = _resolve_one(str(f), resolve=False)
     assert bad is True
 
 
@@ -147,22 +158,25 @@ def test_resolve_one_dangling_symlink_is_bad(tmp_path):
     link = tmp_path / "dangling"
     link.symlink_to(target)
 
-    _, bad = _resolve_one(str(link), resolve=True)
+    _, _, bad = _resolve_one(str(link), resolve=True)
     assert bad is True
 
 
 @skip_if_on_windows
 def test_resolve_one_detects_cycle(tmp_path):
-    """A symlink pair A → B → A must be flagged bad and leave the
-    original path untouched so the caller can display it."""
+    """A symlink pair A → B → A must be flagged bad and leave the input
+    path untouched on both ``original`` and ``resolved`` so the colored
+    renderer collapses to a single (red) row.
+    """
     a = tmp_path / "a"
     b = tmp_path / "b"
     a.symlink_to(b)
     b.symlink_to(a)
 
-    resolved, bad = _resolve_one(str(a), resolve=True)
+    original, resolved, bad = _resolve_one(str(a), resolve=True)
     assert bad is True
-    assert resolved == str(a)  # original preserved
+    assert original == str(a)
+    assert resolved == str(a)  # cycle: chain not followed
 
 
 @skip_if_on_windows
@@ -171,49 +185,55 @@ def test_resolve_one_detects_self_cycle(tmp_path):
     a = tmp_path / "selfloop"
     a.symlink_to(a)
 
-    resolved, bad = _resolve_one(str(a), resolve=True)
+    original, resolved, bad = _resolve_one(str(a), resolve=True)
     assert bad is True
+    assert original == str(a)
     assert resolved == str(a)
 
 
 def test_resolve_path_accepts_none():
-    assert _resolve_path(None, resolve=True) == (None, False)
+    assert _resolve_path(None, resolve=True) == (None, None, False)
 
 
 def test_resolve_path_accepts_non_path_list():
-    """A list whose first element is not a string is returned as-is."""
+    """A list whose first element is not a string is returned as-is on
+    both sides (no probing happens)."""
     value = [object(), "-m", "pip"]
-    assert _resolve_path(value, resolve=True) == (value, False)
+    assert _resolve_path(value, resolve=True) == (value, value, False)
 
 
 @skip_if_on_windows
 def test_resolve_path_list_with_cyclic_head(tmp_path):
     """For list values (e.g. xpip alias), only the first element is resolved.
-    If it cycles, the list is kept and the bad flag is True."""
+    If it cycles, the list is kept verbatim on both sides and the bad
+    flag is True."""
     a = tmp_path / "a"
     b = tmp_path / "b"
     a.symlink_to(b)
     b.symlink_to(a)
 
     value = [str(a), "-m", "pip"]
-    resolved, bad = _resolve_path(value, resolve=True)
+    original, resolved, bad = _resolve_path(value, resolve=True)
     assert bad is True
-    # Original head preserved so the display still works; tail unchanged.
+    # Head kept verbatim on both sides; tail unchanged.
+    assert original == [str(a), "-m", "pip"]
     assert resolved == [str(a), "-m", "pip"]
 
 
 @skip_if_on_windows
 def test_resolve_path_list_with_good_head(tmp_path):
-    """For list values with an executable head, the head is resolved in
-    place and the tail is kept intact."""
+    """For list values with an executable head, the head is resolved on
+    the ``resolved`` side while ``original`` keeps the input verbatim;
+    the tail is kept intact on both sides."""
     target = tmp_path / "real"
     _make_executable(target)
     link = tmp_path / "link"
     link.symlink_to(target)
 
     value = [str(link), "-m", "pip"]
-    resolved, bad = _resolve_path(value, resolve=True)
+    original, resolved, bad = _resolve_path(value, resolve=True)
     assert bad is False
+    assert original == [str(link), "-m", "pip"]
     assert resolved[0] == os.path.realpath(str(link))
     assert resolved[1:] == ["-m", "pip"]
 
@@ -227,8 +247,9 @@ def test_resolve_path_list_with_bad_head_not_executable(tmp_path):
     f = tmp_path / "foo.py"
     _make_unexecutable(f)
     value = [str(f), "-m", "pip"]
-    resolved, bad = _resolve_path(value, resolve=True)
+    original, resolved, bad = _resolve_path(value, resolve=True)
     assert bad is True
+    assert original == [str(f), "-m", "pip"]
     assert resolved == [os.path.realpath(str(f)), "-m", "pip"]
 
 
