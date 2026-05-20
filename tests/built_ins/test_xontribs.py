@@ -1,5 +1,7 @@
 """xontrib tests, such as they are"""
 
+import importlib.util
+import os
 import sys
 
 import pytest
@@ -97,6 +99,32 @@ hello = 'world'
 
     xontribs_load(["script"])
     assert "script" in xontribs_loaded()
+
+
+def test_xontrib_load_after_dir_cached(tmpmod):
+    """A xontrib file written after importlib already cached its parent
+    directory must still load.
+
+    ``xontribs_load`` calls ``importlib.invalidate_caches()`` first.
+    Regression for a filesystem-dependent flake: ``FileFinder`` keeps a
+    per-directory cache keyed by mtime, and on a coarse-mtime filesystem a
+    freshly written xontrib could be missed, so the load silently did
+    nothing.
+    """
+    xdir = tmpmod.mkdir("xontrib")
+    # Prime importlib's FileFinder cache while the directory is empty.
+    assert importlib.util.find_spec("xontrib.latecomer") is None
+    xdir.join("latecomer.py").write("hello = 'world'\n")
+    # Emulate a coarse-mtime filesystem: tell the cached finder the
+    # directory is already up to date so it will not rescan on its own.
+    finder = sys.path_importer_cache.get(str(xdir))
+    if finder is not None:
+        finder._path_mtime = os.stat(str(xdir)).st_mtime
+        # Sanity check: without invalidation the new file stays invisible.
+        assert importlib.util.find_spec("xontrib.latecomer") is None
+
+    xontribs_load(["latecomer"])
+    assert "latecomer" in xontribs_loaded()
 
 
 def test_xontrib_unload(tmpmod, xession):
