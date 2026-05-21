@@ -11,13 +11,18 @@ def test_returncode_finalizes_unreaped_proc(xonsh_session):
     unset.  ``CommandPipeline.returncode`` must still produce a
     definite int — not ``None`` — so the raise-check helpers don't
     conflate "undetermined" with "succeeded".
+
+    Use a successful ``!(true)`` as the carrier pipeline (so the test
+    is independent of ``$XONSH_SUBPROC_CMD_RAISE_ERROR``, which the
+    in-CI ``run-tests.xsh`` enables) and inject the bug state by
+    swapping ``pipeline.proc`` for one whose ``returncode`` is ``None``
+    until ``poll()`` is called.
     """
-    pipeline: CommandPipeline = xonsh_session.execer.eval(
-        "!(/bin/sh -c 'exit 7')"
-    )
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(true)")
     pipeline.end()
-    real_rc = pipeline.proc.returncode
-    assert real_rc == 7  # sanity
+    assert pipeline.proc.returncode == 0  # sanity
+
+    real_rc = 7
 
     class _UnreapedProc:
         returncode = None
