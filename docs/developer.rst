@@ -211,8 +211,8 @@ Note that you can pass multiple test names in the above examples:
 Running the Tests in Parallel
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The full suite has ~7000 tests; on a multi-core machine
-`pytest-xdist <https://pypi.org/project/pytest-xdist/>`_ runs them
+On a multi-core machine
+`pytest-xdist <https://pypi.org/project/pytest-xdist/>`_ runs tests
 several times faster by distributing work across worker processes:
 
 .. code-block:: bash
@@ -222,14 +222,6 @@ several times faster by distributing work across worker processes:
 
 ``-n auto`` uses one worker per CPU core. Pass an explicit integer
 (``-n 4``) to cap the worker count.
-
-When iterating on a small set of tests, prefer a single process — the
-worker fork-up cost outweighs the parallelism gain below ~50 tests:
-
-.. code-block:: bash
-
-    python -m pytest tests/test_aliases.py        # single process is faster
-    python -m pytest -n auto                       # whole suite
 
 Writing the Tests - Advanced
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

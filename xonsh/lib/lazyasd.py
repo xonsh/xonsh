@@ -189,7 +189,7 @@ class LazyDict(cabc.MutableMapping):
             self._destruct()
 
     def __iter__(self):
-        # Insertion order — stable across processes (previously hash-randomized).
+        # Insertion order — stable across processes.
         seen = set()
         for k in tuple(self._d):
             seen.add(k)
