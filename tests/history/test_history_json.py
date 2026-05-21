@@ -541,6 +541,24 @@ assert MAX_RUNTIME < MIN_DIFF / 2
             HISTORY_FILES_LIST[:-3],
         ),
     ],
+    # Explicit IDs because three `seconds_to_rmfiles` rows derive hsize from
+    # `time.time()` at import — without these IDs the auto-generated test
+    # names contain the timestamp and differ between pytest-xdist workers,
+    # breaking collection with "Different tests were collected" errors.
+    ids=[
+        "commands-no-trim",
+        "commands-20days",
+        "commands-20-plus-evening",
+        "files-no-trim",
+        "files-20days",
+        "files-20-plus-evening",
+        "bytes-no-trim",
+        "bytes-20days",
+        "bytes-20-plus-evening",
+        "seconds-no-trim",
+        "seconds-latest-only",
+        "seconds-latest-plus-day",
+    ],
 )
 def test__xhj_gc_xx_to_rmfiles(fn, hsize, in_files, exp_size, exp_files, xession):
     act_size, act_files = fn(hsize, in_files)

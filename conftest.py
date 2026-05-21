@@ -21,6 +21,18 @@ if _actual != _expected:
         f"Use `cd {_root!r} && python -m pytest` to ensure that xonsh is tested from the source tree rather than site-packages."
     )
 
+# Propagate the source-tree guarantee to subprocesses. Tests under
+# tests/xintegration/ spawn `python -m xonsh` via subprocess, which does not
+# inherit the parent's sys.path — Python in the child resolves `xonsh` against
+# its own default sys.path plus PYTHONPATH. Without this, a stale xonsh in
+# site-packages silently takes precedence when the child's cwd isn't the repo
+# root (any test that os.chdir()s and doesn't restore on failure breaks it).
+os.environ["PYTHONPATH"] = (
+    _root + os.pathsep + os.environ["PYTHONPATH"]
+    if os.environ.get("PYTHONPATH")
+    else _root
+)
+
 # Render tests/bin/<name> from tests/bin/templates/<name> with a shebang that
 # uses the current pytest interpreter. The interpreter that runs pytest is the
 # one that should run the helper scripts, so a hardcoded ``#!/usr/bin/env

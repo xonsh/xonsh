@@ -189,7 +189,14 @@ class LazyDict(cabc.MutableMapping):
             self._destruct()
 
     def __iter__(self):
-        yield from (set(self._d.keys()) | set(self._loaders.keys()))
+        # Insertion order — stable across processes.
+        seen = set()
+        for k in tuple(self._d):
+            seen.add(k)
+            yield k
+        for k in tuple(self._loaders):
+            if k not in seen:
+                yield k
 
     def __len__(self):
         return len(self._d) + len(self._loaders)
