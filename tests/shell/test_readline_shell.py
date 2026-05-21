@@ -8,6 +8,7 @@ from xonsh.shells.readline_shell import (
     _ensure_newline,
     _parse_dsr_cursor_column,
     _render_completions,
+    _rendered_keeps_prefix,
 )
 
 
@@ -44,10 +45,39 @@ def test_render_completions_filters_substring_matches():
     completions = {"json", "jsonrpc", "_json"}
     rendered = _render_completions(completions, prefix, plen)
     # _json renders to @.imp._json which does NOT start with @.imp.jso
-    safe = [c for c in rendered if c.startswith(prefix)]
-    assert all(c.startswith(prefix) for c in safe)
+    safe = [c for c in rendered if _rendered_keeps_prefix(c, prefix)]
     assert "@.imp._json" not in safe
     assert "@.imp.json" in safe
+    assert "@.imp.jsonrpc" in safe
+
+
+@pytest.mark.parametrize(
+    "rendered, prefix, expected",
+    [
+        # #2865 — quoted path completions for an unquoted prefix must pass.
+        # Without the leading-quote allowance, readline ends up with nothing
+        # to insert (bell) when the user tabs `cat file<TAB>`.
+        ("'file with different name.txt' ", "file", True),
+        ("'file with spaces in name.txt' ", "file", True),
+        ('"file with spaces.txt" ', "file", True),
+        # #6209 — substring match starting with `_` would shrink the GCP
+        # below the typed prefix and must be filtered.
+        ("@.imp._json", "@.imp.jso", False),
+        ("@.imp.json", "@.imp.jso", True),
+        # Plain (non-quoted) prefix match — the common case.
+        ("abc", "ab", True),
+        # Empty prefix accepts everything.
+        ("anything", "", True),
+        # Leading quote on the rendered form, but the content does not
+        # actually match the typed prefix.
+        ("'other.txt'", "file", False),
+        # Both prefix and rendered start with a quote.
+        ('"hello world"', '"hel', True),
+        ('"_hello"', '"hel', False),
+    ],
+)
+def test_rendered_keeps_prefix(rendered, prefix, expected):
+    assert _rendered_keeps_prefix(rendered, prefix) is expected
 
 
 @pytest.mark.parametrize(
