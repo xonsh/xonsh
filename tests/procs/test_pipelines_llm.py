@@ -12,9 +12,7 @@ def test_returncode_finalizes_unreaped_proc(xonsh_session):
     definite int — not ``None`` — so the raise-check helpers don't
     conflate "undetermined" with "succeeded".
     """
-    pipeline: CommandPipeline = xonsh_session.execer.eval(
-        "!(/bin/sh -c 'exit 7')"
-    )
+    pipeline: CommandPipeline = xonsh_session.execer.eval("!(/bin/sh -c 'exit 7')")
     pipeline.end()
     real_rc = pipeline.proc.returncode
     assert real_rc == 7  # sanity
