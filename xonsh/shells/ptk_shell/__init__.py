@@ -9,7 +9,7 @@ from types import MethodType
 try:
     import termios
 except ImportError:  # Windows
-    termios = None
+    termios = None  # type: ignore[assignment]
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.application.current import get_app
