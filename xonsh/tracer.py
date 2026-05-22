@@ -23,6 +23,8 @@ terminal = LazyObject(
     "terminal",
 )
 
+_CACHE_MISS = object()
+
 
 class TracerType:
     """Represents a xonsh tracer object, which keeps track of all tracing
@@ -44,6 +46,11 @@ class TracerType:
         self.lexer = pyghooks.XonshLexer()
         self.formatter = terminal.TerminalFormatter()
         self._last = ("", -1)  # filename, lineno tuple
+        # Per-code-object cache for find_file(frame). Code objects are
+        # immutable and reused across calls, so resolving the file path once
+        # per code object is enough — avoids hitting the filesystem on every
+        # line event. See xonsh/xonsh#3063.
+        self._fname_cache: dict[tp.Any, str | None] = {}
 
     def __del__(self):
         for f in set(self.files):
@@ -81,26 +88,65 @@ class TracerType:
                     frame.f_trace = self.prev_tracer
             self.prev_tracer = DefaultNotGiven
 
-    def trace(self, frame, event, arg, *, find_file=find_file, print_color=print_color):
-        """Implements a line tracing function."""
+    def trace(
+        self,
+        frame,
+        event,
+        arg,
+        *,
+        find_file=find_file,
+        print_color=print_color,
+        linecache=linecache,
+        sys=sys,
+    ):
+        """Implements a line tracing function.
+
+        Default-argument bindings keep cross-module references alive inside
+        ``__kwdefaults__``. At interpreter shutdown, weakref callbacks like
+        ``logging._removeHandlerRef`` can fire while ``xonsh.tracer``'s globals
+        are being cleared, and without these bindings the lookups would raise
+        ``TypeError: 'NoneType' object is not callable``. See #4924 / #5806.
+        ``tracer_format_line`` is intentionally *not* bound here: it lives in
+        this same module, so its lifetime matches ``trace`` itself.
+        """
         if event not in self.valid_events:
             return self.trace
-        fname = find_file(frame)
-        if fname in self.files:
-            lineno = frame.f_lineno
-            curr = (fname, lineno)
-            if curr != self._last:
-                line = linecache.getline(fname, lineno).rstrip()
-                s = tracer_format_line(
-                    fname,
-                    lineno,
-                    line,
-                    color=self.usecolor,
-                    lexer=self.lexer,
-                    formatter=self.formatter,
-                )
-                print_color(s)
-                self._last = curr
+        # Resolve the frame's file path. Cached on the code object: code
+        # objects are immutable and reused across invocations, so we hit the
+        # filesystem (inspect.getabsfile + normabspath) at most once per
+        # distinct callable in the program. This matters because the global
+        # tracer fires on every "call" event — for every frame entered, in
+        # every file — so the per-event cost has to be near-zero.
+        code = frame.f_code
+        cache = self._fname_cache
+        fname = cache.get(code, _CACHE_MISS)
+        if fname is _CACHE_MISS:
+            fname = find_file(frame)
+            cache[code] = fname
+        if fname not in self.files:
+            # Returning None tells Python not to install this function as the
+            # frame's local trace function. Line events inside this frame
+            # (and its children, until they cross back into a traced file)
+            # will not fire at all — that is the source of the speedup for
+            # #3063. Without this, every line of every imported module gets
+            # a Python-level callback, which is two orders of magnitude
+            # slower than running with the tracer off.
+            return None
+        lineno = frame.f_lineno
+        curr = (fname, lineno)
+        if curr != self._last:
+            line = linecache.getline(fname, lineno).rstrip()
+            s = tracer_format_line(
+                fname,
+                lineno,
+                line,
+                color=self.usecolor,
+                lexer=self.lexer,
+                formatter=self.formatter,
+            )
+            print_color(s)
+            sys.stdout.flush()
+            self._last = curr
         return self.trace
 
     def on_files(
