@@ -81,8 +81,27 @@ class TracerType:
                     frame.f_trace = self.prev_tracer
             self.prev_tracer = DefaultNotGiven
 
-    def trace(self, frame, event, arg, *, find_file=find_file, print_color=print_color):
-        """Implements a line tracing function."""
+    def trace(
+        self,
+        frame,
+        event,
+        arg,
+        *,
+        find_file=find_file,
+        print_color=print_color,
+        linecache=linecache,
+        sys=sys,
+    ):
+        """Implements a line tracing function.
+
+        Default-argument bindings keep cross-module references alive inside
+        ``__kwdefaults__``. At interpreter shutdown, weakref callbacks like
+        ``logging._removeHandlerRef`` can fire while ``xonsh.tracer``'s globals
+        are being cleared, and without these bindings the lookups would raise
+        ``TypeError: 'NoneType' object is not callable``. See #4924 / #5806.
+        ``tracer_format_line`` is intentionally *not* bound here: it lives in
+        this same module, so its lifetime matches ``trace`` itself.
+        """
         if event not in self.valid_events:
             return self.trace
         fname = find_file(frame)
