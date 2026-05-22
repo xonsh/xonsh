@@ -1078,7 +1078,7 @@ def source_foreign_fn(
             if shell_name in {"cmd", "cmd.exe"}
             else shlex.quote
         )
-        prevcmd = "".join(f"{sourcer} {quote(f)}\n" for f in files_or_code)
+        prevcmd = "\n".join(f"{sourcer} {quote(f)}" for f in files_or_code)
         files = tuple(files_or_code)
     elif not prevcmd:
         prevcmd = " ".join(files_or_code)  # code to run, no files
@@ -1107,8 +1107,16 @@ def source_foreign_fn(
         if dryrun:
             return
         else:
-            msg = f"xonsh: error: Source failed: {prevcmd!r}\n"
-            msg += "xonsh: error: Possible reasons: File not found or syntax error\n"
+            what = ", ".join(files) if files else prevcmd
+            msg = (
+                f"xonsh: error: Failed to source: {what}\n"
+                "xonsh: error: The foreign shell exited with an error "
+                "(its stderr is forwarded above if any). Common causes: "
+                "the shell binary is missing, the file has a syntax error, "
+                "or the sourced script returned non-zero (for example an "
+                "early-exit guard in shell rc files). Re-run with "
+                "--show-output for full stdout/stderr.\n"
+            )
             return (None, msg, 1)
     # apply results
     denv = env.detype()

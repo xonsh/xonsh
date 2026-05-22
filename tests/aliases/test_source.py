@@ -126,7 +126,7 @@ def test_source_foreign_quotes_posix_paths(monkeypatch, xession):
 
     source_foreign_fn("bash", [target], sourcer="source")
 
-    expected = f"source {shlex.quote(target)}\n"
+    expected = f"source {shlex.quote(target)}"
     assert calls["kwargs"]["prevcmd"] == expected
 
 
@@ -137,5 +137,5 @@ def test_source_foreign_quotes_cmd_paths(monkeypatch, xession):
 
     source_foreign_fn("cmd.exe", [target], sourcer="call")
 
-    expected = f"call {argvquote(target, force=True)}\n"
+    expected = f"call {argvquote(target, force=True)}"
     assert calls["kwargs"]["prevcmd"] == expected

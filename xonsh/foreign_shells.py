@@ -299,13 +299,26 @@ def foreign_shell_data(
         s = proc.stdout
         captured_stderr = proc.stderr or ""
     except subprocess.CalledProcessError as e:
-        # Surface output even on failure — that's where users most need it.
-        if show_output:
-            _emit_foreign_script_output(e.stdout or "", e.stderr or "")
+        # Always surface the foreign shell's stderr on failure — that's
+        # where users most need it (and ``--show-output`` is opt-in for
+        # the success case where the script's stdout would also be
+        # forwarded). Without this, callers like ``source-zsh`` would
+        # print a generic "failed to source" message with no hint of why.
+        stderr_str = e.stderr or ""
+        if stderr_str:
+            sys.stderr.write(stderr_str)
+            sys.stderr.flush()
+        if show_output and e.stdout:
+            _emit_foreign_script_output(e.stdout, "")
         if not safe:
             raise
         return None, None
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        # The foreign shell binary itself wasn't found. Tell the user
+        # which binary was missing — otherwise the caller's "failed to
+        # source" message looks identical to a script-level error.
+        sys.stderr.write(f"xonsh: error: foreign shell not found: {shell!r} ({e})\n")
+        sys.stderr.flush()
         if not safe:
             raise
         return None, None

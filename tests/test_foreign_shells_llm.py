@@ -174,3 +174,80 @@ def test_foreign_shell_data_default_silently_swallows_script_output(capfd, xessi
     assert env.get("VAR_4070_SILENT") == "ok"
     assert "silent-banner" not in captured.out
     assert "silent-banner" not in captured.err
+
+
+# ---------------------------------------------------------------------------
+# Issue #4977: ``source-zsh`` (and friends) gives a misleading
+# "File not found or syntax error" message whenever the foreign shell
+# subprocess exits non-zero — even when the real cause is a script that
+# returned non-zero (e.g. an early-exit guard inside ``.zshrc``). The fix
+# auto-surfaces the shell's stderr on every failure, regardless of
+# ``--show-output``, so users see why the source actually failed.
+# ---------------------------------------------------------------------------
+
+
+@skip_if_on_windows
+@pytest.mark.skipif(not shutil.which("bash"), reason="bash is not available")
+def test_foreign_shell_data_forwards_stderr_on_failure_without_show_output(
+    capfd, xession
+):
+    """Issue #4977: a non-zero exit from the foreign shell must surface its
+    stderr to the user even when ``show_output`` is left at its default."""
+    from xonsh.foreign_shells import foreign_shell_data
+
+    foreign_shell_data.cache_clear()
+    with tempfile.NamedTemporaryFile("w", suffix=".sh", delete=False) as script:
+        # ``set -e`` is prepended by xonsh; ``return 1`` exits the sourced
+        # script (and therefore the whole subprocess) with code 1, exactly
+        # like a real-world rc-file early-exit guard.
+        script.write("echo why-it-failed 1>&2\nreturn 1\n")
+        script_name = script.name
+    try:
+        env, aliases = foreign_shell_data(
+            shell="bash",
+            currenv=(("PATH", os.environ.get("PATH", "")),),
+            interactive=False,
+            sourcer="source",
+            prevcmd=f"source {script_name}",
+            files=(script_name,),
+        )
+    finally:
+        os.unlink(script_name)
+        foreign_shell_data.cache_clear()
+
+    captured = capfd.readouterr()
+    assert env is None and aliases is None
+    # The shell's stderr ("why-it-failed") must appear regardless of
+    # ``show_output`` — that's the whole point of the fix.
+    assert "why-it-failed" in captured.err
+
+
+@skip_if_on_windows
+def test_foreign_shell_data_missing_binary_emits_named_error(
+    capfd, xession, monkeypatch
+):
+    """Issue #4977: when the foreign shell binary itself isn't on PATH the
+    user gets a concrete "foreign shell not found" message naming the
+    binary, instead of the caller's generic "failed to source"."""
+    from xonsh import foreign_shells
+
+    def fake_run(*args, **kwargs):
+        raise FileNotFoundError(2, "No such file or directory", "bash")
+
+    monkeypatch.setattr(foreign_shells.subprocess, "run", fake_run)
+    foreign_shells.foreign_shell_data.cache_clear()
+    try:
+        env, aliases = foreign_shells.foreign_shell_data(
+            shell="bash",  # canon-name check passes; subprocess.run is mocked
+            currenv=(("PATH", "/nonexistent"),),
+            interactive=False,
+            sourcer="source",
+            prevcmd="source /tmp/whatever",
+        )
+    finally:
+        foreign_shells.foreign_shell_data.cache_clear()
+
+    captured = capfd.readouterr()
+    assert env is None and aliases is None
+    assert "foreign shell not found" in captured.err
+    assert "'bash'" in captured.err
