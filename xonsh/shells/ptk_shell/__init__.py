@@ -6,6 +6,11 @@ import sys
 from functools import wraps
 from types import MethodType
 
+try:
+    import termios
+except ImportError:  # Windows
+    termios = None  # type: ignore[assignment]
+
 from prompt_toolkit import ANSI
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, Suggestion
@@ -423,19 +428,34 @@ class PromptToolkitShell(BaseShell):
         if emit_modify_other_keys:
             output.write_raw("\x1b[>4;1m")
             output.flush()
+        eintr_retry_types: tuple = (InterruptedError,)
+        if termios is not None:
+            eintr_retry_types = (InterruptedError, termios.error)
         try:
             while True:
                 try:
                     line = self.prompter.prompt(**prompt_args)
                     break
-                except InterruptedError:
+                except eintr_retry_types as e:
                     # Retry on EINTR — tcsetattr in prompt_toolkit's
                     # raw_mode() is not automatically retried by Python
-                    # (PEP 475 doesn't cover termios). This happens when a
-                    # signal (e.g. SIGCHLD from a process launcher like
-                    # `uv run`) arrives during terminal setup. Narrow to
-                    # InterruptedError so EOFError/KeyboardInterrupt/etc.
+                    # (PEP 475 doesn't cover termios). This happens when
+                    # a signal (e.g. SIGCHLD from a process launcher like
+                    # `uv run` or `chezmoi cd`) arrives during terminal
+                    # setup. termios.error is declared in CPython as
+                    # PyErr_NewException("termios.error", NULL, ...) — it
+                    # inherits directly from Exception, not OSError, so
+                    # InterruptedError alone does not cover it (issues
+                    # #5791, #5871). Gate termios.error on errno==EINTR
+                    # so unrelated termios failures (EIO, ENOTTY, …)
+                    # still surface. EOFError/KeyboardInterrupt/etc.
                     # propagate to cmdloop unchanged (issue #6412).
+                    if (
+                        termios is not None
+                        and isinstance(e, termios.error)
+                        and (not e.args or e.args[0] != 4)
+                    ):
+                        raise
                     continue
         finally:
             if emit_modify_other_keys:
