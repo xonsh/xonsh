@@ -26,7 +26,11 @@ from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
-from xonsh.foreign_shells import foreign_shell_data
+from xonsh.foreign_shells import (
+    CANON_SHELL_NAMES,
+    DEFAULT_SOURCERS,
+    foreign_shell_data,
+)
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
@@ -1070,7 +1074,24 @@ def source_foreign_fn(
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(files_or_code[0]):
         if not sourcer:
-            return (None, "xonsh: error: `sourcer` command is not mentioned.\n", 1)
+            # Issue #5895: ``--sourcer`` used to be mandatory whenever a
+            # file argument was given, even though every shell xonsh
+            # knows about already has a default in ``DEFAULT_SOURCERS``.
+            # Fall back to that default when the shell canonicalizes
+            # ("/bin/bash" → "bash" → "source"); only error out for a
+            # truly unknown shell.
+            shkey = CANON_SHELL_NAMES.get(shell) or CANON_SHELL_NAMES.get(
+                os.path.basename(shell)
+            )
+            sourcer = DEFAULT_SOURCERS.get(shkey) if shkey else None
+        if not sourcer:
+            return (
+                None,
+                f"xonsh: error: cannot determine how to source files for "
+                f"foreign shell {shell!r}. Pass --sourcer "
+                f"(for example --sourcer . for POSIX).\n",
+                1,
+            )
         # we have filenames to source
         shell_name = os.path.basename(shell).lower()
         quote = (
@@ -1078,7 +1099,7 @@ def source_foreign_fn(
             if shell_name in {"cmd", "cmd.exe"}
             else shlex.quote
         )
-        prevcmd = "".join(f"{sourcer} {quote(f)}\n" for f in files_or_code)
+        prevcmd = "\n".join(f"{sourcer} {quote(f)}" for f in files_or_code)
         files = tuple(files_or_code)
     elif not prevcmd:
         prevcmd = " ".join(files_or_code)  # code to run, no files
@@ -1107,8 +1128,16 @@ def source_foreign_fn(
         if dryrun:
             return
         else:
-            msg = f"xonsh: error: Source failed: {prevcmd!r}\n"
-            msg += "xonsh: error: Possible reasons: File not found or syntax error\n"
+            what = ", ".join(files) if files else prevcmd
+            msg = (
+                f"xonsh: error: Failed to source: {what}\n"
+                "xonsh: error: The foreign shell exited with an error "
+                "(its stderr is forwarded above if any). Common causes: "
+                "the shell binary is missing, the file has a syntax error, "
+                "or the sourced script returned non-zero (for example an "
+                "early-exit guard in shell rc files). Re-run with "
+                "--show-output for full stdout/stderr.\n"
+            )
             return (None, msg, 1)
     # apply results
     denv = env.detype()
@@ -1668,6 +1697,15 @@ def make_default_aliases():
             func=functools.partial(source_foreign_fn, "bash", sourcer="source"),
             has_args=True,
             prog="source-bash",
+        ),
+        # Issue #5894: ``/bin/sh`` may be bash, dash, or another POSIX
+        # shell — default to the POSIX dot sourcer so this works on dash-
+        # based distros too. Users can still pass --sourcer source to
+        # opt into the bash/zsh extension.
+        "source-sh": SourceForeignAlias(
+            func=functools.partial(source_foreign_fn, "sh", sourcer="."),
+            has_args=True,
+            prog="source-sh",
         ),
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,

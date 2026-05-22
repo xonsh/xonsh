@@ -56,6 +56,13 @@ def CANON_SHELL_NAMES():
         "zsh": "zsh",
         "/bin/zsh": "zsh",
         "/usr/bin/zsh": "zsh",
+        # POSIX ``sh`` — issue #5894. ``/bin/sh`` may be bash, dash, or
+        # another POSIX shell depending on distro, so the defaults below
+        # stick to POSIX-only constructs (``.`` instead of ``source``,
+        # no function listing, ``alias`` without ``-L``).
+        "sh": "sh",
+        "/bin/sh": "sh",
+        "/usr/bin/sh": "sh",
         "cmd": "cmd",
         "cmd.exe": "cmd",
     }
@@ -69,43 +76,55 @@ def DEFAULT_ENVCMDS():
         # Falls back to plain env if -0 is not supported.
         "bash": "env -0 2>/dev/null || env",
         "zsh": "env -0 2>/dev/null || env",
+        "sh": "env -0 2>/dev/null || env",
         "cmd": "set",
     }
 
 
 @lazyobject
 def DEFAULT_ALIASCMDS():
-    return {"bash": "alias", "zsh": "alias -L", "cmd": ""}
+    # ``alias -L`` is zsh-only; bare ``alias`` is POSIX.
+    return {"bash": "alias", "zsh": "alias -L", "sh": "alias", "cmd": ""}
 
 
 @lazyobject
 def DEFAULT_FUNCSCMDS():
-    return {"bash": DEFAULT_BASH_FUNCSCMD, "zsh": DEFAULT_ZSH_FUNCSCMD, "cmd": ""}
+    # POSIX sh has no portable way to enumerate functions; bash and zsh
+    # variants both rely on shell-specific builtins. Leave empty for sh.
+    return {
+        "bash": DEFAULT_BASH_FUNCSCMD,
+        "zsh": DEFAULT_ZSH_FUNCSCMD,
+        "sh": "",
+        "cmd": "",
+    }
 
 
 @lazyobject
 def DEFAULT_SOURCERS():
-    return {"bash": "source", "zsh": "source", "cmd": "call"}
+    # ``.`` is the POSIX sourcing builtin; ``source`` is a bash/zsh
+    # extension. ``/bin/sh`` on dash-based distros (Debian, Ubuntu,
+    # Alpine) does not support ``source``.
+    return {"bash": "source", "zsh": "source", "sh": ".", "cmd": "call"}
 
 
 @lazyobject
 def DEFAULT_TMPFILE_EXT():
-    return {"bash": ".sh", "zsh": ".zsh", "cmd": ".bat"}
+    return {"bash": ".sh", "zsh": ".zsh", "sh": ".sh", "cmd": ".bat"}
 
 
 @lazyobject
 def DEFAULT_RUNCMD():
-    return {"bash": "-c", "zsh": "-c", "cmd": "/C"}
+    return {"bash": "-c", "zsh": "-c", "sh": "-c", "cmd": "/C"}
 
 
 @lazyobject
 def DEFAULT_SETERRPREVCMD():
-    return {"bash": "set -e", "zsh": "set -e", "cmd": "@echo off"}
+    return {"bash": "set -e", "zsh": "set -e", "sh": "set -e", "cmd": "@echo off"}
 
 
 @lazyobject
 def DEFAULT_SETERRPOSTCMD():
-    return {"bash": "", "zsh": "", "cmd": "if errorlevel 1 exit 1"}
+    return {"bash": "", "zsh": "", "sh": "", "cmd": "if errorlevel 1 exit 1"}
 
 
 _FOREIGN_OUTPUT_FIRST_MARKER = "__XONSH_ENV_BEG__"
@@ -243,10 +262,21 @@ def foreign_shell_data(
         os.path.basename(shell)
     )
     if shkey is None:
-        raise KeyError(
-            f"Unknown foreign shell {shell!r}. "
-            f"Supported: {', '.join(sorted(set(CANON_SHELL_NAMES.values())))}"
+        # Issue #5894: unknown shell name used to raise KeyError that
+        # bubbled all the way up through ProcProxyThread as an
+        # unhandled traceback. Under the default ``safe=True`` we
+        # surface a clean message and behave like every other failure
+        # path (return None, None → caller prints the friendly source-
+        # failed error). Callers that opted out of safe handling still
+        # see the exception.
+        supported = ", ".join(sorted(set(CANON_SHELL_NAMES.values())))
+        if not safe:
+            raise KeyError(f"Unknown foreign shell {shell!r}. Supported: {supported}")
+        sys.stderr.write(
+            f"xonsh: error: unknown foreign shell {shell!r}. Supported: {supported}\n"
         )
+        sys.stderr.flush()
+        return None, None
     envcmd = DEFAULT_ENVCMDS.get(shkey, "env") if envcmd is None else envcmd
     aliascmd = DEFAULT_ALIASCMDS.get(shkey, "alias") if aliascmd is None else aliascmd
     funcscmd = DEFAULT_FUNCSCMDS.get(shkey, "echo {}") if funcscmd is None else funcscmd
@@ -299,13 +329,26 @@ def foreign_shell_data(
         s = proc.stdout
         captured_stderr = proc.stderr or ""
     except subprocess.CalledProcessError as e:
-        # Surface output even on failure — that's where users most need it.
-        if show_output:
-            _emit_foreign_script_output(e.stdout or "", e.stderr or "")
+        # Always surface the foreign shell's stderr on failure — that's
+        # where users most need it (and ``--show-output`` is opt-in for
+        # the success case where the script's stdout would also be
+        # forwarded). Without this, callers like ``source-zsh`` would
+        # print a generic "failed to source" message with no hint of why.
+        stderr_str = e.stderr or ""
+        if stderr_str:
+            sys.stderr.write(stderr_str)
+            sys.stderr.flush()
+        if show_output and e.stdout:
+            _emit_foreign_script_output(e.stdout, "")
         if not safe:
             raise
         return None, None
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        # The foreign shell binary itself wasn't found. Tell the user
+        # which binary was missing — otherwise the caller's "failed to
+        # source" message looks identical to a script-level error.
+        sys.stderr.write(f"xonsh: error: foreign shell not found: {shell!r} ({e})\n")
+        sys.stderr.flush()
         if not safe:
             raise
         return None, None
