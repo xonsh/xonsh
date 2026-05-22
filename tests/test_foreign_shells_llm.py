@@ -281,12 +281,24 @@ def test_foreign_shell_data_missing_binary_emits_named_error(
         "ash",
         "/bin/ash",
         "/usr/bin/ash",
+        # ksh family — POSIX-compatible at the env/alias level; their
+        # shell-specific function listing isn't exposed, but the common
+        # ``source-ksh /etc/ksh.kshrc`` use case works via this alias.
+        "ksh",
+        "/bin/ksh",
+        "/usr/bin/ksh",
+        "mksh",
+        "/bin/mksh",
+        "/usr/bin/mksh",
+        "pdksh",
+        "/bin/pdksh",
+        "/usr/bin/pdksh",
     ],
 )
 def test_sh_canonicalizes_to_posix_defaults(shell_name):
-    """All POSIX-sh spellings (sh/dash/ash, bare and absolute) resolve
-    to the same canon key and pull in POSIX-safe defaults (no bash/zsh-
-    specific syntax)."""
+    """All POSIX-sh spellings (sh/dash/ash/ksh/mksh/pdksh, bare and
+    absolute) resolve to the same canon key and pull in POSIX-safe
+    defaults (no bash/zsh-specific syntax)."""
     from xonsh.foreign_shells import (
         CANON_SHELL_NAMES,
         DEFAULT_ALIASCMDS,
