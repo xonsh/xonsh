@@ -23,6 +23,7 @@ from prompt_toolkit.application.current import get_app
 if os.environ.get("SSH_TTY") or os.environ.get("SSH_CONNECTION"):
     try:
         from prompt_toolkit.output.vt100 import Vt100_Output as _XPtkVt100Output
+
         _XPtkVt100Output.ask_for_cpr = lambda self: None
         _XPtkVt100Output.responds_to_cpr = property(lambda self: False)
     except Exception:

@@ -1,7 +1,6 @@
 """LLM-generated tests for the prompt_toolkit shell."""
 
 import importlib
-import os
 
 import pytest
 
