@@ -26,7 +26,11 @@ from xonsh.built_ins import XSH
 from xonsh.cli_utils import Annotated, Arg, ArgParserAlias
 from xonsh.dirstack import _get_cwd, cd, dirs, popd, pushd
 from xonsh.environ import locate_binary, make_args_env
-from xonsh.foreign_shells import foreign_shell_data
+from xonsh.foreign_shells import (
+    CANON_SHELL_NAMES,
+    DEFAULT_SOURCERS,
+    foreign_shell_data,
+)
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
@@ -1070,7 +1074,24 @@ def source_foreign_fn(
         pass  # don't change prevcmd if given explicitly
     elif os.path.isfile(files_or_code[0]):
         if not sourcer:
-            return (None, "xonsh: error: `sourcer` command is not mentioned.\n", 1)
+            # Issue #5895: ``--sourcer`` used to be mandatory whenever a
+            # file argument was given, even though every shell xonsh
+            # knows about already has a default in ``DEFAULT_SOURCERS``.
+            # Fall back to that default when the shell canonicalizes
+            # ("/bin/bash" → "bash" → "source"); only error out for a
+            # truly unknown shell.
+            shkey = CANON_SHELL_NAMES.get(shell) or CANON_SHELL_NAMES.get(
+                os.path.basename(shell)
+            )
+            sourcer = DEFAULT_SOURCERS.get(shkey) if shkey else None
+        if not sourcer:
+            return (
+                None,
+                f"xonsh: error: cannot determine how to source files for "
+                f"foreign shell {shell!r}. Pass --sourcer "
+                f"(for example --sourcer . for POSIX).\n",
+                1,
+            )
         # we have filenames to source
         shell_name = os.path.basename(shell).lower()
         quote = (

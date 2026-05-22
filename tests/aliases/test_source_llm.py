@@ -15,6 +15,8 @@ diagnosis was wrong for the most common real-world cause (a sourced
 import functools
 import os.path
 
+import pytest
+
 from xonsh.aliases import make_default_aliases, source_foreign_fn
 
 
@@ -64,3 +66,89 @@ def test_source_sh_alias_registered(xession):
     assert isinstance(bound, functools.partial)
     assert bound.args == ("sh",)
     assert bound.keywords == {"sourcer": "."}
+
+
+# ---------------------------------------------------------------------------
+# Issue #5895: ``source-foreign <shell> <file>`` used to require
+# ``--sourcer`` even when the shell was one of the well-known ones
+# (bash/zsh/sh/cmd) that already have a default in DEFAULT_SOURCERS.
+# The fix falls back to that default; only truly unknown shells still
+# error out, and with a clearer message that mentions ``--sourcer``.
+# ---------------------------------------------------------------------------
+
+
+def _spy_prevcmd(monkeypatch):
+    """Replace ``foreign_shell_data`` with a recorder that captures the
+    ``prevcmd`` and ``sourcer`` kwargs without running a real subprocess.
+    """
+    calls = {}
+
+    def fake_foreign_shell_data(*args, **kwargs):
+        calls["kwargs"] = kwargs
+        return {}, {}
+
+    fake_foreign_shell_data.cache_clear = lambda: None
+    monkeypatch.setattr(
+        "xonsh.aliases.foreign_shell_data", fake_foreign_shell_data, raising=False
+    )
+    return calls
+
+
+@pytest.mark.parametrize(
+    "shell, expected_sourcer",
+    [
+        ("bash", "source"),
+        ("/bin/bash", "source"),
+        ("zsh", "source"),
+        ("/bin/zsh", "source"),
+        ("sh", "."),
+        ("/bin/sh", "."),
+    ],
+)
+def test_source_foreign_resolves_default_sourcer(
+    monkeypatch, xession, shell, expected_sourcer
+):
+    """Without ``--sourcer``, source-foreign falls back to the known
+    default for the shell (``source`` for bash/zsh, POSIX ``.`` for sh).
+    """
+    calls = _spy_prevcmd(monkeypatch)
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
+
+    # On success ``source_foreign_fn`` falls through with no return value
+    # — what matters is that we *got* to foreign_shell_data (no early
+    # ``--sourcer`` bail-out) and that ``prevcmd`` was built with the
+    # right per-shell default.
+    result = source_foreign_fn(shell, ["/etc/profile"])
+    assert result is None
+    prevcmd = calls["kwargs"]["prevcmd"]
+    assert prevcmd == f"{expected_sourcer} /etc/profile"
+
+
+def test_source_foreign_unknown_shell_without_sourcer_errors_clearly(
+    monkeypatch, xession
+):
+    """A shell that isn't in CANON_SHELL_NAMES and no ``--sourcer`` →
+    we cannot guess how to source the file, so error out with a
+    message naming the shell and pointing at the ``--sourcer`` flag."""
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
+
+    out, err, rc = source_foreign_fn("/opt/fish/bin/fish", ["/etc/profile"])
+
+    assert rc == 1
+    assert out is None
+    assert "/opt/fish/bin/fish" in err
+    assert "--sourcer" in err
+    # Legacy unhelpful wording is gone.
+    assert "is not mentioned" not in err
+
+
+def test_source_foreign_explicit_sourcer_still_wins(monkeypatch, xession):
+    """A user-supplied ``--sourcer`` overrides the default even when the
+    shell would have provided one — needed for things like ``--sourcer .``
+    on bash to force POSIX-style sourcing."""
+    calls = _spy_prevcmd(monkeypatch)
+    monkeypatch.setattr(os.path, "isfile", lambda _: True)
+
+    source_foreign_fn("bash", ["/etc/profile"], sourcer=".")
+
+    assert calls["kwargs"]["prevcmd"] == ". /etc/profile"
