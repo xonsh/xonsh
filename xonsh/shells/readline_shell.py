@@ -96,6 +96,13 @@ def _ensure_newline():
     fd = sys.stdin.fileno()
     if not os.isatty(fd):
         return
+    # When running inside an SSH session, do not issue the DSR query.
+    # The terminal's reply travels through stdin and is observed by the
+    # local ssh client, which uses byte-stream state to detect tilde
+    # escape sequences; a DSR reply arriving between the user's Enter
+    # and a following `~` silently breaks ssh's `~.` etc. (issue #5686).
+    if os.environ.get("SSH_TTY") or os.environ.get("SSH_CONNECTION"):
+        return
     old = termios.tcgetattr(fd)
     try:
         tty.setcbreak(fd)
