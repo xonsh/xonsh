@@ -1019,11 +1019,36 @@ class CommandPipeline:
 
     @blocking_property
     def returncode(self):
-        """Process return code, waits until command is completed."""
+        """Process return code.
+
+        ``None`` means the proc has not exited (typically a suspended or
+        backgrounded pipeline).  After a foreground pipeline has
+        ``end()``-ed this never returns ``None``.
+
+        Background: under load, ``tee_stdout`` can bail before the
+        trailing ``proc.wait()`` in ``iterraw`` runs (e.g. an uncaught
+        ``OSError`` while draining the pipe).  ``end()`` then flips
+        ``self.ended = True`` in its ``finally`` with
+        ``self.proc.returncode`` still unset.  The raise-check helpers
+        conflated ``None`` with ``0`` (success) and silently swallowed
+        real failures (#6456).  Reap once more via ``poll()`` —
+        non-blocking, so suspended/backgrounded pipelines still
+        correctly report ``None``.
+        """
         self.end()
         if self.proc is None:
             return 1
-        return self.proc.returncode
+        rc = self.proc.returncode
+        if rc is None:
+            try:
+                rc = self.proc.poll()
+            except Exception:
+                if XSH.env.get("XONSH_SUBPROC_TRACE", False):
+                    xt.print_exception(
+                        source_msg="Trace: returncode poll() fallback failed"
+                    )
+                rc = None
+        return rc
 
     @property
     def args(self):

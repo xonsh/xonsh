@@ -130,7 +130,7 @@ The project follows consistent, well-organized patterns throughout the codebase 
 
 **Style:** flat, procedural — tests are standalone functions, never grouped into classes. Use `pytest.mark.parametrize` for variations.
 
-**LLM-generated tests:** when Claude creates a substantial block of tests for a feature or module, place them in a `test_<topic>_llm.py` file (e.g. `tests/parsers/test_parser_fstring_llm.py`). This keeps generated tests separate from hand-written ones.
+**LLM-generated tests:** when Claude creates a substantial block of tests for a module, place them in a `test_<module>_llm.py` file whose name mirrors the module under test — e.g. tests for `xonsh/procs/pipelines.py` go in `tests/procs/test_pipelines_llm.py`, tests for `xonsh/tools.py` go in `tests/test_tools_llm.py`. Do *not* name the file after the specific feature or bug being covered (`test_returncode_llm.py`, `test_fix_6456_llm.py`): module-mirroring keeps related generated tests in one place and prevents a long tail of one-off files. Topic-specific names are acceptable only when the surface under test really is feature-scoped and spans multiple modules (e.g. `tests/parsers/test_parser_fstring_llm.py`). This keeps generated tests separate from hand-written ones while staying easy to locate from the module path.
 
 **Key fixtures** (from `xonsh/pytest/plugin.py`):
 - `xession` — mocked xonsh session (most commonly used)
