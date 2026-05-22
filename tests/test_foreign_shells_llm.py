@@ -251,3 +251,128 @@ def test_foreign_shell_data_missing_binary_emits_named_error(
     assert env is None and aliases is None
     assert "foreign shell not found" in captured.err
     assert "'bash'" in captured.err
+
+
+# ---------------------------------------------------------------------------
+# Issue #5894: ``source-foreign /bin/sh /etc/profile`` used to crash with
+# ``KeyError: '/bin/sh'`` because POSIX ``sh`` was missing from
+# CANON_SHELL_NAMES, and the lookup raised an unhandled exception that
+# bubbled up through ProcProxyThread. The fix:
+# - Adds ``sh`` / ``/bin/sh`` / ``/usr/bin/sh`` to CANON_SHELL_NAMES with
+#   POSIX-safe defaults (``.`` as sourcer, no funcscmd, ``alias`` without
+#   the zsh-only ``-L`` flag).
+# - Converts the unknown-shell error into a safe-handled failure under
+#   the default ``safe=True``, matching every other failure path.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "shell_name",
+    ["sh", "/bin/sh", "/usr/bin/sh"],
+)
+def test_sh_canonicalizes_to_posix_defaults(shell_name):
+    """All three spellings of POSIX sh resolve to the same canon key and
+    pull in POSIX-safe defaults (no bash/zsh-specific syntax)."""
+    from xonsh.foreign_shells import (
+        CANON_SHELL_NAMES,
+        DEFAULT_ALIASCMDS,
+        DEFAULT_FUNCSCMDS,
+        DEFAULT_SETERRPREVCMD,
+        DEFAULT_SOURCERS,
+    )
+
+    # The mapping is keyed on either the literal shell or its basename;
+    # both forms must land on ``"sh"`` so unknown absolute paths like
+    # ``/bin/sh`` don't crash. ``os.path.basename("sh") == "sh"``.
+    assert CANON_SHELL_NAMES.get(shell_name) == "sh" or (
+        CANON_SHELL_NAMES.get(os.path.basename(shell_name)) == "sh"
+    )
+    # POSIX sourcer is ``.`` — ``source`` is a bash/zsh extension and is
+    # rejected by dash, which is /bin/sh on Debian/Ubuntu/Alpine.
+    assert DEFAULT_SOURCERS["sh"] == "."
+    # No portable way to list functions in POSIX sh; leave empty so the
+    # COMMAND template doesn't try to run bash-specific ``declare -F``.
+    assert DEFAULT_FUNCSCMDS["sh"] == ""
+    # POSIX ``alias`` only — no ``-L`` flag (zsh-only).
+    assert DEFAULT_ALIASCMDS["sh"] == "alias"
+    # ``set -e`` is POSIX.
+    assert DEFAULT_SETERRPREVCMD["sh"] == "set -e"
+
+
+@skip_if_on_windows
+@pytest.mark.skipif(not os.path.exists("/bin/sh"), reason="/bin/sh not present")
+def test_foreign_shell_data_sources_via_bin_sh(capfd, xession):
+    """End-to-end: sourcing a real script through ``/bin/sh`` populates
+    env (and crucially does not crash, fixing issue #5894)."""
+    from xonsh.foreign_shells import foreign_shell_data
+
+    foreign_shell_data.cache_clear()
+    with tempfile.NamedTemporaryFile("w", suffix=".sh", delete=False) as script:
+        script.write("FROM_PROFILE_SH=ok; export FROM_PROFILE_SH\n")
+        script_name = script.name
+    try:
+        env, _ = foreign_shell_data(
+            shell="/bin/sh",
+            currenv=(("PATH", os.environ.get("PATH", "")),),
+            interactive=False,
+            sourcer=".",
+            prevcmd=f". {script_name}",
+            files=(script_name,),
+            safe=False,
+        )
+    finally:
+        os.unlink(script_name)
+        foreign_shell_data.cache_clear()
+
+    assert env is not None
+    assert env.get("FROM_PROFILE_SH") == "ok"
+
+
+def test_foreign_shell_data_unknown_shell_safe_returns_none(capfd, xession):
+    """Issue #5894: ``safe=True`` (the default) must not raise on an
+    unknown shell name — it should print a clean message and return
+    ``(None, None)`` so the source-foreign caller's friendly error
+    takes over instead of a raw traceback."""
+    from xonsh.foreign_shells import foreign_shell_data
+
+    foreign_shell_data.cache_clear()
+    try:
+        env, aliases = foreign_shell_data(
+            shell="/opt/fish/bin/fish",
+            currenv=(),
+            interactive=False,
+            sourcer="source",
+            prevcmd="source /tmp/whatever",
+        )
+    finally:
+        foreign_shell_data.cache_clear()
+
+    captured = capfd.readouterr()
+    assert env is None and aliases is None
+    assert "unknown foreign shell" in captured.err
+    assert "/opt/fish/bin/fish" in captured.err
+    # The message must list the canonical shells the user *can* choose.
+    assert "bash" in captured.err
+    assert "sh" in captured.err
+    assert "zsh" in captured.err
+
+
+def test_foreign_shell_data_unknown_shell_unsafe_raises(xession):
+    """With ``safe=False`` the historical KeyError behavior is preserved
+    for callers that explicitly opted out of safe handling (so existing
+    integrations don't silently start swallowing errors)."""
+    from xonsh.foreign_shells import foreign_shell_data
+
+    foreign_shell_data.cache_clear()
+    with pytest.raises(KeyError, match="Unknown foreign shell"):
+        try:
+            foreign_shell_data(
+                shell="/opt/fish/bin/fish",
+                currenv=(),
+                interactive=False,
+                sourcer="source",
+                prevcmd="source /tmp/whatever",
+                safe=False,
+            )
+        finally:
+            foreign_shell_data.cache_clear()

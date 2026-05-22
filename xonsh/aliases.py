@@ -1677,6 +1677,15 @@ def make_default_aliases():
             has_args=True,
             prog="source-bash",
         ),
+        # Issue #5894: ``/bin/sh`` may be bash, dash, or another POSIX
+        # shell — default to the POSIX dot sourcer so this works on dash-
+        # based distros too. Users can still pass --sourcer source to
+        # opt into the bash/zsh extension.
+        "source-sh": SourceForeignAlias(
+            func=functools.partial(source_foreign_fn, "sh", sourcer="."),
+            has_args=True,
+            prog="source-sh",
+        ),
         "source-cmd": source_cmd,
         "source-foreign": source_foreign,
         "history": xhm.history_main,

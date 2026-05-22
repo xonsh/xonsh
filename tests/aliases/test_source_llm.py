@@ -12,9 +12,10 @@ diagnosis was wrong for the most common real-world cause (a sourced
 ``.zshrc``/``.bashrc`` that early-exits with ``return 1``).
 """
 
+import functools
 import os.path
 
-from xonsh.aliases import source_foreign_fn
+from xonsh.aliases import make_default_aliases, source_foreign_fn
 
 
 def test_source_foreign_failure_message_is_helpful(monkeypatch, xession):
@@ -47,3 +48,19 @@ def test_source_foreign_failure_message_is_helpful(monkeypatch, xession):
     assert "--show-output" in err
     # Legacy misleading wording is gone.
     assert "File not found or syntax error" not in err
+
+
+def test_source_sh_alias_registered(xession):
+    """Issue #5894: ``source-sh`` is registered alongside ``source-bash``
+    and ``source-zsh``, with a POSIX-safe ``.`` sourcer default (since
+    ``/bin/sh`` on Debian/Ubuntu/Alpine is dash, which rejects
+    ``source``)."""
+    aliases = make_default_aliases()
+    assert "source-sh" in aliases
+
+    # Unwrap the ``functools.partial`` to confirm the defaults bound at
+    # registration time. The shape mirrors the bash/zsh entries.
+    bound = aliases["source-sh"].kwargs["func"]
+    assert isinstance(bound, functools.partial)
+    assert bound.args == ("sh",)
+    assert bound.keywords == {"sourcer": "."}
