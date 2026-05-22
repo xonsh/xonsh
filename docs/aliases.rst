@@ -185,8 +185,8 @@ Provides an interface to printing lines of source code prior to their execution.
 
 .. _command-decorators:
 
-Command Decorators (Decorator Aliases)
-======================================
+Command Decorators
+==================
 
 ``@error_raise`` and ``@error_ignore``
 ----------------------------------------
