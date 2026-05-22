@@ -90,6 +90,46 @@ def test_trace_in_script_with_logging_handler():
     assert "OK" in proc.stdout
 
 
+def test_tracer_skips_untraced_frames():
+    """Regression for xonsh/xonsh#3063: when the global trace function fires
+    on a 'call' event for a frame whose file is not in ``self.files``,
+    ``trace()`` must return ``None`` so Python skips installing the per-frame
+    tracer. Without this, line events fire for every line of every imported
+    module while ``trace on`` is active, slowing scripts by ~100× on the
+    original report.
+    """
+    import inspect
+
+    import xonsh.tracer as tm
+
+    t = tm.TracerType()
+    t.files = set()
+    # 'call' is the event that wires up per-frame tracing; 'line' fires only
+    # for frames already opted in. Both must short-circuit to None when the
+    # frame's file isn't traced.
+    assert t.trace(inspect.currentframe(), "call", None) is None
+    assert t.trace(inspect.currentframe(), "line", None) is None
+
+
+def test_tracer_caches_filename_per_code_object():
+    """``trace()`` resolves the frame's filename via ``find_file``, which
+    calls ``inspect.getabsfile`` + ``normabspath`` — non-trivial cost on the
+    hot path. The result is cached per code object (see #3063); a single
+    call should populate the cache, and the cache must survive across
+    repeated calls for the same code object.
+    """
+    import inspect
+
+    import xonsh.tracer as tm
+
+    t = tm.TracerType()
+    t._fname_cache.clear()
+    frame = inspect.currentframe()
+    t.files = set()
+    t.trace(frame, "call", None)
+    assert frame.f_code in t._fname_cache
+
+
 def test_tracer_survives_module_finalization():
     """Regression for xonsh/xonsh#4924: when CPython tears down modules at
     interpreter exit, `xonsh.tracer`'s globals can be wiped while `trace` is
