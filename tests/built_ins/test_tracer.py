@@ -55,4 +55,7 @@ def test_trace_in_script():
     stdout = re.sub(r".*example\.xsh:", "example.xsh:", proc.stdout)
     assert proc.returncode == 0
     assert proc.stderr == ""
-    assert stdout in [expected + "\n" + output, output + expected + "\n"]
+    # Trace lines must precede subprocess output: the tracer flushes stdout
+    # after each line, so trace output cannot be reordered with respect to
+    # subprocesses spawned on the same line. See xonsh/xonsh#3291.
+    assert stdout == expected + "\n" + output

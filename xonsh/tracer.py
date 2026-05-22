@@ -100,6 +100,7 @@ class TracerType:
                     formatter=self.formatter,
                 )
                 print_color(s)
+                sys.stdout.flush()
                 self._last = curr
         return self.trace
 
