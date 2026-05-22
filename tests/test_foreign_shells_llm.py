@@ -268,11 +268,25 @@ def test_foreign_shell_data_missing_binary_emits_named_error(
 
 @pytest.mark.parametrize(
     "shell_name",
-    ["sh", "/bin/sh", "/usr/bin/sh"],
+    [
+        "sh",
+        "/bin/sh",
+        "/usr/bin/sh",
+        # ``dash`` and ``ash`` are strict-POSIX shells that share the
+        # same defaults — they're aliased to the ``sh`` canon key so
+        # ``source-foreign dash /file`` works without --sourcer.
+        "dash",
+        "/bin/dash",
+        "/usr/bin/dash",
+        "ash",
+        "/bin/ash",
+        "/usr/bin/ash",
+    ],
 )
 def test_sh_canonicalizes_to_posix_defaults(shell_name):
-    """All three spellings of POSIX sh resolve to the same canon key and
-    pull in POSIX-safe defaults (no bash/zsh-specific syntax)."""
+    """All POSIX-sh spellings (sh/dash/ash, bare and absolute) resolve
+    to the same canon key and pull in POSIX-safe defaults (no bash/zsh-
+    specific syntax)."""
     from xonsh.foreign_shells import (
         CANON_SHELL_NAMES,
         DEFAULT_ALIASCMDS,

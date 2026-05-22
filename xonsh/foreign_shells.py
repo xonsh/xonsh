@@ -59,10 +59,18 @@ def CANON_SHELL_NAMES():
         # POSIX ``sh`` — issue #5894. ``/bin/sh`` may be bash, dash, or
         # another POSIX shell depending on distro, so the defaults below
         # stick to POSIX-only constructs (``.`` instead of ``source``,
-        # no function listing, ``alias`` without ``-L``).
+        # no function listing, ``alias`` without ``-L``). ``dash`` and
+        # ``ash`` are strict-POSIX shells that share the same defaults,
+        # so we alias them to ``sh`` directly.
         "sh": "sh",
         "/bin/sh": "sh",
         "/usr/bin/sh": "sh",
+        "dash": "sh",
+        "/bin/dash": "sh",
+        "/usr/bin/dash": "sh",
+        "ash": "sh",
+        "/bin/ash": "sh",
+        "/usr/bin/ash": "sh",
         "cmd": "cmd",
         "cmd.exe": "cmd",
     }

@@ -373,26 +373,38 @@ only works on xonsh and Python files (``*.xsh``, ``*.py``). Use ``-e`` to ignore
 extension.
 
 
-``source-bash``
---------------------
-Like the ``source`` command but for Bash files. This is a thin wrapper around
-the ``source-foreign`` alias where the ``shell`` argument is automatically set
-to ``bash``.
-
-
-``source-zsh``
---------------------
-Like the ``source`` command but for ZSH files. This is a thin wrapper around
-the ``source-foreign`` alias where the ``shell`` argument is automatically set
-to ``zsh``.
-
-
 ``source-foreign``
 --------------------
 Like the ``source`` command but for files in foreign (non-xonsh) languages.
 It will pick up the environment and any aliases.
 
+Supported shells: ``bash``, ``zsh``, ``sh`` (also ``dash`` and ``ash``),
+and ``cmd`` on Windows. Absolute paths like ``/bin/bash`` or ``/bin/sh``
+are canonicalised to the same defaults.
+
+The convenience wrappers below pre-set the ``shell`` and ``--sourcer``
+arguments for the most common cases — every flag accepted by
+``source-foreign`` is available on them as well.
+
 .. command-help:: xonsh.aliases.source_foreign
+
+
+``source-sh``
+^^^^^^^^^^^^^^^
+Thin wrapper around ``source-foreign sh`` with ``--sourcer .`` (the POSIX
+dot builtin, since ``/bin/sh`` on dash-based distros does not understand
+``source``). Use this to source ``/etc/profile`` and similar POSIX
+configuration files. Also covers ``dash`` and ``ash``.
+
+
+``source-bash``
+^^^^^^^^^^^^^^^^^
+Thin wrapper around ``source-foreign bash`` with ``--sourcer source``.
+
+
+``source-zsh``
+^^^^^^^^^^^^^^^^
+Thin wrapper around ``source-foreign zsh`` with ``--sourcer source``.
 
 
 Windows Aliases
