@@ -91,16 +91,43 @@ def _bash_completion_paths_default():
 _BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
 
 
+def _source_bash_completion_file(path):
+    return f'source "{path.as_posix()}"'
+
+
+def _is_bash_completion_framework(path):
+    return path.name in {"bash_completion", "bash_completion.sh"}
+
+
+def _get_bash_completions_sources(paths):
+    framework = None
+    extras = []
+
+    for path in map(pathlib.Path, paths):
+        if path.is_dir():
+            extras.extend(
+                _source_bash_completion_file(child)
+                for child in sorted(path.iterdir())
+                if child.is_file()
+            )
+        elif path.is_file():
+            source = _source_bash_completion_file(path)
+            if _is_bash_completion_framework(path):
+                if framework is None:
+                    framework = source
+            else:
+                extras.append(source)
+
+    return tuple(filter(None, (framework, *extras)))
+
+
 def _get_bash_completions_source(paths=None):
     global _BASH_COMPLETIONS_PATHS_DEFAULT
     if paths is None:
         if not _BASH_COMPLETIONS_PATHS_DEFAULT:
             _BASH_COMPLETIONS_PATHS_DEFAULT = _bash_completion_paths_default()
         paths = _BASH_COMPLETIONS_PATHS_DEFAULT
-    for path in map(pathlib.Path, paths):
-        if path.is_file():
-            return f'source "{path.as_posix()}"'
-    return None
+    return "\n".join(_get_bash_completions_sources(paths)) or None
 
 
 def _bash_get_sep():
@@ -324,12 +351,14 @@ def bash_completions(
         The environment dict to execute the Bash subprocess in.
     paths : list or tuple of str or None, optional
         This is a list (or tuple) of strings that specifies where the
-        ``bash_completion`` script may be found. The first valid path will
-        be used. For better performance, bash-completion v2.x is recommended
-        since it lazy-loads individual completion scripts. For both
-        bash-completion v1.x and v2.x, paths of individual completion scripts
-        (like ``.../completes/ssh``) do not need to be included here. The
-        default values are platform dependent, but reasonable.
+        ``bash_completion`` script and supplemental completion scripts may be
+        found. The first valid ``bash_completion`` framework file will be used;
+        non-framework files and files in directories are sourced after it. For
+        better performance, bash-completion v2.x is recommended since it
+        lazy-loads individual completion scripts. For both bash-completion v1.x
+        and v2.x, paths of package-managed individual completion scripts (like
+        ``.../completes/ssh``) do not need to be included here. The default
+        values are platform dependent, but reasonable.
     command : str or None, optional
         The /path/to/bash to use. If None, it will be selected based on the
         from the environment and platform.

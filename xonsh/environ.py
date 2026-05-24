@@ -2145,12 +2145,13 @@ class AutoCompletionSetting(Xettings):
     )
     BASH_COMPLETIONS = Var.with_default(
         doc="This is a list (or tuple) of strings that specifies where the "
-        "``bash_completion`` script may be found. "
-        "The first valid path will be used. For better performance, "
-        "bash-completion v2.x is recommended since it lazy-loads individual "
-        "completion scripts. "
-        "For both bash-completion v1.x and v2.x, paths of individual completion "
-        "scripts (like ``.../completes/ssh``) do not need to be included here. "
+        "``bash_completion`` script and supplemental completion scripts may be "
+        "found. The first valid ``bash_completion`` framework file will be used; "
+        "non-framework files and files in directories are sourced after it. For "
+        "better performance, bash-completion v2.x is recommended since it "
+        "lazy-loads individual completion scripts. For both bash-completion v1.x "
+        "and v2.x, paths of package-managed individual completion scripts "
+        "(like ``.../completes/ssh``) do not need to be included here. "
         "The default values are platform "
         "dependent, but reasonable. To specify an alternate list, do so in the run "
         "control file.",
@@ -2158,7 +2159,8 @@ class AutoCompletionSetting(Xettings):
         doc_default=(
             "Platform-dependent. The list probes every known install "
             "prefix for the bash-completion framework script and the "
-            "first existing file is sourced:\n\n"
+            "first existing framework file is sourced, followed by "
+            "supplemental user completion scripts:\n\n"
             "* **Linux / Cygwin / MSYS** — the standard FHS path "
             "``/usr/share/bash-completion/bash_completion``, plus "
             "Linuxbrew (``/home/linuxbrew/.linuxbrew/...``) and Nix "
@@ -2166,7 +2168,7 @@ class AutoCompletionSetting(Xettings):
             "* **macOS** — Homebrew on Intel "
             "(``/usr/local/...``) and Apple Silicon "
             "(``/opt/homebrew/...``), MacPorts (``/opt/local/...``), "
-            "and Nix.\n"
+            "``~/.bash_completions``, and Nix.\n"
             "* **Windows** — Git for Windows installation prefix "
             "(both bash-completion and the bundled "
             "``git-completion.bash``).\n\n"

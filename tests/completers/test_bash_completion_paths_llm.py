@@ -15,6 +15,11 @@ canonical list — these tests pin both ends down so they can't drift
 again.
 """
 
+import os
+import shutil
+
+import pytest
+
 from xonsh import platform as plat_mod
 from xonsh.completers import bash_completion as bc_mod
 
@@ -25,6 +30,66 @@ def test_bridge_fallback_delegates_to_canonical_default():
     assert bc_mod._bash_completion_paths_default() == tuple(
         plat_mod.BASH_COMPLETIONS_DEFAULT
     )
+
+
+def test_get_bash_completions_source_loads_framework_then_user_dir(tmp_path):
+    """User completion directories supplement the first framework script.
+
+    This lets defaults such as Homebrew's ``bash_completion`` coexist
+    with extra user scripts in ``~/.bash_completions``.
+    """
+    homebrew = tmp_path / "homebrew" / "bash_completion"
+    fallback = tmp_path / "fallback" / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    custom_a = user_dir / "a_custom"
+    custom_b = user_dir / "b_custom"
+    for path in (homebrew, fallback, custom_a, custom_b):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# test completion\n")
+
+    source = bc_mod._get_bash_completions_source([homebrew, fallback, user_dir])
+
+    assert source == "\n".join(
+        (
+            f'source "{homebrew.as_posix()}"',
+            f'source "{custom_a.as_posix()}"',
+            f'source "{custom_b.as_posix()}"',
+        )
+    )
+    assert fallback.as_posix() not in source
+
+
+def test_bash_completions_executes_user_dir_scripts(tmp_path):
+    """Scripts in supplemental completion directories must affect results."""
+    if shutil.which("bash") is None:
+        pytest.skip("bash not found on PATH")
+
+    framework = tmp_path / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    user_script = user_dir / "foo"
+    framework.write_text("# empty test framework\n")
+    user_dir.mkdir()
+    user_script.write_text(
+        """
+_foo_completion()
+{
+    COMPREPLY=(bar)
+}
+complete -F _foo_completion foo
+"""
+    )
+
+    completions, lprefix = bc_mod.bash_completions(
+        "",
+        "foo ",
+        4,
+        4,
+        paths=[framework, user_dir],
+        command="bash",
+    )
+
+    assert completions == {"bar "}
+    assert lprefix == 0
 
 
 def test_canonical_darwin_default_covers_all_install_prefixes():
@@ -52,6 +117,8 @@ def test_canonical_darwin_default_covers_all_install_prefixes():
     assert "/opt/homebrew/share/bash-completion/bash_completion" in paths
     # MacPorts
     assert "/opt/local/share/bash-completion/bash_completion" in paths
+    # User-defined
+    assert os.path.expanduser("~/.bash_completions") in paths
     # Nix shared profile (nix-darwin)
     assert "/run/current-system/sw/share/bash-completion/bash_completion" in paths
 
