@@ -91,8 +91,14 @@ def _bash_completion_paths_default():
 _BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
 
 
+def _bash_source_path(path):
+    if platform.system() == "Windows":
+        return f'"$(cygpath -u {shlex.quote(str(path))})"'
+    return f'"{path.as_posix()}"'
+
+
 def _source_bash_completion_file(path):
-    return f'source "{path.as_posix()}"'
+    return f"source {_bash_source_path(path)}"
 
 
 def _is_bash_completion_framework(path):

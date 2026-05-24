@@ -16,6 +16,7 @@ again.
 """
 
 import os
+import pathlib
 import shutil
 
 import pytest
@@ -57,6 +58,25 @@ def test_get_bash_completions_source_loads_framework_then_user_dir(tmp_path):
         )
     )
     assert fallback.as_posix() not in source
+
+
+def test_source_bash_completion_file_uses_cygpath_on_windows(monkeypatch):
+    """Native Windows paths must be translated before Bash's source builtin.
+
+    Git/MSYS Bash path conversion does not apply to shell builtins, so
+    ``source "C:/..."`` is not portable there.
+    """
+    monkeypatch.setattr(bc_mod.platform, "system", lambda: "Windows")
+
+    path = pathlib.PureWindowsPath(
+        r"C:\Users\runneradmin\AppData\Local\Temp\.bash_completions\foo"
+    )
+
+    expected = (
+        "source \"$(cygpath -u "
+        "'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\.bash_completions\\foo')\""
+    )
+    assert bc_mod._source_bash_completion_file(path) == expected
 
 
 def test_bash_completions_executes_user_dir_scripts(tmp_path):
