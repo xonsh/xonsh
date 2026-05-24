@@ -75,7 +75,8 @@ def test_source_bash_completion_file_uses_msys_path_on_windows(monkeypatch):
 
 def test_bash_completions_executes_user_dir_scripts(tmp_path):
     """Scripts in supplemental completion directories must affect results."""
-    if shutil.which("bash") is None:
+    command = bc_mod._bash_command()
+    if shutil.which(command) is None:
         pytest.skip("bash not found on PATH")
 
     framework = tmp_path / "bash_completion"
@@ -99,7 +100,7 @@ complete -F _foo_completion foo
         4,
         4,
         paths=[framework, user_dir],
-        command="bash",
+        command=command,
     )
 
     assert completions == {"bar "}
