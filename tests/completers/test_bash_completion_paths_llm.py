@@ -51,16 +51,13 @@ def test_get_bash_completions_source_loads_framework_then_user_dir(tmp_path):
     source = bc_mod._get_bash_completions_source([homebrew, fallback, user_dir])
 
     assert source == "\n".join(
-        (
-            f'source "{homebrew.as_posix()}"',
-            f'source "{custom_a.as_posix()}"',
-            f'source "{custom_b.as_posix()}"',
-        )
+        bc_mod._source_bash_completion_file(path)
+        for path in (homebrew, custom_a, custom_b)
     )
     assert fallback.as_posix() not in source
 
 
-def test_source_bash_completion_file_uses_cygpath_on_windows(monkeypatch):
+def test_source_bash_completion_file_uses_msys_path_on_windows(monkeypatch):
     """Native Windows paths must be translated before Bash's source builtin.
 
     Git/MSYS Bash path conversion does not apply to shell builtins, so
@@ -72,10 +69,7 @@ def test_source_bash_completion_file_uses_cygpath_on_windows(monkeypatch):
         r"C:\Users\runneradmin\AppData\Local\Temp\.bash_completions\foo"
     )
 
-    expected = (
-        'source "$(cygpath -u '
-        "'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\.bash_completions\\foo')\""
-    )
+    expected = "source /c/Users/runneradmin/AppData/Local/Temp/.bash_completions/foo"
     assert bc_mod._source_bash_completion_file(path) == expected
 
 

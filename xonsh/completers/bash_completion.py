@@ -93,7 +93,10 @@ _BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
 
 def _bash_source_path(path):
     if platform.system() == "Windows":
-        return f'"$(cygpath -u {shlex.quote(str(path))})"'
+        posix_path = path.as_posix()
+        if path.drive:
+            posix_path = f"/{path.drive[:1].lower()}{posix_path[2:]}"
+        return shlex.quote(posix_path)
     return f'"{path.as_posix()}"'
 
 
