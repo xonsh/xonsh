@@ -73,7 +73,7 @@ def test_source_bash_completion_file_uses_cygpath_on_windows(monkeypatch):
     )
 
     expected = (
-        "source \"$(cygpath -u "
+        'source "$(cygpath -u '
         "'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\.bash_completions\\foo')\""
     )
     assert bc_mod._source_bash_completion_file(path) == expected
