@@ -118,3 +118,76 @@ def test_andor_chain_eval_mode(line, xession):
 )
 def test_line_cont_with_comment(code, xonsh_execer_parse):
     assert xonsh_execer_parse(code)
+
+
+# --- f-string conversion (``{x!r}``/``{x!s}``/``{x!a}``) -----------------
+#
+# In subproc mode the xonsh lexer emits ``BANG`` for ``!``.  Without
+# f-string awareness, ``subproc_toks`` and ``find_next_break`` treat
+# any ``BANG`` as the start of a macro call, swallowing the rest of
+# the line into a single ``![…]`` wrap that then fails to re-parse
+# (``code: @(``).  ``f"{name!r}"`` and friends use ``!`` as a
+# *conversion specifier* — purely textual, with no relation to xonsh
+# macros — so the fix tracks f-string nesting (``FSTRING_START`` /
+# ``FSTRING_END``) and replacement-field depth (``LBRACE`` /
+# ``RBRACE``) and ignores ``BANG`` while ``fstring_expr_depth > 0``.
+
+
+@pytest.mark.parametrize(
+    "src",
+    [
+        # Plain ``!r`` conversion in ``@()`` followed by ``&&``.
+        'echo @(f"hi {name!r}") && echo z\n',
+        # ``!s`` and ``!a`` are the other two conversions.
+        'echo @(f"x {y!s}") && echo z\n',
+        'echo @(f"x {y!a}") && echo z\n',
+        # Triple-quoted f-string with conversion.
+        'echo @(f"""hi {name!r}""") && echo z\n',
+        # Conversion + format spec (``:>10``).
+        'echo @(f"x {y!r:>10}") && echo z\n',
+        # PEP 701 nested f-string with conversion in the inner one.
+        'echo @(f"""a {f"{x!r}"} b""") && echo z\n',
+        # Plain Python statement with conversion — should never have
+        # touched recovery, but covers the path nonetheless.
+        'x = "world"\nprint(f"hi {x!r}")\n',
+    ],
+)
+def test_fstring_conversion_in_pyeval(src, xession):
+    """f-string conversion (``{x!r}``/``{x!s}``/``{x!a}``) inside an
+    ``@()`` argument used to break recovery because the subproc-mode
+    lexer reported the ``!`` as a ``BANG`` token, which
+    ``subproc_toks`` / ``find_next_break`` interpreted as the start of
+    a macro call.  The fix tracks f-string nesting and ignores
+    ``BANG`` while inside a replacement field.
+    """
+    execer = xession.execer
+    ctx = {"__xonsh__": object()}
+    tree = execer.parse(src, ctx=ctx, mode="exec")
+    assert tree is not None
+    assert tree.body, f"expected non-empty AST for {src!r}"
+
+
+@pytest.mark.parametrize(
+    "src",
+    [
+        # Bare macro at top level still wraps; the ``!`` is outside any
+        # f-string.  These are existing baselines pinned for regression.
+        '$[echo ! arg]\n',
+        '![echo ! arg]\n',
+        '$(echo ! arg)\n',
+        '!(echo ! arg)\n',
+        # Macro with multi-line triple-quoted argument.
+        '![echo ! """a\nb"""]\n',
+    ],
+)
+def test_macro_still_works_after_fstring_fix(src, xession):
+    """Pin the macro-call paths: the f-string-conversion guard only
+    suppresses ``BANG``-as-macro detection while ``fstring_expr_depth
+    > 0``.  Top-level macros (and macros inside ``$[…]``/``![…]``)
+    must continue to be recognised.
+    """
+    execer = xession.execer
+    ctx = {"__xonsh__": object()}
+    tree = execer.parse(src, ctx=ctx, mode="exec")
+    assert tree is not None
+    assert tree.body, f"expected non-empty AST for {src!r}"
