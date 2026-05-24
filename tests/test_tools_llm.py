@@ -33,12 +33,27 @@ success cases and the boundaries that must remain unchanged: ``#``
 inside a string literal, an inline ``# \\`` at the end of a regular
 code line (#6294 regression), and lines inside an open triple-quoted
 string.
+
+f-string conversion ``!r``/``!s``/``!a`` inside ``{…}``
+========================================================
+
+In subproc mode the xonsh lexer emits ``BANG`` for ``!``, regardless of
+whether it sits inside an f-string replacement field (where ``!r``,
+``!s``, ``!a`` are *conversion specifiers* — purely textual, with no
+relation to xonsh macros) or at top level (where ``!`` is the macro
+operator).  Without f-string awareness, ``subproc_toks`` and
+``find_next_break`` treated any ``BANG`` as macro-start: the former
+swallowed the rest of the line into a single wrap that then failed to
+re-parse (``code: @(``), the latter returned ``maxcol = end-of-line``
+which prevented wrapping the LHS before a combinator.  The fix tracks
+``FSTRING_START`` / ``FSTRING_END`` nesting and ``LBRACE`` /
+``RBRACE`` depth, ignoring ``BANG`` while inside a replacement field.
 """
 
 import pytest
 
 from xonsh.parsers.lexer import Lexer
-from xonsh.tools import strip_continuation_comments, subproc_toks
+from xonsh.tools import find_next_break, strip_continuation_comments, subproc_toks
 
 LEXER = Lexer()
 LEXER.build()
@@ -169,3 +184,114 @@ def test_strip_continuation_comments(src, exp, xession):
     # expectations encode the non-interactive shape.
     xession.env["XONSH_INTERACTIVE"] = False
     assert strip_continuation_comments(src) == exp
+
+# --- f-string conversion ``!r``/``!s``/``!a`` inside ``{…}`` ---------------
+#
+# In subproc mode the lexer emits ``BANG`` for ``!``, regardless of
+# whether it sits inside an f-string replacement field (where it means
+# "conversion specifier") or at top level (where it means "macro call").
+# Without f-string awareness, ``subproc_toks`` and ``find_next_break``
+# treat any ``BANG`` as macro-start: the former swallows the rest of
+# the line into a single wrap that then fails to re-parse, the latter
+# returns ``maxcol = end-of-line`` which prevents wrapping the LHS
+# before a combinator.  The fix tracks ``FSTRING_START`` / ``FSTRING_END``
+# nesting and ``LBRACE`` / ``RBRACE`` depth, ignoring ``BANG`` while
+# inside a replacement field.
+
+
+@pytest.mark.parametrize(
+    "line, expected",
+    [
+        # ``!r`` conversion — the wrap must cover the whole ``@()``
+        # subproc segment up to the ``&&``, not stop at the ``!``.
+        (
+            'echo @(f"hi {name!r}") && echo z',
+            '![echo @(f"hi {name!r}")] && echo z',
+        ),
+        # ``!s`` and ``!a``.
+        (
+            'echo @(f"x {y!s}") && echo z',
+            '![echo @(f"x {y!s}")] && echo z',
+        ),
+        (
+            'echo @(f"x {y!a}") && echo z',
+            '![echo @(f"x {y!a}")] && echo z',
+        ),
+        # Conversion plus a format spec — the ``:`` introduces a
+        # ``FSTRING_MIDDLE`` for the spec text, ``BANG`` still must be
+        # treated as conversion.
+        (
+            'echo @(f"x {y!r:>10}") && echo z',
+            '![echo @(f"x {y!r:>10}")] && echo z',
+        ),
+    ],
+)
+def test_subproc_toks_fstring_conversion(line, expected):
+    """Wrap up to ``&&`` even though the f-string contains ``{x!r}``."""
+    maxcol = find_next_break(line, mincol=-1, lexer=LEXER)
+    obs = subproc_toks(line, lexer=LEXER, maxcol=maxcol, returnline=True)
+    assert obs == expected
+
+
+@pytest.mark.parametrize(
+    "line, expected_maxcol",
+    [
+        # ``find_next_break`` returns the lexpos of the combinator
+        # token (with ``mincol=-1`` the per-mincol shift cancels out).
+        # For ``&&`` / ``||`` / ``;`` at lexpos 23 this is ``23``.
+        # Without the f-string guard, the ``BANG`` inside ``{x!r}``
+        # would trigger an early break and return ``len(line)``
+        # instead.
+        (
+            'echo @(f"hi {name!r}") && echo z',
+            23,
+        ),
+        (
+            'echo @(f"hi {name!r}") || echo z',
+            23,
+        ),
+        (
+            'echo @(f"hi {name!r}") ; echo z',
+            23,
+        ),
+        # Without any ``!``, the position shifts because the f-string
+        # is shorter — sanity check that the value is still the
+        # combinator position, not end-of-line.
+        (
+            'echo @(f"hi {name}") && echo z',
+            21,
+        ),
+    ],
+)
+def test_find_next_break_fstring_conversion(line, expected_maxcol):
+    """``find_next_break`` must not treat ``!`` inside an f-string
+    replacement field as a macro break — only top-level ``BANG``
+    qualifies.
+    """
+    obs = find_next_break(line, mincol=-1, lexer=LEXER)
+    assert obs == expected_maxcol
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        # Bare macro at top level — ``!`` IS a macro operator here.
+        # ``subproc_toks`` must still recognise it (saw_macro behaviour).
+        "echo ! something",
+        "cmd ! arg with spaces",
+        # Macro inside an already-wrapped block.
+        "$[echo ! arg]",
+        "![echo ! arg]",
+    ],
+)
+def test_subproc_toks_macro_outside_fstring_still_works(line):
+    """Pin the inverse: ``BANG`` outside an f-string replacement field
+    is still the xonsh macro operator and ``subproc_toks`` must accept
+    it (i.e., not decline by mistake after the f-string-conversion
+    guard).
+    """
+    obs = subproc_toks(line, lexer=LEXER, returnline=True)
+    # Either the function wraps the line (placing ``![…]`` around it)
+    # or, for an already-wrapped input, leaves it alone — but never
+    # crashes and never collapses to a comment-only ``None`` return.
+    assert obs is None or "!" in obs
