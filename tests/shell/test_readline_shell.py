@@ -121,6 +121,12 @@ def fake_tty(monkeypatch):
     import termios
 
     state = {"chunks": []}
+    # ``_ensure_newline`` returns early if ``SSH_TTY``/``SSH_CONNECTION``
+    # is set (issue #5686 — DSR reply through ssh client breaks ``~.``).
+    # CI runs FreeBSD tests inside an SSH-attached VM where those env
+    # vars are inherited, so clear them before exercising the DSR path.
+    monkeypatch.delenv("SSH_TTY", raising=False)
+    monkeypatch.delenv("SSH_CONNECTION", raising=False)
     monkeypatch.setattr(sys, "stdin", _FakeStdin())
     monkeypatch.setattr("os.isatty", lambda fd: True)
     monkeypatch.setattr(termios, "tcgetattr", lambda fd: object())
