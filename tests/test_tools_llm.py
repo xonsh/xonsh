@@ -335,6 +335,8 @@ def test_subproc_toks_macro_outside_fstring_still_works(line):
     # or, for an already-wrapped input, leaves it alone — but never
     # crashes and never collapses to a comment-only ``None`` return.
     assert obs is None or "!" in obs
+
+
 # --- GH-6011: multi-line @() plus shell combinator ---------------------
 
 
