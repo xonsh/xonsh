@@ -276,30 +276,29 @@ def test_subproc_toks_fstring_conversion(line, expected):
 @pytest.mark.parametrize(
     "line, expected_maxcol",
     [
-        # ``find_next_break`` returns the lexpos of the combinator
-        # token (with ``mincol=-1`` the per-mincol shift cancels out).
-        # For ``&&`` / ``||`` / ``;`` at lexpos 23 this is ``23``.
-        # Without the f-string guard, the ``BANG`` inside ``{x!r}``
-        # would trigger an early break and return ``len(line)``
-        # instead.
+        # ``find_next_break`` returns one past the lexpos of the
+        # combinator token.  For ``&&`` / ``||`` / ``;`` at lexpos 23
+        # this is ``24``.  Without the f-string guard, the ``BANG``
+        # inside ``{x!r}`` would trigger an early break and return
+        # ``len(line)+1`` instead.
         (
             'echo @(f"hi {name!r}") && echo z',
-            23,
+            24,
         ),
         (
             'echo @(f"hi {name!r}") || echo z',
-            23,
+            24,
         ),
         (
             'echo @(f"hi {name!r}") ; echo z',
-            23,
+            24,
         ),
         # Without any ``!``, the position shifts because the f-string
         # is shorter — sanity check that the value is still the
         # combinator position, not end-of-line.
         (
             'echo @(f"hi {name}") && echo z',
-            21,
+            22,
         ),
     ],
 )
