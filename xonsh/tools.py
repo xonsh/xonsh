@@ -330,27 +330,8 @@ def find_next_break(line, mincol=0, lexer=None):
         return None
     maxcol = None
     lparens = []
-    # Track f-string state so a ``!`` conversion specifier inside ``{…}``
-    # (e.g. ``f"{name!r}"``) is not mistaken for the xonsh macro operator
-    # and does not trigger an early ``BANG`` break.  See ``subproc_toks``
-    # for the matching logic.
-    in_fstring = 0
-    fstring_expr_depth = 0
     lexer.input(line, is_subproc=True)
     for tok in lexer:
-        if tok.type == "FSTRING_START":
-            in_fstring += 1
-            continue
-        elif tok.type == "FSTRING_END" and in_fstring > 0:
-            in_fstring -= 1
-            continue
-        elif in_fstring > 0:
-            if tok.type == "LBRACE":
-                fstring_expr_depth += 1
-                continue
-            elif tok.type == "RBRACE" and fstring_expr_depth > 0:
-                fstring_expr_depth -= 1
-                continue
         if tok.type in LPARENS:
             lparens.append(tok.type)
         elif tok.type in END_TOK_TYPES:
@@ -362,7 +343,7 @@ def find_next_break(line, mincol=0, lexer=None):
         elif tok.type == "ERRORTOKEN" and ")" in tok.value:
             maxcol = tok.lexpos + mincol + 1
             break
-        elif tok.type == "BANG" and fstring_expr_depth == 0:
+        elif tok.type == "BANG":
             maxcol = mincol + len(line) + 1
             break
     return maxcol
@@ -422,14 +403,6 @@ def subproc_toks(
     saved_toks = None
     saved_lparens = None
     saved_leading_paren_skipped = False
-    # Track f-string state so ``!`` conversion specifiers (``!r``/``!s``/
-    # ``!a``) inside ``{…}`` are not mistaken for the xonsh macro
-    # operator.  ``in_fstring`` counts nested ``FSTRING_START``/``END``
-    # pairs (PEP 701 allows ``f"{f"…"}"``); ``fstring_expr_depth`` counts
-    # ``LBRACE``/``RBRACE`` pairs while inside an f-string.  A ``BANG``
-    # token is the xonsh macro operator only when both counters are zero.
-    in_fstring = 0
-    fstring_expr_depth = 0
     for tok in lexer:
         pos = tok.lexpos
         if skip_depth > 0:
@@ -438,19 +411,9 @@ def subproc_toks(
             elif tok.type == "RBRACKET":
                 skip_depth -= 1
             continue
-        # Update f-string nesting state before any BANG / END_TOK checks.
-        if tok.type == "FSTRING_START":
-            in_fstring += 1
-        elif tok.type == "FSTRING_END" and in_fstring > 0:
-            in_fstring -= 1
-        elif in_fstring > 0:
-            if tok.type == "LBRACE":
-                fstring_expr_depth += 1
-            elif tok.type == "RBRACE" and fstring_expr_depth > 0:
-                fstring_expr_depth -= 1
         if tok.type not in END_TOK_TYPES and pos >= maxcol:
             break
-        if tok.type == "BANG" and fstring_expr_depth == 0:
+        if tok.type == "BANG":
             saw_macro = True
         if saw_macro and tok.type not in ("NEWLINE", "DEDENT"):
             toks.append(tok)
