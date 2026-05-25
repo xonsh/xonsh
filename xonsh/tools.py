@@ -323,10 +323,13 @@ def find_next_break(line, mincol=0, lexer=None):
     subproc_toks().
     """
     if mincol >= 1:
-        line = line[mincol:]
+        sub = line[mincol:]
+    else:
+        sub = line
+        mincol = 0
     if lexer is None:
         lexer = xsh.execer.parser.lexer
-    if RE_END_TOKS.search(line) is None:
+    if RE_END_TOKS.search(sub) is None:
         return None
     maxcol = None
     lparens = []
@@ -336,7 +339,7 @@ def find_next_break(line, mincol=0, lexer=None):
     # for the matching logic.
     in_fstring = 0
     fstring_expr_depth = 0
-    lexer.input(line, is_subproc=True)
+    lexer.input(sub, is_subproc=True)
     for tok in lexer:
         if tok.type == "FSTRING_START":
             in_fstring += 1
@@ -357,13 +360,13 @@ def find_next_break(line, mincol=0, lexer=None):
             if _is_not_lparen_and_rparen(lparens, tok):
                 lparens.pop()
             else:
-                maxcol = tok.lexpos + mincol + 1
+                maxcol = _abs_lexpos(sub, tok) + mincol + 1
                 break
         elif tok.type == "ERRORTOKEN" and ")" in tok.value:
-            maxcol = tok.lexpos + mincol + 1
+            maxcol = _abs_lexpos(sub, tok) + mincol + 1
             break
         elif tok.type == "BANG" and fstring_expr_depth == 0:
-            maxcol = mincol + len(line) + 1
+            maxcol = mincol + len(sub) + 1
             break
     return maxcol
 
@@ -371,6 +374,45 @@ def find_next_break(line, mincol=0, lexer=None):
 def _offset_from_prev_lines(line, last):
     lines = line.splitlines(keepends=True)[:last]
     return sum(map(len, lines))
+
+
+def _abs_lexpos(line, tok):
+    """Return the absolute character offset of ``tok`` in ``line``.
+
+    Xonsh's lexer reports ``tok.lexpos`` as the column within the physical
+    line on which the token starts — ``0`` is the first character of that
+    line, not of the multiline input.  For tokens on the first physical
+    line the column and the absolute offset coincide.  For tokens after a
+    newline (e.g. the ``RPAREN`` after a multiline triple-quoted string in
+    ``echo @(\"\"\"a\\nb\"\"\")``) they do not.  This helper does the
+    column-to-offset conversion so callers like ``find_next_break`` and
+    ``subproc_toks`` can compare positions correctly.
+
+    ``FSTRING_MIDDLE`` is a special case: PEP 701's tokenizer reports its
+    ``start`` as ``(end_lnum, start_col_on_start_line)`` — the lnum is
+    where the token ends but the col is the column where it began on the
+    earlier (start) line.  We recover the start line by subtracting the
+    newlines inside the token value.
+
+    ``INDENT`` / ``DEDENT`` / ``NEWLINE`` are markers, not real tokens —
+    their ``lineno`` may sit *past* the last physical line (DEDENT at
+    end-of-input has lineno = nlines + 1) and applying the offset formula
+    drives ``pos`` past ``len(line)``, prematurely tripping the
+    ``pos >= maxcol`` break in ``subproc_toks``.  Treat their ``lexpos``
+    as already absolute (it is small, typically 0 or the column of the
+    next would-be statement).
+    """
+    if tok.lineno <= 1:
+        return tok.lexpos
+    if tok.type in ("INDENT", "DEDENT", "NEWLINE"):
+        return tok.lexpos
+    if tok.type == "FSTRING_MIDDLE" and isinstance(tok.value, str):
+        nl_count = tok.value.count("\n")
+        start_line = tok.lineno - nl_count
+        if start_line <= 1:
+            return tok.lexpos
+        return _offset_from_prev_lines(line, start_line - 1) + tok.lexpos
+    return _offset_from_prev_lines(line, tok.lineno - 1) + tok.lexpos
 
 
 def subproc_toks(
@@ -431,7 +473,7 @@ def subproc_toks(
     in_fstring = 0
     fstring_expr_depth = 0
     for tok in lexer:
-        pos = tok.lexpos
+        pos = _abs_lexpos(line, tok)
         if skip_depth > 0:
             if tok.type in ("BANG_LBRACKET", "DOLLAR_LBRACKET", "LBRACKET"):
                 skip_depth += 1
@@ -484,6 +526,20 @@ def subproc_toks(
                     t.type == "LPAREN" for t in toks[:-1]
                 ):
                     pass
+                elif greedy and len(lparens) == 0:
+                    # In greedy mode at top level, a shell combinator
+                    # (``&&``/``||``/``;``) or unbalanced ``)`` ends the
+                    # subproc segment.  Without breaking here the wrap
+                    # would span across the combinator, producing
+                    # ``![cmd && cmd2]`` — not valid xonsh syntax, since
+                    # ``![…]`` may not contain top-level combinators.
+                    # Pop the END_TOK so it stays outside the wrap, and
+                    # let the recovery loop wrap the next segment on its
+                    # next pass.  Without this guard ``subproc_toks``
+                    # cycled in the recovery loop for inputs like
+                    # ``![already wrapped] && echo 2`` (GH-6011 follow-up).
+                    toks.pop()
+                    break
                 elif not greedy:
                     # Save the tokens we are about to drop (everything up
                     # to but not including the END_TOK) as a fallback in
@@ -521,9 +577,12 @@ def subproc_toks(
             # fake a newline when dedenting without a newline
             tok.type = "NEWLINE"
             tok.value = "\n"
-            tok.lineno -= 1
+            # We pin lineno to 1 so that ``_abs_lexpos`` later returns the
+            # absolute position we are about to assign to ``tok.lexpos``
+            # verbatim, rather than re-adding an offset.
+            tok.lineno = 1
             if len(toks) >= 2:
-                prev_tok_end = toks[-2].lexpos + len(toks[-2].value)
+                prev_tok_end = _abs_lexpos(line, toks[-2]) + len(toks[-2].value)
             else:
                 prev_tok_end = len(line)
             if "#" in line[prev_tok_end:]:
@@ -559,7 +618,7 @@ def subproc_toks(
         if len(toks) == 0:
             return  # handle comment lines
         tok = toks[-1]
-        pos = tok.lexpos
+        pos = _abs_lexpos(line, tok)
         if isinstance(tok.value, str):
             end_offset = len(tok.value.rstrip())
         else:
@@ -571,7 +630,7 @@ def subproc_toks(
         lparens = saved_lparens
         leading_paren_skipped = saved_leading_paren_skipped
         tok = toks[-1]
-        pos = tok.lexpos
+        pos = _abs_lexpos(line, tok)
         if isinstance(tok.value, str):
             end_offset = len(tok.value.rstrip())
         else:
@@ -596,12 +655,21 @@ def subproc_toks(
     # the STRING token is not the first collected token in those lines.
     if toks[0].type in ("FSTRING_START", "STRING"):
         return
+    if toks[0].type in END_TOK_TYPES:
+        # The first collectable token is a statement terminator —
+        # this happens when ``skip_depth`` consumed an already-wrapped
+        # ``![…]``/``$[…]`` block immediately preceding it, and then
+        # ``maxcol`` cut the wrap window at the next bare token.  There
+        # is no real subproc content to wrap on this side of the
+        # combinator.  Returning ``None`` keeps the original line
+        # untouched; without this guard ``subproc_toks`` would emit an
+        # empty ``![]``, which the recovery loop would then loop on
+        # until ``max_retries``.  See GH-6011 follow-up.
+        return
     elif saw_macro or greedy:
         end_offset = len(toks[-1].value.rstrip()) + 1
-    if toks[0].lineno != toks[-1].lineno:
-        # handle multiline cases
-        end_offset += _offset_from_prev_lines(line, toks[-1].lineno)
-    beg, end = toks[0].lexpos, (toks[-1].lexpos + end_offset)
+    beg = _abs_lexpos(line, toks[0])
+    end = _abs_lexpos(line, toks[-1]) + end_offset
     end = len(line[:end].rstrip())
     rtn = "![" + line[beg:end] + "]"
     if returnline:
@@ -639,14 +707,94 @@ def check_quotes(s):
     return ok
 
 
+_STR_PREFIX_CHARS = frozenset("rRbBuUfF")
+
+
 def _have_open_triple_quotes(s):
-    if s.count('"""') % 2 == 1:
-        open_triple = '"""'
-    elif s.count("'''") % 2 == 1:
-        open_triple = "'''"
-    else:
-        open_triple = False
-    return open_triple
+    """Return the opening triple-quote string (``'\"\"\"'`` or ``\"'''\"``)
+    if ``s`` contains an unclosed triple-quoted string literal, else False.
+
+    The previous implementation counted ``\"\"\"`` per physical line and
+    declared the count odd → open.  That is wrong on a line that contains
+    only the *closing* triple quote of a string opened earlier (split by
+    ``splitlines()``) — the closer looks identical to an opener in
+    isolation.  Callers that need cross-line context must pass the joined
+    text of all earlier physical lines as part of ``s``.
+
+    This implementation walks ``s`` once, tracking:
+
+    - the active single-line string (``'`` or ``\"``), if any
+    - the active triple-quoted string (``\"\"\"`` or ``'''``), if any
+    - string prefixes (``r``/``R``/``b``/``B``/``u``/``U``/``f``/``F`` in
+      any combination — ``r``/``R`` toggles raw mode, which disables
+      backslash escapes)
+    - ``#`` comments outside strings (a ``#`` inside a string is literal)
+
+    Returns the opening triple-quote token if a triple-quoted string is
+    still open at the end of ``s``; otherwise False.  Single-quoted strings
+    left unclosed do not count — they end at the next newline by Python's
+    rules and never participate in logical-line joining.
+    """
+    i, n = 0, len(s)
+    while i < n:
+        c = s[i]
+        if c == "#":
+            j = s.find("\n", i)
+            i = n if j < 0 else j + 1
+            continue
+        if c != '"' and c != "'":
+            i += 1
+            continue
+        # We're at a quote. Look back up to 2 chars for a string prefix to
+        # determine whether the literal is raw.  A prefix may have an
+        # identifier prefix immediately before it (``identifier_name + r"x"``);
+        # we only care about the chars adjacent to the quote.
+        is_raw = False
+        prefix = ""
+        j = i - 1
+        while j >= 0 and len(prefix) < 2 and s[j] in _STR_PREFIX_CHARS:
+            prefix = s[j] + prefix
+            j -= 1
+        if prefix and ("r" in prefix or "R" in prefix):
+            is_raw = True
+        # If the prefix is adjacent to a previous identifier char, it isn't
+        # a string prefix.  ``foor"x"`` would not be a raw string; the ``r``
+        # is part of the identifier.  This matters only when the prefix is
+        # non-empty — adjacent letters/digits/underscore disqualify it.
+        if prefix and j >= 0 and (s[j].isalnum() or s[j] == "_"):
+            is_raw = False
+        quote = c
+        if s[i : i + 3] == quote * 3:
+            # Triple-quoted: scan for closing triple.
+            end = i + 3
+            while end < n:
+                if not is_raw and s[end] == "\\" and end + 1 < n:
+                    end += 2
+                    continue
+                if s[end : end + 3] == quote * 3:
+                    end += 3
+                    break
+                end += 1
+            else:
+                # Reached end of input while still inside the triple.
+                return quote * 3
+            i = end
+        else:
+            # Single-quoted: ends at unescaped matching quote or newline.
+            end = i + 1
+            while end < n:
+                ch = s[end]
+                if ch == "\n":
+                    break  # unterminated single-line string ends at EOL
+                if not is_raw and ch == "\\" and end + 1 < n:
+                    end += 2
+                    continue
+                if ch == quote:
+                    end += 1
+                    break
+                end += 1
+            i = end
+    return False
 
 
 def get_line_continuation():
@@ -759,12 +907,28 @@ def get_logical_line(lines, idx):
     from a list of lines.  This line should begin at index idx. This also
     returns the number of physical lines the logical line spans. The lines
     should not contain newlines
+
+    Walking backward through both backslash continuations *and* through
+    triple-quoted strings opened by earlier physical lines is required —
+    ``splitlines()`` cuts inside ``\"\"\"abc\\ndef\"\"\"`` and ``lines[idx]``
+    on its own does not know whether it starts inside an open triple-quoted
+    string.  We answer that question by re-scanning ``\"\\n\".join(lines[:idx])``
+    with the context-aware ``_have_open_triple_quotes``.
     """
     n = 1
     nlines = len(lines)
     linecont = get_line_continuation()
-    while idx > 0 and _ends_with_line_continuation(lines[idx - 1], linecont):
-        idx -= 1
+    while idx > 0:
+        if _ends_with_line_continuation(lines[idx - 1], linecont):
+            idx -= 1
+            continue
+        # If the joined text of all earlier physical lines ends inside an
+        # open triple-quoted string, this physical line is a continuation
+        # of that string and the logical line started earlier.
+        if _have_open_triple_quotes("\n".join(lines[:idx])):
+            idx -= 1
+            continue
+        break
     start = idx
     line = lines[idx]
     open_triple = _have_open_triple_quotes(line)
@@ -784,10 +948,20 @@ def get_logical_line(lines, idx):
 def replace_logical_line(lines, logical, idx, n):
     """Replaces lines at idx that may end in line continuation with a logical
     line that spans n lines.
+
+    When the logical line contains a real ``\\n`` — i.e. it came from a
+    triple-quoted string that ``splitlines()`` cut in the middle — the
+    original physical split is not meaningful (it sliced inside the string
+    literal).  Collapse the affected slot to a single list entry so the
+    downstream ``\"\\n\".join(lines)`` reproduces the input exactly without
+    inserting extra newlines or splitting on whitespace inside the literal.
     """
     linecont = get_line_continuation()
     if n == 1:
         lines[idx] = logical
+        return
+    if "\n" in logical:
+        lines[idx : idx + n] = [logical]
         return
     space = " "
     for i in range(idx, idx + n - 1):

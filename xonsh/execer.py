@@ -289,6 +289,7 @@ class Execer:
                     last_error_col = e.loc.column
                     last_error_line = e.loc.lineno
                     idx = last_error_line - 1
+                    err_idx = idx
                     lines = input.splitlines()
                     if input.endswith("\n"):
                         lines.append("")
@@ -300,6 +301,24 @@ class Execer:
                         # SyntaxError instead of crashing in get_logical_line.
                         raise original_error from None
                     line, nlogical, idx = get_logical_line(lines, idx)
+                    # ``last_error_col`` stays as the parser-reported column
+                    # on the physical error line (preserved for the
+                    # no-progress check on the next iteration).
+                    # ``find_next_break`` / ``subproc_toks`` need an absolute
+                    # offset in the joined logical line, so compute that
+                    # here as a separate ``mincol_abs``.  For a single-line
+                    # logical line they coincide; for a multi-line one the
+                    # offset is shifted by the lengths of preceding physical
+                    # lines (plus joining ``\n``).  Without this conversion,
+                    # an already-wrapped LHS followed by ``&&`` would loop
+                    # the recovery loop until ``max_retries`` (GH-6011).
+                    if nlogical > 1:
+                        prev_phys = lines[idx:err_idx]
+                        mincol_abs = (
+                            sum(len(ln) + 1 for ln in prev_phys) + last_error_col
+                        )
+                    else:
+                        mincol_abs = last_error_col
                     if nlogical > 1 and not logical_input:
                         _, sbpline = self._parse_ctx_free(
                             line, mode=mode, filename=filename, logical_input=True
@@ -331,9 +350,9 @@ class Execer:
                     maxcol = (
                         None
                         if greedy
-                        else find_next_break(line, mincol=last_error_col, lexer=lexer)
+                        else find_next_break(line, mincol=mincol_abs, lexer=lexer)
                     )
-                    if not greedy and maxcol in (e.loc.column + 1, e.loc.column):
+                    if not greedy and maxcol in (mincol_abs + 1, mincol_abs):
                         # go greedy the first time if the syntax error was because
                         # we hit an end token out of place. This usually indicates
                         # a subshell or maybe a macro.
