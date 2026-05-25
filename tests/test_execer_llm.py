@@ -172,10 +172,10 @@ def test_fstring_conversion_in_pyeval(src, xession):
     [
         # Bare macro at top level still wraps; the ``!`` is outside any
         # f-string.  These are existing baselines pinned for regression.
-        '$[echo ! arg]\n',
-        '![echo ! arg]\n',
-        '$(echo ! arg)\n',
-        '!(echo ! arg)\n',
+        "$[echo ! arg]\n",
+        "![echo ! arg]\n",
+        "$(echo ! arg)\n",
+        "!(echo ! arg)\n",
         # Macro with multi-line triple-quoted argument.
         '![echo ! """a\nb"""]\n',
     ],

@@ -185,6 +185,7 @@ def test_strip_continuation_comments(src, exp, xession):
     xession.env["XONSH_INTERACTIVE"] = False
     assert strip_continuation_comments(src) == exp
 
+
 # --- f-string conversion ``!r``/``!s``/``!a`` inside ``{…}`` ---------------
 #
 # In subproc mode the lexer emits ``BANG`` for ``!``, regardless of
