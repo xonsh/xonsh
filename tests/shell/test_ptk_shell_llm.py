@@ -10,8 +10,29 @@ def restore_vt100_cpr():
     """Snapshot Vt100_Output.{ask_for_cpr,responds_to_cpr} and restore
     them after the test. The CPR-suppression patch in ptk_shell runs at
     import time and mutates the class globally, so tests that
-    deliberately trigger it must clean up."""
+    deliberately trigger it must clean up.
+
+    On CI runners that invoke pytest inside an SSH session (FreeBSD VM),
+    ``ptk_shell``'s first import — triggered by some collected test's
+    import chain — already runs with ``SSH_TTY``/``SSH_CONNECTION`` set
+    and replaces both attributes with the no-op lambda.  Naively
+    snapshotting at fixture entry would therefore record the lambda as
+    "original" and ``test_ptk_does_not_touch_cpr_outside_ssh`` would
+    fail because its assertion expects the truly-original method name.
+
+    Drop any leftover lambda overrides from the class *before* taking
+    the snapshot so that ``type(...).__delattr__`` falls back to the
+    method body defined in ``prompt_toolkit.output.vt100.Vt100_Output``.
+    """
     from prompt_toolkit.output.vt100 import Vt100_Output
+
+    for attr in ("ask_for_cpr", "responds_to_cpr"):
+        cur = vars(Vt100_Output).get(attr)
+        if cur is not None and getattr(cur, "__name__", "") == "<lambda>":
+            try:
+                delattr(Vt100_Output, attr)
+            except AttributeError:
+                pass
 
     orig_ask = Vt100_Output.ask_for_cpr
     orig_responds = Vt100_Output.responds_to_cpr
