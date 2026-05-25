@@ -393,8 +393,18 @@ def _abs_lexpos(line, tok):
     where the token ends but the col is the column where it began on the
     earlier (start) line.  We recover the start line by subtracting the
     newlines inside the token value.
+
+    ``INDENT`` / ``DEDENT`` / ``NEWLINE`` are markers, not real tokens —
+    their ``lineno`` may sit *past* the last physical line (DEDENT at
+    end-of-input has lineno = nlines + 1) and applying the offset formula
+    drives ``pos`` past ``len(line)``, prematurely tripping the
+    ``pos >= maxcol`` break in ``subproc_toks``.  Treat their ``lexpos``
+    as already absolute (it is small, typically 0 or the column of the
+    next would-be statement).
     """
     if tok.lineno <= 1:
+        return tok.lexpos
+    if tok.type in ("INDENT", "DEDENT", "NEWLINE"):
         return tok.lexpos
     if tok.type == "FSTRING_MIDDLE" and isinstance(tok.value, str):
         nl_count = tok.value.count("\n")
