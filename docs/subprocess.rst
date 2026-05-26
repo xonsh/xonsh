@@ -29,7 +29,7 @@ printed to the screen:
     output
     # '1\n2\n3 4\n5\n'
 
-Use :ref:`command decorators <aliases>` to change the return format:
+Use :ref:`Command Decorators <command-decorators>` to change the return format:
 
 .. code-block:: xonsh
 
@@ -39,8 +39,8 @@ Use :ref:`command decorators <aliases>` to change the return format:
     $(@json curl https://example.com/data.json)
     # {'key': 'value'}
 
-See `Command Decorators <aliases.html#command-decorators-decorator-aliases>`_
-for the full list (``@lines``, ``@json``, ``@jsonl``, ``@yaml``, ``@toml``, etc.).
+See :ref:`Command Decorators <command-decorators>` for the full list
+(``@lines``, ``@json``, ``@jsonl``, ``@yaml``, ``@toml``, etc.).
 
 
 ``!(cmd)`` -- captured object
