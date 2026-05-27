@@ -117,7 +117,7 @@ def _get_bash_completions_sources(paths):
             extras.extend(
                 _source_bash_completion_file(child)
                 for child in sorted(path.iterdir())
-                if child.is_file()
+                if child.is_file() and not child.name.startswith(".")
             )
         elif path.is_file():
             source = _source_bash_completion_file(path)
