@@ -113,6 +113,8 @@ def _get_bash_completions_sources(paths):
     extras = []
 
     for path in map(pathlib.Path, paths):
+        if not str(path):
+            continue
         if path.is_dir():
             extras.extend(
                 _source_bash_completion_file(child)
