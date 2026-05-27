@@ -92,12 +92,10 @@ _BASH_COMPLETIONS_PATHS_DEFAULT: tuple[str, ...] = ()
 
 
 def _bash_source_path(path):
-    if platform.system() == "Windows":
-        posix_path = path.as_posix()
-        if path.drive:
-            posix_path = f"/{path.drive[:1].lower()}{posix_path[2:]}"
-        return shlex.quote(posix_path)
-    return f'"{path.as_posix()}"'
+    posix_path = path.as_posix()
+    if platform.system() == "Windows" and path.drive:
+        posix_path = f"/{path.drive[:1].lower()}{posix_path[2:]}"
+    return shlex.quote(posix_path)
 
 
 def _source_bash_completion_file(path):
@@ -113,7 +111,7 @@ def _get_bash_completions_sources(paths):
     extras = []
 
     for path in map(pathlib.Path, paths):
-        if not str(path):
+        if str(path) == ".":
             continue
         if path.is_dir():
             extras.extend(

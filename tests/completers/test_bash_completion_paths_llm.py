@@ -107,6 +107,45 @@ complete -F _foo_completion foo
     assert lprefix == 0
 
 
+def test_hidden_files_in_user_dir_are_skipped(tmp_path):
+    """Hidden files (e.g. .DS_Store) inside completion directories
+    must not be sourced."""
+    framework = tmp_path / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    framework.write_text("# framework\n")
+    user_dir.mkdir()
+    (user_dir / ".DS_Store").write_bytes(b"\x00\x00\x00\x01Bud1")
+    (user_dir / ".hidden").write_text("# hidden\n")
+    (user_dir / "visible").write_text("# visible\n")
+
+    source = bc_mod._get_bash_completions_source([framework, user_dir])
+
+    assert ".DS_Store" not in source
+    assert ".hidden" not in source
+    assert "visible" in source
+
+
+def test_empty_string_in_paths_is_ignored(tmp_path):
+    """An empty string in paths must not be treated as the current directory."""
+    framework = tmp_path / "bash_completion"
+    framework.write_text("# framework\n")
+
+    source = bc_mod._get_bash_completions_source(["", framework])
+
+    assert source == bc_mod._source_bash_completion_file(framework)
+
+
+def test_source_path_quotes_special_characters():
+    """Paths with spaces or quotes must be properly shell-quoted."""
+    path = pathlib.Path("/home/user/my dir/completions")
+    result = bc_mod._bash_source_path(path)
+    assert " " not in result or result.startswith("'")
+
+    path_quote = pathlib.Path('/home/user/my"dir/file')
+    result_quote = bc_mod._bash_source_path(path_quote)
+    assert '"' not in result_quote or result_quote.startswith("'")
+
+
 def test_canonical_darwin_default_covers_all_install_prefixes():
     """All four mac install prefixes (Homebrew Intel + Apple Silicon,
     MacPorts, Nix) must appear so the bridge auto-discovers
