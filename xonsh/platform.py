@@ -560,6 +560,10 @@ def BASH_COMPLETIONS_DEFAULT():
             bcd = bcd + (
                 os.path.join(_prefix, "share/bash-completion/bash_completion"),
             )
+        bcd = bcd + (
+            # User-defined
+            os.path.expanduser("~/.bash_completions"),
+        )
     elif ON_DARWIN:
         bcd = (
             # Homebrew, Intel
@@ -602,6 +606,8 @@ def BASH_COMPLETIONS_DEFAULT():
             "/usr/local/share/bash-completion/bash_completion",  # v2.x library
             "/usr/local/etc/bash_completion",  # v1.x
             "/usr/pkg/share/bash-completion/bash_completion",  # pkgsrc
+            # User-defined
+            os.path.expanduser("~/.bash_completions"),
         )
     else:
         bcd = ()
