@@ -114,9 +114,17 @@ def _get_bash_completions_sources(paths):
         if str(path) == ".":
             continue
         if path.is_dir():
+            try:
+                children = sorted(path.iterdir())
+            except OSError as e:
+                from xonsh.built_ins import XSH
+
+                if XSH.env and XSH.env.get("XONSH_COMPLETER_TRACE"):
+                    print(f"TRACE COMPLETIONS: bash: skipping {path}: {e}")
+                continue
             extras.extend(
                 _source_bash_completion_file(child)
-                for child in sorted(path.iterdir())
+                for child in children
                 if child.is_file() and not child.name.startswith(".")
             )
         elif path.is_file():
