@@ -146,6 +146,24 @@ def test_source_path_quotes_special_characters():
     assert '"' not in result_quote or result_quote.startswith("'")
 
 
+def test_get_bash_completions_sources_is_cached(tmp_path):
+    """Repeated calls with the same paths must not re-read the filesystem."""
+    framework = tmp_path / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    framework.write_text("# framework\n")
+    user_dir.mkdir()
+    (user_dir / "foo").write_text("# foo\n")
+
+    bc_mod._get_bash_completions_sources.cache_clear()
+    paths = (str(framework), str(user_dir))
+
+    bc_mod._get_bash_completions_sources(paths)
+    bc_mod._get_bash_completions_sources(paths)
+    info = bc_mod._get_bash_completions_sources.cache_info()
+    assert info.hits >= 1
+    assert info.misses == 1
+
+
 def test_canonical_darwin_default_covers_all_install_prefixes():
     """All four mac install prefixes (Homebrew Intel + Apple Silicon,
     MacPorts, Nix) must appear so the bridge auto-discovers

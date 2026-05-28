@@ -106,6 +106,7 @@ def _is_bash_completion_framework(path):
     return path.name in {"bash_completion", "bash_completion.sh"}
 
 
+@functools.lru_cache(maxsize=16)
 def _get_bash_completions_sources(paths):
     framework = None
     extras = []
@@ -144,6 +145,7 @@ def _get_bash_completions_source(paths=None):
         if not _BASH_COMPLETIONS_PATHS_DEFAULT:
             _BASH_COMPLETIONS_PATHS_DEFAULT = _bash_completion_paths_default()
         paths = _BASH_COMPLETIONS_PATHS_DEFAULT
+    paths = tuple(str(p) for p in paths)
     return "\n".join(_get_bash_completions_sources(paths)) or None
 
 
