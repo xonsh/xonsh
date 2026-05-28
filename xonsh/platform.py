@@ -534,11 +534,12 @@ def BASH_COMPLETIONS_DEFAULT():
     """A possibly empty tuple with default paths to Bash completions known for
     the current platform.
 
-    The bridge picks the first existing file from this list, so order
-    doesn't affect coverage — only which framework gets sourced when
-    several are installed side by side. Distro/package-manager prefixes
-    are listed alongside the standard FHS path so users don't have to
-    extend ``$BASH_COMPLETIONS`` manually after installing
+    The bridge picks the first existing framework file from this list,
+    then sources supplemental user scripts from non-framework file and
+    directory entries. Order only affects which framework gets sourced
+    when several are installed side by side. Distro/package-manager
+    prefixes are listed alongside the standard FHS path so users don't
+    have to extend ``$BASH_COMPLETIONS`` manually after installing
     bash-completion via Homebrew, MacPorts, Linuxbrew, Nix, etc.
     """
     if ON_LINUX or ON_CYGWIN or ON_MSYS or ON_TERMUX:
@@ -559,6 +560,10 @@ def BASH_COMPLETIONS_DEFAULT():
             bcd = bcd + (
                 os.path.join(_prefix, "share/bash-completion/bash_completion"),
             )
+        bcd = bcd + (
+            # User-defined
+            os.path.expanduser("~/.bash_completions"),
+        )
     elif ON_DARWIN:
         bcd = (
             # Homebrew, Intel
@@ -570,6 +575,8 @@ def BASH_COMPLETIONS_DEFAULT():
             # MacPorts
             "/opt/local/share/bash-completion/bash_completion",  # v2.x
             "/opt/local/etc/bash_completion",  # v1.x
+            # User-defined
+            os.path.expanduser("~/.bash_completions"),
             # Nix (nix-darwin shared and per-user profiles)
             "/run/current-system/sw/share/bash-completion/bash_completion",
             os.path.expanduser("~/.nix-profile/share/bash-completion/bash_completion"),
@@ -599,6 +606,8 @@ def BASH_COMPLETIONS_DEFAULT():
             "/usr/local/share/bash-completion/bash_completion",  # v2.x library
             "/usr/local/etc/bash_completion",  # v1.x
             "/usr/pkg/share/bash-completion/bash_completion",  # pkgsrc
+            # User-defined
+            os.path.expanduser("~/.bash_completions"),
         )
     else:
         bcd = ()

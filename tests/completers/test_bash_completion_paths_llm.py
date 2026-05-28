@@ -15,6 +15,12 @@ canonical list — these tests pin both ends down so they can't drift
 again.
 """
 
+import os
+import pathlib
+import shutil
+
+import pytest
+
 from xonsh import platform as plat_mod
 from xonsh.completers import bash_completion as bc_mod
 
@@ -25,6 +31,137 @@ def test_bridge_fallback_delegates_to_canonical_default():
     assert bc_mod._bash_completion_paths_default() == tuple(
         plat_mod.BASH_COMPLETIONS_DEFAULT
     )
+
+
+def test_get_bash_completions_source_loads_framework_then_user_dir(tmp_path):
+    """User completion directories supplement the first framework script.
+
+    This lets defaults such as Homebrew's ``bash_completion`` coexist
+    with extra user scripts in ``~/.bash_completions``.
+    """
+    homebrew = tmp_path / "homebrew" / "bash_completion"
+    fallback = tmp_path / "fallback" / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    custom_a = user_dir / "a_custom"
+    custom_b = user_dir / "b_custom"
+    for path in (homebrew, fallback, custom_a, custom_b):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# test completion\n")
+
+    source = bc_mod._get_bash_completions_source([homebrew, fallback, user_dir])
+
+    assert source == "\n".join(
+        bc_mod._source_bash_completion_file(path)
+        for path in (homebrew, custom_a, custom_b)
+    )
+    assert fallback.as_posix() not in source
+
+
+def test_source_bash_completion_file_uses_msys_path_on_windows(monkeypatch):
+    """Native Windows paths must be translated before Bash's source builtin.
+
+    Git/MSYS Bash path conversion does not apply to shell builtins, so
+    ``source "C:/..."`` is not portable there.
+    """
+    monkeypatch.setattr(bc_mod.platform, "system", lambda: "Windows")
+
+    path = pathlib.PureWindowsPath(
+        r"C:\Users\runneradmin\AppData\Local\Temp\.bash_completions\foo"
+    )
+
+    expected = "source /c/Users/runneradmin/AppData/Local/Temp/.bash_completions/foo"
+    assert bc_mod._source_bash_completion_file(path) == expected
+
+
+def test_bash_completions_executes_user_dir_scripts(tmp_path):
+    """Scripts in supplemental completion directories must affect results."""
+    command = bc_mod._bash_command()
+    if shutil.which(command) is None:
+        pytest.skip("bash not found on PATH")
+
+    framework = tmp_path / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    user_script = user_dir / "foo"
+    framework.write_text("# empty test framework\n")
+    user_dir.mkdir()
+    user_script.write_text(
+        """
+_foo_completion()
+{
+    COMPREPLY=(bar)
+}
+complete -F _foo_completion foo
+"""
+    )
+
+    completions, lprefix = bc_mod.bash_completions(
+        "",
+        "foo ",
+        4,
+        4,
+        paths=[framework, user_dir],
+        command=command,
+    )
+
+    assert completions == {"bar "}
+    assert lprefix == 0
+
+
+def test_hidden_files_in_user_dir_are_skipped(tmp_path):
+    """Hidden files (e.g. .DS_Store) inside completion directories
+    must not be sourced."""
+    framework = tmp_path / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    framework.write_text("# framework\n")
+    user_dir.mkdir()
+    (user_dir / ".DS_Store").write_bytes(b"\x00\x00\x00\x01Bud1")
+    (user_dir / ".hidden").write_text("# hidden\n")
+    (user_dir / "visible").write_text("# visible\n")
+
+    source = bc_mod._get_bash_completions_source([framework, user_dir])
+
+    assert ".DS_Store" not in source
+    assert ".hidden" not in source
+    assert "visible" in source
+
+
+def test_empty_string_in_paths_is_ignored(tmp_path):
+    """An empty string in paths must not be treated as the current directory."""
+    framework = tmp_path / "bash_completion"
+    framework.write_text("# framework\n")
+
+    source = bc_mod._get_bash_completions_source(["", framework])
+
+    assert source == bc_mod._source_bash_completion_file(framework)
+
+
+def test_source_path_quotes_special_characters():
+    """Paths with spaces or quotes must be properly shell-quoted."""
+    path = pathlib.Path("/home/user/my dir/completions")
+    result = bc_mod._bash_source_path(path)
+    assert " " not in result or result.startswith("'")
+
+    path_quote = pathlib.Path('/home/user/my"dir/file')
+    result_quote = bc_mod._bash_source_path(path_quote)
+    assert '"' not in result_quote or result_quote.startswith("'")
+
+
+def test_get_bash_completions_sources_is_cached(tmp_path):
+    """Repeated calls with the same paths must not re-read the filesystem."""
+    framework = tmp_path / "bash_completion"
+    user_dir = tmp_path / ".bash_completions"
+    framework.write_text("# framework\n")
+    user_dir.mkdir()
+    (user_dir / "foo").write_text("# foo\n")
+
+    bc_mod._get_bash_completions_sources.cache_clear()
+    paths = (str(framework), str(user_dir))
+
+    bc_mod._get_bash_completions_sources(paths)
+    bc_mod._get_bash_completions_sources(paths)
+    info = bc_mod._get_bash_completions_sources.cache_info()
+    assert info.hits >= 1
+    assert info.misses == 1
 
 
 def test_canonical_darwin_default_covers_all_install_prefixes():
@@ -52,6 +189,8 @@ def test_canonical_darwin_default_covers_all_install_prefixes():
     assert "/opt/homebrew/share/bash-completion/bash_completion" in paths
     # MacPorts
     assert "/opt/local/share/bash-completion/bash_completion" in paths
+    # User-defined
+    assert os.path.expanduser("~/.bash_completions") in paths
     # Nix shared profile (nix-darwin)
     assert "/run/current-system/sw/share/bash-completion/bash_completion" in paths
 
