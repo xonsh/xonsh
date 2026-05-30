@@ -1,9 +1,9 @@
 Callable Aliases
 ================
 
-In xonsh, a Python function can be registered as a shell command (alias). The
-function declares which arguments it needs, and xonsh fills them automatically
-based on parameter names. When a function runs as an alias, xonsh redirects
+In Xonsh, a Python function can be registered as a shell command (alias). The
+function declares which arguments it needs, and Xonsh fills them automatically
+based on parameter names. When a function runs as an alias, Xonsh redirects
 ``sys.stdout`` and ``sys.stderr`` inside it, making it possible to capture all
 output that happens within the function — including ``print()`` calls and
 subprocess commands.
@@ -103,7 +103,7 @@ Local Environment Overlay
 -------------------------
 
 The ``env`` parameter provides a local environment overlay. Values set in
-``env`` shadow the global environment during alias execution — both for xonsh
+``env`` shadow the global environment during alias execution — both for Xonsh
 ``$VAR`` reads and for subprocesses. When the alias exits, the overlay is
 removed and the global environment is unchanged.
 
@@ -137,7 +137,7 @@ Return Command Aliases
 
 The ``@aliases.return_command`` decorator creates aliases that return a new
 command to execute instead of running it themselves. The body of the alias
-can run its own commands first, then return the command xonsh should execute
+can run its own commands first, then return the command Xonsh should execute
 on its behalf.
 
 The alias may return its result in either of two forms:
@@ -379,7 +379,7 @@ The ``stderr`` argument and ``sys.stderr`` are also redirected — use
 Streams
 -------
 
-Inside a callable alias xonsh replaces ``sys.stdout`` and ``sys.stderr``
+Inside a callable alias Xonsh replaces ``sys.stdout`` and ``sys.stderr``
 with the alias's own streams.  The ``stdout`` and ``stderr`` function
 arguments point to the **same** redirected streams.  So bare ``print()``
 just works — in pipes, in capture, everywhere:
@@ -549,7 +549,7 @@ xonsh exposes two helpers on the ``aliases`` object:
 * ``aliases.click`` — the ``click`` module itself, for decorating functions
   with ``@aliases.click.option(...)``, ``@aliases.click.argument(...)``, etc.
 * ``aliases.register_click_command`` — a decorator that registers a click
-  command as a xonsh alias.
+  command as a Xonsh alias.
 
 Both are loaded lazily on first access — sessions that never touch click
 don't pay the import cost, and nothing breaks on systems where click is
@@ -579,7 +579,7 @@ The decorator mirrors the calling conventions of ``@aliases.register``:
     @aliases.register_click_command("my-name")   # explicit alias name
 
 The function's first argument is a ``click.Context`` subclass that carries
-every standard xonsh alias parameter from `Signature Parameters`_ as an
+every standard Xonsh alias parameter from `Signature Parameters`_ as an
 attribute of the same name — ``ctx.stdin``, ``ctx.stdout``, ``ctx.stderr``,
 ``ctx.spec``, ``ctx.stack``, ``ctx.decorators``, ``ctx.alias_name``,
 ``ctx.called_alias_name``, ``ctx.env``. The only exception is ``args``,
@@ -590,7 +590,7 @@ The ``click`` module itself is also attached as ``ctx.click``, so
 callbacks can call ``ctx.click.echo(...)``, ``ctx.click.secho(...)``, etc.
 without a separate ``import click``.
 
-Use these when a click command needs the underlying xonsh streams or
+Use these when a click command needs the underlying Xonsh streams or
 environment overlay — for example, ``print(text, file=ctx.stdout)`` writes
 to the alias's captured output the same way a regular callable alias does.
 
@@ -607,7 +607,7 @@ a ``click.Group`` are all suggested without any extra configuration.
 String Aliases and ExecAlias
 ----------------------------
 
-When you assign a string to an alias, xonsh stores it in one of two ways
+When you assign a string to an alias, Xonsh stores it in one of two ways
 depending on the content.
 
 A **simple string** like ``"ls -la"`` is split into a list of tokens and
@@ -619,9 +619,9 @@ directly:
     @ aliases['ll'] = 'ls -la'
     @ aliases['ll'] = ['ls', '-la']   # same thing
 
-A string that contains xonsh expressions (``@()``, ``$()``), pipes (``|``),
+A string that contains Xonsh expressions (``@()``, ``$()``), pipes (``|``),
 redirections (``>``, ``<``), or logical operators (``&&``, ``||``) cannot be
-represented as a simple list — it needs to be compiled and executed as xonsh
+represented as a simple list — it needs to be compiled and executed as Xonsh
 code. Xonsh wraps such strings in an ``ExecAlias``, which is a callable alias
 under the hood:
 
