@@ -1,5 +1,35 @@
 # Xonsh Change Log
 
+## [0.23.8](https://github.com/xonsh/xonsh/compare/0.23.7...0.23.8) (2026-05-28)
+
+
+### Features
+
+* Add `events.on_completer_filter` to skip certain completer if needed ([#6453](https://github.com/xonsh/xonsh/issues/6453)) ([ea747d2](https://github.com/xonsh/xonsh/commit/ea747d276aa9f3646bfbc6d01dc84b5888a508b0))
+* Builtins: source-foreign: Add ash, dash, ksh as reference to sh ([#6459](https://github.com/xonsh/xonsh/issues/6459)) ([9bb681f](https://github.com/xonsh/xonsh/commit/9bb681f8e30d29b1d2011d47b6d3428368c554f0))
+* Parser: Support multiline string with logical subprocess ([#6465](https://github.com/xonsh/xonsh/issues/6465)) ([78d9c53](https://github.com/xonsh/xonsh/commit/78d9c532aebf6374bbecdb795edce4b285a33a6f))
+* Support SSH escape sequences ([#6462](https://github.com/xonsh/xonsh/issues/6462)) ([c5300ed](https://github.com/xonsh/xonsh/commit/c5300ed1be96aad8cbe94351b11fe8f575122ea9))
+
+
+### Fixes
+
+* Builtins: source-foreign: Show more detailed error, add `source-sh` ([#6458](https://github.com/xonsh/xonsh/issues/6458)) ([8ef52c1](https://github.com/xonsh/xonsh/commit/8ef52c167f5838887ced87be81f6974712ec58b9))
+* Builtins: trace: Fix lags issue by avoiding settrace for all files. Also improve output flushing ([#6460](https://github.com/xonsh/xonsh/issues/6460)) ([da4e2c9](https://github.com/xonsh/xonsh/commit/da4e2c99f759e15615b2d38b26a5b0e5b49dbd7c))
+* **completer:** Source user bash completion scripts ([#6464](https://github.com/xonsh/xonsh/issues/6464)) ([a17c6f6](https://github.com/xonsh/xonsh/commit/a17c6f6c9d56453a3082d8afe642e89c24299c2e))
+* Parser: Treat `!` inside f-string `{…}` as conversion ([#6466](https://github.com/xonsh/xonsh/issues/6466)) ([6f52fdc](https://github.com/xonsh/xonsh/commit/6f52fdccf5c77f1d5235f8f05ebac64fffa8094e))
+* **parser:** treat ``!`` inside f-string ``{…}`` as conversion, not macro ([b41ba78](https://github.com/xonsh/xonsh/commit/b41ba78a10bd0c56e49e083c1bb40df8a886e49b))
+* Proc: Additional polling return code  ([#6457](https://github.com/xonsh/xonsh/issues/6457)) ([0549cc5](https://github.com/xonsh/xonsh/commit/0549cc51b00b3d5c495a3e0145f0c7b57e48f472))
+* Readline: Completer: Fix file with space in name ([#6455](https://github.com/xonsh/xonsh/issues/6455)) ([d7a2811](https://github.com/xonsh/xonsh/commit/d7a2811a4eb6a5d86de8c1670bce6f52f85d9d9e))
+* **tests:** Add pytest-xdist support  ([#6454](https://github.com/xonsh/xonsh/issues/6454)) ([85f6c55](https://github.com/xonsh/xonsh/commit/85f6c55590e64a07097b2e91a486273ad25825cd))
+* TTY: termios error ([#6461](https://github.com/xonsh/xonsh/issues/6461)) ([b8e51f0](https://github.com/xonsh/xonsh/commit/b8e51f0ee2c7c7a8f38dc090e503e2ed1762a3e6))
+* xcontext: Show both path and resolved path ([#6448](https://github.com/xonsh/xonsh/issues/6448)) ([8b75ce2](https://github.com/xonsh/xonsh/commit/8b75ce20c71c72f8e50aa1a55148bf895fa6a243))
+* **xontribs:** Invalidate import caches before loading xontribs ([#6452](https://github.com/xonsh/xonsh/issues/6452)) ([794b53c](https://github.com/xonsh/xonsh/commit/794b53c609df0e3166b584300c3473ffa061f244))
+
+
+### Refactoring
+
+* Remove docstring shenanigans from events ([#6449](https://github.com/xonsh/xonsh/issues/6449)) ([8bc46d0](https://github.com/xonsh/xonsh/commit/8bc46d046d386b7128e1c778ba476f771f859f75))
+
 ## [0.23.7](https://github.com/xonsh/xonsh/compare/0.23.6...0.23.7) (2026-05-17)
 
 
