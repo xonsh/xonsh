@@ -144,6 +144,16 @@ events.doc(
 on_pre_prompt_format() -> None
 
 Fires before the prompt will be formatted
+
+Example:
+
+.. code-block:: python
+
+    @events.on_pre_prompt_format
+    def update_vcs_status(**kw):
+        # refresh any cached VCS info before the prompt template is rendered
+        import os
+        os.environ.pop("GIT_STATUS_CACHE", None)
 """,
 )
 
@@ -153,6 +163,14 @@ events.doc(
 on_pre_prompt() -> None
 
 Fires just before showing the prompt
+
+Example:
+
+.. code-block:: python
+
+    @events.on_pre_prompt
+    def ring_bell(**kw):
+        print("\\a", end="", flush=True)
 """,
 )
 
@@ -163,6 +181,15 @@ events.doc(
 on_post_prompt() -> None
 
 Fires just after the prompt returns
+
+Example:
+
+.. code-block:: python
+
+    @events.on_post_prompt
+    def log_session_time(**kw):
+        import time
+        print(f"[session time: {time.strftime('%H:%M:%S')}]")
 """,
 )
 
