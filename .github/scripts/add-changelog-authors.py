@@ -6,11 +6,10 @@ Adds @author username to each commit reference in the changelog.
 Desired format: * description ([#PR](URL)) ([@username](commit_url))
 """
 
-import re
 import json
-import urllib.request
 import os
-import sys
+import re
+import urllib.request
 
 CHANGELOG_PATH = "CHANGELOG.md"
 REPO = "xonsh/xonsh"
@@ -39,16 +38,16 @@ def get_author_from_commit(sha):
         # Fallback to commit author name
         commit_author = data.get("commit", {}).get("author", {}).get("name", "")
         return commit_author
-    except Exception as e:
+    except Exception:
         return None
 
 def process_changelog():
     """Add author attribution to CHANGELOG.md entries."""
     if not os.path.exists(CHANGELOG_PATH):
-        print(f"CHANGELOG.md not found, skipping")
+        print("CHANGELOG.md not found, skipping")
         return
 
-    with open(CHANGELOG_PATH, "r", encoding="utf-8") as f:
+    with open(CHANGELOG_PATH, encoding="utf-8") as f:
         content = f.read()
 
     original = content
@@ -71,7 +70,7 @@ def process_changelog():
             seen_commits[inner] = author
 
         if author:
-            return f"({author} {full[1:]}"  # Replace leading ( with (@author 
+            return f"({author} {full[1:]}"  # Replace leading ( with (@author
         return full
 
     # Match commit references: ([0-9a-f]+](...commit/...))
