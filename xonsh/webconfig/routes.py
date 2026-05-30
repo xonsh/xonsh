@@ -38,7 +38,7 @@ class Routes:
         self.err_msgs.append(tree)
 
     _external_links = [
-        ("Docs", "https://xon.sh/dev/contents.html"),
+        ("Docs", "https://xon.sh/contents.html"),
         ("Xontribs", "https://github.com/topics/xontrib"),
         ("Code", "https://github.com/xonsh/xonsh"),
         ("Sponsor", "https://github.com/sponsors/xonsh"),
