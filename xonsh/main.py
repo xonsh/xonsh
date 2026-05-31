@@ -56,7 +56,7 @@ Example:
 .. code-block:: python
 
     @events.on_post_init
-    def greet(**kw):
+    def _event_greet(**kw):
         from xonsh.built_ins import XSH
         name = XSH.env.get("USER", "user")
         print(f"Welcome back, {name}!")
@@ -82,7 +82,7 @@ Example:
 .. code-block:: python
 
     @events.on_exit
-    def save_session_log(exit_code, **kw):
+    def _event_save_session_log(exit_code, **kw):
         import datetime
         with open("/tmp/xonsh_sessions.log", "a") as f:
             f.write(f"{datetime.datetime.now()}: exited with code {exit_code}\\n")
@@ -103,7 +103,7 @@ Example:
 .. code-block:: python
 
     @events.on_pre_cmdloop
-    def show_tip(**kw):
+    def _event_show_tip(**kw):
         import random
         tips = ["Use Tab for completion", "Try 'xonfig' to configure xonsh"]
         print("Tip:", random.choice(tips))
@@ -125,7 +125,7 @@ Example:
 .. code-block:: python
 
     @events.on_post_cmdloop
-    def farewell(**kw):
+    def _event_farewell(**kw):
         print("Goodbye!")
 """,
 )
@@ -143,7 +143,7 @@ Example:
 .. code-block:: python
 
     @events.on_xontribs_loaded
-    def check_xontribs(**kw):
+    def _event_check_xontribs(**kw):
         from xonsh.built_ins import XSH
         loaded = list(XSH.builtins.__xonsh__.xontribs_loaded)
         print(f"Loaded xontribs: {loaded}")
@@ -163,7 +163,7 @@ Example:
 .. code-block:: python
 
     @events.on_pre_rc
-    def announce_rc(**kw):
+    def _event_announce_rc(**kw):
         print("Loading rc files...")
 """,
 )
@@ -181,7 +181,7 @@ Example:
 .. code-block:: python
 
     @events.on_post_rc
-    def rc_loaded(**kw):
+    def _event_rc_loaded(**kw):
         print("RC files loaded successfully.")
 """,
 )

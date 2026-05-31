@@ -150,7 +150,7 @@ Example:
 .. code-block:: python
 
     @events.on_pre_prompt_format
-    def update_vcs_status(**kw):
+    def _event_update_vcs_status(**kw):
         # refresh any cached VCS info before the prompt template is rendered
         import os
         os.environ.pop("GIT_STATUS_CACHE", None)
@@ -169,7 +169,7 @@ Example:
 .. code-block:: python
 
     @events.on_pre_prompt
-    def ring_bell(**kw):
+    def _event_ring_bell(**kw):
         print("\\a", end="", flush=True)
 """,
 )
@@ -187,7 +187,7 @@ Example:
 .. code-block:: python
 
     @events.on_post_prompt
-    def log_session_time(**kw):
+    def _event_log_session_time(**kw):
         import time
         print(f"[session time: {time.strftime('%H:%M:%S')}]")
 """,

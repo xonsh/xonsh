@@ -149,7 +149,7 @@ Example:
 .. code-block:: python
 
     @events.on_envvar_new
-    def log_new_var(name, value, **kw):
+    def _event_log_new_var(name, value, **kw):
         print(f"New env var created: {name}={value!r}")
 """,
 )
@@ -191,7 +191,7 @@ Example:
 .. code-block:: python
 
     @events.on_pre_spec_run_ls
-    def inject_color_flag(spec, **kw):
+    def _event_inject_color_flag(spec, **kw):
         # Automatically add --color=auto if not already present
         if "--color" not in spec.args:
             spec.args.append("--color=auto")
@@ -221,7 +221,7 @@ Example:
 .. code-block:: python
 
     @events.on_lscolors_change
-    def log_lscolors_change(key, oldvalue, newvalue, **kw):
+    def _event_log_lscolors_change(key, oldvalue, newvalue, **kw):
         if newvalue is None:
             print(f"LS_COLORS: removed key {key!r}")
         elif oldvalue is None:
