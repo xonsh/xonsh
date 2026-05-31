@@ -3,10 +3,10 @@ Cross-platform
 
 .. _cross_platform_xonshrc:
 
-Cross-platform xonsh RC
+Cross-platform Xonsh RC
 -----------------------
 
-First of all because a :doc:`xonsh RC <xonshrc>` is plain xonsh code, you can ship a single
+First of all because a :doc:`Xonsh RC <xonshrc>` is plain Xonsh code, you can ship a single
 file across Linux, macOS, and Windows and gate snippets on platform and
 execution-mode flags.
 
@@ -30,7 +30,7 @@ Platform flags are lazy booleans exposed by :mod:`xonsh.platform`:
 
 Execution-mode flags live in the environment:
 
-* ``$XONSH_INTERACTIVE`` — ``True`` when xonsh is running an interactive
+* ``$XONSH_INTERACTIVE`` — ``True`` when Xonsh is running an interactive
   shell. Use it to gate anything that only makes sense with a live terminal
   (aliases you type, key bindings, prompt colors, xontribs that hook the
   REPL). Safe to use inside an RC that is ``source``-d at runtime, because
@@ -97,7 +97,7 @@ Common packaging systems for macOS:
   This will install the completion file to
   ``/usr/local/share/bash-completion/bash_completion`` (Intel Mac) or
   ``/opt/homebrew/share/bash-completion/bash_completion`` (Apple Silicon)
-  — both are in the default xonsh search path and should just work.
+  — both are in the default Xonsh search path and should just work.
 
 - **MacPorts** — install the ``bash-completion`` port
   (`docs <https://trac.macports.org/wiki/howto/bash-completion>`_):
@@ -151,7 +151,7 @@ these work on any POSIX system with ``less`` as the pager:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 On certain (mostly older or stripped) Linux distributions you may
-occasionally see this error when starting xonsh:
+occasionally see this error when starting Xonsh:
 
 .. code-block:: xonshcon
 
@@ -179,7 +179,7 @@ your process locale is not UTF-8. Usually seen in minimal containers,
 stripped SSH sessions, systemd units, or cron jobs where ``LANG`` / ``LC_ALL``
 are set to ``C`` or ``POSIX``.
 
-The locale must be set **before** xonsh starts — setting ``$LC_ALL`` from
+The locale must be set **before** Xonsh starts — setting ``$LC_ALL`` from
 your :doc:`xonsh RC <xonshrc>` is too late for subprocesses that already
 inherited the broken environment. Fix it at the OS level (``~/.pam_environment``,
 ``/etc/locale.conf``, the container image's base layer, or the systemd unit's
@@ -189,9 +189,9 @@ forces Python into UTF-8 mode regardless of locale.
 Bash module warnings on startup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Depending on how your installation of Bash is configured, xonsh may show
+Depending on how your installation of Bash is configured, Xonsh may show
 warnings when loading certain shell modules. If you see errors similar to
-this when launching xonsh:
+this when launching Xonsh:
 
 .. code-block:: console
 
@@ -233,7 +233,7 @@ macOS provides a `path helper
 which by default configures paths in bash and other POSIX or C  shells. Without
 including these paths, common tools including those installed by Homebrew
 may be unavailable. See ``/etc/profile`` for details on how it is done.
-To ensure the path helper is invoked on xonsh (for all users), add the
+To ensure the path helper is invoked on Xonsh (for all users), add the
 following to ``/etc/xonsh/xonshrc``:
 
 .. code-block:: xonshcon
@@ -293,7 +293,7 @@ from that.
 Installing
 ^^^^^^^^^^
 
-In a fresh Termux install, set up xonsh and a working bash completion
+In a fresh Termux install, set up Xonsh and a working bash completion
 framework:
 
 .. code-block:: xonshcon
@@ -319,10 +319,10 @@ Android disallows a few syscalls that desktop Linux takes for granted:
   manager handles this gracefully (no controlling terminal handover),
   so subprocesses still work; you just don't get bash-style job
   control on Android-only sessions.
-* ``os.link`` — not exposed in Python on bionic. xonsh xoreutils
+* ``os.link`` — not exposed in Python on bionic. Xonsh xoreutils
   ``cp -l`` and similar features fall back to copying.
 
-Detecting Android in xonshrc
+Detecting Android in Xonsh RC
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: xonsh
@@ -348,10 +348,10 @@ Tab completion
 ^^^^^^^^^^^^^^
 
 After ``pkg install bash-completion``, completions for git, pip, ssh,
-``--`` long options, and so on work out of the box — xonsh probes
+``--`` long options, and so on work out of the box — Xonsh probes
 ``$PREFIX/share/bash-completion/bash_completion`` by default.
 
-For commands xonsh itself provides (``cd``, ``rmdir``, …) and
+For commands Xonsh itself provides (``cd``, ``rmdir``, …) and
 filesystem path completion, the same case-insensitive, subsequence- and
 fuzzy-tier behaviour described in :doc:`completers <completers>`
 applies on Android.
@@ -369,7 +369,7 @@ below give you a working set, ordered roughly from most lightweight and
 xonsh-native to most comprehensive.
 
 - **xonsh built-in coreutils.** A pure-Python xontrib that ships with
-  xonsh registers ``cat``, ``echo``, ``pwd``, ``tee``, ``tty``,
+  Xonsh registers ``cat``, ``echo``, ``pwd``, ``tee``, ``tty``,
   ``umask``, ``uname``, ``uptime``, ``yes`` as aliases — no install,
   identical behaviour on every platform:
 
@@ -384,7 +384,7 @@ xonsh-native to most comprehensive.
   of a much larger GNU-style set: ``ls``, ``cp``, ``mv``, ``rm``,
   ``find``, ``grep``, ``head``, ``tail``, ``wc``, ``sort``, ``uniq``,
   ``du``, ``df``, ``date``, ``base64``, and many more. Because it's
-  Python it installs into the same interpreter as xonsh and behaves
+  Python it installs into the same interpreter as Xonsh and behaves
   identically across Windows, macOS, and Linux:
 
   .. code-block:: xonshcon
@@ -439,7 +439,7 @@ You can install it from the `Microsoft Store <https://www.microsoft.com/en-us/p/
 or from `Github <https://github.com/microsoft/terminal>`_.
 
 By default Windows Terminal runs Powershell, but you can add a profile tab to run Xonsh and even configure it
-to open automatically in xonsh. Here is a sample settings.json:
+to open automatically in Xonsh. Here is a sample settings.json:
 
 .. code-block::
 
@@ -478,10 +478,10 @@ to open automatically in xonsh. Here is a sample settings.json:
         . . .
 
 
-How to add xonsh into the context menu for Windows?
+How to add Xonsh into the context menu for Windows?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In Windows, there's a context menu support for opening a folder in a shell, such as `Open PowerShell window here`. You might want to have a similar menu that opens a folder in xonsh:
+In Windows, there's a context menu support for opening a folder in a shell, such as `Open PowerShell window here`. You might want to have a similar menu that opens a folder in Xonsh:
 
 .. image:: _static/context_menu_windows.png
    :width: 80 %
@@ -492,7 +492,7 @@ Usually it involves modifying registry to get it, but `a contributed script <htt
 
 .. code-block:: xonshcon
 
-    # Open xonsh and copy-paste the following line:
+    # Open Xonsh and copy-paste the following line:
     @ exec(@.imp.urllib.request.urlopen(r'https://gist.githubusercontent.com/nedsociety/91041691d0ac18bc8fd9e937ad21b055/raw/xonsh_context_menu.py').read()) \
        && xonsh_register_right_click()
 
@@ -534,7 +534,7 @@ Python (like other processes on Windows) locks the current working directory so
 it can't be deleted or renamed. ``cmd.exe`` has this behaviour as well, but it
 is quite annoying for a shell.
 
-The :ref:`free_cwd <free_cwd>` xontrib (add-on) for xonsh solves some of this problem. It
+The :ref:`free_cwd <free_cwd>` xontrib (add-on) for Xonsh solves some of this problem. It
 works by hooking the prompt to reset the current working directory to the root
 drive folder whenever the shell is idle. It only works with the prompt-toolkit
 back-end. To enable that behaviour run the following:
@@ -606,11 +606,11 @@ Although not recommended, to restore the behavior found in the
 Add that to your :doc:`xonsh RC <xonshrc>` to enable that as the default behavior.
 
 
-Updating xonsh
+Updating Xonsh
 ^^^^^^^^^^^^^^
 
 On Windows the running ``xonsh.exe`` is locked by the OS, so pip cannot
-replace it from inside xonsh itself. Use
+replace it from inside Xonsh itself. Use
 :ref:`xcontext <aliases-xcontext>` to find the interpreter path, exit
 the shell, then run pip from another terminal (``cmd``, PowerShell, or
 Windows Terminal):
@@ -624,11 +624,11 @@ Windows Terminal):
 
    > <xpython> -m pip install --upgrade xonsh
 
-If you installed xonsh via the
+If you installed Xonsh via the
 `WinGet installer <https://github.com/xonsh/xonsh-winget/releases>`_,
 download the latest installer and run it — it will upgrade in place.
 
-See also :ref:`Updating xonsh <updating_xonsh>` in the installation guide
+See also :ref:`Updating Xonsh <updating_xonsh>` in the installation guide
 for more details.
 
 
@@ -640,7 +640,7 @@ directories like ``C:\Windows\System32`` with thousands of executables. Xonsh
 scans ``$PATH`` directories to resolve commands, which may cause noticeable
 lag.
 
-The ``$XONSH_COMMANDS_CACHE_READ_DIR_ONCE`` variable tells xonsh to cache
+The ``$XONSH_COMMANDS_CACHE_READ_DIR_ONCE`` variable tells Xonsh to cache
 directory listings on first access and never re-read them within the session.
 On Windows it defaults to ``C:\Windows`` (via ``%WINDIR%``), meaning
 ``C:\Windows\System32`` and all other subdirectories are scanned once and
@@ -651,7 +651,7 @@ directories:
 
     @ $XONSH_COMMANDS_CACHE_READ_DIR_ONCE += ['C:\\Program Files', 'C:\\Program Files (x86)']
 
-On WSL, xonsh auto-detects ``/mnt/*/Windows`` directories.
+On WSL, Xonsh auto-detects ``/mnt/*/Windows`` directories.
 
 To debug command resolution, enable:
 
@@ -694,7 +694,7 @@ in every session.
 Forward-slash paths (``$FORCE_POSIX_PATHS``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Set ``$FORCE_POSIX_PATHS = True`` to make xonsh display and complete paths
+Set ``$FORCE_POSIX_PATHS = True`` to make Xonsh display and complete paths
 with forward slashes (``/``) instead of backslashes (``\``):
 
 .. code-block:: xonsh
