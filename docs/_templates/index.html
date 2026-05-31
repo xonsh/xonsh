@@ -409,10 +409,11 @@
 <span unselectable-text="@ "></span><b>xontrib</b> load sh \
 <span unselectable-text="  "></span>             fish_completer
 
+<span unselectable-text="@ "></span><b>osqueryi !</b> SELECT platform FROM os_version
+
 <span unselectable-text="@ "></span><b>def</b> nudf(cmd):
 <span unselectable-text="  "></span>    <b>return</b> <b>@</b>.imp.pandas.DataFrame(
-<span unselectable-text="  "></span>      <b>@</b>.imp.json.loads(
-<span unselectable-text="  "></span>          <span style="color: lightgreen;">$(nu -c <span style="color: lightsalmon;">@(cmd + <span style="color: lightblue;">'| to json'</span>)</span>)</span>))
+<span unselectable-text="  "></span>      <span style="color: lightgreen;">$(<span style="color: lightsalmon;">@json</span> nu -c <span style="color: lightsalmon;">@(cmd + <span style="color: lightblue;">'| to json'</span>)</span>)</span>)
 
 <span unselectable-text="  "></span>nudf!(<span style="color: lightgreen;">ls -la</span>)
 

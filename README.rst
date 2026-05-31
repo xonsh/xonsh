@@ -103,10 +103,11 @@ Xonsh
             xontrib load sh \
                          fish_completer
 
+            osqueryi ! SELECT platform FROM os_version
+
             def nudf(cmd):
                 return @.imp.pandas.DataFrame(
-                  @.imp.json.loads(
-                    $(nu -c @(cmd+'| to json'))))
+                  $(@json nu -c @(cmd+'| to json')))
             nudf!(ls -la)
 
             aliases['ai'] = 'ollama run llama3'
