@@ -181,6 +181,10 @@ def color_name_to_pygments_code(name, styles):
         if parts["reset"] == "NO_COLOR":
             warn_deprecated_no_color()
         res = "noinherit"
+    elif parts["resetfg"] is not None:
+        res = "ansidefault"
+    elif parts["resetbg"] is not None:
+        res = "bg:ansidefault"
     elif parts["bghex"] is not None:
         res = "bg:#" + parts["bghex"][3:]
     elif parts["background"] is not None:
