@@ -126,8 +126,7 @@ Example:
 
     @events.on_post_cmdloop
     def _event_session_summary(**kw):
-        from xonsh.built_ins import XSH
-        print(f"Session ended after {len(XSH.history)} commands.")
+        print(f"Session ended after {len(@.history)} commands.")
 """,
 )
 
