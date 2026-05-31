@@ -50,6 +50,16 @@ on_post_init() -> None
 Fired after all initialization is finished and we're ready to do work.
 
 NOTE: This is fired before the wizard is automatically started.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_post_init
+    def _event_greet(**kw):
+        from xonsh.built_ins import XSH
+        name = XSH.env.get("USER", "user")
+        print(f"Welcome back, {name}!")
 """,
 )
 
@@ -62,6 +72,20 @@ on_exit(exit_code : int) -> None
 Fired after all commands have been executed, before tear-down occurs.
 
 NOTE: All the caveats of the ``atexit`` module also apply to this event.
+
+Parameters:
+
+* ``exit_code``: The shell's exit code (``0`` for success).
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_exit
+    def _event_save_session_log(exit_code, **kw):
+        import datetime
+        with open("/tmp/xonsh_sessions.log", "a") as f:
+            f.write(f"{datetime.datetime.now()}: exited with code {exit_code}\\n")
 """,
 )
 
@@ -73,6 +97,16 @@ events.doc(
 on_pre_cmdloop() -> None
 
 Fired just before the command loop is started, if it is.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_pre_cmdloop
+    def _event_show_tip(**kw):
+        import random
+        tips = ["Use Tab for completion", "Try 'xonfig' to configure xonsh"]
+        print("Tip:", random.choice(tips))
 """,
 )
 
@@ -85,6 +119,14 @@ on_post_cmdloop() -> None
 Fired just after the command loop finishes, if it is.
 
 NOTE: All the caveats of the ``atexit`` module also apply to this event.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_post_cmdloop
+    def _event_session_summary(**kw):
+        print(f"Session ended after {len(@.history)} commands.")
 """,
 )
 
@@ -95,6 +137,16 @@ events.doc(
 on_xontribs_loaded() -> None
 
 Fired after external xontribs with ``entrypoints defined`` are loaded.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_xontribs_loaded
+    def _event_check_xontribs(**kw):
+        from xonsh.xontribs import xontribs_loaded
+        if "coreutils" not in xontribs_loaded():
+            print("Hint: 'xontrib load coreutils' adds cross-platform cp, mv, rm, ...")
 """,
 )
 
@@ -105,6 +157,14 @@ events.doc(
 on_pre_rc() -> None
 
 Fired just before rc files are loaded, if they are.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_pre_rc
+    def _event_announce_rc(**kw):
+        print("Loading rc files...")
 """,
 )
 
@@ -115,6 +175,14 @@ events.doc(
 on_post_rc() -> None
 
 Fired just after rc files are loaded, if they are.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_post_rc
+    def _event_rc_loaded(**kw):
+        print("RC files loaded successfully.")
 """,
 )
 

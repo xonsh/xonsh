@@ -138,6 +138,19 @@ on_envvar_new(name: str, value: Any) -> None
 Fires after a new environment variable is created.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
+
+Parameters:
+
+* ``name``: The name of the new environment variable.
+* ``value``: The value assigned to it.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_envvar_new
+    def _event_log_new_var(name, value, **kw):
+        print(f"New env var created: {name}={value!r}")
 """,
 )
 
@@ -150,7 +163,7 @@ Fires after an environment variable is changed.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_envvar_change
     def _on_env_path_change(name, oldvalue, newvalue):
@@ -168,6 +181,20 @@ on_pre_spec_run_ls(spec: xonsh.built_ins.SubprocSpec) -> None
 
 Fires right before a SubprocSpec.run() is called for the ls
 command.
+
+Parameters:
+
+* ``spec``: The ``SubprocSpec`` object for the ``ls`` invocation.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_pre_spec_run_ls
+    def _event_inject_color_flag(spec, **kw):
+        # Automatically add --color=auto if not already present
+        if not any(arg.startswith("--color") for arg in spec.args):
+            spec.args.append("--color=auto")
 """,
 )
 
@@ -182,6 +209,25 @@ LS_COLORS values must be (ANSI color) strings, None is unambiguous.
 Does not fire when the whole environment variable changes (see on_envvar_change).
 Does not fire for each value when LS_COLORS is first instantiated.
 Normal usage is to arm the event handler, then read (not modify) all existing values.
+
+Parameters:
+
+* ``key``: The LS_COLORS key that changed (e.g. ``"di"`` for directories).
+* ``oldvalue``: Previous ANSI color string, or ``None`` if the key is new.
+* ``newvalue``: New ANSI color string, or ``None`` if the key was deleted.
+
+Example:
+
+.. code-block:: xonsh
+
+    @events.on_lscolors_change
+    def _event_log_lscolors_change(key, oldvalue, newvalue, **kw):
+        if newvalue is None:
+            print(f"LS_COLORS: removed key {key!r}")
+        elif oldvalue is None:
+            print(f"LS_COLORS: added {key!r}={newvalue!r}")
+        else:
+            print(f"LS_COLORS: changed {key!r} from {oldvalue!r} to {newvalue!r}")
 """,
 )
 
@@ -1401,7 +1447,7 @@ class SubprocessSetting(Xettings):
         "``specs`` is the list of :class:`SubprocSpec` objects about to be executed; "
         "``CommandPipeline`` is not yet built at this point.",
         doc_default="By default it just prints ``cmds`` like below.\n\n"
-        ".. code-block:: python\n\n"
+        ".. code-block:: xonsh\n\n"
         "    def _tracer(cmds, captured, specs):\n"
         "        # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,\n"
         "        # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.\n"
