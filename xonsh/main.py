@@ -125,8 +125,9 @@ Example:
 .. code-block:: python
 
     @events.on_post_cmdloop
-    def _event_farewell(**kw):
-        print("Goodbye!")
+    def _event_session_summary(**kw):
+        from xonsh.built_ins import XSH
+        print(f"Session ended after {len(XSH.history)} commands.")
 """,
 )
 
