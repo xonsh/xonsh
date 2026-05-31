@@ -208,6 +208,8 @@ Unset the affected functions in your ``~/.bashrc``:
     $ unset scl
 
 
+.. _open_terminal_here:
+
 "Open Terminal Here" action in Thunar (XFCE)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -708,8 +710,37 @@ Most modern Windows applications accept forward-slash paths, but not all do
 other tools work fine with ``/``.
 
 
-.. _open_terminal_here:
+Cross-platform tooling
+----------------------
 
+Query the system
+^^^^^^^^^^^^^^^^
+
+`osquery <https://www.osquery.io>`_ exposes the operating system as a
+relational database. It ships hundreds of tables — ``processes``,
+``listening_ports``, ``users``, ``system_info``, ``os_version`` and many more (see
+the `schema <https://osquery.io/schema>`_) — that you read with plain SQL, and
+the same query returns the same columns on Linux, macOS, and Windows. Its
+``osqueryi`` shell runs a single query and exits when you pass the SQL as an
+argument:
+
+.. code-block:: xonshcon
+
+    @ osqueryi! SELECT platform FROM os_version
+    +----------+
+    | platform |
+    +----------+
+    | darwin   |
+    +----------+
+
+Because ``osqueryi --json`` prints a table as a JSON array, the ``@json``
+:doc:`output decorator <aliases>` hands it back as a list of dicts you can loop
+over directly:
+
+.. code-block:: xonsh
+
+    for proc in $(@json osqueryi --json "SELECT pid, name FROM processes ORDER BY pid LIMIT 5"):
+        print(proc['pid'], proc['name'])
 
 
 See Also
