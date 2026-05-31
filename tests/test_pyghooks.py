@@ -105,6 +105,9 @@ DEFAULT_STYLES = {
         ("BACKGROUND_#000000", "bg:#000000"),
         ("BG#000", "bg:#000"),
         ("bg#000000", "bg:#000000"),
+        # reset only one channel (issue #3389)
+        ("RESET_FOREGROUND", "ansidefault"),
+        ("RESET_BACKGROUND", "bg:ansidefault"),
     ],
 )
 def test_color_name_to_pygments_code(name, exp):
@@ -139,6 +142,11 @@ def test_color_name_to_pygments_code(name, exp):
         ("BACKGROUND_#000000", "bg:#000000"),
         ("BG#000", "bg:#000"),
         ("bg#000000", "bg:#000000"),
+        # reset only one channel, preserving the other (issue #3389)
+        ("RESET_FOREGROUND", "ansidefault"),
+        ("RESET_BACKGROUND", "bg:ansidefault"),
+        ("RESET_FOREGROUND__BACKGROUND_RED", "bg:ansired ansidefault"),
+        ("RED__RESET_BACKGROUND", "bg:ansidefault ansired"),
     ],
 )
 def test_code_by_name(name, exp):

@@ -90,12 +90,18 @@ def ansi_color_name_to_escape_code(name, style="default", cmap=None):
         if parts["reset"] == "NO_COLOR":
             warn_deprecated_no_color()
         res = "0"
+    elif parts["resetfg"] is not None:
+        res = "39"
+    elif parts["resetbg"] is not None:
+        res = "49"
     elif parts["bghex"] is not None:
         res = "48;5;" + rgb_to_256(parts["bghex"][3:])[0]
     elif parts["background"] is not None:
         color = parts["color"]
         if "#" in color:
             res = "48;5;" + rgb_to_256(color[1:])[0]
+        elif color == "DEFAULT":
+            res = "49"
         else:
             fgcolor = cmap[color]
             if fgcolor.isdecimal():

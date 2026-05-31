@@ -6,6 +6,7 @@ from xonsh.ansi_colors import (
     ansi_color_escape_code_to_name,
     ansi_color_name_to_escape_code,
     ansi_color_style_names,
+    ansi_partial_color_format,
     ansi_reverse_style,
     ansi_style_by_name,
     register_custom_ansi_style,
@@ -48,6 +49,10 @@ DEFAULT_CMAP = {
     "name, exp",
     [
         ("RESET", "0"),
+        ("RESET_FOREGROUND", "39"),
+        ("RESET_BACKGROUND", "49"),
+        ("DEFAULT", "39"),
+        ("BACKGROUND_DEFAULT", "49"),
         ("RED", "0;31"),
         ("BACKGROUND_RED", "41"),
         ("BACKGROUND_INTENSE_RED", "101"),
@@ -69,6 +74,24 @@ def test_ansi_color_name_to_escape_code_default(name, exp):
     cmap = DEFAULT_CMAP.copy()
     obs = ansi_color_name_to_escape_code(name, cmap=cmap)
     assert obs in exp
+
+
+def test_ansi_reset_foreground_keeps_background():
+    # RESET_FOREGROUND resets only the text color (39), not the whole
+    # styling (0), so a previously set background survives (issue #3389).
+    template = "{BACKGROUND_RED}{GREEN}text{RESET_FOREGROUND}more"
+    obs = ansi_partial_color_format(template, cmap=DEFAULT_CMAP.copy())
+    assert "\033[39m" in obs
+    assert "\033[0m" not in obs
+
+
+def test_ansi_reset_background_keeps_foreground():
+    # RESET_BACKGROUND resets only the background color (49), not the whole
+    # styling (0), so a previously set foreground survives (issue #3389).
+    template = "{BACKGROUND_RED}{GREEN}text{RESET_BACKGROUND}more"
+    obs = ansi_partial_color_format(template, cmap=DEFAULT_CMAP.copy())
+    assert "\033[49m" in obs
+    assert "\033[0m" not in obs
 
 
 RS = ansi_reverse_style(style="default")

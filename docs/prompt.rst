@@ -78,8 +78,7 @@ strings and with color printing functions.
 Color Names
 -----------
 
-* ``RESET``: Resets any previously used styling.
-* ``COLORNAME``: Inserts a color code for the following basic colors,
+* COLORNAME: Inserts a color code for the following basic colors,
   which come in regular (dark) and intense (light) forms:
 
   - ``BLACK`` or ``INTENSE_BLACK``
@@ -120,6 +119,16 @@ Each modifier has an ``OFF`` variant to disable it: ``BOLDOFF_``, ``FAINTOFF_``,
 ``STRIKETHROUGHOFF_``.
 
 Modifiers can be combined: ``BOLD_UNDERLINE_INTENSE_BLACK``.
+
+
+Reset Colors
+------------
+
+* ``RESET``: Resets any previously used styling.
+* ``RESET_FOREGROUND``: Resets only the foreground (text) color to the
+  terminal's default, leaving the background color unchanged.
+* ``RESET_BACKGROUND``: Resets only the background color to the terminal's
+  default, leaving the foreground color unchanged.
 
 
 Additional Prompt Variables
