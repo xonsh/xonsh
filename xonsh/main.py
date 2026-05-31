@@ -53,7 +53,7 @@ NOTE: This is fired before the wizard is automatically started.
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_post_init
     def _event_greet(**kw):
@@ -79,7 +79,7 @@ Parameters:
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_exit
     def _event_save_session_log(exit_code, **kw):
@@ -100,7 +100,7 @@ Fired just before the command loop is started, if it is.
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_pre_cmdloop
     def _event_show_tip(**kw):
@@ -122,7 +122,7 @@ NOTE: All the caveats of the ``atexit`` module also apply to this event.
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_post_cmdloop
     def _event_session_summary(**kw):
@@ -140,7 +140,7 @@ Fired after external xontribs with ``entrypoints defined`` are loaded.
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_xontribs_loaded
     def _event_check_xontribs(**kw):
@@ -160,7 +160,7 @@ Fired just before rc files are loaded, if they are.
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_pre_rc
     def _event_announce_rc(**kw):
@@ -178,7 +178,7 @@ Fired just after rc files are loaded, if they are.
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_post_rc
     def _event_rc_loaded(**kw):

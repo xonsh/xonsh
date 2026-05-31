@@ -146,7 +146,7 @@ Parameters:
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_envvar_new
     def _event_log_new_var(name, value, **kw):
@@ -163,7 +163,7 @@ Fires after an environment variable is changed.
 Note: Setting envvars inside the handler might
 cause a recursion until the limit.
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_envvar_change
     def _on_env_path_change(name, oldvalue, newvalue):
@@ -188,7 +188,7 @@ Parameters:
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_pre_spec_run_ls
     def _event_inject_color_flag(spec, **kw):
@@ -218,7 +218,7 @@ Parameters:
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_lscolors_change
     def _event_log_lscolors_change(key, oldvalue, newvalue, **kw):
@@ -1447,7 +1447,7 @@ class SubprocessSetting(Xettings):
         "``specs`` is the list of :class:`SubprocSpec` objects about to be executed; "
         "``CommandPipeline`` is not yet built at this point.",
         doc_default="By default it just prints ``cmds`` like below.\n\n"
-        ".. code-block:: python\n\n"
+        ".. code-block:: xonsh\n\n"
         "    def _tracer(cmds, captured, specs):\n"
         "        # ``specs`` is a list of SubprocSpec — use e.g. ``s.args``,\n"
         "        # ``s.alias``, ``s.binary_loc``, ``s.threadable`` for details.\n"

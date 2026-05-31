@@ -31,7 +31,7 @@ Only done for interactive sessions.
 This may be fired multiple times per command, with other transformers input or
 output, so design any handlers for this carefully.
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_transform_command
     def _pipe_prev_command(cmd, **kw):
@@ -59,7 +59,7 @@ Parameters:
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_precommand
     def _audit(cmd, **kw):
@@ -87,7 +87,7 @@ Parameters:
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_postcommand
     def _prompt_err_command_again(cmd, rtn, out, ts):
@@ -121,7 +121,7 @@ Note: If the replacement command also fails, the original error is shown.
 
 Examples:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_command_not_found
     def _vim_to_vi(cmd, **kwargs):
@@ -147,7 +147,7 @@ Fires before the prompt will be formatted
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_pre_prompt_format
     def _event_update_vcs_status(**kw):
@@ -166,7 +166,7 @@ Fires just before showing the prompt
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_pre_prompt
     def _event_ring_bell(**kw):
@@ -184,7 +184,7 @@ Fires just after the prompt returns
 
 Example:
 
-.. code-block:: python
+.. code-block:: xonsh
 
     @events.on_post_prompt
     def _event_log_session_time(**kw):
