@@ -193,7 +193,7 @@ Example:
     @events.on_pre_spec_run_ls
     def _event_inject_color_flag(spec, **kw):
         # Automatically add --color=auto if not already present
-        if "--color" not in spec.args:
+        if not any(arg.startswith("--color") for arg in spec.args):
             spec.args.append("--color=auto")
 """,
 )
