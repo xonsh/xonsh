@@ -144,9 +144,9 @@ Example:
 
     @events.on_xontribs_loaded
     def _event_check_xontribs(**kw):
-        from xonsh.built_ins import XSH
-        loaded = list(XSH.builtins.__xonsh__.xontribs_loaded)
-        print(f"Loaded xontribs: {loaded}")
+        from xonsh.xontribs import xontribs_loaded
+        if "coreutils" not in xontribs_loaded():
+            print("Hint: 'xontrib load coreutils' adds cross-platform cp, mv, rm, ...")
 """,
 )
 
