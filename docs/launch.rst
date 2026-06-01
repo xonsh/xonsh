@@ -270,6 +270,9 @@ Subcommands
 * ``xonsh check`` -- check xonsh source files for syntax errors without
   running them; the ``-n`` / ``--no-execute`` flag does the same for a
   ``-c`` command, a script file, or piped stdin. Run ``xonsh check --help``.
+* ``xonsh lint`` -- lint xonsh source files for likely mistakes (env-var
+  typos, bad env-var values, deprecated vars, unused imports), without
+  running them. Run ``xonsh lint --help``.
 
 
 See also
