@@ -770,6 +770,8 @@ def parser():
             "Run `xonsh format --help` for options.\n"
             "  check           Check xonsh source files for syntax errors "
             "without running them. Run `xonsh check --help` for options.\n"
+            "  lint            Lint xonsh source files for likely mistakes. "
+            "Run `xonsh lint --help` for options.\n"
         ),
     )
     p.add_argument(
@@ -1203,6 +1205,11 @@ def main(argv=None):
         from xonsh.checker.cli import main as check_main
 
         sys.exit(check_main(argv[1:]))
+
+    if argv and argv[0] == "lint":
+        from xonsh.linter.cli import main as lint_main
+
+        sys.exit(lint_main(argv[1:]))
 
     # Run the TTY startup handshake *before* premain so that xontrib
     # loading and xonshrc execution happen with xonsh already as the
