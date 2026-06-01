@@ -26,6 +26,10 @@ li > p:last-child {
     height: 8em;
 }
 
+.sidebar-brand-text {
+    text-align: center;
+}
+
 /* Disable red-on-white error highlighting from Pygments for unrecognized tokens
    (e.g. xonsh $VAR syntax in python/xonshcon code blocks). */
 .highlight .err {
