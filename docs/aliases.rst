@@ -26,14 +26,6 @@ On NetBSD and OpenBSD no ``ls`` alias is defined.
 The ``grep`` command is aliased to ``['grep', '--color=auto']``.
 
 
-``history``
---------------------
-Tools for dealing with xonsh history. See `the history tutorial <history.html>`_
-for more information all the history command and all of its sub-commands.
-
-.. command-help:: xonsh.history.main.history_main
-
-
 ``timeit``
 --------------------
 Runs timing study on arguments. Similar to IPython's ``%timeit`` magic.
@@ -58,6 +50,14 @@ current script:
 
 Xonsh-specific Aliases
 =======================
+
+``history``
+--------------------
+Tools for dealing with xonsh history. See `the history tutorial <history.html>`_
+for more information all the history command and all of its sub-commands.
+
+.. command-help:: xonsh.history.main.history_main
+
 
 ``showcmd``
 --------------------
