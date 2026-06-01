@@ -1845,6 +1845,16 @@ def test_expand_path(expand_user, inp, expand_env_vars, exp_end, xession):
         assert path == "~" + exp_end
 
 
+def test_expand_path_preserves_tilde_from_envvar_value(xession):
+    tilde_path = os.path.join("~", "docs")
+    xession.env.update({"tilde": "~", "tilde_path": tilde_path})
+    xession.env["EXPAND_ENV_VARS"] = True
+
+    assert expand_path("$tilde") == "~"
+    assert expand_path("$tilde_path") == tilde_path
+    assert expand_path("x=$tilde_path") == f"x={tilde_path}"
+
+
 @pytest.mark.parametrize(
     "inp, exp_expanded, exp_literal",
     [
