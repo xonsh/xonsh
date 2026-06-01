@@ -82,8 +82,16 @@ class PopenThread(threading.Thread):
         self.proc = None  # has to be here for closure for handles
         self.old_int_handler = self.old_winch_handler = None
         self.old_tstp_handler = self.old_quit_handler = None
+        self.old_break_handler = None
         if xt.on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT, self._signal_int)
+            if xp.ON_WINDOWS:
+                # Windows Ctrl+Break -> CTRL_BREAK_EVENT -> SIGBREAK. With no
+                # handler the default action would terminate xonsh itself
+                # (issue #4852); mirror the SIGINT handling instead.
+                self.old_break_handler = signal.signal(
+                    signal.SIGBREAK, self._signal_break
+                )
             if xp.ON_POSIX:
                 self.old_tstp_handler = signal.signal(signal.SIGTSTP, self._signal_tstp)
                 self.old_quit_handler = signal.signal(signal.SIGQUIT, self._signal_quit)
@@ -368,6 +376,37 @@ class PopenThread(threading.Thread):
                 old(signal.SIGINT, frame)
 
     #
+    # SIGBREAK handler (Windows Ctrl+Break)
+    #
+
+    def _signal_break(self, signum, frame):
+        """Signal handler for SIGBREAK - Windows Ctrl+Break may have been pressed.
+
+        Counterpart to :meth:`_signal_int`. When the user presses Ctrl+Break
+        the console delivers ``CTRL_BREAK_EVENT`` to every process in the
+        group, so the child has already received it and will exit on its own
+        — there is nothing to forward. Handling the signal here exists only to
+        stop its default action from terminating xonsh itself (issue #4852):
+        we mark the interrupt and let the normal teardown collect the child.
+        """
+        if self._interrupted:
+            return
+        self._interrupted = True
+        if self.proc is not None and self.proc.poll() is not None:
+            self._restore_sigbreak(frame=frame)
+
+    def _restore_sigbreak(self, frame=None):
+        old = self.old_break_handler
+        if old is not None:
+            if xt.on_main_thread():
+                signal.signal(signal.SIGBREAK, old)
+            self.old_break_handler = None
+        if frame is not None:
+            self._disable_cbreak_stdin()
+            if old is not None and old is not self._signal_break:
+                old(signal.SIGBREAK, frame)
+
+    #
     # SIGTSTP handler
     #
 
@@ -495,6 +534,7 @@ class PopenThread(threading.Thread):
 
     def _clean_up(self):
         self._restore_sigint()
+        self._restore_sigbreak()
         self._restore_sigtstp()
         self._restore_sigquit()
         self._restore_sigwinch()

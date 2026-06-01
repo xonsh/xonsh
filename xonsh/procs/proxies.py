@@ -375,8 +375,15 @@ class ProcProxyThread(threading.Thread):
         # Set some signal handles, if we can. Must come before process
         # is started to prevent deadlock on windows
         self.old_int_handler = None
+        self.old_break_handler = None
         if xt.on_main_thread():
             self.old_int_handler = signal.signal(signal.SIGINT, self._signal_int)
+            if xp.ON_WINDOWS:
+                # Windows Ctrl+Break would otherwise terminate xonsh itself
+                # (issue #4852); mirror the SIGINT handling instead.
+                self.old_break_handler = signal.signal(
+                    signal.SIGBREAK, self._signal_break
+                )
         # start up the proc
         super().__init__()
         # This is so the thread will use the same swapped values as the origin one.
@@ -385,6 +392,7 @@ class ProcProxyThread(threading.Thread):
 
     def __del__(self):
         self._restore_sigint()
+        self._restore_sigbreak()
 
     @property
     def pipe_channels(self):
@@ -538,6 +546,7 @@ class ProcProxyThread(threading.Thread):
         """Waits for the process to finish and returns the return code."""
         self.join()
         self._restore_sigint()
+        self._restore_sigbreak()
         return self.returncode
 
     #
@@ -573,6 +582,30 @@ class ProcProxyThread(threading.Thread):
         if frame is not None:
             if old is not None and old is not self._signal_int:
                 old(signal.SIGINT, frame)
+        if self._interrupted:
+            self.returncode = 1
+
+    def _signal_break(self, signum, frame):
+        """Signal handler for SIGBREAK - Windows Ctrl+Break.
+
+        Counterpart to :meth:`_signal_int` so the break interrupts the
+        callable alias instead of terminating xonsh itself (issue #4852).
+        """
+        if self._interrupted:
+            return
+        self._interrupted = True
+        if self.poll() is not None:
+            self._restore_sigbreak(frame=frame)
+
+    def _restore_sigbreak(self, frame=None):
+        old = self.old_break_handler
+        if old is not None:
+            if xt.on_main_thread():
+                signal.signal(signal.SIGBREAK, old)
+            self.old_break_handler = None
+        if frame is not None:
+            if old is not None and old is not self._signal_break:
+                old(signal.SIGBREAK, frame)
         if self._interrupted:
             self.returncode = 1
 

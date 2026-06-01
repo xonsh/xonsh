@@ -33,6 +33,7 @@ from xonsh.shell import Shell
 from xonsh.timings import setup_timings
 from xonsh.tools import (
     display_error_message,
+    on_main_thread,
     print_color,
     print_exception,
     to_bool_or_int,
@@ -627,6 +628,37 @@ def _release_controlling_terminal():
         _fg_tty_state["old_fg"] = -1
 
 
+def _setup_ctrl_break():
+    """Windows: make Ctrl+Break interrupt the foreground job, not kill xonsh.
+
+    The Windows console delivers ``CTRL_BREAK_EVENT`` to *every* process
+    attached to the console — xonsh and the subprocess it is waiting on
+    alike. Python maps that event to ``SIGBREAK``, whose default disposition
+    terminates the process, so with no handler installed xonsh itself is torn
+    down the moment the user presses Ctrl+Break while a child is running
+    (issue #4852).
+
+    Install :func:`signal.default_int_handler` for ``SIGBREAK`` so the event
+    surfaces as a catchable ``KeyboardInterrupt``, exactly like ``SIGINT``
+    (Ctrl+C) already does. The foreground child still receives the console
+    event directly and exits on its own; xonsh's wait then unblocks, the
+    ``KeyboardInterrupt`` is handled by the shell loop, and we return to the
+    prompt instead of dying. Threaded/captured subprocesses additionally
+    install their own ``SIGBREAK`` handler while running (see
+    ``xonsh/procs/posix.py`` and ``xonsh/procs/proxies.py``).
+
+    ``signal.signal`` only works on the main thread, so skip otherwise
+    (embedded hosts that call :func:`setup` off-main), matching the guard in
+    :func:`xonsh.built_ins.resetting_signal_handle`.
+    """
+    if not on_main_thread():
+        return
+    if not hasattr(signal, "SIGBREAK"):
+        # SIGBREAK is a Windows-only signal; nothing to do elsewhere.
+        return
+    signal.signal(signal.SIGBREAK, signal.default_int_handler)
+
+
 def _setup_controlling_terminal():
     """Run the TTY startup handshake and install matching signal handlers.
 
@@ -706,6 +738,8 @@ def _setup_controlling_terminal():
     if _tty_setup_done:
         return
     if ON_WINDOWS:
+        _setup_ctrl_break()
+        _tty_setup_done = True
         return
     _tty_setup_done = True
 

@@ -1,10 +1,18 @@
 import io
 import os
+import signal
 import sys
 from unittest.mock import patch
 
+import pytest
+
+from xonsh.platform import ON_WINDOWS
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread, still_writable
 from xonsh.procs.readers import safe_fdclose
+
+skip_if_not_on_windows = pytest.mark.skipif(
+    not ON_WINDOWS, reason="SIGBREAK / Ctrl+Break only exist on Windows"
+)
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -240,3 +248,73 @@ class TestProcProxyWaitFdCleanup:
             )
         os.close(out_r)
         os.close(err_r)
+
+
+# ── ProcProxyThread SIGBREAK handling (Windows Ctrl+Break, issue #4852) ────
+
+
+def _bare_proxy_thread(*, returncode=None, interrupted=False):
+    """A ProcProxyThread skeleton with only the attributes the SIGBREAK
+    handlers touch — no thread, no callable alias."""
+    inst = ProcProxyThread.__new__(ProcProxyThread)
+    inst._interrupted = interrupted
+    inst.returncode = returncode
+    # Both default to None so the GC-time __del__ (which calls _restore_sigint
+    # then _restore_sigbreak) is a clean no-op and never touches the
+    # Windows-only signal.SIGBREAK on POSIX.
+    inst.old_int_handler = None
+    inst.old_break_handler = None
+    return inst
+
+
+def test_proxy_signal_break_marks_interrupted_while_running():
+    """While the alias is still running, the break only records the
+    interrupt; it must not restore the handler yet."""
+    inst = _bare_proxy_thread(returncode=None)
+    restored = []
+    inst._restore_sigbreak = lambda **kw: restored.append(kw)
+    inst._signal_break(21, None)
+    assert inst._interrupted is True
+    assert restored == []
+
+
+def test_proxy_signal_break_is_idempotent():
+    """A second delivery while already interrupted is a no-op."""
+    inst = _bare_proxy_thread(returncode=0, interrupted=True)
+    restored = []
+    inst._restore_sigbreak = lambda **kw: restored.append(kw)
+    inst._signal_break(21, None)
+    assert restored == []
+
+
+@skip_if_not_on_windows
+def test_proxy_signal_break_restores_and_chains(monkeypatch):
+    """Once the alias has finished, the break restores the previous handler
+    and chains to it, raising the catchable KeyboardInterrupt."""
+    import xonsh.procs.proxies as pmod
+
+    calls = []
+    monkeypatch.setattr(pmod.signal, "signal", lambda s, h: calls.append((s, h)))
+    inst = _bare_proxy_thread(returncode=0)
+    inst.old_break_handler = signal.default_int_handler
+    with pytest.raises(KeyboardInterrupt):
+        inst._signal_break(int(signal.SIGBREAK), object())
+    assert inst._interrupted is True
+    assert (signal.SIGBREAK, signal.default_int_handler) in calls
+    assert inst.old_break_handler is None
+
+
+@skip_if_not_on_windows
+def test_proxy_restore_sigbreak_without_frame_sets_returncode(monkeypatch):
+    """Cleanup-path restore (frame=None) reinstalls the old handler, does not
+    chain, and marks an interrupted alias as failed (returncode=1)."""
+    import xonsh.procs.proxies as pmod
+
+    calls = []
+    monkeypatch.setattr(pmod.signal, "signal", lambda s, h: calls.append((s, h)))
+    inst = _bare_proxy_thread(returncode=0, interrupted=True)
+    inst.old_break_handler = signal.default_int_handler
+    inst._restore_sigbreak()  # frame=None -> no chaining, no raise
+    assert (signal.SIGBREAK, signal.default_int_handler) in calls
+    assert inst.old_break_handler is None
+    assert inst.returncode == 1
