@@ -134,8 +134,7 @@ def _check_text(
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog=_PROG,
-        description="Check xonsh source files for syntax errors without "
-        "running them.",
+        description="Check xonsh source files for syntax errors without running them.",
     )
     p.add_argument(
         "files",

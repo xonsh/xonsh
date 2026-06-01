@@ -799,7 +799,7 @@ def parser():
         "--no-execute",
         help="Parse and compile the code but do not execute it. Exit non-zero on "
         "errors. Use the `xonsh check` subcommand for more options "
-             "e.g. to check several files.",
+        "e.g. to check several files.",
         dest="no_execute",
         action="store_true",
         default=False,
