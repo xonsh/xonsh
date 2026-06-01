@@ -15,7 +15,12 @@ import sys
 import pytest
 
 import xonsh.main
+from xonsh.platform import ON_WINDOWS
 from xonsh.pytest.tools import skip_if_on_windows
+
+skip_if_not_on_windows = pytest.mark.skipif(
+    not ON_WINDOWS, reason="SIGBREAK / Ctrl+Break only exist on Windows"
+)
 
 
 @pytest.fixture
@@ -666,12 +671,74 @@ def test_setup_is_idempotent(
     assert len(capture_atexit) == first_atexit_count
 
 
-def test_setup_is_noop_on_windows(
+def test_setup_delegates_to_ctrl_break_on_windows(
     monkeypatch, reset_fg_state, capture_signal_signal, capture_atexit
 ):
-    """POSIX concepts don't apply on Windows — no handlers installed."""
+    """On Windows the POSIX TTY handshake is skipped entirely; the only
+    signal work is delegated to :func:`_setup_ctrl_break` (Ctrl+Break /
+    SIGBREAK, issue #4852). No SIGTTIN/SIGTTOU handlers, no atexit restorer.
+    """
     monkeypatch.setattr(xonsh.main, "ON_WINDOWS", True)
+    called = []
+    monkeypatch.setattr(xonsh.main, "_setup_ctrl_break", lambda: called.append(True))
     xonsh.main._setup_controlling_terminal()
+    # The Ctrl+Break setup is delegated to (and only to) _setup_ctrl_break.
+    assert called == [True]
+    # No POSIX TTY signal handlers and no atexit restorer on the Windows path.
     assert capture_signal_signal == []
     assert capture_atexit == []
-    assert xonsh.main._tty_setup_done is False
+    # Idempotency flag is set so a second call is a cheap no-op.
+    assert xonsh.main._tty_setup_done is True
+
+
+# ── _setup_ctrl_break: Windows Ctrl+Break / SIGBREAK (issue #4852) ─────────
+
+
+@skip_if_not_on_windows
+def test_ctrl_break_installs_default_int_handler():
+    """Ctrl+Break must raise a catchable KeyboardInterrupt instead of
+    terminating xonsh, so SIGBREAK gets the same handler as SIGINT."""
+    old = signal.getsignal(signal.SIGBREAK)
+    try:
+        signal.signal(signal.SIGBREAK, signal.SIG_DFL)
+        xonsh.main._setup_ctrl_break()
+        assert signal.getsignal(signal.SIGBREAK) is signal.default_int_handler
+    finally:
+        signal.signal(signal.SIGBREAK, old)
+
+
+@skip_if_not_on_windows
+def test_ctrl_break_handler_raises_keyboard_interrupt():
+    """The installed handler turns the break into KeyboardInterrupt."""
+    old = signal.getsignal(signal.SIGBREAK)
+    try:
+        xonsh.main._setup_ctrl_break()
+        handler = signal.getsignal(signal.SIGBREAK)
+        with pytest.raises(KeyboardInterrupt):
+            handler(int(signal.SIGBREAK), None)
+    finally:
+        signal.signal(signal.SIGBREAK, old)
+
+
+@skip_if_not_on_windows
+def test_setup_controlling_terminal_installs_ctrl_break(reset_fg_state):
+    """End to end on Windows: the public entry point installs the SIGBREAK
+    handler and flips the idempotency flag."""
+    old = signal.getsignal(signal.SIGBREAK)
+    try:
+        signal.signal(signal.SIGBREAK, signal.SIG_DFL)
+        xonsh.main._setup_controlling_terminal()
+        assert signal.getsignal(signal.SIGBREAK) is signal.default_int_handler
+        assert xonsh.main._tty_setup_done is True
+    finally:
+        signal.signal(signal.SIGBREAK, old)
+
+
+def test_ctrl_break_off_main_thread_is_noop(monkeypatch):
+    """signal.signal only works on the main thread; _setup_ctrl_break must
+    bail out quietly when called off-main (embedded host setup)."""
+    monkeypatch.setattr(xonsh.main, "on_main_thread", lambda: False)
+    recorded = []
+    monkeypatch.setattr(xonsh.main.signal, "signal", lambda *a: recorded.append(a))
+    xonsh.main._setup_ctrl_break()
+    assert recorded == []
