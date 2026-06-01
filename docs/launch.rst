@@ -8,7 +8,7 @@ Xonsh accepts the following command-line arguments:
 
 .. code-block:: text
 
-    xonsh [-h] [-V] [-c COMMAND] [-i] [-l] [--rc RC [RC ...]]
+    xonsh [-h] [-V] [-c COMMAND] [-n] [-i] [-l] [--rc RC [RC ...]]
           [--no-rc] [--no-env] [--no-script-cache] [--cache-everything]
           [-D ITEM] [-st SHELL_TYPE] [--timings]
           [--save-origin-env] [--load-origin-env]
@@ -31,6 +31,10 @@ Arguments Reference
 
 ``-c COMMAND``
     Run a single command and exit.
+
+``-n``, ``--no-execute``
+    Check syntax of the command, script, or stdin without running it.
+    Exit non-zero on errors.  See also the ``xonsh check`` subcommand.
 
 ``-i``, ``--interactive``
     Force running in interactive mode.
@@ -257,6 +261,15 @@ it as a single argument:
     $(@lines xonsh -c @!(echo hello; echo world))
 
 See :ref:`macros` for more on ``@!()``.
+
+Subcommands
+===========
+
+* ``xonsh format`` -- format xonsh source files in place, à la Black
+  (``--check`` / ``--diff`` supported). Run ``xonsh format --help``.
+* ``xonsh check`` -- check xonsh source files for syntax errors without
+  running them; the ``-n`` / ``--no-execute`` flag does the same for a
+  ``-c`` command, a script file, or piped stdin. Run ``xonsh check --help``.
 
 
 See also

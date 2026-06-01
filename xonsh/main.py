@@ -768,6 +768,8 @@ def parser():
             "subcommands:\n"
             "  format          Format xonsh source files. "
             "Run `xonsh format --help` for options.\n"
+            "  check           Check xonsh source files for syntax errors "
+            "without running them. Run `xonsh check --help` for options.\n"
         ),
     )
     p.add_argument(
@@ -791,6 +793,16 @@ def parser():
         dest="command",
         required=False,
         default=None,
+    )
+    p.add_argument(
+        "-n",
+        "--no-execute",
+        help="Parse and compile the code but do not execute it. Exit non-zero on "
+        "errors. Use the `xonsh check` subcommand for more options "
+             "e.g. to check several files.",
+        dest="no_execute",
+        action="store_true",
+        default=False,
     )
     p.add_argument(
         "-i",
@@ -1045,6 +1057,10 @@ def premain(argv=None):
     if args.help:
         parser.print_help()
         parser.exit()
+    if args.no_execute:
+        from xonsh.checker.cli import check_no_execute
+
+        sys.exit(check_no_execute(args))
     shell_kwargs = {
         "shell_type": args.shell_type,
         "completer": False,
@@ -1182,6 +1198,11 @@ def main(argv=None):
         from xonsh.formatter.cli import main as format_main
 
         sys.exit(format_main(argv[1:]))
+
+    if argv and argv[0] == "check":
+        from xonsh.checker.cli import main as check_main
+
+        sys.exit(check_main(argv[1:]))
 
     # Run the TTY startup handshake *before* premain so that xontrib
     # loading and xonshrc execution happen with xonsh already as the
