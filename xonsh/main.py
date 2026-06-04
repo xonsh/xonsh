@@ -969,12 +969,17 @@ def _pprint_displayhook(value):
     if not isinstance(printed_val, str):
         # pretty may fail (i.e for unittest.mock.Mock)
         printed_val = repr(value)
-    if HAS_PYGMENTS and env.get("COLOR_RESULTS"):
+    # A repr that already carries its own terminal escapes (e.g. a __repr__
+    # that emits ANSI colors) must not be re-highlighted: the lexer would
+    # split the escapes into separate tokens and the raw ESC bytes would be
+    # mangled when re-colored, so pass it through raw like CPython's default
+    # displayhook does. See https://github.com/xonsh/xonsh/issues/6503.
+    if HAS_PYGMENTS and env.get("COLOR_RESULTS") and "\x1b" not in printed_val:
         tokens = list(pygments.lex(printed_val, lexer=pyghooks.XonshLexer()))
         end = "" if env.get("SHELL_TYPE") == "prompt_toolkit" else "\n"
         print_color(tokens, end=end)
     else:
-        print(printed_val)  # black & white case
+        print(printed_val)  # black & white case, or an already-colored repr
     builtins._ = value
 
 
