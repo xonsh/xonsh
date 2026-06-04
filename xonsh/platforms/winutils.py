@@ -37,6 +37,7 @@ from ctypes.wintypes import (
     LPDWORD,
     SHORT,
     SMALL_RECT,
+    UINT,
     WORD,
 )
 
@@ -263,6 +264,82 @@ def enable_virtual_terminal_processing():
     See http://stackoverflow.com/a/36760881/2312428
     """
     SetConsoleMode(GetStdHandle(-11), 7)
+
+
+# Console command-line history -------------------------------------------------
+#
+# The console host (conhost) keeps a separate command-history buffer for each
+# attached client process, used by cooked-mode ``ReadConsole`` -- e.g. the
+# up-arrow / backscroll recall in the standard Python REPL. The number of these
+# buffers defaults to only 4, so a deeply nested chain of console processes
+# (xonsh launching ``py`` launching ``python``) exhausts the pool and the
+# innermost REPL is left with no usable history. Raising the count at startup
+# restores backscroll for child programs.
+
+HISTORY_NO_DUP = 0x1  # CONSOLE_HISTORY_INFO.dwFlags: discard duplicate entries
+
+
+class CONSOLE_HISTORY_INFO(ctypes.Structure):
+    """Mirror of the Win32 ``CONSOLE_HISTORY_INFO`` structure."""
+
+    _fields_ = (
+        ("cbSize", UINT),
+        ("HistoryBufferSize", UINT),  # commands stored per buffer
+        ("NumberOfHistoryBuffers", UINT),  # number of per-process buffers
+        ("dwFlags", DWORD),  # bit 0 == HISTORY_NO_DUP
+    )
+
+
+@lazyobject
+def GetConsoleHistoryInfo():
+    f = ctypes.windll.kernel32.GetConsoleHistoryInfo
+    f.errcheck = check_zero
+    f.argtypes = (POINTER(CONSOLE_HISTORY_INFO),)
+    return f
+
+
+@lazyobject
+def SetConsoleHistoryInfo():
+    f = ctypes.windll.kernel32.SetConsoleHistoryInfo
+    f.errcheck = check_zero
+    f.argtypes = (POINTER(CONSOLE_HISTORY_INFO),)
+    return f
+
+
+def get_console_history_info():
+    """Return the console's current ``CONSOLE_HISTORY_INFO``.
+
+    Raises ``OSError`` if the process is not attached to a console.
+    """
+    info = CONSOLE_HISTORY_INFO()
+    info.cbSize = ctypes.sizeof(CONSOLE_HISTORY_INFO)
+    GetConsoleHistoryInfo(byref(info))
+    return info
+
+
+def set_console_history_info(nbuf=32, bufsize=512, flags=0):
+    """Reset the console command-history buffers.
+
+    Parameters
+    ----------
+    nbuf : int, optional
+        Number of history buffers to keep -- one per attached console process.
+        The Windows default of 4 is what gets exhausted by nested console
+        processes, so this is the value that actually restores child-REPL
+        history.
+    bufsize : int, optional
+        Number of commands retained within each buffer (recall depth).
+    flags : int, optional
+        ``HISTORY_NO_DUP`` to discard duplicate entries, otherwise 0.
+
+    Raises ``OSError`` if the process is not attached to a console.
+    """
+    info = CONSOLE_HISTORY_INFO()
+    info.cbSize = ctypes.sizeof(CONSOLE_HISTORY_INFO)
+    info.HistoryBufferSize = bufsize
+    info.NumberOfHistoryBuffers = nbuf
+    info.dwFlags = flags
+    SetConsoleHistoryInfo(byref(info))
 
 
 @lazyobject

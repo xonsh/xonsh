@@ -226,6 +226,11 @@ class PromptToolkitShell(BaseShell):
         super().__init__(**kwargs)
         if ON_WINDOWS:
             winutils.enable_virtual_terminal_processing()
+            if nbuf := XSH.env.get("XONSH_WIN_CONSOLE_HISTORY_BUFFERS"):
+                try:
+                    winutils.set_console_history_info(nbuf=nbuf)
+                except OSError:
+                    pass  # stdin is not a real console (redirect/ConPTY)
         self._first_prompt = True
         self.history = ThreadedHistory(PromptToolkitHistory())
         self.push = self._push

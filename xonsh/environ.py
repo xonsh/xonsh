@@ -2381,6 +2381,17 @@ class WindowsSetting(Xettings):
         "generally replaced by their bright counter parts.",
         is_configurable=ON_WINDOWS,
     )
+    XONSH_WIN_CONSOLE_HISTORY_BUFFERS = Var.with_default(
+        32,
+        "On Windows, number of console command-history buffers to reserve at "
+        "startup (one per attached console process). The default of 4 is "
+        "exhausted by nested consoles (xonsh -> ``py`` -> ``python``), losing "
+        "up-arrow history in the child REPL; ``0`` disables. For the other "
+        "fields, set this to ``0`` and call "
+        "``@.imp.xonsh.platforms.winutils.set_console_history_info("
+        "nbuf=64, bufsize=1024, flags=1)`` from your xonsh RC.",
+        is_configurable=ON_WINDOWS,
+    )
 
 
 class DeprecatedSetting(Xettings):  # sub-classing -> sub-group
