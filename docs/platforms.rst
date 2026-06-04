@@ -402,6 +402,16 @@ xonsh-native to most comprehensive.
 
       @ winget install uutils.coreutils
 
+- `microsoft/coreutils <https://github.com/microsoft/coreutils>`_ —
+  Microsoft-maintained build of uutils/coreutils plus the uutils
+  findutils and grep ports, packaged as a single multi-call binary
+  for Windows (currently in preview). Same commands, flags, and
+  pipelines as on Linux/macOS/WSL:
+
+  .. code-block:: xonshcon
+
+      @ winget install Microsoft.Coreutils
+
 - `MSYS2 <https://www.msys2.org>`_ — pacman-based distribution shipping
   full GNU coreutils, findutils, grep, sed, awk, tar, gzip, openssl,
   make, gcc/clang, and thousands of other packages. The most
