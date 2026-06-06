@@ -1085,7 +1085,9 @@ def test_auto_cd(xession, tmpdir):
 @pytest.mark.parametrize(
     "inp,exp",
     [
-        ["echo command", ["xonsh", "{file}", "--arg", "1"]],
+        # No shebang: POSIX convention — run with sh (#5843).
+        ["echo command", ["/bin/sh", "{file}", "--arg", "1"]],
+        ["#!", ["/bin/sh", "{file}", "--arg", "1"]],
         ["#!/bin/bash", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
         ["#!/bin/bash\n\necho 1", ["/bin/bash", "{file}", "--arg", "1"]],
@@ -1104,6 +1106,17 @@ def test_get_script_subproc_command_shebang(tmpdir, inp, exp):
     file.chmod(0o755)
     cmd = get_script_subproc_command(file_str, ["--arg", "1"])
     assert [c if c != file_str else "{file}" for c in cmd] == exp
+
+
+@skip_if_on_windows
+@pytest.mark.parametrize("ext", [".xsh", ".py", ".pyw"])
+def test_get_script_subproc_command_no_shebang_xonsh_exts(tmpdir, ext):
+    """Shebang-less xonsh/Python scripts run with the current xonsh."""
+    file = tmpdir / f"script{ext}"
+    file.write_text("echo command", encoding="utf-8")
+    file.chmod(0o755)
+    cmd = get_script_subproc_command(str(file), ["--arg", "1"])
+    assert cmd == [sys.executable, "-m", "xonsh", str(file), "--arg", "1"]
 
 
 def test_redirect_without_left_part(tmpdir):

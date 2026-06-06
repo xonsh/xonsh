@@ -3,6 +3,7 @@ import os
 import pytest
 
 from xonsh.aliases import xexec
+from xonsh.pytest.tools import skip_if_on_windows
 
 
 @pytest.fixture(autouse=True)
@@ -150,7 +151,7 @@ def test_exec_script_shebang_fallback(monkeypatch, tmp_path):
 
 
 def test_exec_script_no_shebang_defaults_to_xonsh(monkeypatch, tmp_path):
-    """exec on a script without shebang should default to xonsh."""
+    """exec on a .xsh script without shebang should default to xonsh."""
     calls = []
 
     def mocked_execvpe(command, args, env):
@@ -169,6 +170,29 @@ def test_exec_script_no_shebang_defaults_to_xonsh(monkeypatch, tmp_path):
     assert len(calls) == 1
     # Must not try to execute the script directly again
     assert calls[0]["command"] != str(script)
+
+
+@skip_if_on_windows
+def test_exec_script_no_shebang_sh_fallback(monkeypatch, tmp_path):
+    """exec on a shebang-less non-xonsh script should fall back to sh (#5843)."""
+    calls = []
+
+    def mocked_execvpe(command, args, env):
+        if command.endswith("test.sh"):
+            raise OSError(8, "Exec format error")
+        calls.append({"command": command, "args": args})
+
+    monkeypatch.setattr(os, "execvpe", mocked_execvpe)
+
+    script = tmp_path / "test.sh"
+    script.write_text('echo "$@"\n')
+    script.chmod(0o755)
+
+    xexec([str(script)])
+
+    assert len(calls) == 1
+    assert calls[0]["command"] == "/bin/sh"
+    assert calls[0]["args"][:2] == ["/bin/sh", str(script)]
 
 
 def test_exec_nonexistent_file(monkeypatch):
