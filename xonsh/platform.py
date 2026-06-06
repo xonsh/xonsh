@@ -10,6 +10,7 @@ import importlib.util
 import os
 import pathlib
 import platform
+import shutil
 import signal
 import subprocess
 import sys
@@ -116,6 +117,31 @@ IN_FLATPAK = LazyBool(
     "IN_FLATPAK",
 )
 """``True`` if in Flastpak, else ``False``."""
+
+
+def path_bshell():
+    """Absolute path to the system Bourne shell, like libc ``_PATH_BSHELL``.
+
+    ``/bin/sh`` everywhere except Android: Termux ships ``sh`` under
+    ``$PREFIX/bin`` and stock Android under ``/system/bin`` (bionic's
+    ``_PATH_BSHELL``); plain ``/bin/sh`` may not exist on either.
+    Candidates are checked for existence, so FHS userlands running on top
+    of Android (proot-distro, UserLAnd, ...) keep their own ``/bin/sh``.
+    NixOS needs no special casing — ``/bin/sh`` is its single ``/bin``
+    FHS concession. If no candidate exists, fall back to ``sh`` from
+    ``$PATH`` (POSIX mandates the *utility*, not a fixed path).
+    """
+    candidates = []
+    if ON_TERMUX:
+        prefix = os.environ.get("PREFIX", "/data/data/com.termux/files/usr")
+        candidates.append(os.path.join(prefix, "bin", "sh"))
+    candidates.append("/bin/sh")
+    if ON_ANDROID:
+        candidates.append("/system/bin/sh")
+    for sh in candidates:
+        if os.access(sh, os.X_OK):
+            return sh
+    return shutil.which("sh") or "/bin/sh"
 
 
 @lazybool

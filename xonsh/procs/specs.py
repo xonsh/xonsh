@@ -176,7 +176,7 @@ def get_script_subproc_command(fname, args):
             # by bash, zsh, dash, ksh, fish and tcsh alike: an executable
             # text file without a shebang is run as a ``sh`` script
             # (https://github.com/xonsh/xonsh/issues/5843).
-            interp = ["/bin/sh"]
+            interp = [xp.path_bshell()]
     if interp[:1] == ["xonsh"]:
         # Run with the current xonsh rather than whatever ``xonsh`` happens
         # to be first on $PATH (which may belong to a different Python).
