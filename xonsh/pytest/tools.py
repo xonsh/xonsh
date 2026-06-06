@@ -109,6 +109,8 @@ class DummyBaseShell(BaseShell):
 
 
 class DummyShell:
+    shell_type = "none"
+
     def settitle(self):
         pass
 

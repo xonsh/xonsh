@@ -441,6 +441,30 @@ class PromptToolkitShell(BaseShell):
         if cursor_shape:
             prompt_args["cursor"] = cursor_shape
 
+        # Vim-like key-sequence timeouts (seconds) of the prompt_toolkit
+        # application, re-read on every prompt so they can be tuned at
+        # runtime. These are intentionally not registered in environ.py —
+        # low-level escape hatches, not advertised settings.
+        #
+        # ttimeoutlen: how long the vt100 parser waits after a lone ESC
+        # byte for the rest of a terminal escape sequence (an arrow key is
+        # "\x1b[A" etc.) before treating it as the Escape key. The ptk
+        # default of 0.5 makes leaving vi insert mode feel sluggish
+        # (issue #6507). 0.05 matches Neovim's default (IPython ships
+        # 0.01, tmux >= 3.5 uses 0.01) and is still safe on slow
+        # connections: a terminal emits a sequence in a single write, so
+        # its bytes virtually never arrive more than 50ms apart. Raise it
+        # back if a link really does split sequences (e.g. a serial line).
+        #
+        # timeoutlen: how long the key processor waits for a continuation
+        # once the pressed keys are a prefix of a longer binding, e.g.
+        # "d" of "dd" in vi normal mode, or ESC of (Escape, ControlJ) —
+        # after this wait the shorter match runs. Plain <Esc> in vi mode
+        # does not depend on it: eager bindings in key_bindings.py fire
+        # immediately.
+        self.prompter.app.ttimeoutlen = float(env.get("XONSH_PTK_TTIMEOUTLEN", 0.05))
+        self.prompter.app.timeoutlen = float(env.get("XONSH_PTK_TIMEOUTLEN", 1.0))
+
         events.on_pre_prompt.fire()
         # Enable xterm modifyOtherKeys mode so the terminal sends
         # distinct escape sequences for Shift+Enter, Ctrl+Enter, etc.
