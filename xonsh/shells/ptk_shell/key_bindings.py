@@ -12,10 +12,13 @@ from prompt_toolkit.filters import (
     IsMultiline,
     IsSearching,
     ViInsertMode,
+    has_focus,
     has_suggestion,
+    vi_mode,
 )
 from prompt_toolkit.input import ansi_escape_sequences
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
+from prompt_toolkit.key_binding.bindings.vi import load_vi_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.keys import Keys
@@ -450,6 +453,32 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         """Execute a block of text irrespective of cursor position"""
         b = event.cli.current_buffer
         b.validate_and_handle()
+
+    # A lone <Esc> in vi mode must take effect immediately. Because
+    # multi-key bindings starting with <Esc> exist (e.g. the
+    # ``(Escape, ControlJ)`` one above), the key processor would otherwise
+    # wait ``timeoutlen`` for a possible continuation before leaving
+    # insert mode, which makes vi mode feel sluggish — issue #6507.
+    # Re-register prompt toolkit's own vi <Esc> handlers as eager copies:
+    # an eager match fires at once and ignores the longer matches. Scoped
+    # to the default buffer so that more specific <Esc> bindings elsewhere
+    # (e.g. aborting a history search) keep their behavior.
+    focused_default_buffer = has_focus(DEFAULT_BUFFER)
+    for vi_binding in load_vi_bindings().get_bindings_for_keys((Keys.Escape,)):
+        handle(
+            Keys.Escape,
+            filter=vi_binding.filter & focused_default_buffer,
+            eager=True,
+        )(vi_binding.handler)
+
+    @handle(Keys.Escape, filter=vi_mode & should_confirm_completion, eager=True)
+    def vi_esc_cancel_completion(event):
+        """<Esc> with the completions menu open cancels the menu instead of
+        leaving insert mode (same as ``esc_cancel_completion``, but eager).
+        Registered after the eager vi <Esc> copies above on purpose: among
+        eager matches the last registered one wins.
+        """
+        event.cli.current_buffer.cancel_completion()
 
     @handle(Keys.Left, filter=beginning_of_line)
     def wrap_cursor_back(event):
