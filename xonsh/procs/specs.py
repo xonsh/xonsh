@@ -160,18 +160,27 @@ def get_script_subproc_command(fname, args):
             return o + [fname] + args
         # 5) Unknown file type — no recognised extension, no shebang
         return None
-    # --- POSIX path (unchanged) ---
+    # --- POSIX path ---
     shebang = parse_shebang_from_file(fname)
     m = RE_SHEBANG.match(shebang)
-    # xonsh is the default interpreter
-    if m is None:
-        interp = ["xonsh"]
-    else:
-        interp = m.group(1).strip()
-        if len(interp) > 0:
-            interp = shlex.split(interp)
-        else:
+    interp = shlex.split(m.group(1).strip()) if m is not None else []
+    if not interp:
+        # No shebang (or an empty one).
+        _, ext = os.path.splitext(fname)
+        if ext.lower() in {".xsh", ".py", ".pyw"}:
+            # xonsh/Python scripts run with the current xonsh interpreter,
+            # mirroring the Windows branch above.
             interp = ["xonsh"]
+        else:
+            # Any other text file follows the POSIX ENOEXEC convention used
+            # by bash, zsh, dash, ksh, fish and tcsh alike: an executable
+            # text file without a shebang is run as a ``sh`` script
+            # (https://github.com/xonsh/xonsh/issues/5843).
+            interp = [xp.path_bshell()]
+    if interp[:1] == ["xonsh"]:
+        # Run with the current xonsh rather than whatever ``xonsh`` happens
+        # to be first on $PATH (which may belong to a different Python).
+        interp = [sys.executable, "-m", "xonsh"] + interp[1:]
     return interp + [fname] + args
 
 
