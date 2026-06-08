@@ -18,6 +18,7 @@ again.
 import os
 import pathlib
 import shutil
+import subprocess
 
 import pytest
 
@@ -78,6 +79,12 @@ def test_bash_completions_executes_user_dir_scripts(tmp_path):
     command = bc_mod._bash_command()
     if shutil.which(command) is None:
         pytest.skip("bash not found on PATH")
+    if subprocess.run([command, "-c", "complete -p"], capture_output=True).returncode:
+        # Bash built without readline (e.g. the stdenv bash in the Nix
+        # build sandbox) has programmable completion compiled out — the
+        # ``complete`` builtin does not exist, so the bridge can only
+        # ever return an empty set. Nothing to test against.
+        pytest.skip("bash lacks programmable completion")
 
     framework = tmp_path / "bash_completion"
     user_dir = tmp_path / ".bash_completions"
