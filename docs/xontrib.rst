@@ -82,6 +82,17 @@ after xonsh has started up.
 
     xontrib load myext mpl mypkg.show
 
+By default, each name is resolved as a xontrib name. Xonsh first checks
+installed ``xonsh.xontribs`` entry points, then modules in the ``xontrib``
+namespace package, and finally top-level modules available on ``$PYTHONPATH``.
+
+Pass ``-f`` (``--full``) when the arguments are already full module paths and
+should be imported exactly as written:
+
+.. code-block:: xonsh
+
+    xontrib load -f mypkg.show mypkg.subpkg.done
+
 Pass ``-s`` (``--suppress-warnings``) to load every xontrib that is installed and
 silently skip any name that isn't. Useful in a :doc:`xonsh RC <xonshrc>` that is shared across machines
 where only a subset of xontribs is installed.
@@ -92,6 +103,7 @@ The same can be done in Python as well
 
     from xonsh.xontribs import xontribs_load
     xontribs_load(['myext', 'mpl', 'mypkg.show'])
+    xontribs_load(['mypkg.show'], full_module=True)
 
 A xontrib can be unloaded from the current session using ``xontrib unload``
 
@@ -110,6 +122,12 @@ to mark themselves available for autoloading using the below format.
 
 Here the module should contain ``_load_xontrib_`` function as described above.
 
+Autoloading and manual loading are separate choices. Entry points in the
+``xonsh.xontribs`` group let xonsh discover and autoload the xontrib at startup,
+unless autoloading is disabled. A xontrib can still be intentionally manual-only:
+install the module so it is importable, but omit the ``xonsh.xontribs`` entry
+point and load it explicitly with ``xontrib load`` when needed.
+
 .. note::
 
     Please make sure that importing the xontrib module and calling ``_load_xontrib_`` is fast enough.
@@ -127,6 +145,11 @@ Structure
 ================
 Xontribs are modules with some special functions written
 in either xonsh (``*.xsh``) or Python (``*.py``).
+
+Use ``*.xsh`` when the extension is mostly xonsh syntax or shell-oriented
+setup. Use ``*.py`` when the extension is regular Python code, benefits from
+standard Python tooling, or needs normal package imports. Both file types can
+participate in the same loading model.
 
 Here is a template:
 
@@ -157,6 +180,12 @@ Here is a template:
 
 This _load_xontrib_() function is called after your extension is imported,
 and the currently active :py:class:`xonsh.built_ins.XonshSession` instance is passed as the argument.
+
+Use ``_load_xontrib_`` when loading should register aliases, environment
+variables, event handlers, completers, or other session state. Return values
+from ``_load_xontrib_`` are added to the current execution context. Without the
+hook, xonsh still supports simple modules by placing names from ``__all__`` (or
+public names when ``__all__`` is absent) into the context.
 
 .. note::
 
