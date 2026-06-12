@@ -540,8 +540,8 @@ Summary of default behavior:
      - ``@uncapturable`` — output goes to terminal only
 
 
-Click Integration
------------------
+Click CLI Integration
+---------------------
 
 If the `click <https://click.palletsprojects.com/>`_ package is installed,
 xonsh exposes two helpers on the ``aliases`` object:
