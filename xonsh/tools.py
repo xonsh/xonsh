@@ -165,9 +165,15 @@ def expand_path(s, expand_user=True):
     """Takes a string path and expands ~ to home if expand_user is set
     and environment vars if EXPAND_ENV_VARS is set."""
     env = xsh.env or os_environ
-    if env.get("EXPAND_ENV_VARS", False):
-        s = expandvars(s)
+    if isinstance(s, bytes):
+        s = s.decode(
+            encoding=env.get("XONSH_ENCODING"), errors=env.get("XONSH_ENCODING_ERRORS")
+        )
+    elif isinstance(s, pathlib.Path):
+        s = str(s)
     if expand_user and env.get("XONSH_SUBPROC_ARG_EXPANDUSER", True):
+        # Match shell expansion order: only literal tildes are expanded here.
+        # Tildes introduced later by environment expansion should stay literal.
         # expand ~ according to Bash unquoted rules "Each variable assignment is
         # checked for unquoted tilde-prefixes immediately following a ':' or the
         # first '='". See the following for more details.
@@ -178,6 +184,8 @@ def expand_path(s, expand_user=True):
             s += os.pathsep.join(map(expanduser, post.split(os.pathsep)))
         else:
             s = expanduser(s)
+    if env.get("EXPAND_ENV_VARS", False):
+        s = expandvars(s)
     return s
 
 

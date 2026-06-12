@@ -776,6 +776,16 @@ def test_script_stderr(case):
     assert exp_rtn == rtn
 
 
+def test_env_var_tilde_is_not_expanduser_in_subproc():
+    script = """
+with @.env.swap(QWE="~"):
+    echo $QWE
+"""
+    out, err, rtn = run_xonsh(script, stderr=sp.PIPE)
+    assert out == "~\n", err
+    assert rtn == 0, err
+
+
 @skip_if_on_windows
 @pytest.mark.parametrize(
     "cmd, fmt, exp",
