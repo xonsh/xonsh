@@ -150,9 +150,6 @@ If you like xonsh, :star: the repo and spread the word about xonsh.
             :target: https://github.com/xonsh/xonsh/actions/workflows/test.yml
             :alt: GitHub Actions
 
-    .. image:: https://codecov.io/gh/xonsh/xonsh/branch/master/graphs/badge.svg?branch=main
-            :target: https://codecov.io/github/xonsh/xonsh?branch=main
-            :alt: codecov.io
 
 First steps
 ***********
