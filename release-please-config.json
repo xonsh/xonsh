@@ -4,6 +4,7 @@
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "include-v-in-tag": false,
+  "include-commit-authors": true,
   "release-search-depth": 10,
   "commit-search-depth": 2000,
   "packages": {
