@@ -14,6 +14,10 @@ Currently covers:
   commands / ``@()`` names cannot succeed, so the lexer must emit the
   optimistic token instead of flooding rendered output with Error
   markers.
+* File-color readability guard — regression for
+  https://github.com/xonsh/xonsh/issues/6516 (styles like ``rrt`` that
+  collapse several ANSI names onto one hex used to render device/orphan/
+  setgid file colors as fg-on-identical-bg, i.e. invisible).
 """
 
 from unittest.mock import MagicMock, patch
@@ -220,3 +224,99 @@ def test_unknown_env_var_still_error_in_live_session(xession):
     tokens = list(lexer.get_tokens("$THIS_VAR_DOES_NOT_EXIST = 1\n"))
     err_values = [v for t, v in tokens if t is Token.Error]
     assert "$THIS_VAR_DOES_NOT_EXIST" in err_values
+
+
+# ---------------------------------------------------------------------------
+# Readability guard for file colors -- regression for
+# https://github.com/xonsh/xonsh/issues/6516.
+#
+# Some built-in styles map several distinct ANSI color names onto a single
+# hex (e.g. ``rrt`` resolves BLACK, RED and YELLOW all to ``#ff0000``).  A
+# file-type color that combines a foreground and background name -- block
+# devices, fifos, orphan links, setgid files, ... -- then renders as e.g.
+# red-on-red and is invisible.  ``_join_fg_bg`` drops the background when it
+# collides with the foreground.
+# ---------------------------------------------------------------------------
+
+
+def test_join_fg_bg_drops_colliding_background():
+    from xonsh.pyghooks import _join_fg_bg
+
+    # identical fg/bg -> background dropped, foreground + modifiers preserved
+    assert _join_fg_bg("bg:#ff0000", "#ff0000") == "#ff0000"
+    assert _join_fg_bg("bg:#ff0000", "bold #ff0000") == "bold #ff0000"
+    # order-independent: the foreground piece may come first
+    assert _join_fg_bg("bold #ff0000", "bg:#ff0000") == "bold #ff0000"
+
+
+def test_join_fg_bg_preserves_distinct_colors():
+    from xonsh.pyghooks import _join_fg_bg
+
+    assert _join_fg_bg("bg:#ff0000", "#00ff00") == "bg:#ff0000 #00ff00"
+    # a reset/default background is not a hex color -> never a collision
+    assert _join_fg_bg("bg:ansidefault", "#ff0000") == "bg:ansidefault #ff0000"
+    assert _join_fg_bg("noinherit", "#ff0000") == "noinherit #ff0000"
+
+
+def test_join_fg_bg_collision_is_case_and_shorthand_insensitive():
+    from xonsh.pyghooks import _join_fg_bg
+
+    # some styles (vim, vs) store hexes uppercase
+    assert _join_fg_bg("bg:#FF0000", "#ff0000") == "#ff0000"
+    # #RGB shorthand equals its #RRGGBB expansion
+    assert _join_fg_bg("bg:#f00", "#ff0000") == "#ff0000"
+
+
+@pytest.mark.parametrize(
+    "name, exp",
+    [
+        # rrt maps BLACK, RED and YELLOW all to #ff0000
+        ("BACKGROUND_BLACK__YELLOW", "#ff0000"),  # bd, cd, pi
+        ("BACKGROUND_BLACK__BOLD_YELLOW", "bold #ff0000"),
+        ("BACKGROUND_BLACK__RED", "#ff0000"),  # or
+        # distinct colors are left untouched
+        ("BACKGROUND_BLACK__GREEN", "bg:#ff0000 #00ff00"),
+    ],
+)
+def test_code_by_name_guards_invisible_rrt_colors(name, exp):
+    from xonsh.pyghooks import STYLES, code_by_name
+
+    assert code_by_name(name, dict(STYLES["rrt"])) == exp
+
+
+def test_color_token_by_name_drops_colliding_background():
+    """The runtime file-color path (used by ``on_lscolors_change`` and
+    ``XonshStyle``) must not cache a fg==bg style for device files."""
+    from xonsh.pyghooks import STYLES, Color, color_token_by_name
+
+    styles = dict(STYLES["rrt"])
+    ct = color_token_by_name(("BACKGROUND_BLACK", "YELLOW"), styles)
+    assert ct == Color.BACKGROUND_BLACK__YELLOW
+    assert "bg:" not in styles[ct]
+    assert styles[ct] == "#ff0000"
+
+
+def test_no_builtin_style_renders_invisible_file_colors():
+    """No built-in style may resolve a fg+bg file-type color to fg==bg."""
+    from xonsh.pyghooks import STYLES, code_by_name
+
+    combos = sorted(
+        {"__".join(v) for v in LsColors.default_settings.values() if len(v) == 2}
+    )
+
+    def fg_bg(code):
+        fg = bg = None
+        for tok in code.split():
+            if tok.startswith("bg:#"):
+                bg = tok[3:].lower()
+            elif tok.startswith("#"):
+                fg = tok.lower()
+        return fg, bg
+
+    offenders = []
+    for style_name in STYLES:
+        for combo in combos:
+            fg, bg = fg_bg(code_by_name(combo, dict(STYLES[style_name])))
+            if fg and bg and fg == bg:
+                offenders.append((style_name, combo))
+    assert not offenders, f"invisible fg==bg file colors: {offenders}"

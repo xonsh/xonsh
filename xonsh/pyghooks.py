@@ -216,6 +216,57 @@ def color_name_to_pygments_code(name, styles):
     return res
 
 
+def _normalize_hex(value):
+    """Normalize a ``#RGB`` or ``#RRGGBB`` color to lowercase ``#rrggbb``."""
+    h = value.lstrip("#").lower()
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return "#" + h
+
+
+def _fg_bg_hex(code):
+    """Extract the foreground and background hex colors from a pygments code.
+
+    Parameters
+    ----------
+    code : str
+        A pygments style string such as ``"bg:#000000 bold #ffff00"``.
+
+    Returns
+    -------
+    tuple
+        ``(foreground, background)`` normalized hex strings. Either element is
+        ``None`` when that side is unset or not a hex color (e.g.
+        ``ansidefault`` / ``noinherit``).
+    """
+    fg = bg = None
+    for tok in code.split():
+        if tok.startswith("bg:#"):
+            bg = _normalize_hex(tok[3:])
+        elif tok.startswith("#"):
+            fg = _normalize_hex(tok)
+    return fg, bg
+
+
+def _join_fg_bg(first, second):
+    """Join a foreground and a background pygments code into one style string.
+
+    When both sides resolve to the *same* color the text becomes invisible --
+    e.g. the ``rrt`` style maps both ``BLACK`` and ``YELLOW`` to ``#ff0000``,
+    so a ``BACKGROUND_BLACK__YELLOW`` file color would render red-on-red. In
+    that case the background is dropped so the foreground stays readable. The
+    order of *first*/*second* is preserved for the common, non-colliding case.
+
+    See https://github.com/xonsh/xonsh/issues/6516.
+    """
+    combined = f"{first} {second}"
+    fg, bg = _fg_bg_hex(combined)
+    if fg is not None and fg == bg:
+        # identical fore/background -> drop the background piece
+        return second if "bg:" in first else first
+    return combined
+
+
 def code_by_name(name, styles):
     """Converts a token name into a pygments-style color code.
 
@@ -243,10 +294,12 @@ def code_by_name(name, styles):
     elif len(bg) == 0:
         code = color_name_to_pygments_code(fg, styles)
     else:
-        # have both colors
-        code = color_name_to_pygments_code(bg, styles)
-        code += " "
-        code += color_name_to_pygments_code(fg, styles)
+        # have both colors -- guard against fg and bg resolving to the same
+        # color, which would render the text invisible (#6516)
+        code = _join_fg_bg(
+            color_name_to_pygments_code(bg, styles),
+            color_name_to_pygments_code(fg, styles),
+        )
     return code
 
 
@@ -263,7 +316,8 @@ def color_token_by_name(xc: tuple, styles=None) -> _TokenType:
         pc = color_name_to_pygments_code(xc[0], styles)
 
         if len(xc) > 1:
-            pc += " " + color_name_to_pygments_code(xc[1], styles)
+            # guard against fg and bg resolving to the same color (#6516)
+            pc = _join_fg_bg(pc, color_name_to_pygments_code(xc[1], styles))
             tokName += "__" + xc[1]
 
     token = getattr(Color, norm_name(tokName))
