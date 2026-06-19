@@ -23,6 +23,8 @@ readme = {file = ["README.rst"], content-type = "text/plain"}
 packages = [
     "xonsh",
     "xonsh.api",
+    "xonsh.checker",
+    "xonsh.linter",
     "xonsh.shells",
     "xonsh.shells.ptk_shell",
     "xonsh.parsers.ply",
