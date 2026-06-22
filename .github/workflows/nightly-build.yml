@@ -46,7 +46,7 @@ jobs:
     if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: setup-python
         uses: actions/setup-python@v6
@@ -92,7 +92,7 @@ jobs:
     if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: setup-python
         uses: actions/setup-python@v6
@@ -172,7 +172,7 @@ jobs:
     if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: setup-python
         uses: actions/setup-python@v6
@@ -246,9 +246,9 @@ jobs:
     if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: xonsh/xonsh-winget
           path: winget
@@ -298,9 +298,9 @@ jobs:
     if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: xonsh/xonsh-winget
           path: winget
@@ -355,9 +355,9 @@ jobs:
     if: needs.check-new-commit.outputs.skip != 'true'
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: xonsh/xonsh-flatpak
           path: flatpak-build
