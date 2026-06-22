@@ -41,7 +41,7 @@ jobs:
           - "3.14"
     name: Test Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -74,7 +74,7 @@ jobs:
     name: Test Python 3.11 FreeBSD 15.0
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Test in FreeBSD VM
         uses: vmactions/freebsd-vm@v1
         with:
