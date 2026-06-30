@@ -41,7 +41,7 @@ jobs:
           - "3.14"
     name: Test Python ${{ matrix.python-version }} ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -67,14 +67,17 @@ jobs:
   freebsd:
     # FreeBSD has no GitHub-hosted runner; the VM is launched on a Linux
     # host via vmactions/freebsd-vm (https://github.com/marketplace/actions/freebsd-vm).
-    # 15.0-RELEASE + python311 mirrors the target the FreeBSD port is built
+    # 15.0-RELEASE + python312 mirrors the target the FreeBSD port is built
     # against (see CLAUDE.md "Running tests in a FreeBSD poudriere jail"
-    # and issue #6374).
+    # and issue #6374). The Python flavor must track FreeBSD's PYTHON_DEFAULT
+    # (Mk/bsd.default-versions.mk): only default-flavor pyXY-* binary packages
+    # are built for the `latest` repo, so a stale flavor makes `pkg install`
+    # fail to resolve py3XX-pip / py3XX-cryptography. Bump when the default moves.
     runs-on: ubuntu-latest
-    name: Test Python 3.11 FreeBSD 15.0
+    name: Test Python 3.12 FreeBSD 15.0
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Test in FreeBSD VM
         uses: vmactions/freebsd-vm@v1
         with:
@@ -82,8 +85,8 @@ jobs:
           usesh: true
           copyback: false
           # Package set mirrors the FreeBSD port's test recipe in #6374:
-          # - python311 / py311-pip: interpreter + installer
-          # - py311-sqlite3 / py311-cryptography: stdlib-adjacent extras the
+          # - python312 / py312-pip: interpreter + installer
+          # - py312-sqlite3 / py312-cryptography: stdlib-adjacent extras the
           #   FreeBSD base python ships unbundled
           # - bash / bash-completion: drive test_bash_completer.py and the
           #   foreign-shell bridge tests (skipped if missing, but we want
@@ -92,10 +95,10 @@ jobs:
           # - gmake: GNU make for the one @skip_if_no_make integration test
           prepare: |
             pkg install -y \
-              python311 \
-              py311-pip \
-              py311-sqlite3 \
-              py311-cryptography \
+              python312 \
+              py312-pip \
+              py312-sqlite3 \
+              py312-cryptography \
               bash \
               bash-completion \
               git \
@@ -103,5 +106,5 @@ jobs:
           run: |
             # PEP 668 — the system Python is externally-managed; the VM is
             # throwaway, so --break-system-packages is safe.
-            python3.11 -m pip install --break-system-packages -e ".[test,full]"
-            python3.11 -m pytest --timeout=600
+            python3.12 -m pip install --break-system-packages -e ".[test,full]"
+            python3.12 -m pytest --timeout=600
