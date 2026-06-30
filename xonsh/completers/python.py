@@ -217,7 +217,12 @@ def complete_python(context: CompletionContext) -> CompleterResult:
             if not prefix.startswith(",")
             else prefix
         )
-        rtn = _complete_python(prefix, context.python)
+        # A segment that begins with a path separator (e.g. the ``/`` left
+        # after splitting ``--home=/`` or ``if=/`` on ``=``) is a path, never
+        # Python.  Skip operator-token completion so it doesn't shadow the
+        # (exclusive, later-running) path completer with ``/`` ``//`` ``/=``.
+        if not prefix.startswith(("/", "\\", "~")):
+            rtn = _complete_python(prefix, context.python)
     return rtn, len(prefix)
 
 
