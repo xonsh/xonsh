@@ -64,75 +64,70 @@ def test_option_value_completes_path_after_equals(
         assert all(a.startswith(f"app {opt}={td}{os.sep}") for a in applied)
 
 
-def test_option_value_empty_lists_cwd(path_env, completion_context_parse, monkeypatch):
+# The cwd-relative tests below use the ``tmp_path`` fixture rather than
+# ``tempfile.TemporaryDirectory``: they ``chdir`` into the directory, and on
+# Windows a directory can't be removed while it is the current working
+# directory.  ``TemporaryDirectory`` rmtree's on ``with`` exit — before
+# ``monkeypatch`` restores the cwd — raising ``WinError 32``.  pytest cleans
+# ``tmp_path`` lazily, after the cwd has been restored.
+def test_option_value_empty_lists_cwd(
+    path_env, completion_context_parse, tmp_path, monkeypatch
+):
     """``app --out=<TAB>`` (empty value) lists the current directory."""
-    with tempfile.TemporaryDirectory() as td:
-        os.makedirs(os.path.join(td, "subdir"))
-        open(os.path.join(td, "afile"), "w").close()
-        monkeypatch.chdir(td)
+    (tmp_path / "subdir").mkdir()
+    (tmp_path / "afile").touch()
+    monkeypatch.chdir(tmp_path)
 
-        line = "app --out="
-        applied = _apply(
-            line, xcp.complete_path(completion_context_parse(line, len(line)))
-        )
+    line = "app --out="
+    applied = _apply(line, xcp.complete_path(completion_context_parse(line, len(line))))
 
-        assert f"app --out=subdir{os.sep}" in applied
-        assert "app --out=afile" in applied
+    assert f"app --out=subdir{os.sep}" in applied
+    assert "app --out=afile" in applied
 
 
 def test_real_dir_containing_equals_is_not_split(
-    path_env, completion_context_parse, monkeypatch
+    path_env, completion_context_parse, tmp_path, monkeypatch
 ):
     """A real directory named ``qwe=asd`` is completed whole, not split.
 
     ``app qwe=asd/<TAB>`` must list the contents of ``qwe=asd/`` rather than
     treating ``qwe=`` as an option and completing ``asd/`` in the cwd.
     """
-    with tempfile.TemporaryDirectory() as td:
-        os.makedirs(os.path.join(td, "qwe=asd", "inside1"))
-        os.makedirs(os.path.join(td, "qwe=asd", "inside2"))
-        monkeypatch.chdir(td)
+    (tmp_path / "qwe=asd" / "inside1").mkdir(parents=True)
+    (tmp_path / "qwe=asd" / "inside2").mkdir(parents=True)
+    monkeypatch.chdir(tmp_path)
 
-        # complete inside the real 'qwe=asd' directory
-        line = "app qwe=asd/"
-        applied = _apply(
-            line, xcp.complete_path(completion_context_parse(line, len(line)))
-        )
-        assert applied == [
-            f"app qwe=asd{os.sep}inside1{os.sep}",
-            f"app qwe=asd{os.sep}inside2{os.sep}",
-        ]
+    # complete inside the real 'qwe=asd' directory
+    line = "app qwe=asd/"
+    applied = _apply(line, xcp.complete_path(completion_context_parse(line, len(line))))
+    assert applied == [
+        f"app qwe=asd{os.sep}inside1{os.sep}",
+        f"app qwe=asd{os.sep}inside2{os.sep}",
+    ]
 
-        # partial inside the directory
-        line = "app qwe=asd/in"
-        applied = _apply(
-            line, xcp.complete_path(completion_context_parse(line, len(line)))
-        )
-        assert f"app qwe=asd{os.sep}inside1{os.sep}" in applied
-        assert f"app qwe=asd{os.sep}inside2{os.sep}" in applied
+    # partial inside the directory
+    line = "app qwe=asd/in"
+    applied = _apply(line, xcp.complete_path(completion_context_parse(line, len(line))))
+    assert f"app qwe=asd{os.sep}inside1{os.sep}" in applied
+    assert f"app qwe=asd{os.sep}inside2{os.sep}" in applied
 
-        # partial of the directory name itself (still contains '=')
-        line = "app qwe=as"
-        applied = _apply(
-            line, xcp.complete_path(completion_context_parse(line, len(line)))
-        )
-        assert f"app qwe=asd{os.sep}" in applied
+    # partial of the directory name itself (still contains '=')
+    line = "app qwe=as"
+    applied = _apply(line, xcp.complete_path(completion_context_parse(line, len(line))))
+    assert f"app qwe=asd{os.sep}" in applied
 
 
 def test_real_file_containing_equals_is_not_split(
-    path_env, completion_context_parse, monkeypatch
+    path_env, completion_context_parse, tmp_path, monkeypatch
 ):
     """A real file named ``qwe=asd`` completes whole from a partial name."""
-    with tempfile.TemporaryDirectory() as td:
-        open(os.path.join(td, "qwe=asd"), "w").close()
-        monkeypatch.chdir(td)
+    (tmp_path / "qwe=asd").touch()
+    monkeypatch.chdir(tmp_path)
 
-        line = "app qwe=as"
-        applied = _apply(
-            line, xcp.complete_path(completion_context_parse(line, len(line)))
-        )
-        # completes the literal 'qwe=asd' name, not a split 'as'
-        assert any(a.startswith("app qwe=asd") for a in applied)
+    line = "app qwe=as"
+    applied = _apply(line, xcp.complete_path(completion_context_parse(line, len(line))))
+    # completes the literal 'qwe=asd' name, not a split 'as'
+    assert any(a.startswith("app qwe=asd") for a in applied)
 
 
 def test_plain_path_completion_unaffected(path_env, completion_context_parse):
