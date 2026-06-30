@@ -1,6 +1,7 @@
 import ast
 import glob
 import os
+import re
 
 import xonsh.platform as xp
 import xonsh.tools as xt
@@ -494,29 +495,50 @@ def complete_path(context):
     return set(), 0
 
 
+# Matches an ``option=value`` argument so path completion can target only the
+# value (e.g. ``--path=/home/`` → ``/home/``).  The option name must not
+# contain a path separator, so a real path that contains ``=`` (``/home/a=b/``
+# or a directory named ``qwe=asd``) is never split.
+_OPTION_ASSIGN_RE = re.compile(r"^[^/\\=\s]*=(.*)$")
+
+
 def contextual_complete_path(command: CommandContext, cdpath=True, filtfunc=None):
-    # ``_complete_path_raw`` may add opening quotes:
+    def _complete(prefix):
+        # ``_complete_path_raw`` may add opening quotes.
+        # When the cursor is inside a closed string (before the closing quote),
+        # append the closing quote to the line so ``_complete_path_raw`` can
+        # detect it and set ``append_end = False``.  The completion will NOT
+        # include a closing quote, and lprefix will NOT cover the original
+        # closing quote — so the existing quote stays in place.
+        if command.closing_quote and not command.is_after_closing_quote:
+            line = prefix + command.closing_quote
+        else:
+            line = prefix
+        return _complete_path_raw(
+            prefix,
+            line,
+            0,
+            len(prefix),
+            ctx={},
+            cdpath=cdpath,
+            filtfunc=filtfunc,
+        )
+
     prefix = command.raw_prefix
+    completions, lprefix = _complete(prefix)
 
-    # When the cursor is inside a closed string (before the closing quote),
-    # append the closing quote to the line so ``_complete_path_raw`` can
-    # detect it and set ``append_end = False``.  The completion will NOT
-    # include a closing quote, and lprefix will NOT cover the original
-    # closing quote — so the existing quote stays in place.
-    if command.closing_quote and not command.is_after_closing_quote:
-        line = prefix + command.closing_quote
-    else:
-        line = prefix
-
-    completions, lprefix = _complete_path_raw(
-        prefix,
-        line,
-        0,
-        len(prefix),
-        ctx={},
-        cdpath=cdpath,
-        filtfunc=filtfunc,
-    )
+    # Complete the value of an ``option=value`` argument (e.g.
+    # ``--path=/home/`` or ``if=/dev/``): only the part after the first ``=``
+    # is treated as a path.  The whole prefix is tried first, so a real path
+    # that itself contains ``=`` (a file/dir literally named ``qwe=asd``)
+    # still completes as a whole — we only fall back to the value when the
+    # literal prefix matched nothing.  ``lprefix`` then covers only the value,
+    # so the ``option=`` part is preserved in the line.
+    if not completions and not command.opening_quote:
+        eq_match = _OPTION_ASSIGN_RE.match(prefix)
+        if eq_match:
+            prefix = eq_match.group(1)
+            completions, lprefix = _complete(prefix)
 
     # Set an explicit display on completions whose text no longer
     # starts with the typed prefix (e.g. expanded tilde on Windows:
