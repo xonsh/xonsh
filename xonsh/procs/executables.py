@@ -168,21 +168,46 @@ def locate_executable(name, env=None):
     return locate_file(name, env=env, check_executable=True, use_pathext=True)
 
 
+def is_explicit_path(name):
+    """Return whether ``name`` is written as a path rather than a bare name.
+
+    This follows the rule used by other shells: if the command name contains a
+    path separator (``/``, or ``\\`` on Windows) it is an explicit path —
+    resolved against the file system, relative to the current directory or as
+    an absolute path, and **never** looked up in ``$PATH``. This covers
+    ``./name``, ``../name``, ``~/name``, ``sub/name`` and absolute paths alike.
+
+    A bare name with no separator (e.g. ``"binfile"``) is *not* an explicit
+    path: it is resolved through ``$PATH`` and, for security reasons, never
+    against the current working directory.
+    """
+    return os.sep in name or (os.altsep is not None and os.altsep in name)
+
+
 def locate_file(name, env=None, check_executable=False, use_pathext=False):
-    """Search file name in the current working directory and in ``$PATH`` and return full path."""
-    return locate_relative_path(
-        name, env, check_executable, use_pathext
-    ) or locate_file_in_path_env(name, env, check_executable, use_pathext)
+    """Search file name in the current working directory and in ``$PATH`` and return full path.
+
+    A name containing a path separator (``./name``, ``../name``, ``~/name``,
+    ``sub/name`` or an absolute path) is an explicit path and is resolved
+    *only* against the location it points at. If the file is not there the
+    result is ``None`` — we must not fall back to a ``$PATH`` search, otherwise
+    a command such as ``./name`` or ``sub/name`` would be located in ``$PATH``
+    even though it does not exist in the current directory (see gh-6532). Only
+    a bare name with no separator is looked up in ``$PATH``.
+    """
+    if is_explicit_path(name):
+        return locate_relative_path(name, env, check_executable, use_pathext)
+    return locate_file_in_path_env(name, env, check_executable, use_pathext)
 
 
 def locate_relative_path(name, env=None, check_executable=False, use_pathext=False):
-    """Return absolute path by relative file path.
+    """Return absolute path for a name written as a path (containing a separator).
 
-    We should not locate files without prefix (e.g. ``"binfile"``) by security reasons like other shells.
-    If directory has "binfile" it can be called only by providing prefix "./binfile" explicitly.
+    We should not locate files without a separator (e.g. ``"binfile"``) for security reasons, like other shells.
+    If the current directory has "binfile" it can be called only by providing a path such as "./binfile" explicitly.
     """
     p = Path(name)
-    if name.startswith(("./", "../", ".\\", "..\\", "~/")) or p.is_absolute():
+    if is_explicit_path(name):
         possible_names = get_possible_names(p.name, env) if use_pathext else [p.name]
         for possible_name in possible_names:
             filepath = p.parent / possible_name
