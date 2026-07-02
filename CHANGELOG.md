@@ -1,5 +1,44 @@
 # Xonsh Change Log
 
+## [0.24.0](https://github.com/xonsh/xonsh/compare/0.23.8...0.24.0) (2026-07-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* Procs: Run scripts without shebang using `sh` ([#6510](https://github.com/xonsh/xonsh/issues/6510))
+
+### Features
+
+* git completer: Add `.gitconfig` alias support ([#6508](https://github.com/xonsh/xonsh/issues/6508)) ([01c701b](https://github.com/xonsh/xonsh/commit/01c701b6fbc55487d32e0b1eda1da10750b63e11))
+* Introduce `xonsh --no-execute` and `xonsh check` for syntax checking without execution ([#6496](https://github.com/xonsh/xonsh/issues/6496)) ([3db4807](https://github.com/xonsh/xonsh/commit/3db4807523bd61026230ff8a5f6753b2cf3f04d5))
+* Introduce Xonsh linter `xonsh lint` ([#6497](https://github.com/xonsh/xonsh/issues/6497)) ([da9222f](https://github.com/xonsh/xonsh/commit/da9222f4b8e2ca5fce29dd639090a4eea41ed972))
+* Prompt: Add `RESET_FOREGROUND` and `RESET_BACKGROUND` ([#6492](https://github.com/xonsh/xonsh/issues/6492)) ([79d0856](https://github.com/xonsh/xonsh/commit/79d085683f0c227ec6607b95bd614641db89d937))
+* Windows: Add `XONSH_WIN_CONSOLE_HISTORY_BUFFERS` to support Windows console history ([#6505](https://github.com/xonsh/xonsh/issues/6505)) ([4c0cfa1](https://github.com/xonsh/xonsh/commit/4c0cfa1186a8dc0e4aa754b2cad68b0c84c4ebfa))
+* Windows: Add SIGBREAK handler ([#6498](https://github.com/xonsh/xonsh/issues/6498)) ([d10d3c0](https://github.com/xonsh/xonsh/commit/d10d3c09a6e111177b0463aaca84ced899aad614))
+
+
+### Fixes
+
+* Add `checker` and `linter` commands to pyproject.toml (Issue [#6519](https://github.com/xonsh/xonsh/issues/6519)) ([#6520](https://github.com/xonsh/xonsh/issues/6520)) ([1c2a92f](https://github.com/xonsh/xonsh/commit/1c2a92f122b18ec540bcfe575a6671694ef49872))
+* **ci:** FreeBSD test: Fix Python version: from 3.11 to 3.12 ([#6531](https://github.com/xonsh/xonsh/issues/6531)) ([83327c4](https://github.com/xonsh/xonsh/commit/83327c47174edc23d0d5e02b135f41f1d7217cd9))
+* Completer: Fix `sometool --arg=path/<Tab>` completion ([#6530](https://github.com/xonsh/xonsh/issues/6530)) ([ffc5e47](https://github.com/xonsh/xonsh/commit/ffc5e474bce73a926aa7eeedd87964ca0d888ca6))
+* Executable: Fixed regress with running executable file by relative path in case the path in PATH ([#6533](https://github.com/xonsh/xonsh/issues/6533)) ([6d9d6f4](https://github.com/xonsh/xonsh/commit/6d9d6f470710f3023451ee03e421e529765da1be))
+* Procs: Run scripts without shebang using `sh` ([#6510](https://github.com/xonsh/xonsh/issues/6510)) ([763efe6](https://github.com/xonsh/xonsh/commit/763efe678648b94352a9791b2c794ef261b7c1a7))
+* prompt: vi mode: Fix lag with switching to insert mode ([#6509](https://github.com/xonsh/xonsh/issues/6509)) ([8a7371b](https://github.com/xonsh/xonsh/commit/8a7371b484c8f502ac14f96ba344922141fdf17e))
+* Some built-in styles make some paths unreadable ([#6517](https://github.com/xonsh/xonsh/issues/6517)) ([341774a](https://github.com/xonsh/xonsh/commit/341774aa0ec72a210fe09718ffcfa901e9e382c2))
+* xonfig web: Fix external link for Xonsh documentation ([#6470](https://github.com/xonsh/xonsh/issues/6470)) ([e691a91](https://github.com/xonsh/xonsh/commit/e691a91d16fc223ea139dfe878f830923842f619))
+
+
+### Documentation
+
+* Add microsoft coreutils to the docs ([#6506](https://github.com/xonsh/xonsh/issues/6506)) ([43780b9](https://github.com/xonsh/xonsh/commit/43780b9bf60658c9df8f98ae9d37cdc74c6f2fc6))
+* center title ([3dee09e](https://github.com/xonsh/xonsh/commit/3dee09e0198d074ec5246279e10357c7bade2462))
+* Cross-platform: Add `osquery` to cross-platform tooling ([#6493](https://github.com/xonsh/xonsh/issues/6493)) ([971cd15](https://github.com/xonsh/xonsh/commit/971cd151b90dc6a913b9c75f0fc0fdda16d37e7f))
+* **events:** add usage examples to all event handlers missing them ([#6485](https://github.com/xonsh/xonsh/issues/6485)) ([27cd810](https://github.com/xonsh/xonsh/commit/27cd8100bdbdeec82a2c079aac3fc8b39ae581d2))
+* skip archived repos ([1a9ae8f](https://github.com/xonsh/xonsh/commit/1a9ae8f187389a46dc3c3a1a5878f0c6d9549a87))
+* Update Github xonsh/actions to version 2 in install.rst ([be35c39](https://github.com/xonsh/xonsh/commit/be35c39440843f2bd384bbe46b3d9b2f35218c50))
+* Update Xonsh Projects doc ([#6534](https://github.com/xonsh/xonsh/issues/6534)) ([0c3dbb8](https://github.com/xonsh/xonsh/commit/0c3dbb846c38a9008f130a25bd87ee8ab412ddf5))
+
 ## [0.23.8](https://github.com/xonsh/xonsh/compare/0.23.7...0.23.8) (2026-05-28)
 
 
