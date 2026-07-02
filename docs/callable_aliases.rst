@@ -540,6 +540,8 @@ Summary of default behavior:
      - ``@uncapturable`` — output goes to terminal only
 
 
+.. _click_cli_integration:
+
 Click CLI Integration
 ---------------------
 
