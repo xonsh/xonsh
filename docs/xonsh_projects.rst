@@ -29,17 +29,26 @@ Here is a sample file system layout would be::
           |- a.py      # "mypkg.subpkg.a", full module name
           |- b.xsh     # "mypkg.subpkg.b", full module name
 
-To ensure that these files are installed, you need to provide the
-appropriate information in ``setup.py`` file for your project.
+To ensure that these files are installed, you need to declare the
+``*.xsh`` files as package data in your project's ``pyproject.toml``.
 For the above structure, this looks like the following.
 
-**setup.py**::
+.. code-block:: toml
 
-    setup(
-        packages=['mypkg', 'mypkg.subpkg'],
-        package_dir={'mypkg': 'mypkg', 'mypkg.subpkg': 'mypkg/subpkg'},
-        package_data={'mypkg': ['*.xsh'], 'mypkg.subpkg': ['*.xsh']},
-    )
+    [build-system]
+    requires = ["setuptools>=61"]
+    build-backend = "setuptools.build_meta"
+
+    [project]
+    name = "mypkg"
+    version = "0.1.0"
+
+    [tool.setuptools]
+    packages = ["mypkg", "mypkg.subpkg"]
+
+    [tool.setuptools.package-data]
+    mypkg = ["*.xsh"]
+    "mypkg.subpkg" = ["*.xsh"]
 
 With this, the xonsh code will be installed and included in any source
 distribution you create!
@@ -109,3 +118,18 @@ For example, to fail a CI job when any file needs reformatting:
 .. code-block:: xonshcon
 
     @ xonsh format --check mypkg
+
+
+CLI app on Xonsh
+================
+
+Building a command-line application on Xonsh is easy: you write and package it
+like any other Python project, so it is installable, testable, and
+distributable out of the box. For a basic implementation to start from, see the
+`xonsh-awesome-cli-app`_ template — fork it and add your own commands.
+
+For commands that live inside a session rather than a standalone app, Xonsh also
+ships built-in :ref:`Click CLI Integration <click_cli_integration>` that
+registers a Click command as an alias.
+
+.. _xonsh-awesome-cli-app: https://github.com/anki-code/xonsh-awesome-cli-app/
