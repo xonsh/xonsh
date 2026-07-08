@@ -197,6 +197,43 @@ class TestFStringFormatSpecLexer:
         spec_middles = [t for t in toks('f"{x:0>10d}"') if t[0] == "FSTRING_MIDDLE"]
         assert spec_middles[0][1] == "0>10d"
 
+    def test_equals_fill_char_spec(self):
+        """A '=' fill/align char right after ':' must start a format spec,
+        not be swallowed into a walrus ':=' token (e.g. f"{x:=^40}")."""
+        result = toks('f"{x:=^10}"')
+        types = [t[0] for t in result]
+        assert types == [
+            "FSTRING_START",
+            "LBRACE",
+            "NAME",
+            "COLON",
+            "FSTRING_MIDDLE",
+            "RBRACE",
+            "FSTRING_END",
+        ]
+        assert "COLONEQUAL" not in types
+        spec_middles = [t for t in result if t[0] == "FSTRING_MIDDLE"]
+        assert spec_middles[0][1] == "=^10"
+
+    @pytest.mark.parametrize(
+        "inp, spec",
+        [('f"{x:=5}"', "=5"), ('f"{x:=}"', "="), ('f"{x:=+10}"', "=+10")],
+    )
+    def test_equals_align_spec(self, inp, spec):
+        """':=' at the top level of a field is ':' + '=' fill, not walrus."""
+        result = toks(inp)
+        types = [t[0] for t in result]
+        assert "COLONEQUAL" not in types
+        assert "COLON" in types
+        middles = [t[1] for t in result if t[0] == "FSTRING_MIDDLE"]
+        assert "".join(middles) == spec
+
+    def test_parenthesised_walrus_kept(self):
+        """A parenthesised walrus inside a field is still COLONEQUAL."""
+        types = [t[0] for t in toks('f"{(x := 5)}"')]
+        assert "COLONEQUAL" in types
+        assert "COLON" not in types
+
     def test_format_spec_followed_by_field(self):
         """Regression test for issue #6389.
 
