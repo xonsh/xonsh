@@ -6,7 +6,6 @@ that assemble FSTRING_START / FSTRING_MIDDLE / FSTRING_END tokens into
 """
 
 from ast import parse as pyparse
-from ast import unparse as ast_unparse
 
 from xonsh.parsers import ast
 from xonsh.parsers.ast import xonsh_call
@@ -82,12 +81,25 @@ class FStringRules:
 
     def p_fstring_content_replacement_selfdoc(self, p):
         """fstring_content : fstring_content LBRACE testlist_comp EQUALS fstring_conversion fstring_format_spec RBRACE"""
-        # Self-documenting expression: f"{expr=}"
-        # Produces the text "expr=" followed by the formatted value
+        # Self-documenting expression: f"{expr=}". Python emits the verbatim
+        # source text of the debug region (everything between '{' and the
+        # terminating ':' / '!' / '}', preserving whitespace exactly as typed)
+        # followed by the formatted value. Reconstruct it from the original
+        # source rather than ast.unparse(), which would normalise whitespace.
         conversion = p[5]
         format_spec = p[6]
         s2 = p.slice[2]
-        expr_text = ast_unparse(p[3]) + "="
+        # The debug text ends at the conversion '!', the format-spec ':' or the
+        # closing '}' -- whichever comes first after the expression.
+        if conversion != -1:
+            s5 = p.slice[5]
+            term = (s5.lineno, s5.lexpos)
+        elif format_spec is not None:
+            term = (format_spec.lineno, format_spec.col_offset)
+        else:
+            s7 = p.slice[7]
+            term = (s7.lineno, s7.lexpos)
+        expr_text = self._source_slice((s2.lineno, s2.lexpos + 1), term)
         text_node = ast.Constant(
             value=expr_text,
             lineno=s2.lineno,
@@ -112,6 +124,11 @@ class FStringRules:
     def p_fstring_conversion(self, p):
         """fstring_conversion : BANG NAME"""
         p[0] = ord(p[2])
+        # Preserve the '!' position so self-documenting f-strings (f"{x=!r}")
+        # can locate the end of the verbatim debug-text region.
+        s1 = p.slice[1]
+        p.slice[0].lineno = s1.lineno
+        p.slice[0].lexpos = s1.lexpos
 
     def p_fstring_format_spec_empty(self, p):
         """fstring_format_spec : empty"""

@@ -68,6 +68,40 @@ class TestPEP701FStrings:
     def test_format_spec_fill_align(self, check_ast):
         check_ast('f"{42:0>10}"', run=False)
 
+    @pytest.mark.parametrize(
+        "inp",
+        [
+            'f"{42:=^10}"',  # '=' fill char with '^' align
+            'f"{42:=>10}"',
+            'f"{42:=<10}"',
+            'f"{42:=+10}"',  # '=' align + '+' sign
+            'f"{42:=10}"',  # '=' align + width
+            'f"{42:=}"',  # bare '=' align
+            'f"{42 := 10}"',  # ':' starts the spec even with surrounding spaces
+            'f"{42:=^{3}}"',  # '=' fill with a nested-expr width
+        ],
+    )
+    def test_format_spec_equals_fill(self, check_ast, inp):
+        """A '=' right after ':' is a fill/align char, not the walrus operator.
+
+        The tokenizer must not greedily read ':=' as COLONEQUAL at the top
+        level of a replacement field (a real walrus needs parentheses).
+        """
+        check_ast(inp, run=False)
+
+    @pytest.mark.parametrize(
+        "inp, exp",
+        [
+            ("f'{v:=^11}'", "====123===="),
+            ("f'{v:=>8}'", "=====123"),
+            ("f'{v := 8}'", "     123"),  # ':' opens the spec; '= 8' is the spec
+            ("f'{(v := 8)}'", "8"),  # a parenthesised walrus still assigns
+        ],
+    )
+    def test_format_spec_equals_fill_render(self, parser, inp, exp):
+        code = compile(parser.parse(inp), "<test>", "eval")
+        assert eval(code, {"v": 123}) == exp
+
     def test_format_spec_nested_expr(self, check_ast):
         """f"{x:.{n}f}" — sub-expression inside format spec."""
         check_ast('f"{3.14159:.{3}f}"', run=False)
@@ -103,15 +137,76 @@ class TestPEP701FStrings:
     def test_conversion_a(self, check_ast):
         check_ast('f"{42!a}"', run=False)
 
-    # -- self-documenting f"{x=}" --
-    # NOTE: ast.unparse adds spaces (e.g., "1 + 1=" instead of "1+1="),
-    # so we can't compare AST with CPython's (which uses source text).
+    # -- self-documenting f"{x=}" (debug syntax) --
+    # The debug text is the verbatim source between '{' and the terminating
+    # ':' / '!' / '}', so whitespace around '=' is preserved exactly as typed,
+    # matching CPython's AST (issue #6536). ast.unparse() must NOT be used here
+    # as it would normalise "1  +  1=" to "1 + 1=".
 
-    def test_self_doc_simple(self, check_ast):
-        check_ast('f"{42=}"', run=False)
+    @pytest.mark.parametrize(
+        "inp",
+        [
+            'f"{42=}"',
+            'f"{42 = }"',  # spaces on both sides of '='
+            'f"{42 =}"',  # space only before '='
+            'f"{42= }"',  # space only after '='
+            'f"{ 42 =}"',  # leading space inside the braces
+            'f"{1+1=}"',  # verbatim expression text (no normalisation)
+            'f"{1  +  1 = }"',  # internal whitespace preserved
+            'f"{42=:.5f}"',  # format spec
+            'f"{42 = :.5f}"',  # whitespace + format spec (':' terminator)
+            'f"{42=!r}"',  # conversion
+            'f"{42 = !r}"',  # whitespace + conversion ('!' terminator)
+            'f"{42 = !s:>10}"',  # whitespace + conversion + format spec
+            'f"""{1 =\n}"""',  # multiline debug region keeps the newline
+        ],
+    )
+    def test_self_doc(self, check_ast, inp):
+        check_ast(inp, run=False)
 
-    def test_self_doc_format_spec(self, check_ast):
-        check_ast('f"{42=:.5f}"', run=False)
+    @pytest.mark.parametrize(
+        "inp, exp",
+        [
+            # the exact spacing variants from issue #6536
+            ('f"{v = }"', "v = 123"),
+            ('f"{v =}"', "v =123"),
+            ('f"{v= }"', "v= 123"),
+            ('f"{v=}"', "v=123"),
+            # leading / internal whitespace preserved verbatim
+            ('f"{ v =}"', " v =123"),
+            # conversion / format-spec terminators keep surrounding whitespace
+            ('f"{v = !r}"', "v = 123"),
+            ('f"{v = :>6}"', "v =    123"),
+            # multiple debug fields and surrounding literal text
+            ('f"a{v=}b{v=}c"', "av=123bv=123c"),
+            ('f"pre {v = } post"', "pre v = 123 post"),
+        ],
+    )
+    def test_self_doc_render(self, parser, inp, exp):
+        code = compile(parser.parse(inp), "<test>", "eval")
+        assert eval(code, {"v": 123}) == exp
+
+    @pytest.mark.parametrize(
+        "inp, exp",
+        [
+            # '=' as part of an operator must NOT be treated as debug syntax
+            ("f'{x == y}'", "False"),
+            ("f'{x != y}'", "True"),
+            ("f'{x <= y}'", "True"),
+            ("f'{x >= y}'", "False"),
+            ("f'{(x := 5)}'", "5"),  # walrus, not debug
+            ("f'{dict(a=1, b=2)}'", "{'a': 1, 'b': 2}"),  # kwargs, not debug
+            # a comparison result that IS self-documented (debug '=' at the end)
+            ("f'{x == y = }'", "x == y = False"),
+            ("f'{x <= y = }'", "x <= y = True"),
+            ("f'{x >= y=}'", "x >= y=False"),
+            # self-documenting field nested inside another f-string
+            ('f"{f"{x=}"}"', "x=7"),
+        ],
+    )
+    def test_self_doc_boundary(self, parser, inp, exp):
+        code = compile(parser.parse(inp), "<test>", "eval")
+        assert eval(code, {"x": 7, "y": 42}) == exp
 
     # -- escaped braces --
 
@@ -200,6 +295,23 @@ class TestPEP701XonshFStrings:
         obs = check_xonsh_ast({}, 'f"{$HOME}/users/{$USER}"', return_obs=True)
         code = compile(obs, "<test>", "eval")
         assert eval(code) == "/home/users/alice"
+
+    # -- $VAR in self-documenting f"{$VAR=}" (issue #6536) --
+
+    @pytest.mark.parametrize(
+        "inp, exp",
+        [
+            ('f"{$HOME=}"', "$HOME='/foo/bar'"),
+            ('f"{$HOME = }"', "$HOME = '/foo/bar'"),
+            ('f"{$HOME =}"', "$HOME ='/foo/bar'"),
+            ('f"{$HOME= }"', "$HOME= '/foo/bar'"),
+        ],
+    )
+    def test_dollar_var_self_doc(self, check_xonsh_ast, xsh, monkeypatch, inp, exp):
+        monkeypatch.setitem(xsh.env, "HOME", "/foo/bar")
+        obs = check_xonsh_ast({}, inp, return_obs=True)
+        code = compile(obs, "<test>", "eval")
+        assert eval(code) == exp
 
     # -- $VAR combined with PEP 701 quote reuse --
 

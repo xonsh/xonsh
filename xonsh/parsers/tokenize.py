@@ -1490,7 +1490,7 @@ def _tokenize(
                                 yield TokenInfo(OP, "}", spos, epos, line)
                                 continue
                         elif (
-                            token == ":"
+                            initial == ":"
                             and fs["brace_depth"] == 1
                             and fs["paren_depth"] == 0
                             and not fs["in_format_spec"]
@@ -1499,12 +1499,19 @@ def _tokenize(
                             # switch to format spec scanning mode.
                             # Set in_expr=False so the fstring literal
                             # scanner handles the format spec text.
+                            # At the top level of a replacement field a ':'
+                            # always begins the format spec, so the pseudo-
+                            # tokenizer's greedy ':=' (walrus) match is wrong
+                            # here: the '=' is a literal fill/align char and
+                            # must be re-scanned as format-spec text. A real
+                            # walrus must be parenthesised: f"{(x:=5)}".
                             fs["in_format_spec"] = True
                             fs["in_expr"] = False
                             if stashed:
                                 yield stashed
                                 stashed = None
-                            yield TokenInfo(OP, ":", spos, epos, line)
+                            yield TokenInfo(OP, ":", spos, (lnum, start + 1), line)
+                            pos = start + 1
                             continue
 
                     if stashed:
