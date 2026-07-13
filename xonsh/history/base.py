@@ -191,6 +191,22 @@ class History:
         """
         pass
 
+    def erasedups(self):
+        """Remove duplicate commands, keeping only the latest occurrence.
+
+        Backends that support deduplication override this. The base
+        implementation is a no-op so that backends without it (e.g.
+        :class:`~xonsh.history.dummy.DummyHistory`) degrade gracefully
+        instead of raising ``AttributeError``.
+
+        Returns
+        -------
+        tuple of int
+            ``(removed, total)`` — the number of duplicates removed and the
+            total number of entries considered.
+        """
+        return 0, 0
+
     @functools.cached_property
     def ignore_regex(self):
         compiled_regex = None
