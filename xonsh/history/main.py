@@ -554,6 +554,24 @@ class HistoryAlias(xcli.ArgParserAlias):
         return parser
 
     def __call__(self, args, *rest, **kwargs):
+        if XSH.history is None:
+            # The history backend is created during shell startup (see
+            # ``xonsh.main.start_services``). If a history command runs before
+            # that — most commonly from an RC file, which is loaded first —
+            # the backend is still None. Emit actionable guidance instead of
+            # crashing with an opaque ``AttributeError``.
+            print(
+                "history: the history backend is not ready or not "
+                "initialized yet.\n"
+                "If you are calling a history command from an RC file, run it "
+                "from the on_post_init event instead, which fires once the "
+                "backend is ready:\n\n"
+                "    @events.on_post_init\n"
+                "    def _my_post_init(**kw):\n"
+                "        history erasedups\n",
+                file=kwargs.get("stderr") or sys.stderr,
+            )
+            return
         if not args:
             args = ["show", "session"]
         else:
