@@ -195,9 +195,7 @@ class History:
         """Remove duplicate commands, keeping only the latest occurrence.
 
         Backends that support deduplication override this. The base
-        implementation is a no-op so that backends without it (e.g.
-        :class:`~xonsh.history.dummy.DummyHistory`) degrade gracefully
-        instead of raising ``AttributeError``.
+        implementation is a no-op.
 
         Returns
         -------
