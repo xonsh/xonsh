@@ -2292,7 +2292,8 @@ def is_history_tuple(x):
         isinstance(x, cabc.Sequence)
         and len(x) == 2
         and isinstance(x[0], int | float)
-        and x[1].lower() in CANON_HISTORY_UNITS
+        and isinstance(x[1], str)
+        and x[1] in CANON_HISTORY_UNITS
     ):
         return True
     return False
@@ -2367,7 +2368,10 @@ def to_history_tuple(x):
         return to_history_tuple((m.group(1), m.group(3)))
     elif isinstance(x, float | int):
         return to_history_tuple((x, "commands"))
-    units, converter = HISTORY_UNITS[x[1]]
+    try:
+        units, converter = HISTORY_UNITS[str(x[1]).lower()]
+    except KeyError:
+        raise ValueError(f"could not parse history units: {x[1]!r}") from None
     value = converter(x[0])
     return (value, units)
 
