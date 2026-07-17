@@ -56,6 +56,7 @@ from xonsh.tools import (
     is_completions_display_value,
     is_dynamic_cwd_width,
     is_float,
+    is_history_tuple,
     is_int,
     is_int_as_str,
     is_logfile_opt,
@@ -90,6 +91,7 @@ from xonsh.tools import (
     to_completion_mode,
     to_completions_display_value,
     to_dynamic_cwd_tuple,
+    to_history_tuple,
     to_int_or_none,
     to_logfile_opt,
 )
@@ -2136,6 +2138,38 @@ def test_register_custom_style(name, styles, refrules):
 )
 def test_is_completion_mode(val, exp):
     assert is_completion_mode(val) is exp
+
+
+@pytest.mark.parametrize(
+    "val, exp",
+    [
+        ((10, "commands"), True),
+        ((10, "b"), True),
+        # Only the canonical units are valid; anything else has to go through
+        # to_history_tuple, so the validator must not fold the case itself.
+        ((10, "Commands"), False),
+        ((1, "GB"), False),
+        ((1, "gb"), False),
+        # A non-string unit is not a history tuple either.
+        ((10, 2), False),
+    ],
+)
+def test_is_history_tuple(val, exp):
+    assert is_history_tuple(val) is exp
+
+
+@pytest.mark.parametrize(
+    "val, exp",
+    [
+        ((1, "gb"), (1073741824, "b")),
+        # The docs advertise "1 GB"; the tuple form must accept it too.
+        ((1, "GB"), (1073741824, "b")),
+        ((10, "Commands"), (10, "commands")),
+        ("1 GB", (1073741824, "b")),
+    ],
+)
+def test_to_history_tuple_unit_case(val, exp):
+    assert to_history_tuple(val) == exp
 
 
 @pytest.mark.parametrize(
