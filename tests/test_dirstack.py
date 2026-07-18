@@ -152,3 +152,13 @@ def test_cd_literal_tilde_dir(xession, tmpdir):
 
     dirstack.cd(["~"])
     assert os.getcwd() == os.path.realpath(tilde_dir)
+
+
+def test_popd_numeric_zero_on_empty_stack(xession):
+    # +0 / -0 must report an error like the other popd paths, not fall
+    # through to DIRSTACK.pop(0) and raise IndexError.
+    dirstack.DIRSTACK.clear()
+    for nth in ("+0", "-0"):
+        _, err, rc = dirstack.popd_fn(nth=nth)
+        assert rc == 1
+        assert "Too few elements" in err
