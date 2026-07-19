@@ -438,6 +438,11 @@ def popd_fn(
             e = "Invalid argument to popd: {0}\n"
             return None, e.format(nth), 1
 
+        if not DIRSTACK:
+            # +0/-0 otherwise reach DIRSTACK.pop(0) below and raise IndexError.
+            e = "Too few elements in dirstack ({0} elements)\n"
+            return None, e.format(len(DIRSTACK)), 1
+
         if num > len(DIRSTACK):
             e = "Too few elements in dirstack ({0} elements)\n"
             return None, e.format(len(DIRSTACK)), 1
