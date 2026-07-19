@@ -3085,21 +3085,37 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
             continue
         nxt = []
         if recursive and part == "**":
-            stack = list(cur)
-            seen = set()
-            while stack:
-                d = stack.pop()
-                if d in seen:
-                    continue
-                seen.add(d)
-                nxt.append(d)
-                entries = _entries(d, part)
-                if entries is None:
-                    continue
-                for e in entries:
-                    full = _join(d, e)
-                    if os.path.isdir(full):
-                        stack.append(full)
+            if is_last:
+                # A trailing '**' matches every file *and* directory under
+                # each current dir recursively (stdlib semantics), not only
+                # directories. The prefix has already been resolved
+                # case-insensitively into real on-disk dirs, so the subtree
+                # carries no case ambiguity — delegate to stdlib glob, which
+                # also silently tolerates unreadable dirs.
+                for d in cur:
+                    nxt.extend(
+                        glob.iglob(
+                            _join(d, part),
+                            recursive=True,
+                            include_hidden=include_dotfiles,
+                        )
+                    )
+            else:
+                stack = list(cur)
+                seen = set()
+                while stack:
+                    d = stack.pop()
+                    if d in seen:
+                        continue
+                    seen.add(d)
+                    nxt.append(d)
+                    entries = _entries(d, part)
+                    if entries is None:
+                        continue
+                    for e in entries:
+                        full = _join(d, e)
+                        if os.path.isdir(full):
+                            stack.append(full)
             cur = nxt
             continue
         has_meta = any(c in part for c in _GLOB_META)
@@ -3129,7 +3145,12 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
     if strip_dot_prefix:
         prefix = "." + os.sep
         for p in cur:
-            yield p[len(prefix) :] if p.startswith(prefix) else p
+            stripped = p[len(prefix) :] if p.startswith(prefix) else p
+            # Drop the bare current-directory self-match ('' after
+            # stripping): stdlib glob omits it for an implicit-cwd pattern
+            # (e.g. '**' or '**/'), unlike an explicit './...' pattern.
+            if stripped:
+                yield stripped
     else:
         yield from cur
 
