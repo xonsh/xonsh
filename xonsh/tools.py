@@ -2338,6 +2338,9 @@ def to_dynamic_cwd_tuple(x):
         else:
             unit = "c"
         return (float(x), unit)
+    elif isinstance(x, float | int):
+        # A bare number is a character count, like the string form "20".
+        return (float(x), unit)
     else:
         return (float(x[0]), x[1])
 
