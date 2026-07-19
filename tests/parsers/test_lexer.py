@@ -373,6 +373,20 @@ def test_double_f_string_literal():
         assert check_token('f"{yo}"', ["STRING", 'f"{yo}"', 0])
 
 
+@pytest.mark.parametrize("quote", ['"""', "'''"])
+@pytest.mark.parametrize("prefix", ["fR", "FR", "Rf"])
+def test_triple_quoted_raw_fstring_prefix_casing(prefix, quote):
+    # Regression: on Python 3.11 these prefix casings raised ``KeyError`` from
+    # the tokenizer because ``endpats`` was missing the triple-quoted
+    # ``fR``/``FR``/``Rf`` keys that ``triple_quoted`` already listed. They must
+    # tokenize like the equivalent lowercase ``rf`` raw f-string.
+    src = f"{prefix}{quote}hi{quote}"
+    ref = f"rf{quote}hi{quote}"
+    obs = lex_input(src)
+    assert [t.type for t in obs] == [t.type for t in lex_input(ref)]
+    assert "".join(t.value for t in obs) == src
+
+
 def test_single_unicode_literal():
     assert check_token("u'yo'", ["STRING", "u'yo'", 0])
 
