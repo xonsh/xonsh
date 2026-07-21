@@ -1,5 +1,18 @@
 # Xonsh Change Log
 
+## [0.24.1](https://github.com/xonsh/xonsh/compare/0.24.0...0.24.1) (2026-07-21)
+
+
+### Fixes
+
+* Add helpful message in case of using `history` command without history object ([#6541](https://github.com/xonsh/xonsh/issues/6541)) ([d038e03](https://github.com/xonsh/xonsh/commit/d038e037b50e3491bdfebdbc2c54212e88f62bbd))
+* **dirstack:** stop popd +0/-0 crashing on an empty stack ([#6545](https://github.com/xonsh/xonsh/issues/6545)) ([4c05a98](https://github.com/xonsh/xonsh/commit/4c05a980958a652aa1a53916e385c59205befb46))
+* Parser: preserve whitespace in self-documenting f-strings ([#6537](https://github.com/xonsh/xonsh/issues/6537)) ([3e6f996](https://github.com/xonsh/xonsh/commit/3e6f9965f85dd65998ec0fb4202146970e1ac2ef))
+* **tests:** Drop the harness PYTHONPATH before completing pip ([#6543](https://github.com/xonsh/xonsh/issues/6543)) ([feae907](https://github.com/xonsh/xonsh/commit/feae90718a30dc92dff1d26a70685add614e272d))
+* **tokenize:** tokenize fR/FR/Rf triple-quoted raw f-strings on Python 3.11 ([#6549](https://github.com/xonsh/xonsh/issues/6549)) ([6d5dad3](https://github.com/xonsh/xonsh/commit/6d5dad35420f785c7e1182952e224f7413a8ffd6))
+* **tools:** accept a bare number for $DYNAMIC_CWD_WIDTH ([#6547](https://github.com/xonsh/xonsh/issues/6547)) ([6363f30](https://github.com/xonsh/xonsh/commit/6363f30a2f8348e6fa64c44fdda11ed26e6d5fe1))
+* **tools:** accept a non-lowercase unit in the $XONSH_HISTORY_SIZE tuple ([#6544](https://github.com/xonsh/xonsh/issues/6544)) ([d114676](https://github.com/xonsh/xonsh/commit/d1146768e82432a8a6131e7e4503fa211d0064fc))
+
 ## [0.24.0](https://github.com/xonsh/xonsh/compare/0.23.8...0.24.0) (2026-07-02)
 
 
