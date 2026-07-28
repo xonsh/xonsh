@@ -131,7 +131,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
         return -1
 
     pargs = parser.parse_args(args)
-    verbose = pargs.verbose or pargs.all
+    verbose = pargs.verbose
     if spec is not None:
         captured = spec.captured in xpp.STDOUT_CAPTURE_KINDS
     else:
