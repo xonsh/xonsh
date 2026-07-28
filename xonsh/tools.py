@@ -81,6 +81,13 @@ from xonsh.platform import (
     os_environ,
     pygments_version_info,
 )
+from xonsh.platforms import win_colors as _win_colors
+
+WIN10_COLOR_MAP = _win_colors.WIN10_COLOR_MAP
+WIN_BOLD_COLOR_MAP = _win_colors.WIN_BOLD_COLOR_MAP
+_win10_color_map = _win_colors._win10_color_map
+_win_bold_color_map = _win_colors._win_bold_color_map
+hardcode_colors_for_win10 = _win_colors.hardcode_colors_for_win10
 
 
 @lazyobject
@@ -2541,75 +2548,6 @@ ANSICOLOR_NAMES_MAP = LazyObject(
     globals(),
     "ANSICOLOR_NAMES_MAP",
 )
-
-
-def _win10_color_map():
-    cmap = {
-        "ansiblack": (12, 12, 12),
-        "ansiblue": (0, 55, 218),
-        "ansigreen": (19, 161, 14),
-        "ansicyan": (58, 150, 221),
-        "ansired": (197, 15, 31),
-        "ansimagenta": (136, 23, 152),
-        "ansiyellow": (193, 156, 0),
-        "ansigray": (204, 204, 204),
-        "ansibrightblack": (118, 118, 118),
-        "ansibrightblue": (59, 120, 255),
-        "ansibrightgreen": (22, 198, 12),
-        "ansibrightcyan": (97, 214, 214),
-        "ansibrightred": (231, 72, 86),
-        "ansibrightmagenta": (180, 0, 158),
-        "ansibrightyellow": (249, 241, 165),
-        "ansiwhite": (242, 242, 242),
-    }
-    return {k: f"#{r:02x}{g:02x}{b:02x}" for k, (r, g, b) in cmap.items()}
-
-
-WIN10_COLOR_MAP = LazyObject(_win10_color_map, globals(), "WIN10_COLOR_MAP")
-
-
-def _win_bold_color_map():
-    """Map dark ansi colors to lighter version."""
-    return {
-        "ansiblack": "ansibrightblack",
-        "ansiblue": "ansibrightblue",
-        "ansigreen": "ansibrightgreen",
-        "ansicyan": "ansibrightcyan",
-        "ansired": "ansibrightred",
-        "ansimagenta": "ansibrightmagenta",
-        "ansiyellow": "ansibrightyellow",
-        "ansigray": "ansiwhite",
-    }
-
-
-WIN_BOLD_COLOR_MAP = LazyObject(_win_bold_color_map, globals(), "WIN_BOLD_COLOR_MAP")
-
-
-def hardcode_colors_for_win10(style_map):
-    """Replace all ansi colors with hardcoded colors to avoid unreadable defaults
-    in conhost.exe
-    """
-    modified_style = {}
-    if not xsh.env["PROMPT_TOOLKIT_COLOR_DEPTH"]:
-        xsh.env["PROMPT_TOOLKIT_COLOR_DEPTH"] = "DEPTH_24_BIT"
-    # Replace all ansi colors with hardcoded colors to avoid unreadable defaults
-    # in conhost.exe
-    for token, style_str in style_map.items():
-        for ansicolor in WIN10_COLOR_MAP:
-            if ansicolor in style_str:
-                if "bold" in style_str and "nobold" not in style_str:
-                    # Win10  doesn't yet handle bold colors. Instead dark
-                    # colors are mapped to their lighter version. We simulate
-                    # the same here.
-                    style_str = style_str.replace("bold", "")
-                    hexcolor = WIN10_COLOR_MAP[
-                        WIN_BOLD_COLOR_MAP.get(ansicolor, ansicolor)
-                    ]
-                else:
-                    hexcolor = WIN10_COLOR_MAP[ansicolor]
-                style_str = style_str.replace(ansicolor, hexcolor)
-        modified_style[token] = style_str
-    return modified_style
 
 
 def ansicolors_to_ptk1_names(stylemap):

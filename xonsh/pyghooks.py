@@ -50,6 +50,7 @@ from xonsh.platform import (
     pygments_version_info,
     win_ansi_support,
 )
+from xonsh.platforms.win_colors import hardcode_colors_for_win10
 from xonsh.procs.executables import locate_executable
 from xonsh.pygments_cache import add_custom_style, get_style_by_name
 from xonsh.style_tools import DEFAULT_STYLE_DICT, norm_name
@@ -58,7 +59,6 @@ from xonsh.tools import (
     FORMATTER,
     ON_WINDOWS,
     PTK_NEW_OLD_COLOR_MAP,
-    hardcode_colors_for_win10,
     intensify_colors_for_cmd_exe,
 )
 
