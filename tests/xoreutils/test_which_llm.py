@@ -5,6 +5,7 @@ import os
 
 import pytest
 
+from xonsh.aliases import ExecAlias
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.xoreutils.which import which
 
@@ -35,7 +36,7 @@ def app_path(tmp_path):
 
 
 ALIAS_PLAIN = "echo hi"
-ALIAS_VERBOSE = f"aliases['{APP}'] = ['echo', 'hi']"
+ALIAS_VERBOSE = f"echo hi (from aliases['{APP}'])"
 
 
 @skip_if_on_windows
@@ -89,6 +90,24 @@ def test_which_alias_only(xsh_with_aliases, flags, expected):
     """An alias with no PATH match short-circuits before any path lookup."""
     xsh_with_aliases.aliases[APP] = ["echo", "hi"]
     assert run_which(*flags, APP) == [expected]
+
+
+def test_which_exec_alias(xsh_with_aliases):
+    """An ExecAlias reports its source, with provenance appended when verbose."""
+    xsh_with_aliases.aliases[APP] = ExecAlias("echo hi")
+    assert run_which(APP) == ["echo hi"]
+    assert run_which("-v", APP) == [f"echo hi (from aliases['{APP}'])"]
+
+
+def test_which_callable_alias(xsh_with_aliases):
+    """A callable alias reports its repr, with provenance appended when verbose."""
+
+    def _cb(args):
+        pass
+
+    xsh_with_aliases.aliases[APP] = _cb
+    expansion = run_which(APP)[0]
+    assert run_which("-v", APP) == [f"{expansion} (from aliases['{APP}'])"]
 
 
 @skip_if_on_windows

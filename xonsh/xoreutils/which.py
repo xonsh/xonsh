@@ -101,21 +101,17 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
 def print_alias(arg, stdout, verbose=False):
     """Print the alias."""
     alias = XSH.aliases[arg]
-    if not verbose:
-        if not callable(alias):
-            print(" ".join(alias), file=stdout)
-        elif isinstance(alias, xonsh.aliases.ExecAlias):
-            print(alias.src, file=stdout)
-        else:
-            print(alias, file=stdout)
+    if not callable(alias):
+        expansion = " ".join(alias)
+    elif isinstance(alias, xonsh.aliases.ExecAlias):
+        expansion = alias.src
     else:
-        print(
-            f"aliases['{arg}'] = {alias}",
-            flush=True,
-            file=stdout,
-        )
-        if callable(alias) and not isinstance(alias, xonsh.aliases.ExecAlias):
-            XSH.superhelp(alias)
+        expansion = str(alias)
+    if verbose:
+        # Mirror the ``<match> (<where it came from>)`` shape of print_path.
+        print(f"{expansion} (from aliases['{arg}'])", flush=True, file=stdout)
+    else:
+        print(expansion, file=stdout)
 
 
 def which(args, stdin=None, stdout=None, stderr=None, spec=None):
