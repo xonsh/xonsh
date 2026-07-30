@@ -60,6 +60,7 @@ from xonsh.shells.base_shell import BaseShell
 from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
 from xonsh.shells.ptk_shell.formatter import PTKPromptFormatter
 from xonsh.shells.ptk_shell.history import PromptToolkitHistory, _cust_history_matches
+from xonsh.shells.ptk_shell.input_hook import PTKInputHook
 from xonsh.shells.ptk_shell.key_bindings import load_xonsh_bindings
 from xonsh.style_tools import DEFAULT_STYLE_DICT, _TokenType, partial_color_tokenize
 from xonsh.tools import carriage_return, print_exception, print_warning
@@ -232,6 +233,10 @@ class PromptToolkitShell(BaseShell):
                 except OSError:
                     pass  # stdin is not a real console (redirect/ConPTY)
         self._first_prompt = True
+        # Installed for the duration of ``cmdloop`` only, so that
+        # non-interactive runs (``-c``, scripts, piped stdin) keep the
+        # interpreter's own ``input()``.
+        self.input_hook = PTKInputHook(self)
         self.history = ThreadedHistory(PromptToolkitHistory())
         self.push = self._push
 
@@ -544,35 +549,39 @@ class PromptToolkitShell(BaseShell):
         if intro:
             print(intro)
         auto_suggest = AutoSuggestFromHistory()
-        while XSH.exit is None:
-            try:
-                line = self.singleline(auto_suggest=auto_suggest)
-                if not line:
-                    self.emptyline()
-                else:
-                    raw_line = line
-                    line = self.precmd(line)
-                    self.default(line, raw_line)
-            except (KeyboardInterrupt, SystemExit) as e:
-                self.reset_buffer()
-                if isinstance(e, KeyboardInterrupt):
-                    if XSH.env.get("XONSH_HISTORY_SIGINT_FLUSH", True):
-                        """
-                        Development tools like PyCharm send SIGINT before SIGKILL.
-                        This is the last chance to save history in this case.
-                        """
-                        if XSH.env.get("XONSH_DEBUG", False):
-                            print("Flushing history after SIGINT.", file=sys.stderr)
-                        XSH.history.flush()
-                if isinstance(e, SystemExit):
-                    get_app().reset()  # Reset TTY mouse and keys handlers.
-                    self.restore_tty_sanity()  # Reset TTY SIGINT handlers.
-                    raise
-            except EOFError:
-                if XSH.env.get("IGNOREEOF"):
-                    print('Use "exit" to leave the shell.', file=sys.stderr)
-                else:
-                    break
+        self.input_hook.install()
+        try:
+            while XSH.exit is None:
+                try:
+                    line = self.singleline(auto_suggest=auto_suggest)
+                    if not line:
+                        self.emptyline()
+                    else:
+                        raw_line = line
+                        line = self.precmd(line)
+                        self.default(line, raw_line)
+                except (KeyboardInterrupt, SystemExit) as e:
+                    self.reset_buffer()
+                    if isinstance(e, KeyboardInterrupt):
+                        if XSH.env.get("XONSH_HISTORY_SIGINT_FLUSH", True):
+                            """
+                            Development tools like PyCharm send SIGINT before SIGKILL.
+                            This is the last chance to save history in this case.
+                            """
+                            if XSH.env.get("XONSH_DEBUG", False):
+                                print("Flushing history after SIGINT.", file=sys.stderr)
+                            XSH.history.flush()
+                    if isinstance(e, SystemExit):
+                        get_app().reset()  # Reset TTY mouse and keys handlers.
+                        self.restore_tty_sanity()  # Reset TTY SIGINT handlers.
+                        raise
+                except EOFError:
+                    if XSH.env.get("IGNOREEOF"):
+                        print('Use "exit" to leave the shell.', file=sys.stderr)
+                    else:
+                        break
+        finally:
+            self.input_hook.restore()
 
     def _get_prompt_tokens(self, env_name: str, prompt_name: str, **kwargs):
         env = XSH.env  # type:ignore

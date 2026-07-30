@@ -129,3 +129,287 @@ def test_singleline_retries_on_eintr(ptk_shell):
     shell.prompter.prompt = flaky
     assert shell.singleline() == "echo ok"
     assert calls["n"] == 2
+
+
+#
+# builtins.input() served through prompt_toolkit (PTKInputHook)
+#
+
+
+@pytest.fixture
+def input_hook(xession):
+    """A hook wired to a fake tty, with ``builtins.input`` restored after."""
+    import builtins
+
+    from xonsh.shells.ptk_shell.input_hook import PTKInputHook
+
+    original = builtins.input
+    hook = PTKInputHook()
+    yield hook
+    builtins.input = original
+
+
+class FakeStream:
+    def __init__(self, tty=True):
+        self._tty = tty
+
+    def isatty(self):
+        return self._tty
+
+
+def make_tty(monkeypatch, stdin=True, stdout=True):
+    monkeypatch.setattr("sys.stdin", FakeStream(stdin))
+    monkeypatch.setattr("sys.stdout", FakeStream(stdout))
+
+
+def test_input_hook_install_and_restore(input_hook):
+    """``install`` swaps ``builtins.input`` and ``restore`` puts the
+    original back, byte for byte."""
+    import builtins
+
+    original = builtins.input
+    input_hook.install()
+    assert builtins.input is input_hook
+    assert input_hook.installed
+    input_hook.restore()
+    assert builtins.input is original
+    assert not input_hook.installed
+
+
+def test_input_hook_install_is_idempotent(input_hook):
+    """A second ``install`` must not record the hook as its own original —
+    that would make ``restore`` leave the hook in place forever."""
+    import builtins
+
+    original = builtins.input
+    input_hook.install()
+    input_hook.install()
+    input_hook.restore()
+    assert builtins.input is original
+
+
+def test_input_hook_restore_keeps_a_foreign_hook(input_hook):
+    """If something else replaced ``input`` after us (a xontrib, ``pdb``,
+    user code), ``restore`` must not clobber it."""
+    import builtins
+
+    input_hook.install()
+    foreign = lambda prompt="": "foreign"  # noqa: E731
+    builtins.input = foreign
+    input_hook.restore()
+    assert builtins.input is foreign
+
+
+def test_input_hook_reads_through_ptk(input_hook, monkeypatch, xession):
+    """On an interactive terminal the hook reads through prompt_toolkit,
+    which is not bound by the terminal's 1024-byte canonical-mode line
+    limit (issue behind this hook)."""
+    make_tty(monkeypatch)
+    token = "x" * 2000
+    seen = []
+    monkeypatch.setattr(input_hook, "prompt", lambda msg: seen.append(msg) or token)
+    input_hook.install()
+    assert input("token: ") == token
+    assert seen == ["token: "]
+
+
+def test_input_hook_prompt_argument_matches_builtin(input_hook, monkeypatch, xession):
+    """``input()`` takes the prompt positionally and stringifies it;
+    no argument means an empty prompt."""
+    make_tty(monkeypatch)
+    seen = []
+    monkeypatch.setattr(input_hook, "prompt", lambda msg: seen.append(msg) or "")
+    input_hook.install()
+    input()
+    input(42)
+    input(None)
+    assert seen == ["", "42", "None"]
+
+
+@pytest.mark.parametrize(
+    "kwargs", [{"stdin": False}, {"stdout": False}, {"stdin": False, "stdout": False}]
+)
+def test_input_hook_falls_back_without_a_tty(input_hook, monkeypatch, xession, kwargs):
+    """Redirected stdin/stdout means no prompt_toolkit prompt — the
+    interpreter's own ``input()`` handles it."""
+    make_tty(monkeypatch, **kwargs)
+    monkeypatch.setattr(
+        input_hook, "prompt", lambda msg: pytest.fail("ptk must not be used")
+    )
+    input_hook.install()
+    input_hook._original = lambda *a: "builtin"
+    assert input("p") == "builtin"
+
+
+def test_input_hook_falls_back_off_main_thread(input_hook, monkeypatch, xession):
+    """Callable aliases run in worker threads; prompt_toolkit needs the
+    main thread for its event loop and signal handlers."""
+    import threading
+
+    make_tty(monkeypatch)
+    monkeypatch.setattr(
+        input_hook, "prompt", lambda msg: pytest.fail("ptk must not be used")
+    )
+    input_hook.install()
+    input_hook._original = lambda *a: "builtin"
+    result = []
+    t = threading.Thread(target=lambda: result.append(input("p")))
+    t.start()
+    t.join()
+    assert result == ["builtin"]
+
+
+def test_input_hook_falls_back_inside_a_running_app(input_hook, monkeypatch, xession):
+    """Called from a completer or a key binding, i.e. from inside a
+    running prompt_toolkit application — nesting would deadlock."""
+    make_tty(monkeypatch)
+
+    class RunningApp:
+        is_running = True
+
+    monkeypatch.setattr(
+        "prompt_toolkit.application.current.get_app_or_none", lambda: RunningApp()
+    )
+    monkeypatch.setattr(
+        input_hook, "prompt", lambda msg: pytest.fail("ptk must not be used")
+    )
+    input_hook.install()
+    input_hook._original = lambda *a: "builtin"
+    assert input("p") == "builtin"
+
+
+def test_input_hook_disabled_by_env(input_hook, monkeypatch, xession):
+    """``$XONSH_PTK_INPUT_HOOK = False`` is honored per call, so it can be
+    flipped at runtime."""
+    make_tty(monkeypatch)
+    xession.env["XONSH_PTK_INPUT_HOOK"] = False
+    monkeypatch.setattr(
+        input_hook, "prompt", lambda msg: pytest.fail("ptk must not be used")
+    )
+    input_hook.install()
+    input_hook._original = lambda *a: "builtin"
+    assert input("p") == "builtin"
+
+
+@pytest.mark.parametrize("exc", [EOFError, KeyboardInterrupt])
+def test_input_hook_propagates_eof_and_sigint(input_hook, monkeypatch, xession, exc):
+    """Ctrl-D and Ctrl-C must raise, exactly as the built-in does — not
+    fall back and read a second time."""
+    make_tty(monkeypatch)
+
+    def raiser(msg):
+        raise exc()
+
+    monkeypatch.setattr(input_hook, "prompt", raiser)
+    input_hook.install()
+    input_hook._original = lambda *a: pytest.fail("must not fall back")
+    with pytest.raises(exc):
+        input("p")
+
+
+def test_input_hook_falls_back_on_ptk_failure(input_hook, monkeypatch, xession):
+    """A broken prompt_toolkit prompt must never make ``input()``
+    unusable."""
+    make_tty(monkeypatch)
+
+    def boom(msg):
+        raise RuntimeError("no terminal here")
+
+    monkeypatch.setattr(input_hook, "prompt", boom)
+    input_hook.install()
+    input_hook._original = lambda *a: "builtin"
+    assert input("p") == "builtin"
+
+
+def test_cmdloop_installs_and_restores_the_hook(ptk_shell, xession):
+    """The hook lives exactly as long as the interactive command loop:
+    ``cmdloop`` is only reached from ``main_xonsh`` in interactive mode,
+    so ``-c``, scripts and piped stdin keep the built-in ``input()``."""
+    import builtins
+
+    _, _, shell = ptk_shell
+    original = builtins.input
+    seen = []
+    shell.input_hook.install = lambda: seen.append(builtins.input)
+    xession.exit = 0  # loop body never runs
+    shell.cmdloop()
+    assert seen == [original]  # install was called from cmdloop
+    assert builtins.input is original  # and the hook was restored
+
+
+def test_shell_construction_does_not_touch_input(ptk_shell):
+    """Building the shell (as tests and non-interactive runs do) must
+    leave ``builtins.input`` alone."""
+    import builtins
+
+    _, _, shell = ptk_shell
+    assert builtins.input is not shell.input_hook
+    assert not shell.input_hook.installed
+
+
+class FakePromptSession:
+    """Records how the hook builds and drives its prompt_toolkit session."""
+
+    instances = []
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        self.calls = []
+        FakePromptSession.instances.append(self)
+
+    def prompt(self, message, **kwargs):
+        self.calls.append((message, kwargs))
+        return "answer"
+
+
+@pytest.fixture
+def fake_session(monkeypatch):
+    # Reach for the module through ``sys.modules``: ``prompt_toolkit.shortcuts``
+    # re-exports a *function* named ``prompt``, which shadows the submodule of
+    # the same name for both ``import ... as`` and the dotted-string form.
+    import sys
+
+    ptk_prompt = sys.modules["prompt_toolkit.shortcuts.prompt"]
+    FakePromptSession.instances = []
+    monkeypatch.setattr(ptk_prompt, "PromptSession", FakePromptSession)
+    return FakePromptSession
+
+
+def test_input_hook_enables_auto_suggest(input_hook, fake_session, xession):
+    """The ``input()`` prompt gets the same grey history suggestion as the
+    command prompt (accepted with the right arrow — prompt_toolkit loads
+    those key bindings itself)."""
+    from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+
+    xession.env["XONSH_PROMPT_AUTO_SUGGEST"] = True
+    input_hook.prompt("token: ")
+    (message, kwargs) = fake_session.instances[0].calls[0]
+    assert message == "token: "
+    assert isinstance(kwargs["auto_suggest"], AutoSuggestFromHistory)
+
+
+def test_input_hook_auto_suggest_follows_env(input_hook, fake_session, xession):
+    """``$XONSH_PROMPT_AUTO_SUGGEST`` is read per call, so turning
+    suggestions off applies to the very next ``input()``."""
+    xession.env["XONSH_PROMPT_AUTO_SUGGEST"] = False
+    input_hook.prompt("a: ")
+    xession.env["XONSH_PROMPT_AUTO_SUGGEST"] = True
+    input_hook.prompt("b: ")
+    session = fake_session.instances[0]
+    assert session.calls[0][1]["auto_suggest"] is None
+    assert session.calls[1][1]["auto_suggest"] is not None
+
+
+def test_input_hook_reuses_one_session(input_hook, fake_session, xession):
+    """Answers accumulate in a single session's history — that history is
+    what the suggestion is drawn from — and it is dropped on ``restore``."""
+    from prompt_toolkit.history import InMemoryHistory
+
+    input_hook.prompt("a: ")
+    input_hook.prompt("b: ")
+    assert len(fake_session.instances) == 1
+    assert isinstance(fake_session.instances[0].kwargs["history"], InMemoryHistory)
+    input_hook.install()
+    input_hook.restore()
+    input_hook.prompt("c: ")
+    assert len(fake_session.instances) == 2  # a fresh, empty history
