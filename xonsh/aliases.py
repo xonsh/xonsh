@@ -31,6 +31,7 @@ from xonsh.foreign_shells import (
     DEFAULT_SOURCERS,
     foreign_shell_data,
 )
+from xonsh.lib.collections import swap_values
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.parsers.ast import isexpression
 from xonsh.platform import (
@@ -56,7 +57,6 @@ from xonsh.tools import (
     print_color,
     print_exception,
     strip_simple_quotes,
-    swap_values,
     threadable,
     to_repr_pretty_,
     to_shlvl,

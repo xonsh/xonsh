@@ -31,6 +31,7 @@ from xonsh.codecache import run_script_with_cache
 from xonsh.debug import is_breakpoint_engine, to_breakpoint_engine
 from xonsh.dirstack import _get_cwd
 from xonsh.events import events
+from xonsh.lib.collections import swap_values
 from xonsh.lib.lazyasd import LazyBool, lazyobject
 from xonsh.platform import (
     BASH_COMPLETIONS_DEFAULT,
@@ -92,7 +93,6 @@ from xonsh.tools import (
     qualified_name,
     seq_to_upper_pathsep,
     set_to_csv,
-    swap_values,
     to_bool,
     to_bool_or_int,
     to_bool_or_none,

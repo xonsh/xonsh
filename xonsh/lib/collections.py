@@ -1,5 +1,6 @@
-"""Base class for chaining DBs"""
+"""Collection helpers."""
 
+import contextlib
 import itertools
 import typing as tp
 from collections import ChainMap
@@ -18,6 +19,37 @@ class ChainDBDefaultType:
 
 
 ChainDBDefault = ChainDBDefaultType()
+
+_DEFAULT_SENTINEL = object()
+
+
+@contextlib.contextmanager
+def swap(namespace, name, value, default=_DEFAULT_SENTINEL):
+    """Swaps a current variable name in a namespace for another value, and then
+    replaces it when the context is exited.
+    """
+    old = getattr(namespace, name, default)
+    setattr(namespace, name, value)
+    yield value
+    if old is default:
+        delattr(namespace, name)
+    else:
+        setattr(namespace, name, old)
+
+
+@contextlib.contextmanager
+def swap_values(mapping, updates, default=_DEFAULT_SENTINEL):
+    """Updates a dictionary (or other mapping) with values from another mapping,
+    and then restores the original mapping when the context is exited.
+    """
+    old = {key: mapping.get(key, default) for key in updates}
+    mapping.update(updates)
+    yield
+    for key, value in old.items():
+        if value is default and key in mapping:
+            del mapping[key]
+        else:
+            mapping[key] = value
 
 
 class ChainDB(ChainMap):

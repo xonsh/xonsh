@@ -48,7 +48,6 @@ from the IPython project and retain their upstream copyrights:
 import ast
 import collections
 import collections.abc as cabc
-import contextlib
 import ctypes
 import datetime
 import functools
@@ -71,6 +70,8 @@ from contextlib import contextmanager
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
+from xonsh.lib.collections import swap as swap
+from xonsh.lib.collections import swap_values as swap_values
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.platform import (
     DEFAULT_ENCODING,
@@ -1563,38 +1564,6 @@ def argvquote(arg, force=False):
 def on_main_thread():
     """Checks if we are on the main thread or not."""
     return threading.current_thread() is threading.main_thread()
-
-
-_DEFAULT_SENTINEL = object()
-
-
-@contextlib.contextmanager
-def swap(namespace, name, value, default=_DEFAULT_SENTINEL):
-    """Swaps a current variable name in a namespace for another value, and then
-    replaces it when the context is exited.
-    """
-    old = getattr(namespace, name, default)
-    setattr(namespace, name, value)
-    yield value
-    if old is default:
-        delattr(namespace, name)
-    else:
-        setattr(namespace, name, old)
-
-
-@contextlib.contextmanager
-def swap_values(d, updates, default=_DEFAULT_SENTINEL):
-    """Updates a dictionary (or other mapping) with values from another mapping,
-    and then restores the original mapping when the context is exited.
-    """
-    old = {k: d.get(k, default) for k in updates}
-    d.update(updates)
-    yield
-    for k, v in old.items():
-        if v is default and k in d:
-            del d[k]
-        else:
-            d[k] = v
 
 
 #

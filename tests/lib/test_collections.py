@@ -1,4 +1,24 @@
-from xonsh.lib.collections import ChainDB
+from types import SimpleNamespace
+
+from xonsh.lib.collections import ChainDB, swap, swap_values
+
+
+def test_swap_restores_attribute():
+    namespace = SimpleNamespace(value="before")
+
+    with swap(namespace, "value", "during"):
+        assert namespace.value == "during"
+
+    assert namespace.value == "before"
+
+
+def test_swap_values_restores_mapping():
+    mapping = {"existing": "before"}
+
+    with swap_values(mapping, {"existing": "during", "added": True}):
+        assert mapping == {"existing": "during", "added": True}
+
+    assert mapping == {"existing": "before"}
 
 
 def test_dddi():
