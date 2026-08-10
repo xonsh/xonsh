@@ -1749,6 +1749,11 @@ def make_default_aliases():
             "Command decorator. Return output as list of lines.",
             name="@lines",
         ),
+        "@stream": SpecAttrDecoratorAlias(
+            {"output_format": "stream_lines"},
+            "Command decorator. Return output as stream.",
+            name="@stream",
+        ),
         "@path": SpecAttrDecoratorAlias(
             {"output_format": _output_to_path_object},
             "Command decorator. Return Path object for the first line in output.",
