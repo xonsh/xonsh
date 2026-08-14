@@ -12,6 +12,7 @@ import threading
 
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
+from xonsh.dirstack import _get_cwd
 from xonsh.lib.lazyasd import LazyObject
 from xonsh.procs.executables import locate_executable
 
@@ -48,7 +49,9 @@ def _get_git_branch(q):
 def _is_in_git_repo():
     """Fast filesystem check for .git — avoids spawning git subprocess."""
     env = XSH.env
-    cwd = env.get("PWD", os.getcwd()) if env else os.getcwd()
+    cwd = (env.get("PWD") if env else None) or _get_cwd()
+    if cwd is None:
+        return False
     while True:
         if os.path.exists(os.path.join(cwd, ".git")):
             return True
