@@ -373,8 +373,16 @@ class BaseShell:
         """Called just before execution of line."""
         try:
             self.precwd = os.getcwd()
-        except FileNotFoundError:
-            self.precwd = os.path.expanduser("~")
+        except OSError:
+            # The working directory can stop being reachable at any moment:
+            # removed by another process, an unmounted volume, or an ancestor
+            # that is no longer readable -- macOS reports the latter (and any
+            # sandbox/TCC denial) as ``PermissionError``, not as the
+            # ``FileNotFoundError`` a plain deletion gives. ``$PWD`` is
+            # xonsh's own record of where the session is, so it stays closer
+            # to the truth than the home directory.
+            env = XSH.env
+            self.precwd = (env.get("PWD") if env else None) or os.path.expanduser("~")
         return line
 
     def default(self, line, raw_line=None):

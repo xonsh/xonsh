@@ -155,3 +155,34 @@ def test_git_dirty_working_directory_includes_untracked(
         )
 
     assert vc.git_dirty_working_directory() == include_untracked
+
+
+def test_is_in_git_repo_uses_pwd_only(set_xenv, monkeypatch, tmpdir):
+    """``$PWD`` is xonsh's own record of the location, so the prompt has no
+    reason to call ``os.getcwd()`` on every render -- and calling it used to
+    happen unconditionally, because ``env.get("PWD", os.getcwd())`` evaluates
+    its default eagerly.
+    """
+    set_xenv(str(tmpdir))
+    called = []
+    monkeypatch.setattr(os, "getcwd", lambda: called.append(1) or str(tmpdir))
+
+    vc._is_in_git_repo()
+
+    assert called == []
+
+
+def test_is_in_git_repo_with_unreachable_cwd(set_xenv, monkeypatch):
+    """With no ``$PWD`` and a working directory that has been removed (or an
+    ancestor that stopped being readable -- ``PermissionError`` on macOS),
+    the check reports "not a repo" instead of breaking the prompt.
+    """
+    set_xenv("")
+
+    def boom():
+        raise PermissionError(1, "Operation not permitted")
+
+    monkeypatch.setattr(os, "getcwd", boom)
+
+    assert vc._is_in_git_repo() is False
+    assert vc.get_git_branch() is None
