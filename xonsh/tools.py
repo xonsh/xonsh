@@ -72,6 +72,8 @@ from contextlib import contextmanager
 # dependencies
 from xonsh import __version__
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
+from xonsh.lib.string import endswith_newline as endswith_newline
+from xonsh.lib.string import unquote as unquote
 from xonsh.platform import (
     DEFAULT_ENCODING,
     HAS_PYGMENTS,
@@ -3352,15 +3354,3 @@ def describe_waitpid_status(status):
     for f in funcs:
         s = f(status)
         print(f.__name__, "-", s, get_signal_name(s), "-", f.__doc__)
-
-
-def unquote(s: str, chars="'\""):
-    """Strip paired quotes from string once."""
-    if len(s) >= 2 and s[0] == s[-1] and s[0] in chars:
-        return s[1:-1]
-    return s
-
-
-def endswith_newline(s: str):
-    """Force one new line character end to string."""
-    return s.rstrip("\n") + "\n"
