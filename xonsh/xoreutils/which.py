@@ -6,7 +6,6 @@ import os
 
 import xonsh
 import xonsh.platform as xp
-import xonsh.procs.pipelines as xpp
 from xonsh.built_ins import XSH
 from xonsh.xoreutils import _which
 
