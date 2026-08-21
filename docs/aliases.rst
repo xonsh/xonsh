@@ -236,7 +236,7 @@ Return output as list of lines.
 
 ``@stream``
 -----------
-Return output as stream_lines.
+Return output as stream of lines. This is useful when ``$XONSH_SUBPROC_OUTPUT_FORMAT`` is set to ``list_lines``.
 
 .. code-block:: xonshcon
 
