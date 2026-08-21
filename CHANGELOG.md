@@ -1,5 +1,18 @@
 # Xonsh Change Log
 
+## [0.24.2](https://github.com/xonsh/xonsh/compare/0.24.1...0.24.2) (2026-08-21)
+
+
+### Features
+
+* Add `[@stream](https://github.com/stream)` command decorator alias. ([#6577](https://github.com/xonsh/xonsh/issues/6577)) ([2b28705](https://github.com/xonsh/xonsh/commit/2b287058917f7bf6c906fc58c775fe32001f8f0c))
+
+
+### Fixes
+
+* **cwd:** Fix exception in case of running command being in removed directory on macOS ([#6570](https://github.com/xonsh/xonsh/issues/6570)) ([5518547](https://github.com/xonsh/xonsh/commit/5518547e7a2b1a28933c642d490761057f21554e))
+* **which:** fix output under `which -ap` flags ([#6578](https://github.com/xonsh/xonsh/issues/6578)) ([375f703](https://github.com/xonsh/xonsh/commit/375f703fa4867fa181d5afe3bc6424304e6cdd6e))
+
 ## [0.24.1](https://github.com/xonsh/xonsh/compare/0.24.0...0.24.1) (2026-07-30)
 
 
