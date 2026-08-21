@@ -234,6 +234,15 @@ Return output as list of lines.
     @ lines = $(@lines cat file)
 
 
+``@stream``
+-----------
+Return output as stream of lines. This is useful when ``$XONSH_SUBPROC_OUTPUT_FORMAT`` is set to ``list_lines``.
+
+.. code-block:: xonshcon
+
+    @ str = $(@stream cat file)
+
+
 ``@json``
 ----------
 Parses JSON and returns a JSON object.

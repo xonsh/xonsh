@@ -1746,8 +1746,13 @@ def make_default_aliases():
         ),
         "@lines": SpecAttrDecoratorAlias(
             {"output_format": "list_lines"},
-            "Command decorator. Return output as list of lines.",
+            "Command decorator. Return output as list of lines. See also $XONSH_SUBPROC_OUTPUT_FORMAT.",
             name="@lines",
+        ),
+        "@stream": SpecAttrDecoratorAlias(
+            {"output_format": "stream_lines"},
+            "Command decorator. Return output as stream of lines. See also $XONSH_SUBPROC_OUTPUT_FORMAT.",
+            name="@stream",
         ),
         "@path": SpecAttrDecoratorAlias(
             {"output_format": _output_to_path_object},
