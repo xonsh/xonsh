@@ -468,6 +468,35 @@ declared in ``nix/default.nix``. For example, to use Python 3.14:
     nix-build nix/ -A xonsh-py314
 
 
+Binary cache
+""""""""""""
+
+Building xonsh from the flake compiles it from source, which takes a while.
+Every push to ``main`` is built by CI and the results are pushed to the
+`xonsh.cachix.org <https://app.cachix.org/cache/xonsh>`_ binary cache. To use it:
+
+.. code-block:: bash
+
+    nix run nixpkgs#cachix -- use xonsh
+
+Or declare the substituter yourself, e.g. on NixOS:
+
+.. code-block:: nix
+
+    nix.settings = {
+      substituters = [ "https://xonsh.cachix.org" ];
+      trusted-public-keys = [ "xonsh.cachix.org-1:wwdHGMixIz1oZB0MtubjhZyCfWMWRLTQTT9zLO+DyMY=" ];
+    };
+
+The ``cachix`` branch always points at the newest commit of ``main`` that was
+built successfully, so following it guarantees a cache hit instead of a local
+build:
+
+.. code-block:: bash
+
+    nix run github:xonsh/xonsh/cachix
+
+
 Container
 ^^^^^^^^^
 

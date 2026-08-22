@@ -32,7 +32,17 @@
 
 buildPythonPackage {
   pname = "xonsh";
-  version = "main";
+  # `xonsh.__version__` is the single source of truth: setuptools reads it for
+  # the wheel metadata and buildPythonPackage checks that it matches `version`.
+  version =
+    let
+      matches = lib.filter (m: m != null) (
+        map (builtins.match "__version__ *= *\"([^\"]*)\".*") (
+          lib.splitString "\n" (builtins.readFile ../xonsh/__init__.py)
+        )
+      );
+    in
+    lib.head (lib.head matches);
   pyproject = true;
 
   src = ../.;
