@@ -20,6 +20,7 @@ import xonsh.platform as xp
 import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.cli_utils import run_with_partial_args
+from xonsh.lib.string import endswith_newline
 from xonsh.procs.pipes import PipeChannel
 from xonsh.procs.readers import safe_fdclose
 
@@ -255,7 +256,7 @@ def parse_proxy_return(r, stdout, stderr):
             stdout.write(str(r[0]))
             stdout.flush()
         if rlen > 1 and r[1] is not None:
-            stderr.write(xt.endswith_newline(str(r[1])))
+            stderr.write(endswith_newline(str(r[1])))
             stderr.flush()
         if rlen > 2 and isinstance(r[2], int):
             cmd_result = r[2]

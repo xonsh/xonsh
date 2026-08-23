@@ -27,6 +27,7 @@ from xonsh.imphooks import install_import_hooks
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.lib.lazyimps import pyghooks, pygments
 from xonsh.lib.pretty import pretty
+from xonsh.lib.string import unquote
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS
 from xonsh.procs.jobs import ignore_sigtstp
 from xonsh.shell import Shell
@@ -37,7 +38,6 @@ from xonsh.tools import (
     print_color,
     print_exception,
     to_bool_or_int,
-    unquote,
 )
 from xonsh.xonfig import print_welcome_screen
 from xonsh.xontribs import auto_load_xontribs_from_entrypoints, xontribs_load
