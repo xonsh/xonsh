@@ -6,7 +6,6 @@ import os
 
 import xonsh
 import xonsh.platform as xp
-import xonsh.procs.pipelines as xpp
 from xonsh.built_ins import XSH
 from xonsh.xoreutils import _which
 
@@ -81,7 +80,7 @@ def print_global_object(arg, stdout):
     print(f"global object of {type(obj)}", file=stdout)
 
 
-def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
+def print_path(abs_name, from_where, stdout, verbose=False):
     """Print the name and path of the command."""
     if xp.ON_WINDOWS:
         # Use list dir to get correct case for the filename
@@ -94,8 +93,7 @@ def print_path(abs_name, from_where, stdout, verbose=False, captured=False):
     if verbose:
         print(f"{abs_name} ({from_where})", file=stdout)
     else:
-        end = "" if captured else "\n"
-        print(abs_name, end=end, file=stdout)
+        print(abs_name, file=stdout)
 
 
 def print_alias(arg, stdout, verbose=False):
@@ -132,10 +130,6 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
 
     pargs = parser.parse_args(args)
     verbose = pargs.verbose or pargs.all
-    if spec is not None:
-        captured = spec.captured in xpp.STDOUT_CAPTURE_KINDS
-    else:
-        captured = False
     if pargs.plain:
         verbose = False
     if xp.ON_WINDOWS:
@@ -163,7 +157,7 @@ def which(args, stdin=None, stdout=None, stderr=None, spec=None):
                 if match is None:
                     continue
                 abs_name, from_where = match
-                print_path(abs_name, from_where, stdout, verbose, captured)
+                print_path(abs_name, from_where, stdout, verbose)
                 nmatches += 1
                 if not pargs.all:
                     break
