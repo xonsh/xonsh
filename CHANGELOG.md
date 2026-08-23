@@ -1,5 +1,24 @@
 # Xonsh Change Log
 
+## [0.24.2](https://github.com/xonsh/xonsh/compare/0.24.1...0.24.2) (2026-08-23)
+
+
+### Features
+
+* Add `[@stream](https://github.com/stream)` command decorator alias. ([#6577](https://github.com/xonsh/xonsh/issues/6577)) ([2b28705](https://github.com/xonsh/xonsh/commit/2b287058917f7bf6c906fc58c775fe32001f8f0c))
+
+
+### Fixes
+
+* **cwd:** Fix exception in case of running command being in removed directory on macOS ([#6570](https://github.com/xonsh/xonsh/issues/6570)) ([5518547](https://github.com/xonsh/xonsh/commit/5518547e7a2b1a28933c642d490761057f21554e))
+* **nix:** Fixed new Nix pythonMetadataCheckHook ([#6580](https://github.com/xonsh/xonsh/issues/6580)) ([7e66722](https://github.com/xonsh/xonsh/commit/7e6672283261671b95d531bd7fa699b5d63fb8ec))
+* **which:** fix output under `which -ap` flags ([#6578](https://github.com/xonsh/xonsh/issues/6578)) ([375f703](https://github.com/xonsh/xonsh/commit/375f703fa4867fa181d5afe3bc6424304e6cdd6e))
+
+
+### Refactoring
+
+* move `unquote` and `endswith_newline` to `xonsh.lib.string` ([#6576](https://github.com/xonsh/xonsh/issues/6576)) ([7663be8](https://github.com/xonsh/xonsh/commit/7663be82c2e87b543bbf83973c97e2d397cbba43))
+
 ## [0.24.1](https://github.com/xonsh/xonsh/compare/0.24.0...0.24.1) (2026-07-30)
 
 
