@@ -1,0 +1,72 @@
+name: ci-nix-build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'nix/**'
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'pyproject.toml'
+      - 'xonsh/__init__.py'
+      - '.github/workflows/nix-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: cachix/install-nix-action@v31
+
+      # Pushing needs the auth token, which forks and pull_request events
+      # don't have. They still build, they just don't populate the cache.
+      - uses: cachix/cachix-action@v17
+        if: github.repository == 'xonsh/xonsh' && github.event_name != 'pull_request'
+        with:
+          name: xonsh
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      # `.#default` is the same derivation as one of the py3xx variants,
+      # Nix deduplicates it.
+      - run: nix build -L --no-link --fallback .#default .#xonsh-py312 .#xonsh-py313 .#xonsh-py314
+
+  cachix-branch:
+    needs: build
+    if: github.repository == 'xonsh/xonsh' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward the `cachix` branch
+        run: |
+          git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+          git fetch --no-tags origin '+refs/heads/cachix:refs/remotes/origin/cachix' || true
+
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "$GITHUB_SHA is no longer on main, skipping"
+            exit 0
+          fi
+
+          if git rev-parse --verify -q origin/cachix >/dev/null &&
+             git merge-base --is-ancestor "$GITHUB_SHA" origin/cachix; then
+            echo "cachix branch already contains $GITHUB_SHA, skipping"
+            exit 0
+          fi
+
+          git push origin "$GITHUB_SHA":refs/heads/cachix --force
