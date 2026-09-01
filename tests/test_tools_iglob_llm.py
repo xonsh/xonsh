@@ -209,6 +209,21 @@ def test_recursive_off_treats_double_star_as_single_segment(tree):
     assert out == [os.path.join("nested", "sub", "deep.txt")]
 
 
+@skip_on_windows
+@pytest.mark.parametrize("pattern", ["**", "**/", "nested/**", "Foo/**"])
+def test_trailing_double_star_mirrors_stdlib(tree, pattern):
+    # A trailing '**' must match every file *and* directory recursively,
+    # exactly like stdlib glob (whose behavior the helper mirrors) — not
+    # only directories, and with no spurious '' / '.' self entry.
+    import glob as _glob
+
+    out = sorted(_case_insensitive_iglob(pattern, recursive=True))
+    assert out == sorted(_glob.glob(pattern, recursive=True))
+    # Guard the specific regression: files present, no empty entry.
+    assert "" not in out
+    assert "." not in out
+
+
 # ---------- PermissionError fallback -----------------------------------
 
 
