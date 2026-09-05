@@ -66,12 +66,12 @@ Execution
 
     * - Shortcut
       - Description
-    * - ``Ctrl-J``
+    * - ``Alt-Ctrl-J``
       - | Similar to enter in a few respects:
         | 1. Execute the current buffer.
         | 2. End and execute a multiline statement.
-    * - ``Ctrl-M``
-      - Same as ``Ctrl-J``.
+    * - ``Alt-Ctrl-M``
+      - Same as ``Alt-Ctrl-J``.
 
 
 Exit
