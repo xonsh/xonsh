@@ -341,7 +341,11 @@ class JsonHistoryFlusher(threading.Thread):
         self.skip = skip
         if at_exit:
             with self.cond:
-                self.cond.wait_for(self.i_am_at_the_front)
+                timeout = XSH.env.get("XONSH_HISTORY_EXIT_FLUSH_TIMEOUT", 2.0)
+                if not self.cond.wait_for(self.i_am_at_the_front, timeout=timeout):
+                    self.queue.remove(self)
+                    self.cond.notify_all()
+                    return
                 self.dump()
                 self.queue.popleft()
                 self.cond.notify_all()

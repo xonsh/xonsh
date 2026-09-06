@@ -2,12 +2,15 @@
 
 # pylint: disable=protected-access
 
+import collections
 import shlex
+import threading
 
 import pytest
 
 from xonsh.history.json import (
     JsonHistory,
+    JsonHistoryFlusher,
     _xhj_gc_bytes_to_rmfiles,
     _xhj_gc_commands_to_rmfiles,
     _xhj_gc_files_to_rmfiles,
@@ -68,6 +71,25 @@ def test_hist_flush(hist, xession):
         cmd = lj["cmds"][0]
         assert cmd["inp"] == "still alive?"
         assert not cmd.get("out", None)
+
+
+def test_at_exit_flush_timeout_does_not_block_shutdown(xession):
+    """A stuck earlier flush must not prevent the exit flush from returning."""
+    blocker = object()
+    queue = collections.deque([blocker])
+    cond = threading.Condition()
+    finished = threading.Event()
+    xession.env["XONSH_HISTORY_EXIT_FLUSH_TIMEOUT"] = 0.01
+
+    def flush_at_exit():
+        JsonHistoryFlusher("unused", (), queue, cond, at_exit=True)
+        finished.set()
+
+    thread = threading.Thread(target=flush_at_exit, daemon=True)
+    thread.start()
+
+    assert finished.wait(timeout=1.0)
+    assert list(queue) == [blocker]
 
 
 def test_hist_flush_on_xonsh_unload(hist, xession):
