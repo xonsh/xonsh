@@ -202,7 +202,9 @@ def complete_python(context: CompletionContext) -> CompleterResult:
 
     if context.command and context.command.arg_index != 0:
         # this can be a command (i.e. not a subexpression)
-        first = context.command.args[0].value
+        # Preserve quotes here: a quoted Python literal can be parsed as the
+        # first command argument, but it is not an executable command.
+        first = context.command.args[0].raw_value
         ctx = context.python.ctx or {}
         if first in XSH.commands_cache and first not in ctx:  # type: ignore
             # this is a known command, so it won't be python code

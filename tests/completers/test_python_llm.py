@@ -1,10 +1,14 @@
-"""Path-vs-operator completion in ``xonsh/completers/python.py``.
+"""Regression coverage for ``xonsh/completers/python.py``.
 
 For an unknown command, the Python completer splits ``--home=/`` on ``=`` and
 used to offer operator tokens (``/`` ``//`` ``/=`` ``//=``) for the trailing
 ``/``.  Being exclusive and running before the path completer, those tokens
 shadowed path completion.  A value that begins with a path separator must not
 get operator completions, so the path completer can list the directory.
+
+The command context can also interpret the first quoted string in a Python
+membership expression as a command name. Command-cache suppression must use
+the raw token so quoted Python literals remain distinct from actual commands.
 """
 
 import os
@@ -25,6 +29,35 @@ def _values(result):
         return set()
     comps = result[0] if isinstance(result, tuple) else result
     return {str(c).strip() for c in comps}
+
+
+@pytest.mark.parametrize("alias_name", ["less", "more", "dir"])
+@pytest.mark.parametrize("quote", ['"', "'"])
+def test_python_completion_after_quoted_alias_membership(
+    alias_name, quote, xession, completion_context_parse
+):
+    """Quoted alias names must not make Python expressions look like commands."""
+    xession.commands_cache.aliases[alias_name] = "echo"
+    xession.ctx["aliases"] = xession.commands_cache.aliases
+    line = f"{quote}{alias_name}{quote} in ali"
+
+    context = completion_context_parse(line, len(line))
+    result = complete_python(context)
+
+    assert "aliases" in _values(result)
+
+
+def test_python_completion_still_skips_real_alias_command(
+    xession, completion_context_parse
+):
+    """An unquoted alias in command position must retain command suppression."""
+    xession.commands_cache.aliases["less"] = "echo"
+    xession.ctx["aliases"] = xession.commands_cache.aliases
+    line = "less ali"
+
+    result = complete_python(completion_context_parse(line, len(line)))
+
+    assert result is None
 
 
 @pytest.mark.parametrize(
