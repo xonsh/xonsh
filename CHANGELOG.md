@@ -1,5 +1,17 @@
 # Xonsh Change Log
 
+## [0.24.3](https://github.com/xonsh/xonsh/compare/0.24.2...0.24.3) (2026-09-10)
+
+
+### Fixes
+
+* **history:** never let JSON history flushing block shell exit  ([#6596](https://github.com/xonsh/xonsh/issues/6596)) ([13bd0f2](https://github.com/xonsh/xonsh/commit/13bd0f229b8294aa98cdc34442f1fd8e71124740))
+
+
+### Documentation
+
+* Fix execution shortcuts ([#6590](https://github.com/xonsh/xonsh/issues/6590)) ([7ac936f](https://github.com/xonsh/xonsh/commit/7ac936f745bee53a315c03c8b895bd0e1a856318))
+
 ## [0.24.2](https://github.com/xonsh/xonsh/compare/0.24.1...0.24.2) (2026-08-23)
 
 
