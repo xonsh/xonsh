@@ -2001,6 +2001,15 @@ class PromptHistorySetting(Xettings):
         "Common abbreviations, such as '6 months' or '1 GB' are also allowed.",
         doc_default="``(8128, 'commands')`` or ``'8128 commands'``",
     )
+    XONSH_HISTORY_EXIT_FLUSH_TIMEOUT = Var.with_default(
+        2.0,
+        "Number of seconds the final history flush waits for an earlier, still "
+        "unfinished history write when the shell is exiting. Once the timeout "
+        "expires the buffered commands are dropped and shutdown continues, so "
+        "that a history file on an unresponsive filesystem cannot keep the "
+        "shell alive. Only the ``json`` history backend uses this.",
+        doc_default="2.0",
+    )
     XONSH_STORE_STDOUT = Var.with_default(
         False,
         "Store the ``stdout`` and ``stderr`` streams to the history. "
