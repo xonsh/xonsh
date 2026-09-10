@@ -2,6 +2,7 @@
 
 import collections
 import collections.abc as cabc
+import contextlib
 import os
 import re
 import sys
@@ -324,6 +325,57 @@ class JsonHistoryGC(threading.Thread):
         return files
 
 
+@contextlib.contextmanager
+def _xhj_queue_turn(queue, item, cond, timeout=None):
+    """Take a turn at the head of a history file access queue.
+
+    ``queue`` holds every reader and writer waiting for exclusive access to a
+    history file, oldest first, and ``cond`` guards it. Callers append ``item``
+    themselves before entering, at the moment the access is requested, so that
+    the queue order matches the order the reads and writes were issued in.
+
+    Sitting at the head of ``queue`` *is* the exclusive access token, so ``cond``
+    is only ever held for the queue bookkeeping and never for the file I/O
+    itself. That matters at shutdown: a writer wedged on an unresponsive
+    filesystem parks at the head of the queue without holding ``cond``, which
+    leaves everyone behind it waiting on the condition rather than on the lock,
+    and so still able to time out.
+
+    Yields ``True`` once ``item`` reaches the head, and always drops it from the
+    queue and wakes the next waiter on the way out, including when the body
+    raises. An item left behind would sit at the head forever and block every
+    later reader and writer for the rest of the session.
+
+    If ``timeout`` seconds pass without the turn coming, ``item`` is dropped
+    from the queue and ``False`` is yielded, without exclusive access ever
+    having been granted.
+
+    Parameters
+    ----------
+    queue : collections.deque
+        The FIFO of pending history file users.
+    item : object
+        The entry the caller has already appended to ``queue``.
+    cond : threading.Condition
+        The condition guarding ``queue``.
+    timeout : float or None, optional
+        Seconds to wait for the turn, or ``None`` to wait indefinitely.
+    """
+    with cond:
+        if not cond.wait_for(lambda: bool(queue) and item is queue[0], timeout):
+            with contextlib.suppress(ValueError):
+                queue.remove(item)
+            cond.notify_all()
+            yield False
+            return
+    try:
+        yield True
+    finally:
+        with cond:
+            queue.popleft()
+            cond.notify_all()
+
+
 class JsonHistoryFlusher(threading.Thread):
     """Flush shell history to disk periodically."""
 
@@ -332,6 +384,11 @@ class JsonHistoryFlusher(threading.Thread):
     ):
         """Thread for flushing history."""
         super().__init__(*args, **kwargs)
+        # History must never be the reason the interpreter cannot shut down:
+        # non-daemon threads are joined before the at-exit flush handler even
+        # runs, so a flusher stuck on an unresponsive filesystem would hang the
+        # process past any timeout the exit path could apply.
+        self.daemon = True
         self.filename = filename
         self.buffer = buffer
         self.queue = queue
@@ -340,24 +397,25 @@ class JsonHistoryFlusher(threading.Thread):
         self.at_exit = at_exit
         self.skip = skip
         if at_exit:
-            with self.cond:
-                self.cond.wait_for(self.i_am_at_the_front)
-                self.dump()
-                self.queue.popleft()
-                self.cond.notify_all()
+            timeout = XSH.env.get("XONSH_HISTORY_EXIT_FLUSH_TIMEOUT", 2.0)
+            with _xhj_queue_turn(queue, self, cond, timeout=timeout) as my_turn:
+                if my_turn:
+                    self.dump()
+                else:
+                    print(
+                        f"history: dropping {len(self.buffer)} command(s): an "
+                        f"earlier history write did not finish within {timeout}s "
+                        "(see $XONSH_HISTORY_EXIT_FLUSH_TIMEOUT).",
+                        file=sys.stderr,
+                    )
         else:
             self.start()
 
     def run(self):
-        with self.cond:
-            self.cond.wait_for(self.i_am_at_the_front)
+        # No timeout here: a background flusher may wait as long as it takes,
+        # and being a daemon thread it cannot hold up shutdown.
+        with _xhj_queue_turn(self.queue, self, self.cond):
             self.dump()
-            self.queue.popleft()
-            self.cond.notify_all()
-
-    def i_am_at_the_front(self):
-        """Tests if the flusher is at the front of the queue."""
-        return self is self.queue[0]
 
     def dump(self):
         """Write the cached history to external storage."""
@@ -401,6 +459,8 @@ class JsonHistoryFlusher(threading.Thread):
                 xlj.ljdump(hist, f, sort_keys=True)
         except Exception as err:
             print(f"history: failed to write {tmpname!r}: {err}", file=sys.stderr)
+            with contextlib.suppress(OSError):
+                os.unlink(tmpname)
             return
         try:
             os.replace(tmpname, self.filename)
@@ -409,6 +469,8 @@ class JsonHistoryFlusher(threading.Thread):
                 f"history: failed to replace {tmpname!r} -> {self.filename!r}: {err}",
                 file=sys.stderr,
             )
+            with contextlib.suppress(OSError):
+                os.unlink(tmpname)
 
 
 class JsonCommandField(cabc.Sequence):
@@ -455,19 +517,13 @@ class JsonCommandField(cabc.Sequence):
         # now we know we have to go into the file
         queue = self.hist._queue
         queue.append(self)
-        with self.hist._cond:
-            self.hist._cond.wait_for(self.i_am_at_the_front)
+        with _xhj_queue_turn(queue, self, self.hist._cond):
             with open(self.hist.filename, newline="\n", encoding="utf-8") as f:
                 lj = xlj.LazyJSON(f, reopen=False)
                 rtn = lj["cmds"][key].get(self.field, self.default)
                 if isinstance(rtn, xlj.LJNode):
                     rtn = rtn.load()
-            queue.popleft()
         return rtn
-
-    def i_am_at_the_front(self):
-        """Tests if the command field is at the front of the queue."""
-        return self is self.hist._queue[0]
 
 
 class JsonHistory(History):
