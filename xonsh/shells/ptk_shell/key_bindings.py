@@ -20,7 +20,7 @@ from prompt_toolkit.input import ansi_escape_sequences
 from prompt_toolkit.key_binding.bindings.named_commands import get_by_name
 from prompt_toolkit.key_binding.bindings.vi import load_vi_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, KeyBindingsBase
-from prompt_toolkit.key_binding.key_processor import KeyPressEvent
+from prompt_toolkit.key_binding.key_processor import KeyPress, KeyPressEvent
 from prompt_toolkit.keys import Keys
 
 from xonsh.aliases import xonsh_exit
@@ -247,6 +247,23 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
     def shift_enter_newline(event):
         """Shift+Enter always inserts a newline with auto-indent."""
         event.current_buffer.newline(copy_margin=True)
+
+    # With modifyOtherKeys enabled, terminals (notably tmux with
+    # ``extended-keys on``) also report Shift+Space and Shift+Backspace as
+    # modified keys. Unknown to the parser, they would be inserted as text
+    # (e.g. ``[27;2;32~``), so map them to key slots that re-feed the plain key.
+    for slot, code, plain in (("\x81", 32, " "), ("\x82", 127, "\x7f")):
+        # xterm modifyOtherKeys format
+        ansi_escape_sequences.ANSI_SEQUENCES[f"\x1b[27;2;{code}~"] = slot  # type: ignore
+        # Kitty keyboard protocol format
+        ansi_escape_sequences.ANSI_SEQUENCES[f"\x1b[{code};2u"] = slot  # type: ignore
+        ansi_escape_sequences.REVERSE_ANSI_SEQUENCES[slot] = f"\x1b[27;2;{code}~"  # type: ignore
+        plain_key = ansi_escape_sequences.ANSI_SEQUENCES.get(plain, plain)
+
+        @handle(slot)
+        def shift_plain_key(event, plain_key=plain_key, plain=plain):
+            """Handle Shift+Space / Shift+Backspace like the unshifted key."""
+            event.app.key_processor.feed(KeyPress(plain_key, plain), first=True)
 
     if XSH.env["XONSH_CTRL_BKSP_DELETION"]:
         # Not all terminal emulators emit the same keys for backspace, therefore
