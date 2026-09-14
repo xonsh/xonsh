@@ -28,6 +28,19 @@ def hist(tmpdir, xession, monkeypatch):
     yield h
 
 
+def flush_and_wait(hist):
+    """Flush and block until the background flusher has written the file.
+
+    ``flush()`` hands the write to a thread, so a fixed sleep afterwards is a
+    race: on a loaded machine the file simply isn't there yet and the reader
+    finds nothing.
+    """
+    flusher = hist.flush()
+    if flusher is not None:
+        flusher.join()
+    return flusher
+
+
 def test_hist_init(hist, xession):
     """Test initialization of the shell history."""
     with LazyJSON(hist.filename) as lj:
@@ -200,10 +213,7 @@ def test_history_diff(tmpdir, xession, monkeypatch, capsys):
         xession.env["HISTCONTROL"] = set()
         for ts, cmd in enumerate(CMDS):  # populate the shell history
             hist.append({"inp": cmd, "rtn": 0, "ts": (ts + 1, ts + 1.5)})
-        flush = hist.flush()
-        if flush.queue:
-            # make sure that flush is complete
-            time.sleep(0.1)
+        flush_and_wait(hist)
 
     left, right = (str(f) for f in files)
     history_main(["diff", left, right])
@@ -755,8 +765,8 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
     # filesystem mtimes and time.time() don't always match up perfectly,
     # so we need a little bit of fudge time
     time.sleep(0.032)
-    hist_a.flush()
-    hist_b.flush()
+    flush_and_wait(hist_a)
+    flush_and_wait(hist_b)
     time.sleep(0.032)
     hist_main.pull(src_sessionid=str(hist_a.sessionid))
     # at this point, hist_main will only have "a1" in its history
@@ -768,8 +778,8 @@ def test_hist_pull_mixed(ptk_shell, tmpdir, xonsh_session, monkeypatch):
     hist_b.append(cmd("b2"))
 
     time.sleep(0.032)
-    hist_a.flush()
-    hist_b.flush()
+    flush_and_wait(hist_a)
+    flush_and_wait(hist_b)
     time.sleep(0.032)
     hist_main.pull()
     # hist_main should now have all the items we just added
