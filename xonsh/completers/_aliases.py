@@ -151,9 +151,9 @@ def complete_aliases(command: CommandContext):
     The said attribute should be a function. The current command context is passed to it.
     """
 
-    if not command.args:
+    cmd = command.command_name
+    if cmd is None:
         return
-    cmd = command.args[0].value
 
     resolved = XSH.aliases.get(cmd)
     if not resolved:

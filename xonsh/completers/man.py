@@ -153,7 +153,9 @@ def complete_from_man(context: CommandContext):
 
     if context.arg_index == 0 or not context.prefix.startswith("-"):
         return
-    cmd = context.args[0].value
+    cmd = context.command_name
+    if cmd is None:
+        return
 
     # Tools like cargo, docker use per-subcommand man pages
     # (e.g. cargo-build). Try the hyphenated form first.

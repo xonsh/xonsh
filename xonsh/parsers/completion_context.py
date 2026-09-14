@@ -87,6 +87,28 @@ class CommandContext(NamedTuple):
         return None
 
     @property
+    def command_name(self) -> "str | None":
+        """The name of the command this line runs, or ``None`` if it runs none.
+
+        A quoted first token is a Python string literal, not a command name:
+        xonsh has no implicit subprocess form that starts with a quote --
+        ``"ls" -l`` is a syntax error -- so ``"less" in aliases`` is Python and
+        must not be read as an invocation of ``less``. Inside an explicit
+        subprocess block the quotes are ordinary shell quoting instead, and
+        ``![ "/opt/my prog" --help ]`` does name a command.
+
+        Completers deciding *which executable* the line runs should use this
+        rather than ``args[0].value``, which drops that distinction, or
+        ``command``, which keeps the quotes as part of the name.
+        """
+        if not self.args:
+            return None
+        first = self.args[0]
+        if first.opening_quote and not self.subcmd_opening:
+            return None
+        return first.value
+
+    @property
     def words_before_cursor(self) -> str:
         """words without current prefix"""
         return " ".join([arg.raw_value for arg in self.args[: self.arg_index]])
