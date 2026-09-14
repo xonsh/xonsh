@@ -61,6 +61,13 @@ def test_command_name_is_none_for_a_quoted_first_arg(quote):
     assert ctx.command_name is None
 
 
+@pytest.mark.parametrize("first", ["/bin/ls", "bin/ls", "C:\\bin\\ls.exe"])
+def test_command_name_keeps_a_path_untouched(first):
+    """Resolving a path to its command is ``CommandsCache``'s job, not ours."""
+    ctx = CommandContext(args=(CommandArg(first), CommandArg("-l")), arg_index=2)
+    assert ctx.command_name == first
+
+
 @pytest.mark.parametrize("subcmd_opening", ["![", "$[", "$(", "!("])
 def test_command_name_keeps_quoting_inside_a_subproc_block(subcmd_opening):
     """``![ "/opt/my prog" -x ]`` really does name a command."""
@@ -107,7 +114,7 @@ def test_python_completes_after_a_quoted_command_name(
     assert "aliases" in _values(result)
 
 
-@pytest.mark.parametrize("line", ["less ali", "less -x ali", "/bin/ls ali"])
+@pytest.mark.parametrize("line", ["less ali", "less -x ali"])
 def test_python_still_skips_a_real_command_line(
     line, aliased, completion_context_parse
 ):
