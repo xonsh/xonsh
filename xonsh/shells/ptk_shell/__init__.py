@@ -471,9 +471,12 @@ class PromptToolkitShell(BaseShell):
         self.prompter.app.timeoutlen = float(env.get("XONSH_PTK_TIMEOUTLEN", 1.0))
 
         events.on_pre_prompt.fire()
-        # Enable xterm modifyOtherKeys mode so the terminal sends
-        # distinct escape sequences for Shift+Enter, Ctrl+Enter, etc.
-        # Mode 2 = all keys except those with well-known behavior.
+        # Enable xterm modifyOtherKeys so the terminal sends distinct escape
+        # sequences for Shift+Enter, Ctrl+Enter, etc.
+        # Level 1 (what ``\x1b[>4;1m`` below asks for) covers every key except
+        # those with a well-known legacy encoding; level 2 would cover those
+        # too. tmux draws that line differently and reports Shift with Space,
+        # Backspace and Tab as well -- see ``key_bindings.py`` for the mappings.
         # Skip on legacy Windows conhost (pre-Win10 build 14393) which
         # does not interpret VT/ANSI and would render the bytes verbatim
         # around every prompt — see issue #6325.

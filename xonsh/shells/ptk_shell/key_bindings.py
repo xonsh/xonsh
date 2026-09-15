@@ -265,6 +265,18 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
             """Handle Shift+Space / Shift+Backspace like the unshifted key."""
             event.app.key_processor.feed(KeyPress(plain_key, plain), first=True)
 
+    # Shift+Tab is reported the same way, but it already has an exact key of
+    # its own, so it needs no slot: point the reports straight at the key a
+    # terminal sends in legacy encoding (``CSI Z``), which is bound by default
+    # to walking the completion menu backwards.
+    ansi_escape_sequences.ANSI_SEQUENCES["\x1b[27;2;9~"] = Keys.BackTab  # type: ignore
+    ansi_escape_sequences.ANSI_SEQUENCES["\x1b[9;2u"] = Keys.BackTab  # type: ignore
+
+    # Same for Ctrl+Backspace. Which key that is depends on
+    # ``$XONSH_CTRL_BKSP_DELETION`` below, so both branches point the reports at
+    # whatever this session binds the legacy byte to.
+    CTRL_BKSP_REPORTS = ("\x1b[27;5;127~", "\x1b[127;5u")
+
     if XSH.env["XONSH_CTRL_BKSP_DELETION"]:
         # Not all terminal emulators emit the same keys for backspace, therefore
         # ptk always maps backspace ("\x7f") to ^H ("\x08"), and all the backspace bindings are registered for ^H.
@@ -285,11 +297,19 @@ def load_xonsh_bindings(ptk_bindings: KeyBindingsBase) -> KeyBindingsBase:
         # Prompt-toolkit allows using single-character keys that aren't in the `Keys` enum.
         ansi_escape_sequences.ANSI_SEQUENCES[REAL_CTRL_BKSP] = REAL_CTRL_BKSP  # type: ignore
         ansi_escape_sequences.REVERSE_ANSI_SEQUENCES[REAL_CTRL_BKSP] = REAL_CTRL_BKSP  # type: ignore
+        for seq in CTRL_BKSP_REPORTS:
+            ansi_escape_sequences.ANSI_SEQUENCES[seq] = REAL_CTRL_BKSP  # type: ignore
 
         @handle(REAL_CTRL_BKSP, filter=insert_mode)
         def delete_word(event):
             """Delete a single word (like ALT-backspace)"""
             get_by_name("backward-kill-word").call(event)
+
+    else:
+        # Without that binding Ctrl+Backspace is an ordinary backspace, which is
+        # also what a terminal sends for it outside modifyOtherKeys.
+        for seq in CTRL_BKSP_REPORTS:
+            ansi_escape_sequences.ANSI_SEQUENCES[seq] = Keys.ControlH  # type: ignore
 
     def _indent_lines(b, indent=True):
         """Indent or dedent selected lines, preserving selection."""
