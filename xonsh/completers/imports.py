@@ -189,20 +189,25 @@ def complete_import(context: CompletionContext):
         # can't have a quoted import
         return None
 
+    keyword = command.command_name
+    if keyword is None:
+        # a quoted first token is a string literal, not an import statement
+        return None
+
     arg_index = command.arg_index
     prefix = command.prefix
     args = command.args
 
-    if arg_index == 1 and args[0].value == "from":
+    if arg_index == 1 and keyword == "from":
         # completing module to import
         return complete_module(prefix)
-    if arg_index >= 1 and args[0].value == "import":
+    if arg_index >= 1 and keyword == "import":
         # completing module to import, might be multiple modules
         prefix = prefix.rsplit(",", 1)[-1]
         return complete_module(prefix), len(prefix)
-    if arg_index == 2 and args[0].value == "from":
+    if arg_index == 2 and keyword == "from":
         return {RichCompletion("import", append_space=True)}
-    if arg_index > 2 and args[0].value == "from" and args[2].value == "import":
+    if arg_index > 2 and keyword == "from" and args[2].value == "import":
         # complete thing inside a module, might be multiple objects
         module = args[1].value
         prefix = prefix.rsplit(",", 1)[-1]

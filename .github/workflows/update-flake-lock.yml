@@ -22,7 +22,7 @@ jobs:
         uses: cachix/install-nix-action@v31
 
       - name: Update flake.lock
-        uses: DeterminateSystems/update-flake-lock@v28
+        uses: DeterminateSystems/update-flake-lock@v29
         with:
           commit-msg: "ci(nix): update flake.lock"
           pr-title: "ci(nix): update flake.lock"

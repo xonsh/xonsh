@@ -201,10 +201,16 @@ def complete_python(context: CompletionContext) -> CompleterResult:
         return None
 
     if context.command and context.command.arg_index != 0:
-        # this can be a command (i.e. not a subexpression)
-        first = context.command.args[0].value
+        # this can be a command (i.e. not a subexpression).
+        # ``command_name`` is None when the first token cannot name a command at
+        # all -- a quoted string literal -- so ``"less" in aliases`` stays python.
+        first = context.command.command_name
         ctx = context.python.ctx or {}
-        if first in XSH.commands_cache and first not in ctx:  # type: ignore
+        if (
+            first is not None
+            and first in XSH.commands_cache  # type: ignore
+            and first not in ctx
+        ):
             # this is a known command, so it won't be python code
             return None
 
