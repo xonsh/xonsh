@@ -6,6 +6,7 @@ import os
 import pytest
 
 from xonsh.built_ins import XSH
+from xonsh.platform import ON_WINDOWS
 from xonsh.shells.base_shell import BaseShell
 
 
@@ -65,3 +66,38 @@ def test_precmd_falls_back_to_home_without_env(xession, xonsh_execer, monkeypatc
     shell.precmd("echo test")
 
     assert shell.precwd == os.path.expanduser("~")
+
+
+def _shell_with_title(xession, xonsh_execer):
+    shell = BaseShell(xonsh_execer, None)
+    xession.env["TERM"] = "xterm-256color"
+    xession.env["TITLE"] = "hello"
+    return shell
+
+
+@pytest.mark.skipif(ON_WINDOWS, reason="Windows sets the title through the console API")
+def test_settitle_writes_osc_sequence_to_tty_stdout(
+    xession, xonsh_execer, monkeypatch, capfdbinary
+):
+    shell = _shell_with_title(xession, xonsh_execer)
+    monkeypatch.setattr(os, "isatty", lambda fd: True)
+
+    shell.settitle()
+
+    out, _ = capfdbinary.readouterr()
+    assert out == b"\x1b]0;hello\x07"
+
+
+@pytest.mark.skipif(ON_WINDOWS, reason="Windows sets the title through the console API")
+def test_settitle_skips_non_tty_stdout(xession, xonsh_execer, monkeypatch, capfdbinary):
+    """``xonsh -i -c cmd | consumer`` and ``xonsh -i -c cmd > file`` must not
+    leak the title escape into the captured output: the sequence lands ahead
+    of every subprocess command's output and corrupts anything that parses it.
+    """
+    shell = _shell_with_title(xession, xonsh_execer)
+    monkeypatch.setattr(os, "isatty", lambda fd: False)
+
+    shell.settitle()
+
+    out, _ = capfdbinary.readouterr()
+    assert out == b""
