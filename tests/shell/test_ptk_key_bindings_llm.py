@@ -10,6 +10,7 @@ import pytest
 from prompt_toolkit.application.current import set_app
 from prompt_toolkit.buffer import CompletionState
 from prompt_toolkit.enums import EditingMode
+from prompt_toolkit.input.vt100_parser import Vt100Parser
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.keys import Keys
@@ -127,3 +128,115 @@ def test_singleline_applies_key_timeouts_from_env(ptk_shell, xession, value):
     assert shell.singleline() == "echo ok"
     assert shell.prompter.app.ttimeoutlen == 0.123
     assert shell.prompter.app.timeoutlen == 0.123
+
+
+def feed_raw(app, data):
+    """Parse raw terminal input the way the vt100 input does, then run
+    the resulting key presses through the key processor."""
+    parser = Vt100Parser(app.key_processor.feed)
+    parser.feed(data)
+    parser.flush()
+    app.key_processor.process_keys()
+
+
+@pytest.mark.parametrize(
+    "shift_space, shift_bksp",
+    [("\x1b[27;2;32~", "\x1b[27;2;127~"), ("\x1b[32;2u", "\x1b[127;2u")],
+    ids=["modifyOtherKeys", "csi-u"],
+)
+def test_shift_space_and_shift_backspace_act_as_plain_keys(
+    ptk_app, shift_space, shift_bksp
+):
+    """Shift+Space / Shift+Backspace reports (sent e.g. by tmux with
+    ``extended-keys on``) must behave like Space / Backspace instead of
+    inserting the escape sequence as text — issue #6597."""
+    ptk_app.editing_mode = EditingMode.EMACS
+    buff = ptk_app.current_buffer
+    with set_app(ptk_app):
+        feed_raw(ptk_app, f"echo 1{shift_space}2x{shift_bksp}3")
+    assert buff.text == "echo 1 23"
+
+
+def test_shift_space_follows_vi_navigation_mode(ptk_app):
+    """The plain key is re-fed, so Shift+Space keeps the meaning Space has
+    in the current mode: in vi navigation mode it moves the cursor."""
+    ptk_app.editing_mode = EditingMode.VI
+    buff = ptk_app.current_buffer
+    with set_app(ptk_app):
+        buff.text = "echo hi"
+        buff.cursor_position = 0
+        ptk_app.vi_state.input_mode = InputMode.NAVIGATION
+        feed_raw(ptk_app, "\x1b[27;2;32~")
+    assert buff.text == "echo hi"
+    assert buff.cursor_position == 1
+
+
+@pytest.fixture
+def restore_ansi_sequences():
+    """``load_xonsh_bindings`` mutates prompt_toolkit's global sequence map."""
+    from prompt_toolkit.input import ansi_escape_sequences
+
+    saved = dict(ansi_escape_sequences.ANSI_SEQUENCES)
+    saved_reverse = dict(ansi_escape_sequences.REVERSE_ANSI_SEQUENCES)
+    yield ansi_escape_sequences
+    for mapping, original in (
+        (ansi_escape_sequences.ANSI_SEQUENCES, saved),
+        (ansi_escape_sequences.REVERSE_ANSI_SEQUENCES, saved_reverse),
+    ):
+        mapping.clear()
+        mapping.update(original)
+
+
+def parse_raw(data):
+    """The keys prompt_toolkit's vt100 parser produces for raw input."""
+    presses = []
+    parser = Vt100Parser(presses.append)
+    parser.feed(data)
+    parser.flush()
+    return [press.key for press in presses]
+
+
+@pytest.mark.parametrize(
+    "report", ["\x1b[27;2;9~", "\x1b[9;2u"], ids=["modifyOtherKeys", "csi-u"]
+)
+def test_shift_tab_report_is_back_tab(ptk_app, report):
+    """Shift+Tab must keep walking the completion menu backwards, not land in
+    the buffer as ``[27;2;9~`` — issue #6597."""
+    assert parse_raw(report) == [Keys.BackTab]
+    buff = ptk_app.current_buffer
+    with set_app(ptk_app):
+        feed_raw(ptk_app, f"echo{report}")
+    assert buff.text == "echo"
+
+
+@pytest.mark.parametrize(
+    "report", ["\x1b[27;5;127~", "\x1b[127;5u"], ids=["modifyOtherKeys", "csi-u"]
+)
+def test_ctrl_backspace_report_is_a_backspace_by_default(ptk_app, report):
+    """``$XONSH_CTRL_BKSP_DELETION`` is off, so Ctrl+Backspace deletes a
+    character, exactly as it does outside modifyOtherKeys."""
+    ptk_app.editing_mode = EditingMode.EMACS
+    buff = ptk_app.current_buffer
+    with set_app(ptk_app):
+        feed_raw(ptk_app, f"echo ab{report}")
+    assert buff.text == "echo a"
+
+
+def test_ctrl_backspace_report_follows_the_deletion_setting(
+    xession, restore_ansi_sequences
+):
+    """With the setting on, the report has to reach the same key the legacy
+    byte does, so it runs ``delete_word`` instead of a plain backspace."""
+    from prompt_toolkit.key_binding.key_bindings import KeyBindings
+
+    from xonsh.platform import ON_WINDOWS
+    from xonsh.shells.ptk_shell.key_bindings import load_xonsh_bindings
+
+    real_ctrl_bksp = "\x7f" if ON_WINDOWS else "\x08"
+    xession.env["XONSH_CTRL_BKSP_DELETION"] = True
+    load_xonsh_bindings(KeyBindings())
+
+    sequences = restore_ansi_sequences.ANSI_SEQUENCES
+    assert sequences["\x1b[27;5;127~"] == real_ctrl_bksp
+    assert sequences["\x1b[127;5u"] == real_ctrl_bksp
+    assert sequences[real_ctrl_bksp] == real_ctrl_bksp
