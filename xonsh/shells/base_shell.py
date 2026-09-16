@@ -631,6 +631,11 @@ class BaseShell:
         if ON_WINDOWS and "ANSICON" not in env:
             kernel32.SetConsoleTitleW(t)
         else:
+            if not os.isatty(1):
+                # stdout is a pipe or a file (``xonsh -i -c cmd | …``): there is
+                # no terminal to title, and the escape sequence would land in
+                # the captured output ahead of every subprocess command.
+                return
             with open(1, "wb", closefd=False) as f:
                 # prevent xonsh from answering interactive questions
                 # on the next command by writing the title
