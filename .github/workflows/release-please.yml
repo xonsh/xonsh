@@ -21,6 +21,11 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - uses: googleapis/release-please-action@v5
+        id: release-please
         with:
           token: ${{ steps.app-token.outputs.token }}
+          config: release-please-config.json
+          extra-args: >
+            --include-commit-authors
+            --github-link-authors
         # todo: add block to run rever's Authors and appimage activity on release
