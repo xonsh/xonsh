@@ -2935,7 +2935,12 @@ def expand_case_matching(s):
 
 
 def globpath(
-    s, ignore_case=False, return_empty=False, sort_result=None, include_dotfiles=None
+    s,
+    ignore_case=False,
+    return_empty=False,
+    sort_result=None,
+    include_dotfiles=None,
+    explicit_dot_matches_hidden=True,
 ):
     """Simple wrapper around glob that also expands home and env vars."""
     o, s = _iglobpath(
@@ -2943,6 +2948,7 @@ def globpath(
         ignore_case=ignore_case,
         sort_result=sort_result,
         include_dotfiles=include_dotfiles,
+        explicit_dot_matches_hidden=explicit_dot_matches_hidden,
     )
     o = list(o)
     no_match = [] if return_empty else [s]
@@ -2952,7 +2958,13 @@ def globpath(
 _GLOB_META = "*?["
 
 
-def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False):
+def _case_insensitive_iglob(
+    pattern,
+    *,
+    include_dotfiles=False,
+    recursive=False,
+    explicit_dot_matches_hidden=True,
+):
     """Case-insensitive glob, tolerant of unreadable parent directories.
 
     Walks ``pattern`` segment by segment. At each segment:
@@ -2995,11 +3007,12 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
             entries = os.listdir(d)
         except OSError:
             return None
-        # Mirror stdlib glob: a segment that starts with '.' is treated as
-        # an explicit request for hidden names (literal '.foo' or wildcard
-        # '.x*'), so the dotfile filter does not apply. Bare wildcards
-        # ('*', '**', 'foo*') still hide dotfiles unless include_dotfiles.
-        if not include_dotfiles and not part.startswith("."):
+        # Completer (#6402): a segment that starts with '.' is an explicit
+        # request for hidden names, so the filter is skipped. g-glob
+        # (#6551): $DOTGLOB=False must hide every dotfile, even for '.*'.
+        if not include_dotfiles and not (
+            explicit_dot_matches_hidden and part.startswith(".")
+        ):
             entries = [e for e in entries if not e.startswith(".")]
         return entries
 
@@ -3077,7 +3090,13 @@ def _case_insensitive_iglob(pattern, *, include_dotfiles=False, recursive=False)
         yield from cur
 
 
-def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
+def _iglobpath(
+    s,
+    ignore_case=False,
+    sort_result=None,
+    include_dotfiles=None,
+    explicit_dot_matches_hidden=True,
+):
     s = xsh.expand_path(s)
     if sort_result is None:
         sort_result = xsh.env.get("GLOB_SORTED")
@@ -3092,6 +3111,7 @@ def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
             s,
             include_dotfiles=bool(include_dotfiles),
             recursive=True,
+            explicit_dot_matches_hidden=explicit_dot_matches_hidden,
         )
     else:
         if ignore_case:
@@ -3107,7 +3127,13 @@ def _iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
     return paths, s
 
 
-def iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
+def iglobpath(
+    s,
+    ignore_case=False,
+    sort_result=None,
+    include_dotfiles=None,
+    explicit_dot_matches_hidden=True,
+):
     """Simple wrapper around iglob that also expands home and env vars."""
     try:
         return _iglobpath(
@@ -3115,6 +3141,7 @@ def iglobpath(s, ignore_case=False, sort_result=None, include_dotfiles=None):
             ignore_case=ignore_case,
             sort_result=sort_result,
             include_dotfiles=include_dotfiles,
+            explicit_dot_matches_hidden=explicit_dot_matches_hidden,
         )[0]
     except IndexError:
         # something went wrong in the actual iglob() call
