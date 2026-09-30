@@ -30,7 +30,7 @@ The module groups its helpers roughly by topic:
   tables, :func:`print_color` / :func:`format_color`.
 * **Collections and functional helpers** — :class:`LazyObject`,
   :class:`LazyDict`, :class:`DefaultNotGivenType`, ``always_true``,
-  ``always_false``, ``all_permutations``, small functional shims.
+  ``always_false``, small functional shims.
 * **Platform and environment probes** — Windows/POSIX conditionals,
   locale detection, terminal-size queries, shell-level (``SHLVL``)
   adjustment.
@@ -71,8 +71,6 @@ from contextlib import contextmanager
 # adding imports from further xonsh modules is discouraged to avoid circular
 # dependencies
 from xonsh import __version__
-from xonsh.lib.itertools import all_permutations as all_permutations
-from xonsh.lib.itertools import get_portions as get_portions
 from xonsh.lib.lazyasd import LazyDict, LazyObject, lazyobject
 from xonsh.lib.string import endswith_newline as endswith_newline
 from xonsh.lib.string import unquote as unquote
