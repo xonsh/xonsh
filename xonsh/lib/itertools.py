@@ -1,4 +1,4 @@
-from itertools import filterfalse
+from itertools import filterfalse, islice, permutations
 
 
 def as_iterable(iterable_or_scalar):
@@ -60,3 +60,31 @@ def unique_everseen(iterable, key=None):
             if k not in seen:
                 seen.add(k)
                 yield element
+
+
+def get_portions(it, slices):
+    """Yield selected slices from an iterable."""
+    if isinstance(slices, slice):
+        slices = [slices]
+    if len(slices) == 1:
+        selected_slice = slices[0]
+        try:
+            yield from islice(
+                it,
+                selected_slice.start,
+                selected_slice.stop,
+                selected_slice.step,
+            )
+            return
+        except ValueError:
+            # ``islice`` does not support negative indexes or steps.
+            pass
+    it = list(it)
+    for selected_slice in slices:
+        yield from it[selected_slice]
+
+
+def all_permutations(iterable):
+    """Yield permutations of every possible non-zero length."""
+    for length in range(1, len(iterable) + 1):
+        yield from permutations(iterable, r=length)

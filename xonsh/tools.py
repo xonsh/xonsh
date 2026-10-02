@@ -30,7 +30,7 @@ The module groups its helpers roughly by topic:
   tables, :func:`print_color` / :func:`format_color`.
 * **Collections and functional helpers** — :class:`LazyObject`,
   :class:`LazyDict`, :class:`DefaultNotGivenType`, ``always_true``,
-  ``always_false``, ``all_permutations``, small functional shims.
+  ``always_false``, small functional shims.
 * **Platform and environment probes** — Windows/POSIX conditionals,
   locale detection, terminal-size queries, shell-level (``SHLVL``)
   adjustment.
@@ -1897,28 +1897,6 @@ def ensure_slice(x):
     return s
 
 
-def get_portions(it, slices):
-    """Yield from portions of an iterable.
-
-    Parameters
-    ----------
-    it : iterable
-    slices : a slice or a list of slice objects
-    """
-    if is_slice(slices):
-        slices = [slices]
-    if len(slices) == 1:
-        s = slices[0]
-        try:
-            yield from itertools.islice(it, s.start, s.stop, s.step)
-            return
-        except ValueError:  # islice failed
-            pass
-    it = list(it)
-    for s in slices:
-        yield from it[s]
-
-
 def is_slice_as_str(x):
     """
     Test if string x is a slice. If not a string return False.
@@ -2391,12 +2369,6 @@ def to_history_tuple(x):
 def history_tuple_to_str(x):
     """Converts a valid history tuple to a canonical string."""
     return "{} {}".format(*x)
-
-
-def all_permutations(iterable):
-    """Yeilds all permutations, not just those of a specified length"""
-    for r in range(1, len(iterable) + 1):
-        yield from itertools.permutations(iterable, r=r)
 
 
 def format_color(string, **kwargs):
