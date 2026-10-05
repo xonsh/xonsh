@@ -6,7 +6,7 @@ from collections.abc import Iterable
 import pytest
 
 from xonsh.environ import DELETE_VAR, Env, EnvPath, _DeleteVarSentinel
-from xonsh.tools import env_path_to_str
+from xonsh.tools import always_true, env_path_to_str
 
 
 def test_env_path_preserves_empty_from_str():
@@ -370,3 +370,28 @@ def test_callable_alias_can_mask_via_overlay(xession):
         assert "HOSTNAME" not in xession.env.detype()
     # Outside the alias scope the original value is intact.
     assert xession.env["HOSTNAME"] == "myhost"
+
+
+def test_get_stringified_none_detyper_falls_back_to_str():
+    """A registered detype of None falls back to str(value)."""
+    env = Env(NO_DETYPE={"a": 1})
+    env.register("NO_DETYPE", validate=always_true, convert=None, detype=None)
+    assert env.get_stringified("NO_DETYPE") == str({"a": 1})
+
+
+def test_get_stringified_detyper_returning_none_falls_back_to_str():
+    """A detyper that returns None falls back to str(value)."""
+    env = Env(RET_NONE=42)
+
+    def _ret_none(_val):
+        return None
+
+    env.register("RET_NONE", validate=always_true, convert=None, detype=_ret_none)
+    assert env.get_stringified("RET_NONE") == "42"
+
+
+def test_get_stringified_missing_key_returns_default():
+    """An unset key returns default, which is the empty string."""
+    env = Env()
+    assert env.get_stringified("NO_SUCH") == ""
+    assert env.get_stringified("NO_SUCH", None) is None

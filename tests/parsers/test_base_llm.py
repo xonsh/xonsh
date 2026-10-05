@@ -115,3 +115,27 @@ def test_python_mode_env_expr_stays_raw(xonsh_session):
     xonsh_session.execer.exec("$A = 2 + 2\n$B = ['x', 'y']\n")
     assert xonsh_session.execer.eval("${'A'}") == 4
     assert xonsh_session.execer.eval("${'B'}") == ["x", "y"]
+
+
+def test_redirect_int_env_expr_creates_file_not_fd(
+    xonsh_session, tmp_path, monkeypatch
+):
+    """``> ${'ONE'}`` with an int opens a file named ``1``, not file descriptor 1."""
+    monkeypatch.chdir(tmp_path)
+    xonsh_session.execer.exec("$ONE = 1\necho hi > ${'ONE'}\n")
+    assert (tmp_path / "1").read_text().replace("\r\n", "\n") == "hi\n"
+
+
+def test_tuple_env_expr_is_argument_not_redirect(xonsh_session, tmp_path, monkeypatch):
+    """A tuple value is one string argument and is not used as a redirect."""
+    monkeypatch.chdir(tmp_path)
+    seen = []
+
+    @unthreadable
+    def _echo(args):
+        seen.append(list(args))
+
+    xonsh_session.aliases["echo"] = _echo
+    xonsh_session.execer.exec("$R = ('>', 'f')\necho hi ${'R'}\n")
+    assert seen == [["hi", "('>', 'f')"]]
+    assert not (tmp_path / "f").exists()
