@@ -3813,8 +3813,13 @@ class BaseParser:
         p1 = p[1]
         lineno, col = p1.lineno, p1.lexpos
         xenv = load_attribute_chain("__xonsh__.env", lineno=lineno, col=col)
+        # Same detype/str conversion as $NAME (see Env.get_for_subproc).
         func = ast.Attribute(
-            value=xenv, attr="get", ctx=ast.Load(), lineno=lineno, col_offset=col
+            value=xenv,
+            attr="get_for_subproc",
+            ctx=ast.Load(),
+            lineno=lineno,
+            col_offset=col,
         )
         p0 = ast.Call(
             func=func,
