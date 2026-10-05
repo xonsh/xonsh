@@ -3010,10 +3010,34 @@ class Env(cabc.MutableMapping):
         except KeyError:
             return default
 
-    def get_stringified(self, key, default=None):
-        value = self.get(key, default)
-        detyper = self.get_detyper(key)
-        return detyper(value)
+    def get_stringified(self, key, default=""):
+        """Return ``key`` detyped the way bare ``$NAME`` is in subprocess mode.
+
+        An unset key returns ``default``. A missing detyper, or a detyper that
+        returns ``None``, falls back to ``str(value)``. Bare ``${expr}``
+        subprocess arguments and ``expandvars`` both use this.
+
+        Parameters
+        ----------
+        key : object
+            Environment variable name, usually a ``str``.
+        default : object, optional
+            Returned when ``key`` is not set. ``""`` by default.
+
+        Returns
+        -------
+        object
+            Detyped string, or ``default`` when the key is absent.
+        """
+        try:
+            val = self[key]
+        except KeyError:
+            return default
+        # Non-string keys are not registered names; pattern matching would
+        # raise. Fall back to str() for those.
+        detyper = self.get_detyper(key) if isinstance(key, str) else None
+        value = str(val) if detyper is None else detyper(val)
+        return str(val) if value is None else value
 
     def rawkeys(self):
         """An iterator that returns all environment keys in their original form.

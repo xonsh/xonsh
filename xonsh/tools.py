@@ -2851,11 +2851,8 @@ def expandvars(path):
         shift = 0
         for match in POSIX_ENVVAR_REGEX.finditer(path):
             name = match.group("envvar")
-            if name in env:
-                detyper = env.get_detyper(name)
-                val = env[name]
-                value = str(val) if detyper is None else detyper(val)
-                value = str(val) if value is None else value
+            value = env.get_stringified(name, None)
+            if value is not None:
                 start_pos, end_pos = match.span()
                 path_len_before_replace = len(path)
                 path = path[: start_pos + shift] + value + path[end_pos + shift :]
