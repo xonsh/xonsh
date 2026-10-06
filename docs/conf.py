@@ -296,6 +296,20 @@ latex_documents = [
 # latex_use_modindex = True
 
 # Autodocumentation Flags
+# Autodoc normally evaluates parameter defaults after importing a module.
+# Values derived from the build environment (paths, locale, etc.) would then
+# become part of the published signature. Keep their source expressions instead.
+# Example: swap(..., default=<object object>) becomes
+# swap(..., default=_DEFAULT_SENTINEL).
+autodoc_preserve_defaults = True
+
+# The duration extension is useful for reporting slow pages to the builder,
+# but its JSON file contains measured build times and varies on every run.
+# Keep the console report without installing these timings with the HTML.
+# Example: the generated JSON can contain "aliases": 0.044 in one build and
+# "aliases": 0.041 in another; neither value belongs in the published docs.
+duration_write_json = None
+
 autodoc_member_order = "groupwise"
 autoclass_content = "both"
 autosummary_generate = True
@@ -332,11 +346,19 @@ def _gather_groups(cls, env: Env, _seen=None):
         var = getattr(key, "pattern", key)
         title = "$" + var
         vd = env.get_docs(key)
+        # Callable defaults such as HOSTNAME/HOSTTYPE can fall back to repr(),
+        # which includes a process-specific memory address. Show their qualified
+        # name instead, but retain any explicitly supplied default documentation.
+        # Example: <function SystemSetting.<lambda> at 0x7f...> becomes
+        # SystemSetting.<lambda> in the HOSTNAME default description.
+        doc_default = vd.doc_default
+        if callable(vd.default) and doc_default == repr(vd.default):
+            doc_default = f"``{vd.default.__qualname__}``"
         info = dict(
             title=title,
             docstr=vd.doc,
             configurable=vd.is_configurable,
-            default=vd.doc_default,
+            default=doc_default,
             store_as_str=vd.can_store_as_str,
         )
         ordered_vars[key] = VarDoc(var, info)
