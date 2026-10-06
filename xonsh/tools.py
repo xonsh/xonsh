@@ -3319,6 +3319,20 @@ def qualified_name(obj) -> str:
     return cls.__name__
 
 
+def info_repr(obj, info=None) -> str:
+    """Return the repr of an object in the common xonsh form.
+
+    The qualified class name followed by a compact dict with the details
+    worth showing, e.g.
+    ``xonsh.aliases.FuncAlias({'name': 'cd', 'func': 'cd'})``.
+    Without details it is just ``xonsh.xonfig.XonfigAlias()``.
+    """
+    name = qualified_name(obj)
+    if not info:
+        return f"{name}()"
+    return f"{name}({info!r})"
+
+
 def to_repr_pretty_(inst, p, cycle):
     name = qualified_name(inst)
     with p.group(0, name + "(", ")"):

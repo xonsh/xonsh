@@ -47,6 +47,7 @@ from xonsh.tools import (
     get_logical_line,
     get_portions,
     iglobpath,
+    info_repr,
     is_balanced,
     is_bool,
     is_bool_or_int,
@@ -2329,3 +2330,19 @@ def test_print_exception_error(xession, capsys):
         cap.err,
         re.MULTILINE | re.DOTALL,
     ), f"\nAssert: {cap.err!r},\nexpected {match!r}"
+
+
+class _ReprDummy:
+    pass
+
+
+@pytest.mark.parametrize(
+    "info, exp",
+    [
+        (None, "_ReprDummy()"),
+        ({}, "_ReprDummy()"),
+        ({"name": "x"}, "_ReprDummy({'name': 'x'})"),
+    ],
+)
+def test_info_repr(info, exp):
+    assert info_repr(_ReprDummy(), info) == f"{_ReprDummy.__module__}.{exp}"

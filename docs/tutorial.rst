@@ -1755,7 +1755,7 @@ callable aliases, fetched via ``inspect.getsource``:
     Alias: ['ls', '-G']
 
     @ xonfig?
-    Alias: <xonsh.xonfig.XonfigAlias>
+    Alias: xonsh.xonfig.XonfigAlias()
     Descr: Manage xonsh configuration.
 
 Define a callable alias and ask for the super-help form:
@@ -1769,11 +1769,11 @@ Define a callable alias and ask for the super-help form:
           print("hello,", *args)
 
     @ greet?
-    Alias: FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
+    Alias: xonsh.aliases.FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
     Descr: Print a friendly greeting.
 
     @ greet??
-    Alias: FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
+    Alias: xonsh.aliases.FuncAlias({'name': 'greet', 'func': '_greet', 'return_what': 'result'})
     Descr: Print a friendly greeting.
     Source: /home/snail/.xonshrc:1
     Code:

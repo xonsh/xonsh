@@ -9,6 +9,8 @@ import pytest
 from xonsh.aliases import (
     Aliases,
     ExecAlias,
+    FuncAlias,
+    PartialEvalAlias,
     get_xxonsh_alias,
     run_alias_by_params,
 )
@@ -200,6 +202,23 @@ def test_dict_merging_assignment(xession, alias):
 
     assert "o" in alias
     assert alias["o"] == ales["o"]
+
+
+def test_alias_reprs():
+    def _myfunc(args):
+        pass
+
+    assert repr(FuncAlias("my", _myfunc)) == (
+        "xonsh.aliases.FuncAlias({'name': 'my', 'func': '_myfunc', "
+        "'return_what': 'result'})"
+    )
+    assert repr(ExecAlias("echo 1 && echo 2", filename="<exec-alias:e>")) == (
+        "xonsh.aliases.ExecAlias({'src': 'echo 1 && echo 2', "
+        "'filename': '<exec-alias:e>'})"
+    )
+    assert repr(PartialEvalAlias(_myfunc, acc_args=("-v",))) == (
+        "xonsh.aliases.PartialEvalAlias({'func': '_myfunc', 'acc_args': ('-v',)})"
+    )
 
 
 def test_exec_alias_args(xession):
