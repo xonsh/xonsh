@@ -277,3 +277,24 @@ def test_color_on_lscolors_change(tmpdir, xonsh_builtins_ls_colors, check_token)
     del lsc["di"]
 
     check_token(f"cd {test_dir}", [(Name.Builtin, "cd"), (Text, test_dir)])
+
+
+@pytest.mark.parametrize("code", ["cd = 2", "cd += 1", "cd //= 2", "  cd = 2"])
+def test_assignment_target_is_not_a_command(code, xsh):
+    tokens = list(XonshLexer().get_tokens(code))
+    assert (Name.Builtin, "cd") not in tokens
+    assert (Name, "cd") in tokens
+
+
+def test_comparison_keeps_command_highlight(xsh):
+    tokens = list(XonshLexer().get_tokens("cd == 2"))
+    assert (Name.Builtin, "cd") in tokens
+
+
+def test_variable_in_context_is_not_a_command(xession, xsh):
+    assert (Name.Builtin, "cd") in list(XonshLexer().get_tokens("cd"))
+
+    xession.ctx["cd"] = 2
+    assert (Name.Builtin, "cd") not in list(XonshLexer().get_tokens("cd"))
+    # With arguments it is still run as a command.
+    assert (Name.Builtin, "cd") in list(XonshLexer().get_tokens("cd /tmp"))
