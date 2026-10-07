@@ -47,7 +47,6 @@ from xonsh.tools import (
     get_logical_line,
     get_portions,
     iglobpath,
-    is_balanced,
     is_bool,
     is_bool_or_int,
     is_bool_or_none,
@@ -81,8 +80,6 @@ from xonsh.tools import (
     seq_to_upper_pathsep,
     set_to_pathsep,
     simple_random_choice,
-    subexpr_before_unbalanced,
-    subexpr_from_unbalanced,
     subproc_toks,
     swap_values,
     to_bool,
@@ -624,43 +621,6 @@ def test_replace_logical_line(src, idx, exp_line, exp_n, xession):
 def test_check_quotes(inp, exp):
     obs = check_quotes(inp)
     assert exp is obs
-
-
-@pytest.mark.parametrize("inp", ["f(1,10),x.y"])
-def test_is_balanced_parens(inp):
-    obs = is_balanced(inp, "(", ")")
-    assert obs
-
-
-@pytest.mark.parametrize("inp", ["f(x.", "f(1,x.f((1,10),x.y"])
-def test_is_not_balanced_parens(inp):
-    obs = is_balanced(inp, "(", ")")
-    assert not obs
-
-
-@pytest.mark.parametrize(
-    "inp, exp", [("f(x.", "x."), ("f(1,x.", "x."), ("f((1,10),x.y", "x.y")]
-)
-def test_subexpr_from_unbalanced_parens(inp, exp):
-    obs = subexpr_from_unbalanced(inp, "(", ")")
-    assert exp == obs
-
-
-@pytest.mark.parametrize(
-    "inp, exp",
-    [
-        ("f(x.", "f"),
-        ("f(1,x.", "f"),
-        ("f((1,10),x.y", "f"),
-        ("wakka().f((1,10),x.y", ".f"),
-        ("wakka(f((1,10),x.y", "f"),
-        ("wakka(jawakka().f((1,10),x.y", ".f"),
-        ("wakka(jawakka().f((1,10),x.y)", "wakka"),
-    ],
-)
-def test_subexpr_before_unbalanced_parens(inp, exp):
-    obs = subexpr_before_unbalanced(inp, "(", ")")
-    assert exp == obs
 
 
 @pytest.mark.parametrize(

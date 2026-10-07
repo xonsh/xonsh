@@ -20,7 +20,7 @@ The module groups its helpers roughly by topic:
   :func:`executables_in`, :func:`iglobpath`, cross-platform path
   normalisation helpers.
 * **String, token and AST helpers** — quoting/escaping,
-  :func:`subexpr_from_unbalanced`, :func:`find_next_break`, regex
+  :func:`find_next_break`, regex
   constants for string prefixes and history tuples, the
   :class:`FlexibleFormatter` for prompt/format-string rendering.
 * **Subprocess and signal helpers** — :func:`on_main_thread`,
@@ -985,45 +985,6 @@ def replace_logical_line(lines, logical, idx, n):
             lines[i] = logical[:b] + linecont
             logical = logical[b:]
     lines[idx + n - 1] = logical
-
-
-def is_balanced(expr, ltok, rtok):
-    """Determines whether an expression has unbalanced opening and closing tokens."""
-    lcnt = expr.count(ltok)
-    if lcnt == 0:
-        return True
-    rcnt = expr.count(rtok)
-    if lcnt == rcnt:
-        return True
-    else:
-        return False
-
-
-def subexpr_from_unbalanced(expr, ltok, rtok):
-    """Attempts to pull out a valid subexpression for unbalanced grouping,
-    based on opening tokens, eg. '(', and closing tokens, eg. ')'.  This
-    does not do full tokenization, but should be good enough for tab
-    completion.
-    """
-    if is_balanced(expr, ltok, rtok):
-        return expr
-    subexpr = expr.rsplit(ltok, 1)[-1]
-    subexpr = subexpr.rsplit(",", 1)[-1]
-    subexpr = subexpr.rsplit(":", 1)[-1]
-    return subexpr
-
-
-def subexpr_before_unbalanced(expr, ltok, rtok):
-    """Obtains the expression prior to last unbalanced left token."""
-    subexpr, _, post = expr.rpartition(ltok)
-    nrtoks_in_post = post.count(rtok)
-    while nrtoks_in_post != 0:
-        for _ in range(nrtoks_in_post):
-            subexpr, _, post = subexpr.rpartition(ltok)
-        nrtoks_in_post = post.count(rtok)
-    _, _, subexpr = subexpr.rpartition(rtok)
-    _, _, subexpr = subexpr.rpartition(ltok)
-    return subexpr
 
 
 @lazyobject

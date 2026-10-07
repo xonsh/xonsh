@@ -7,13 +7,17 @@ import re
 import warnings
 
 import xonsh.lib.lazyasd as xl
-import xonsh.tools as xt
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import (
     CompleterResult,
     RichCompletion,
     contextual_completer,
     get_filter_function,
+)
+from xonsh.lib.string import (
+    is_balanced,
+    subexpr_before_unbalanced,
+    subexpr_from_unbalanced,
 )
 from xonsh.parsers.completion_context import CompletionContext, PythonContext
 
@@ -311,9 +315,9 @@ def attr_complete(prefix, ctx, filter_func):
     if m is None:
         return attrs
     expr, attr = m.group(1, 3)
-    expr = xt.subexpr_from_unbalanced(expr, "(", ")")
-    expr = xt.subexpr_from_unbalanced(expr, "[", "]")
-    expr = xt.subexpr_from_unbalanced(expr, "{", "}")
+    expr = subexpr_from_unbalanced(expr, "(", ")")
+    expr = subexpr_from_unbalanced(expr, "[", "]")
+    expr = subexpr_from_unbalanced(expr, "{", "}")
     if expr.startswith("@."):
         # @.sub -> __xonsh__.interface.sub
         expr = "__xonsh__.interface" + expr[1:]
@@ -381,9 +385,9 @@ def python_signature_complete(prefix, line, end, ctx, filter_func):
     argument and keyword argument names.
     """
     front = line[:end]
-    if xt.is_balanced(front, "(", ")"):
+    if is_balanced(front, "(", ")"):
         return set()
-    funcname = xt.subexpr_before_unbalanced(front, "(", ")")
+    funcname = subexpr_before_unbalanced(front, "(", ")")
     val, _ctx = _safe_eval(funcname, ctx)
     if val is None:
         return set()
