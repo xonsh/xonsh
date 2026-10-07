@@ -92,6 +92,13 @@ class TestDotglob:
         self.xession.env["DOTGLOB"] = False
         assert ".hidden" not in self._glob()
 
+    def test_glob_explicit_dot_wildcard_respects_dotglob(self):
+        """g-glob of .* must not return hidden names when DOTGLOB is False."""
+        self.xession.env["DOTGLOB"] = False
+        assert ".hidden" not in self._basenames(globsearch(".*"))
+        self.xession.env["DOTGLOB"] = True
+        assert ".hidden" in self._basenames(globsearch(".*"))
+
     def test_glob_includes_dotfiles_when_enabled(self):
         self.xession.env["DOTGLOB"] = True
         assert ".hidden" in self._glob()
