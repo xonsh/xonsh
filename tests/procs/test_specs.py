@@ -534,7 +534,10 @@ def test_spec_decorator_alias_output_format(xession):
 
 def test_spec_decorator_alias_repr():
     named = SpecAttrDecoratorAlias({"raise_subproc_error": True}, name="@error_raise")
-    assert repr(named) == "xonsh.procs.specs.SpecAttrDecoratorAlias('@error_raise')"
+    assert (
+        repr(named)
+        == "xonsh.procs.specs.SpecAttrDecoratorAlias({'name': '@error_raise'})"
+    )
 
     unnamed = SpecAttrDecoratorAlias({"raise_subproc_error": True})
     assert repr(unnamed) == "xonsh.procs.specs.SpecAttrDecoratorAlias()"
