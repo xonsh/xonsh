@@ -37,3 +37,23 @@ def test_ensure_newline_skipped_inside_ssh(monkeypatch, capsys, var):
     # No DSR query and no newline written to stdout — the function
     # short-circuited before reaching the ``sys.stdout.write("\\033[6n")``.
     assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize(
+    "completekey, expected", [("tab", []), ("Control-x", ["Control-x: complete"])]
+)
+def test_cmdloop_preserves_readline_bindings(
+    readline_shell, monkeypatch, mocker, completekey, expected
+):
+    """Keep default TAB bindings while still registering explicit completion keys."""
+    bindings = []
+    readline = mocker.Mock()
+    readline.parse_and_bind.side_effect = bindings.append
+    monkeypatch.setitem(sys.modules, "readline", readline)
+    readline_shell.completekey = completekey
+    mocker.patch.object(readline_shell, "singleline", side_effect=SystemExit)
+
+    with pytest.raises(SystemExit):
+        readline_shell._cmdloop()
+
+    assert bindings == expected

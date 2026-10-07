@@ -675,7 +675,9 @@ class ReadlineShell(BaseShell, cmd.Cmd):
             if self.use_rawinput and self.completekey:
                 self.old_completer = readline.get_completer()
                 readline.set_completer(self.complete)
-                readline.parse_and_bind(self.completekey + ": complete")
+                # setup_readline() already configured TAB, including user bindings.
+                if self.completekey != "tab":
+                    readline.parse_and_bind(self.completekey + ": complete")
             have_readline = True
         except ImportError:
             have_readline = False

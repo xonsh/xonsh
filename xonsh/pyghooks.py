@@ -1969,6 +1969,31 @@ def subproc_arg_callback(_, match):
 
 COMMAND_TOKEN_RE = r'[^=\s\[\]{}()$"\'`<&|;!]+(?=\s|$|\)|\]|\}|!)'
 
+# A plain or augmented Python assignment operator, e.g. ``=``, ``+=``, ``//=``.
+PY_ASSIGN_OP_RE = LazyObject(
+    lambda: re.compile(r"[ \t]*(?:\*\*|//|>>|<<|[-+*/%@&|^])?=(?!=)"),
+    globals(),
+    "PY_ASSIGN_OP_RE",
+)
+
+
+def _is_python_name(cmd, rest):
+    """Check whether the leading ``cmd`` token is used as a Python name.
+
+    This is the case when it is the target of an assignment
+    (``ls = 1``, ``ls += 1``) or when it is alone on the line and is
+    defined in the session context, so it is evaluated as Python
+    instead of being run as a command.
+    """
+    if not cmd.isidentifier():
+        return False
+    if PY_ASSIGN_OP_RE.match(rest):
+        return True
+    if rest.strip():
+        return False
+    ctx = getattr(XSH, "ctx", None) or {}
+    return cmd in ctx
+
 
 class XonshLexer(Python3Lexer):
     """Xonsh console lexer for pygments."""
@@ -2175,7 +2200,7 @@ class XonshLexer(Python3Lexer):
         start = 0
         state = ("root",)
         m = re.match(rf"(\s*)({COMMAND_TOKEN_RE})", text)
-        if m is not None:
+        if m is not None and not _is_python_name(m.group(2), text[m.end(2) :]):
             yield m.start(1), Whitespace, m.group(1)
             start = m.end(1)
             cmd = m.group(2)
