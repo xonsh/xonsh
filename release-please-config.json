@@ -4,9 +4,10 @@
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "include-v-in-tag": false,
-  "include-commit-authors": true,
   "release-search-depth": 10,
   "commit-search-depth": 2000,
+  "include-commit-authors": true,
+  "github-link-authors": true,
   "packages": {
     ".": {
       "changelog-path": "CHANGELOG.md",
@@ -14,6 +15,8 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "include-v-in-tag": false,
+      "include-commit-authors": true,
+      "github-link-authors": true,
       "draft": false,
       "prerelease": false
     }
