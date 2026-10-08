@@ -21,6 +21,34 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
       - uses: googleapis/release-please-action@v5
+        id: release-please
         with:
           token: ${{ steps.app-token.outputs.token }}
-        # todo: add block to run rever's Authors and appimage activity on release
+
+      # Step 2: Checkout code after release-please creates PR branch
+      - uses: actions/checkout@v4
+        if: ${{ steps.release-please.outputs.pr }}
+        with:
+          ref: release-please--branches
+          sparse-checkout: |
+            CHANGELOG.md
+            .github/scripts
+          sparse-checkout-cone-mode: false
+
+      # Step 3: Add author attribution to CHANGELOG.md
+      - name: Add changelog author attribution
+        if: ${{ steps.release-please.outputs.pr }}
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          python .github/scripts/add-changelog-authors.py
+
+      # Step 4: Commit and push changes
+      - name: Commit author attribution
+        if: ${{ steps.release-please.outputs.pr }}
+        run: |
+          git config user.name "github-actions[bot]" || true
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com" || true
+          git add CHANGELOG.md
+          git diff --cached --quiet || git commit -m "chore: add author attribution to changelog"
+          git push origin release-please--branches || true
