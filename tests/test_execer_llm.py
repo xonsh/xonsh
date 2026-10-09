@@ -36,6 +36,7 @@ repeatedly breaks the logical line.
 """
 
 import ast as pyast
+import threading
 
 import pytest
 
@@ -342,3 +343,29 @@ def test_multiline_fstring_in_pyeval(src, xession):
     tree = execer.parse(src, ctx=ctx, mode="exec")
     assert tree is not None
     assert tree.body, f"expected non-empty AST for {src!r}"
+
+
+def test_parse_from_multiple_threads(xession):
+    """The session execer is shared by every thread (e.g. callable aliases
+    in a pipeline calling ``execx``), so concurrent ``parse`` calls must
+    not corrupt each other's parser or transformer state (GH-6582).
+    """
+    execer = xession.execer
+    ctx = {"__xonsh__": object()}
+    src = "".join(f"echo a{i} b\nls -l\nx = {i}\n" for i in range(10))
+    expected = pyast.dump(execer.parse(src, ctx=ctx))
+    errors = []
+
+    def work():
+        for _ in range(5):
+            try:
+                assert pyast.dump(execer.parse(src, ctx=ctx)) == expected
+            except Exception as e:
+                errors.append(e)
+
+    threads = [threading.Thread(target=work) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert not errors
