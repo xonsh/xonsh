@@ -27,16 +27,18 @@ jobs:
     name: Xonsh docs to gh-pages
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
         with:
           enable-cache: true
       - run: uv pip install --system -e '.[doc]'
       - name: restore timestamps
-        uses: chetan/git-restore-mtime-action@v2
+        uses: chetan/git-restore-mtime-action@d186aca54f8760da4dec55313195e51ed3ebb0b3 # v2.3
       - name: Cache build and autosummary
         uses: actions/cache@v6
         with:
@@ -49,16 +51,17 @@ jobs:
             docs-${{ runner.os }}-
       - name: Build Docs
         run: cd docs && make html
-      - uses: tibdex/github-app-token@v2
+      - uses: actions/create-github-app-token@v3
         if: ${{ github.event_name != 'pull_request' }}
         id: generate-token
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
-          repository: xonsh/xonsh-docs
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: xonsh
+          repositories: xonsh-docs
       - name: Deploy to dev if not tagged
         if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/')
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           personal_token: ${{ steps.generate-token.outputs.token }}
           external_repository: xonsh/xonsh-docs
@@ -66,7 +69,7 @@ jobs:
           destination_dir: dev # latest as in main branch
       - name: Deploy to stable if tagged
         if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/')
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           personal_token: ${{ steps.generate-token.outputs.token }}
           external_repository: xonsh/xonsh-docs

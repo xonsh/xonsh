@@ -21,6 +21,8 @@ jobs:
           - "3.14"
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: setup-python
         uses: actions/setup-python@v7
         with:
@@ -35,7 +37,7 @@ jobs:
       - name: build bdist(wheel) to dist/
         run: python -m build . --wheel
       - name: publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
 
   build-appimage:
     if: github.repository_owner == 'xonsh'
@@ -44,6 +46,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: setup-python
         uses: actions/setup-python@v7
         with:

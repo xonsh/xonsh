@@ -47,6 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: setup-python
         uses: actions/setup-python@v7
@@ -93,6 +95,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: setup-python
         uses: actions/setup-python@v7
@@ -173,6 +177,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: setup-python
         uses: actions/setup-python@v7
@@ -247,9 +253,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           repository: xonsh/xonsh-winget
           path: winget
 
@@ -299,9 +308,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           repository: xonsh/xonsh-winget
           path: winget
 
@@ -356,9 +368,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           repository: xonsh/xonsh-flatpak
           path: flatpak-build
 
