@@ -10,7 +10,6 @@ import re
 import pytest
 
 from tests.xintegration.conftest import run_xonsh
-from xonsh.platform import ON_WINDOWS
 from xonsh.pytest.tools import skip_if_on_windows
 
 
@@ -94,10 +93,24 @@ def test_callable_alias_no_bad_file_descriptor(test_code):
     assert "Exception" not in out
 
 
-test_code_fd_leaking = [
-    """
+# Number of ``a | b`` pipe calls made by ``test_code_fd_leaking``.  A few
+# warm-up calls first, because xonsh opens some descriptors lazily and the
+# baseline has to be taken once the shell reached a steady state.
+FD_LEAKING_WARMUP_CALLS = 11
+FD_LEAKING_CALLS = 189
+
+_code_fd_leaking = """
 $XONSH_SHOW_TRACEBACK = True
+import os
 import sys
+
+def _open_fds():
+    # Number of open file descriptors, or None on platforms that expose no
+    # descriptor directory (Windows), where the check is skipped.
+    for _p in ("/proc/self/fd", "/dev/fd"):
+        if os.path.isdir(_p):
+            return len(os.listdir(_p))
+    return None
 
 @aliases.register
 def _a(args, stdin, stdout, stderr):
@@ -154,25 +167,25 @@ def _b(args, stdin, stdout, stderr):
 
     echo 3 && echo 4
 
-for i in range(111):
+for i in range(WARMUP_CALLS):
     $(a | b)
 
-"""
-    + (
-        """
-for i in range(10):
-    for j in range(10):
-        $(a | b)
-"""
-        if ON_WINDOWS
-        else """
-# Empirically, in case of a leak, the output
-# drops out at ~600-1000 function calls.
-for i in range(10):
-    for j in range(69):
-        $(a | b)
+_fds_before = _open_fds()
 
+for i in range(CALLS):
+    $(a | b)
+
+_fds_after = _open_fds()
+
+if _fds_before is not None and _fds_after > _fds_before:
+    # The marker is deliberately free of digits: the test asserts that no
+    # digit leaks from alias `a` into the output.
+    print("FDLEAK", file=sys.stderr)
 """
+
+test_code_fd_leaking = [
+    _code_fd_leaking.replace("WARMUP_CALLS", str(FD_LEAKING_WARMUP_CALLS)).replace(
+        "CALLS", str(FD_LEAKING_CALLS)
     )
 ]
 
@@ -181,7 +194,8 @@ for i in range(10):
 @pytest.mark.timeout(600)
 def test_callable_alias_fd_leaking(test_code):
     """Testing callable alias on leaks and errors in pipe.
-    1. No fd leaking: no output interrupting during 1000+ pipe calls.
+    1. No fd leaking: the number of open descriptors is stable across
+       hundreds of pipe calls, and the output is never interrupted.
     2. No I/O errors or "Bad file descriptor" errors.
     3. No stdout leaking from alias `a`.
     See also #6159.
@@ -194,7 +208,9 @@ def test_callable_alias_fd_leaking(test_code):
     assert "Error" not in out  # No I/O errors or "Bad file descriptor" errors.
     assert "Exception" not in out  # No I/O errors or "Bad file descriptor" errors.
     assert "LEAKING" not in out  # No captured stdout/stderr leaking.
-    assert out.count("3\\n4\\n") == 211 if ON_WINDOWS else 801  # No fd leaking.
+    assert "FDLEAK" not in out  # No fd leaking.
+    # No output interrupting.
+    assert out.count("3\\n4\\n") == FD_LEAKING_WARMUP_CALLS + FD_LEAKING_CALLS
     assert "1" not in out  # No stdout leaking from alias `a`.
     assert "2" not in out  # No stdout leaking from alias `a`.
 
