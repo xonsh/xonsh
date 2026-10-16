@@ -1091,6 +1091,12 @@ class SystemSetting(Xettings):
         type_str="str",
     )
 
+    # Autodoc would display this Var tuple with the directory captured at import
+    # time. The environment-variable reference already documents os.getcwd();
+    # suppress the API attribute value using Sphinx's built-in metadata.
+    # Example: PWD = (<function is_string>, ..., '/tmp/build/docs', ...)
+    # becomes just PWD; the environment-variable reference remains unchanged.
+    #: :meta hide-value:
     PWD = Var.with_default(
         _get_cwd() or ".",
         "Current working directory.",

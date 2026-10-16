@@ -380,7 +380,8 @@ class CompletionContextParser:
         self.error = None
         self.debug = debug
         self.lexer = Lexer(tolerant=True, pymode=False)
-        self.tokens = tuple(self.used_tokens | self.artificial_tokens)
+        # sorted: set order depends on the hash seed and leaks into the tables
+        self.tokens = tuple(sorted(self.used_tokens | self.artificial_tokens))
 
         yacc_kwargs = dict(
             module=self,
@@ -604,7 +605,7 @@ class CompletionContextParser:
         )
 
     @with_docstr(
-        f"""commands : {RULES_SEP.join(f"commands {kwd} command" for kwd in multi_tokens)}"""
+        f"""commands : {RULES_SEP.join(f"commands {kwd} command" for kwd in sorted(multi_tokens))}"""
     )
     def p_multiple_commands_many(self, p):
         # commands KWD command
@@ -721,7 +722,7 @@ class CompletionContextParser:
         p[0] = self.sub_expression_arg(p[1])
 
     @with_docstr(
-        f"""arg : {RULES_SEP.join({"ANY"} | used_tokens - multi_tokens - r_parens)}"""
+        f"""arg : {RULES_SEP.join(sorted({"ANY"} | used_tokens - multi_tokens - r_parens))}"""
     )
     def p_any_token_arg(self, p):
         raw_arg: str = p[1]
