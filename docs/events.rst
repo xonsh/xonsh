@@ -60,7 +60,7 @@ intercept an ``ls`` spec, we could write:
 ..........................................................
 This event fires whenever any command has its ``SubprocSpec.run()``
 method called.  This is fired after to the run call has executed
-everything except returning. This recieves the ``SubprocSpec`` object as
+everything except returning. This receives the ``SubprocSpec`` object as
 ``spec`` that triggered the event, allowing the handler to modify the spec
 if needed. Note that because of the way process pipelines and specs work
 in xonsh, the command will have started running, but won't necessarily have
@@ -80,7 +80,7 @@ we could write:
 ..........................................................
 This event fires whenever a command with a give name (``<cmd-name>``)
 has its ``SubprocSpec.run()`` method called.  This is fired
-after to the run call has executed everything except returning. This recieves the
+after to the run call has executed everything except returning. This receives the
 ``SubprocSpec`` object as ``spec`` that triggered the event, allowing
 the handler to modify the spec if needed. Note that because of the
 way process pipelines and specs work in xonsh, the command will have
