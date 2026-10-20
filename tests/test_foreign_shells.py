@@ -5,7 +5,12 @@ import subprocess
 
 import pytest  # noqa F401
 
-from xonsh.foreign_shells import foreign_shell_data, parse_aliases, parse_env
+from xonsh.foreign_shells import (
+    ForeignShellFunctionAlias,
+    foreign_shell_data,
+    parse_aliases,
+    parse_env,
+)
 from xonsh.pytest.tools import skip_if_on_unix, skip_if_on_windows
 
 
@@ -179,3 +184,11 @@ def test_foreign_shell_alias_args_are_escaped(xession):
     # If injection happened, "INJECTED" would appear in output
     if out is not None:
         assert b"INJECTED" not in (out if isinstance(out, bytes) else b"")
+
+
+def test_foreign_shell_alias_repr():
+    alias = ForeignShellFunctionAlias(funcname="myfunc", shell="bash", sourcer="source")
+    assert repr(alias) == (
+        "xonsh.foreign_shells.ForeignShellFunctionAlias("
+        "{'extra_args': (), 'funcname': 'myfunc', 'shell': 'bash'})"
+    )

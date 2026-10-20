@@ -378,10 +378,7 @@ class DecoratorAlias:
     name = ""
 
     def __repr__(self):
-        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        if self.name:
-            return f"{cls}({self.name!r})"
-        return f"{cls}()"
+        return xt.info_repr(self, {"name": self.name} if self.name else None)
 
     def __call__(
         self,

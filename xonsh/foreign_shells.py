@@ -14,7 +14,7 @@ import warnings
 from xonsh.built_ins import XSH
 from xonsh.lib.lazyasd import lazyobject
 from xonsh.platform import ON_CYGWIN, ON_MSYS, ON_WINDOWS
-from xonsh.tools import ensure_string, to_bool
+from xonsh.tools import ensure_string, info_repr, to_bool
 
 COMMAND = """{seterrprevcmd}
 {prevcmd}
@@ -603,12 +603,7 @@ class ForeignShellBaseAlias:
         return out
 
     def __repr__(self):
-        return (
-            self.__class__.__name__
-            + "("
-            + ", ".join([f"{k}={v!r}" for k, v in sorted(self._input_kwargs().items())])
-            + ")"
-        )
+        return info_repr(self, dict(sorted(self._input_kwargs().items())))
 
     @staticmethod
     def _is_streaming(args):
