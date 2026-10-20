@@ -892,7 +892,40 @@ class CommandPipeline:
         spec = self.spec
         rtn = self.returncode
 
-        if rtn is None or rtn == 0:
+        if rtn == 0:
+            if (
+                not XSH.env.get("XONSH_SUBPROC_CMD_RAISE_ERROR")
+                or self.captured not in (False, "hiddenobject")
+                or spec.background
+                or self.suspended
+                or any(getattr(stage, "in_boolop", False) for stage in self.specs)
+            ):
+                return
+            for stage, proc in zip(self.specs[:-1], self.procs[:-1], strict=False):
+                status = getattr(proc, "returncode", None)
+                if status is None or status == 0:
+                    continue
+                policy = stage.raise_subproc_error
+                if callable(policy):
+                    policy = policy(stage, self)
+                if policy is False:
+                    continue
+                # A successful early consumer can intentionally close its pipe.
+                if (
+                    policy is not True
+                    and hasattr(signal, "SIGPIPE")
+                    and status == -signal.SIGPIPE
+                ):
+                    continue
+                try:
+                    raise subprocess.CalledProcessError(
+                        status, stage.args, output=self.output
+                    )
+                finally:
+                    self._return_terminal()
+            return
+
+        if rtn is None:
             return
 
         raise_subproc_error = spec.raise_subproc_error
