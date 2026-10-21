@@ -324,7 +324,7 @@ def test_mixed_candidates_keep_individual_insertion_lengths(
 @pytest.mark.parametrize(
     "line,cursor,length,inserted",
     [
-        ("somecmd ./le", 12, 4, "somecmd ./lest.txt "),
+        ("somecmd ./le", 12, 4, f"somecmd .{os.sep}lest.txt "),
         ('somecmd "le', 11, 3, 'somecmd "lest.txt" '),
         ('somecmd "le"', 12, 4, 'somecmd "lest.txt" '),
         ('somecmd "le"', 11, 3, 'somecmd "lest.txt"'),
