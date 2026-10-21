@@ -92,6 +92,7 @@ redirects = {
     "prompt_toolkit": "prompt.html",
     "tryitnow": "contents.html",
     "customization": "prompt.html",
+    "intro": "contents.html",
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -135,6 +136,7 @@ release = XONSH_VERSION
 
 # List of documents that shouldn't be included in the build.
 exclude_patterns = [
+    "intro.rst",  # included into contents.rst, a page of its own has no title
     "lib/blank.rst",
     "_build",
     "_static",
@@ -180,6 +182,35 @@ html_baseurl = "https://xon.sh/"
 # Pages are served at the site root (https://xon.sh/<page>.html), not under
 # a language/version prefix, so drop sphinx_sitemap's default {lang}/{version}/.
 sitemap_url_scheme = "{link}"
+# Keep out of sitemap.xml the URLs the pages themselves disown: the search page
+# is noindex, and the landing page's canonical URL is https://xon.sh/ (listed by
+# sitemap_add_site_root below), not index.html.
+sitemap_excludes = ["search.html", "index.html"]
+
+# SEO tags of the doc pages, rendered by _templates/page.html (the landing page
+# has its own in _templates/index.html). A page replaces the description with
+# a ``:description:`` field at the very top of its source.
+html_context = {
+    # Appended to the <title> of every doc page, after "<page> - <html_title>".
+    "seo_title_suffix": (
+        "Python-powered shell for Linux, macOS, Windows, Android. "
+        "Alternative to PowerShell, cmd, Fish, Nushell, Zsh, Bash"
+    ),
+    "seo_description": (
+        "Xonsh is a Python-powered, AI-friendly shell and an alternative to "
+        "PowerShell, Fish, and Nushell. It runs on Linux, macOS, Windows, BSD, "
+        "Android, Raspberry Pi, Nix, and Jupyter."
+    ),
+    "seo_keywords": (
+        "command shell, python shell, terminal, console, linux, macos, windows, "
+        "nix, nixos, android, raspberry pi, powershell alternative, "
+        "bash alternative, zsh alternative, fish alternative, "
+        "nushell alternative, secops tools, devops tools, hacking tools, "
+        "ai, llm, data science"
+    ),
+    "seo_image": f"{html_baseurl}_static/landing2/images/xonsh_landing_preview.png",
+    "seo_twitter": "@xonsh_shell",
+}
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
@@ -393,6 +424,23 @@ def make_events():
 make_events()
 
 
+def sitemap_add_site_root(app: Sphinx, exception):
+    """List the landing page in sitemap.xml under its canonical URL, the site root.
+
+    sphinx_sitemap knows the page only as index.html (left out by
+    ``sitemap_excludes``), so append the root to the file it has written.
+    """
+    path = os.path.join(app.outdir, app.config.sitemap_filename)
+    if exception or not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        sitemap = f.read()
+    url = f"<url><loc>{app.config.html_baseurl}</loc></url>"
+    if url not in sitemap:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(sitemap.replace("</urlset>", url + "</urlset>"))
+
+
 def setup(app: Sphinx):
     from xonsh.pyghooks import XonshConsoleLexer, XonshLexer
 
@@ -404,6 +452,8 @@ def setup(app: Sphinx):
 
     app.add_lexer("xonshcon", XonshConsoleLexer)
     app.add_css_file("custom.css")
+    # After sphinx_sitemap (default priority 500) has written sitemap.xml.
+    app.connect("build-finished", sitemap_add_site_root, priority=900)
 
 # To avoid having red highlighting in python/xonshcon blocks.
 suppress_warnings = [

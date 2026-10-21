@@ -1,3 +1,6 @@
+:description: Xonsh on Linux, macOS, Windows, and Android: one Xonsh RC for every platform,
+    platform flags, and tips for terminals, locales, coreutils, and tab completion.
+
 Cross-platform
 ==============
 

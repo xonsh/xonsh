@@ -1,8 +1,15 @@
 {#-
-    Injects per-page JSON-LD (TechArticle + BreadcrumbList) into the <head>
-    of every doc page rendered by Furo. The landing page at `/` uses a
-    separate standalone template (``_templates/index.html`` via
-    ``html_additional_pages``) and is unaffected.
+    Injects SEO tags (title suffix, description, keywords, Open Graph and
+    per-page JSON-LD TechArticle + BreadcrumbList) into the <head> of every
+    doc page rendered by Furo. The landing page at `/` uses a separate
+    standalone template (``_templates/index.html`` via
+    ``html_additional_pages``) and is unaffected. The search and index pages
+    have no page title: they set their own short <title> and get neither
+    og:title nor JSON-LD.
+
+    The texts and the preview image come from ``html_context`` in conf.py.
+    A page replaces the default description with a ``:description:`` field
+    at the very top of its source (file-wide metadata, ``meta`` here).
 
     `pageurl` is populated by Sphinx only when `html_baseurl` is set in
     conf.py — the ``{% if pageurl %}`` guard keeps dev builds without a
@@ -11,9 +18,38 @@
     into the same semantic graph.
 -#}
 {% extends "!page.html" %}
+{#- Furo's title (base.html) with the tagline appended -#}
+{% block htmltitle %}
+  {%- if not docstitle %}
+  <title>{{ title|striptags|e }} - {{ seo_title_suffix|e }}</title>
+  {%- elif pagename == master_doc %}
+  <title>{{ docstitle|striptags|e }} - {{ seo_title_suffix|e }}</title>
+  {%- else %}
+  <title>{{ title|striptags|e }} - {{ docstitle|striptags|e }} - {{ seo_title_suffix|e }}</title>
+  {%- endif %}
+{% endblock %}
+{% block site_meta %}
+  {{ super() }}
+  {#- striptags joins the lines of a wrapped ``:description:`` field -#}
+  {%- set description = (meta.description if meta and meta.description else seo_description)|striptags %}
+  <meta name="description" content="{{ description|e }}">
+  <meta name="keywords" content="{{ seo_keywords|e }}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Xonsh">
+  {%- if title %}
+  <meta property="og:title" content="{{ title|striptags|e }}">
+  {%- endif %}
+  <meta property="og:description" content="{{ description|e }}">
+  {%- if pageurl %}
+  <meta property="og:url" content="{{ pageurl|e }}">
+  {%- endif %}
+  <meta property="og:image" content="{{ seo_image|e }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="{{ seo_twitter|e }}">
+{% endblock %}
 {% block extrahead %}
   {{ super() }}
-  {%- if pageurl %}
+  {%- if pageurl and title %}
   <script type="application/ld+json">{
     "@context": "https://schema.org",
     "@graph": [
