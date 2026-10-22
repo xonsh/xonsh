@@ -1,0 +1,191 @@
+name: PR coverage comment
+
+on:
+  workflow_run:
+    workflows: [ci-test]
+    types: [completed]
+
+permissions: {}
+
+concurrency:
+  group: pr-coverage-comment-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Validate coverage source
+        id: validate
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const repository = `${owner}/${repo}`;
+            const event = context.payload.workflow_run;
+            const fail = message => { throw new Error(message); };
+            const positive = value => Number.isSafeInteger(value) && value > 0;
+            if (!event || !positive(event.id) || !positive(event.run_attempt)) fail('Invalid triggering run');
+            const {data: expected} = await github.rest.actions.getWorkflow({owner, repo, workflow_id: 'test.yml'});
+            const {data: run} = await github.rest.actions.getWorkflowRun({owner, repo, run_id: event.id});
+            if (expected.name !== 'ci-test' || expected.path !== '.github/workflows/test.yml' ||
+                !positive(expected.id) || run.workflow_id !== expected.id || run.path !== expected.path ||
+                event.workflow_id !== expected.id || event.path !== expected.path || event.name !== expected.name ||
+                run.name !== expected.name || run.id !== event.id || run.run_attempt !== event.run_attempt ||
+                run.event !== 'pull_request' || run.status !== 'completed' || run.conclusion !== 'success' ||
+                event.event !== run.event || event.status !== run.status || event.conclusion !== run.conclusion ||
+                run.repository?.full_name !== repository || !positive(run.repository?.id) ||
+                context.payload.repository?.id !== run.repository.id || event.repository?.id !== run.repository.id ||
+                event.repository?.full_name !== repository ||
+                !/^[a-f0-9]{40}$/.test(run.head_sha || '') || run.head_sha !== event.head_sha ||
+                typeof run.head_branch !== 'string' || !run.head_branch || run.head_branch !== event.head_branch ||
+                !positive(run.head_repository?.id) || !run.head_repository?.owner?.login ||
+                run.head_repository.full_name !== `${run.head_repository.owner.login}/${run.head_repository.name}` ||
+                event.head_repository?.id !== run.head_repository.id ||
+                event.head_repository?.full_name !== run.head_repository.full_name) fail('Untrusted source run');
+            const started = Date.parse(run.run_started_at);
+            const ended = Date.parse(run.updated_at);
+            if (!Number.isFinite(started) || !Number.isFinite(ended) || ended < started) fail('Invalid attempt time');
+            const checkPR = pr => {
+              if (!positive(pr.number) || pr.state !== 'open' || pr.base?.ref !== 'main' ||
+                  pr.base?.repo?.id !== run.repository.id || pr.base?.repo?.full_name !== repository ||
+                  pr.head?.repo?.id !== run.head_repository.id ||
+                  pr.head?.repo?.full_name !== run.head_repository.full_name ||
+                  pr.head?.repo?.owner?.login !== run.head_repository.owner.login ||
+                  pr.head?.ref !== run.head_branch || pr.head?.sha !== run.head_sha) fail('PR changed or does not match source');
+            };
+            // Fork runs can have no pull_requests metadata. Resolve through the branch API.
+            const prs = await github.paginate(github.rest.pulls.list, {
+              owner, repo, state: 'open', base: 'main',
+              head: `${run.head_repository.owner.login}:${run.head_branch}`, per_page: 100
+            });
+            if (prs.length !== 1) fail('Missing or ambiguous open PR');
+            const {data: pr} = await github.rest.pulls.get({owner, repo, pull_number: prs[0].number});
+            checkPR(pr);
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner, repo, run_id: run.id, per_page: 100
+            });
+            const matches = artifacts.filter(a => a.name === 'pr-coverage-comment');
+            if (matches.length !== 1) fail('Missing or duplicate coverage artifact');
+            const artifact = matches[0];
+            if (!positive(artifact.id) || artifact.expired !== false ||
+                !Number.isSafeInteger(artifact.size_in_bytes) || artifact.size_in_bytes <= 0 || artifact.size_in_bytes > 100000 ||
+                !Number.isFinite(Date.parse(artifact.expires_at)) || Date.parse(artifact.expires_at) <= Date.now() ||
+                !(Date.parse(artifact.created_at) >= started && Date.parse(artifact.created_at) <= ended) ||
+                !(Date.parse(artifact.updated_at) >= Date.parse(artifact.created_at) && Date.parse(artifact.updated_at) <= ended) ||
+                artifact.workflow_run?.id !== run.id || artifact.workflow_run?.repository_id !== run.repository.id ||
+                artifact.workflow_run?.head_repository_id !== run.head_repository.id ||
+                artifact.workflow_run?.head_branch !== run.head_branch || artifact.workflow_run?.head_sha !== run.head_sha)
+              fail('Artifact does not belong to this head and attempt');
+            const binding = {
+              run: run.id, attempt: run.run_attempt, sha: run.head_sha, branch: run.head_branch,
+              repository: run.repository.id, headRepository: run.head_repository.id,
+              started: run.run_started_at, ended: run.updated_at, pr: pr.number,
+              artifact: artifact.id, created: artifact.created_at, updated: artifact.updated_at
+            };
+            core.setOutput('binding', JSON.stringify(binding));
+            core.setOutput('artifact-id', String(artifact.id));
+      - name: Download validated comment
+        uses: actions/download-artifact@v5
+        with:
+          artifact-ids: ${{ steps.validate.outputs.artifact-id }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          path: ${{ runner.temp }}/xonsh-pr-coverage
+          merge-multiple: true
+      - name: Publish current PR coverage
+        uses: actions/github-script@v8
+        env:
+          COVERAGE_BINDING: ${{ steps.validate.outputs.binding }}
+        with:
+          script: |
+            const fs = require('node:fs/promises');
+            const path = require('node:path');
+            const directory = path.join(process.env.RUNNER_TEMP, 'xonsh-pr-coverage');
+            const entries = await fs.readdir(directory);
+            if (entries.length !== 1 || entries[0] !== 'pr-coverage.txt') throw new Error('Unexpected artifact files');
+            const filename = path.join(directory, entries[0]);
+            const stat = await fs.lstat(filename);
+            if (!stat.isFile() || stat.isSymbolicLink() || stat.size === 0 || stat.size > 60000) throw new Error('Invalid comment file');
+            const bytes = await fs.readFile(filename);
+            if (bytes.length !== stat.size) throw new Error('Comment file changed');
+            const body = new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+            const marker = '<!-- xonsh-pr-coverage -->';
+            if (!body.includes(marker) || !body.includes('<!-- This comment was produced by python-coverage-comment-action -->') ||
+                /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(body)) throw new Error('Invalid comment content');
+            const pinned = JSON.parse(process.env.COVERAGE_BINDING);
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: pinned.pr, per_page: 100
+            });
+            const own = comments.filter(c => c.user?.login === 'github-actions[bot]' &&
+              c.user?.id === 41898282 && c.user?.type === 'Bot' && c.body?.includes(marker));
+            if (own.length > 1) throw new Error('Ambiguous bot coverage comments');
+            // Re-read source and the pinned PR immediately before publishing; never rediscover a target.
+            const {owner, repo} = context.repo;
+            const repository = `${owner}/${repo}`;
+            const event = context.payload.workflow_run;
+            const fail = message => { throw new Error(message); };
+            const positive = value => Number.isSafeInteger(value) && value > 0;
+            if (!event || !positive(event.id) || !positive(event.run_attempt)) fail('Invalid triggering run');
+            const {data: expected} = await github.rest.actions.getWorkflow({owner, repo, workflow_id: 'test.yml'});
+            const {data: run} = await github.rest.actions.getWorkflowRun({owner, repo, run_id: event.id});
+            if (expected.name !== 'ci-test' || expected.path !== '.github/workflows/test.yml' ||
+                !positive(expected.id) || run.workflow_id !== expected.id || run.path !== expected.path ||
+                event.workflow_id !== expected.id || event.path !== expected.path || event.name !== expected.name ||
+                run.name !== expected.name || run.id !== event.id || run.run_attempt !== event.run_attempt ||
+                run.event !== 'pull_request' || run.status !== 'completed' || run.conclusion !== 'success' ||
+                event.event !== run.event || event.status !== run.status || event.conclusion !== run.conclusion ||
+                run.repository?.full_name !== repository || !positive(run.repository?.id) ||
+                context.payload.repository?.id !== run.repository.id || event.repository?.id !== run.repository.id ||
+                event.repository?.full_name !== repository ||
+                !/^[a-f0-9]{40}$/.test(run.head_sha || '') || run.head_sha !== event.head_sha ||
+                typeof run.head_branch !== 'string' || !run.head_branch || run.head_branch !== event.head_branch ||
+                !positive(run.head_repository?.id) || !run.head_repository?.owner?.login ||
+                run.head_repository.full_name !== `${run.head_repository.owner.login}/${run.head_repository.name}` ||
+                event.head_repository?.id !== run.head_repository.id ||
+                event.head_repository?.full_name !== run.head_repository.full_name) fail('Untrusted source run');
+            const started = Date.parse(run.run_started_at);
+            const ended = Date.parse(run.updated_at);
+            if (!Number.isFinite(started) || !Number.isFinite(ended) || ended < started) fail('Invalid attempt time');
+            const checkPR = pr => {
+              if (!positive(pr.number) || pr.state !== 'open' || pr.base?.ref !== 'main' ||
+                  pr.base?.repo?.id !== run.repository.id || pr.base?.repo?.full_name !== repository ||
+                  pr.head?.repo?.id !== run.head_repository.id ||
+                  pr.head?.repo?.full_name !== run.head_repository.full_name ||
+                  pr.head?.repo?.owner?.login !== run.head_repository.owner.login ||
+                  pr.head?.ref !== run.head_branch || pr.head?.sha !== run.head_sha) fail('PR changed or does not match source');
+            };
+            const {data: pr} = await github.rest.pulls.get({owner, repo, pull_number: pinned.pr});
+            checkPR(pr);
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner, repo, run_id: run.id, per_page: 100
+            });
+            const matches = artifacts.filter(a => a.name === 'pr-coverage-comment');
+            if (matches.length !== 1) fail('Missing or duplicate coverage artifact');
+            const artifact = matches[0];
+            if (!positive(artifact.id) || artifact.expired !== false ||
+                !Number.isSafeInteger(artifact.size_in_bytes) || artifact.size_in_bytes <= 0 || artifact.size_in_bytes > 100000 ||
+                !Number.isFinite(Date.parse(artifact.expires_at)) || Date.parse(artifact.expires_at) <= Date.now() ||
+                !(Date.parse(artifact.created_at) >= started && Date.parse(artifact.created_at) <= ended) ||
+                !(Date.parse(artifact.updated_at) >= Date.parse(artifact.created_at) && Date.parse(artifact.updated_at) <= ended) ||
+                artifact.workflow_run?.id !== run.id || artifact.workflow_run?.repository_id !== run.repository.id ||
+                artifact.workflow_run?.head_repository_id !== run.head_repository.id ||
+                artifact.workflow_run?.head_branch !== run.head_branch || artifact.workflow_run?.head_sha !== run.head_sha)
+              fail('Artifact does not belong to this head and attempt');
+            const binding = {
+              run: run.id, attempt: run.run_attempt, sha: run.head_sha, branch: run.head_branch,
+              repository: run.repository.id, headRepository: run.head_repository.id,
+              started: run.run_started_at, ended: run.updated_at, pr: pr.number,
+              artifact: artifact.id, created: artifact.created_at, updated: artifact.updated_at
+            };
+            if (JSON.stringify(binding) !== JSON.stringify(pinned)) fail('Source changed after validation');
+            if (own.length) {
+              await github.rest.issues.updateComment({owner, repo, comment_id: own[0].id, body});
+            } else {
+              await github.rest.issues.createComment({owner, repo, issue_number: pinned.pr, body});
+            }
