@@ -206,17 +206,26 @@ def contextual_command_completer_for(cmd: str):
     return decor
 
 
-def non_exclusive_completer(func):
+def non_exclusive_completer(
+    func=None, *, when: tp.Callable[[CompletionContext], bool] | None = None
+):
     """Decorator for a non-exclusive completer
 
     This is used to mark completers that will be collected with other completer's results.
+    If ``when`` is supplied, collect with later completers only when it returns
+    true for the current completion context. The decorated function is unchanged.
     """
-    func.non_exclusive = True  # type: ignore
+    if func is None:
+        return lambda completer: non_exclusive_completer(completer, when=when)
+    func.non_exclusive = True if when is None else when
     return func
 
 
-def is_exclusive_completer(func):
-    return not getattr(func, "non_exclusive", False)
+def is_exclusive_completer(func, context: CompletionContext | None = None) -> bool:
+    non_exclusive = getattr(func, "non_exclusive", False)
+    if callable(non_exclusive):
+        return context is None or not non_exclusive(context)
+    return not non_exclusive
 
 
 def apply_lprefix(comps, lprefix):
