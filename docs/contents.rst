@@ -1,3 +1,6 @@
+:description: Tutorial, guides, and reference for Xonsh, the Python-powered shell for
+    Linux, macOS, and Windows, an alternative to PowerShell, Fish, and Nushell.
+
 #########################
 The Xonsh Shell
 #########################

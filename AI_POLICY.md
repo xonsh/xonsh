@@ -10,6 +10,8 @@ This section governs how xonsh is presented to the outside world — in docs, RE
 
 2. **Don't mention or reference other shells.** Xonsh has a different architecture than traditional shells, so its documentation, website, blog posts, talks, social posts, and other public materials don't name, link to, or otherwise reference any other shell. Describe what xonsh does on its own terms.
 
+3. **SEO is the exception to rule 2.** So that people who search for other shells find Xonsh, the landing page (`docs/_templates/index.html`) and the search metadata of the doc pages may name them, e.g. "an alternative to PowerShell, Fish, and Nushell". The doc-page metadata — `<meta>` description and keywords, Open Graph and Twitter tags, JSON-LD — is rendered by `docs/_templates/page.html` from `html_context` in `docs/conf.py`. A page replaces the default description with a `:description:` field at the very top of its source: about 150 characters on what the page covers. These mentions are deliberate: keep them when you edit those files, and don't carry them into the text of the docs.
+
 
 ## Quick Reference
 

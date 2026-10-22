@@ -1,3 +1,6 @@
+:description: Learn Xonsh step by step: Python and subprocess modes, environment
+    variables, pipes and redirection, job control, globbing, aliases, and the prompt.
+
 .. _tutorial:
 
 *******************

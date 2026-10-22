@@ -1,3 +1,6 @@
+:description: Install Xonsh on Linux, macOS, Windows, and Android: standalone installers,
+    pip, conda and mamba, AppImage, containers, system packages, and GitHub Actions.
+
 ************************
 Xonsh Installation Guide
 ************************
