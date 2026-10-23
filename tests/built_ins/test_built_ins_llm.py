@@ -23,7 +23,10 @@ from xonsh.tools import unthreadable
 def capture_interleaving(monkeypatch, xonsh_session):
     """Pause a real child's owner before read while another helper finishes."""
     xonsh_session.env.update(
-        XONSH_SUBPROC_RAISE_ERROR=True, XONSH_SUBPROC_CMD_RAISE_ERROR=False
+        # Keep helper calls concurrent without the unrelated nested I/O reader.
+        THREAD_SUBPROCS=False,
+        XONSH_SUBPROC_RAISE_ERROR=True,
+        XONSH_SUBPROC_CMD_RAISE_ERROR=False,
     )
     first_done = threading.Event()
     owner_reading = threading.Event()
@@ -157,7 +160,10 @@ def test_nested_capture_restores_invocation(xonsh_session, threadable):
     xonsh_session.aliases["nested_capture"] = (
         nested if threadable else unthreadable(nested)
     )
-    xonsh_session.env["XONSH_SUBPROC_RAISE_ERROR"] = True
+    xonsh_session.env.update(
+        XONSH_SUBPROC_RAISE_ERROR=True,
+        XONSH_SUBPROC_CMD_RAISE_ERROR=False,
+    )
     with pytest.raises(CalledProcessError) as raised:
         subproc_captured_stdout(["nested_capture"])
     assert raised.value.returncode == 6
@@ -169,6 +175,11 @@ def test_nested_capture_restores_invocation(xonsh_session, threadable):
     "captured", [subproc_captured_object, subproc_captured_hiddenobject]
 )
 def test_object_carries_own_status(xonsh_session, captured):
+    # The CI runner enables per-command raising; this tests helper-level policy.
+    xonsh_session.env.update(
+        XONSH_SUBPROC_RAISE_ERROR=True,
+        XONSH_SUBPROC_CMD_RAISE_ERROR=False,
+    )
     command = [sys.executable, "-c", "print('object'); raise SystemExit(8)"]
     pipeline = captured(command)
     try:
