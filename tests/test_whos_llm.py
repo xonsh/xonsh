@@ -257,8 +257,32 @@ def test_native_rc_to_cmdloop_and_lifecycle(tmp_path):
         XONTRIBS_AUTOLOAD_DISABLED="1",
         TERM="dumb",
     )
+    # Interactive piped stdin selects prompt-toolkit even with the dumb shell.
+    # Supply child terminal devices so captured output needs no Windows console.
+    bootstrap = """
+import sys
+from prompt_toolkit.application import create_app_session
+from prompt_toolkit.input import create_pipe_input
+from prompt_toolkit.output import DummyOutput
+from xonsh.main import main
+
+commands = sys.stdin.read()
+with create_pipe_input() as pipe:
+    pipe.send_text(commands)
+    with create_app_session(input=pipe, output=DummyOutput()):
+        main(sys.argv[1:])
+"""
     result = subprocess.run(
-        [sys.executable, "-m", "xonsh", "--rc", str(rc), "-i", "--shell-type", "dumb"],
+        [
+            sys.executable,
+            "-c",
+            bootstrap,
+            "--rc",
+            str(rc),
+            "-i",
+            "--shell-type",
+            "dumb",
+        ],
         input=commands,
         text=True,
         capture_output=True,
@@ -268,8 +292,7 @@ def test_native_rc_to_cmdloop_and_lifecycle(tmp_path):
     assert result.returncode == 0, result.stderr
     assert "Traceback" not in result.stderr, result.stderr
     assert "AssertionError" not in result.stderr, result.stderr
-    # Readline echoes highlighted input with piped stdin. Keep only actual
-    # report lines, after stripping its ANSI highlighting and prompt.
+    # Keep only actual report lines, stripping any ANSI highlighting and prompt.
     output = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", result.stdout)
     output = output.replace("WHOS_PROMPT> ", "")
     reports = [
