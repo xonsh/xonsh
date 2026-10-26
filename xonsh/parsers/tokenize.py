@@ -929,6 +929,7 @@ def _tokenize(
     _get = getPseudoToken if tokenize_ioredirects else getPseudoTokenWithoutIO
     _pseudo_re = _compile(_get(is_subproc=False))
     _pseudo_re_subproc = _compile(_get(is_subproc=True))
+    _searchpath_match = re.compile(SearchPath).match
 
     # 'stashed' and 'async_*' are used for async/await parsing
     stashed = None
@@ -940,6 +941,7 @@ def _tokenize(
     # Stack of dicts: {"quote", "prefix", "start", "brace_depth",
     #                  "paren_depth", "in_expr", "in_format_spec"}
     fstring_stack = [] if PYTHON_VERSION_INFO >= (3, 12) else None
+    fstring_start_chars = frozenset(token[0] for token in _fstring_start_tokens)
 
     if encoding is not None:
         if encoding == "utf-8-sig":
@@ -1084,8 +1086,10 @@ def _tokenize(
             # Needed because the pseudomatch regex expects complete
             # string content on one line, but PEP 701 allows multi-line
             # expressions inside {}, so f"{\n is valid.
-            if fstring_stack is not None and (
-                not fstring_stack or fstring_stack[-1]["in_expr"]
+            if (
+                fstring_stack is not None
+                and line[pos] in fstring_start_chars
+                and (not fstring_stack or fstring_stack[-1]["in_expr"])
             ):
                 _fs_tok = None
                 for _fs_end in range(min(pos + 5, max), pos, -1):
@@ -1311,7 +1315,7 @@ def _tokenize(
                         stashed = None
                     yield TokenInfo(COMMENT, token, spos, epos, line)
                 # Xonsh-specific Regex Globbing
-                elif re.match(SearchPath, token):
+                elif "`" in token and _searchpath_match(token):
                     yield TokenInfo(SEARCHPATH, token, spos, epos, line)
                 elif token in triple_quoted:
                     if fstring_stack is not None and token in _fstring_start_tokens:
