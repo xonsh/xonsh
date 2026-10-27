@@ -326,6 +326,7 @@ String = group(
 
 # Xonsh-specific Syntax
 SearchPath = r"((?:[rgpfm]+|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
+_searchpath_match = re.compile(SearchPath).match
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
@@ -662,6 +663,9 @@ _fstring_start_tokens = frozenset(
     for t in list(single_quoted) + list(triple_quoted)
     if any(c in t.split("'")[0].split('"')[0].lower() for c in "f")
 )
+# First characters of the tokens above: _tokenize() probes for an f-string
+# start only at positions holding one of them.
+_fstring_start_chars = frozenset(t[0] for t in _fstring_start_tokens)
 
 
 class TokenError(Exception):
@@ -1084,8 +1088,10 @@ def _tokenize(
             # Needed because the pseudomatch regex expects complete
             # string content on one line, but PEP 701 allows multi-line
             # expressions inside {}, so f"{\n is valid.
-            if fstring_stack is not None and (
-                not fstring_stack or fstring_stack[-1]["in_expr"]
+            if (
+                fstring_stack is not None
+                and line[pos] in _fstring_start_chars
+                and (not fstring_stack or fstring_stack[-1]["in_expr"])
             ):
                 _fs_tok = None
                 for _fs_end in range(min(pos + 5, max), pos, -1):
@@ -1320,7 +1326,7 @@ def _tokenize(
                         stashed = None
                     yield TokenInfo(COMMENT, token, spos, epos, line)
                 # Xonsh-specific Regex Globbing
-                elif re.match(SearchPath, token):
+                elif "`" in token and _searchpath_match(token):
                     yield TokenInfo(SEARCHPATH, token, spos, epos, line)
                 elif token in triple_quoted:
                     if fstring_stack is not None and token in _fstring_start_tokens:
