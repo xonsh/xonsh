@@ -326,6 +326,7 @@ String = group(
 
 # Xonsh-specific Syntax
 SearchPath = r"((?:[rgpfm]+|@\w*)?)`([^\n`\\]*(?:\\.[^\n`\\]*)*)`"
+_searchpath_match = re.compile(SearchPath).match
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
@@ -662,6 +663,9 @@ _fstring_start_tokens = frozenset(
     for t in list(single_quoted) + list(triple_quoted)
     if any(c in t.split("'")[0].split('"')[0].lower() for c in "f")
 )
+# First characters of the tokens above: _tokenize() probes for an f-string
+# start only at positions holding one of them.
+_fstring_start_chars = frozenset(t[0] for t in _fstring_start_tokens)
 
 
 class TokenError(Exception):
@@ -929,7 +933,6 @@ def _tokenize(
     _get = getPseudoToken if tokenize_ioredirects else getPseudoTokenWithoutIO
     _pseudo_re = _compile(_get(is_subproc=False))
     _pseudo_re_subproc = _compile(_get(is_subproc=True))
-    _searchpath_match = re.compile(SearchPath).match
 
     # 'stashed' and 'async_*' are used for async/await parsing
     stashed = None
@@ -941,7 +944,6 @@ def _tokenize(
     # Stack of dicts: {"quote", "prefix", "start", "brace_depth",
     #                  "paren_depth", "in_expr", "in_format_spec"}
     fstring_stack = [] if PYTHON_VERSION_INFO >= (3, 12) else None
-    fstring_start_chars = frozenset(token[0] for token in _fstring_start_tokens)
 
     if encoding is not None:
         if encoding == "utf-8-sig":
@@ -1088,7 +1090,7 @@ def _tokenize(
             # expressions inside {}, so f"{\n is valid.
             if (
                 fstring_stack is not None
-                and line[pos] in fstring_start_chars
+                and line[pos] in _fstring_start_chars
                 and (not fstring_stack or fstring_stack[-1]["in_expr"])
             ):
                 _fs_tok = None
