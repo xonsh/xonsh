@@ -902,3 +902,15 @@ exit()
 )
 def test_multiline_python(code):
     assert_match(code, is_main_command=True)
+
+
+@pytest.mark.timeout(10)
+@pytest.mark.parametrize("prefix", ["", "f", "rf", "pf"])
+def test_unterminated_string_on_previous_line(prefix):
+    # an unterminated f-string used to hang the tolerant lexer, freezing TAB
+    assert_match(
+        f"print({prefix}'a\nx{X}",
+        CommandContext(
+            args=(CommandArg(f"print({prefix}'a"),), arg_index=1, prefix="x"
+        ),
+    )
