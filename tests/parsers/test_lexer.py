@@ -527,6 +527,7 @@ def test_lexer_split(s, exp):
     assert exp == obs
 
 
+@pytest.mark.timeout(10)
 @pytest.mark.parametrize(
     "s",
     (
@@ -540,6 +541,11 @@ def test_lexer_split(s, exp):
         '"',
         "'",
         '"""',
+        # unterminated f-strings used to loop forever on the newline
+        "f'string\nliteral",
+        "print(f'string\nliteral",
+        "f'{x:spec\nliteral",
+        'f"string\r\nliteral',
     ),
 )
 def test_tolerant_lexer(s):

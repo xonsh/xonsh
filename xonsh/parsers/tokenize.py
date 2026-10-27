@@ -1237,6 +1237,15 @@ def _tokenize(
                             continue
                         else:
                             if tolerant:
+                                if text:
+                                    yield TokenInfo(
+                                        FSTRING_MIDDLE,
+                                        text,
+                                        (lnum, text_start),
+                                        (lnum, pos),
+                                        line,
+                                    )
+                                fstring_stack.pop()
                                 break
                             raise TokenError(
                                 "EOL while scanning f-string",
