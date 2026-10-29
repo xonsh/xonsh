@@ -20,9 +20,31 @@ def _replace_home(x: str):
     return x
 
 
+# Control characters in a directory name would break the prompt layout
+# (e.g. a newline) or be interpreted by the terminal (e.g. ESC), so they are
+# shown as backslash escapes instead: "\n", "\t", "\x1b", ...
+_CONTROL_CHAR_ESCAPES = {
+    c: ascii(chr(c))[1:-1] for c in (*range(0x20), *range(0x7F, 0xA0))
+}
+
+
+def _escape_control_chars(x: str):
+    # Must run after any splitting on the path separator, since the escapes
+    # contain a backslash, which is the separator on Windows.
+    return x.translate(_CONTROL_CHAR_ESCAPES)
+
+
 def _replace_home_cwd():
     pwd = XSH.env["PWD"].replace("{", "{{").replace("}", "}}")
     return _replace_home(pwd)
+
+
+def _cwd_dir():
+    return _escape_control_chars(os.path.join(os.path.dirname(_replace_home_cwd()), ""))
+
+
+def _cwd_base():
+    return _escape_control_chars(os.path.basename(_replace_home_cwd()))
 
 
 def _collapsed_pwd():
@@ -35,7 +57,7 @@ def _collapsed_pwd():
         for ix, i in enumerate(pwd)
         if len(i) > 0
     ]
-    return leader + sep.join(base)
+    return _escape_control_chars(leader + sep.join(base))
 
 
 def _dynamically_collapsed_pwd():
@@ -46,12 +68,12 @@ def _dynamically_collapsed_pwd():
     target_width, units = XSH.env["DYNAMIC_CWD_WIDTH"]
     elision_char = XSH.env["DYNAMIC_CWD_ELISION_CHAR"]
     if target_width == float("inf"):
-        return original_path
+        return _escape_control_chars(original_path)
     if units == "%":
         cols, _ = shutil.get_terminal_size()
         target_width = (cols * target_width) // 100
     sep = xt.get_sep()
-    pwd = original_path.split(sep)
+    pwd = [_escape_control_chars(part) for part in original_path.split(sep)]
     last = pwd.pop()
     remaining_space = target_width - len(last)
     # Reserve space for separators
