@@ -1203,6 +1203,21 @@ def test_run_dynamic_on_path():
 
 
 @skip_if_on_unix
+def test_run_bat_with_spaces_in_path_and_argument(tmp_path):
+    """A batch file whose path has spaces runs with a quoted argument (#6652)."""
+    folder = tmp_path / "dir with spaces"
+    folder.mkdir()
+    batfile = folder / "echo-args.cmd"
+    batfile.write_text("@echo off\necho args: %*\n", encoding="utf-8")
+    cmd = f"![@(r'{batfile}') 'hello world']"
+    out, _, rtn = run_xonsh(
+        cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"]
+    )
+    assert out.strip() == 'args: "hello world"'
+    assert rtn == 0
+
+
+@skip_if_on_unix
 def test_run_fail_not_on_path():
     """Test that xonsh fails to run an executable when not on path."""
     cmd = "hello_world.bat"

@@ -148,6 +148,12 @@ def get_script_subproc_command(fname, args):
             return [sys.executable, "-m", "xonsh", fname] + args
         # 3) Other PATHEXT extensions — delegate to OS file associations
         if ext_upper in {e.upper() for e in XSH.env.get("PATHEXT", [])}:
+            # CreateProcess runs .bat/.cmd itself and wraps the whole command
+            # line in quotes for cmd.exe. "cmd /c" would strip only the first
+            # and last quote, splitting a path with spaces when an argument
+            # is quoted too.
+            if ext_upper in {".BAT", ".CMD"}:
+                return [fname] + args
             return ["cmd", "/c", fname] + args
         # 4) Try shebang for any other text file
         shebang = parse_shebang_from_file(fname)
@@ -963,9 +969,10 @@ class SubprocSpec:
             scriptcmd = get_script_subproc_command(fname, self.cmd[1:])
             if scriptcmd is not None:
                 self.cmd = scriptcmd
-                # Update binary_loc to the interpreter, not the script.
-                # Otherwise _run_binary() (PR #4077) would launch the script
-                # directly via CreateProcess, causing WinError 193 on Windows.
+                # Update binary_loc to scriptcmd[0]: the interpreter, or the
+                # script itself for .bat/.cmd, which CreateProcess can launch.
+                # Launching e.g. a .xsh directly via _run_binary() (PR #4077)
+                # would cause WinError 193 on Windows.
                 self.binary_loc = locate_executable(scriptcmd[0])
             elif xp.ON_WINDOWS and not _is_binary(fname):
                 # get_script_subproc_command returned None for a non-binary
