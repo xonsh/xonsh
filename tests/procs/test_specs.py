@@ -10,6 +10,7 @@ from subprocess import CalledProcessError, Popen
 
 import pytest
 
+import xonsh.platform as xp
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import STDOUT_DISPATCHER, ProcProxy, ProcProxyThread
 from xonsh.procs.specs import (
@@ -1117,6 +1118,29 @@ def test_get_script_subproc_command_no_shebang_xonsh_exts(tmpdir, ext):
     file.chmod(0o755)
     cmd = get_script_subproc_command(str(file), ["--arg", "1"])
     assert cmd == [sys.executable, "-m", "xonsh", str(file), "--arg", "1"]
+
+
+@pytest.mark.parametrize(
+    "name, exp_head",
+    [
+        ("echo-args.cmd", []),
+        ("echo-args.BAT", []),
+        ("script.vbs", ["cmd", "/c"]),
+    ],
+)
+def test_get_script_subproc_command_windows_pathext(
+    tmpdir, xession, monkeypatch, name, exp_head
+):
+    """Batch files run directly, so a quoted argument can't split a path
+    with spaces; other PATHEXT types go through cmd's file associations."""
+    monkeypatch.setattr(xp, "ON_WINDOWS", True)
+    folder = tmpdir.mkdir("dir with spaces")
+    file = folder / name
+    file.write_text("@echo off\necho args: %*\n", encoding="utf-8")
+    file.chmod(0o755)
+    with xession.env.swap(PATHEXT=[".BAT", ".CMD", ".VBS"]):
+        cmd = get_script_subproc_command(str(file), ["hello world"])
+    assert cmd == exp_head + [str(file), "hello world"]
 
 
 def test_redirect_without_left_part(tmpdir):
