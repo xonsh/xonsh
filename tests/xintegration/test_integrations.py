@@ -1203,17 +1203,29 @@ def test_run_dynamic_on_path():
 
 
 @skip_if_on_unix
-def test_run_bat_with_spaces_in_path_and_argument(tmp_path):
-    """A batch file whose path has spaces runs with a quoted argument (#6652)."""
-    folder = tmp_path / "dir with spaces"
+@pytest.mark.parametrize(
+    "dirname, arg, exp",
+    [
+        ("dir with spaces", "hello world", 'args: "hello world"'),
+        # Parentheses in the path made "cmd /c" strip its quotes even when
+        # no argument was quoted.
+        ("dir with spaces (x86)", "hello", "args: hello"),
+        # The & must stay inside the quotes instead of starting a second
+        # command.
+        ("dir with spaces", "a & b", 'args: "a & b"'),
+    ],
+)
+def test_run_bat_with_spaces_in_path_and_argument(tmp_path, dirname, arg, exp):
+    """A batch file whose path has spaces gets its arguments intact (#6652)."""
+    folder = tmp_path / dirname
     folder.mkdir()
     batfile = folder / "echo-args.cmd"
     batfile.write_text("@echo off\necho args: %*\n", encoding="utf-8")
-    cmd = f"![@(r'{batfile}') 'hello world']"
+    cmd = f"![@(r'{batfile}') '{arg}']"
     out, _, rtn = run_xonsh(
         cmd, stdout=sp.PIPE, stderr=sp.PIPE, path=os.environ["PATH"]
     )
-    assert out.strip() == 'args: "hello world"'
+    assert out.strip() == exp
     assert rtn == 0
 
 

@@ -151,7 +151,8 @@ def get_script_subproc_command(fname, args):
             # CreateProcess runs .bat/.cmd itself and wraps the whole command
             # line in quotes for cmd.exe. "cmd /c" would strip only the first
             # and last quote, splitting a path with spaces when an argument
-            # is quoted too.
+            # is quoted too. Windows adds those quotes only when no
+            # application name is given, so Popen must not get executable=.
             if ext_upper in {".BAT", ".CMD"}:
                 return [fname] + args
             return ["cmd", "/c", fname] + args
