@@ -68,6 +68,29 @@ By default, the following variables are available for use:
 * ``last_return_code``: The return code of the last issued command.
 * ``last_return_code_if_nonzero``: The return code if non-zero, otherwise ``None``.
 
+Asynchronous field fallbacks
+---------------------------
+
+With ``$ENABLE_ASYNC_PROMPT = True``, callable prompt fields run in the
+background. Configure their initial text in your :doc:`xonsh RC <xonshrc>`:
+
+.. code-block:: xonsh
+
+    $ENABLE_ASYNC_PROMPT = True
+    $XONSH_ASYNC_PROMPT_FALLBACKS = {'slow': 'loading...', 'optional': ''}
+
+This dictionary maps field names to strings and applies to ``$PROMPT``,
+``$RIGHT_PROMPT`` and ``$BOTTOM_TOOLBAR``. The default is an empty dictionary;
+missing names retain the ``{field}`` placeholder. A previous cached result
+always takes priority, including ``None`` or empty text. An explicit empty
+fallback hides the field until its result arrives.
+
+Fallbacks are literal field text, processed through the existing field
+conversion, format-template specification and color formatting. Braces do not
+trigger recursive field evaluation, and fallback values cannot be callbacks.
+They appear immediately when no cached result exists, without a delay
+threshold. Synchronous prompts are unaffected.
+
 Colors
 ======
 
