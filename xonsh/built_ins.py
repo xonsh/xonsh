@@ -366,9 +366,9 @@ def pathsearch(func, s, pymode=False, pathobj=False):
     return o if len(o) != 0 else no_match
 
 
-def _check_subproc_helper_raise(in_boolop):
-    """Raise ``CalledProcessError`` if the most recently completed
-    pipeline (``XSH.lastcmd``) failed and the active settings say we
+def _check_subproc_helper_raise(in_boolop, cp):
+    """Raise ``CalledProcessError`` if this invocation's
+    pipeline failed and the active settings say we
     should raise.
 
     Called by the ``subproc_*`` helpers right after they finish, so
@@ -391,7 +391,6 @@ def _check_subproc_helper_raise(in_boolop):
         return
     if not XSH.env.get("XONSH_SUBPROC_RAISE_ERROR"):
         return
-    cp = XSH.lastcmd
     if cp is None:
         return
     spec = getattr(cp, "spec", None)
@@ -427,10 +426,11 @@ def subproc_captured_stdout(*cmds, envs=None, in_boolop=False):
 
     import xonsh.procs.specs
 
-    r = xonsh.procs.specs.run_subproc(
-        cmds, captured="stdout", envs=envs, in_boolop=in_boolop
-    )
-    _check_subproc_helper_raise(in_boolop)
+    with xonsh.procs.specs._capture_subproc_pipeline() as pipeline:
+        r = xonsh.procs.specs.run_subproc(
+            cmds, captured="stdout", envs=envs, in_boolop=in_boolop
+        )
+    _check_subproc_helper_raise(in_boolop, pipeline[0])
     return r
 
 
@@ -442,10 +442,11 @@ def subproc_captured_inject(*cmds, envs=None, in_boolop=False):
     """
     import xonsh.procs.specs
 
-    o = xonsh.procs.specs.run_subproc(
-        cmds, captured="stdout", envs=envs, in_boolop=in_boolop
-    )
-    _check_subproc_helper_raise(in_boolop)
+    with xonsh.procs.specs._capture_subproc_pipeline() as pipeline:
+        o = xonsh.procs.specs.run_subproc(
+            cmds, captured="stdout", envs=envs, in_boolop=in_boolop
+        )
+    _check_subproc_helper_raise(in_boolop, pipeline[0])
     o = o if isinstance(o, list) else o.splitlines()
     toks = []
     for line in o:
@@ -483,10 +484,11 @@ def subproc_uncaptured(*cmds, envs=None, in_boolop=False):
     """
     import xonsh.procs.specs
 
-    r = xonsh.procs.specs.run_subproc(
-        cmds, captured=False, envs=envs, in_boolop=in_boolop
-    )
-    _check_subproc_helper_raise(in_boolop)
+    with xonsh.procs.specs._capture_subproc_pipeline() as pipeline:
+        r = xonsh.procs.specs.run_subproc(
+            cmds, captured=False, envs=envs, in_boolop=in_boolop
+        )
+    _check_subproc_helper_raise(in_boolop, pipeline[0])
     return r
 
 
@@ -526,8 +528,8 @@ def subproc_check_boolop(value):
     Some subproc helpers (``$()``, ``$[]``, ``@$()``) return a *string*
     / *None* / *list* rather than a ``CommandPipeline``, so the wrapper
     can't read ``returncode`` directly off ``value``.  In that case it
-    falls back to ``XSH.lastcmd`` — the most recently completed pipeline,
-    which is the one this helper just ran.
+    uses the context-local completed pipeline, so another prompt worker
+    cannot replace the pipeline this helper just ran.
     """
     if not XSH.env.get("XONSH_SUBPROC_RAISE_ERROR"):
         return value
@@ -542,8 +544,10 @@ def subproc_check_boolop(value):
     if spec is None or rtn is None:
         # Value isn't a CommandPipeline (e.g. string from $(), None from
         # $[], list from @$()).  Fall back to the most recently
-        # completed pipeline so we can still inspect its returncode.
-        last = XSH.lastcmd
+        # completed pipeline in this context to inspect its returncode.
+        from xonsh.procs.specs import _last_subproc_pipeline
+
+        last = _last_subproc_pipeline.get()
         if last is None:
             return value
         spec = getattr(last, "spec", None)

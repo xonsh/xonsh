@@ -11,6 +11,7 @@ import signal
 import stat
 import subprocess
 import sys
+from contextvars import ContextVar
 
 import xonsh.lib.lazyasd as xl
 import xonsh.lib.lazyimps as xli
@@ -33,6 +34,25 @@ from xonsh.procs.pipes import PipeChannel
 from xonsh.procs.posix import PopenThread
 from xonsh.procs.proxies import ProcProxy, ProcProxyThread
 from xonsh.procs.readers import ConsoleParallelReader
+
+# The public lastcmd remains shared for observation. Helper checks must use
+# the pipeline produced by their own invocation instead.
+_pipeline_capture: ContextVar[list | None] = ContextVar(
+    "_pipeline_capture", default=None
+)
+_last_subproc_pipeline: ContextVar[CommandPipeline | None] = ContextVar(
+    "_last_subproc_pipeline", default=None
+)
+
+
+@contextlib.contextmanager
+def _capture_subproc_pipeline():
+    pipeline = [None]
+    token = _pipeline_capture.set(pipeline)
+    try:
+        yield pipeline
+    finally:
+        _pipeline_capture.reset(token)
 
 
 def _has_path_component(name):
@@ -1422,6 +1442,7 @@ def _run_command_pipeline(specs, cmds):
 
 
 def _run_specs(specs, cmds):
+    capture = _pipeline_capture.get()
     cp = _run_command_pipeline(specs, cmds)
     XSH.last = XSH.lastcmd = XSH.interface.lastcmd = cp
     proc, captured, background = (
@@ -1437,17 +1458,22 @@ def _run_specs(specs, cmds):
     """
     resume_process(proc)
 
-    if captured == "object":
-        return cp
-    elif captured == "hiddenobject":
-        if not background:
+    try:
+        if captured == "object":
+            return cp
+        elif captured == "hiddenobject":
+            if not background:
+                cp.end()
+            return cp
+        elif background:
+            return
+        elif captured == "stdout":
             cp.end()
-        return cp
-    elif background:
-        return
-    elif captured == "stdout":
-        cp.end()
-        return cp.output
-    else:
-        cp.end()
-        return
+            return cp.output
+        else:
+            cp.end()
+            return
+    finally:
+        if capture is not None:
+            capture[0] = cp
+        _last_subproc_pipeline.set(cp)
