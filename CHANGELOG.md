@@ -1,5 +1,19 @@
 # Xonsh Change Log
 
+## [0.25.1](https://github.com/xonsh/xonsh/compare/0.25.0...0.25.1) (2026-10-30)
+
+
+### Fixes
+
+* **procs:** run .bat/.cmd scripts directly so quoted args keep spaced paths ([#6653](https://github.com/xonsh/xonsh/issues/6653)) ([fcf9cbf](https://github.com/xonsh/xonsh/commit/fcf9cbf2f0f896a453ba3e849f1e23ed99674a80))
+* **prompt:** escape control characters in cwd prompt fields ([#6651](https://github.com/xonsh/xonsh/issues/6651)) ([6aa4f2d](https://github.com/xonsh/xonsh/commit/6aa4f2d678856d67203e2b09655d167e8208aa34))
+* **tokenize:** TAB hang on unterminated f-string ([#6649](https://github.com/xonsh/xonsh/issues/6649)) ([8dd0eab](https://github.com/xonsh/xonsh/commit/8dd0eab95ac1fee3821ec2e7ef915e05b513f6c7))
+
+
+### Performance
+
+* **tokenize:** skip impossible f-string prefix and search-path probes ([#6644](https://github.com/xonsh/xonsh/issues/6644)) ([ec7833a](https://github.com/xonsh/xonsh/commit/ec7833aa5203e303d1d078e46ca22ae2cd9a1cb5))
+
 ## [0.25.0](https://github.com/xonsh/xonsh/compare/0.24.2...0.25.0) (2026-10-22)
 
 
