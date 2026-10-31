@@ -16,6 +16,7 @@ from typing import Annotated
 
 from xonsh.built_ins import XSH
 from xonsh.completers.tools import RichCompletion
+from xonsh.tools import info_repr
 
 
 class ArgCompleter:
@@ -602,13 +603,10 @@ class ArgParserAlias:
         self.stderr = None
 
     def __repr__(self):
-        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
         prog = self.kwargs.get("prog")
         if prog is None and self._parser is not None:
             prog = getattr(self._parser, "prog", None)
-        if prog:
-            return f"{cls}({prog!r})"
-        return f"{cls}()"
+        return info_repr(self, {"name": prog} if prog else None)
 
     def build(self) -> "ArgParser":
         """Sub-classes should return constructed ArgumentParser"""

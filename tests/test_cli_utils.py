@@ -98,7 +98,7 @@ def test_repr():
         pass
 
     alias = cli_utils.ArgParserAlias(func=_fn, has_args=True, prog="myprog")
-    assert repr(alias) == "xonsh.cli_utils.ArgParserAlias('myprog')"
+    assert repr(alias) == "xonsh.cli_utils.ArgParserAlias({'name': 'myprog'})"
 
     bare = cli_utils.ArgParserAlias()
     assert repr(bare) == "xonsh.cli_utils.ArgParserAlias()"
@@ -108,4 +108,6 @@ def test_repr():
     completer = CompleterAlias()
     assert repr(completer) == "xonsh.completers._aliases.CompleterAlias()"
     assert completer.parser is not None  # trigger lazy build
-    assert repr(completer) == "xonsh.completers._aliases.CompleterAlias('completer')"
+    assert repr(completer) == (
+        "xonsh.completers._aliases.CompleterAlias({'name': 'completer'})"
+    )
