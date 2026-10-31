@@ -413,3 +413,92 @@ def test_input_hook_reuses_one_session(input_hook, fake_session, xession):
     input_hook.restore()
     input_hook.prompt("c: ")
     assert len(fake_session.instances) == 2  # a fresh, empty history
+
+
+#
+# The prompt style knows every color the prompt uses (issue #6621)
+#
+
+
+@pytest.fixture
+def color_shell(ptk_shell, xession, monkeypatch):
+    """The ptk shell, with prompt colors registered in its own styler as in a
+    real session (``partial_color_tokenize`` finds it through ``XSH.shell``)."""
+    _, _, shell = ptk_shell
+    monkeypatch.setattr(xession.shell, "_shell", shell)
+    xession.env["COLOR_INPUT"] = True
+    return shell
+
+
+def _fg(style, color):
+    """Foreground that a prompt_toolkit ``style`` gives to a xonsh ``color``."""
+    from prompt_toolkit.styles.pygments import pygments_token_to_classname
+
+    from xonsh.style_tools import Color, norm_name
+
+    if style is None:
+        return None
+    token = getattr(Color, norm_name(color))
+    attrs = style.get_attrs_for_style_str("class:" + pygments_token_to_classname(token))
+    return (attrs.color or "").lower()
+
+
+@pytest.mark.parametrize("async_prompt", [False, True])
+def test_singleline_style_has_colors_new_to_the_prompt(
+    color_shell, xession, async_prompt
+):
+    """Regression test for https://github.com/xonsh/xonsh/issues/6621
+
+    With ``$ENABLE_ASYNC_PROMPT=True`` the style was built once per session,
+    so a color first used by a later prompt (e.g. after ``$PROMPT`` was
+    changed to ``{#f00}``) was rendered as plain text.
+    """
+    xession.env["ENABLE_ASYNC_PROMPT"] = async_prompt
+    styles = []
+    color_shell.prompter.prompt = lambda **kw: styles.append(kw.get("style")) or ""
+    for color in ("#0f0", "#f00"):
+        xession.env["PROMPT"] = "{" + color + "}meow "
+        color_shell.singleline()
+    assert [_fg(styles[0], "#0f0"), _fg(styles[1], "#f00")] == ["00ff00", "ff0000"]
+
+
+def test_update_prompt_style_adds_only_missing_colors(color_shell):
+    """Async prompt fields are tokenized after the prompt is shown, so a color
+    first used in a field value has to be added to the prompter style then."""
+    from xonsh.style_tools import partial_color_tokenize
+
+    color_shell.prompter.style = style = color_shell.get_prompt_style()
+    color_shell.update_prompt_style(partial_color_tokenize("{RESET}a{RED}b"))
+    assert color_shell.prompter.style is style  # nothing new, nothing rebuilt
+    color_shell.update_prompt_style(partial_color_tokenize("{#ff8800}branch"))
+    assert _fg(color_shell.prompter.style, "#ff8800") == "ff8800"
+
+
+def test_async_field_color_reaches_the_style(color_shell, xession):
+    """A field resolved in the background is shown with a style that has the
+    color of its value, already on the prompt where the color is first used
+    (as the git branch color is)."""
+    import time
+
+    xession.env["ASYNC_INVALIDATE_INTERVAL"] = 0
+    color_shell.prompter.style = color_shell.get_prompt_style()
+    formatter = color_shell.prompt_formatter
+    # an earlier prompt, which loads the lazy ptk attributes of the session
+    formatter(template="> ", threaded=True, prompt_name="message")
+    formatter.start_update()
+    formatter.updator.attrs_loaded.result(timeout=10)
+    formatter(
+        template="{branch}> ",
+        fields={"branch": lambda: "{#123456}trunk{RESET}"},
+        threaded=True,
+        prompt_name="message",
+    )
+    formatter.start_update()
+    try:
+        deadline = time.monotonic() + 10
+        while "trunk" not in str(color_shell.prompter.message):
+            assert time.monotonic() < deadline, "the async field was never shown"
+            time.sleep(0.01)
+    finally:
+        formatter.updator.executor.thread_pool.shutdown(wait=True)
+    assert _fg(color_shell.prompter.style, "#123456") == "123456"
