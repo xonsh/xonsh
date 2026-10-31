@@ -4,6 +4,7 @@ import builtins
 import collections.abc as cabc
 import inspect
 import sys
+import threading
 import types
 
 from xonsh.parser import Parser
@@ -55,6 +56,9 @@ class Execer:
         self.scriptcache = scriptcache
         self.cacheall = cacheall
         self.ctxtransformer = CtxAwareTransformer(self.parser)
+        # The parser and the transformer keep per-call state on themselves,
+        # while the execer is shared by every thread of the session.
+        self._parse_lock = threading.RLock()
 
     def parse(
         self, input, ctx, mode="exec", filename=None, transform=True, user_names=None
@@ -63,6 +67,17 @@ class Execer:
         parsing, please use the Parser class directly or pass in
         transform=False.
         """
+        with self._parse_lock:
+            return self._parse(
+                input,
+                ctx,
+                mode=mode,
+                filename=filename,
+                transform=transform,
+                user_names=user_names,
+            )
+
+    def _parse(self, input, ctx, mode, filename, transform, user_names):
         if filename is None:
             filename = self.filename
         if not transform:
