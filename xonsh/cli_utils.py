@@ -26,6 +26,27 @@ class ArgCompleter:
         raise NotImplementedError
 
 
+class _ArgSpec(tuple):
+    """The ``(args, kwargs)`` pair made by :func:`Arg`, with a stable repr.
+
+    Completers and converters are shown by name, because the default repr of a
+    function holds a memory address that changes on every run and would end up
+    in rendered signatures.
+    """
+
+    __slots__ = ()
+
+    def __repr__(self):
+        args, kwargs = self
+        parts = [repr(arg) for arg in args]
+        parts += [
+            f"{key}={getattr(val, '__qualname__', None) or repr(val)}"
+            for key, val in kwargs
+            if not (key == "completer" and val is None)
+        ]
+        return f"Arg({', '.join(parts)})"
+
+
 def Arg(
     *args: str,
     completer: ArgCompleter | tp.Callable[..., tp.Iterator[str]] | None = None,
@@ -34,7 +55,7 @@ def Arg(
     # converting to tuple because of limitation with hashing args in py3.6
     # after dropping py36 support, the dict can be returned
     kwargs["completer"] = completer
-    return args, tuple(kwargs.items())
+    return _ArgSpec((args, tuple(kwargs.items())))
 
 
 class NumpyDoc:
