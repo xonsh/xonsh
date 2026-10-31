@@ -166,6 +166,13 @@ def test_explicit_dot_wildcard_matches_dotfiles(tree):
 
 
 @skip_on_windows
+def test_explicit_dot_wildcard_respects_include_dotfiles_when_not_completer(tree):
+    # g-glob / $DOTGLOB=False: even '.*' must not return hidden names.
+    out = sorted(_case_insensitive_iglob(".*", explicit_dot_matches_hidden=False))
+    assert ".hidden" not in out
+
+
+@skip_on_windows
 def test_literal_hidden_segment_is_traversed(tmp_path):
     # A literal segment that happens to start with '.' (no glob meta)
     # must always be traversed — otherwise paths like '~/.config/<Tab>'
