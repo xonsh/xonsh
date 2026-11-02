@@ -148,7 +148,7 @@ def get_script_subproc_command(fname, args):
             return [sys.executable, "-m", "xonsh", fname] + args
         # 3) Other PATHEXT extensions — delegate to OS file associations
         if ext_upper in {e.upper() for e in XSH.env.get("PATHEXT", [])}:
-            return ["cmd", "/c", fname] + args
+            return ["cmd", "/s", "/c", fname] + args
         # 4) Try shebang for any other text file
         shebang = parse_shebang_from_file(fname)
         m = RE_SHEBANG.match(shebang)
@@ -513,6 +513,7 @@ class SubprocSpec:
         self.alias_name = None
         self.alias_stack = XSH.env.get("__ALIAS_STACK", "").split(":")
         self.binary_loc = None
+        self._cmd_script = False
         self.is_proxy = False
         self.background = False
         self.threadable = True
@@ -661,6 +662,12 @@ class SubprocSpec:
                 if cmd0 and not _has_path_component(cmd0):
                     if any(is_file(n) for n in get_possible_names(cmd0)):
                         raise FileNotFoundError(cmd0)
+            if self._cmd_script:
+                # CMD /s /c strips the outer quotes. Pass a string so Popen
+                # does not escape them using C-runtime argument quoting.
+                prefix = subprocess.list2cmdline(cmd[:3])
+                command = subprocess.list2cmdline(cmd[3:])
+                cmd = f'{prefix} "{command}"'
             p = self.cls(cmd, bufsize=bufsize, **kwargs)
         except PermissionError as ex:
             e = "xonsh: subprocess mode: permission denied: {0}"
@@ -963,6 +970,11 @@ class SubprocSpec:
             scriptcmd = get_script_subproc_command(fname, self.cmd[1:])
             if scriptcmd is not None:
                 self.cmd = scriptcmd
+                self._cmd_script = xp.ON_WINDOWS and scriptcmd[:3] == [
+                    "cmd",
+                    "/s",
+                    "/c",
+                ]
                 # Update binary_loc to the interpreter, not the script.
                 # Otherwise _run_binary() (PR #4077) would launch the script
                 # directly via CreateProcess, causing WinError 193 on Windows.

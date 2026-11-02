@@ -1119,6 +1119,25 @@ def test_get_script_subproc_command_no_shebang_xonsh_exts(tmpdir, ext):
     assert cmd == [sys.executable, "-m", "xonsh", str(file), "--arg", "1"]
 
 
+@pytest.mark.skipif(not ON_WINDOWS, reason="Windows batch scripts")
+@pytest.mark.parametrize("ext", [".cmd", ".bat"])
+@pytest.mark.parametrize("dirname", ["scripts", "scripts with spaces"])
+@pytest.mark.parametrize(
+    "args", [[], ["hello"], ["hello world"], ["first", "second arg"]]
+)
+def test_windows_batch_script_arguments(xession, tmp_path, ext, dirname, args):
+    directory = tmp_path / dirname
+    directory.mkdir()
+    script = directory / f"echo-args{ext}"
+    script.write_text("@echo off\necho args: [%~1] [%~2]\n", encoding="utf-8")
+
+    result = run_subproc([[str(script), *args]], captured="object")
+
+    expected = (args + ["", ""])[:2]
+    assert result.out.strip() == f"args: [{expected[0]}] [{expected[1]}]"
+    assert result.returncode == 0
+
+
 def test_redirect_without_left_part(tmpdir):
     file = str(tmpdir / "test_redirect_without_left_part.txt")
     with pytest.raises(XonshError) as expected:
