@@ -2133,11 +2133,34 @@ class PTKSetting(PromptSetting):  # sub-classing -> sub-group
     )
 
 
+def _is_async_prompt_fallbacks(value):
+    return isinstance(value, dict) and all(
+        isinstance(key, str) and isinstance(text, str) for key, text in value.items()
+    )
+
+
+def _to_async_prompt_fallbacks(value):
+    if not _is_async_prompt_fallbacks(value):
+        raise TypeError(
+            "XONSH_ASYNC_PROMPT_FALLBACKS must be a dict of strings to strings"
+        )
+    return value
+
+
 class AsyncPromptSetting(PTKSetting):
     """Asynchronous Prompt
     Load ``$PROMPT`` in background without blocking read-eval loop.
     """
 
+    XONSH_ASYNC_PROMPT_FALLBACKS = Var(
+        validate=_is_async_prompt_fallbacks,
+        convert=_to_async_prompt_fallbacks,
+        detype=None,
+        default=default_value(lambda env: {}),
+        doc="Literal field text shown while an asynchronous prompt field has no cached result. "
+        "Maps field names to strings; missing names display {field}. Cached results take priority.",
+        doc_default="{}",
+    )
     ASYNC_INVALIDATE_INTERVAL = Var.with_default(
         0.05,
         "When ENABLE_ASYNC_PROMPT is True, it may call the redraw frequently. "
