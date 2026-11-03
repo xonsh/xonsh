@@ -339,7 +339,7 @@ class Completer:
             # that ``res is None`` is valid — it just yields an empty
             # ``items``, and trace will report ``Got 0 results``.
             items: list = []
-            exclusive = is_exclusive_completer(func)
+            exclusive = is_exclusive_completer(func, completion_context)
             try:
                 if res is not None:
                     for comp in res:
