@@ -63,14 +63,26 @@ def _xh_session_parser(hist=None, newest_first=False, **kwargs):
     """Returns history items of current session."""
     if hist is None:
         hist = XSH.history
-    return hist.items()
+    method = hist.items
+    if (
+        kwargs.get("include_cwd")
+        and getattr(method, "__func__", None) is JsonHistory.items
+    ):
+        return method(include_cwd=True)
+    return method()
 
 
 def _xh_all_parser(hist=None, newest_first=False, **kwargs):
     """Returns all history items."""
     if hist is None:
         hist = XSH.history
-    return hist.all_items(newest_first=newest_first)
+    method = hist.all_items
+    if (
+        kwargs.get("include_cwd")
+        and getattr(method, "__func__", None) is JsonHistory.all_items
+    ):
+        return method(newest_first=newest_first, include_cwd=True)
+    return method(newest_first=newest_first)
 
 
 def _xh_find_histfile_var(file_list, default=None):
@@ -168,6 +180,7 @@ def _xh_get_history(
     start_time=None,
     end_time=None,
     location=None,
+    cwd=None,
 ):
     """Get the requested portion of shell history.
 
@@ -181,6 +194,8 @@ def _xh_get_history(
         Filter commands by timestamp.
     location: string, optional
         The history file location (bash or zsh)
+    cwd: string, optional
+        Match this exact recorded working directory after lexical normalization.
 
     Returns
     -------
@@ -188,7 +203,9 @@ def _xh_get_history(
        A filtered list of commands
     """
     cmds = []
-    for i, item in enumerate(_XH_HISTORY_SESSIONS[session](location=location)):
+    for i, item in enumerate(
+        _XH_HISTORY_SESSIONS[session](location=location, include_cwd=cwd is not None)
+    ):
         item["ind"] = i
         cmds.append(item)
     if slices:
@@ -205,6 +222,15 @@ def _xh_get_history(
         else:
             end_time = xt.ensure_timestamp(end_time, datetime_format)
         cmds = _xh_filter_ts(cmds, start_time, end_time)
+    if cwd is not None:
+        normalized_cwd = os.path.normcase(xt.expanduser_abs_path(cwd))
+        cmds = (
+            cmd
+            for cmd in cmds
+            if isinstance(cmd.get("cwd"), str)
+            and cmd["cwd"]
+            and os.path.normcase(xt.expanduser_abs_path(cmd["cwd"])) == normalized_cwd
+        )
     return cmds
 
 
@@ -241,6 +267,7 @@ class HistoryAlias(xcli.ArgParserAlias):
         start_time: str | None = None,
         end_time: str | None = None,
         location: str | None = None,
+        cwd: str | None = None,
         reverse=False,
         numerate=False,
         timestamp=False,
@@ -267,6 +294,8 @@ class HistoryAlias(xcli.ArgParserAlias):
             Accepts $XONSH_DATETIME_FORMAT or ISO-8601 (e.g. 2023-07-17)
         location: -l, --location
             The history file location (bash or zsh)
+        cwd: --cwd
+            Show commands with this exact recorded working directory (native JSON/SQLite).
         reverse: -r, --reverse
             Reverses the direction
         numerate: -n, --numerate
@@ -289,7 +318,10 @@ class HistoryAlias(xcli.ArgParserAlias):
                 end_time=end_time,
                 datetime_format=datetime_format,
                 location=location,
+                cwd=cwd,
             )
+            if cwd is not None:
+                commands = list(commands)
         except Exception as err:
             print(f"history: error: {err}", file=_stderr or sys.stderr)
             return

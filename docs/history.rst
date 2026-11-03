@@ -107,6 +107,39 @@ the ``-n`` option is used to enumerate the commands,
 the ``-t`` option is used to show the timestamps,
 and more, try out ``history show --help`` for a list of options.
 
+Filter by recorded working directory
+------------------------------------
+
+For native JSON and SQLite history, ``--cwd PATH`` shows commands whose recorded
+working directory matches the given path exactly. For example:
+
+.. code-block:: xonshcon
+
+    @ history show --cwd /work/project
+    @ history show all --cwd /work/project
+    @ history show --cwd "/work/project with spaces"
+    @ history show --cwd ./project
+    @ history show all --cwd "~/project"
+
+The default scope is the current session; ``all`` includes recorded sessions.
+Paths are compared lexically after expanding ``~``, making them absolute, and
+normalizing separators, ``.`` and ``..`` with platform case rules. Relative paths
+(both requested and recorded) use the directory from which the command is
+invoked. Paths need not exist; symbolic links are not resolved and environment
+variables are not expanded by the comparison. Child directories and paths with
+only a matching prefix do not match.
+
+Slices select original history positions before the directory filter, and
+``-n`` retains those original indices. For example, ``history show 0:10 --cwd
+/work/project`` selects matching commands among the first ten original entries.
+Timestamp bounds also apply before directory filtering (inclusive start,
+exclusive end); ``-r`` reverses the resulting display.
+
+Entries without a recorded working directory cannot match. This includes history
+saved with working-directory recording disabled, and missing, null or empty
+values in older records. The filter does not recover missing values.
+
+
 Filtering by date and time
 ---------------------------
 
