@@ -85,6 +85,26 @@ Reserved for scripts that really want "fail fast on anything".  The old
 name ``$RAISE_SUBPROC_ERROR`` is kept as a deprecated alias that syncs
 to ``XONSH_SUBPROC_CMD_RAISE_ERROR``.
 
+For a standalone foreground pipeline whose last stage succeeds, explicitly
+setting ``$XONSH_SUBPROC_CMD_RAISE_ERROR = True`` also checks already
+recorded upstream failures in bare statements and ``$[...]``.  It raises
+for the first nonignored failure from left to right, using that stage's
+actual exit status and arguments.  Unknown statuses are skipped without
+waiting.  Captured objects, captured stdout, logical operands, background
+and suspended pipelines are outside this additional check.
+
+Each failed stage's ``@error_ignore`` or callable error policy applies only
+to that stage; ignoring one failure allows the next failure to be checked.
+A successful stage's policy is not called.  A failing final stage retains
+precedence, even when its policy suppresses the exception.  The terminal
+return code and Boolean value continue to describe the final stage.
+
+A recorded negative ``SIGPIPE`` status from an upstream stage is ignored
+by this additional check, preserving successful consumers that intentionally
+stop reading early.  That stage can explicitly force an exception with
+``@error_raise`` (or a callable policy returning ``True``).  Positive exit
+status ``141`` is an ordinary failure, not a negative signal status.
+
 ``$XONSH_PROMPT_SHOW_SUBPROC_ERROR`` — default ``False``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
