@@ -7,6 +7,7 @@ import contextlib
 import enum
 import os
 import signal
+import subprocess
 import sys
 import traceback
 
@@ -1269,6 +1270,40 @@ def main(argv=None):
         _failback_to_other_shells(args, err)
 
 
+def _run_script_as_program(path, args):
+    """Run a file that cannot be read as xonsh source as a program instead.
+
+    Some launchers are polyglots: a short POSIX-shell header followed by a
+    binary payload, where the header ``exec``s the payload (mill's
+    ``*-assembly`` jar-in-a-script, for example). They contain no xonsh code,
+    but xonsh reads a script whole before compiling it, so it stops at the
+    first byte that is not valid UTF-8. Such a file is a program for the
+    interpreter named in its shebang, so hand it back to the operating system,
+    which is what running ``./<file>`` would do.
+
+    Parameters
+    ----------
+    path : str
+        Absolute path of the script, already resolved.
+    args : list of str
+        Arguments to pass to the script.
+
+    Returns
+    -------
+    int or None
+        The script's exit status, or None when this file cannot be executed
+        here (no shebang support, or the file is not executable).
+    """
+    if ON_WINDOWS or not os.access(path, os.X_OK):
+        # Nothing to hand the file to: Windows has no shebang handling of its
+        # own, and a non-executable file has no interpreter attached to it.
+        return None
+    try:
+        return subprocess.call([path, *args])
+    except OSError:
+        return None
+
+
 def main_xonsh(args):
     """Main entry point for xonsh cli."""
     # Normally :func:`main` has already run the handshake before
@@ -1342,9 +1377,27 @@ def main_xonsh(args):
                 old_sys_path = sys.path.copy()
                 sys.path.insert(0, script_dir)
                 try:
-                    exc_info = run_script_with_cache(
-                        args.file, shell.execer, glb=shell.ctx, loc=None, mode="exec"
-                    )
+                    try:
+                        exc_info = run_script_with_cache(
+                            args.file,
+                            shell.execer,
+                            glb=shell.ctx,
+                            loc=None,
+                            mode="exec",
+                        )
+                    except UnicodeDecodeError:
+                        # A script with a binary payload is not xonsh source,
+                        # so compiling it is meaningless and the decode error
+                        # is not the user's fault. Run it as the program it is.
+                        exit_code = _run_script_as_program(path, args.args)
+                        if exit_code is None:
+                            print(
+                                f"xonsh: {args.file}: contains binary data, so it "
+                                "cannot be compiled as xonsh source; make it "
+                                "executable to run it as a program.",
+                                file=sys.stderr,
+                            )
+                            exit_code = 1
                 finally:
                     sys.path[:] = old_sys_path
             else:
