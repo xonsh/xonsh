@@ -118,3 +118,45 @@ class TestCat:
         stdout.flush()
         stderr.flush()
         assert len(stdout_buf.getvalue()) >= 500
+
+
+def _cat_output(args, fname, stdin):
+    stdout_buf = io.BytesIO()
+    stdout = io.TextIOWrapper(stdout_buf)
+    stderr = io.TextIOWrapper(io.BytesIO())
+    opts = cat._cat_parse_args(args)
+    # Longer timeout to avoid race on slow CI machines
+    cat._cat_single_file(opts, fname, stdin, stdout, stderr, read_timeout=2)
+    stdout.flush()
+    return stdout_buf.getvalue().decode()
+
+
+@pytest.mark.parametrize(
+    "args, content, expected",
+    [
+        (["-n"], "a\nb\n", "     1 a\n     2 b\n"),
+        (["-n"], "a\nb", "     1 a\n     2 b"),
+        (["-b"], "a\n\nb\n", "     1 a\n\n     2 b\n"),
+        (["-E"], "a\nb\n", "a$\nb$\n"),
+        (["-s"], "a\n\n\n\nb\n", "a\n\nb\n"),
+        # spans several reads of the 1 kb file reader
+        (["-n"], f"{'x' * 3000}\ny\n", f"     1 {'x' * 3000}\n     2 y\n"),
+    ],
+)
+def test_cat_line_options_apply_to_each_line(
+    cat_env_fixture, tmp_path, args, content, expected
+):
+    path = tmp_path / "file.txt"
+    path.write_bytes(content.replace("\n", os.linesep).encode())
+
+    output = _cat_output(args, str(path), io.StringIO())
+
+    assert output == expected.replace("\n", os.linesep)
+
+
+def test_cat_number_does_not_split_long_stdin_line(cat_env_fixture):
+    stdin = io.StringIO(f"{'x' * 100}\ny\n")
+
+    output = _cat_output(["-n"], "-", stdin)
+
+    assert output == f"     1 {'x' * 100}\n     2 y\n"
