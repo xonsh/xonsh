@@ -20,7 +20,6 @@ from xonsh.parsers.lexer import Lexer
 from xonsh.platform import HAS_PYGMENTS, ON_WINDOWS, PYTHON_VERSION_INFO
 from xonsh.pytest.tools import skip_if_on_windows
 from xonsh.tools import (
-    all_permutations,
     always_false,
     always_true,
     argvquote,
@@ -45,7 +44,6 @@ from xonsh.tools import (
     find_next_break,
     get_line_continuation,
     get_logical_line,
-    get_portions,
     iglobpath,
     is_bool,
     is_bool_or_int,
@@ -1358,22 +1356,6 @@ def test_ensure_slice(inp, exp):
 
 
 @pytest.mark.parametrize(
-    "inp, exp",
-    [
-        ((range(50), slice(25, 40)), list(i for i in range(25, 40))),
-        (
-            ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [slice(1, 4), slice(6, None)]),
-            [2, 3, 4, 7, 8, 9, 10],
-        ),
-        (([1, 2, 3, 4, 5], [slice(-2, None), slice(-5, -3)]), [4, 5, 1, 2]),
-    ],
-)
-def test_get_portions(inp, exp):
-    obs = get_portions(*inp)
-    assert list(obs) == exp
-
-
-@pytest.mark.parametrize(
     "inp",
     [
         "42.3",
@@ -2033,28 +2015,6 @@ def test_iglobpath_empty_str(monkeypatch, xession):
     monkeypatch.setattr(os, "listdir", mocklistdir)
     paths = list(iglobpath("some/path"))
     assert len(paths) == 0
-
-
-def test_all_permutations():
-    obs = {"".join(p) for p in all_permutations("ABC")}
-    exp = {
-        "A",
-        "B",
-        "C",
-        "AB",
-        "AC",
-        "BA",
-        "BC",
-        "CA",
-        "CB",
-        "ACB",
-        "CBA",
-        "BAC",
-        "CAB",
-        "BCA",
-        "ABC",
-    }
-    assert obs == exp
 
 
 @pytest.mark.parametrize(
