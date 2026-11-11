@@ -85,6 +85,15 @@ def test_get_module_docstring_for_missing_module():
 # --- get_xontribs / xontrib_data --------------------------------------------
 
 
+def test_get_module_docstring_reads_utf8_source(tmp_path, monkeypatch):
+    """Python source is UTF-8 by default, whatever the locale encoding."""
+    (tmp_path / "utf8_docstring_mod.py").write_bytes(
+        '"""Łukasz ✨ prompt."""\n'.encode()
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    assert get_module_docstring("utf8_docstring_mod") == "Łukasz ✨ prompt."
+
+
 def test_get_xontribs_returns_dict():
     data = get_xontribs()
     assert isinstance(data, dict)

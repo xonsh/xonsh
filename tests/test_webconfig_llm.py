@@ -225,6 +225,18 @@ def test_insert_into_xonshrc_preserves_outer_content(tmp_path):
 # --- xonsh_data -------------------------------------------------------------
 
 
+def test_insert_into_xonshrc_reads_utf8(tmp_path):
+    """The xonsh RC is read as UTF-8, the encoding it is written and run in."""
+    rc = tmp_path / "rcfile"
+    rc.write_bytes("# Łukasz ✨\n# S\n$PROMPT = 'old'\n# E\n".encode())
+    file_writes.insert_into_xonshrc(
+        {"prompt": "@ "}, xonshrc=str(rc), prefix="# S", suffix="# E"
+    )
+    text = rc.read_text(encoding="utf-8")
+    assert text.startswith("# Łukasz ✨\n")
+    assert "'old'" not in text
+
+
 def test_invert_color_round_trips_extreme_values():
     # 000000 inverts to ffffff and vice versa
     assert xonsh_data.invert_color("000000").lower() == "ffffff"
