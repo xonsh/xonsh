@@ -33,6 +33,12 @@ Editing
         Terminal must support xterm modifyOtherKeys mode 1 or Kitty keyboard protocol.
 
 
+If the system clipboard cannot encode a selection, such as a filename that
+contains invalid UTF-8 bytes, Xonsh keeps the original selection in the prompt's
+clipboard. Pasting in that prompt uses the preserved text until the next
+successful copy to the system clipboard.
+
+
 Selection Actions
 -----------------
 
