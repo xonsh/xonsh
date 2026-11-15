@@ -9,12 +9,10 @@ import typing as tp
 from email.message import EmailMessage
 from http import HTTPStatus, server
 from pathlib import Path
-from pprint import pprint
 from urllib import parse
 
 from xonsh.built_ins import XSH
 from xonsh.webconfig import tags as t
-from xonsh.webconfig.file_writes import insert_into_xonshrc
 from xonsh.webconfig.routes import Routes
 
 RENDERERS: list[tp.Callable] = []
@@ -87,6 +85,8 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
             return route_cls(url=url, params=params, xsh=XSH)
 
     def do_GET(self) -> None:
+        if not self._is_own_host():
+            return self.send_error(HTTPStatus.FORBIDDEN)
         route = self._get_route("get")
         if route is not None:
             return self.render_get(route)
@@ -106,22 +106,35 @@ class XonshConfigHTTPRequestHandler(server.SimpleHTTPRequestHandler):
                         value = values[0].decode(encoding="utf-8")
                 yield name, value
 
+    def _own_addresses(self) -> set[str]:
+        port = self.connection.getsockname()[1]
+        return {f"localhost:{port}", f"127.0.0.1:{port}"}
+
+    def _is_own_host(self) -> bool:
+        """Block DNS rebinding: a page whose name resolves to 127.0.0.1
+        still sends its own name in ``Host``."""
+        return self.headers.get("Host") in self._own_addresses()
+
+    def _is_own_origin(self) -> bool:
+        """Only accept writes sent by this server's own page.
+
+        The ``Origin`` check blocks other websites open in the browser.
+        """
+        origin = parse.urlparse(self.headers.get("Origin", "")).netloc
+        return self._is_own_host() and origin in self._own_addresses()
+
     def do_POST(self):
         """Reads post request body"""
+        if not self._is_own_origin():
+            return self.send_error(HTTPStatus.FORBIDDEN)
         route = self._get_route("post")
-        if route is not None:
-            # redirect after form submission
-            data = dict(self._read_form())
+        if route is None:
+            return self.send_error(HTTPStatus.NOT_FOUND)
+        # redirect after form submission
+        data = dict(self._read_form())
 
-            new_route = route.post(data) or route
-            return self._send(redirect=new_route.path)
-        post_body = self._read()
-        config = json.loads(post_body)
-        print("Web Config Values:")
-        pprint(config)
-        fname = insert_into_xonshrc(config)
-        print("Wrote out to " + fname)
-        self._send(b"received post request:<br>" + post_body)
+        new_route = route.post(data) or route
+        return self._send(redirect=new_route.path)
 
 
 def bind_server_to(
@@ -136,7 +149,7 @@ def bind_server_to(
         try:
             cls.allow_reuse_address = True
 
-            httpd = cls(("", port), handler_cls)
+            httpd = cls(("127.0.0.1", port), handler_cls)
             url = f"http://localhost:{port}"
             print(f"Web config started at '{url}'. Hit Ctrl+C to stop.")
             if browser:

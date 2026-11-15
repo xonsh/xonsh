@@ -7,7 +7,7 @@ from xonsh.environ import Env
 
 from . import tags as t
 from . import xonsh_data
-from .file_writes import insert_into_xonshrc
+from .file_writes import insert_into_xonshrc, is_valid_xontrib_name
 
 
 class Routes:
@@ -304,6 +304,9 @@ class XontribsPage(Routes):
         if not data:
             return
         name = list(data)[0]
+        if not is_valid_xontrib_name(name):
+            self.err(f"Invalid xontrib name: {name!r}")
+            return
         if self.is_loaded(name):
             # todo: update rc file
             del sys.modules[self.mod_name(name)]
