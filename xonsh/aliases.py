@@ -596,12 +596,12 @@ class Aliases(cabc.MutableMapping):
         The command won't be expanded if the cursor's inside/behind it.
         """
         word = (line.split(maxsplit=1) or [""])[0]
-        if word in self and not callable(self.get(word)[0]):  # type: ignore
+        if word in self and (resolved := self.get(word)) and not callable(resolved[0]):
             word_idx = line.find(word)
             word_edge = word_idx + len(word)
             if cursor_index > word_edge:
                 # the cursor isn't inside/behind the word
-                expansion = " ".join(self.get(word))
+                expansion = " ".join(resolved)
                 line = line[:word_idx] + expansion + line[word_edge:]
         return line
 
