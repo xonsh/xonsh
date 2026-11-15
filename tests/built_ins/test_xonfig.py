@@ -47,7 +47,7 @@ class MockRequest:
         self.handler = None
 
     def getsockname(self):
-        return ("sockname",)
+        return ("127.0.0.1", 8421)
 
     def _request(self):
         web_main.XonshConfigHTTPRequestHandler(self, (0, 0), None)
@@ -79,9 +79,13 @@ class MockRequest:
 
     def makefile(self, *args, **kwargs):
         if args[0] == "rb":
-            body = f"{self.method} {self._path} HTTP/1.0".encode()
-            if self.content:
-                body = b"\n".join([body, *self.content])
+            # what the browser sends from the server's own page
+            lines = [
+                f"{self.method} {self._path} HTTP/1.0".encode(),
+                b"Host: localhost:8421",
+                b"Origin: http://localhost:8421",
+            ]
+            body = b"\n".join([*lines, *(self.content or [b""])])
             return io.BytesIO(body)
         elif args[0] == "wb":
             return io.BytesIO(b"")
