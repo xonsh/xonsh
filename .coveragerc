@@ -1,4 +1,5 @@
 [run]
+relative_files = true
 #branch = true
 source =
   xonsh/

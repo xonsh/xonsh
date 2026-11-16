@@ -66,6 +66,31 @@ jobs:
         run: |
           python -m xonsh run-tests.xsh test --report-coverage -- --timeout=600
 
+      - name: Generate PR coverage comment
+        if: ${{ github.event_name == 'pull_request' && runner.os == 'Linux' && matrix.python-version == env.DEFAULT_PYTHON_VERSION }}
+        uses: py-cov-action/python-coverage-comment-action@e5fb2218463c3377f3504b0c5b5646ed53da7a2f # v4.5
+        env:
+          COVERAGE_FILE: .cache/coverage
+          FORCE_WORKFLOW_RUN: 'true'
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          ACTIVITY: process_pr
+          COVERAGE_PATH: '.'
+          COMMENT_FILENAME: pr-coverage.txt
+          COMMENT_TEMPLATE: |
+            {{ marker }}
+            <!-- xonsh-pr-coverage -->
+            ### Current coverage: {{ coverage.info.percent_covered | pct }}
+            Linux / Python 3.12 only.
+            {{ coverage.info.covered_lines }} of {{ coverage.info.num_statements }} statements covered.
+      - name: Upload PR coverage comment
+        if: ${{ github.event_name == 'pull_request' && runner.os == 'Linux' && matrix.python-version == env.DEFAULT_PYTHON_VERSION }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-coverage-comment
+          path: pr-coverage.txt
+          if-no-files-found: error
+
   freebsd:
     # FreeBSD has no GitHub-hosted runner; the VM is launched on a Linux
     # host via vmactions/freebsd-vm (https://github.com/marketplace/actions/freebsd-vm).
