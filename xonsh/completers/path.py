@@ -187,7 +187,7 @@ def _raw_quote(s):
 
 def _quote_paths(paths, start, end, append_end=True, cdpath=False):
     expand_path = XSH.expand_path
-    out = set()
+    out = {}
     space = " "
     backslash = "\\"
     double_backslash = "\\\\"
@@ -257,8 +257,8 @@ def _quote_paths(paths, start, end, append_end=True, cdpath=False):
         # after the cursor, and a space here would fall inside it.
         if not is_dir and end != "" and append_end:
             s = s + space
-        out.add(s)
-    return out, need_quotes
+        out[s] = None
+    return set(out), need_quotes
 
 
 def _joinpath(path):
@@ -355,7 +355,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
     # Raw strings (r'...') treat ~ literally — skip tilde expansion
     # so that r'~/' completes inside a directory named ~ in cwd.
     is_raw_string = "r" in path_str_start.lower() if path_str_start else False
-    paths = set()
+    paths = {}
     env = XSH.env
     glob_sorted = env.get("GLOB_SORTED")
     prefix = glob.escape(prefix)
@@ -378,12 +378,12 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
         for s in (
             sorted(glob.glob(prefix + "*")) if glob_sorted else glob.iglob(prefix + "*")
         ):
-            paths.add(s)
+            paths[s] = None
     else:
         for s in xt.iglobpath(
             prefix + "*", ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
         ):
-            paths.add(s)
+            paths[s] = None
     # Substring matches: *prefix* catches files containing the prefix
     # anywhere in their name.  The pipeline's tier-based sort ensures
     # prefix matches rank above substring matches.
@@ -403,7 +403,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
             for s in xt.iglobpath(
                 pattern, ignore_case=(not xp.ON_WINDOWS), sort_result=glob_sorted
             ):
-                paths.add(s)
+                paths[s] = None
     if (
         len(paths) == 0
         and env.get("SUBSEQUENCE_PATH_COMPLETION")
@@ -428,7 +428,7 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
             matches_so_far = {basedir}
             for i in p:
                 matches_so_far = _expand_one(matches_so_far, i, False)
-            paths |= {_joinpath(i) for i in matches_so_far}
+            paths.update((_joinpath(i), None) for i in matches_so_far)
     if (
         len(paths) == 0
         and env.get("FUZZY_PATH_COMPLETION")
@@ -441,15 +441,26 @@ def _complete_path_raw(prefix, line, start, end, ctx, cdpath=True, filtfunc=None
             sort_result=glob_sorted,
         ):
             if xt.levenshtein(prefix, s, threshold) < threshold:
-                paths.add(s)
+                paths[s] = None
     if cdpath and cd_in_command(line):
-        _add_cdpaths(paths, prefix)
-    paths = set(filter(filtfunc, paths))
-    if tilde in prefix and not xp.ON_WINDOWS:
+        cdpaths = set()
+        _add_cdpaths(cdpaths, prefix)
+        paths.update(dict.fromkeys(cdpaths))
+    paths = list(filter(filtfunc, paths))
+    replace_home = tilde in prefix and not xp.ON_WINDOWS
+    if replace_home:
         home = os.path.expanduser(tilde)
-        paths = {s.replace(home, tilde) for s in paths}
+
+    def normalized_paths():
+        # Release each source path as the quoted result is built.
+        while paths:
+            path = paths.pop()
+            if replace_home:
+                path = path.replace(home, tilde)
+            yield _normpath(path)
+
     paths, _ = _quote_paths(
-        {_normpath(s) for s in paths}, path_str_start, path_str_end, append_end, cdpath
+        normalized_paths(), path_str_start, path_str_end, append_end, cdpath
     )
     # When a literal file/directory named ~ exists in cwd, add r'~...'
     # completions so the user can select the local file instead of $HOME.
