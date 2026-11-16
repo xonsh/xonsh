@@ -221,3 +221,43 @@ See also
 * :doc:`completers` -- writing custom completers
 * `Awesome-xontribs <https://github.com/xonsh/awesome-xontribs>`_ -- registry of community xontribs
 * `Xontrib template <https://github.com/xonsh/xontrib-template>`_ -- quickstart template
+
+Inspecting session variables with whos
+=====================================
+
+The bundled ``whos`` xontrib is opt-in; its alias is not available by default.
+Enable it in your :doc:`xonsh RC <xonshrc>` or during an interactive Xonsh session:
+
+.. code-block:: xonshcon
+
+    @ xontrib load whos
+    @ answer = 42
+    @ whos
+    Name    Type    Value
+    answer  int     42
+    @ xontrib reload whos
+    @ whos
+    No new variables.
+    @ xontrib unload whos
+
+When loaded from RC, the baseline is captured at ``on_pre_cmdloop``, after all
+RC processing and immediately before the interactive command loop. Names defined
+anywhere in RC, including after the load command, are excluded. A late load
+captures the current context immediately because this event has already fired.
+Reloading starts a fresh baseline at that same rule; repeated loading without
+unloading preserves the existing baseline.
+
+``whos`` lists current names absent from the baseline, sorted by name, with their
+types and single-line value previews. Overwriting a baseline variable does not
+make it new. Inspection keeps the execution context and its values intact, and
+the baseline retains only names, not original values. Empty results display
+``No new variables.``
+
+Ordinary containers and strings use bounded representations. Previews escape
+terminal control characters and are limited to 80 characters after escaping.
+Display exceptions are contained per row; arbitrary custom ``__repr__`` code
+can still take time or have side effects.
+
+An existing ``whos`` alias is preserved when loading. Unloading removes only this
+xontrib's callback and the alias it installed; user replacement or removal of
+that alias is respected.
