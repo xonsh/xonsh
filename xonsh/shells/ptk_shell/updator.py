@@ -33,7 +33,7 @@ class Executor:
             (
                 self.thread_results[field]
                 if field in self.thread_results
-                else place_holder
+                else XSH.env["XONSH_ASYNC_PROMPT_FALLBACKS"].get(field, place_holder)
             ),
             place_holder,
         )

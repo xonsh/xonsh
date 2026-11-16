@@ -395,3 +395,63 @@ def test_get_stringified_missing_key_returns_default():
     env = Env()
     assert env.get_stringified("NO_SUCH") == ""
     assert env.get_stringified("NO_SUCH", None) is None
+
+
+def test_async_fallback_env_default():
+    first, second = Env(), Env()
+    name = "XONSH_ASYNC_PROMPT_FALLBACKS"
+    assert first[name] == second[name] == {}
+    assert first[name] is not second[name]
+    first[name]["slow"] = "waiting"
+    assert second[name] == {}
+    assert first.get_docs(name).doc_default == "{}"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        {},
+        {"slow": "loading"},
+        {"slow": ""},
+        type("FallbackDict", (dict,), {})({"slow": "ok"}),
+    ],
+)
+def test_async_fallback_env_valid(value):
+    env = Env()
+    env["XONSH_ASYNC_PROMPT_FALLBACKS"] = value
+    assert env["XONSH_ASYNC_PROMPT_FALLBACKS"] is value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        "{}",
+        "{'slow': 'loading'}",
+        [],
+        [("slow", "wait")],
+        3,
+        {1: "wait"},
+        {"slow": 1},
+        {"slow": lambda: "wait"},
+    ],
+)
+def test_async_fallback_env_invalid(value):
+    env = Env()
+    name = "XONSH_ASYNC_PROMPT_FALLBACKS"
+    previous = {"slow": "wait"}
+    env[name] = previous
+    with pytest.raises(TypeError, match=name):
+        env[name] = value
+    assert env[name] is previous
+
+
+@pytest.mark.parametrize("value", [None, {"slow": "wait"}])
+def test_async_fallback_env_not_exported(value):
+    env = Env()
+    name = "XONSH_ASYNC_PROMPT_FALLBACKS"
+    if value is not None:
+        env[name] = value
+    assert isinstance(env[name], dict)
+    assert name not in env.detype()
+    assert name not in env.detype_all()
