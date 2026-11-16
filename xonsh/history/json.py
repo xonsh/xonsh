@@ -684,18 +684,24 @@ class JsonHistory(History):
         self.buffer = []
         return hf
 
-    def items(self, newest_first=False):
-        """Display history items of current session."""
+    def items(self, newest_first=False, *, include_cwd=False):
+        """Display session items, optionally including recorded cwd metadata."""
         if newest_first:
             items = zip(reversed(self.inps), reversed(self.tss), strict=False)
         else:
             items = zip(self.inps, self.tss, strict=False)
-        for item, tss in items:
-            yield {"inp": item.rstrip(), "ts": tss[0]}
+        for index, (item, tss) in enumerate(items):
+            command = {"inp": item.rstrip(), "ts": tss[0]}
+            if include_cwd:
+                cwd_index = -index - 1 if newest_first else index
+                command["cwd"] = self.cwds[cwd_index]
+            yield command
 
-    def all_items(self, newest_first=False, **kwargs):
+    def all_items(self, newest_first=False, *, include_cwd=False, **kwargs):
         """
         Returns all history as found in XONSH_DATA_DIR.
+
+        Include recorded cwd metadata only when include_cwd is requested.
 
         yield format: {'inp': cmd, 'rtn': 0, ...}
         """
@@ -725,9 +731,15 @@ class JsonHistory(History):
             if newest_first:
                 commands = reversed(commands)
             for c in commands:
-                yield {"inp": c["inp"].rstrip(), "ts": c["ts"][0]}
+                command = {"inp": c["inp"].rstrip(), "ts": c["ts"][0]}
+                if include_cwd:
+                    command["cwd"] = c.get("cwd")
+                yield command
         # all items should also include session items
-        yield from self.items()
+        if include_cwd and getattr(self.items, "__func__", None) is JsonHistory.items:
+            yield from self.items(include_cwd=True)
+        else:
+            yield from self.items()
 
     def info(self):
         data = collections.OrderedDict()
