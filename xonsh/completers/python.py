@@ -1,9 +1,13 @@
 """Completers for Python code"""
 
+import ast
 import builtins
 import collections.abc as cabc
 import inspect
+import io
+import keyword
 import re
+import tokenize
 import warnings
 
 import xonsh.lib.lazyasd as xl
@@ -13,6 +17,7 @@ from xonsh.completers.tools import (
     RichCompletion,
     contextual_completer,
     get_filter_function,
+    non_exclusive_completer,
 )
 from xonsh.lib.string import (
     is_balanced,
@@ -194,6 +199,74 @@ def complete_xonsh_imp(context: CompletionContext) -> CompleterResult:
         return completions, len(prefix)
 
 
+def _python_can_coexist(context: CompletionContext) -> bool:
+    """Admit unambiguous unknown-command arguments without executing Python."""
+    command, python = context.command, context.python
+    if (
+        command is None
+        or python is None
+        or command.arg_index <= 0
+        or python.is_sub_expression
+        or "." in command.prefix
+    ):
+        return False
+    name = command.command_name
+    if (
+        name is None
+        or not name.isidentifier()
+        or keyword.iskeyword(name)
+        or keyword.issoftkeyword(name)
+        or name in (python.ctx or {})
+        or name in builtins.__dict__
+    ):
+        return False
+    commands = XSH.commands_cache
+    if commands is not None and name in commands:
+        return False
+    source = python.prefix
+    if "\n" in source or "\r" in source:
+        return False
+    try:
+        ast.parse(source)
+    except SyntaxError:
+        pass
+    else:
+        return False
+    try:
+        tokens = [
+            token
+            for token in tokenize.generate_tokens(io.StringIO(source).readline)
+            if token.type not in (tokenize.NL, tokenize.NEWLINE, tokenize.ENDMARKER)
+        ]
+    except (tokenize.TokenError, SyntaxError):
+        return False
+    if (
+        len(tokens) < 2
+        or tokens[0].type != tokenize.NAME
+        or tokens[0].string != name
+        or any(
+            token.type in (tokenize.ERRORTOKEN, tokenize.COMMENT)
+            or (token.type == tokenize.OP and token.string in {";", "|", "&"})
+            or (token.type == tokenize.NAME and token.string in {"and", "or"})
+            for token in tokens
+        )
+    ):
+        return False
+    second = tokens[1]
+    ordinary_argument = second.type in (tokenize.NUMBER, tokenize.STRING) or (
+        second.type == tokenize.NAME and not keyword.iskeyword(second.string)
+    )
+    first_argument = (
+        command.args[1].raw_value
+        if command.arg_index > 1 and len(command.args) > 1
+        else command.raw_prefix
+    )
+    return (
+        ordinary_argument or re.match(r"--[A-Za-z_][\w-]*=", first_argument) is not None
+    )
+
+
+@non_exclusive_completer(when=_python_can_coexist)
 @contextual_completer
 def complete_python(context: CompletionContext) -> CompleterResult:
     """

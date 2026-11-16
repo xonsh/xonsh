@@ -42,6 +42,62 @@ set of completions for the current line. The collected completions are then disp
 user.
 
 
+Python candidates and files
+---------------------------
+
+For supported unknown-command arguments, Python candidates can coexist with
+file candidates from the registered path completer. For example, in a temporary
+working directory:
+
+.. code-block:: xonshcon
+
+    @ from pathlib import Path
+    @ Path('lest.txt').touch()
+    @ lemon = 1
+    @ somecmd le<TAB>
+
+Previously, Python matches such as ``lemon`` and ``len`` prevented ``lest.txt``
+from appearing. Now all three can appear, provided ``somecmd`` is not a known
+command, alias, Python name, or builtin and no earlier exclusive completer has
+already supplied results. Each candidate retains its own replacement length,
+including when completing an argument such as ``--opt=le``.
+
+This fallback is deliberately conservative. It supports a bare identifier as
+the unknown command name, followed by an ordinary word, number, quoted argument,
+or long-option assignment such as ``--opt=value``. Python expressions, unfinished
+calls and grouping, attributes, imports, and Python interpolation retain their
+existing exclusivity. Non-identifier command names, an initial single-dash option,
+an initial ``./directory`` argument, comments, and compound or multiline input
+retain the previous behavior. This does not change existing path completion
+when Python supplies no candidates, including quoted and relative paths.
+
+A completer can opt into conditional non-exclusivity using ``when=``:
+
+.. code-block:: python
+
+    from xonsh.completers.tools import contextual_completer, non_exclusive_completer
+
+    def allow_later_completers(context):
+        return (
+            context.command is not None
+            and context.command.completing_command("deploy")
+        )
+
+    @non_exclusive_completer(when=allow_later_completers)
+    @contextual_completer
+    def complete_deploy(context):
+        if allow_later_completers(context):
+            return {"production"}
+        return None
+
+The predicate receives the current completion context; returning ``True`` allows
+later completers to contribute. Without a context, listing and registration
+classify a conditional completer as exclusive without calling its predicate.
+The bare ``@non_exclusive_completer`` form remains unconditional. Predicates
+should not mutate shared state. Earlier exclusive results, ``StopIteration``,
+and registered completer filters still control collection normally.
+
+
 Listing Active Completers
 =========================
 
