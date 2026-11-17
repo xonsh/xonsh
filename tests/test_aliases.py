@@ -122,6 +122,16 @@ def test_expand_alias():
     assert exp_ff == "ff "
 
 
+def test_expand_alias_keeps_line_when_return_command_raises(xession):
+    @xession.aliases.register("tst")
+    @xession.aliases.return_command
+    def _tst(args):
+        return ["printf", args[0]]
+
+    line = "tst .ba"
+    assert xession.aliases.expand_alias(line, len(line)) == line
+
+
 def _return_to_sender_none():
     return "wakka", {}
 
