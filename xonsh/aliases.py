@@ -53,6 +53,7 @@ from xonsh.tools import (
     argvquote,
     capturable,
     escape_windows_cmd_string,
+    info_repr,
     print_color,
     print_exception,
     strip_simple_quotes,
@@ -167,8 +168,7 @@ class FuncAlias:
             for attr in self.attributes_show
             if (val := getattr(self, attr, None)) is not None
         }
-        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        return f"{cls}({r!r})"
+        return info_repr(self, r)
 
     def __call__(
         self,
@@ -744,8 +744,7 @@ class ExecAlias:
         return thread_local.get("returncode", 0)
 
     def __repr__(self):
-        cls = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        return f"{cls}({self.src!r}, filename={self.filename!r})"
+        return info_repr(self, {"src": self.src, "filename": self.filename})
 
 
 ALIAS_PARAMS_DEFAULT = {
@@ -927,7 +926,7 @@ class PartialEvalAlias:
         return self.f(**kwargs)
 
     def __repr__(self):
-        return f"PartialEvalAlias({self.f!r}, acc_args={self.acc_args!r})"
+        return info_repr(self, {"func": self.__name__, "acc_args": self.acc_args})
 
 
 def partial_eval_alias(f, acc_args=()):
