@@ -155,7 +155,7 @@ def _parse_int(val: str, default=0):
 def get_stash_count(gitdir: str):
     """Get git-stash count"""
     with contextlib.suppress(OSError):
-        with open(os.path.join(gitdir, "logs/refs/stash")) as f:
+        with open(os.path.join(gitdir, "logs/refs/stash"), "rb") as f:
             return sum(1 for _ in f)
     return 0
 

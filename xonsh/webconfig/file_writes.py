@@ -68,7 +68,7 @@ def insert_into_xonshrc(
     # get current contents
     fname = os.path.expanduser(xonshrc)
     if os.path.isfile(fname):
-        with open(fname) as f:
+        with open(fname, encoding="utf-8") as f:
             s = f.read()
         before, _, s = s.partition(prefix)
         current, _, after = s.partition(suffix)

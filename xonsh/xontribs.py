@@ -72,14 +72,14 @@ def get_module_docstring(module: str) -> str:
 
     spec = importlib.util.find_spec(module)
     if spec and spec.has_location and spec.origin:
-        return ast.get_docstring(ast.parse(Path(spec.origin).read_text())) or ""
+        return ast.get_docstring(ast.parse(Path(spec.origin).read_bytes())) or ""
     # Fall back for ``xontrib.<name>`` modules that ship as ``.xsh`` files —
     # importlib's standard finders don't know about ``.xsh`` and return
     # ``None`` here.
     path = _find_xontrib_file(module)
     if path is not None and path.suffix == ".py":
         with contextlib.suppress(SyntaxError, OSError):
-            return ast.get_docstring(ast.parse(path.read_text())) or ""
+            return ast.get_docstring(ast.parse(path.read_bytes())) or ""
     return ""
 
 
