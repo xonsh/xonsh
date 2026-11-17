@@ -11,7 +11,19 @@ def write_value(value: str, _) -> str:
     return f"{value!r}"
 
 
+_XONTRIB_NAME = re.compile(r"[\w.-]+")
+
+
+def is_valid_xontrib_name(name: str) -> bool:
+    """Module, relative and entry-point names, but nothing that could end the
+    ``xontrib load`` line or add code to it."""
+    return _XONTRIB_NAME.fullmatch(name) is not None
+
+
 def append_to_list(value: list[str], existing: str) -> str:
+    for name in value:
+        if not is_valid_xontrib_name(name):
+            raise ValueError(f"Invalid xontrib name: {name!r}")
     vals = set(existing.split(" ")) if existing else set()
     vals.update(value)
     return " ".join(vals)

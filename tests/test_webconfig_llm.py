@@ -279,3 +279,16 @@ def test_rst_to_html_smoke():
     out = xonsh_data.rst_to_html("Hello *world*")
     assert isinstance(out, str)
     assert "world" in out
+
+
+@pytest.mark.parametrize(
+    "name", ["abbrevs\nimport os", "a b", "a;b", "", "a\rb", "a'b", "a#b"]
+)
+def test_append_to_list_rejects_invalid_xontrib_names(name):
+    with pytest.raises(ValueError):
+        file_writes.append_to_list([name], "")
+
+
+@pytest.mark.parametrize("name", ["my.xontrib", "my-xontrib", ".relative"])
+def test_append_to_list_accepts_module_and_entry_point_names(name):
+    assert file_writes.append_to_list([name], "") == name
