@@ -34,7 +34,7 @@ if os.environ.get("SSH_TTY") or os.environ.get("SSH_CONNECTION"):
     except Exception:
         pass
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, Suggestion
-from prompt_toolkit.clipboard import InMemoryClipboard
+from prompt_toolkit.clipboard import Clipboard, ClipboardData, InMemoryClipboard
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import PygmentsTokens, to_formatted_text
@@ -204,6 +204,31 @@ def disable_copy_on_deletion():
         handle_binding(_name)
 
 
+class _SystemClipboard(Clipboard):
+    """Keep text in the prompt when the system clipboard cannot encode it."""
+
+    def __init__(self, clipboard: Clipboard):
+        self._clipboard = clipboard
+        self._local_data: ClipboardData | None = None
+
+    def set_data(self, data: ClipboardData) -> None:
+        """Copy text, keeping the original selection on encoding failure."""
+        try:
+            # Some clipboard backends start a subprocess before encoding.
+            data.text.encode("utf-8")
+            self._clipboard.set_data(data)
+        except UnicodeEncodeError:
+            self._local_data = data
+        else:
+            self._local_data = None
+
+    def get_data(self) -> ClipboardData:
+        """Return the local selection until the next successful system copy."""
+        if self._local_data is not None:
+            return self._local_data
+        return self._clipboard.get_data()
+
+
 class PromptToolkitShell(BaseShell):
     """The xonsh shell for prompt_toolkit v2 and later."""
 
@@ -244,7 +269,7 @@ class PromptToolkitShell(BaseShell):
         if not XSH.env.get("XONSH_COPY_ON_DELETE", False):
             disable_copy_on_deletion()
         if HAVE_SYS_CLIPBOARD and (XSH.env.get("XONSH_USE_SYSTEM_CLIPBOARD", True)):
-            default_clipboard = PyperclipClipboard()
+            default_clipboard = _SystemClipboard(PyperclipClipboard())
         else:
             default_clipboard = InMemoryClipboard()
         ptk_args.setdefault("clipboard", default_clipboard)

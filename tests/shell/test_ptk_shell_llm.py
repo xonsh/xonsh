@@ -413,3 +413,36 @@ def test_input_hook_reuses_one_session(input_hook, fake_session, xession):
     input_hook.restore()
     input_hook.prompt("c: ")
     assert len(fake_session.instances) == 2  # a fresh, empty history
+
+
+def test_system_clipboard_preserves_unencodable_text(ptk_shell, monkeypatch):
+    from prompt_toolkit.clipboard import ClipboardData
+    from prompt_toolkit.selection import SelectionType
+
+    pyperclip = pytest.importorskip("pyperclip")
+    system_text = "already copied"
+    copy_attempts = []
+
+    def copy(text):
+        nonlocal system_text
+        copy_attempts.append(text)
+        system_text = text.encode("utf-8").decode("utf-8")
+
+    monkeypatch.setattr(pyperclip, "copy", copy)
+    monkeypatch.setattr(pyperclip, "paste", lambda: system_text)
+
+    _, _, shell = ptk_shell
+    clipboard = shell.prompter.clipboard
+    filename = "file-\udc8f.txt"
+    clipboard.set_data(ClipboardData(filename, SelectionType.LINES))
+    assert clipboard.get_data().text == filename
+    assert clipboard.get_data().type == SelectionType.LINES
+    assert system_text == "already copied"
+    assert copy_attempts == []
+
+    clipboard.set_text("café.txt")
+    assert system_text == "café.txt"
+    assert clipboard.get_data().text == "café.txt"
+
+    system_text = "copied elsewhere"
+    assert clipboard.get_data().text == "copied elsewhere"
