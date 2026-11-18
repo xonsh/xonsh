@@ -261,6 +261,44 @@ def test_callable_alias_o2e_uncaptured(xonsh_session):
 
 
 @skip_if_on_windows
+def test_unregistered_thread_routes_to_caller_stream(xonsh_session):
+    """A thread that never registered a handle in ``STDOUT_DISPATCHER`` must
+    route to the stream a caller installed via ``redirect_stdout`` (the
+    fallback), not the stale import-time default.
+
+    Regression for the stdout-dispatcher race: an embedding application that
+    captures output by swapping ``sys.stdout`` after xonsh was imported would
+    otherwise leak worker-thread output (e.g. a callable alias's ``print``) to
+    the terminal captured at import time.
+    """
+    import io
+    import threading
+
+    from xonsh.procs.proxies import STDOUT_DISPATCHER
+    from xonsh.tools import redirect_stdout
+
+    capture = io.StringIO()
+    prev_fb = STDOUT_DISPATCHER.get_fallback()
+    seen = {}
+
+    def _worker():
+        # This thread never called register(); it must resolve the fallback.
+        seen["handle"] = STDOUT_DISPATCHER.handle
+
+    with redirect_stdout(capture):
+        assert STDOUT_DISPATCHER.get_fallback() is capture
+        t = threading.Thread(target=_worker)
+        t.start()
+        t.join(timeout=5)
+        assert not t.is_alive()
+        # The unregistered worker must see the caller's stream, not default.
+        assert seen["handle"] is capture
+
+    # Leaving the context manager must restore the previous fallback.
+    assert STDOUT_DISPATCHER.get_fallback() is prev_fb
+
+
+@skip_if_on_windows
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_stderr_prefix_postfix(xonsh_session):
     """XONSH_STDERR_PREFIX/POSTFIX should wrap captured stderr output."""

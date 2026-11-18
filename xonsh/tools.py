@@ -1095,14 +1095,28 @@ class _RedirectStream:
         self._new_target = new_target
         # We use a list of old targets to make this CM re-entrant
         self._old_targets = []
+        self._fb_restore = None
 
     def __enter__(self):
         self._old_targets.append(getattr(sys, self._stream))
         setattr(sys, self._stream, self._new_target)
+        # Record the caller's intended real stream as the dispatcher fallback so
+        # that worker threads which never registered their own handle (e.g. a
+        # pipeline's last-stage alias started inside another thread's redirect
+        # window) route here instead of the stale import-time default. Skipped
+        # when the target is a dispatcher (a transient swap, not a real stream).
+        self._fb_restore = None
+        if self._stream in ("stdout", "stderr") and not _is_dispatcher(self._new_target):
+            dispatcher = _get_stream_dispatcher(self._stream)
+            self._fb_restore = (dispatcher, dispatcher.get_fallback())
+            dispatcher.set_fallback(self._new_target)
         return self._new_target
 
     def __exit__(self, exctype, excinst, exctb):
         setattr(sys, self._stream, self._old_targets.pop())
+        if self._fb_restore is not None:
+            dispatcher, old_fallback = self._fb_restore
+            dispatcher.set_fallback(old_fallback)
 
 
 class redirect_stdout(_RedirectStream):
@@ -1127,6 +1141,20 @@ class redirect_stderr(_RedirectStream):
     """Context manager for temporarily redirecting stderr to another file."""
 
     _stream = "stderr"
+
+
+def _get_stream_dispatcher(stream):
+    """Returns the FileThreadDispatcher backing a sys stream name."""
+    from xonsh.procs.proxies import STDOUT_DISPATCHER, STDERR_DISPATCHER
+
+    return STDOUT_DISPATCHER if stream == "stdout" else STDERR_DISPATCHER
+
+
+def _is_dispatcher(obj):
+    """True if obj is a FileThreadDispatcher (a transient redirect target)."""
+    from xonsh.procs.proxies import FileThreadDispatcher
+
+    return isinstance(obj, FileThreadDispatcher)
 
 
 def debian_command_not_found(cmd):

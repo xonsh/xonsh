@@ -69,11 +69,16 @@ class FileThreadDispatcher:
         ----------
         registry : dict
             Maps thread idents to file handles.
+        _fallback : file-like or None, optional
+            The handle for threads not in the registry once a caller has
+            installed one via redirect_stdout/redirect_stderr; falls back to
+            ``default`` when unset.
         """
         if default is None:
             default = io.TextIOWrapper(io.BytesIO())
         self.default = default
         self.registry = {}
+        self._fallback = None
 
     def register(self, handle):
         """Registers a file handle for the current thread. Returns self so
@@ -92,6 +97,24 @@ class FileThreadDispatcher:
             # don't remove if we have already been deregistered
             del self.registry[threading.get_ident()]
 
+    def get_fallback(self):
+        """Gets the fallback handle used for threads not in the registry."""
+        return self._fallback
+
+    def set_fallback(self, handle):
+        """Sets the fallback handle for threads not in the registry.
+
+        This lets a caller that swaps ``sys.stdout``/``sys.stderr`` after import
+        (e.g. an embedding application capturing output) be honored by worker
+        threads that never registered their own handle, instead of falling back
+        to the stream captured at import time. Pass ``None`` to reset to the
+        import-time default. The dispatcher itself is never used as a fallback
+        (that would recurse).
+        """
+        if handle is self:
+            handle = None
+        self._fallback = handle
+
     @property
     def available(self):
         """True if the thread is available in the registry."""
@@ -100,7 +123,16 @@ class FileThreadDispatcher:
     @property
     def handle(self):
         """Gets the current handle for the thread."""
-        return self.registry.get(threading.get_ident(), self.default)
+        handle = self.registry.get(threading.get_ident())
+        if handle is not None:
+            return handle
+        # Unregistered thread: honor a caller-installed fallback (a real stream
+        # installed after import via redirect_stdout/redirect_stderr), else the
+        # import-time default.
+        fallback = self._fallback
+        if fallback is not None and fallback is not self:
+            return fallback
+        return self.default
 
     def __enter__(self):
         pass
