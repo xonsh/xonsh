@@ -70,9 +70,7 @@ class FileThreadDispatcher:
         registry : dict
             Maps thread idents to file handles.
         _fallback : file-like or None, optional
-            The handle for threads not in the registry once a caller has
-            installed one via redirect_stdout/redirect_stderr; falls back to
-            ``default`` when unset.
+            Handle for unregistered threads once a caller installs one; else ``default``.
         """
         if default is None:
             default = io.TextIOWrapper(io.BytesIO())
@@ -104,12 +102,9 @@ class FileThreadDispatcher:
     def set_fallback(self, handle):
         """Sets the fallback handle for threads not in the registry.
 
-        This lets a caller that swaps ``sys.stdout``/``sys.stderr`` after import
-        (e.g. an embedding application capturing output) be honored by worker
-        threads that never registered their own handle, instead of falling back
-        to the stream captured at import time. Pass ``None`` to reset to the
-        import-time default. The dispatcher itself is never used as a fallback
-        (that would recurse).
+        Lets a caller-installed real stream be honored by worker threads that never
+        registered their own handle, instead of the import-time default. Pass None to
+        reset. The dispatcher itself is never a fallback (that would recurse).
         """
         if handle is self:
             handle = None
@@ -126,9 +121,7 @@ class FileThreadDispatcher:
         handle = self.registry.get(threading.get_ident())
         if handle is not None:
             return handle
-        # Unregistered thread: honor a caller-installed fallback (a real stream
-        # installed after import via redirect_stdout/redirect_stderr), else the
-        # import-time default.
+        # Unregistered thread: use a caller-installed fallback, else the import-time default.
         fallback = self._fallback
         if fallback is not None and fallback is not self:
             return fallback

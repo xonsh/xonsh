@@ -1100,15 +1100,11 @@ class _RedirectStream:
     def __enter__(self):
         self._old_targets.append(getattr(sys, self._stream))
         setattr(sys, self._stream, self._new_target)
-        # Record the caller's intended real stream as the dispatcher fallback so
-        # that worker threads which never registered their own handle (e.g. a
-        # pipeline's last-stage alias started inside another thread's redirect
-        # window) route here instead of the stale import-time default. Skipped
-        # when the target is a dispatcher (a transient swap, not a real stream).
+        # Record the caller's real stream as the dispatcher fallback so unregistered
+        # worker threads route here instead of the stale import-time default (skipped
+        # when the target is itself a dispatcher, i.e. a transient swap).
         self._fb_restore = None
-        if self._stream in ("stdout", "stderr") and not _is_dispatcher(
-            self._new_target
-        ):
+        if self._stream in ("stdout", "stderr") and not _is_dispatcher(self._new_target):
             dispatcher = _get_stream_dispatcher(self._stream)
             self._fb_restore = (dispatcher, dispatcher.get_fallback())
             dispatcher.set_fallback(self._new_target)
@@ -1145,9 +1141,10 @@ class redirect_stderr(_RedirectStream):
     _stream = "stderr"
 
 
+# Imported lazily to avoid a circular import with xonsh.procs.proxies.
 def _get_stream_dispatcher(stream):
     """Returns the FileThreadDispatcher backing a sys stream name."""
-    from xonsh.procs.proxies import STDERR_DISPATCHER, STDOUT_DISPATCHER
+    from xonsh.procs.proxies import STDOUT_DISPATCHER, STDERR_DISPATCHER
 
     return STDOUT_DISPATCHER if stream == "stdout" else STDERR_DISPATCHER
 
