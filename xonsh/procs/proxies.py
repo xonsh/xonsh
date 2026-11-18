@@ -69,11 +69,14 @@ class FileThreadDispatcher:
         ----------
         registry : dict
             Maps thread idents to file handles.
+        _fallback : file-like or None, optional
+            Handle for unregistered threads once a caller installs one; else ``default``.
         """
         if default is None:
             default = io.TextIOWrapper(io.BytesIO())
         self.default = default
         self.registry = {}
+        self._fallback = None
 
     def register(self, handle):
         """Registers a file handle for the current thread. Returns self so
@@ -92,6 +95,21 @@ class FileThreadDispatcher:
             # don't remove if we have already been deregistered
             del self.registry[threading.get_ident()]
 
+    def get_fallback(self):
+        """Gets the fallback handle used for threads not in the registry."""
+        return self._fallback
+
+    def set_fallback(self, handle):
+        """Sets the fallback handle for threads not in the registry.
+
+        Lets a caller-installed real stream be honored by worker threads that never
+        registered their own handle, instead of the import-time default. Pass None to
+        reset. The dispatcher itself is never a fallback (that would recurse).
+        """
+        if handle is self:
+            handle = None
+        self._fallback = handle
+
     @property
     def available(self):
         """True if the thread is available in the registry."""
@@ -100,7 +118,14 @@ class FileThreadDispatcher:
     @property
     def handle(self):
         """Gets the current handle for the thread."""
-        return self.registry.get(threading.get_ident(), self.default)
+        handle = self.registry.get(threading.get_ident())
+        if handle is not None:
+            return handle
+        # Unregistered thread: use a caller-installed fallback, else the import-time default.
+        fallback = self._fallback
+        if fallback is not None and fallback is not self:
+            return fallback
+        return self.default
 
     def __enter__(self):
         pass
