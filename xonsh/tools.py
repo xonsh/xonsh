@@ -1106,7 +1106,9 @@ class _RedirectStream:
         # window) route here instead of the stale import-time default. Skipped
         # when the target is a dispatcher (a transient swap, not a real stream).
         self._fb_restore = None
-        if self._stream in ("stdout", "stderr") and not _is_dispatcher(self._new_target):
+        if self._stream in ("stdout", "stderr") and not _is_dispatcher(
+            self._new_target
+        ):
             dispatcher = _get_stream_dispatcher(self._stream)
             self._fb_restore = (dispatcher, dispatcher.get_fallback())
             dispatcher.set_fallback(self._new_target)
@@ -1145,7 +1147,7 @@ class redirect_stderr(_RedirectStream):
 
 def _get_stream_dispatcher(stream):
     """Returns the FileThreadDispatcher backing a sys stream name."""
-    from xonsh.procs.proxies import STDOUT_DISPATCHER, STDERR_DISPATCHER
+    from xonsh.procs.proxies import STDERR_DISPATCHER, STDOUT_DISPATCHER
 
     return STDOUT_DISPATCHER if stream == "stdout" else STDERR_DISPATCHER
 
