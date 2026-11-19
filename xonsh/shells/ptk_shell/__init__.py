@@ -255,6 +255,8 @@ class PromptToolkitShell(BaseShell):
         ptk_bindings = self.prompter.app.key_bindings
         self.key_bindings = load_xonsh_bindings(ptk_bindings)
         self._overrides_deprecation_warning_shown = False
+        # Color tokens defined by the last style from get_prompt_style()
+        self._prompt_style_tokens = None
 
         # Store original `_history_matches` in case we need to restore it
         self._history_matches_orig = self.prompter.default_buffer._history_matches
@@ -293,10 +295,6 @@ class PromptToolkitShell(BaseShell):
 
             yield "lexer", PygmentsLexer(pyghooks.XonshLexer)
 
-        events.on_timingprobe.fire(name="on_pre_prompt_style")
-        yield "style", self.get_prompt_style()
-        events.on_timingprobe.fire(name="on_post_prompt_style")
-
     def get_prompt_style(self):
         env = XSH.env
 
@@ -312,7 +310,9 @@ class PromptToolkitShell(BaseShell):
         style_overrides_env.update(env.get("XONSH_STYLE_OVERRIDES", {}))
 
         if HAS_PYGMENTS:
-            style = _style_from_pygments_cls(pyghooks.xonsh_style_proxy(self.styler))
+            style_cls = pyghooks.xonsh_style_proxy(self.styler)
+            self._prompt_style_tokens = frozenset(style_cls.styles)
+            style = _style_from_pygments_cls(style_cls)
             if len(self.styler.non_pygments_rules) > 0:
                 try:
                     style = merge_styles(
@@ -337,6 +337,24 @@ class PromptToolkitShell(BaseShell):
             except (AttributeError, TypeError, ValueError) as style_exception:
                 print_warning(f"Error applying style override!\n{style_exception}\n")
         return style
+
+    def update_prompt_style(self, tokens):
+        """Rebuilds the prompter style if ``tokens`` use a color it lacks.
+
+        ``singleline()`` builds the style from the colors known at that time.
+        Async prompt fields are tokenized after the prompt is shown, so a
+        color first used in a field value (e.g. the git branch color) is not
+        in that style yet.
+
+        Parameters
+        ----------
+        tokens : list of (Token, str) tuples
+            Prompt tokens, as returned by ``partial_color_tokenize()``.
+        """
+        if self._prompt_style_tokens is None:
+            return  # no pygments style was built
+        if any(token not in self._prompt_style_tokens for token, _ in tokens):
+            self.prompter.style = self.get_prompt_style()
 
     def singleline(
         self, auto_suggest=None, enable_history_search=True, multiline=True, **kwargs
@@ -441,6 +459,14 @@ class PromptToolkitShell(BaseShell):
         else:
             for attr, val in self.get_lazy_ptk_kwargs():
                 prompt_args[attr] = val
+        if env.get("COLOR_INPUT"):
+            # Built for every prompt in both modes: tokenizing the prompt above
+            # adds the colors it uses for the first time (e.g. ``{#ff0000}``)
+            # to the styler, and $XONSH_COLOR_STYLE or $XONSH_STYLE_OVERRIDES
+            # may have changed.
+            events.on_timingprobe.fire(name="on_pre_prompt_style")
+            prompt_args["style"] = self.get_prompt_style()
+            events.on_timingprobe.fire(name="on_post_prompt_style")
 
         cursor_shape = env.get("XONSH_PROMPT_CURSOR_SHAPE")
         if cursor_shape:

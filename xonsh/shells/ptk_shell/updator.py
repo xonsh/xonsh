@@ -50,7 +50,13 @@ class Executor:
 class AsyncPrompt:
     """Represent an asynchronous prompt."""
 
-    def __init__(self, name: str, session: PromptSession, executor: Executor):
+    def __init__(
+        self,
+        name: str,
+        session: PromptSession,
+        executor: Executor,
+        update_style: tp.Callable | None = None,
+    ):
         """
 
         Parameters
@@ -59,6 +65,9 @@ class AsyncPrompt:
             what prompt to update. One of ['message', 'rprompt', 'bottom_toolbar']
         session: PromptSession
             current ptk session
+        update_style: callable, optional
+            called with the color tokens of the updated prompt before it is
+            shown, so that the session style can add colors they use
         """
 
         self.name = name
@@ -68,6 +77,7 @@ class AsyncPrompt:
         self.timer = None
         self.session = session
         self.executor = executor
+        self.update_style = update_style
 
         # (Key: the future object) that is created for the (value: index/field_name) in the tokens list
         self.futures: dict[
@@ -129,12 +139,13 @@ class AsyncPrompt:
 
         def _invalidate():
             new_prompt = self.tokens.process()
-            formatted_tokens = tokenize_ansi(
-                PygmentsTokens(partial_color_tokenize(new_prompt))
-            )
+            color_tokens = partial_color_tokenize(new_prompt)
+            formatted_tokens = tokenize_ansi(PygmentsTokens(color_tokens))
             app = self.session.app
 
             def _update_in_main():
+                if self.update_style is not None:
+                    self.update_style(color_tokens)
                 setattr(self.session, self.name, formatted_tokens)
                 app.invalidate()
 
@@ -187,7 +198,10 @@ class PromptUpdator:
         self.stop(prompt_name)
 
         self.prompts[prompt_name] = AsyncPrompt(
-            prompt_name, self.shell.prompter, self.executor
+            prompt_name,
+            self.shell.prompter,
+            self.executor,
+            update_style=self.shell.update_prompt_style,
         )
         return self.prompts[prompt_name]
 
