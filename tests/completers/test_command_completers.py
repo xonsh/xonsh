@@ -40,6 +40,19 @@ def test_skipper_command(completion_context_parse):
 
 
 @skip_if_on_windows
+def test_skipper_user_token(completion_context_parse, xession):
+    xession.env["XONSH_COMPLETER_SKIP_TOKENS"].add("xsudo")
+    assert "grep" in completions_from_result(
+        complete_skipper(completion_context_parse("xsudo time gre", 14))
+    )
+
+
+def test_skipper_token_removed(completion_context_parse, xession):
+    xession.env["XONSH_COMPLETER_SKIP_TOKENS"] = {"which"}
+    assert complete_skipper(completion_context_parse("time gre", 8)) is None
+
+
+@skip_if_on_windows
 def test_skipper_arg(completion_context_parse, xession, monkeypatch):
     monkeypatch.setattr(xession.shell.shell, "completer", Completer(), raising=False)
     bash_completer_mock = Mock()

@@ -51,6 +51,20 @@ of the currently-active completers, in the order in which they will be
 checked.
 
 
+Completing After Wrapper Commands
+=================================
+
+Wrapper commands such as ``time`` and ``which`` are skipped when completing,
+so ``time git ch<TAB>`` completes like ``git ch<TAB>``. The skipped commands
+are listed in :ref:`$XONSH_COMPLETER_SKIP_TOKENS <xonsh_completer_skip_tokens>`.
+To skip your own wrapper alias too, add it in your :doc:`xonsh RC <xonshrc>`:
+
+.. code-block:: xonshcon
+
+    @ $XONSH_COMPLETER_SKIP_TOKENS.add('xsudo')
+    @ xsudo git ch<TAB>
+
+
 Writing a New Completer
 =======================
 
