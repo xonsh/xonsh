@@ -17,10 +17,6 @@ from xonsh.completers.tools import (
 from xonsh.lib.modules import ModuleFinder
 from xonsh.parsers.completion_context import CommandContext, CompletionContext
 
-# Wrapper commands whose completions delegate to the inner command. ``sudo``
-# is intentionally absent — it has its own flag grammar (``-u root``,
-# ``VAR=value``, ``--``) handled by ``xompletions/sudo.py``.
-SKIP_TOKENS = {"time", "timeit", "which", "showcmd", "man"}
 END_PROC_TOKENS = ("|", ";", "&&")  # includes ||
 END_PROC_KEYWORDS = {"and", "or"}
 
@@ -125,10 +121,11 @@ def complete_skipper(command_context: CommandContext):
 
     # Contextual completers don't need us to skip tokens since they get the correct completion context -
     # meaning we only need to skip commands like ``sudo``.
+    skip_tokens = (XSH.env or {}).get("XONSH_COMPLETER_SKIP_TOKENS", set())
     skip_part_num = 0
     # all the args before the current argument
     for arg in command_context.args[: command_context.arg_index]:
-        if arg.value not in SKIP_TOKENS:
+        if arg.value not in skip_tokens:
             break
         skip_part_num += 1
 
@@ -141,7 +138,7 @@ def complete_skipper(command_context: CommandContext):
     )
 
     if skipped_command_context.arg_index == 0:
-        # completing the command after a SKIP_TOKEN
+        # completing the command after a skip token
         return complete_command(skipped_command_context)
 
     completer: Completer = XSH.shell.shell.completer  # type: ignore

@@ -2287,6 +2287,19 @@ The file should contain a function with the signature
         "Set to ``'::'`` to enable, then type ``::<TAB>`` or ``::cat<TAB>`` to search. "
         "Default is ``None`` (disabled).",
     )
+    XONSH_COMPLETER_SKIP_TOKENS = Var(
+        is_string_set,
+        csv_to_set,
+        set_to_csv,
+        default_value(lambda env: {"time", "timeit", "which", "showcmd", "man"}),
+        "A set of strings (comma-separated list in string form) of wrapper "
+        "commands that the command completer skips over, so that "
+        "``time git ch<TAB>`` completes like ``git ch<TAB>``. Add your own "
+        "wrapper aliases, e.g. ``$XONSH_COMPLETER_SKIP_TOKENS.add('xsudo')``. "
+        "``sudo`` is not included because it has its own completer.",
+        doc_default="``{'time', 'timeit', 'which', 'showcmd', 'man'}``",
+        can_store_as_str=True,
+    )
     XONSH_COMPLETER_SYMBOLS_PREFIX = Var.with_default(
         None,
         "Trigger prefix for unicode symbol completion. "
