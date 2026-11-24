@@ -150,6 +150,10 @@ If you like xonsh, :star: the repo and spread the word about xonsh.
             :target: https://github.com/xonsh/xonsh/actions/workflows/test.yml
             :alt: GitHub Actions
 
+    .. image:: https://score.getplumber.io/github.com/xonsh/xonsh.svg
+            :target: https://score.getplumber.io/github.com/xonsh/xonsh
+            :alt: Plumber Score
+
 
 First steps
 ***********
