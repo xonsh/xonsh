@@ -346,6 +346,7 @@ def globsearch(s):
             return_empty=True,
             sort_result=glob_sorted,
             include_dotfiles=dotglob,
+            explicit_dot_matches_hidden=False,
         )
     )
 
