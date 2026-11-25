@@ -8,6 +8,39 @@ import xonsh.procs.pipelines as xpp
 from xonsh.built_ins import XSH
 from xonsh.xoreutils.util import arg_handler, run_alias
 
+_LINE_OPTS = ("number_nonblank", "number_all", "squeeze_blank", "show_ends")
+
+
+class _LineReader:
+    """Gives ``_cat_line`` whole lines from a reader that returns pieces of them.
+
+    ``NonBlockingFDReader.readline()`` returns read chunks that can hold several
+    lines or only part of one, and ``readline(size)`` on a text stream stops after
+    ``size`` characters.
+    """
+
+    def __init__(self, reader, enc, enc_errors):
+        self.reader = reader
+        self.enc = enc
+        self.enc_errors = enc_errors
+        self.pending = bytearray()
+
+    def readline(self, size=-1):
+        """Reads the next line, or the rest of the stream if it has no newline."""
+        end = self.pending.find(b"\n")
+        while end < 0:
+            chunk = self.reader.readline(size)
+            if isinstance(chunk, str):
+                chunk = chunk.encode(self.enc, self.enc_errors)
+            if not chunk:
+                end = len(self.pending) - 1
+                break
+            self.pending += chunk
+            end = self.pending.find(b"\n", len(self.pending) - len(chunk))
+        line = bytes(self.pending[: end + 1])
+        del self.pending[: end + 1]
+        return line
+
 
 def _cat_line(
     f, sep, last_was_blank, line_count, opts, out, enc, enc_errors, read_size
@@ -59,6 +92,8 @@ def _cat_single_file(opts, fname, stdin, out, err, line_count=1, read_timeout=0.
             file_size = None
         fobj = open(fname, "rb")
         f = xpp.NonBlockingFDReader(fobj.fileno(), timeout=read_timeout)
+    if any(opts[opt] for opt in _LINE_OPTS):
+        f = _LineReader(f, enc, enc_errors)
     sep = os.linesep.encode(enc, enc_errors)
     last_was_blank = False
     errors = 0
